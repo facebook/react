@@ -8,6 +8,15 @@ The Rust port should be structurally as close to the TypeScript as possible: vie
 
 **Current status**: M1, M2, M3 implemented. Crate structure compiles, HIRBuilder core methods and binding resolution work. All lowering functions (lower_statement, lower_expression, etc.) stubbed with `todo!()`. Next step: M4 (lower() entry point + basic statements).
 
+**Known issues to fix:**
+- All collection types must use `IndexMap`/`IndexSet` (from the `indexmap` crate), not `BTreeMap`/`BTreeSet`/`HashMap`/`HashSet`. This is critical for `HIR.blocks` where `BTreeMap` destroys RPO insertion ordering.
+- Functions `lower_function`, `lower_function_to_value`, `gather_captured_context`, `lower_object_property_key`, `lower_type` take `&Expression`. The AST crate uses `Expression` for keys and doesn't have standalone `Function`/`ObjectPropertyKey`/`TypeAnnotation` types, so `&Expression` is correct for the current AST structure. When these functions are implemented, they should pattern-match on the specific expression variants internally.
+- `VariableBinding::Identifier.binding_kind` is `String` — must be a `BindingKind` enum.
+- `HirBuilder` is missing `component_scope: ScopeId` field (needed for `gather_captured_context` in M9).
+- `build_temporary_place` helper is missing (listed in M4).
+- `mark_predecessors` fallthrough handling: VERIFIED — matches TS `eachTerminalSuccessor` (does not include fallthroughs, correct).
+- `GotoVariant::Break` usage: VERIFIED — matches TS for both `remove_unnecessary_try_catch` and `remove_dead_do_while_statements`.
+
 ---
 
 ## Crate Layout
@@ -109,7 +118,7 @@ fn resolve_identifier(&mut self, name: &str, start_offset: u32) -> VariableBindi
                 }
             } else {
                 let identifier = self.resolve_binding(name, binding_id.unwrap());
-                VariableBinding::Identifier { identifier, binding_kind: binding.kind.clone() }
+                VariableBinding::Identifier { identifier, binding_kind: BindingKind::from(&binding.kind) }
             }
         }
     }
@@ -136,6 +145,7 @@ pub struct HirBuilder<'a> {
     used_names: IndexMap<String, BindingId>,
     instruction_table: Vec<Instruction>,
     function_scope: ScopeId,
+    component_scope: ScopeId,  // outermost component/hook scope, for gather_captured_context
     env: &'a mut Environment,
     scope_info: &'a ScopeInfo,
     exception_handler_stack: Vec<BlockId>,
@@ -320,8 +330,12 @@ These helper functions in HIRBuilder.ts run after `build()` and clean up the CFG
 | `removeDeadDoWhileStatements(func)` | `remove_dead_do_while_statements(hir)` | |
 | `removeUnnecessaryTryCatch(fn)` | `remove_unnecessary_try_catch(hir)` | |
 | `markInstructionIds(func)` | `mark_instruction_ids(hir)` | Assigns EvaluationOrder |
-| `markPredecessors(func)` | `mark_predecessors(hir)` | |
+| `markPredecessors(func)` | `mark_predecessors(hir)` | Must include fallthrough blocks — verify `each_terminal_successor` matches TS `eachTerminalSuccessor` |
 | `createTemporaryPlace(env, loc)` | `create_temporary_place(env, loc)` | |
+
+**Implementation notes for post-build helpers:**
+- `remove_unnecessary_try_catch` and `remove_dead_do_while_statements`: Verify that the `GotoVariant` used when replacing terminals matches the TS equivalent. Currently uses `GotoVariant::Break` — confirm this is correct.
+- `mark_predecessors`: The `each_terminal_successor` function must visit fallthrough blocks for terminals like `Try`, not just direct successors. Compare against TS `eachTerminalSuccessor` behavior.
 
 ---
 
@@ -461,7 +475,7 @@ fn lower_function(builder: &mut HirBuilder, func: &ast::Function) -> LoweredFunc
    - `Instruction`, `InstructionValue` (enum with all ~40 variants, each stubbed as `todo!()` for fields)
    - `Terminal` (enum with all variants)
    - `Place`, `Identifier`, `MutableRange`, `SourceLocation`
-   - `Effect`, `InstructionKind`, `GotoVariant`
+   - `Effect`, `InstructionKind`, `GotoVariant`, `BindingKind` (enum: `Var`, `Let`, `Const`, `Param`, `Using`, `AwaitUsing`, `CatchParam`, `ImplicitConst`)
    - `Environment` (counters, arenas, config, errors)
    - `FloatValue(u64)` — wrapper type for f64 values that need `Eq`/`Hash` (stores raw bits via `f64::to_bits()` for deterministic comparison)
 

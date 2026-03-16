@@ -34,7 +34,7 @@ fn main() {
         Ok(output) => print!("{}", output),
         Err(e) => {
             // Compiler errors go to stdout for diffing
-            print!("{}", react_compiler::debug_print::debug_error(&e));
+            print!("{}", react_compiler::debug_print::format_errors(&e));
         }
     }
 }

@@ -3,6 +3,28 @@
 version = 4
 
 [[package]]
+name = "equivalent"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "hashbrown"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+
+[[package]]
+name = "indexmap"
+version = "2.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7714e70437a7dc3ac8eb7e6f8df75fd8eb422675fc7678aff7364301092b1017"
+dependencies = [
+ "equivalent",
+ "hashbrown",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -62,6 +84,7 @@ version = "0.1.0"
 name = "react_compiler_hir"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "react_compiler_diagnostics",
 ]
 
@@ -69,6 +92,7 @@ dependencies = [
 name = "react_compiler_lowering"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "react_compiler_ast",
  "react_compiler_diagnostics",
  "react_compiler_hir",

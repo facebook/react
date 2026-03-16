@@ -11,7 +11,7 @@ use react_compiler_hir::environment::Environment;
 // Error formatting
 // =============================================================================
 
-pub fn debug_error(error: &CompilerError) -> String {
+pub fn format_errors(error: &CompilerError) -> String {
     let mut out = String::new();
     for detail in &error.details {
         match detail {

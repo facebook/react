@@ -1,3 +1,4 @@
+use indexmap::{IndexMap, IndexSet};
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::File;
 use react_compiler_diagnostics::CompilerError;
@@ -39,6 +40,10 @@ fn lower_expression_to_temporary(
 
 fn lower_value_to_temporary(builder: &mut HirBuilder, value: InstructionValue) -> Place {
     todo!("lower_value_to_temporary not yet implemented - M4")
+}
+
+fn build_temporary_place(builder: &mut HirBuilder, loc: Option<SourceLocation>) -> Place {
+    todo!("build_temporary_place not yet implemented - M4")
 }
 
 fn lower_assignment(
@@ -154,7 +159,7 @@ fn gather_captured_context(
     _func: &react_compiler_ast::expressions::Expression,
     _scope_info: &ScopeInfo,
     _parent_scope: react_compiler_ast::scope::ScopeId,
-) -> std::collections::HashMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
+) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
     todo!("gather_captured_context not yet implemented - M9")
 }
 
@@ -162,7 +167,7 @@ fn capture_scopes(
     scope_info: &ScopeInfo,
     from: react_compiler_ast::scope::ScopeId,
     to: react_compiler_ast::scope::ScopeId,
-) -> std::collections::HashSet<react_compiler_ast::scope::ScopeId> {
+) -> IndexSet<react_compiler_ast::scope::ScopeId> {
     todo!("capture_scopes not yet implemented - M9")
 }
 

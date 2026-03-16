@@ -6,6 +6,17 @@ Create a testing infrastructure that validates the Rust port produces identical 
 
 **Current status**: M1, M2, M3 implemented. All Rust tests expected to fail (todo!() stubs). Next step: port lower() (M4).
 
+**Known issues to fix:**
+- TS binary currently uses BabelPluginReactCompiler via transformFromAstSync instead of the independent pipeline described below. Must be rewritten to call passes directly.
+- Debug output format must be updated to use Rust `Debug`-style nested format (both TS and Rust sides).
+- TS debug printer collects identifiers/functions per-function; should print all from environment (matching Rust).
+- Rust binary needs matching config (compilationMode, target, etc.) added to Environment::new().
+- Implementation uses `CompilerError` / `debug_error` naming; rename to `CompilerDiagnostic` / `format_errors` per this plan.
+- Error format output between TS and Rust has not been validated for byte-identical output. Must be validated and aligned.
+- Both TS and Rust should print `returnTypeAnnotation` in debug output.
+- `mark_predecessors` fallthrough handling: VERIFIED — matches TS `eachTerminalSuccessor` (does not include fallthroughs, correct).
+- `GotoVariant::Break` usage in `remove_unnecessary_try_catch` and `remove_dead_do_while_statements`: VERIFIED — matches TS.
+
 ---
 
 ## Overview
@@ -231,7 +242,7 @@ function main() {
 
 ## Rust Test Binary
 
-### `compiler/crates/react_compiler/src/bin/test-rust-port.rs`
+### `compiler/crates/react_compiler/src/bin/test_rust_port.rs`
 
 A Rust binary in the main compiler crate that mirrors the TS test binary exactly.
 
@@ -254,9 +265,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let ast: react_compiler_ast::File = serde_json::from_str(&ast_json)?;
     let scope: react_compiler_ast::ScopeInfo = serde_json::from_str(&scope_json)?;
 
-    let mut env = Environment::new(/* default config */);
+    let mut env = Environment::new(/* config matching TS binary: compilationMode="all", target="19", etc. */);
 
-    match run_pipeline(pass, ast, scope, &mut env) {
+    match run_pipeline(pass, &ast, &scope, &mut env) {
         Ok(output) => {
             print!("{}", output);
         }
@@ -270,8 +281,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn run_pipeline(
     target_pass: &str,
-    ast: File,
-    scope: ScopeInfo,
+    ast: &File,
+    scope: &ScopeInfo,
     env: &mut Environment,
 ) -> Result<String, CompilerDiagnostic> {
     let mut hir = lower(ast, scope, env)?;
@@ -323,55 +334,35 @@ For port validation, we need a representation that prints **everything** — sim
 
 ### Debug HIR Format
 
-A structured text format that prints every field of the HIR, **including outlined functions**. Both TS and Rust must produce byte-identical output for the same HIR state.
+A structured text format that prints every field of the HIR, **including outlined functions**. Both TS and Rust must produce byte-identical output for the same HIR state. The format uses **Rust `Debug` trait style** — nested struct/enum formatting with curly braces and named fields.
 
 **Design principles:**
+- **Rust `Debug`-style format**: Output looks like Rust's `#[derive(Debug)]` output — `StructName { field: value, ... }` for structs, `EnumVariant { ... }` for enum variants
 - Print every field, even defaults/empty values (no elision)
 - Deterministic ordering (blocks in RPO, instructions in order, maps by sorted key)
 - Stable identifiers (use numeric IDs, not memory addresses)
 - Indent with 2 spaces for nesting
-- Include all outlined functions (from `FunctionExpression` instructions) after the main function, each printed with the same format, numbered sequentially (`Function #0`, `Function #1`, etc.)
+- Include all identifiers from the environment (not just those referenced in the function)
+- Include all outlined functions from the environment (not just those referenced in the function), each printed with the same format, numbered sequentially (`Function #0`, `Function #1`, etc.)
 
 **Example output after `InferTypes`:**
 
 ```
 Function #0:
-  id: "example"
-  params:
-    [0] Place {
-      identifier: $3
-      effect: Read
-      reactive: false
-      loc: 1:20-1:21
-    }
-  returns: Place {
-    identifier: $0
-    effect: Read
-    reactive: false
-    loc: 0:0-0:0
+  HirFunction {
+    id: "example",
+    params: [
+      Place { identifier: $3, effect: Read, reactive: false, loc: 1:20-1:21 },
+    ],
+    returns: Place { identifier: $0, effect: Read, reactive: false, loc: 0:0-0:0 },
+    returnTypeAnnotation: None,
+    context: [],
+    aliasing_effects: None,
   }
-  context: []
-  aliasingEffects: null
 
   Identifiers:
-    $0: Identifier {
-      id: 0
-      declarationId: null
-      name: null
-      mutableRange: [0:0]
-      scope: null
-      type: Type
-      loc: 0:0-0:0
-    }
-    $1: Identifier {
-      id: 1
-      declarationId: 0
-      name: "x"
-      mutableRange: [1:5]
-      scope: null
-      type: TFunction<BuiltInArray>
-      loc: 1:20-1:21
-    }
+    $0: Identifier { id: 0, declaration_id: None, name: None, mutable_range: [0, 0], scope: None, type: Type, loc: 0:0-0:0 }
+    $1: Identifier { id: 1, declaration_id: 0, name: Some("x"), mutable_range: [1, 5], scope: None, type: TFunction(BuiltInArray), loc: 1:20-1:21 }
     ...
 
   Blocks:
@@ -379,26 +370,12 @@ Function #0:
       preds: []
       phis: []
       instructions:
-        [1] Instruction {
-          order: 1
-          lvalue: Place {
-            identifier: $1
-            effect: Mutate
-            reactive: false
-            loc: 1:0-1:10
-          }
-          value: LoadGlobal {
-            name: "console"
-          }
-          effects: null
-          loc: 1:0-1:10
-        }
+        Instruction { id: EvaluationOrder(1), lvalue: Place { identifier: $1, effect: Mutate, reactive: false, loc: 1:0-1:10 }, value: LoadGlobal { name: "console" }, effects: None, loc: 1:0-1:10 }
         ...
-      terminal: Return {
-        value: Place { ... }
-        loc: 5:2-5:10
-      }
+      terminal: Return { value: Place { identifier: $2, effect: Read, reactive: false, loc: 5:2-5:10 }, loc: 5:2-5:10 }
 ```
+
+Note: This is Rust `Debug`-style formatting. Field names use `snake_case`. Optional values use `None`/`Some(...)`. Enum variants use `VariantName { ... }` or `VariantName(...)` syntax.
 
 ### Debug Reactive Function Format
 
@@ -426,11 +403,11 @@ All fields of `CompilerDiagnostic` are included — reason, description, loc, se
 
 ### Implementation Strategy
 
-**TS side**: Create a `debugHIR(hir: HIRFunction, env: Environment): string` function in the test script that walks the HIR and prints everything, including outlined functions. The printer recursively processes all `FunctionExpression` instructions to include their lowered HIR bodies in the output. This is NOT a modification to the existing `PrintHIR.ts` — it's a separate debug printer in the test infrastructure.
+**TS side**: Create a `debugHIR(hir: HIRFunction, env: Environment): string` function in the test script that walks the HIR and prints everything using Rust `Debug`-style formatting (`StructName { field: value, ... }`). Prints all identifiers and outlined functions from the environment (not just those referenced by the function). This is NOT a modification to the existing `PrintHIR.ts` — it's a separate debug printer in the test infrastructure. Must also print `returnTypeAnnotation`.
 
-**Rust side**: Implement `Debug` trait (or a custom `debug_hir()` function) that produces the same format, including outlined functions. Since Rust's `#[derive(Debug)]` output format differs from what we need (it uses Rust syntax), we need a custom formatter that matches the TS output exactly.
+**Rust side**: Implement a custom `debug_hir()` function that produces Rust `Debug`-style output. While this is similar to `#[derive(Debug)]`, a custom implementation is needed for consistent field ordering and formatting. Prints all identifiers and functions from the environment.
 
-**Shared format specification**: The format is defined once (in this document) and both sides implement it. The round-trip test validates they produce identical output.
+**Shared format specification**: The format is defined once (in this document) and both sides implement it. The round-trip test validates they produce identical output. Both sides must print `returnTypeAnnotation`.
 
 ---
 
@@ -612,7 +589,7 @@ The TS test binary parses the original fixture source with `@babel/parser` and `
 
 ## Configuration
 
-Both test binaries use the **same default configuration**. This is the `EnvironmentConfig` with all defaults, plus any overrides from pragma comments in the fixture source.
+Both test binaries use the **same configuration**. This includes `compilationMode: "all"`, `target: "19"`, and other settings that ensure both sides produce comparable output, plus any overrides from pragma comments in the fixture source.
 
 **Pragma parsing**: The first line of each fixture may contain config pragmas like `// @enableJsxOutlining @enableNameAnonymousFunctions:false`. Both test binaries parse this line and apply the overrides before running passes.
 

@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use indexmap::{IndexMap, IndexSet};
 
 use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
 use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
@@ -66,18 +66,18 @@ fn new_block(id: BlockId, kind: BlockKind) -> WipBlock {
 // ---------------------------------------------------------------------------
 
 pub struct HirBuilder<'a> {
-    completed: BTreeMap<BlockId, BasicBlock>,
+    completed: IndexMap<BlockId, BasicBlock>,
     current: WipBlock,
     entry: BlockId,
     scopes: Vec<Scope>,
     /// Context identifiers: variables captured from an outer scope.
     /// Maps the outer scope's BindingId to the source location where it was referenced.
-    context: HashMap<BindingId, Option<SourceLocation>>,
+    context: IndexMap<BindingId, Option<SourceLocation>>,
     /// Resolved bindings: maps a BindingId to the HIR IdentifierId created for it.
-    bindings: HashMap<BindingId, IdentifierId>,
+    bindings: IndexMap<BindingId, IdentifierId>,
     /// Names already used by bindings, for collision avoidance.
     /// Maps name string -> how many times it has been used (for appending _0, _1, ...).
-    used_names: HashMap<String, BindingId>,
+    used_names: IndexMap<String, BindingId>,
     env: &'a mut Environment,
     scope_info: &'a ScopeInfo,
     exception_handler_stack: Vec<BlockId>,
@@ -88,6 +88,8 @@ pub struct HirBuilder<'a> {
     pub fbt_depth: u32,
     /// The scope of the function being compiled (for context identifier checks).
     function_scope: ScopeId,
+    /// The scope of the outermost component/hook function (for gather_captured_context).
+    component_scope: ScopeId,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -107,26 +109,28 @@ impl<'a> HirBuilder<'a> {
         env: &'a mut Environment,
         scope_info: &'a ScopeInfo,
         function_scope: ScopeId,
-        bindings: Option<HashMap<BindingId, IdentifierId>>,
-        context: Option<HashMap<BindingId, Option<SourceLocation>>>,
+        component_scope: ScopeId,
+        bindings: Option<IndexMap<BindingId, IdentifierId>>,
+        context: Option<IndexMap<BindingId, Option<SourceLocation>>>,
         entry_block_kind: Option<BlockKind>,
     ) -> Self {
         let entry = env.next_block_id();
         let kind = entry_block_kind.unwrap_or(BlockKind::Block);
         HirBuilder {
-            completed: BTreeMap::new(),
+            completed: IndexMap::new(),
             current: new_block(entry, kind),
             entry,
             scopes: Vec::new(),
             context: context.unwrap_or_default(),
             bindings: bindings.unwrap_or_default(),
-            used_names: HashMap::new(),
+            used_names: IndexMap::new(),
             env,
             scope_info,
             exception_handler_stack: Vec::new(),
             instruction_table: Vec::new(),
             fbt_depth: 0,
             function_scope,
+            component_scope,
         }
     }
 
@@ -145,13 +149,18 @@ impl<'a> HirBuilder<'a> {
         self.scope_info
     }
 
+    /// Access the component scope.
+    pub fn component_scope(&self) -> ScopeId {
+        self.component_scope
+    }
+
     /// Access the context map.
-    pub fn context(&self) -> &HashMap<BindingId, Option<SourceLocation>> {
+    pub fn context(&self) -> &IndexMap<BindingId, Option<SourceLocation>> {
         &self.context
     }
 
     /// Access the bindings map.
-    pub fn bindings(&self) -> &HashMap<BindingId, IdentifierId> {
+    pub fn bindings(&self) -> &IndexMap<BindingId, IdentifierId> {
         &self.bindings
     }
 
@@ -206,7 +215,7 @@ impl<'a> HirBuilder<'a> {
                 id: block_id,
                 instructions: wip.instructions,
                 terminal,
-                preds: BTreeSet::new(),
+                preds: IndexSet::new(),
                 phis: Vec::new(),
             },
         );
@@ -230,7 +239,7 @@ impl<'a> HirBuilder<'a> {
                 id: block_id,
                 instructions: wip.instructions,
                 terminal,
-                preds: BTreeSet::new(),
+                preds: IndexSet::new(),
                 phis: Vec::new(),
             },
         );
@@ -254,7 +263,7 @@ impl<'a> HirBuilder<'a> {
                 id: block_id,
                 instructions: block.instructions,
                 terminal,
-                preds: BTreeSet::new(),
+                preds: IndexSet::new(),
                 phis: Vec::new(),
             },
         );
@@ -274,7 +283,7 @@ impl<'a> HirBuilder<'a> {
                 id: completed_wip.id,
                 instructions: completed_wip.instructions,
                 terminal,
-                preds: BTreeSet::new(),
+                preds: IndexSet::new(),
                 phis: Vec::new(),
             },
         );
@@ -624,15 +633,15 @@ impl<'a> HirBuilder<'a> {
                     // Local binding: resolve via resolve_binding
                     let binding_id = binding.id;
                     let binding_kind = match &binding.kind {
-                        react_compiler_ast::scope::BindingKind::Var => "var",
-                        react_compiler_ast::scope::BindingKind::Let => "let",
-                        react_compiler_ast::scope::BindingKind::Const => "const",
-                        react_compiler_ast::scope::BindingKind::Param => "param",
-                        react_compiler_ast::scope::BindingKind::Module => "module",
-                        react_compiler_ast::scope::BindingKind::Hoisted => "hoisted",
-                        react_compiler_ast::scope::BindingKind::Local => "local",
-                        react_compiler_ast::scope::BindingKind::Unknown => "unknown",
-                    }.to_string();
+                        react_compiler_ast::scope::BindingKind::Var => BindingKind::Var,
+                        react_compiler_ast::scope::BindingKind::Let => BindingKind::Let,
+                        react_compiler_ast::scope::BindingKind::Const => BindingKind::Const,
+                        react_compiler_ast::scope::BindingKind::Param => BindingKind::Param,
+                        react_compiler_ast::scope::BindingKind::Module => BindingKind::Module,
+                        react_compiler_ast::scope::BindingKind::Hoisted => BindingKind::Hoisted,
+                        react_compiler_ast::scope::BindingKind::Local => BindingKind::Local,
+                        react_compiler_ast::scope::BindingKind::Unknown => BindingKind::Unknown,
+                    };
                     let identifier_id = self.resolve_binding(name, binding_id);
                     VariableBinding::Identifier {
                         identifier: identifier_id,
@@ -782,19 +791,19 @@ fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
 /// Blocks not reachable through successors are removed. Blocks that are
 /// only reachable as fallthroughs (not through real successor edges) are
 /// replaced with empty blocks that have an Unreachable terminal.
-fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> BTreeMap<BlockId, BasicBlock> {
-    let mut visited: HashSet<BlockId> = HashSet::new();
-    let mut used: HashSet<BlockId> = HashSet::new();
-    let mut used_fallthroughs: HashSet<BlockId> = HashSet::new();
+fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> IndexMap<BlockId, BasicBlock> {
+    let mut visited: IndexSet<BlockId> = IndexSet::new();
+    let mut used: IndexSet<BlockId> = IndexSet::new();
+    let mut used_fallthroughs: IndexSet<BlockId> = IndexSet::new();
     let mut postorder: Vec<BlockId> = Vec::new();
 
     fn visit(
         hir: &HIR,
         block_id: BlockId,
         is_used: bool,
-        visited: &mut HashSet<BlockId>,
-        used: &mut HashSet<BlockId>,
-        used_fallthroughs: &mut HashSet<BlockId>,
+        visited: &mut IndexSet<BlockId>,
+        used: &mut IndexSet<BlockId>,
+        used_fallthroughs: &mut IndexSet<BlockId>,
         postorder: &mut Vec<BlockId>,
     ) {
         let was_used = used.contains(&block_id);
@@ -854,7 +863,7 @@ fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> BT
         &mut postorder,
     );
 
-    let mut blocks = BTreeMap::new();
+    let mut blocks = IndexMap::new();
     for block_id in postorder.into_iter().rev() {
         let block = hir.blocks.get(&block_id).unwrap();
         if used.contains(&block_id) {
@@ -870,7 +879,7 @@ fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> BT
                         id: block.terminal.evaluation_order(),
                         loc: block.terminal.loc().copied(),
                     },
-                    preds: BTreeSet::new(),
+                    preds: IndexSet::new(),
                     phis: Vec::new(),
                 },
             );
@@ -884,7 +893,7 @@ fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> BT
 /// For each block with a `For` terminal whose update block is not in the
 /// blocks map, set update to None.
 fn remove_unreachable_for_updates(hir: &mut HIR) {
-    let block_ids: HashSet<BlockId> = hir.blocks.keys().copied().collect();
+    let block_ids: IndexSet<BlockId> = hir.blocks.keys().copied().collect();
     for block in hir.blocks.values_mut() {
         if let Terminal::For { update, .. } = &mut block.terminal {
             if let Some(update_id) = *update {
@@ -899,7 +908,7 @@ fn remove_unreachable_for_updates(hir: &mut HIR) {
 /// For each block with a `DoWhile` terminal whose test block is not in
 /// the blocks map, replace the terminal with a Goto to the loop block.
 fn remove_dead_do_while_statements(hir: &mut HIR) {
-    let block_ids: HashSet<BlockId> = hir.blocks.keys().copied().collect();
+    let block_ids: IndexSet<BlockId> = hir.blocks.keys().copied().collect();
     for block in hir.blocks.values_mut() {
         let should_replace = if let Terminal::DoWhile { test, .. } = &block.terminal {
             !block_ids.contains(test)
@@ -933,7 +942,7 @@ fn remove_dead_do_while_statements(hir: &mut HIR) {
 /// Also cleans up the fallthrough block's predecessors if the handler
 /// was the only path to it.
 fn remove_unnecessary_try_catch(hir: &mut HIR) {
-    let block_ids: HashSet<BlockId> = hir.blocks.keys().copied().collect();
+    let block_ids: IndexSet<BlockId> = hir.blocks.keys().copied().collect();
 
     // Collect the blocks that need replacement and their associated data
     let replacements: Vec<(BlockId, BlockId, BlockId, BlockId, Option<SourceLocation>)> = hir
@@ -971,9 +980,9 @@ fn remove_unnecessary_try_catch(hir: &mut HIR) {
         if let Some(fallthrough) = hir.blocks.get_mut(&fallthrough_id) {
             if fallthrough.preds.len() == 1 && fallthrough.preds.contains(&handler_id) {
                 // The handler was the only predecessor: remove the fallthrough block
-                hir.blocks.remove(&fallthrough_id);
+                hir.blocks.shift_remove(&fallthrough_id);
             } else {
-                fallthrough.preds.remove(&handler_id);
+                fallthrough.preds.shift_remove(&handler_id);
             }
         }
     }
@@ -1005,9 +1014,9 @@ fn mark_predecessors(hir: &mut HIR) {
         block.preds.clear();
     }
 
-    let mut visited: HashSet<BlockId> = HashSet::new();
+    let mut visited: IndexSet<BlockId> = IndexSet::new();
 
-    fn visit(hir: &mut HIR, block_id: BlockId, prev_block_id: Option<BlockId>, visited: &mut HashSet<BlockId>) {
+    fn visit(hir: &mut HIR, block_id: BlockId, prev_block_id: Option<BlockId>, visited: &mut IndexSet<BlockId>) {
         // Add predecessor
         if let Some(prev_id) = prev_block_id {
             if let Some(block) = hir.blocks.get_mut(&block_id) {

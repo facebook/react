@@ -12,7 +12,7 @@ pub fn run_pipeline(
     let hir = lower(ast, scope, env)?;
     if target_pass == "HIR" {
         if env.has_errors() {
-            return Ok(crate::debug_print::debug_error(env.errors()));
+            return Ok(crate::debug_print::format_errors(env.errors()));
         }
         return Ok(crate::debug_print::debug_hir(&hir, env));
     }

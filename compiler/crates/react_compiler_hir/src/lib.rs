@@ -2,7 +2,7 @@ pub mod environment;
 
 pub use react_compiler_diagnostics::{SourceLocation, Position, GENERATED_SOURCE};
 
-use std::collections::{BTreeMap, BTreeSet};
+use indexmap::{IndexMap, IndexSet};
 
 // =============================================================================
 // ID newtypes
@@ -126,7 +126,7 @@ pub enum ParamPattern {
 #[derive(Debug, Clone)]
 pub struct HIR {
     pub entry: BlockId,
-    pub blocks: BTreeMap<BlockId, BasicBlock>,
+    pub blocks: IndexMap<BlockId, BasicBlock>,
 }
 
 /// Block kinds
@@ -146,7 +146,7 @@ pub struct BasicBlock {
     pub id: BlockId,
     pub instructions: Vec<InstructionId>,
     pub terminal: Terminal,
-    pub preds: BTreeSet<BlockId>,
+    pub preds: IndexSet<BlockId>,
     pub phis: Vec<Phi>,
 }
 
@@ -154,7 +154,7 @@ pub struct BasicBlock {
 #[derive(Debug, Clone)]
 pub struct Phi {
     pub place: Place,
-    pub operands: BTreeMap<BlockId, Place>,
+    pub operands: IndexMap<BlockId, Place>,
 }
 
 // =============================================================================
@@ -934,11 +934,23 @@ pub enum JsxAttribute {
 // Variable Binding types
 // =============================================================================
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BindingKind {
+    Var,
+    Let,
+    Const,
+    Param,
+    Module,
+    Hoisted,
+    Local,
+    Unknown,
+}
+
 #[derive(Debug, Clone)]
 pub enum VariableBinding {
     Identifier {
         identifier: IdentifierId,
-        binding_kind: String,
+        binding_kind: BindingKind,
     },
     Global {
         name: String,
