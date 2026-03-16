@@ -7,7 +7,7 @@ globs:
 
 When working on Rust code in `compiler/crates/`:
 
-- Follow patterns from `compiler/docs/rust-port/rust-port-notes.md`
+- Follow patterns from `compiler/docs/rust-port/rust-port-architecture.md`
 - Use arenas + copyable IDs instead of shared references: `IdentifierId`, `ScopeId`, `FunctionId`, `TypeId`
 - Pass `env: &mut Environment` separately from `func: &mut HirFunction`
 - Use two-phase collect/apply when you can't mutate through stored references

@@ -10,7 +10,7 @@ Deep-research a topic across all compiler passes and update a plan document.
 Arguments:
 - $ARGUMENTS: `<plan-doc-path> <topic/question>`
   - Example: `compiler/docs/rust-port/rust-port-0001-babel-ast.md scope resolution strategy`
-  - Example: `compiler/docs/rust-port/rust-port-research.md error handling patterns`
+  - Example: `compiler/docs/rust-port/rust-port-architecture.md error handling patterns`
 
 ## Instructions
 
@@ -18,8 +18,7 @@ Arguments:
 
 Read these files to understand the current state:
 - The plan doc specified in $ARGUMENTS
-- `compiler/docs/rust-port/rust-port-research.md` (overall research)
-- `compiler/docs/rust-port/rust-port-notes.md` (port conventions)
+- `compiler/docs/rust-port/rust-port-architecture.md` (architecture guide and port conventions)
 - `compiler/packages/babel-plugin-react-compiler/docs/passes/README.md` (pass overview)
 
 ### Step 2: Launch parallel analysis agents
@@ -56,7 +55,7 @@ Each agent prompt should be:
 ```
 Analyze how the topic "<topic>" affects the following compiler passes.
 
-Read each pass's documentation in compiler/packages/babel-plugin-react-compiler/docs/passes/ and its implementation source. Also read compiler/docs/rust-port/rust-port-notes.md for port conventions.
+Read each pass's documentation in compiler/packages/babel-plugin-react-compiler/docs/passes/ and its implementation source. Also read compiler/docs/rust-port/rust-port-architecture.md for port conventions.
 
 Pass docs to analyze: <list of pass doc filenames>
 

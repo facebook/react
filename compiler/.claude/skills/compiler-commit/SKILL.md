@@ -14,13 +14,15 @@ Arguments:
 
 1. **Run `/compiler-verify`** first (with test pattern if provided after `--`). Stop on any failure.
 
-2. **Detect commit prefix** from changed files:
+2. **Run `/compiler-review`** on the uncommitted changes. Report the findings to the user. If any issues are found, stop and do NOT commit — let the user decide how to proceed.
+
+3. **Detect commit prefix** from changed files:
    - If any files in `compiler/crates/` changed: use `[rust-compiler]`
    - Otherwise: use `[compiler]`
 
-3. **Stage files** — stage only the relevant changed files by name. Do NOT use `git add -A` or `git add .`.
+4. **Stage files** — stage only the relevant changed files by name. Do NOT use `git add -A` or `git add .`.
 
-4. **Compose commit message**:
+5. **Compose commit message**:
    ```
    [prefix] <title>
 
@@ -28,7 +30,7 @@ Arguments:
    ```
    The title comes from $ARGUMENTS. Write the summary yourself based on the actual changes.
 
-5. **Commit** using a heredoc for the message:
+6. **Commit** using a heredoc for the message:
    ```bash
    git commit -m "$(cat <<'EOF'
    [rust-compiler] Title here
@@ -38,7 +40,7 @@ Arguments:
    )"
    ```
 
-6. **Do NOT push** unless the user explicitly asks.
+7. **Do NOT push** unless the user explicitly asks.
 
 ## Examples
 

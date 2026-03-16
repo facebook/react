@@ -19,7 +19,7 @@ You are a React Compiler pass analysis specialist. Your job is to analyze how a 
    - `src/ReactiveScopes/` — Reactive scope analysis
    - `src/Entrypoint/Pipeline.ts` — Pass ordering and invocation
 
-3. **Read the port conventions** from `compiler/docs/rust-port/rust-port-notes.md`
+3. **Read the port conventions** from `compiler/docs/rust-port/rust-port-architecture.md`
 
 4. **For each pass**, analyze the topic's impact and produce a structured report
 
