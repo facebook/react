@@ -44,11 +44,16 @@ export default function BabelPluginReactCompilerRust(
           // Step 5: Call Rust compiler
           const result = compileWithRust(pass.file.ast, scopeInfo, opts);
 
-          // Step 6: Forward logger events
+          // Step 6: Forward logger events and debug logs
           const logger = (pass.opts as PluginOptions).logger;
           if (logger && result.events) {
             for (const event of result.events) {
               logger.logEvent(filename, event);
+            }
+          }
+          if (logger?.debugLogIRs && result.debugLogs) {
+            for (const entry of result.debugLogs) {
+              logger.debugLogIRs(entry);
             }
           }
 

@@ -11,11 +11,15 @@ pub enum CompileResult {
     Success {
         ast: Option<serde_json::Value>,
         events: Vec<LoggerEvent>,
+        #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
+        debug_logs: Vec<DebugLogEntry>,
     },
     /// A fatal error occurred and panicThreshold dictates it should throw.
     Error {
         error: CompilerErrorInfo,
         events: Vec<LoggerEvent>,
+        #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
+        debug_logs: Vec<DebugLogEntry>,
     },
 }
 
@@ -37,6 +41,25 @@ pub struct CompilerErrorDetailInfo {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loc: Option<SourceLocation>,
+}
+
+/// Debug log entry for debugLogIRs support.
+/// Currently only supports the 'debug' variant (string values).
+#[derive(Debug, Clone, Serialize)]
+pub struct DebugLogEntry {
+    pub kind: &'static str,
+    pub name: String,
+    pub value: String,
+}
+
+impl DebugLogEntry {
+    pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            kind: "debug",
+            name: name.into(),
+            value: value.into(),
+        }
+    }
 }
 
 /// Logger events emitted during compilation.

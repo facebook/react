@@ -25,7 +25,7 @@ use react_compiler_ast::{File, Program};
 use react_compiler_diagnostics::SourceLocation;
 use regex::Regex;
 
-use super::compile_result::{CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo, LoggerEvent};
+use super::compile_result::{CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo, DebugLogEntry, LoggerEvent};
 use super::imports::{
     get_react_compiler_runtime_module, validate_restricted_imports, ProgramContext,
 };
@@ -927,6 +927,7 @@ fn handle_error(
     opts: &PluginOptions,
     fn_loc: Option<SourceLocation>,
     events: &mut Vec<LoggerEvent>,
+    debug_logs: &Vec<DebugLogEntry>,
 ) -> Option<CompileResult> {
     // Log the error
     events.extend(log_error(err, fn_loc.clone()));
@@ -962,6 +963,7 @@ fn handle_error(
         Some(CompileResult::Error {
             error: error_info,
             events: events.clone(),
+            debug_logs: debug_logs.clone(),
         })
     } else {
         None
@@ -1516,12 +1518,20 @@ pub fn compile_program(
     options: PluginOptions,
 ) -> CompileResult {
     let mut events: Vec<LoggerEvent> = Vec::new();
+    let mut debug_logs: Vec<DebugLogEntry> = Vec::new();
+
+    // Log environment config for debugLogIRs
+    debug_logs.push(DebugLogEntry::new(
+        "EnvironmentConfig",
+        serde_json::to_string_pretty(&options.environment).unwrap_or_default(),
+    ));
 
     // Check if we should compile this file at all (pre-resolved by JS shim)
     if !options.should_compile {
         return CompileResult::Success {
             ast: None,
             events,
+            debug_logs,
         };
     }
 
@@ -1532,6 +1542,7 @@ pub fn compile_program(
         return CompileResult::Success {
             ast: None,
             events,
+            debug_logs,
         };
     }
 
@@ -1557,12 +1568,13 @@ pub fn compile_program(
             description: None,
             details,
         });
-        if let Some(result) = handle_error(&compile_err, &options, None, &mut events) {
+        if let Some(result) = handle_error(&compile_err, &options, None, &mut events, &debug_logs) {
             return result;
         }
         return CompileResult::Success {
             ast: None,
             events,
+            debug_logs,
         };
     }
 
@@ -1637,6 +1649,7 @@ pub fn compile_program(
         return CompileResult::Success {
             ast: None,
             events,
+            debug_logs,
         };
     }
 
@@ -1647,6 +1660,7 @@ pub fn compile_program(
     CompileResult::Success {
         ast: None,
         events,
+        debug_logs,
     }
 }
 

@@ -9,10 +9,17 @@ import type {ResolvedOptions} from './options';
 import type {ScopeInfo} from './scope';
 import type * as t from '@babel/types';
 
+export interface DebugLogEntry {
+  kind: 'debug';
+  name: string;
+  value: string;
+}
+
 export interface CompileSuccess {
   kind: 'success';
   ast: t.File | null;
   events: Array<LoggerEvent>;
+  debugLogs?: Array<DebugLogEntry>;
 }
 
 export interface CompileError {
@@ -23,6 +30,7 @@ export interface CompileError {
     details: Array<unknown>;
   };
   events: Array<LoggerEvent>;
+  debugLogs?: Array<DebugLogEntry>;
 }
 
 export type CompileResult = CompileSuccess | CompileError;
