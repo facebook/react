@@ -38,7 +38,11 @@ export function flushBuffered(destination: Destination) {
   }
 }
 
-const VIEW_SIZE = 2048;
+// Chunks larger than VIEW_SIZE are written directly, without copying into the
+// internal view buffer. This must be at least half of Node's internal Buffer
+// pool size (8192) to avoid corrupting the pool when using
+// renderToReadableStream, which uses a byte stream that detaches ArrayBuffers.
+const VIEW_SIZE = 4096;
 let currentView = null;
 let writtenBytes = 0;
 let destinationHasCapacity = true;

@@ -1,4 +1,4 @@
-// @enablePreserveExistingMemoizationGuarantees:false
+// @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import {useMemo} from 'react';
 import {identity, ValidateMemoization} from 'shared-runtime';
 

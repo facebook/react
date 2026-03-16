@@ -19,6 +19,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_TRACING_MARKER_TYPE,
   REACT_VIEW_TRANSITION_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -34,7 +35,6 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache, cacheSignal} from './ReactCacheClient';
-import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
@@ -84,7 +84,6 @@ export {
   memo,
   cache,
   cacheSignal,
-  postpone as unstable_postpone,
   useCallback,
   useContext,
   useEffect,
@@ -129,6 +128,8 @@ export {
   addTransitionType as addTransitionType,
   // enableGestureTransition
   startGestureTransition as unstable_startGestureTransition,
+  // enableOptimisticKey
+  REACT_OPTIMISTIC_KEY as optimisticKey,
   // DEV-only
   useId,
   act,

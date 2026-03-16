@@ -1,5 +1,5 @@
 import fbt from 'fbt';
-import {Stringify} from 'shared-runtime';
+import {identity} from 'shared-runtime';
 
 /**
  * MemoizeFbtAndMacroOperands needs to account for nested fbt calls.
@@ -12,22 +12,25 @@ import {Stringify} from 'shared-runtime';
 function Component({firstname, lastname}) {
   'use memo';
   return (
-    <Stringify>
+    <div>
       {fbt(
         [
           'Name: ',
-          fbt.param('firstname', <Stringify key={0} name={firstname} />),
+          fbt.param('firstname', identity(firstname)),
           ', ',
           fbt.param(
             'lastname',
-            <Stringify key={0} name={lastname}>
-              {fbt('(inner fbt)', 'Inner fbt value')}
-            </Stringify>
+            identity(
+              fbt(
+                '(inner)' + fbt.param('lastname', identity(lastname)),
+                'Inner fbt value'
+              )
+            )
           ),
         ],
         'Name'
       )}
-    </Stringify>
+    </div>
   );
 }
 

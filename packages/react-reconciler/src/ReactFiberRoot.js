@@ -115,7 +115,6 @@ function FiberRootNode(
 
   if (enableGestureTransition) {
     this.pendingGestures = null;
-    this.stoppingGestures = null;
     this.gestureClone = null;
   }
 

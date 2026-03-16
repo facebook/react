@@ -162,10 +162,13 @@ jobs:
           mv build/facebook-react-native/react-is/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react-is/
           mv build/facebook-react-native/react-test-renderer/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/react-test-renderer/
 
-          # Delete OSS renderer. OSS renderer is synced through internal script.
+          # Delete the OSS renderers, these are sync'd to RN separately.
           RENDERER_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/implementations/
           rm $RENDERER_FOLDER/ReactFabric-{dev,prod,profiling}.js
-          rm $RENDERER_FOLDER/ReactNativeRenderer-{dev,prod,profiling}.js
+          
+          # Delete the legacy renderer shim, this is not sync'd and will get deleted in the future.
+          SHIM_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/shims/
+          rm $SHIM_FOLDER/ReactNative.js
 
           # Copy eslint-plugin-react-hooks
           # NOTE: This is different from www, here we include the full package

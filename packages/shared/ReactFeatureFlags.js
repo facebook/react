@@ -22,8 +22,6 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-export const enableHydrationLaneScheduling: boolean = true;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -80,10 +78,6 @@ export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
-export const enablePostpone = __EXPERIMENTAL__;
-
-export const enableHalt: boolean = true;
-
 export const enableViewTransition: boolean = true;
 
 export const enableGestureTransition = __EXPERIMENTAL__;
@@ -99,6 +93,8 @@ export const enableSrcObject = __EXPERIMENTAL__;
 export const enableHydrationChangeEvent = __EXPERIMENTAL__;
 
 export const enableDefaultTransitionIndicator = __EXPERIMENTAL__;
+
+export const enableOptimisticKey = __EXPERIMENTAL__;
 
 /**
  * Switches Fiber creation to a simple object instead of a constructor.
@@ -118,14 +114,16 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 // Test this at Meta before enabling.
 export const enableNoCloningMemoCache: boolean = false;
 
-export const enableUseEffectEventHook: boolean = true;
-
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries: boolean = true;
+
+// Gate whether useEffectEvent uses the mutation phase (true) or before-mutation
+// phase (false) for updating event function references.
+export const enableEffectEventMutationPhase: boolean = false;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
@@ -147,6 +145,10 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
+export const enableFragmentRefsInstanceHandles: boolean = true;
+export const enableFragmentRefsTextNodes: boolean = true;
+
+export const enableInternalInstanceMap: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Ready for next major.
@@ -159,14 +161,6 @@ export const enableFragmentRefsScrollIntoView: boolean = true;
 // different section of this file.
 
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
-// Renames the internal symbol for elements since they have changed signature/constructor
-export const renameElementSymbol: boolean = true;
-
-/**
- * Enables a fix to run insertion effect cleanup on hidden subtrees.
- */
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = true;
 
 /**
  * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
@@ -209,7 +203,7 @@ export const disableLegacyMode: boolean = true;
 // in open source, but www codebase still relies on it. Need to remove.
 export const disableCommentsAsDOMContainers: boolean = true;
 
-export const enableTrustedTypesIntegration: boolean = false;
+export const enableTrustedTypesIntegration: boolean = true;
 
 // Prevent the value and checked attributes from syncing with their related
 // DOM properties
@@ -217,6 +211,9 @@ export const disableInputAttributeSyncing: boolean = false;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren: boolean = false;
+
+// Disables children for <textarea> elements
+export const enableParallelTransitions: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
@@ -230,6 +227,11 @@ export const enableProfilerTimer = __PROFILE__;
 // This flag will be used for both Server Component and Client Component tracks.
 // All calls should also be gated on enableProfilerTimer.
 export const enableComponentPerformanceTrack: boolean = true;
+
+// Enables annotating of React performance track events with `performanceIssue`
+// metadata, to more prominently highlight performance issues to users
+// (initially, an experimental feature in React Native).
+export const enablePerformanceIssueReporting: boolean = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.

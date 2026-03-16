@@ -1934,52 +1934,6 @@ describe('ReactFlightDOMBrowser', () => {
     );
   });
 
-  // @gate enablePostpone
-  it('supports postpone in Server Components', async () => {
-    function Server() {
-      React.unstable_postpone('testing postpone');
-      return 'Not shown';
-    }
-
-    let postponed = null;
-
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        <Suspense fallback="Loading...">
-          <Server />
-        </Suspense>,
-        null,
-        {
-          onPostpone(reason) {
-            postponed = reason;
-          },
-        },
-      ),
-    );
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
-      root.render(
-        <div>
-          Shell: <Client />
-        </div>,
-      );
-    });
-    // We should have reserved the shell already. Which means that the Server
-    // Component should've been a lazy component.
-    expect(container.innerHTML).toContain('Shell:');
-    expect(container.innerHTML).toContain('Loading...');
-    expect(container.innerHTML).not.toContain('Not shown');
-
-    expect(postponed).toBe('testing postpone');
-  });
-
   it('should not continue rendering after the reader cancels', async () => {
     let hasLoaded = false;
     let resolve;
@@ -2029,66 +1983,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
-  });
-
-  // @gate enablePostpone
-  it('postpones when abort passes a postpone signal', async () => {
-    const infinitePromise = new Promise(() => {});
-    function Server() {
-      return infinitePromise;
-    }
-
-    let postponed = null;
-    let error = null;
-
-    const controller = new AbortController();
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        <Suspense fallback="Loading...">
-          <Server />
-        </Suspense>,
-        null,
-        {
-          onError(x) {
-            error = x;
-          },
-          onPostpone(reason) {
-            postponed = reason;
-          },
-          signal: controller.signal,
-        },
-      ),
-    );
-
-    try {
-      React.unstable_postpone('testing postpone');
-    } catch (reason) {
-      controller.abort(reason);
-    }
-
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(
-        <div>
-          Shell: <Client />
-        </div>,
-      );
-    });
-    // We should have reserved the shell already. Which means that the Server
-    // Component should've been a lazy component.
-    expect(container.innerHTML).toContain('Shell:');
-    expect(container.innerHTML).toContain('Loading...');
-    expect(container.innerHTML).not.toContain('Not shown');
-
-    expect(postponed).toBe('testing postpone');
-    expect(error).toBe(null);
   });
 
   function passThrough(stream) {
@@ -2495,7 +2389,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([reason]);
   });
 
-  // @gate enableHalt || enablePostpone
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2544,7 +2437,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<div>hello world</div>');
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -2610,6 +2502,171 @@ describe('ReactFlightDOMBrowser', () => {
 
     expect(errors).toEqual([new Error('Connection closed.')]);
     expect(container.innerHTML).toBe('');
+  });
+
+  it('renders Suspense fallback for unresolved promises with unstable_allowPartialStream', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <Suspense fallback="loading...">
+          <Greeting />
+        </Suspense>
+      );
+    }
+
+    async function Greeting() {
+      const greeting = await greetingPromise;
+      return greeting;
+    }
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    resolveGreeting('Hello, World!');
+    const {prelude} = await serverAct(() => pendingResult);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+      {
+        unstable_allowPartialStream: true,
+      },
+    );
+    const container = document.createElement('div');
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError(err) {
+        errors.push(err);
+      },
+    });
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    // With `unstable_allowPartialStream`, we should see the fallback instead of a
+    // 'Connection closed.' error
+    expect(errors).toEqual([]);
+    expect(container.innerHTML).toBe('loading...');
+  });
+
+  it('renders client components that are blocked on chunks with unstable_allowPartialStream', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientComponent = clientExports(
+      function ClientComponent({children}) {
+        return <div>{children}</div>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function App() {
+      return <ClientComponent>Hello, World!</ClientComponent>;
+    }
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    const {prelude} = await serverAct(() => pendingResult);
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+      {
+        unstable_allowPartialStream: true,
+      },
+    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<div>Hello, World!</div>');
+  });
+
+  it('closes inner ReadableStreams gracefully with unstable_allowPartialStream', async () => {
+    let streamController;
+    const innerStream = new ReadableStream({
+      start(c) {
+        streamController = c;
+      },
+    });
+
+    const abortController = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      streamController.enqueue({hello: 'world'});
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          {stream: innerStream},
+          webpackMap,
+          {
+            signal: abortController.signal,
+          },
+        ),
+      };
+    });
+
+    abortController.abort();
+    const {prelude} = await serverAct(() => pendingResult);
+
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+      {
+        unstable_allowPartialStream: true,
+      },
+    );
+
+    // The inner stream should be readable up to what was enqueued.
+    const reader = response.stream.getReader();
+    const {value, done} = await reader.read();
+    expect(value).toEqual({hello: 'world'});
+    expect(done).toBe(false);
+
+    // The next read should signal the stream is done (closed, not errored).
+    const final = await reader.read();
+    expect(final.done).toBe(true);
   });
 
   it('can dedupe references inside promises', async () => {
@@ -2926,15 +2983,16 @@ describe('ReactFlightDOMBrowser', () => {
       },
     });
 
+    const app = ReactServer.createElement(
+      ReactServer.Fragment,
+      null,
+      ReactServer.createElement(Paragraph, null, 'foo'),
+      ReactServer.createElement(Paragraph, null, 'bar'),
+    );
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToReadableStream(
         {
-          root: ReactServer.createElement(
-            ReactServer.Fragment,
-            null,
-            ReactServer.createElement(Paragraph, null, 'foo'),
-            ReactServer.createElement(Paragraph, null, 'bar'),
-          ),
+          root: app,
         },
         webpackMap,
         {
@@ -3007,27 +3065,11 @@ describe('ReactFlightDOMBrowser', () => {
             "props": {},
             "stack": [
               [
-                "",
-                "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2935,
-                27,
-                2929,
-                34,
-              ],
-              [
-                "serverAct",
-                "/packages/internal-test-utils/internalAct.js",
-                270,
-                19,
-                231,
-                1,
-              ],
-              [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2929,
-                18,
-                2916,
+                2989,
+                19,
+                2973,
                 89,
               ],
             ],

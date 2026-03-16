@@ -79,6 +79,15 @@
 ::view-transition-group(.slide-in) {
   z-index: 1;
 }
+::view-transition-old(.slide-out) {
+  animation-name: slideOutLeft;
+}
+::view-transition-new(.slide-out) {
+  animation-name: slideInLeft;
+}
+::view-transition-group(.slide-out) {
+  z-index: 1;
+}
 
 @keyframes slideOutLeft {
   from {

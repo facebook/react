@@ -169,6 +169,9 @@ export function attach(
     getElementIDForHostInstance() {
       return null;
     },
+    getSuspenseNodeIDForHostInstance() {
+      return null;
+    },
     getInstanceAndStyle() {
       return {
         instance: null,

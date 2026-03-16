@@ -551,45 +551,4 @@ describe('ReactDOMFizzServerBrowser', () => {
       `"<link rel="preload" as="script" fetchPriority="low" nonce="R4nd0m" href="init.js"/><link rel="modulepreload" fetchPriority="low" nonce="R4nd0m" href="init.mjs"/><div>hello world</div><script nonce="${nonce}" id="_R_">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
     );
   });
-
-  // @gate enablePostpone
-  it('errors if trying to postpone outside a Suspense boundary', async () => {
-    function Postponed() {
-      React.unstable_postpone('testing postpone');
-      return 'client only';
-    }
-
-    function App() {
-      return (
-        <div>
-          <Postponed />
-        </div>
-      );
-    }
-
-    const errors = [];
-    const postponed = [];
-
-    let caughtError = null;
-    try {
-      await serverAct(() =>
-        ReactDOMFizzServer.renderToReadableStream(<App />, {
-          onError(error) {
-            errors.push(error.message);
-          },
-          onPostpone(reason) {
-            postponed.push(reason);
-          },
-        }),
-      );
-    } catch (error) {
-      caughtError = error;
-    }
-
-    // Postponing is not logged as an error but as a postponed reason.
-    expect(errors).toEqual([]);
-    expect(postponed).toEqual(['testing postpone']);
-    // However, it does error the shell.
-    expect(caughtError.message).toEqual('testing postpone');
-  });
 });

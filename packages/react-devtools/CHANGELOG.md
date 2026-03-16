@@ -4,6 +4,15 @@
 
 ---
 
+### 7.0.1
+October 20, 2025
+
+* Various UI improvements to experimental Suspense tab ([sebmarkbage](https://github.com/sebmarkbage) & [eps1lon](https://github.com/eps1lon))
+* devtools: fix ellipsis truncation for key values ([sophiebits](https://github.com/sophiebits) in [#34796](https://github.com/facebook/react/pull/34796))
+* fix(devtools): remove duplicated "Display density" field in General settings ([Anatole-Godard](https://github.com/Anatole-Godard) in [#34792](https://github.com/facebook/react/pull/34792))
+
+---
+
 ### 7.0.0
 Oct 2, 2025
 

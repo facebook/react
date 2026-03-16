@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  PostponedState,
-  ErrorInfo,
-  PostponeInfo,
-} from 'react-server/src/ReactFizzServer';
+import type {PostponedState, ErrorInfo} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   BootstrapScriptDescriptor,
@@ -57,7 +53,6 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
-  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
@@ -69,7 +64,6 @@ type ResumeOptions = {
   nonce?: NonceOption,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-  onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
@@ -150,7 +144,6 @@ function renderToReadableStream(
       onShellReady,
       onShellError,
       onFatalError,
-      options ? options.onPostpone : undefined,
       options ? options.formState : undefined,
     );
     if (options && options.signal) {
@@ -220,7 +213,6 @@ function resume(
       onShellReady,
       onShellError,
       onFatalError,
-      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

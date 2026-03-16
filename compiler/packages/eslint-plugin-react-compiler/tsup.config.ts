@@ -10,7 +10,14 @@ import {defineConfig} from 'tsup';
 export default defineConfig({
   entry: ['./src/index.ts'],
   outDir: './dist',
-  external: ['@babel/core', 'hermes-parser', 'zod', 'zod-validation-error'],
+  external: [
+    '@babel/core',
+    'hermes-parser',
+    'zod',
+    'zod/v4',
+    'zod-validation-error',
+    'zod-validation-error/v4',
+  ],
   splitting: false,
   sourcemap: false,
   dts: false,

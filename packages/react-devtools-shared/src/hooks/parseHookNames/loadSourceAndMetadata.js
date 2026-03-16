@@ -475,23 +475,25 @@ function loadSourceFiles(
 
     const fetchPromise =
       dedupedFetchPromises.get(runtimeSourceURL) ||
-      fetchFileFunction(runtimeSourceURL).then(runtimeSourceCode => {
-        // TODO (named hooks) Re-think this; the main case where it matters is when there's no source-maps,
-        // because then we need to parse the full source file as an AST.
-        if (runtimeSourceCode.length > MAX_SOURCE_LENGTH) {
-          throw Error('Source code too large to parse');
-        }
+      (runtimeSourceURL && !runtimeSourceURL.startsWith('<anonymous')
+        ? fetchFileFunction(runtimeSourceURL).then(runtimeSourceCode => {
+            // TODO (named hooks) Re-think this; the main case where it matters is when there's no source-maps,
+            // because then we need to parse the full source file as an AST.
+            if (runtimeSourceCode.length > MAX_SOURCE_LENGTH) {
+              throw Error('Source code too large to parse');
+            }
 
-        if (__DEBUG__) {
-          console.groupCollapsed(
-            `loadSourceFiles() runtimeSourceURL "${runtimeSourceURL}"`,
-          );
-          console.log(runtimeSourceCode);
-          console.groupEnd();
-        }
+            if (__DEBUG__) {
+              console.groupCollapsed(
+                `loadSourceFiles() runtimeSourceURL "${runtimeSourceURL}"`,
+              );
+              console.log(runtimeSourceCode);
+              console.groupEnd();
+            }
 
-        return runtimeSourceCode;
-      });
+            return runtimeSourceCode;
+          })
+        : Promise.reject(new Error('Empty url')));
     dedupedFetchPromises.set(runtimeSourceURL, fetchPromise);
 
     setterPromises.push(

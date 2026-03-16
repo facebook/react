@@ -31,7 +31,7 @@ function Component(props) {
   const $ = _c(10);
   let t0;
   if ($[0] !== props) {
-    t0 = idx(props, _temp);
+    t0 = idx(props, (_) => _.group.label);
     $[0] = props;
     $[1] = t0;
   } else {
@@ -73,9 +73,6 @@ function Component(props) {
     t3 = $[9];
   }
   return t3;
-}
-function _temp(_) {
-  return _.group.label;
 }
 
 ```

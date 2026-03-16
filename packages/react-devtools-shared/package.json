@@ -23,6 +23,7 @@
     "json5": "^2.2.3",
     "local-storage-fallback": "^4.1.1",
     "react-virtualized-auto-sizer": "^1.0.23",
-    "react-window": "^1.8.10"
+    "react-window": "^1.8.10",
+    "rbush": "4.0.1"
   }
 }

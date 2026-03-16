@@ -3,7 +3,7 @@
 
 ```javascript
 import fbt from 'fbt';
-import {Stringify} from 'shared-runtime';
+import {identity} from 'shared-runtime';
 
 /**
  * MemoizeFbtAndMacroOperands needs to account for nested fbt calls.
@@ -16,22 +16,25 @@ import {Stringify} from 'shared-runtime';
 function Component({firstname, lastname}) {
   'use memo';
   return (
-    <Stringify>
+    <div>
       {fbt(
         [
           'Name: ',
-          fbt.param('firstname', <Stringify key={0} name={firstname} />),
+          fbt.param('firstname', identity(firstname)),
           ', ',
           fbt.param(
             'lastname',
-            <Stringify key={0} name={lastname}>
-              {fbt('(inner fbt)', 'Inner fbt value')}
-            </Stringify>
+            identity(
+              fbt(
+                '(inner)' + fbt.param('lastname', identity(lastname)),
+                'Inner fbt value'
+              )
+            )
           ),
         ],
         'Name'
       )}
-    </Stringify>
+    </div>
   );
 }
 
@@ -48,7 +51,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
-import { Stringify } from "shared-runtime";
+import { identity } from "shared-runtime";
 
 /**
  * MemoizeFbtAndMacroOperands needs to account for nested fbt calls.
@@ -70,14 +73,24 @@ function Component(t0) {
         fbt._param(
           "firstname",
 
-          <Stringify key={0} name={firstname} />,
+          identity(firstname),
         ),
         fbt._param(
           "lastname",
 
-          <Stringify key={0} name={lastname}>
-            {fbt._("(inner fbt)", null, { hk: "36qNwF" })}
-          </Stringify>,
+          identity(
+            fbt._(
+              "(inner){lastname}",
+              [
+                fbt._param(
+                  "lastname",
+
+                  identity(lastname),
+                ),
+              ],
+              { hk: "1Kdxyo" },
+            ),
+          ),
         ),
       ],
       { hk: "3AiIf8" },
@@ -90,7 +103,7 @@ function Component(t0) {
   }
   let t2;
   if ($[3] !== t1) {
-    t2 = <Stringify>{t1}</Stringify>;
+    t2 = <div>{t1}</div>;
     $[3] = t1;
     $[4] = t2;
   } else {
@@ -108,4 +121,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>{"children":"Name: , "}</div>
+(kind: ok) <div>Name: first, (inner)last</div>

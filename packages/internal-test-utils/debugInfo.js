@@ -1,9 +1,5 @@
 'use strict';
 
-const path = require('path');
-
-const repoRoot = path.resolve(__dirname, '../../');
-
 type DebugInfoConfig = {
   ignoreProps?: boolean,
   ignoreRscStreamInfo?: boolean,
@@ -34,7 +30,7 @@ function normalizeStack(stack) {
     const [name, file, line, col, enclosingLine, enclosingCol] = stack[i];
     copy.push([
       name,
-      file.replace(repoRoot, ''),
+      file.replace(__REACT_ROOT_PATH_TEST__, ''),
       line,
       col,
       enclosingLine,
@@ -64,7 +60,7 @@ function normalizeIOInfo(config: DebugInfoConfig, ioInfo) {
   if (promise) {
     promise.then(); // init
     if (promise.status === 'fulfilled') {
-      if (ioInfo.name === 'RSC stream') {
+      if (ioInfo.name === 'rsc stream') {
         copy.byteSize = 0;
         copy.value = {
           value: 'stream',
@@ -83,6 +79,18 @@ function normalizeIOInfo(config: DebugInfoConfig, ioInfo) {
         status: promise.status,
       };
     }
+  } else if ('value' in ioInfo) {
+    // If value exists in ioInfo but is undefined (e.g., WeakRef was GC'd),
+    // ensure we still include it in the normalized output for consistency
+    copy.value = {
+      value: undefined,
+    };
+  } else if (ioInfo.name && ioInfo.name !== 'rsc stream') {
+    // For non-rsc-stream IO that doesn't have a value field, add a default.
+    // This handles the case where the server doesn't send the field when WeakRef is GC'd.
+    copy.value = {
+      value: undefined,
+    };
   }
   return copy;
 }
@@ -117,7 +125,7 @@ export function getDebugInfo(config: DebugInfoConfig, obj) {
     for (let i = 0; i < debugInfo.length; i++) {
       if (
         debugInfo[i].awaited &&
-        debugInfo[i].awaited.name === 'RSC stream' &&
+        debugInfo[i].awaited.name === 'rsc stream' &&
         config.ignoreRscStreamInfo
       ) {
         // Ignore RSC stream I/O info.

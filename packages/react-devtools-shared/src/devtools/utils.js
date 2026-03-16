@@ -63,14 +63,11 @@ function printRects(rects: SuspenseNode['rects']): string {
 }
 
 function printSuspense(suspense: SuspenseNode): string {
-  let name = '';
-  if (suspense.name !== null) {
-    name = ` name="${suspense.name}"`;
-  }
-
+  const name = ` name="${suspense.name || 'Unknown'}"`;
+  const hasUniqueSuspenders = ` uniqueSuspenders={${suspense.hasUniqueSuspenders ? 'true' : 'false'}}`;
   const printedRects = printRects(suspense.rects);
 
-  return `<Suspense${name}${printedRects}>`;
+  return `<Suspense${name}${hasUniqueSuspenders}${printedRects}>`;
 }
 
 function printSuspenseWithChildren(

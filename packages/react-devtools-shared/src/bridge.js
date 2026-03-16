@@ -74,7 +74,7 @@ export const currentBridgeProtocol: BridgeProtocol =
 
 type ElementAndRendererID = {id: number, rendererID: RendererID};
 
-type Message = {
+export type Message = {
   event: string,
   payload: any,
 };
@@ -145,6 +145,7 @@ type OverrideSuspense = {
 };
 
 type OverrideSuspenseMilestone = {
+  rendererID: number,
   suspendedSet: Array<number>,
 };
 
@@ -191,7 +192,7 @@ type NativeStyleEditor_SetValueParams = {
   value: string,
 };
 
-type SavedPreferencesParams = {
+export type SavedPreferencesParams = {
   componentFilters: Array<ComponentFilter>,
 };
 
@@ -199,7 +200,6 @@ export type BackendEvents = {
   backendInitialized: [],
   backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
-  enableSuspenseTab: [],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
   getSavedPreferences: [],
@@ -208,15 +208,15 @@ export type BackendEvents = {
   isReloadAndProfileSupportedByBackend: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
-  overrideComponentFilters: [Array<ComponentFilter>],
   environmentNames: [Array<string>],
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
   saveToClipboard: [string],
-  selectElement: [number],
+  selectElement: [number | null],
   shutdown: [],
   stopInspectingHost: [boolean],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
   syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [],
 
@@ -238,7 +238,7 @@ export type BackendEvents = {
 type StartProfilingParams = ProfilingSettings;
 type ReloadAndProfilingParams = ProfilingSettings;
 
-type FrontendEvents = {
+export type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
   clearHostInstanceHighlight: [],
@@ -266,10 +266,12 @@ type FrontendEvents = {
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
-  startInspectingHost: [],
+  startInspectingHost: [boolean],
   startProfiling: [StartProfilingParams],
   stopInspectingHost: [],
   scrollToHostInstance: [ScrollToHostInstance],
+  scrollTo: [{left: number, top: number, right: number, bottom: number}],
+  requestScrollPosition: [],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
@@ -416,7 +418,8 @@ class Bridge<
     try {
       if (this._messageQueue.length) {
         for (let i = 0; i < this._messageQueue.length; i += 2) {
-          this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
+          // This only supports one argument in practice but the types suggests it should support multiple.
+          this._wall.send(this._messageQueue[i], this._messageQueue[i + 1][0]);
         }
         this._messageQueue.length = 0;
       }

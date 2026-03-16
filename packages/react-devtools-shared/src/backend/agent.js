@@ -38,7 +38,7 @@ import type {
   ElementType,
 } from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
-import {gte, isReactNativeEnvironment} from './utils';
+import {isReactNativeEnvironment} from './utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -147,6 +147,7 @@ type OverrideSuspenseParams = {
 };
 
 type OverrideSuspenseMilestoneParams = {
+  rendererID: number,
   suspendedSet: Array<number>,
 };
 
@@ -455,7 +456,10 @@ export default class Agent extends EventEmitter<{
     return renderer.getInstanceAndStyle(id);
   }
 
-  getIDForHostInstance(target: HostInstance): number | null {
+  getIDForHostInstance(
+    target: HostInstance,
+    onlySuspenseNodes?: boolean,
+  ): null | {id: number, rendererID: number} {
     if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
       // In React Native or non-DOM we simply pick any renderer that has a match.
       for (const rendererID in this._rendererInterfaces) {
@@ -463,9 +467,14 @@ export default class Agent extends EventEmitter<{
           (rendererID: any)
         ]: any): RendererInterface);
         try {
-          const match = renderer.getElementIDForHostInstance(target);
-          if (match != null) {
-            return match;
+          const id = onlySuspenseNodes
+            ? renderer.getSuspenseNodeIDForHostInstance(target)
+            : renderer.getElementIDForHostInstance(target);
+          if (id !== null) {
+            return {
+              id: id,
+              rendererID: +rendererID,
+            };
           }
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
@@ -478,6 +487,7 @@ export default class Agent extends EventEmitter<{
       // that is registered if there isn't an exact match.
       let bestMatch: null | Element = null;
       let bestRenderer: null | RendererInterface = null;
+      let bestRendererID: number = 0;
       // Find the nearest ancestor which is mounted by a React.
       for (const rendererID in this._rendererInterfaces) {
         const renderer = ((this._rendererInterfaces[
@@ -491,6 +501,7 @@ export default class Agent extends EventEmitter<{
             // Exact match we can exit early.
             bestMatch = nearestNode;
             bestRenderer = renderer;
+            bestRendererID = +rendererID;
             break;
           }
           if (bestMatch === null || bestMatch.contains(nearestNode)) {
@@ -498,12 +509,21 @@ export default class Agent extends EventEmitter<{
             // so the new match is a deeper and therefore better match.
             bestMatch = nearestNode;
             bestRenderer = renderer;
+            bestRendererID = +rendererID;
           }
         }
       }
       if (bestRenderer != null && bestMatch != null) {
         try {
-          return bestRenderer.getElementIDForHostInstance(bestMatch);
+          const id = onlySuspenseNodes
+            ? bestRenderer.getSuspenseNodeIDForHostInstance(bestMatch)
+            : bestRenderer.getElementIDForHostInstance(bestMatch);
+          if (id !== null) {
+            return {
+              id,
+              rendererID: bestRendererID,
+            };
+          }
         } catch (error) {
           // Some old React versions might throw if they can't find a match.
           // If so we should ignore it...
@@ -514,65 +534,14 @@ export default class Agent extends EventEmitter<{
   }
 
   getComponentNameForHostInstance(target: HostInstance): string | null {
-    // We duplicate this code from getIDForHostInstance to avoid an object allocation.
-    if (isReactNativeEnvironment() || typeof target.nodeType !== 'number') {
-      // In React Native or non-DOM we simply pick any renderer that has a match.
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        try {
-          const id = renderer.getElementIDForHostInstance(target);
-          if (id) {
-            return renderer.getDisplayNameForElementID(id);
-          }
-        } catch (error) {
-          // Some old React versions might throw if they can't find a match.
-          // If so we should ignore it...
-        }
-      }
-      return null;
-    } else {
-      // In the DOM we use a smarter mechanism to find the deepest a DOM node
-      // that is registered if there isn't an exact match.
-      let bestMatch: null | Element = null;
-      let bestRenderer: null | RendererInterface = null;
-      // Find the nearest ancestor which is mounted by a React.
-      for (const rendererID in this._rendererInterfaces) {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        const nearestNode: null | Element = renderer.getNearestMountedDOMNode(
-          (target: any),
-        );
-        if (nearestNode !== null) {
-          if (nearestNode === target) {
-            // Exact match we can exit early.
-            bestMatch = nearestNode;
-            bestRenderer = renderer;
-            break;
-          }
-          if (bestMatch === null || bestMatch.contains(nearestNode)) {
-            // If this is the first match or the previous match contains the new match,
-            // so the new match is a deeper and therefore better match.
-            bestMatch = nearestNode;
-            bestRenderer = renderer;
-          }
-        }
-      }
-      if (bestRenderer != null && bestMatch != null) {
-        try {
-          const id = bestRenderer.getElementIDForHostInstance(bestMatch);
-          if (id) {
-            return bestRenderer.getDisplayNameForElementID(id);
-          }
-        } catch (error) {
-          // Some old React versions might throw if they can't find a match.
-          // If so we should ignore it...
-        }
-      }
-      return null;
+    const match = this.getIDForHostInstance(target);
+    if (match !== null) {
+      const renderer = ((this._rendererInterfaces[
+        (match.rendererID: any)
+      ]: any): RendererInterface);
+      return renderer.getDisplayNameForElementID(match.id);
     }
+    return null;
   }
 
   getBackendVersion: () => void = () => {
@@ -819,15 +788,14 @@ export default class Agent extends EventEmitter<{
   };
 
   overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
+    rendererID,
     suspendedSet,
   }) => {
-    for (const rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-      if (renderer.supportsTogglingSuspense) {
-        renderer.overrideSuspenseMilestone(suspendedSet);
-      }
+    const renderer = ((this._rendererInterfaces[
+      (rendererID: any)
+    ]: any): RendererInterface);
+    if (renderer.supportsTogglingSuspense) {
+      renderer.overrideSuspenseMilestone(suspendedSet);
     }
   };
 
@@ -970,11 +938,19 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  selectNode(target: HostInstance): void {
-    const id = this.getIDForHostInstance(target);
-    if (id !== null) {
-      this._bridge.send('selectElement', id);
-    }
+  selectNode(target: HostInstance | null): void {
+    const match = target !== null ? this.getIDForHostInstance(target) : null;
+    this._bridge.send(
+      'selectElement',
+      match !== null
+        ? match.id
+        : // If you click outside a React root in the Elements panel, we want to give
+          // feedback that no selection is possible so we clear the selection.
+          // Otherwise clicking outside a React root is indistinguishable from clicking
+          // a different host node that leads to the same selected React element
+          // due to Component filters
+          null,
+    );
   }
 
   registerRendererInterface(
@@ -984,16 +960,6 @@ export default class Agent extends EventEmitter<{
     this._rendererInterfaces[rendererID] = rendererInterface;
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
-
-    const renderer = rendererInterface.renderer;
-    if (renderer !== null) {
-      const devRenderer = renderer.bundleType === 1;
-      const enableSuspenseTab =
-        devRenderer && gte(renderer.version, '19.3.0-canary');
-      if (enableSuspenseTab) {
-        this._bridge.send('enableSuspenseTab');
-      }
-    }
 
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
@@ -1020,10 +986,7 @@ export default class Agent extends EventEmitter<{
 
   syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
-    if (target == null) {
-      return;
-    }
-    this.selectNode(target);
+    this.selectNode(target == null ? null : target);
   };
 
   shutdown: () => void = () => {
@@ -1112,6 +1075,15 @@ export default class Agent extends EventEmitter<{
           }
         }
         renderer.updateComponentFilters(componentFilters);
+      }
+
+      // Due to the component filters changing, we might be able
+      // to select a closer match for the currently selected host element.
+      // The store will already select a suitable parent if the the current
+      // selection is now filtered out in which cases this will be a no-op.
+      const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
+      if (target != null) {
+        this.selectNode(target);
       }
     };
 

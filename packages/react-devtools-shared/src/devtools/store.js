@@ -16,24 +16,29 @@ import {
   PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
   SUSPENSE_TREE_OPERATION_RESIZE,
   SUSPENSE_TREE_OPERATION_SUSPENDERS,
 } from '../constants';
-import {ElementTypeRoot} from '../frontend/types';
+import {
+  ElementTypeRoot,
+  ElementTypeActivity,
+  ComponentFilterActivitySlice,
+} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
   shallowDiffers,
   utfDecodeStringWithRanges,
   parseElementDisplayNameFromBackend,
+  unionOfTwoArrays,
 } from '../utils';
 import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
@@ -51,6 +56,7 @@ import type {
   ComponentFilter,
   ElementType,
   SuspenseNode,
+  SuspenseTimelineStep,
   Rect,
 } from 'react-devtools-shared/src/frontend/types';
 import type {
@@ -59,6 +65,31 @@ import type {
 } from 'react-devtools-shared/src/bridge';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 import type {DevToolsHookSettings} from '../backend/types';
+
+import RBush from 'rbush';
+
+// Custom version which works with our Rect data structure.
+class RectRBush extends RBush<Rect> {
+  toBBox(rect: Rect): {
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+  } {
+    return {
+      minX: rect.x,
+      minY: rect.y,
+      maxX: rect.x + rect.width,
+      maxY: rect.y + rect.height,
+    };
+  }
+  compareMinX(a: Rect, b: Rect): number {
+    return a.x - b.x;
+  }
+  compareMinY(a: Rect, b: Rect): number {
+    return a.y - b.y;
+  }
+}
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -112,12 +143,17 @@ export default class Store extends EventEmitter<{
   backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
-  enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
-  hostInstanceSelected: [Element['id']],
-  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
-  mutated: [[Array<Element['id']>, Map<Element['id'], Element['id']>]],
+  hostInstanceSelected: [Element['id'] | null],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>, Array<ComponentFilter>],
+  mutated: [
+    [
+      Array<Element['id']>,
+      Map<Element['id'], Element['id']>,
+      Element['id'] | null,
+    ],
+  ],
   recordChangeDescriptions: [],
   roots: [],
   rootSupportsBasicProfiling: [],
@@ -150,6 +186,8 @@ export default class Store extends EventEmitter<{
     Element['id'],
     {errorCount: number, warningCount: number},
   > = new Map();
+
+  _focusedTransition: 0 | Element['id'] = 0;
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -192,13 +230,14 @@ export default class Store extends EventEmitter<{
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<Element['id'], number> = new Map();
 
+  // Stores all the SuspenseNode rects in an R-tree to make it fast to find overlaps.
+  _rtree: RBush<Rect> = new RectRBush();
+
   // These options may be initially set by a configuration option when constructing the Store.
   _supportsInspectMatchingDOMElement: boolean = false;
   _supportsClickToInspect: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
-  // Dynamically set if the renderer supports the Suspense tab.
-  _supportsSuspenseTab: boolean = false;
 
   _isReloadAndProfileFrontendSupported: boolean = false;
   _isReloadAndProfileBackendSupported: boolean = false;
@@ -278,10 +317,6 @@ export default class Store extends EventEmitter<{
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
-    bridge.addListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isReloadAndProfileSupportedByBackend',
@@ -303,7 +338,6 @@ export default class Store extends EventEmitter<{
     bridge.addListener('hookSettings', this.onHookSettings);
     bridge.addListener('backendInitialized', this.onBackendInitialized);
     bridge.addListener('selectElement', this.onHostInstanceSelected);
-    bridge.addListener('enableSuspenseTab', this.onEnableSuspenseTab);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -394,8 +428,23 @@ export default class Store extends EventEmitter<{
 
     this._componentFilters = value;
 
-    // Update persisted filter preferences stored in localStorage.
+    // Update persisted filter preferences
     setSavedComponentFilters(value);
+    if (this._hookSettings === null) {
+      // We changed filters before we got the hook settings.
+      // Wait for hook settings before persisting component filters to not overwrite
+      // persisted hook settings with defaults.
+      // This exists purely as a type safety check; in practice the hook settings
+      // should have arrived before any filter changes could be made.
+      const onHookSettings = (settings: $ReadOnly<DevToolsHookSettings>) => {
+        this._bridge.removeListener('hookSettings', onHookSettings);
+        this.emit('settingsUpdated', settings, value);
+      };
+      this._bridge.addListener('hookSettings', onHookSettings);
+      this._bridge.send('getHookSettings');
+    } else {
+      this.emit('settingsUpdated', this._hookSettings, value);
+    }
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -626,6 +675,10 @@ export default class Store extends EventEmitter<{
     }
 
     return element;
+  }
+
+  containsSuspense(id: SuspenseNode['id']): boolean {
+    return this._idToSuspense.has(id);
   }
 
   getSuspenseByID(id: SuspenseNode['id']): SuspenseNode | null {
@@ -890,66 +943,262 @@ export default class Store extends EventEmitter<{
   }
 
   /**
-   * @param rootID
    * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
    */
-  getSuspendableDocumentOrderSuspense(
+  getSuspendableDocumentOrderSuspenseInitialPaint(
     uniqueSuspendersOnly: boolean,
-  ): $ReadOnlyArray<SuspenseNode['id']> {
+  ): Array<SuspenseTimelineStep> {
+    const target: Array<SuspenseTimelineStep> = [];
     const roots = this.roots;
-    if (roots.length === 0) {
-      return [];
-    }
-
-    const list: SuspenseNode['id'][] = [];
+    let rootStep: null | SuspenseTimelineStep = null;
     for (let i = 0; i < roots.length; i++) {
       const rootID = roots[i];
       const root = this.getElementByID(rootID);
       if (root === null) {
         continue;
       }
+      const rendererID = this._rootIDToRendererID.get(rootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for root. This is a bug in React DevTools.',
+        );
+      }
       // TODO: This includes boundaries that can't be suspended due to no support from the renderer.
 
       const suspense = this.getSuspenseByID(rootID);
       if (suspense !== null) {
-        if (list.length === 0) {
-          // start with an arbitrary root that will allow inspection of the Screen
-          list.push(suspense.id);
-        }
-
-        const stack = [suspense];
-        while (stack.length > 0) {
-          const current = stack.pop();
-          if (current === undefined) {
-            continue;
+        const environments = suspense.environments;
+        const environmentName =
+          environments.length > 0
+            ? environments[environments.length - 1]
+            : null;
+        if (rootStep === null) {
+          // Arbitrarily use the first root as the root step id.
+          rootStep = {
+            id: suspense.id,
+            environment: environmentName,
+            endTime: suspense.endTime,
+            rendererID,
+          };
+          target.push(rootStep);
+        } else {
+          if (rootStep.environment === null) {
+            // If any root has an environment name, then let's use it.
+            rootStep.environment = environmentName;
           }
-          // Ignore any suspense boundaries that has no visual representation as this is not
-          // part of the visible loading sequence.
-          // TODO: Consider making visible meta data and other side-effects get virtual rects.
-          const hasRects =
-            current.rects !== null &&
-            current.rects.length > 0 &&
-            current.rects.some(isNonZeroRect);
-          if (
-            hasRects &&
-            (!uniqueSuspendersOnly || current.hasUniqueSuspenders) &&
-            // Roots are already included as part of the Screen
-            current.id !== rootID
-          ) {
-            list.push(current.id);
-          }
-          // Add children in reverse order to maintain document order
-          for (let j = current.children.length - 1; j >= 0; j--) {
-            const childSuspense = this.getSuspenseByID(current.children[j]);
-            if (childSuspense !== null) {
-              stack.push(childSuspense);
-            }
+          if (suspense.endTime > rootStep.endTime) {
+            // If any root has a higher end time, let's use that.
+            rootStep.endTime = suspense.endTime;
           }
         }
+        this.pushTimelineStepsInDocumentOrder(
+          suspense.children,
+          target,
+          uniqueSuspendersOnly,
+          environments,
+          0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+          rendererID,
+        );
       }
     }
 
-    return list;
+    return target;
+  }
+
+  _pushSuspenseChildrenInDocumentOrder(
+    children: Array<Element['id']>,
+    target: Array<SuspenseNode['id']>,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const childID = children[i];
+      const suspense = this.getSuspenseByID(childID);
+      if (suspense !== null) {
+        target.push(suspense.id);
+      } else {
+        const childElement = this.getElementByID(childID);
+        if (childElement !== null) {
+          this._pushSuspenseChildrenInDocumentOrder(
+            childElement.children,
+            target,
+          );
+        }
+      }
+    }
+  }
+
+  getSuspenseChildren(id: Element['id']): Array<SuspenseNode['id']> {
+    const transitionChildren: Array<SuspenseNode['id']> = [];
+
+    const root = this._idToElement.get(id);
+    if (root === undefined) {
+      return transitionChildren;
+    }
+
+    this._pushSuspenseChildrenInDocumentOrder(
+      root.children,
+      transitionChildren,
+    );
+
+    return transitionChildren;
+  }
+
+  /**
+   * @param uniqueSuspendersOnly Filters out boundaries without unique suspenders
+   */
+  getSuspendableDocumentOrderSuspenseTransition(
+    uniqueSuspendersOnly: boolean,
+    rendererID: number,
+  ): Array<SuspenseTimelineStep> {
+    const target: Array<SuspenseTimelineStep> = [];
+    const focusedTransitionID = this._focusedTransition;
+    if (focusedTransitionID === null) {
+      return target;
+    }
+
+    target.push({
+      id: focusedTransitionID,
+      // TODO: Get environment for Activity
+      environment: null,
+      endTime: 0,
+      rendererID,
+    });
+
+    const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
+
+    this.pushTimelineStepsInDocumentOrder(
+      transitionChildren,
+      target,
+      uniqueSuspendersOnly,
+      // TODO: Get environment for Activity
+      [],
+      0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+      rendererID,
+    );
+
+    return target;
+  }
+
+  pushTimelineStepsInDocumentOrder(
+    children: Array<SuspenseNode['id']>,
+    target: Array<SuspenseTimelineStep>,
+    uniqueSuspendersOnly: boolean,
+    parentEnvironments: Array<string>,
+    parentEndTime: number,
+    rendererID: number,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this.getSuspenseByID(children[i]);
+      if (child === null) {
+        continue;
+      }
+      // Ignore any suspense boundaries that has no visual representation as this is not
+      // part of the visible loading sequence.
+      // TODO: Consider making visible meta data and other side-effects get virtual rects.
+      const hasRects =
+        child.rects !== null &&
+        child.rects.length > 0 &&
+        child.rects.some(isNonZeroRect);
+      const childEnvironments = child.environments;
+      // Since children are blocked on the parent, they're also blocked by the parent environments.
+      // Only if we discover a novel environment do we add that and it becomes the name we use.
+      const unionEnvironments = unionOfTwoArrays(
+        parentEnvironments,
+        childEnvironments,
+      );
+      const environmentName =
+        unionEnvironments.length > 0
+          ? unionEnvironments[unionEnvironments.length - 1]
+          : null;
+      // The end time of a child boundary can in effect never be earlier than its parent even if
+      // everything unsuspended before that.
+      const maxEndTime =
+        parentEndTime > child.endTime ? parentEndTime : child.endTime;
+      if (hasRects && (!uniqueSuspendersOnly || child.hasUniqueSuspenders)) {
+        target.push({
+          id: child.id,
+          environment: environmentName,
+          endTime: maxEndTime,
+          rendererID,
+        });
+      }
+      this.pushTimelineStepsInDocumentOrder(
+        child.children,
+        target,
+        uniqueSuspendersOnly,
+        unionEnvironments,
+        maxEndTime,
+        rendererID,
+      );
+    }
+  }
+
+  getEndTimeOrDocumentOrderSuspense(
+    uniqueSuspendersOnly: boolean,
+  ): $ReadOnlyArray<SuspenseTimelineStep> {
+    let timeline: SuspenseTimelineStep[];
+    if (this._focusedTransition === 0) {
+      timeline =
+        this.getSuspendableDocumentOrderSuspenseInitialPaint(
+          uniqueSuspendersOnly,
+        );
+    } else {
+      const focusedTransitionRootID = this.getRootIDForElement(
+        this._focusedTransition,
+      );
+      if (focusedTransitionRootID === null) {
+        throw new Error(
+          'Failed to find root ID for focused transition. This is a bug in React DevTools.',
+        );
+      }
+      const rendererID = this._rootIDToRendererID.get(focusedTransitionRootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for focused transition root. This is a bug in React DevTools.',
+        );
+      }
+      timeline = this.getSuspendableDocumentOrderSuspenseTransition(
+        uniqueSuspendersOnly,
+        rendererID,
+      );
+    }
+
+    if (timeline.length === 0) {
+      return timeline;
+    }
+    const root = timeline[0];
+    // We mutate in place since we assume we've got a fresh array.
+    timeline.sort((a, b) => {
+      // Root is always first
+      return a === root ? -1 : b === root ? 1 : a.endTime - b.endTime;
+    });
+    return timeline;
+  }
+
+  getActivities(): Array<{id: Element['id'], depth: number}> {
+    const target: Array<{id: Element['id'], depth: number}> = [];
+    // TODO: Keep a live tree in the backend so we don't need to recalculate
+    // this each time while also including filtered Activities.
+    this._pushActivitiesInDocumentOrder(this.roots, target, 0);
+    return target;
+  }
+
+  _pushActivitiesInDocumentOrder(
+    children: $ReadOnlyArray<Element['id']>,
+    target: Array<{id: Element['id'], depth: number}>,
+    depth: number,
+  ): void {
+    for (let i = 0; i < children.length; i++) {
+      const child = this._idToElement.get(children[i]);
+      if (child === undefined) {
+        continue;
+      }
+      if (child.type === ElementTypeActivity && child.nameProp !== null) {
+        target.push({id: child.id, depth});
+        this._pushActivitiesInDocumentOrder(child.children, target, depth + 1);
+      } else {
+        this._pushActivitiesInDocumentOrder(child.children, target, depth);
+      }
+    }
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -1065,7 +1314,7 @@ export default class Store extends EventEmitter<{
         // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
         // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
         // Updating the selected search index later may require auto-expanding a collapsed subtree though.
-        this.emit('mutated', [[], new Map()]);
+        this.emit('mutated', [[], new Map(), null]);
       }
     }
   }
@@ -1134,10 +1383,11 @@ export default class Store extends EventEmitter<{
 
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
+    // We'll use the parent ID to adjust selection if it gets deleted.
     const removedElementIDs: Map<number, number> = new Map();
     const removedSuspenseIDs: Map<SuspenseNode['id'], SuspenseNode['id']> =
       new Map();
-    // We'll use the parent ID to adjust selection if it gets deleted.
+    let nextActivitySliceID: Element['id'] | null = null;
 
     let i = 2;
 
@@ -1421,45 +1671,6 @@ export default class Store extends EventEmitter<{
 
           break;
         }
-        case TREE_OPERATION_REMOVE_ROOT: {
-          i += 1;
-
-          const id = operations[1];
-
-          if (__DEBUG__) {
-            debug(`Remove root ${id}`);
-          }
-
-          const recursivelyDeleteElements = (elementID: number) => {
-            const element = this._idToElement.get(elementID);
-            this._idToElement.delete(elementID);
-            if (element) {
-              // Mostly for Flow's sake
-              for (let index = 0; index < element.children.length; index++) {
-                recursivelyDeleteElements(element.children[index]);
-              }
-            }
-          };
-
-          const root = this._idToElement.get(id);
-          if (root === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot remove root "${id}": no matching node was found in the Store.`,
-              ),
-            );
-
-            break;
-          }
-
-          recursivelyDeleteElements(id);
-
-          this._rootIDToCapabilities.delete(id);
-          this._rootIDToRendererID.delete(id);
-          this._roots = this._roots.filter(rootID => rootID !== id);
-          this._weightAcrossRoots -= root.weight;
-          break;
-        }
         case TREE_OPERATION_REORDER_CHILDREN: {
           const id = operations[i + 1];
           const numChildren = operations[i + 2];
@@ -1587,11 +1798,16 @@ export default class Store extends EventEmitter<{
           } else {
             rects = [];
             for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
-              const x = operations[i + 0];
-              const y = operations[i + 1];
-              const width = operations[i + 2];
-              const height = operations[i + 3];
-              rects.push({x, y, width, height});
+              const x = operations[i + 0] / 1000;
+              const y = operations[i + 1] / 1000;
+              const width = operations[i + 2] / 1000;
+              const height = operations[i + 3] / 1000;
+              const rect = {x, y, width, height};
+              if (parentID !== 0) {
+                // Track all rects except the root.
+                this._rtree.insert(rect);
+              }
+              rects.push(rect);
               i += 4;
             }
           }
@@ -1615,10 +1831,6 @@ export default class Store extends EventEmitter<{
             parentSuspense.children.push(id);
           }
 
-          if (name === null) {
-            name = 'Unknown';
-          }
-
           this._idToSuspense.set(id, {
             id,
             parentID,
@@ -1627,6 +1839,8 @@ export default class Store extends EventEmitter<{
             rects,
             hasUniqueSuspenders: false,
             isSuspended: isSuspended,
+            environments: [],
+            endTime: 0,
           });
 
           hasSuspenseTreeChanged = true;
@@ -1652,11 +1866,18 @@ export default class Store extends EventEmitter<{
 
             i += 1;
 
-            const {children, parentID} = suspense;
+            const {children, parentID, rects} = suspense;
             if (children.length > 0) {
               this._throwAndEmitError(
                 Error(`Suspense node "${id}" was removed before its children.`),
               );
+            }
+
+            if (rects !== null && parentID !== 0) {
+              // Delete all the existing rects from the R-tree
+              for (let j = 0; j < rects.length; j++) {
+                this._rtree.remove(rects[j]);
+              }
             }
 
             this._idToSuspense.delete(id);
@@ -1684,6 +1905,13 @@ export default class Store extends EventEmitter<{
               }
 
               const index = parentSuspense.children.indexOf(id);
+              if (index === -1) {
+                this._throwAndEmitError(
+                  Error(
+                    `Cannot remove suspense node "${id}" from parent "${parentID}" because it is not a child of the parent.`,
+                  ),
+                );
+              }
               parentSuspense.children.splice(index, 1);
             }
           }
@@ -1757,18 +1985,31 @@ export default class Store extends EventEmitter<{
             break;
           }
 
+          const prevRects = suspense.rects;
+          if (prevRects !== null && suspense.parentID !== 0) {
+            // Delete all the existing rects from the R-tree
+            for (let j = 0; j < prevRects.length; j++) {
+              this._rtree.remove(prevRects[j]);
+            }
+          }
+
           let nextRects: SuspenseNode['rects'];
           if (numRects === -1) {
             nextRects = null;
           } else {
             nextRects = [];
             for (let rectIndex = 0; rectIndex < numRects; rectIndex++) {
-              const x = operations[i + 0];
-              const y = operations[i + 1];
-              const width = operations[i + 2];
-              const height = operations[i + 3];
+              const x = operations[i + 0] / 1000;
+              const y = operations[i + 1] / 1000;
+              const width = operations[i + 2] / 1000;
+              const height = operations[i + 3] / 1000;
 
-              nextRects.push({x, y, width, height});
+              const rect = {x, y, width, height};
+              if (suspense.parentID !== 0) {
+                // Track all rects except the root.
+                this._rtree.insert(rect);
+              }
+              nextRects.push(rect);
 
               i += 4;
             }
@@ -1803,6 +2044,7 @@ export default class Store extends EventEmitter<{
           for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
             const id = operations[i++];
             const hasUniqueSuspenders = operations[i++] === 1;
+            const endTime = operations[i++] / 1000;
             const isSuspended = operations[i++] === 1;
             const environmentNamesLength = operations[i++];
             const environmentNames = [];
@@ -1812,7 +2054,10 @@ export default class Store extends EventEmitter<{
               envIndex++
             ) {
               const environmentNameStringID = operations[i++];
-              environmentNames.push(stringTable[environmentNameStringID]);
+              const environmentName = stringTable[environmentNameStringID];
+              if (environmentName != null) {
+                environmentNames.push(environmentName);
+              }
             }
             const suspense = this._idToSuspense.get(id);
 
@@ -1835,12 +2080,18 @@ export default class Store extends EventEmitter<{
             }
 
             suspense.hasUniqueSuspenders = hasUniqueSuspenders;
+            suspense.endTime = endTime;
             suspense.isSuspended = isSuspended;
-            // TODO: Recompute the environment names.
+            suspense.environments = environmentNames;
           }
 
           hasSuspenseTreeChanged = true;
 
+          break;
+        }
+        case TREE_OPERATION_APPLIED_ACTIVITY_SLICE_CHANGE: {
+          i++;
+          nextActivitySliceID = operations[i++];
           break;
         }
         default:
@@ -1941,21 +2192,83 @@ export default class Store extends EventEmitter<{
       console.groupEnd();
     }
 
-    this.emit('mutated', [addedElementIDs, removedElementIDs]);
+    if (nextActivitySliceID !== null && nextActivitySliceID !== 0) {
+      let didCollapse = false;
+      // The backend filtered everything above the Activity slice.
+      // We need to hide everything below the Activity slice by collapsing
+      // the Activities that are descendants of the next Activity slice.
+      const nextActivitySlice = this._idToElement.get(nextActivitySliceID);
+      if (nextActivitySlice === undefined) {
+        throw new Error('Next Activity slice not found in Store.');
+      }
+
+      for (let j = 0; j < nextActivitySlice.children.length; j++) {
+        didCollapse ||= this._collapseActivitiesRecursively(
+          nextActivitySlice.children[j],
+        );
+      }
+
+      if (didCollapse) {
+        let weightAcrossRoots = 0;
+        this._roots.forEach(rootID => {
+          const {weight} = ((this.getElementByID(rootID): any): Element);
+          weightAcrossRoots += weight;
+        });
+        this._weightAcrossRoots = weightAcrossRoots;
+      }
+    }
+
+    for (let j = 0; j < this._componentFilters.length; j++) {
+      const filter = this._componentFilters[j];
+      // If we're focusing an Activity, IDs may have changed.
+      if (filter.type === ComponentFilterActivitySlice) {
+        if (nextActivitySliceID === null || nextActivitySliceID === 0) {
+          filter.isValid = false;
+        } else {
+          filter.activityID = nextActivitySliceID;
+        }
+      }
+    }
+
+    if (nextActivitySliceID !== null) {
+      this._focusedTransition = nextActivitySliceID;
+    }
+
+    this.emit('mutated', [
+      addedElementIDs,
+      removedElementIDs,
+      nextActivitySliceID,
+    ]);
   };
 
-  // Certain backends save filters on a per-domain basis.
-  // In order to prevent filter preferences and applied filters from being out of sync,
-  // this message enables the backend to override the frontend's current ("saved") filters.
-  // This action should also override the saved filters too,
-  // else reloading the frontend without reloading the backend would leave things out of sync.
-  onBridgeOverrideComponentFilters: (
-    componentFilters: Array<ComponentFilter>,
-  ) => void = componentFilters => {
-    this._componentFilters = componentFilters;
+  _collapseActivitiesRecursively(elementID: number): boolean {
+    let didMutate = false;
+    const element = this._idToElement.get(elementID);
+    if (element === undefined) {
+      throw new Error('Element not found in Store.');
+    }
 
-    setSavedComponentFilters(componentFilters);
-  };
+    if (element.type === ElementTypeActivity) {
+      if (!element.isCollapsed) {
+        element.isCollapsed = true;
+
+        const weightDelta = 1 - element.weight;
+
+        let parentElement = this._idToElement.get(element.parentID);
+        while (parentElement !== undefined) {
+          parentElement.weight += weightDelta;
+          parentElement = this._idToElement.get(parentElement.parentID);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    for (let i = 0; i < element.children.length; i++) {
+      didMutate ||= this._collapseActivitiesRecursively(element.children[i]);
+    }
+    return didMutate;
+  }
 
   onBridgeShutdown: () => void = () => {
     if (__DEBUG__) {
@@ -1964,10 +2277,6 @@ export default class Store extends EventEmitter<{
 
     const bridge = this._bridge;
     bridge.removeListener('operations', this.onBridgeOperations);
-    bridge.removeListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.removeListener('shutdown', this.onBridgeShutdown);
     bridge.removeListener(
       'isReloadAndProfileSupportedByBackend',
@@ -2061,8 +2370,15 @@ export default class Store extends EventEmitter<{
     this._bridge.send('getHookSettings'); // Warm up cached hook settings
   };
 
-  onHostInstanceSelected: (elementId: number) => void = elementId => {
-    if (this._lastSelectedHostInstanceElementId === elementId) {
+  onHostInstanceSelected: (elementId: number | null) => void = elementId => {
+    if (
+      this._lastSelectedHostInstanceElementId === elementId &&
+      // Force clear selection e.g. when we inspect an element in the Components panel
+      // and then switch to the browser's Elements panel.
+      // We wouldn't want to stay on the inspected element if we're inspecting
+      // an element not owned by React when switching to the browser's Elements panel.
+      elementId !== null
+    ) {
       return;
     }
 
@@ -2092,7 +2408,7 @@ export default class Store extends EventEmitter<{
       this._hookSettings = settings;
 
       this._bridge.send('updateHookSettings', settings);
-      this.emit('settingsUpdated', settings);
+      this.emit('settingsUpdated', settings, this._componentFilters);
     };
 
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
@@ -2109,18 +2425,9 @@ export default class Store extends EventEmitter<{
 
     if (previousStatus !== status) {
       // Propagate to subscribers, although tree state has not changed
-      this.emit('mutated', [[], new Map()]);
+      this.emit('mutated', [[], new Map(), null]);
     }
   }
-
-  get supportsSuspenseTab(): boolean {
-    return this._supportsSuspenseTab;
-  }
-
-  onEnableSuspenseTab = (): void => {
-    this._supportsSuspenseTab = true;
-    this.emit('enableSuspenseTab');
-  };
 
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
@@ -2135,13 +2442,12 @@ export default class Store extends EventEmitter<{
     throw error;
   }
 
-  _guessSuspenseName(element: Element): string {
+  _guessSuspenseName(element: Element): string | null {
     const owner = this._idToElement.get(element.ownerID);
-    let name = 'Unknown';
     if (owner !== undefined && owner.displayName !== null) {
-      name = owner.displayName;
+      return owner.displayName;
     }
 
-    return name;
+    return null;
   }
 }

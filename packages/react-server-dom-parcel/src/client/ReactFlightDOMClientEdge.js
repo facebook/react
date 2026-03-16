@@ -77,8 +77,11 @@ export type Options = {
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
+  unstable_allowPartialStream?: boolean,
   replayConsoleLogs?: boolean,
   environmentName?: string,
+  startTime?: number,
+  endTime?: number,
   // For the Edge client we only support a single-direction debug channel.
   debugChannel?: {readable?: ReadableStream, ...},
 };
@@ -102,11 +105,18 @@ function createResponseFromOptions(options?: Options) {
     options && options.temporaryReferences
       ? options.temporaryReferences
       : undefined,
+    options && options.unstable_allowPartialStream
+      ? options.unstable_allowPartialStream
+      : false,
     __DEV__ ? findSourceMapURL : undefined,
     __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
     __DEV__ && options && options.environmentName
       ? options.environmentName
       : undefined,
+    __DEV__ && options && options.startTime != null
+      ? options.startTime
+      : undefined,
+    __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
 }

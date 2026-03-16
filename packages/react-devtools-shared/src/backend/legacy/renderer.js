@@ -1269,6 +1269,9 @@ export function attach(
     getDisplayNameForElementID,
     getNearestMountedDOMNode,
     getElementIDForHostInstance,
+    getSuspenseNodeIDForHostInstance(id: number): null {
+      return null;
+    },
     getInstanceAndStyle,
     findHostInstancesForElementID: (id: number) => {
       const hostInstance = findHostInstanceForInternalID(id);

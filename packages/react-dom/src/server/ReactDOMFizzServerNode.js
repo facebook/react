@@ -11,7 +11,6 @@ import type {
   Request,
   PostponedState,
   ErrorInfo,
-  PostponeInfo,
 } from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
@@ -77,7 +76,6 @@ type Options = {
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
-  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
@@ -91,7 +89,6 @@ type ResumeOptions = {
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
-  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
 };
 
 type PipeableStream = {
@@ -127,7 +124,6 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     options ? options.onShellReady : undefined,
     options ? options.onShellError : undefined,
     undefined,
-    options ? options.onPostpone : undefined,
     options ? options.formState : undefined,
   );
 }
@@ -285,7 +281,6 @@ function renderToReadableStream(
       onShellReady,
       onShellError,
       onFatalError,
-      options ? options.onPostpone : undefined,
       options ? options.formState : undefined,
     );
     if (options && options.signal) {
@@ -321,7 +316,6 @@ function resumeRequestImpl(
     options ? options.onShellReady : undefined,
     options ? options.onShellError : undefined,
     undefined,
-    options ? options.onPostpone : undefined,
   );
 }
 
@@ -423,7 +417,6 @@ function resume(
       onShellReady,
       onShellError,
       onFatalError,
-      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

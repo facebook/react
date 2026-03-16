@@ -22,6 +22,8 @@ import OwnerView from './OwnerView';
 import {meta} from '../../../hydration';
 import useInferredName from '../useInferredName';
 
+import {getClassNameForEnvironment} from '../SuspenseTab/SuspenseEnvironmentColors.js';
+
 import type {
   InspectedElement,
   SerializedAsyncInfo,
@@ -34,6 +36,7 @@ import {
   UNKNOWN_SUSPENDERS_REASON_OLD_VERSION,
   UNKNOWN_SUSPENDERS_REASON_THROWN_PROMISE,
 } from '../../../constants';
+import {ElementTypeRoot} from 'react-devtools-shared/src/frontend/types';
 
 type RowProps = {
   bridge: FrontendBridge,
@@ -169,7 +172,7 @@ function SuspendedByRow({
           type={isOpen ? 'expanded' : 'collapsed'}
         />
         <span className={styles.CollapsableHeaderTitle}>
-          {skipName ? shortDescription : name}
+          {skipName && shortDescription !== '' ? shortDescription : name}
         </span>
         {skipName || shortDescription === '' ? null : (
           <>
@@ -181,7 +184,12 @@ function SuspendedByRow({
           </>
         )}
         <div className={styles.CollapsableHeaderFiller} />
-        <div className={styles.TimeBarContainer}>
+        <div
+          className={
+            styles.TimeBarContainer +
+            ' ' +
+            getClassNameForEnvironment(ioInfo.env)
+          }>
           <div
             className={
               !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored
@@ -341,6 +349,7 @@ type GroupProps = {
   inspectedElement: InspectedElement,
   store: Store,
   name: string,
+  environment: null | string,
   suspendedBy: Array<{
     index: number,
     value: SerializedAsyncInfo,
@@ -355,6 +364,7 @@ function SuspendedByGroup({
   inspectedElement,
   store,
   name,
+  environment,
   suspendedBy,
   minTime,
   maxTime,
@@ -407,7 +417,12 @@ function SuspendedByGroup({
         <span className={styles.CollapsableHeaderTitle}>{pluralizedName}</span>
         <div className={styles.CollapsableHeaderFiller} />
         {isOpen ? null : (
-          <div className={styles.TimeBarContainer}>
+          <div
+            className={
+              styles.TimeBarContainer +
+              ' ' +
+              getClassNameForEnvironment(environment)
+            }>
             <div
               className={
                 !isRejected ? styles.TimeBarSpan : styles.TimeBarSpanErrored
@@ -463,7 +478,21 @@ export default function InspectedElementSuspendedBy({
         </div>
       );
     }
-    return null;
+    // For roots, show an empty state since there's nothing else to show for
+    // these elements.
+    // This can happen for older versions of React without Suspense, older versions
+    // of React with less sources for Suspense, or simple UIs that don't have any suspenders.
+    if (inspectedElement.type === ElementTypeRoot) {
+      return (
+        <div>
+          <div className={styles.HeaderRow}>
+            <div className={`${styles.Header} ${styles.Empty}`}>
+              Nothing suspended the initial paint.
+            </div>
+          </div>
+        </div>
+      );
+    }
   }
 
   const handleCopy = withPermissionsCheck(
@@ -502,17 +531,21 @@ export default function InspectedElementSuspendedBy({
   const groups = [];
   let currentGroup = null;
   let currentGroupName = null;
+  let currentGroupEnv = null;
   for (let i = 0; i < sortedSuspendedBy.length; i++) {
     const entry = sortedSuspendedBy[i];
     const name = entry.value.awaited.name;
+    const env = entry.value.awaited.env;
     if (
       currentGroupName !== name ||
+      currentGroupEnv !== env ||
       !name ||
       name === 'Promise' ||
       currentGroup === null
     ) {
       // Create a new group.
       currentGroupName = name;
+      currentGroupEnv = env;
       currentGroup = [];
       groups.push(currentGroup);
     }
@@ -551,6 +584,9 @@ export default function InspectedElementSuspendedBy({
       break;
   }
 
+  if (groups.length === 0) {
+    return null;
+  }
   return (
     <div>
       <div className={styles.HeaderRow}>
@@ -591,6 +627,7 @@ export default function InspectedElementSuspendedBy({
               <SuspendedByGroup
                 key={entries[0].index}
                 name={entries[0].value.awaited.name}
+                environment={entries[0].value.awaited.env}
                 suspendedBy={entries}
                 bridge={bridge}
                 element={element}

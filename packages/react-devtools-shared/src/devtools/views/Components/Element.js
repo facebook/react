@@ -8,8 +8,9 @@
  */
 
 import * as React from 'react';
-import {Fragment, useContext, useMemo, useState} from 'react';
+import {Fragment, startTransition, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
+import {ElementTypeActivity} from 'react-devtools-shared/src/frontend/types';
 import ButtonIcon from '../ButtonIcon';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {StoreContext} from '../context';
@@ -25,6 +26,7 @@ import styles from './Element.css';
 import Icon from '../Icon';
 import {useChangeOwnerAction} from './OwnersListContext';
 import Tooltip from './reach-ui/tooltip';
+import {useChangeActivitySliceAction} from '../SuspenseTab/ActivityList';
 
 type Props = {
   data: ItemData,
@@ -65,6 +67,7 @@ export default function Element({data, index, style}: Props): React.Node {
   }>(errorsAndWarningsSubscription);
 
   const changeOwnerAction = useChangeOwnerAction();
+  const changeActivitySliceAction = useChangeActivitySliceAction();
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
@@ -75,9 +78,13 @@ export default function Element({data, index, style}: Props): React.Node {
   }
 
   const handleDoubleClick = () => {
-    if (id !== null) {
-      changeOwnerAction(id);
-    }
+    startTransition(() => {
+      if (element.type === ElementTypeActivity) {
+        changeActivitySliceAction(element.id);
+      } else {
+        changeOwnerAction(element.id);
+      }
+    });
   };
 
   // $FlowFixMe[missing-local-annot]

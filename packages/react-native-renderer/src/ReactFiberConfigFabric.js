@@ -40,6 +40,10 @@ import {
   type PublicTextInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {
+  enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
+} from 'shared/ReactFeatureFlags';
 
 const {
   createNode,
@@ -119,6 +123,9 @@ export type TextInstance = {
 };
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
+type PublicInstanceWithFragmentHandles = PublicInstance & {
+  reactFragments?: Set<FragmentInstanceType>,
+};
 export type Container = {
   containerTag: number,
   publicInstance: PublicRootInstance | null,
@@ -271,6 +278,7 @@ export function getChildHostContext(
     const isInAParentText =
       type === 'AndroidTextInput' || // Android
       type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSelectableText' ||
       type === 'RCTSinglelineTextInputView' || // iOS
       type === 'RCTText' ||
       type === 'RCTVirtualText';
@@ -414,14 +422,48 @@ export function resolveUpdatePriority(): EventPriority {
   return DefaultEventPriority;
 }
 
-export function trackSchedulerEvent(): void {}
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = global.event;
+}
+
+function getEventType(event: Event): null | string {
+  if (event.type) {
+    return event.type;
+  }
+
+  // Legacy implementation. RN does not define the `type` property on the event object yet.
+  // $FlowExpectedError[prop-missing]
+  const dispatchConfig = event.dispatchConfig;
+  if (
+    dispatchConfig == null ||
+    dispatchConfig.phasedRegistrationNames == null
+  ) {
+    return null;
+  }
+
+  const rawEventType =
+    dispatchConfig.phasedRegistrationNames.bubbled ||
+    dispatchConfig.phasedRegistrationNames.captured;
+  if (!rawEventType) {
+    return null;
+  }
+
+  if (rawEventType.startsWith('on')) {
+    return rawEventType.slice(2).toLowerCase();
+  }
+
+  return rawEventType.toLowerCase();
+}
 
 export function resolveEventType(): null | string {
-  return null;
+  const event = global.event;
+  return event && event !== schedulerEvent ? getEventType(event) : null;
 }
 
 export function resolveEventTimeStamp(): number {
-  return -1.1;
+  const event = global.event;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export function shouldAttemptEagerTransition(): boolean {
@@ -794,10 +836,45 @@ function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
   return false;
 }
 
+function addFragmentHandleToFiber(
+  child: Fiber,
+  fragmentInstance: FragmentInstanceType,
+): boolean {
+  if (enableFragmentRefsInstanceHandles) {
+    const instance = ((getPublicInstanceFromHostFiber(
+      child,
+    ): any): PublicInstanceWithFragmentHandles);
+    if (instance != null) {
+      addFragmentHandleToInstance(instance, fragmentInstance);
+    }
+  }
+  return false;
+}
+
+function addFragmentHandleToInstance(
+  instance: PublicInstanceWithFragmentHandles,
+  fragmentInstance: FragmentInstanceType,
+): void {
+  if (enableFragmentRefsInstanceHandles) {
+    if (instance.reactFragments == null) {
+      instance.reactFragments = new Set();
+    }
+    instance.reactFragments.add(fragmentInstance);
+  }
+}
+
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  return new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  if (enableFragmentRefsInstanceHandles) {
+    traverseFragmentInstance(
+      fragmentFiber,
+      addFragmentHandleToFiber,
+      fragmentInstance,
+    );
+  }
+  return fragmentInstance;
 }
 
 export function updateFragmentInstanceFiber(
@@ -808,10 +885,15 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: Instance,
+  childInstance: Instance | TextInstance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  const publicInstance = getPublicInstance(childInstance);
+  // Text nodes are not observable
+  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+    return;
+  }
+  const instance: Instance = (childInstance: any);
+  const publicInstance = getPublicInstance(instance);
   if (fragmentInstance._observers !== null) {
     if (publicInstance == null) {
       throw new Error('Expected to find a host node. This is a bug in React.');
@@ -821,13 +903,31 @@ export function commitNewChildToFragmentInstance(
       observer.observe(publicInstance);
     });
   }
+  if (enableFragmentRefsInstanceHandles) {
+    addFragmentHandleToInstance(
+      ((publicInstance: any): PublicInstanceWithFragmentHandles),
+      fragmentInstance,
+    );
+  }
 }
 
 export function deleteChildFromFragmentInstance(
-  child: Instance,
+  childInstance: Instance | TextInstance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  // Noop
+  // Text nodes are not observable
+  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+    return;
+  }
+  const instance: Instance = (childInstance: any);
+  const publicInstance = ((getPublicInstance(
+    instance,
+  ): any): PublicInstanceWithFragmentHandles);
+  if (enableFragmentRefsInstanceHandles) {
+    if (publicInstance.reactFragments != null) {
+      publicInstance.reactFragments.delete(fragmentInstance);
+    }
+  }
 }
 
 export const NotPendingTransition: TransitionStatus = null;

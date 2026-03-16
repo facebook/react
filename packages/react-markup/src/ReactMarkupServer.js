@@ -89,8 +89,12 @@ export function experimental_renderToHTML(
       noServerCallOrFormAction,
       undefined,
       undefined,
+      false,
       undefined,
       false,
+      undefined,
+      undefined,
+      undefined,
     );
     const streamState = createFlightStreamState(flightResponse, null);
     const flightDestination = {
@@ -206,7 +210,6 @@ export function experimental_renderToHTML(
       createRootFormatContext(),
       Infinity,
       handleError,
-      undefined,
       undefined,
       undefined,
       undefined,

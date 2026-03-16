@@ -36,6 +36,7 @@ import {
 import {
   enableProfilerTimer,
   enableGestureTransition,
+  enablePerformanceIssueReporting,
 } from 'shared/ReactFeatureFlags';
 
 const supportsUserTiming =
@@ -202,6 +203,15 @@ const reusableComponentOptions: PerformanceMeasureOptions = {
 };
 
 const reusableChangedPropsEntry = ['Changed Props', ''];
+
+const reusableCascadingUpdateIssue = {
+  name: 'React: Cascading Update',
+  severity: 'warning',
+  description:
+    'A cascading update is an update that is triggered during an ongoing render. This can lead to performance issues.',
+  learnMoreUrl:
+    'https://react.dev/reference/dev-tools/react-performance-tracks#cascading-updates',
+};
 
 const DEEP_EQUALITY_WARNING =
   'This component received deeply equal props. It might benefit from useMemo or the React Compiler in its owner.';
@@ -761,6 +771,11 @@ export function logBlockingStart(
             },
           },
         };
+        if (enablePerformanceIssueReporting && isSpawnedUpdate) {
+          // $FlowFixMe[prop-missing] - detail is untyped
+          measureOptions.detail.devtools.performanceIssue =
+            reusableCascadingUpdateIssue;
+        }
 
         if (debugTask) {
           debugTask.run(
@@ -1549,6 +1564,41 @@ export function logPaintYieldPhase(
         currentTrack,
         LANES_TRACK_GROUP,
         'secondary-light',
+      );
+    }
+  }
+}
+
+export function logApplyGesturePhase(
+  startTime: number,
+  endTime: number,
+  debugTask: null | ConsoleTask,
+): void {
+  if (supportsUserTiming) {
+    if (endTime <= startTime) {
+      return;
+    }
+    if (__DEV__ && debugTask) {
+      debugTask.run(
+        // $FlowFixMe[method-unbinding]
+        console.timeStamp.bind(
+          console,
+          'Create Ghost Tree',
+          startTime,
+          endTime,
+          currentTrack,
+          LANES_TRACK_GROUP,
+          'secondary-dark',
+        ),
+      );
+    } else {
+      console.timeStamp(
+        'Create Ghost Tree',
+        startTime,
+        endTime,
+        currentTrack,
+        LANES_TRACK_GROUP,
+        'secondary-dark',
       );
     }
   }

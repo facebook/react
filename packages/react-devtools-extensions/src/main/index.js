@@ -1,6 +1,14 @@
-/* global chrome */
+/* global chrome, ExtensionRuntimePort */
+/** @flow */
 
+import type {RootType} from 'react-dom/src/client/ReactDOMRoot';
+import type {FrontendBridge, Message} from 'react-devtools-shared/src/bridge';
+import type {
+  TabID,
+  ViewElementSource,
+} from 'react-devtools-shared/src/devtools/views/DevTools';
 import type {SourceSelection} from 'react-devtools-shared/src/devtools/views/Editor/EditorPane';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 import {createElement} from 'react';
 import {flushSync} from 'react-dom';
@@ -32,8 +40,9 @@ import {
 } from './elementSelection';
 import {viewAttributeSource} from './sourceSelection';
 
+import {evalInInspectedWindow} from './evalInInspectedWindow';
 import {startReactPolling} from './reactPolling';
-import cloneStyleTags from './cloneStyleTags';
+import {cloneStyleTags} from './cloneStyleTags';
 import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
 import registerEventsLogger from './registerEventsLogger';
@@ -50,7 +59,7 @@ const hookNamesModuleLoaderFunction = () => resolvedParseHookNames;
 function createBridge() {
   bridge = new Bridge({
     listen(fn) {
-      const bridgeListener = message => fn(message);
+      const bridgeListener = (message: Message) => fn(message);
       // Store the reference so that we unsubscribe from the same object.
       const portOnMessage = port.onMessage;
       portOnMessage.addListener(bridgeListener);
@@ -70,7 +79,7 @@ function createBridge() {
 
   bridge.addListener('reloadAppForProfiling', () => {
     localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
-    chrome.devtools.inspectedWindow.eval('window.location.reload();');
+    evalInInspectedWindow('reload', [], () => {});
   });
 
   bridge.addListener(
@@ -158,12 +167,8 @@ function createBridgeAndStore() {
     supportsClickToInspect: true,
   });
 
-  store.addListener('enableSuspenseTab', () => {
-    createSuspensePanel();
-  });
-
-  store.addListener('settingsUpdated', settings => {
-    chrome.storage.local.set(settings);
+  store.addListener('settingsUpdated', (hookSettings, componentFilters) => {
+    chrome.storage.local.set({...hookSettings, componentFilters});
   });
 
   if (!isProfiling) {
@@ -175,14 +180,20 @@ function createBridgeAndStore() {
   // Otherwise, the Store may miss important initial tree op codes.
   injectBackendManager(chrome.devtools.inspectedWindow.tabId);
 
-  const viewAttributeSourceFunction = (id, path) => {
+  const viewAttributeSourceFunction = (
+    id: Element['id'],
+    path: Array<string | number>,
+  ) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID != null) {
       viewAttributeSource(rendererID, id, path);
     }
   };
 
-  const viewElementSourceFunction = (source, symbolicatedSource) => {
+  const viewElementSourceFunction: ViewElementSource = (
+    source,
+    symbolicatedSource,
+  ) => {
     const [, sourceURL, line, column] = symbolicatedSource
       ? symbolicatedSource
       : source;
@@ -197,7 +208,7 @@ function createBridgeAndStore() {
 
   root = createRoot(document.createElement('div'));
 
-  render = (overrideTab = mostRecentOverrideTab) => {
+  render = (overrideTab: TabID | null = mostRecentOverrideTab) => {
     mostRecentOverrideTab = overrideTab;
 
     root.render(
@@ -205,6 +216,7 @@ function createBridgeAndStore() {
         bridge,
         browserTheme: getBrowserTheme(),
         componentsPortalContainer,
+        inspectedElementPortalContainer,
         profilerPortalContainer,
         editorPortalContainer,
         currentSelectedSource,
@@ -225,7 +237,9 @@ function createBridgeAndStore() {
   };
 }
 
-function ensureInitialHTMLIsCleared(container) {
+function ensureInitialHTMLIsCleared(
+  container: HTMLElement & {_hasInitialHTMLBeenCleared?: boolean},
+) {
   if (container._hasInitialHTMLBeenCleared) {
     return;
   }
@@ -275,6 +289,52 @@ function createComponentsPanel() {
       });
     },
   );
+}
+
+function createElementsInspectPanel() {
+  if (inspectedElementPortalContainer) {
+    // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+    render();
+
+    return;
+  }
+
+  if (inspectedElementPane) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
+    return;
+  }
+
+  const elementsPanel = chrome.devtools.panels.elements;
+  if (__IS_FIREFOX__ || !elementsPanel || !elementsPanel.createSidebarPane) {
+    // Firefox will not pass the window to the onShown listener despite setPage
+    // being called.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=2010549
+
+    // May not be supported in some browsers.
+    // See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools/panels/ElementsPanel/createSidebarPane#browser_compatibility
+    return;
+  }
+
+  elementsPanel.createSidebarPane('React Element ⚛', createdPane => {
+    inspectedElementPane = createdPane;
+
+    createdPane.setPage('panel.html');
+    createdPane.setHeight('75px');
+
+    createdPane.onShown.addListener(portal => {
+      inspectedElementPortalContainer = portal.container;
+      if (inspectedElementPortalContainer != null && render) {
+        ensureInitialHTMLIsCleared(inspectedElementPortalContainer);
+        bridge.send('syncSelectionFromBuiltinElementsPanel');
+
+        render();
+        portal.injectStyles(cloneStyleTags);
+
+        logEvent({event_name: 'selected-inspected-element-pane'});
+      }
+    });
+  });
 }
 
 function createProfilerPanel() {
@@ -349,13 +409,6 @@ function createSourcesEditorPanel() {
 
         logEvent({event_name: 'selected-editor-pane'});
       }
-    });
-
-    createdPane.onShown.addListener(() => {
-      bridge.emit('extensionEditorPaneShown');
-    });
-    createdPane.onHidden.addListener(() => {
-      bridge.emit('extensionEditorPaneHidden');
     });
   });
 }
@@ -432,10 +485,10 @@ function performInTabNavigationCleanup() {
   // Do not clean mostRecentOverrideTab on purpose, so we remember last opened
   // React DevTools tab, when user does in-tab navigation
 
-  store = null;
-  bridge = null;
-  render = null;
-  root = null;
+  store = (null: $FlowFixMe);
+  bridge = (null: $FlowFixMe);
+  render = (null: $FlowFixMe);
+  root = (null: $FlowFixMe);
 }
 
 function performFullCleanup() {
@@ -457,18 +510,18 @@ function performFullCleanup() {
   componentsPortalContainer = null;
   profilerPortalContainer = null;
   suspensePortalContainer = null;
-  root = null;
+  root = (null: $FlowFixMe);
 
   mostRecentOverrideTab = null;
-  store = null;
-  bridge = null;
-  render = null;
+  store = (null: $FlowFixMe);
+  bridge = (null: $FlowFixMe);
+  render = (null: $FlowFixMe);
 
   port?.disconnect();
-  port = null;
+  port = (null: $FlowFixMe);
 }
 
-function connectExtensionPort() {
+function connectExtensionPort(): void {
   if (port) {
     throw new Error('DevTools port was already connected');
   }
@@ -492,7 +545,7 @@ function connectExtensionPort() {
   // so, when we call `port.disconnect()` from this script,
   // this should not trigger this callback and port reconnection
   port.onDisconnect.addListener(() => {
-    port = null;
+    port = (null: $FlowFixMe);
     connectExtensionPort();
   });
 }
@@ -507,8 +560,8 @@ function mountReactDevTools() {
   createComponentsPanel();
   createProfilerPanel();
   createSourcesEditorPanel();
-  // Suspense Tab is created via the hook
-  // TODO(enableSuspenseTab): Create eagerly once Suspense tab is stable
+  createElementsInspectPanel();
+  createSuspensePanel();
 }
 
 let reactPollingInstance = null;
@@ -545,9 +598,9 @@ function mountReactDevToolsWhenReactHasLoaded() {
   );
 }
 
-let bridge = null;
+let bridge: FrontendBridge = (null: $FlowFixMe);
 let lastSubscribedBridgeListener = null;
-let store = null;
+let store: Store = (null: $FlowFixMe);
 
 let profilingData = null;
 
@@ -555,18 +608,20 @@ let componentsPanel = null;
 let profilerPanel = null;
 let suspensePanel = null;
 let editorPane = null;
+let inspectedElementPane = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
 let suspensePortalContainer = null;
 let editorPortalContainer = null;
+let inspectedElementPortalContainer = null;
 
-let mostRecentOverrideTab = null;
-let render = null;
-let root = null;
+let mostRecentOverrideTab: null | TabID = null;
+let render: (overrideTab?: TabID) => void = (null: $FlowFixMe);
+let root: RootType = (null: $FlowFixMe);
 
 let currentSelectedSource: null | SourceSelection = null;
 
-let port = null;
+let port: ExtensionRuntimePort = (null: $FlowFixMe);
 
 // In case when multiple navigation events emitted in a short period of time
 // This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
@@ -599,7 +654,7 @@ connectExtensionPort();
 
 mountReactDevToolsWhenReactHasLoaded();
 
-function onThemeChanged(themeName) {
+function onThemeChanged() {
   // Rerender with the new theme
   render();
 }
@@ -636,6 +691,12 @@ if (chrome.devtools.panels.setOpenResourceHandler) {
         resource.url,
         lineNumber - 1,
         columnNumber - 1,
+        maybeError => {
+          if (maybeError && maybeError.isError) {
+            // Not a resource Chrome can open. Fallback to browser default behavior.
+            window.open(resource.url);
+          }
+        },
       );
     },
   );
