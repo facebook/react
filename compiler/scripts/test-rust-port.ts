@@ -15,6 +15,7 @@
  */
 
 import * as babel from '@babel/core';
+import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
@@ -58,22 +59,40 @@ const fixturesPath = fixturesPathArg
   ? path.resolve(fixturesPathArg)
   : DEFAULT_FIXTURES_DIR;
 
-// --- Check that native module is built ---
-const NATIVE_NODE_PATH = path.join(
+// --- Build native module ---
+const NATIVE_DIR = path.join(
   REPO_ROOT,
-  'compiler/packages/babel-plugin-react-compiler-rust/native/index.node',
+  'compiler/packages/babel-plugin-react-compiler-rust/native',
 );
+const NATIVE_NODE_PATH = path.join(NATIVE_DIR, 'index.node');
 
-if (!fs.existsSync(NATIVE_NODE_PATH)) {
-  console.error(`${RED}ERROR: Rust native module not built.${RESET}`);
+console.log('Building Rust native module...');
+try {
+  execSync('~/.cargo/bin/cargo build -p react_compiler_napi', {
+    cwd: path.join(REPO_ROOT, 'compiler/crates'),
+    stdio: 'inherit',
+    shell: true,
+  });
+} catch {
+  console.error(`${RED}ERROR: Failed to build Rust native module.${RESET}`);
+  process.exit(1);
+}
+
+// Copy the built dylib as index.node (Node requires .node extension for native addons)
+const TARGET_DIR = path.join(REPO_ROOT, 'compiler/target/debug');
+const dylib = fs.existsSync(
+  path.join(TARGET_DIR, 'libreact_compiler_napi.dylib'),
+)
+  ? path.join(TARGET_DIR, 'libreact_compiler_napi.dylib')
+  : path.join(TARGET_DIR, 'libreact_compiler_napi.so');
+
+if (!fs.existsSync(dylib)) {
   console.error(
-    'Run: bash compiler/scripts/test-rust-port.sh to build automatically,',
-  );
-  console.error(
-    'or build manually: cd compiler/crates && cargo build -p react_compiler_napi',
+    `${RED}ERROR: Could not find built native module in ${TARGET_DIR}${RESET}`,
   );
   process.exit(1);
 }
+fs.copyFileSync(dylib, NATIVE_NODE_PATH);
 
 // --- Load plugins ---
 const tsPlugin = require('../packages/babel-plugin-react-compiler/src').default;
