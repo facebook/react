@@ -115,7 +115,7 @@ fn convert_binary_operator(op: &react_compiler_ast::operators::BinaryOperator) -
         AstOp::BitAnd => BinaryOperator::BitwiseAnd,
         AstOp::In => BinaryOperator::In,
         AstOp::Instanceof => BinaryOperator::InstanceOf,
-        AstOp::Pipeline => todo!("Pipeline operator not supported"),
+        AstOp::Pipeline => panic!("Pipeline operator is not supported"),
     }
 }
 
@@ -433,10 +433,64 @@ fn lower_expression(
             let loc = convert_opt_loc(&unary.base.loc);
             match &unary.operator {
                 react_compiler_ast::operators::UnaryOperator::Delete => {
-                    todo!("lower delete expression")
+                    // Delete can be on member expressions or identifiers
+                    let loc = convert_opt_loc(&unary.base.loc);
+                    match &*unary.argument {
+                        Expression::MemberExpression(member) => {
+                            let object = lower_expression_to_temporary(builder, &member.object);
+                            if !member.computed {
+                                match &*member.property {
+                                    Expression::Identifier(prop_id) => {
+                                        InstructionValue::PropertyDelete {
+                                            object,
+                                            property: PropertyLiteral::String(prop_id.name.clone()),
+                                            loc,
+                                        }
+                                    }
+                                    _ => {
+                                        builder.record_error(CompilerErrorDetail {
+                                            reason: "Unsupported delete target".to_string(),
+                                            category: ErrorCategory::Todo,
+                                            loc: loc.clone(),
+                                            description: None,
+                                            suggestions: None,
+                                        });
+                                        InstructionValue::UnsupportedNode { loc }
+                                    }
+                                }
+                            } else {
+                                let property = lower_expression_to_temporary(builder, &member.property);
+                                InstructionValue::ComputedDelete {
+                                    object,
+                                    property,
+                                    loc,
+                                }
+                            }
+                        }
+                        _ => {
+                            // delete on non-member expression (e.g., delete x) - not commonly supported
+                            builder.record_error(CompilerErrorDetail {
+                                reason: "Unsupported delete target".to_string(),
+                                category: ErrorCategory::Todo,
+                                loc: loc.clone(),
+                                description: None,
+                                suggestions: None,
+                            });
+                            InstructionValue::UnsupportedNode { loc }
+                        }
+                    }
                 }
                 react_compiler_ast::operators::UnaryOperator::Throw => {
-                    todo!("lower throw expression (unary)")
+                    // throw as unary operator (Babel-specific)
+                    let loc = convert_opt_loc(&unary.base.loc);
+                    builder.record_error(CompilerErrorDetail {
+                        reason: "throw expressions are not supported".to_string(),
+                        category: ErrorCategory::Todo,
+                        loc: loc.clone(),
+                        description: None,
+                        suggestions: None,
+                    });
+                    InstructionValue::UnsupportedNode { loc }
                 }
                 op => {
                     let value = lower_expression_to_temporary(builder, &unary.argument);
@@ -841,8 +895,15 @@ fn lower_expression(
                     AssignmentOperator::BitXorAssign => Some(BinaryOperator::BitwiseXor),
                     AssignmentOperator::BitAndAssign => Some(BinaryOperator::BitwiseAnd),
                     AssignmentOperator::OrAssign | AssignmentOperator::AndAssign | AssignmentOperator::NullishAssign => {
-                        // Logical assignment operators (||=, &&=, ??=)
-                        todo!("logical assignment operators (||=, &&=, ??=)")
+                        // Logical assignment operators (||=, &&=, ??=) - not yet supported
+                        builder.record_error(CompilerErrorDetail {
+                            reason: "Logical assignment operators (||=, &&=, ??=) are not yet supported".to_string(),
+                            category: ErrorCategory::Todo,
+                            loc: loc.clone(),
+                            description: None,
+                            suggestions: None,
+                        });
+                        return InstructionValue::UnsupportedNode { loc };
                     }
                     AssignmentOperator::Assign => unreachable!(),
                 };
@@ -913,11 +974,24 @@ fn lower_expression(
                         }
                     }
                     react_compiler_ast::patterns::PatternLike::MemberExpression(_member) => {
-                        // a.b += right: PropertyLoad, compute, PropertyStore
-                        todo!("compound assignment to member expression")
+                        builder.record_error(CompilerErrorDetail {
+                            reason: "Compound assignment to member expression is not yet supported".to_string(),
+                            category: ErrorCategory::Todo,
+                            loc: loc.clone(),
+                            description: None,
+                            suggestions: None,
+                        });
+                        InstructionValue::UnsupportedNode { loc }
                     }
                     _ => {
-                        todo!("compound assignment to complex pattern")
+                        builder.record_error(CompilerErrorDetail {
+                            reason: "Compound assignment to complex pattern is not yet supported".to_string(),
+                            category: ErrorCategory::Todo,
+                            loc: loc.clone(),
+                            description: None,
+                            suggestions: None,
+                        });
+                        InstructionValue::UnsupportedNode { loc }
                     }
                 }
             }
@@ -1273,7 +1347,20 @@ fn lower_expression(
                 loc,
             }
         }
-        Expression::AssignmentPattern(_) => todo!("lower AssignmentPattern"),
+        Expression::AssignmentPattern(_) => {
+            let loc = convert_opt_loc(&match expr {
+                Expression::AssignmentPattern(p) => p.base.loc.clone(),
+                _ => unreachable!(),
+            });
+            builder.record_error(CompilerErrorDetail {
+                reason: "AssignmentPattern in expression position is not supported".to_string(),
+                category: ErrorCategory::Todo,
+                loc: loc.clone(),
+                description: None,
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
         Expression::TSAsExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TSSatisfiesExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TSNonNullExpression(ts) => lower_expression(builder, &ts.expression),
@@ -2226,8 +2313,12 @@ fn lower_statement(
         }
         // Import/export declarations are skipped during lowering
         Statement::ImportDeclaration(_) => {}
-        Statement::ExportNamedDeclaration(_) => todo!("lower ExportNamedDeclaration"),
-        Statement::ExportDefaultDeclaration(_) => todo!("lower ExportDefaultDeclaration"),
+        Statement::ExportNamedDeclaration(_) => {
+            // Export declarations should not appear in function bodies; skip
+        }
+        Statement::ExportDefaultDeclaration(_) => {
+            // Export declarations should not appear in function bodies; skip
+        }
         Statement::ExportAllDeclaration(_) => {}
         // TypeScript/Flow declarations are type-only, skip them
         Statement::TSTypeAliasDeclaration(_)
@@ -3775,50 +3866,40 @@ fn lower_inner(
                 }
             }
             react_compiler_ast::patterns::PatternLike::RestElement(rest) => {
-                match &*rest.argument {
-                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
-                        let start = ident.base.start.unwrap_or(0);
-                        let binding = builder.resolve_identifier(&ident.name, start);
-                        match binding {
-                            VariableBinding::Identifier { identifier, .. } => {
-                                let param_loc = convert_opt_loc(&ident.base.loc);
-                                let place = Place {
-                                    identifier,
-                                    effect: Effect::Unknown,
-                                    reactive: false,
-                                    loc: param_loc,
-                                };
-                                hir_params.push(ParamPattern::Spread(SpreadPattern { place }));
-                            }
-                            _ => {
-                                builder.record_error(CompilerErrorDetail {
-                                    category: ErrorCategory::Invariant,
-                                    reason: format!(
-                                        "Could not find binding for rest param `{}`",
-                                        ident.name
-                                    ),
-                                    description: None,
-                                    loc: convert_opt_loc(&ident.base.loc),
-                                    suggestions: None,
-                                });
-                            }
-                        }
-                    }
-                    _ => {
-                        builder.record_error(CompilerErrorDetail {
-                            category: ErrorCategory::Todo,
-                            reason: "Destructuring in rest parameters is not yet supported".to_string(),
-                            description: None,
-                            loc: None,
-                            suggestions: None,
-                        });
-                    }
-                }
+                let rest_loc = convert_opt_loc(&rest.base.loc);
+                // Create a temporary place for the spread param
+                let place = build_temporary_place(&mut builder, rest_loc.clone());
+                hir_params.push(ParamPattern::Spread(SpreadPattern { place: place.clone() }));
+                // Delegate the assignment of the rest argument
+                lower_assignment(
+                    &mut builder,
+                    rest_loc,
+                    InstructionKind::Let,
+                    &rest.argument,
+                    place,
+                    AssignmentStyle::Assignment,
+                );
             }
-            _ => {
+            react_compiler_ast::patterns::PatternLike::ObjectPattern(_)
+            | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
+            | react_compiler_ast::patterns::PatternLike::AssignmentPattern(_) => {
+                let param_loc = convert_opt_loc(&pattern_like_loc(param));
+                let place = build_temporary_place(&mut builder, param_loc.clone());
+                promote_temporary(&mut builder, place.identifier);
+                hir_params.push(ParamPattern::Place(place.clone()));
+                lower_assignment(
+                    &mut builder,
+                    param_loc,
+                    InstructionKind::Let,
+                    param,
+                    place,
+                    AssignmentStyle::Assignment,
+                );
+            }
+            react_compiler_ast::patterns::PatternLike::MemberExpression(_) => {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
-                    reason: "Complex parameter patterns are not yet supported in nested functions".to_string(),
+                    reason: "MemberExpression parameters are not supported".to_string(),
                     description: None,
                     loc: None,
                     suggestions: None,
@@ -4226,8 +4307,9 @@ fn is_reorderable_expression(
     }
 }
 
-fn lower_type(node: &react_compiler_ast::expressions::Expression) -> Type {
-    todo!("lower_type not yet implemented - M8")
+fn lower_type(_node: &react_compiler_ast::expressions::Expression) -> Type {
+    // Type lowering is a future enhancement; return Poly for now
+    Type::Poly
 }
 
 /// Gather captured context variables for a nested function.
