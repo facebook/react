@@ -6,16 +6,19 @@ Create a testing infrastructure that validates the Rust port produces identical 
 
 **Current status**: M1, M2, M3 implemented. All Rust tests expected to fail (todo!() stubs). Next step: port lower() (M4).
 
-**Known issues to fix:**
-- TS binary currently uses BabelPluginReactCompiler via transformFromAstSync instead of the independent pipeline described below. Must be rewritten to call passes directly.
-- Debug output format must be updated to use Rust `Debug`-style nested format (both TS and Rust sides).
-- TS debug printer collects identifiers/functions per-function; should print all from environment (matching Rust).
-- Rust binary needs matching config (compilationMode, target, etc.) added to Environment::new().
-- Implementation uses `CompilerError` / `debug_error` naming; rename to `CompilerDiagnostic` / `format_errors` per this plan.
-- Error format output between TS and Rust has not been validated for byte-identical output. Must be validated and aligned.
-- Both TS and Rust should print `returnTypeAnnotation` in debug output.
+**Known issues — resolved:**
+- TS binary rewritten to call `compile()` directly (bypasses `transformFromAstSync` + `BabelPluginReactCompiler`). Individual pass functions aren't exported from dist, so logger-based capture is still used, but the Babel plugin orchestration layer is bypassed. (done)
+- `debug_error` renamed to `format_errors` (done). `CompilerError` type name kept as-is since `CompilerDiagnostic` already exists as a different type in the diagnostics crate.
+- Both TS and Rust now print `returnTypeAnnotation` in debug output. (done)
 - `mark_predecessors` fallthrough handling: VERIFIED — matches TS `eachTerminalSuccessor` (does not include fallthroughs, correct).
 - `GotoVariant::Break` usage in `remove_unnecessary_try_catch` and `remove_dead_do_while_statements`: VERIFIED — matches TS.
+- All collection types migrated to `IndexMap`/`IndexSet` (done).
+
+**Known issues — remaining:**
+- Debug output format: TS and Rust debug printers produce different output formats. Both need to converge on Rust `Debug`-style nested format. This will be addressed when the Rust lowering is implemented and output comparison becomes possible.
+- TS debug printer collects identifiers/functions per-function; should print all from environment (matching Rust). Requires access to the Environment from TS, which is not currently exposed through the logger API.
+- Rust binary config: `Environment::new()` needs matching config (`compilationMode: "all"`, `target: "19"`, etc.) — requires adding config support to the Rust Environment type.
+- Error format output between TS and Rust has not been validated for byte-identical output. Will be validated when lowering produces real output.
 
 ---
 
@@ -271,8 +274,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         Ok(output) => {
             print!("{}", output);
         }
-        Err(diagnostic) => {
-            print_formatted_error(&diagnostic);
+        Err(error) => {
+            print!("{}", format_errors(&error));
         }
     }
 
@@ -284,7 +287,7 @@ fn run_pipeline(
     ast: &File,
     scope: &ScopeInfo,
     env: &mut Environment,
-) -> Result<String, CompilerDiagnostic> {
+) -> Result<String, CompilerError> {
     let mut hir = lower(ast, scope, env)?;
     if target_pass == "HIR" {
         if env.has_errors() {

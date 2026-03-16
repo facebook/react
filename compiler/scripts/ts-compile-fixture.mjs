@@ -14,14 +14,14 @@
  *
  * Usage: node compiler/scripts/ts-compile-fixture.mjs <pass> <fixture-path>
  *
- * The script uses the built compiler dist bundle and runs the full pipeline
- * with a logger to capture intermediate state at each pass checkpoint.
+ * The script uses the built compiler dist bundle and calls compile() directly
+ * (bypassing transformFromAstSync / BabelPluginReactCompiler) with a logger
+ * to capture intermediate state at each pass checkpoint.
  */
 
 import { parse } from "@babel/parser";
 import _traverse from "@babel/traverse";
 const traverse = _traverse.default || _traverse;
-import { transformFromAstSync } from "@babel/core";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -58,8 +58,10 @@ if (!fs.existsSync(COMPILER_DIST)) {
 }
 
 const compiler = require(COMPILER_DIST);
-const BabelPluginReactCompiler = compiler.default;
+const compileFunction = compiler.compile;
 const parseConfigPragmaForTests = compiler.parseConfigPragmaForTests;
+const parsePluginOptions = compiler.parsePluginOptions;
+const ProgramContext = compiler.ProgramContext;
 const printFunctionWithOutlined = compiler.printFunctionWithOutlined;
 const printReactiveFunctionWithOutlined =
   compiler.printReactiveFunctionWithOutlined;
@@ -67,7 +69,6 @@ const CompilerError = compiler.CompilerError;
 
 // --- Pass name mapping ---
 // Maps the plan doc's pass names to Pipeline.ts log() name strings.
-// Some plan names differ from the Pipeline.ts names for brevity.
 const PASS_NAME_MAP = {
   HIR: "HIR",
   PruneMaybeThrows: "PruneMaybeThrows",
@@ -118,57 +119,6 @@ const PASS_NAME_MAP = {
   PruneHoistedContexts: "PruneHoistedContexts",
   Codegen: "Codegen",
 };
-
-// Build the ordered list of Pipeline.ts log names for handling PruneMaybeThrows
-// appearing twice. We need to track which occurrence we want.
-const PIPELINE_LOG_ORDER = [
-  "HIR",
-  "PruneMaybeThrows",
-  "DropManualMemoization",
-  "InlineImmediatelyInvokedFunctionExpressions",
-  "MergeConsecutiveBlocks",
-  "SSA",
-  "EliminateRedundantPhi",
-  "ConstantPropagation",
-  "InferTypes",
-  "OptimizePropsMethodCalls",
-  "AnalyseFunctions",
-  "InferMutationAliasingEffects",
-  "OptimizeForSSR",
-  "DeadCodeElimination",
-  "PruneMaybeThrows", // second occurrence
-  "InferMutationAliasingRanges",
-  "InferReactivePlaces",
-  "RewriteInstructionKindsBasedOnReassignment",
-  "InferReactiveScopeVariables",
-  "MemoizeFbtAndMacroOperandsInSameScope",
-  "NameAnonymousFunctions",
-  "OutlineFunctions",
-  "AlignMethodCallScopes",
-  "AlignObjectMethodScopes",
-  "PruneUnusedLabelsHIR",
-  "AlignReactiveScopesToBlockScopesHIR",
-  "MergeOverlappingReactiveScopesHIR",
-  "BuildReactiveScopeTerminalsHIR",
-  "FlattenReactiveLoopsHIR",
-  "FlattenScopesWithHooksOrUseHIR",
-  "PropagateScopeDependenciesHIR",
-  "BuildReactiveFunction",
-  "PruneUnusedLabels",
-  "PruneNonEscapingScopes",
-  "PruneNonReactiveDependencies",
-  "PruneUnusedScopes",
-  "MergeReactiveScopesThatInvalidateTogether",
-  "PruneAlwaysInvalidatingScopes",
-  "PropagateEarlyReturns",
-  "PruneUnusedLValues",
-  "PromoteUsedTemporaries",
-  "ExtractScopeDeclarationsFromDestructuring",
-  "StabilizeBlockIds",
-  "RenameVariables",
-  "PruneHoistedContexts",
-  "Codegen",
-];
 
 // Resolve the target pipeline log name
 const pipelineLogName = PASS_NAME_MAP[passArg];
@@ -246,8 +196,6 @@ const logger = {
   },
 };
 
-pluginOptions.logger = logger;
-
 // --- Parse the fixture ---
 const plugins = language === "flow" ? ["flow", "jsx"] : ["typescript", "jsx"];
 const inputAst = parse(source, {
@@ -257,49 +205,140 @@ const inputAst = parse(source, {
   errorRecovery: true,
 });
 
-// --- Run the compiler pipeline ---
-try {
-  const result = transformFromAstSync(inputAst, source, {
-    filename: "/" + path.basename(fixturePath),
-    highlightCode: false,
-    retainLines: true,
-    compact: true,
-    plugins: [[BabelPluginReactCompiler, pluginOptions]],
-    sourceType: "module",
-    ast: false,
-    cloneInputAst: false,
-    configFile: false,
-    babelrc: false,
-  });
+// --- Find the first compilable function and run the pipeline ---
+const filename = "/" + path.basename(fixturePath);
+const parsedOpts = parsePluginOptions({ ...pluginOptions, logger });
 
-  // Find the target pass output
-  const targetOutput = findTargetOutput();
-  if (targetOutput) {
-    process.stdout.write(targetOutput.printed);
-    if (!targetOutput.printed.endsWith("\n")) {
-      process.stdout.write("\n");
+// Traverse to find the first function
+let functionPath = null;
+traverse(inputAst, {
+  FunctionDeclaration(nodePath) {
+    if (!functionPath) {
+      functionPath = nodePath;
+      nodePath.stop();
+    }
+  },
+  FunctionExpression(nodePath) {
+    if (!functionPath) {
+      functionPath = nodePath;
+      nodePath.stop();
+    }
+  },
+  ArrowFunctionExpression(nodePath) {
+    if (!functionPath) {
+      functionPath = nodePath;
+      nodePath.stop();
+    }
+  },
+});
+
+if (!functionPath) {
+  console.error("No function found in fixture");
+  process.exit(1);
+}
+
+// Create ProgramContext - need a program path for scope
+let programPath = null;
+traverse(inputAst, {
+  Program(nodePath) {
+    programPath = nodePath;
+    nodePath.stop();
+  },
+});
+
+const programContext = new ProgramContext({
+  program: programPath,
+  opts: parsedOpts,
+  filename,
+  code: source,
+  suppressions: [],
+  hasModuleScopeOptOut: false,
+});
+
+// Determine function type (component, hook, or other)
+function getFnType(fnPath) {
+  const node = fnPath.node;
+  if (fnPath.isFunctionDeclaration() && node.id) {
+    const name = node.id.name;
+    if (/^[A-Z]/.test(name)) {
+      return "Component";
+    }
+    if (/^use[A-Z]/.test(name)) {
+      return "Hook";
+    }
+  }
+  return "Other";
+}
+
+const fnType = getFnType(functionPath);
+
+// Run the compiler pipeline directly via compile()
+try {
+  const result = compileFunction(
+    functionPath,
+    parsedOpts.environment,
+    fnType,
+    "client", // outputMode
+    programContext,
+    logger,
+    filename,
+    source,
+  );
+
+  // compile() returns a Result type
+  if (result.isErr()) {
+    const err = result.unwrapErr();
+    // Check if the target pass output was captured before the error
+    const targetOutput = findTargetOutput();
+    if (targetOutput) {
+      process.stdout.write(targetOutput.printed);
+      if (!targetOutput.printed.endsWith("\n")) {
+        process.stdout.write("\n");
+      }
+    } else {
+      // Print compiler errors in debug format
+      process.stdout.write(debugPrintError(err));
+      process.exit(0);
     }
   } else {
-    // The target pass may not have run (e.g., conditional pass behind a feature flag)
-    console.error(`Pass "${passArg}" did not produce output (may be conditional on config)`);
-    process.exit(1);
+    // Find the target pass output
+    const targetOutput = findTargetOutput();
+    if (targetOutput) {
+      process.stdout.write(targetOutput.printed);
+      if (!targetOutput.printed.endsWith("\n")) {
+        process.stdout.write("\n");
+      }
+    } else {
+      console.error(`Pass "${passArg}" did not produce output (may be conditional on config)`);
+      process.exit(1);
+    }
   }
 } catch (e) {
   if (e.name === "ReactCompilerError" || e instanceof CompilerError) {
-    // Print compiler errors in debug format
-    process.stdout.write(debugPrintError(e));
-    process.exit(0);
-  }
-  // Check if the target pass output was captured before the error
-  const targetOutput = findTargetOutput();
-  if (targetOutput) {
-    process.stdout.write(targetOutput.printed);
-    if (!targetOutput.printed.endsWith("\n")) {
-      process.stdout.write("\n");
+    // Check if the target pass output was captured before the error
+    const targetOutput = findTargetOutput();
+    if (targetOutput) {
+      process.stdout.write(targetOutput.printed);
+      if (!targetOutput.printed.endsWith("\n")) {
+        process.stdout.write("\n");
+      }
+    } else {
+      // Print compiler errors in debug format
+      process.stdout.write(debugPrintError(e));
+      process.exit(0);
     }
   } else {
-    // Re-throw non-compiler errors if we didn't capture target pass output
-    throw e;
+    // Check if the target pass output was captured before the error
+    const targetOutput = findTargetOutput();
+    if (targetOutput) {
+      process.stdout.write(targetOutput.printed);
+      if (!targetOutput.printed.endsWith("\n")) {
+        process.stdout.write("\n");
+      }
+    } else {
+      // Re-throw non-compiler errors if we didn't capture target pass output
+      throw e;
+    }
   }
 }
 
@@ -324,4 +363,3 @@ function findTargetOutput() {
   }
   return null;
 }
-

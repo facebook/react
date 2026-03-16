@@ -28,6 +28,11 @@ fn main() {
         process::exit(1);
     });
 
+    // TODO: Add config matching TS binary:
+    //   compilationMode: "all"
+    //   assertValidMutableRanges: true
+    //   enableReanimatedCheck: false
+    //   target: "19"
     let mut env = Environment::new();
 
     match run_pipeline(pass, &ast, &scope, &mut env) {

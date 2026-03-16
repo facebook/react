@@ -841,6 +841,13 @@ function printHIRFunction(fn, functionIndex, outlinedCollector) {
   lines.push(`${indent(d1)}returns:`);
   lines.push(printPlaceInline(fn.returns, d2));
 
+  // returnTypeAnnotation
+  if (fn.returnTypeAnnotation != null) {
+    lines.push(`${indent(d1)}returnTypeAnnotation: ${JSON.stringify(fn.returnTypeAnnotation)}`);
+  } else {
+    lines.push(`${indent(d1)}returnTypeAnnotation: null`);
+  }
+
   // context
   if (fn.context.length > 0) {
     lines.push(`${indent(d1)}context:`);
