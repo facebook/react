@@ -203,6 +203,13 @@ fn lower_arguments(
     result
 }
 
+fn convert_update_operator(op: &react_compiler_ast::operators::UpdateOperator) -> UpdateOperator {
+    match op {
+        react_compiler_ast::operators::UpdateOperator::Increment => UpdateOperator::Increment,
+        react_compiler_ast::operators::UpdateOperator::Decrement => UpdateOperator::Decrement,
+    }
+}
+
 // =============================================================================
 // lower_member_expression
 // =============================================================================
@@ -379,10 +386,450 @@ fn lower_expression(
         }
         Expression::OptionalCallExpression(_) => todo!("lower OptionalCallExpression"),
         Expression::OptionalMemberExpression(_) => todo!("lower OptionalMemberExpression"),
-        Expression::LogicalExpression(_) => todo!("lower LogicalExpression"),
-        Expression::UpdateExpression(_) => todo!("lower UpdateExpression"),
-        Expression::ConditionalExpression(_) => todo!("lower ConditionalExpression"),
-        Expression::AssignmentExpression(_) => todo!("lower AssignmentExpression"),
+        Expression::LogicalExpression(expr) => {
+            let loc = convert_opt_loc(&expr.base.loc);
+            let continuation_block = builder.reserve(builder.current_block_kind());
+            let continuation_id = continuation_block.id;
+            let test_block = builder.reserve(BlockKind::Value);
+            let test_block_id = test_block.id;
+            let place = build_temporary_place(builder, loc.clone());
+            let left_place = build_temporary_place(builder, loc.clone());
+
+            // Block for short-circuit case: store left value as result, goto continuation
+            let consequent_block = builder.enter(BlockKind::Value, |builder, _block_id| {
+                lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                    lvalue: LValue {
+                        kind: InstructionKind::Const,
+                        place: place.clone(),
+                    },
+                    value: left_place.clone(),
+                    type_annotation: None,
+                    loc: left_place.loc.clone(),
+                });
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: left_place.loc.clone(),
+                }
+            });
+
+            // Block for evaluating right side
+            let alternate_block = builder.enter(BlockKind::Value, |builder, _block_id| {
+                let right = lower_expression_to_temporary(builder, &expr.right);
+                let right_loc = right.loc.clone();
+                lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                    lvalue: LValue {
+                        kind: InstructionKind::Const,
+                        place: place.clone(),
+                    },
+                    value: right,
+                    type_annotation: None,
+                    loc: right_loc.clone(),
+                });
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: right_loc,
+                }
+            });
+
+            let hir_op = match expr.operator {
+                react_compiler_ast::operators::LogicalOperator::And => LogicalOperator::And,
+                react_compiler_ast::operators::LogicalOperator::Or => LogicalOperator::Or,
+                react_compiler_ast::operators::LogicalOperator::NullishCoalescing => LogicalOperator::NullishCoalescing,
+            };
+
+            builder.terminate_with_continuation(
+                Terminal::Logical {
+                    operator: hir_op,
+                    test: test_block_id,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                test_block,
+            );
+
+            // Now in test block: lower left expression, copy to left_place
+            let left_value = lower_expression_to_temporary(builder, &expr.left);
+            builder.push(Instruction {
+                id: EvaluationOrder(0),
+                lvalue: left_place.clone(),
+                value: InstructionValue::LoadLocal {
+                    place: left_value,
+                    loc: loc.clone(),
+                },
+                effects: None,
+                loc: loc.clone(),
+            });
+
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test: left_place,
+                    consequent: consequent_block,
+                    alternate: alternate_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                continuation_block,
+            );
+
+            InstructionValue::LoadLocal { place: place.clone(), loc: place.loc.clone() }
+        }
+        Expression::UpdateExpression(update) => {
+            let loc = convert_opt_loc(&update.base.loc);
+            match update.argument.as_ref() {
+                Expression::MemberExpression(_member) => {
+                    // Member expression targets for update expressions are complex
+                    // (need lowerMemberExpression + PropertyStore/ComputedStore)
+                    builder.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::Todo,
+                        reason: "UpdateExpression with member expression argument is not yet supported".to_string(),
+                        description: None,
+                        loc: loc.clone(),
+                        suggestions: None,
+                    });
+                    InstructionValue::UnsupportedNode { loc }
+                }
+                Expression::Identifier(ident) => {
+                    let start = ident.base.start.unwrap_or(0);
+                    if builder.is_context_identifier(&ident.name, start) {
+                        builder.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Todo,
+                            reason: "UpdateExpression to variables captured within lambdas is not yet supported".to_string(),
+                            description: None,
+                            loc: loc.clone(),
+                            suggestions: None,
+                        });
+                        return InstructionValue::UnsupportedNode { loc };
+                    }
+
+                    let binding = builder.resolve_identifier(&ident.name, start);
+                    match &binding {
+                        VariableBinding::Global { .. } => {
+                            builder.record_error(CompilerErrorDetail {
+                                category: ErrorCategory::Todo,
+                                reason: "UpdateExpression where argument is a global is not yet supported".to_string(),
+                                description: None,
+                                loc: loc.clone(),
+                                suggestions: None,
+                            });
+                            return InstructionValue::UnsupportedNode { loc };
+                        }
+                        _ => {}
+                    }
+                    let identifier = match binding {
+                        VariableBinding::Identifier { identifier, .. } => identifier,
+                        _ => {
+                            builder.record_error(CompilerErrorDetail {
+                                category: ErrorCategory::Todo,
+                                reason: "UpdateExpression with non-local identifier".to_string(),
+                                description: None,
+                                loc: loc.clone(),
+                                suggestions: None,
+                            });
+                            return InstructionValue::UnsupportedNode { loc };
+                        }
+                    };
+                    let lvalue_place = Place {
+                        identifier,
+                        effect: Effect::Unknown,
+                        reactive: false,
+                        loc: loc.clone(),
+                    };
+
+                    // Load the current value
+                    let value = lower_identifier(builder, &ident.name, start, loc.clone());
+
+                    let operation = convert_update_operator(&update.operator);
+
+                    if update.prefix {
+                        InstructionValue::PrefixUpdate {
+                            lvalue: lvalue_place,
+                            operation,
+                            value,
+                            loc,
+                        }
+                    } else {
+                        InstructionValue::PostfixUpdate {
+                            lvalue: lvalue_place,
+                            operation,
+                            value,
+                            loc,
+                        }
+                    }
+
+                }
+                _ => {
+                    builder.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::Todo,
+                        reason: format!(
+                            "UpdateExpression with unsupported argument type"
+                        ),
+                        description: None,
+                        loc: loc.clone(),
+                        suggestions: None,
+                    });
+                    InstructionValue::UnsupportedNode { loc }
+                }
+            }
+        }
+        Expression::ConditionalExpression(expr) => {
+            let loc = convert_opt_loc(&expr.base.loc);
+            let continuation_block = builder.reserve(builder.current_block_kind());
+            let continuation_id = continuation_block.id;
+            let test_block = builder.reserve(BlockKind::Value);
+            let test_block_id = test_block.id;
+            let place = build_temporary_place(builder, loc.clone());
+
+            // Block for the consequent (test is truthy)
+            let consequent_block = builder.enter(BlockKind::Value, |builder, _block_id| {
+                let consequent = lower_expression_to_temporary(builder, &expr.consequent);
+                let consequent_loc = consequent.loc.clone();
+                lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                    lvalue: LValue {
+                        kind: InstructionKind::Const,
+                        place: place.clone(),
+                    },
+                    value: consequent,
+                    type_annotation: None,
+                    loc: loc.clone(),
+                });
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: consequent_loc,
+                }
+            });
+
+            // Block for the alternate (test is falsy)
+            let alternate_block = builder.enter(BlockKind::Value, |builder, _block_id| {
+                let alternate = lower_expression_to_temporary(builder, &expr.alternate);
+                let alternate_loc = alternate.loc.clone();
+                lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                    lvalue: LValue {
+                        kind: InstructionKind::Const,
+                        place: place.clone(),
+                    },
+                    value: alternate,
+                    type_annotation: None,
+                    loc: loc.clone(),
+                });
+                Terminal::Goto {
+                    block: continuation_id,
+                    variant: GotoVariant::Break,
+                    id: EvaluationOrder(0),
+                    loc: alternate_loc,
+                }
+            });
+
+            builder.terminate_with_continuation(
+                Terminal::Ternary {
+                    test: test_block_id,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                test_block,
+            );
+
+            // Now in test block: lower test expression
+            let test_place = lower_expression_to_temporary(builder, &expr.test);
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test: test_place,
+                    consequent: consequent_block,
+                    alternate: alternate_block,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                continuation_block,
+            );
+
+            InstructionValue::LoadLocal { place: place.clone(), loc: place.loc.clone() }
+        }
+        Expression::AssignmentExpression(expr) => {
+            use react_compiler_ast::operators::AssignmentOperator;
+            let loc = convert_opt_loc(&expr.base.loc);
+
+            if matches!(expr.operator, AssignmentOperator::Assign) {
+                // Simple `=` assignment
+                match &*expr.left {
+                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
+                        // Handle simple identifier assignment directly
+                        let start = ident.base.start.unwrap_or(0);
+                        let right = lower_expression_to_temporary(builder, &expr.right);
+                        let binding = builder.resolve_identifier(&ident.name, start);
+                        match binding {
+                            VariableBinding::Identifier { identifier, .. } => {
+                                let ident_loc = convert_opt_loc(&ident.base.loc);
+                                let place = Place {
+                                    identifier,
+                                    reactive: false,
+                                    effect: Effect::Unknown,
+                                    loc: ident_loc,
+                                };
+                                if builder.is_context_identifier(&ident.name, start) {
+                                    lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                                        lvalue: LValue {
+                                            kind: InstructionKind::Reassign,
+                                            place: place.clone(),
+                                        },
+                                        value: right,
+                                        loc: loc.clone(),
+                                    });
+                                    InstructionValue::LoadContext { place, loc }
+                                } else {
+                                    lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                                        lvalue: LValue {
+                                            kind: InstructionKind::Reassign,
+                                            place: place.clone(),
+                                        },
+                                        value: right,
+                                        type_annotation: None,
+                                        loc: loc.clone(),
+                                    });
+                                    InstructionValue::LoadLocal { place, loc }
+                                }
+                            }
+                            _ => {
+                                // Global or import assignment
+                                let name = ident.name.clone();
+                                let temp = lower_value_to_temporary(builder, InstructionValue::StoreGlobal {
+                                    name,
+                                    value: right,
+                                    loc: loc.clone(),
+                                });
+                                InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
+                            }
+                        }
+                    }
+                    _ => {
+                        // Destructuring or member expression assignment - delegate to lower_assignment
+                        let right = lower_expression_to_temporary(builder, &expr.right);
+                        let is_destructure = matches!(
+                            &*expr.left,
+                            react_compiler_ast::patterns::PatternLike::ObjectPattern(_)
+                                | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
+                        );
+                        let style = if is_destructure {
+                            AssignmentStyle::Destructure
+                        } else {
+                            AssignmentStyle::Assignment
+                        };
+                        lower_assignment(
+                            builder,
+                            loc.clone(),
+                            InstructionKind::Reassign,
+                            &expr.left,
+                            right.clone(),
+                            style,
+                        );
+                        InstructionValue::LoadLocal { place: right, loc }
+                    }
+                }
+            } else {
+                // Compound assignment operators
+                let binary_op = match expr.operator {
+                    AssignmentOperator::AddAssign => Some(BinaryOperator::Add),
+                    AssignmentOperator::SubAssign => Some(BinaryOperator::Subtract),
+                    AssignmentOperator::MulAssign => Some(BinaryOperator::Multiply),
+                    AssignmentOperator::DivAssign => Some(BinaryOperator::Divide),
+                    AssignmentOperator::RemAssign => Some(BinaryOperator::Modulo),
+                    AssignmentOperator::ExpAssign => Some(BinaryOperator::Exponent),
+                    AssignmentOperator::ShlAssign => Some(BinaryOperator::ShiftLeft),
+                    AssignmentOperator::ShrAssign => Some(BinaryOperator::ShiftRight),
+                    AssignmentOperator::UShrAssign => Some(BinaryOperator::UnsignedShiftRight),
+                    AssignmentOperator::BitOrAssign => Some(BinaryOperator::BitwiseOr),
+                    AssignmentOperator::BitXorAssign => Some(BinaryOperator::BitwiseXor),
+                    AssignmentOperator::BitAndAssign => Some(BinaryOperator::BitwiseAnd),
+                    AssignmentOperator::OrAssign | AssignmentOperator::AndAssign | AssignmentOperator::NullishAssign => {
+                        // Logical assignment operators (||=, &&=, ??=)
+                        todo!("logical assignment operators (||=, &&=, ??=)")
+                    }
+                    AssignmentOperator::Assign => unreachable!(),
+                };
+                let binary_op = match binary_op {
+                    Some(op) => op,
+                    None => {
+                        return InstructionValue::UnsupportedNode { loc };
+                    }
+                };
+
+                match &*expr.left {
+                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
+                        let start = ident.base.start.unwrap_or(0);
+                        let left_place = lower_expression_to_temporary(
+                            builder,
+                            &react_compiler_ast::expressions::Expression::Identifier(ident.clone()),
+                        );
+                        let right = lower_expression_to_temporary(builder, &expr.right);
+                        let binary_place = lower_value_to_temporary(builder, InstructionValue::BinaryExpression {
+                            operator: binary_op,
+                            left: left_place,
+                            right,
+                            loc: loc.clone(),
+                        });
+                        let binding = builder.resolve_identifier(&ident.name, start);
+                        match binding {
+                            VariableBinding::Identifier { identifier, .. } => {
+                                let ident_loc = convert_opt_loc(&ident.base.loc);
+                                let place = Place {
+                                    identifier,
+                                    reactive: false,
+                                    effect: Effect::Unknown,
+                                    loc: ident_loc,
+                                };
+                                if builder.is_context_identifier(&ident.name, start) {
+                                    lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                                        lvalue: LValue {
+                                            kind: InstructionKind::Reassign,
+                                            place: place.clone(),
+                                        },
+                                        value: binary_place,
+                                        loc: loc.clone(),
+                                    });
+                                    InstructionValue::LoadContext { place, loc }
+                                } else {
+                                    lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                                        lvalue: LValue {
+                                            kind: InstructionKind::Reassign,
+                                            place: place.clone(),
+                                        },
+                                        value: binary_place,
+                                        type_annotation: None,
+                                        loc: loc.clone(),
+                                    });
+                                    InstructionValue::LoadLocal { place, loc }
+                                }
+                            }
+                            _ => {
+                                // Global assignment
+                                let name = ident.name.clone();
+                                let temp = lower_value_to_temporary(builder, InstructionValue::StoreGlobal {
+                                    name,
+                                    value: binary_place,
+                                    loc: loc.clone(),
+                                });
+                                InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
+                            }
+                        }
+                    }
+                    react_compiler_ast::patterns::PatternLike::MemberExpression(_member) => {
+                        // a.b += right: PropertyLoad, compute, PropertyStore
+                        todo!("compound assignment to member expression")
+                    }
+                    _ => {
+                        todo!("compound assignment to complex pattern")
+                    }
+                }
+            }
+        }
         Expression::SequenceExpression(seq) => {
             let loc = convert_opt_loc(&seq.base.loc);
 
@@ -442,22 +889,161 @@ fn lower_expression(
         }
         Expression::ArrowFunctionExpression(_) => todo!("lower ArrowFunctionExpression"),
         Expression::FunctionExpression(_) => todo!("lower FunctionExpression"),
-        Expression::ObjectExpression(_) => todo!("lower ObjectExpression"),
-        Expression::ArrayExpression(_) => todo!("lower ArrayExpression"),
+        Expression::ObjectExpression(obj) => {
+            let loc = convert_opt_loc(&obj.base.loc);
+            let mut properties: Vec<ObjectPropertyOrSpread> = Vec::new();
+            for prop in &obj.properties {
+                match prop {
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+                        let key = lower_object_property_key(builder, &p.key, p.computed);
+                        let key = match key {
+                            Some(k) => k,
+                            None => continue,
+                        };
+                        let value = lower_expression_to_temporary(builder, &p.value);
+                        properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
+                            key,
+                            property_type: ObjectPropertyType::Property,
+                            place: value,
+                        }));
+                    }
+                    react_compiler_ast::expressions::ObjectExpressionProperty::SpreadElement(spread) => {
+                        let place = lower_expression_to_temporary(builder, &spread.argument);
+                        properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
+                    }
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectMethod(_method) => {
+                        // ObjectMethod lowering requires function lowering (M9)
+                        todo!("lower ObjectMethod in ObjectExpression")
+                    }
+                }
+            }
+            InstructionValue::ObjectExpression { properties, loc }
+        }
+        Expression::ArrayExpression(arr) => {
+            let loc = convert_opt_loc(&arr.base.loc);
+            let mut elements: Vec<ArrayElement> = Vec::new();
+            for element in &arr.elements {
+                match element {
+                    None => {
+                        elements.push(ArrayElement::Hole);
+                    }
+                    Some(Expression::SpreadElement(spread)) => {
+                        let place = lower_expression_to_temporary(builder, &spread.argument);
+                        elements.push(ArrayElement::Spread(SpreadPattern { place }));
+                    }
+                    Some(expr) => {
+                        let place = lower_expression_to_temporary(builder, expr);
+                        elements.push(ArrayElement::Place(place));
+                    }
+                }
+            }
+            InstructionValue::ArrayExpression { elements, loc }
+        }
         Expression::NewExpression(new_expr) => {
             let loc = convert_opt_loc(&new_expr.base.loc);
             let callee = lower_expression_to_temporary(builder, &new_expr.callee);
             let args = lower_arguments(builder, &new_expr.arguments);
             InstructionValue::NewExpression { callee, args, loc }
         }
-        Expression::TemplateLiteral(_) => todo!("lower TemplateLiteral"),
-        Expression::TaggedTemplateExpression(_) => todo!("lower TaggedTemplateExpression"),
-        Expression::AwaitExpression(_) => todo!("lower AwaitExpression"),
-        Expression::YieldExpression(_) => todo!("lower YieldExpression"),
-        Expression::SpreadElement(_) => todo!("lower SpreadElement"),
-        Expression::MetaProperty(_) => todo!("lower MetaProperty"),
-        Expression::ClassExpression(_) => todo!("lower ClassExpression"),
-        Expression::PrivateName(_) => todo!("lower PrivateName"),
+        Expression::TemplateLiteral(tmpl) => {
+            let loc = convert_opt_loc(&tmpl.base.loc);
+            let subexprs: Vec<Place> = tmpl.expressions.iter()
+                .map(|e| lower_expression_to_temporary(builder, e))
+                .collect();
+            let quasis: Vec<TemplateQuasi> = tmpl.quasis.iter()
+                .map(|q| TemplateQuasi {
+                    raw: q.value.raw.clone(),
+                    cooked: q.value.cooked.clone(),
+                })
+                .collect();
+            InstructionValue::TemplateLiteral { subexprs, quasis, loc }
+        }
+        Expression::TaggedTemplateExpression(tagged) => {
+            let loc = convert_opt_loc(&tagged.base.loc);
+            if !tagged.quasi.expressions.is_empty() {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "Handle tagged template with interpolations".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return InstructionValue::UnsupportedNode { loc };
+            }
+            assert!(
+                tagged.quasi.quasis.len() == 1,
+                "there should be only one quasi as we don't support interpolations yet"
+            );
+            let quasi = &tagged.quasi.quasis[0];
+            let value = TemplateQuasi {
+                raw: quasi.value.raw.clone(),
+                cooked: quasi.value.cooked.clone(),
+            };
+            let tag = lower_expression_to_temporary(builder, &tagged.tag);
+            InstructionValue::TaggedTemplateExpression { tag, value, loc }
+        }
+        Expression::AwaitExpression(await_expr) => {
+            let loc = convert_opt_loc(&await_expr.base.loc);
+            let value = lower_expression_to_temporary(builder, &await_expr.argument);
+            InstructionValue::Await { value, loc }
+        }
+        Expression::YieldExpression(yld) => {
+            let loc = convert_opt_loc(&yld.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "yield is not yet supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
+        Expression::SpreadElement(spread) => {
+            // SpreadElement should be handled by the parent context (array/object/call)
+            // If we reach here, just lower the argument expression
+            lower_expression(builder, &spread.argument)
+        }
+        Expression::MetaProperty(meta) => {
+            let loc = convert_opt_loc(&meta.base.loc);
+            if meta.meta.name == "import" && meta.property.name == "meta" {
+                InstructionValue::MetaProperty {
+                    meta: meta.meta.name.clone(),
+                    property: meta.property.name.clone(),
+                    loc,
+                }
+            } else {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "MetaProperty expressions other than import.meta are not yet supported".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                InstructionValue::UnsupportedNode { loc }
+            }
+        }
+        Expression::ClassExpression(cls) => {
+            let loc = convert_opt_loc(&cls.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "class expressions are not yet supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
+        Expression::PrivateName(pn) => {
+            let loc = convert_opt_loc(&pn.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "private names are not yet supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
         Expression::Super(sup) => {
             let loc = convert_opt_loc(&sup.base.loc);
             builder.record_error(CompilerErrorDetail {
@@ -469,7 +1055,17 @@ fn lower_expression(
             });
             InstructionValue::UnsupportedNode { loc }
         }
-        Expression::Import(_) => todo!("lower Import"),
+        Expression::Import(imp) => {
+            let loc = convert_opt_loc(&imp.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "dynamic import() is not yet supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
         Expression::ThisExpression(this) => {
             let loc = convert_opt_loc(&this.base.loc);
             builder.record_error(CompilerErrorDetail {
@@ -493,8 +1089,25 @@ fn lower_expression(
         Expression::TSTypeAssertion(ts) => lower_expression(builder, &ts.expression),
         Expression::TSInstantiationExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TypeCastExpression(tc) => lower_expression(builder, &tc.expression),
-        Expression::BigIntLiteral(_) => todo!("lower BigIntLiteral"),
-        Expression::RegExpLiteral(_) => todo!("lower RegExpLiteral"),
+        Expression::BigIntLiteral(big) => {
+            let loc = convert_opt_loc(&big.base.loc);
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "BigInt literals are not yet supported".to_string(),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            });
+            InstructionValue::UnsupportedNode { loc }
+        }
+        Expression::RegExpLiteral(re) => {
+            let loc = convert_opt_loc(&re.base.loc);
+            InstructionValue::RegExpLiteral {
+                pattern: re.pattern.clone(),
+                flags: re.flags.clone(),
+                loc,
+            }
+        }
     }
 }
 
@@ -1623,8 +2236,38 @@ fn lower_object_method(
 fn lower_object_property_key(
     builder: &mut HirBuilder,
     key: &react_compiler_ast::expressions::Expression,
-) -> ObjectPropertyKey {
-    todo!("lower_object_property_key not yet implemented - M8")
+    computed: bool,
+) -> Option<ObjectPropertyKey> {
+    use react_compiler_ast::expressions::Expression;
+    match key {
+        Expression::StringLiteral(lit) => {
+            Some(ObjectPropertyKey::String { name: lit.value.clone() })
+        }
+        Expression::Identifier(ident) if !computed => {
+            Some(ObjectPropertyKey::Identifier { name: ident.name.clone() })
+        }
+        Expression::NumericLiteral(lit) if !computed => {
+            Some(ObjectPropertyKey::Identifier { name: lit.value.to_string() })
+        }
+        _ if computed => {
+            let place = lower_expression_to_temporary(builder, key);
+            Some(ObjectPropertyKey::Computed { name: place })
+        }
+        _ => {
+            let loc = match key {
+                Expression::Identifier(i) => convert_opt_loc(&i.base.loc),
+                _ => None,
+            };
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: "Unsupported key type in ObjectExpression".to_string(),
+                description: None,
+                loc,
+                suggestions: None,
+            });
+            None
+        }
+    }
 }
 
 fn lower_reorderable_expression(
@@ -1667,4 +2310,6 @@ pub enum AssignmentStyle {
     Assignment,
     /// Compound assignment like `+=`, `-=`, etc.
     Compound,
+    /// Destructuring assignment
+    Destructure,
 }
