@@ -478,6 +478,7 @@ function loadServerReference<A: Iterable<any>, T>(
       const initializedPromise: InitializedChunk<T> = (blockedPromise: any);
       initializedPromise.status = INITIALIZED;
       initializedPromise.value = resolvedValue;
+      initializedPromise.reason = null;
       return resolvedValue;
     }
   } else if (bound instanceof ReactPromise) {

@@ -7898,7 +7898,7 @@ export function attach(
   // Map of Fiber and its force error status: true (error), false (toggled off)
   const forceErrorForFibers = new Map<Fiber, boolean>();
 
-  function shouldErrorFiberAccordingToMap(fiber: any): boolean {
+  function shouldErrorFiberAccordingToMap(fiber: any): boolean | null {
     if (typeof setErrorHandler !== 'function') {
       throw new Error(
         'Expected overrideError() to not get called for earlier React versions.',
@@ -7934,7 +7934,7 @@ export function attach(
       }
     }
     if (status === undefined) {
-      return false;
+      return null;
     }
     return status;
   }

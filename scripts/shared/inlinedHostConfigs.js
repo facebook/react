@@ -662,6 +662,25 @@ module.exports = [
     isServerSupported: false,
   },
   {
+    shortName: 'noop',
+    entryPoints: [
+      'react-noop-renderer',
+      'react-noop-renderer/persistent',
+      'react-noop-renderer/server',
+      'react-noop-renderer/flight-server',
+      'react-noop-renderer/flight-client',
+    ],
+    paths: [
+      'react-noop-renderer',
+      'react-client/flight',
+      'react-server/flight',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+    isFlightSupported: true,
+  },
+  {
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',

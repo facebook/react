@@ -1,4 +1,4 @@
-/* global chrome */
+/* global chrome, ExtensionRuntimePort */
 /** @flow */
 
 import type {RootType} from 'react-dom/src/client/ReactDOMRoot';
@@ -61,7 +61,7 @@ function createBridge() {
     listen(fn) {
       const bridgeListener = (message: Message) => fn(message);
       // Store the reference so that we unsubscribe from the same object.
-      const portOnMessage = ((port: any): ExtensionPort).onMessage;
+      const portOnMessage = port.onMessage;
       portOnMessage.addListener(bridgeListener);
 
       lastSubscribedBridgeListener = bridgeListener;
@@ -621,22 +621,7 @@ let root: RootType = (null: $FlowFixMe);
 
 let currentSelectedSource: null | SourceSelection = null;
 
-type ExtensionEvent = {
-  addListener(callback: (message: Message, port: ExtensionPort) => void): void,
-  removeListener(
-    callback: (message: Message, port: ExtensionPort) => void,
-  ): void,
-};
-
-/** https://developer.chrome.com/docs/extensions/reference/api/runtime#type-Port */
-type ExtensionPort = {
-  onDisconnect: ExtensionEvent,
-  onMessage: ExtensionEvent,
-  postMessage(message: mixed, transferable?: Array<mixed>): void,
-  disconnect(): void,
-};
-
-let port: ExtensionPort = (null: $FlowFixMe);
+let port: ExtensionRuntimePort = (null: $FlowFixMe);
 
 // In case when multiple navigation events emitted in a short period of time
 // This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
