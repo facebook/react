@@ -31,5 +31,6 @@ export {
 } from './HIRBuilder';
 export {mergeConsecutiveBlocks} from './MergeConsecutiveBlocks';
 export {mergeOverlappingReactiveScopesHIR} from './MergeOverlappingReactiveScopesHIR';
+export {printDebugHIR} from './DebugPrintHIR';
 export {printFunction, printHIR, printFunctionWithOutlined} from './PrintHIR';
 export {pruneUnusedLabelsHIR} from './PruneUnusedLabelsHIR';
