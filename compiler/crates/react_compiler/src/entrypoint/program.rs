@@ -20,15 +20,19 @@ use react_compiler_ast::declarations::{
 };
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
+use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::statements::*;
 use react_compiler_ast::{File, Program};
 use react_compiler_diagnostics::SourceLocation;
+use react_compiler_hir::ReactFunctionType;
+use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
 use super::compile_result::{CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo, DebugLogEntry, LoggerEvent};
 use super::imports::{
     get_react_compiler_runtime_module, validate_restricted_imports, ProgramContext,
 };
+use super::pipeline;
 use super::plugin_options::PluginOptions;
 use super::suppression::{
     filter_suppressions_that_affect_function, find_program_suppressions,
@@ -51,25 +55,14 @@ const OPT_IN_DIRECTIVES: &[&str] = &["use forget", "use memo"];
 const OPT_OUT_DIRECTIVES: &[&str] = &["use no forget", "use no memo"];
 
 // -----------------------------------------------------------------------
-// Public types
-// -----------------------------------------------------------------------
-
-/// The type of a React function (component, hook, or other)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ReactFunctionType {
-    Component,
-    Hook,
-    Other,
-}
-
-// -----------------------------------------------------------------------
 // Internal types
 // -----------------------------------------------------------------------
 
 /// A function found in the program that should be compiled
 #[allow(dead_code)]
-struct CompileSource {
+struct CompileSource<'a> {
     kind: CompileSourceKind,
+    fn_node: FunctionNode<'a>,
     /// Location of this function in the AST for logging
     fn_name: Option<String>,
     fn_loc: Option<SourceLocation>,
@@ -89,13 +82,10 @@ enum CompileSourceKind {
 
 /// Result of attempting to compile a function
 enum TryCompileResult {
-    /// Compilation succeeded (placeholder for when pipeline is implemented)
-    #[allow(dead_code)]
-    Compiled,
+    /// Compilation succeeded, with debug log entries from the pipeline
+    Compiled { debug_logs: Vec<DebugLogEntry> },
     /// Compilation produced an error
     Error(CompileError),
-    /// Pipeline not yet implemented
-    NotImplemented,
 }
 
 /// Represents a compilation error (either a structured CompilerError or an opaque error)
@@ -979,14 +969,13 @@ fn handle_error(
 /// Currently returns NotImplemented since the compilation pipeline (HIR lowering,
 /// optimization passes, codegen) is not yet ported to Rust.
 fn try_compile_function(
-    _fn_name: Option<&str>,
-    _fn_type: ReactFunctionType,
-    fn_start: Option<u32>,
-    fn_end: Option<u32>,
+    source: &CompileSource<'_>,
+    scope_info: &ScopeInfo,
     suppressions: &[SuppressionRange],
+    options: &PluginOptions,
 ) -> TryCompileResult {
     // Check for suppressions that affect this function
-    if let (Some(start), Some(end)) = (fn_start, fn_end) {
+    if let (Some(start), Some(end)) = (source.fn_start, source.fn_end) {
         let affecting = filter_suppressions_that_affect_function(suppressions, start, end);
         if !affecting.is_empty() {
             let owned: Vec<SuppressionRange> = affecting.into_iter().cloned().collect();
@@ -1010,19 +999,36 @@ fn try_compile_function(
         }
     }
 
-    // Pipeline not yet implemented
-    TryCompileResult::NotImplemented
+    // Run the compilation pipeline
+    match pipeline::compile_fn(
+        &source.fn_node,
+        source.fn_name.as_deref(),
+        scope_info,
+        source.fn_type,
+        options,
+    ) {
+        Ok(debug_logs) => TryCompileResult::Compiled { debug_logs },
+        Err(pipeline::CompileError::Lowering(msg)) => {
+            TryCompileResult::Error(CompileError::Structured(CompilerErrorInfo {
+                reason: "Lowering error".to_string(),
+                description: Some(msg),
+                details: vec![],
+            }))
+        }
+    }
 }
 
 /// Process a single function: check directives, attempt compilation, handle results.
 ///
-/// Returns a LoggerEvent to record what happened.
+/// Returns logger events and any debug log entries from the pipeline.
 fn process_fn(
-    source: &CompileSource,
+    source: &CompileSource<'_>,
+    scope_info: &ScopeInfo,
     context: &ProgramContext,
     opts: &PluginOptions,
-) -> Vec<LoggerEvent> {
+) -> (Vec<LoggerEvent>, Vec<DebugLogEntry>) {
     let mut events = Vec::new();
+    let mut debug_logs = Vec::new();
 
     // Parse directives from the function body
     let opt_in_result =
@@ -1034,17 +1040,16 @@ fn process_fn(
         Ok(d) => d,
         Err(err) => {
             events.extend(log_error(&err, source.fn_loc.clone()));
-            return events;
+            return (events, debug_logs);
         }
     };
 
     // Attempt compilation
     let compile_result = try_compile_function(
-        source.fn_name.as_deref(),
-        source.fn_type,
-        source.fn_start,
-        source.fn_end,
+        source,
+        scope_info,
         &context.suppressions,
+        opts,
     );
 
     match compile_result {
@@ -1056,17 +1061,17 @@ fn process_fn(
                 // Use handle_error logic (simplified since we can't throw)
                 events.extend(log_error(&err, source.fn_loc.clone()));
             }
-            return events;
+            return (events, debug_logs);
         }
-        TryCompileResult::NotImplemented => {
+        TryCompileResult::Compiled { debug_logs: fn_debug_logs } => {
+            debug_logs.extend(fn_debug_logs);
+
+            // Emit a CompileSkip event since optimization passes aren't implemented yet
             events.push(LoggerEvent::CompileSkip {
                 fn_loc: source.fn_loc.clone(),
-                reason: "Rust compilation pipeline not yet implemented".to_string(),
+                reason: "Rust compilation pipeline incomplete (lowering only)".to_string(),
                 loc: None,
             });
-            return events;
-        }
-        TryCompileResult::Compiled => {
             // When the pipeline is implemented, this path will:
             // 1. Check opt-out directives
             // 2. Log CompileSuccess
@@ -1082,7 +1087,7 @@ fn process_fn(
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
                     loc: opt_out.and_then(|d| d.base.loc.as_ref().map(convert_loc)),
                 });
-                return events;
+                return (events, debug_logs);
             }
 
             // Log success (placeholder values)
@@ -1098,7 +1103,7 @@ fn process_fn(
 
             // Check module scope opt-out
             if context.has_module_scope_opt_out {
-                return events;
+                return (events, debug_logs);
             }
 
             // Check output mode
@@ -1107,16 +1112,16 @@ fn process_fn(
                 .as_deref()
                 .unwrap_or(if opts.no_emit { "lint" } else { "client" });
             if output_mode == "lint" {
-                return events;
+                return (events, debug_logs);
             }
 
             // Check annotation mode
             if opts.compilation_mode == "annotation" && opt_in.is_none() {
-                return events;
+                return (events, debug_logs);
             }
 
             // Here we would apply the compiled function to the AST
-            events
+            (events, debug_logs)
         }
     }
 }
@@ -1161,6 +1166,7 @@ fn should_skip_compilation(program: &Program, options: &PluginOptions) -> bool {
 /// Information about an expression that might be a function to compile
 struct FunctionInfo<'a> {
     name: Option<String>,
+    fn_node: FunctionNode<'a>,
     params: &'a [PatternLike],
     body: FunctionBody<'a>,
     body_directives: Vec<Directive>,
@@ -1172,6 +1178,7 @@ struct FunctionInfo<'a> {
 fn fn_info_from_decl(decl: &FunctionDeclaration) -> FunctionInfo<'_> {
     FunctionInfo {
         name: get_function_name_from_id(decl.id.as_ref()),
+        fn_node: FunctionNode::FunctionDeclaration(decl),
         params: &decl.params,
         body: FunctionBody::Block(&decl.body),
         body_directives: decl.body.directives.clone(),
@@ -1192,6 +1199,7 @@ fn fn_info_from_func_expr<'a>(
             .as_ref()
             .map(|id| id.name.clone())
             .or(inferred_name),
+        fn_node: FunctionNode::FunctionExpression(expr),
         params: &expr.params,
         body: FunctionBody::Block(&expr.body),
         body_directives: expr.body.directives.clone(),
@@ -1214,6 +1222,7 @@ fn fn_info_from_arrow<'a>(
     };
     FunctionInfo {
         name: inferred_name,
+        fn_node: FunctionNode::ArrowFunctionExpression(expr),
         params: &expr.params,
         body,
         body_directives: directives,
@@ -1223,11 +1232,11 @@ fn fn_info_from_arrow<'a>(
 }
 
 /// Try to create a CompileSource from function info
-fn try_make_compile_source(
-    info: &FunctionInfo<'_>,
+fn try_make_compile_source<'a>(
+    info: FunctionInfo<'a>,
     opts: &PluginOptions,
     context: &mut ProgramContext,
-) -> Option<CompileSource> {
+) -> Option<CompileSource<'a>> {
     // Skip if already compiled
     if let Some(start) = info.base.start {
         if context.is_already_compiled(start) {
@@ -1252,12 +1261,13 @@ fn try_make_compile_source(
 
     Some(CompileSource {
         kind: CompileSourceKind::Original,
-        fn_name: info.name.clone(),
+        fn_node: info.fn_node,
+        fn_name: info.name,
         fn_loc: base_node_loc(info.base),
         fn_start: info.base.start,
         fn_end: info.base.end,
         fn_type,
-        body_directives: info.body_directives.clone(),
+        body_directives: info.body_directives,
     })
 }
 
@@ -1306,11 +1316,11 @@ fn try_extract_wrapped_function<'a>(
 /// - ExportNamedDeclaration with function declarations
 ///
 /// Skips classes and their contents (they may reference `this`).
-fn find_functions_to_compile(
-    program: &Program,
+fn find_functions_to_compile<'a>(
+    program: &'a Program,
     opts: &PluginOptions,
     context: &mut ProgramContext,
-) -> Vec<CompileSource> {
+) -> Vec<CompileSource<'a>> {
     let mut queue = Vec::new();
 
     for (_index, stmt) in program.body.iter().enumerate() {
@@ -1320,7 +1330,7 @@ fn find_functions_to_compile(
 
             Statement::FunctionDeclaration(func) => {
                 let info = fn_info_from_decl(func);
-                if let Some(source) = try_make_compile_source(&info, opts, context) {
+                if let Some(source) = try_make_compile_source(info, opts, context) {
                     queue.push(source);
                 }
             }
@@ -1338,7 +1348,7 @@ fn find_functions_to_compile(
                                     None,
                                 );
                                 if let Some(source) =
-                                    try_make_compile_source(&info, opts, context)
+                                    try_make_compile_source(info, opts, context)
                                 {
                                     queue.push(source);
                                 }
@@ -1350,7 +1360,7 @@ fn find_functions_to_compile(
                                     None,
                                 );
                                 if let Some(source) =
-                                    try_make_compile_source(&info, opts, context)
+                                    try_make_compile_source(info, opts, context)
                                 {
                                     queue.push(source);
                                 }
@@ -1363,7 +1373,7 @@ fn find_functions_to_compile(
                                     try_extract_wrapped_function(other, inferred_name)
                                 {
                                     if let Some(source) =
-                                        try_make_compile_source(&info, opts, context)
+                                        try_make_compile_source(info, opts, context)
                                     {
                                         queue.push(source);
                                     }
@@ -1378,7 +1388,7 @@ fn find_functions_to_compile(
                 match export.declaration.as_ref() {
                     ExportDefaultDecl::FunctionDeclaration(func) => {
                         let info = fn_info_from_decl(func);
-                        if let Some(source) = try_make_compile_source(&info, opts, context) {
+                        if let Some(source) = try_make_compile_source(info, opts, context) {
                             queue.push(source);
                         }
                     }
@@ -1387,7 +1397,7 @@ fn find_functions_to_compile(
                             Expression::FunctionExpression(func) => {
                                 let info = fn_info_from_func_expr(func, None, None);
                                 if let Some(source) =
-                                    try_make_compile_source(&info, opts, context)
+                                    try_make_compile_source(info, opts, context)
                                 {
                                     queue.push(source);
                                 }
@@ -1395,7 +1405,7 @@ fn find_functions_to_compile(
                             Expression::ArrowFunctionExpression(arrow) => {
                                 let info = fn_info_from_arrow(arrow, None, None);
                                 if let Some(source) =
-                                    try_make_compile_source(&info, opts, context)
+                                    try_make_compile_source(info, opts, context)
                                 {
                                     queue.push(source);
                                 }
@@ -1405,7 +1415,7 @@ fn find_functions_to_compile(
                                     try_extract_wrapped_function(other, None)
                                 {
                                     if let Some(source) =
-                                        try_make_compile_source(&info, opts, context)
+                                        try_make_compile_source(info, opts, context)
                                     {
                                         queue.push(source);
                                     }
@@ -1425,7 +1435,7 @@ fn find_functions_to_compile(
                         Declaration::FunctionDeclaration(func) => {
                             let info = fn_info_from_decl(func);
                             if let Some(source) =
-                                try_make_compile_source(&info, opts, context)
+                                try_make_compile_source(info, opts, context)
                             {
                                 queue.push(source);
                             }
@@ -1443,7 +1453,7 @@ fn find_functions_to_compile(
                                                 None,
                                             );
                                             if let Some(source) =
-                                                try_make_compile_source(&info, opts, context)
+                                                try_make_compile_source(info, opts, context)
                                             {
                                                 queue.push(source);
                                             }
@@ -1455,7 +1465,7 @@ fn find_functions_to_compile(
                                                 None,
                                             );
                                             if let Some(source) =
-                                                try_make_compile_source(&info, opts, context)
+                                                try_make_compile_source(info, opts, context)
                                             {
                                                 queue.push(source);
                                             }
@@ -1466,7 +1476,7 @@ fn find_functions_to_compile(
                                                 inferred_name,
                                             ) {
                                                 if let Some(source) =
-                                                    try_make_compile_source(&info, opts, context)
+                                                    try_make_compile_source(info, opts, context)
                                                 {
                                                     queue.push(source);
                                                 }
@@ -1514,7 +1524,7 @@ fn find_functions_to_compile(
 /// so all functions are skipped with a "not yet implemented" event.
 pub fn compile_program(
     file: File,
-    _scope: react_compiler_ast::scope::ScopeInfo,
+    scope: ScopeInfo,
     options: PluginOptions,
 ) -> CompileResult {
     let mut events: Vec<LoggerEvent> = Vec::new();
@@ -1638,8 +1648,9 @@ pub fn compile_program(
 
     // Process each function
     for source in &queue {
-        let fn_events = process_fn(source, &context, &options);
+        let (fn_events, fn_debug_logs) = process_fn(source, &scope, &context, &options);
         events.extend(fn_events);
+        debug_logs.extend(fn_debug_logs);
     }
 
     // If there's a module scope opt-out and we somehow compiled functions,

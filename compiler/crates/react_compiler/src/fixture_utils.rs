@@ -2,6 +2,7 @@ use react_compiler_ast::File;
 use react_compiler_ast::declarations::{Declaration, ExportDefaultDecl};
 use react_compiler_ast::expressions::Expression;
 use react_compiler_ast::statements::Statement;
+use react_compiler_lowering::FunctionNode;
 
 /// Count the number of top-level functions in an AST file.
 ///
@@ -78,4 +79,143 @@ fn is_function_expression(expr: &Expression) -> bool {
         expr,
         Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
     )
+}
+
+/// Extract the nth top-level function from an AST file as a `FunctionNode`.
+/// Also returns the inferred name (e.g. from a variable declarator).
+/// Returns None if function_index is out of bounds.
+pub fn extract_function(ast: &File, function_index: usize) -> Option<(FunctionNode<'_>, Option<&str>)> {
+    let mut index = 0usize;
+
+    for stmt in &ast.program.body {
+        match stmt {
+            Statement::FunctionDeclaration(func_decl) => {
+                if index == function_index {
+                    let name = func_decl.id.as_ref().map(|id| id.name.as_str());
+                    return Some((FunctionNode::FunctionDeclaration(func_decl), name));
+                }
+                index += 1;
+            }
+            Statement::VariableDeclaration(var_decl) => {
+                for declarator in &var_decl.declarations {
+                    if let Some(init) = &declarator.init {
+                        match init.as_ref() {
+                            Expression::FunctionExpression(func) => {
+                                if index == function_index {
+                                    let name = match &declarator.id {
+                                        react_compiler_ast::patterns::PatternLike::Identifier(ident) => Some(ident.name.as_str()),
+                                        _ => func.id.as_ref().map(|id| id.name.as_str()),
+                                    };
+                                    return Some((FunctionNode::FunctionExpression(func), name));
+                                }
+                                index += 1;
+                            }
+                            Expression::ArrowFunctionExpression(arrow) => {
+                                if index == function_index {
+                                    let name = match &declarator.id {
+                                        react_compiler_ast::patterns::PatternLike::Identifier(ident) => Some(ident.name.as_str()),
+                                        _ => None,
+                                    };
+                                    return Some((FunctionNode::ArrowFunctionExpression(arrow), name));
+                                }
+                                index += 1;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            Statement::ExportNamedDeclaration(export) => {
+                if let Some(decl) = &export.declaration {
+                    match decl.as_ref() {
+                        Declaration::FunctionDeclaration(func_decl) => {
+                            if index == function_index {
+                                let name = func_decl.id.as_ref().map(|id| id.name.as_str());
+                                return Some((FunctionNode::FunctionDeclaration(func_decl), name));
+                            }
+                            index += 1;
+                        }
+                        Declaration::VariableDeclaration(var_decl) => {
+                            for declarator in &var_decl.declarations {
+                                if let Some(init) = &declarator.init {
+                                    match init.as_ref() {
+                                        Expression::FunctionExpression(func) => {
+                                            if index == function_index {
+                                                let name = match &declarator.id {
+                                                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => Some(ident.name.as_str()),
+                                                    _ => func.id.as_ref().map(|id| id.name.as_str()),
+                                                };
+                                                return Some((FunctionNode::FunctionExpression(func), name));
+                                            }
+                                            index += 1;
+                                        }
+                                        Expression::ArrowFunctionExpression(arrow) => {
+                                            if index == function_index {
+                                                let name = match &declarator.id {
+                                                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => Some(ident.name.as_str()),
+                                                    _ => None,
+                                                };
+                                                return Some((FunctionNode::ArrowFunctionExpression(arrow), name));
+                                            }
+                                            index += 1;
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Statement::ExportDefaultDeclaration(export) => {
+                match export.declaration.as_ref() {
+                    ExportDefaultDecl::FunctionDeclaration(func_decl) => {
+                        if index == function_index {
+                            let name = func_decl.id.as_ref().map(|id| id.name.as_str());
+                            return Some((FunctionNode::FunctionDeclaration(func_decl), name));
+                        }
+                        index += 1;
+                    }
+                    ExportDefaultDecl::Expression(expr) => match expr.as_ref() {
+                        Expression::FunctionExpression(func) => {
+                            if index == function_index {
+                                let name = func.id.as_ref().map(|id| id.name.as_str());
+                                return Some((FunctionNode::FunctionExpression(func), name));
+                            }
+                            index += 1;
+                        }
+                        Expression::ArrowFunctionExpression(arrow) => {
+                            if index == function_index {
+                                return Some((FunctionNode::ArrowFunctionExpression(arrow), None));
+                            }
+                            index += 1;
+                        }
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+            Statement::ExpressionStatement(expr_stmt) => {
+                match expr_stmt.expression.as_ref() {
+                    Expression::FunctionExpression(func) => {
+                        if index == function_index {
+                            let name = func.id.as_ref().map(|id| id.name.as_str());
+                            return Some((FunctionNode::FunctionExpression(func), name));
+                        }
+                        index += 1;
+                    }
+                    Expression::ArrowFunctionExpression(arrow) => {
+                        if index == function_index {
+                            return Some((FunctionNode::ArrowFunctionExpression(arrow), None));
+                        }
+                        index += 1;
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }

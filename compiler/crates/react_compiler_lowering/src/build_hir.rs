@@ -1,10 +1,10 @@
 use indexmap::{IndexMap, IndexSet};
 use react_compiler_ast::scope::ScopeInfo;
-use react_compiler_ast::File;
 use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 
+use crate::FunctionNode;
 use crate::hir_builder::HirBuilder;
 
 // =============================================================================
@@ -2522,396 +2522,86 @@ fn lower_statement(
 }
 
 // =============================================================================
-// Function extraction helpers
+// lower() entry point
 // =============================================================================
-
-/// Information about a function extracted from the AST for lowering.
-struct ExtractedFunction<'a> {
-    id: Option<&'a str>,
-    params: &'a [react_compiler_ast::patterns::PatternLike],
-    body: FunctionBody<'a>,
-    generator: bool,
-    is_async: bool,
-    loc: Option<SourceLocation>,
-    /// The scope of this function (from node_to_scope).
-    scope_id: react_compiler_ast::scope::ScopeId,
-}
 
 enum FunctionBody<'a> {
     Block(&'a react_compiler_ast::statements::BlockStatement),
     Expression(&'a react_compiler_ast::expressions::Expression),
 }
 
-/// Extract the nth top-level function from the AST file.
-/// Returns None if function_index is out of bounds.
-fn extract_function<'a>(
-    ast: &'a File,
-    scope_info: &ScopeInfo,
-    function_index: usize,
-) -> Option<ExtractedFunction<'a>> {
-    use react_compiler_ast::declarations::{Declaration, ExportDefaultDecl};
-    use react_compiler_ast::expressions::Expression;
-    use react_compiler_ast::statements::Statement;
-
-    let mut index = 0usize;
-
-    for stmt in &ast.program.body {
-        match stmt {
-            Statement::FunctionDeclaration(func_decl) => {
-                if index == function_index {
-                    let start = func_decl.base.start.unwrap_or(0);
-                    let scope_id = scope_info
-                        .node_to_scope
-                        .get(&start)
-                        .copied()
-                        .unwrap_or(scope_info.program_scope);
-                    return Some(ExtractedFunction {
-                        id: func_decl.id.as_ref().map(|id| id.name.as_str()),
-                        params: &func_decl.params,
-                        body: FunctionBody::Block(&func_decl.body),
-                        generator: func_decl.generator,
-                        is_async: func_decl.is_async,
-                        loc: convert_opt_loc(&func_decl.base.loc),
-                        scope_id,
-                    });
-                }
-                index += 1;
-            }
-            Statement::VariableDeclaration(var_decl) => {
-                for declarator in &var_decl.declarations {
-                    if let Some(init) = &declarator.init {
-                        match init.as_ref() {
-                            Expression::FunctionExpression(func) => {
-                                if index == function_index {
-                                    let start = func.base.start.unwrap_or(0);
-                                    let scope_id = scope_info
-                                        .node_to_scope
-                                        .get(&start)
-                                        .copied()
-                                        .unwrap_or(scope_info.program_scope);
-                                    // Use the variable name as the id
-                                    let name = match &declarator.id {
-                                        react_compiler_ast::patterns::PatternLike::Identifier(
-                                            ident,
-                                        ) => Some(ident.name.as_str()),
-                                        _ => func.id.as_ref().map(|id| id.name.as_str()),
-                                    };
-                                    return Some(ExtractedFunction {
-                                        id: name,
-                                        params: &func.params,
-                                        body: FunctionBody::Block(&func.body),
-                                        generator: func.generator,
-                                        is_async: func.is_async,
-                                        loc: convert_opt_loc(&func.base.loc),
-                                        scope_id,
-                                    });
-                                }
-                                index += 1;
-                            }
-                            Expression::ArrowFunctionExpression(arrow) => {
-                                if index == function_index {
-                                    let start = arrow.base.start.unwrap_or(0);
-                                    let scope_id = scope_info
-                                        .node_to_scope
-                                        .get(&start)
-                                        .copied()
-                                        .unwrap_or(scope_info.program_scope);
-                                    let name = match &declarator.id {
-                                        react_compiler_ast::patterns::PatternLike::Identifier(
-                                            ident,
-                                        ) => Some(ident.name.as_str()),
-                                        _ => None,
-                                    };
-                                    let body = match arrow.body.as_ref() {
-                                        react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                                            FunctionBody::Block(block)
-                                        }
-                                        react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
-                                            FunctionBody::Expression(expr)
-                                        }
-                                    };
-                                    return Some(ExtractedFunction {
-                                        id: name,
-                                        params: &arrow.params,
-                                        body,
-                                        generator: arrow.generator,
-                                        is_async: arrow.is_async,
-                                        loc: convert_opt_loc(&arrow.base.loc),
-                                        scope_id,
-                                    });
-                                }
-                                index += 1;
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-            }
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(decl) = &export.declaration {
-                    match decl.as_ref() {
-                        Declaration::FunctionDeclaration(func_decl) => {
-                            if index == function_index {
-                                let start = func_decl.base.start.unwrap_or(0);
-                                let scope_id = scope_info
-                                    .node_to_scope
-                                    .get(&start)
-                                    .copied()
-                                    .unwrap_or(scope_info.program_scope);
-                                return Some(ExtractedFunction {
-                                    id: func_decl.id.as_ref().map(|id| id.name.as_str()),
-                                    params: &func_decl.params,
-                                    body: FunctionBody::Block(&func_decl.body),
-                                    generator: func_decl.generator,
-                                    is_async: func_decl.is_async,
-                                    loc: convert_opt_loc(&func_decl.base.loc),
-                                    scope_id,
-                                });
-                            }
-                            index += 1;
-                        }
-                        Declaration::VariableDeclaration(var_decl) => {
-                            for declarator in &var_decl.declarations {
-                                if let Some(init) = &declarator.init {
-                                    match init.as_ref() {
-                                        Expression::FunctionExpression(func) => {
-                                            if index == function_index {
-                                                let start = func.base.start.unwrap_or(0);
-                                                let scope_id = scope_info
-                                                    .node_to_scope
-                                                    .get(&start)
-                                                    .copied()
-                                                    .unwrap_or(scope_info.program_scope);
-                                                let name = match &declarator.id {
-                                                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
-                                                        Some(ident.name.as_str())
-                                                    }
-                                                    _ => func.id.as_ref().map(|id| id.name.as_str()),
-                                                };
-                                                return Some(ExtractedFunction {
-                                                    id: name,
-                                                    params: &func.params,
-                                                    body: FunctionBody::Block(&func.body),
-                                                    generator: func.generator,
-                                                    is_async: func.is_async,
-                                                    loc: convert_opt_loc(&func.base.loc),
-                                                    scope_id,
-                                                });
-                                            }
-                                            index += 1;
-                                        }
-                                        Expression::ArrowFunctionExpression(arrow) => {
-                                            if index == function_index {
-                                                let start = arrow.base.start.unwrap_or(0);
-                                                let scope_id = scope_info
-                                                    .node_to_scope
-                                                    .get(&start)
-                                                    .copied()
-                                                    .unwrap_or(scope_info.program_scope);
-                                                let name = match &declarator.id {
-                                                    react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
-                                                        Some(ident.name.as_str())
-                                                    }
-                                                    _ => None,
-                                                };
-                                                let body = match arrow.body.as_ref() {
-                                                    react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                                                        FunctionBody::Block(block)
-                                                    }
-                                                    react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
-                                                        FunctionBody::Expression(expr)
-                                                    }
-                                                };
-                                                return Some(ExtractedFunction {
-                                                    id: name,
-                                                    params: &arrow.params,
-                                                    body,
-                                                    generator: arrow.generator,
-                                                    is_async: arrow.is_async,
-                                                    loc: convert_opt_loc(&arrow.base.loc),
-                                                    scope_id,
-                                                });
-                                            }
-                                            index += 1;
-                                        }
-                                        _ => {}
-                                    }
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            Statement::ExportDefaultDeclaration(export) => {
-                match export.declaration.as_ref() {
-                    ExportDefaultDecl::FunctionDeclaration(func_decl) => {
-                        if index == function_index {
-                            let start = func_decl.base.start.unwrap_or(0);
-                            let scope_id = scope_info
-                                .node_to_scope
-                                .get(&start)
-                                .copied()
-                                .unwrap_or(scope_info.program_scope);
-                            return Some(ExtractedFunction {
-                                id: func_decl.id.as_ref().map(|id| id.name.as_str()),
-                                params: &func_decl.params,
-                                body: FunctionBody::Block(&func_decl.body),
-                                generator: func_decl.generator,
-                                is_async: func_decl.is_async,
-                                loc: convert_opt_loc(&func_decl.base.loc),
-                                scope_id,
-                            });
-                        }
-                        index += 1;
-                    }
-                    ExportDefaultDecl::Expression(expr) => match expr.as_ref() {
-                        Expression::FunctionExpression(func) => {
-                            if index == function_index {
-                                let start = func.base.start.unwrap_or(0);
-                                let scope_id = scope_info
-                                    .node_to_scope
-                                    .get(&start)
-                                    .copied()
-                                    .unwrap_or(scope_info.program_scope);
-                                return Some(ExtractedFunction {
-                                    id: func.id.as_ref().map(|id| id.name.as_str()),
-                                    params: &func.params,
-                                    body: FunctionBody::Block(&func.body),
-                                    generator: func.generator,
-                                    is_async: func.is_async,
-                                    loc: convert_opt_loc(&func.base.loc),
-                                    scope_id,
-                                });
-                            }
-                            index += 1;
-                        }
-                        Expression::ArrowFunctionExpression(arrow) => {
-                            if index == function_index {
-                                let start = arrow.base.start.unwrap_or(0);
-                                let scope_id = scope_info
-                                    .node_to_scope
-                                    .get(&start)
-                                    .copied()
-                                    .unwrap_or(scope_info.program_scope);
-                                let body = match arrow.body.as_ref() {
-                                    react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                                        FunctionBody::Block(block)
-                                    }
-                                    react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
-                                        FunctionBody::Expression(expr)
-                                    }
-                                };
-                                return Some(ExtractedFunction {
-                                    id: None,
-                                    params: &arrow.params,
-                                    body,
-                                    generator: arrow.generator,
-                                    is_async: arrow.is_async,
-                                    loc: convert_opt_loc(&arrow.base.loc),
-                                    scope_id,
-                                });
-                            }
-                            index += 1;
-                        }
-                        _ => {}
-                    },
-                    _ => {}
-                }
-            }
-            Statement::ExpressionStatement(expr_stmt) => {
-                match expr_stmt.expression.as_ref() {
-                    Expression::FunctionExpression(func) => {
-                        if index == function_index {
-                            let start = func.base.start.unwrap_or(0);
-                            let scope_id = scope_info
-                                .node_to_scope
-                                .get(&start)
-                                .copied()
-                                .unwrap_or(scope_info.program_scope);
-                            return Some(ExtractedFunction {
-                                id: func.id.as_ref().map(|id| id.name.as_str()),
-                                params: &func.params,
-                                body: FunctionBody::Block(&func.body),
-                                generator: func.generator,
-                                is_async: func.is_async,
-                                loc: convert_opt_loc(&func.base.loc),
-                                scope_id,
-                            });
-                        }
-                        index += 1;
-                    }
-                    Expression::ArrowFunctionExpression(arrow) => {
-                        if index == function_index {
-                            let start = arrow.base.start.unwrap_or(0);
-                            let scope_id = scope_info
-                                .node_to_scope
-                                .get(&start)
-                                .copied()
-                                .unwrap_or(scope_info.program_scope);
-                            let body = match arrow.body.as_ref() {
-                                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                                    FunctionBody::Block(block)
-                                }
-                                react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
-                                    FunctionBody::Expression(expr)
-                                }
-                            };
-                            return Some(ExtractedFunction {
-                                id: None,
-                                params: &arrow.params,
-                                body,
-                                generator: arrow.generator,
-                                is_async: arrow.is_async,
-                                loc: convert_opt_loc(&arrow.base.loc),
-                                scope_id,
-                            });
-                        }
-                        index += 1;
-                    }
-                    _ => {}
-                }
-            }
-            _ => {}
-        }
-    }
-    None
-}
-
-// =============================================================================
-// lower() entry point
-// =============================================================================
-
-/// Main entry point: lower an AST function into HIR.
+/// Main entry point: lower a function AST node into HIR.
 ///
-/// `function_index` selects which top-level function in the file to lower
-/// (0-based, in source order).
+/// Receives a `FunctionNode` (discovered by the entrypoint) and lowers it to HIR.
+/// The `id` parameter provides the function name (which may come from the variable
+/// declarator rather than the function node itself, e.g. `const Foo = () => {}`).
 pub fn lower(
-    ast: &File,
+    func: &FunctionNode<'_>,
+    id: Option<&str>,
     scope_info: &ScopeInfo,
     env: &mut Environment,
-    function_index: usize,
 ) -> Result<HirFunction, CompilerError> {
-    let extracted = extract_function(ast, scope_info, function_index)
-        .expect("function_index out of bounds");
+    // Extract params, body, generator, is_async, loc, and scope_id from FunctionNode
+    let (params, body, generator, is_async, loc, start) = match func {
+        FunctionNode::FunctionDeclaration(decl) => (
+            &decl.params[..],
+            FunctionBody::Block(&decl.body),
+            decl.generator,
+            decl.is_async,
+            convert_opt_loc(&decl.base.loc),
+            decl.base.start.unwrap_or(0),
+        ),
+        FunctionNode::FunctionExpression(expr) => (
+            &expr.params[..],
+            FunctionBody::Block(&expr.body),
+            expr.generator,
+            expr.is_async,
+            convert_opt_loc(&expr.base.loc),
+            expr.base.start.unwrap_or(0),
+        ),
+        FunctionNode::ArrowFunctionExpression(arrow) => {
+            let body = match arrow.body.as_ref() {
+                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                    FunctionBody::Block(block)
+                }
+                react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
+                    FunctionBody::Expression(expr)
+                }
+            };
+            (
+                &arrow.params[..],
+                body,
+                arrow.generator,
+                arrow.is_async,
+                convert_opt_loc(&arrow.base.loc),
+                arrow.base.start.unwrap_or(0),
+            )
+        }
+    };
+
+    let scope_id = scope_info
+        .node_to_scope
+        .get(&start)
+        .copied()
+        .unwrap_or(scope_info.program_scope);
 
     // For top-level functions, context is empty (no captured refs)
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =
         IndexMap::new();
 
     let hir_func = lower_inner(
-        extracted.params,
-        extracted.body,
-        extracted.id,
-        extracted.generator,
-        extracted.is_async,
-        extracted.loc,
+        params,
+        body,
+        id,
+        generator,
+        is_async,
+        loc,
         scope_info,
         env,
         None,          // no pre-existing bindings for top-level
         context_map,
-        extracted.scope_id,
-        extracted.scope_id, // component_scope = function_scope for top-level
+        scope_id,
+        scope_id, // component_scope = function_scope for top-level
         true, // is_top_level
     );
 

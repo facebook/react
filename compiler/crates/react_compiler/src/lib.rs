@@ -1,7 +1,6 @@
 pub mod debug_print;
 pub mod entrypoint;
 pub mod fixture_utils;
-pub mod pipeline;
 
 // Re-export from new crates for backwards compatibility
 pub use react_compiler_diagnostics;
