@@ -107,7 +107,6 @@ impl ProgramContext {
             let mut uid = name.to_string();
             let mut i = 0;
             while self.has_reference(&uid) {
-                self.known_referenced_names.insert(uid.clone());
                 uid = format!("{}_{}", name, i);
                 i += 1;
             }

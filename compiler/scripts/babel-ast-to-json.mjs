@@ -127,7 +127,7 @@ function collectScopeInfo(ast) {
           name,
           kind: getBindingKind(binding.kind),
           scope: id,
-          declaration_type: binding.path.node.type,
+          declarationType: binding.path.node.type,
         };
 
         // Import bindings
@@ -179,9 +179,9 @@ function collectScopeInfo(ast) {
   return {
     scopes,
     bindings,
-    node_to_scope: nodeToScope,
-    reference_to_binding: referenceToBinding,
-    program_scope: 0,
+    nodeToScope,
+    referenceToBinding,
+    programScope: 0,
   };
 }
 
@@ -189,8 +189,8 @@ function renameIdentifiers(ast, scopeInfo) {
   traverse(ast, {
     Identifier(path) {
       const start = path.node.start;
-      if (start != null && String(start) in scopeInfo.reference_to_binding) {
-        const bindingId = scopeInfo.reference_to_binding[String(start)];
+      if (start != null && String(start) in scopeInfo.referenceToBinding) {
+        const bindingId = scopeInfo.referenceToBinding[String(start)];
         const binding = scopeInfo.bindings[bindingId];
         path.node.name = `${path.node.name}_${binding.scope}_${bindingId}`;
       }

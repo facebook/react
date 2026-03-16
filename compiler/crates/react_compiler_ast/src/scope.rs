@@ -10,6 +10,7 @@ pub struct ScopeId(pub u32);
 pub struct BindingId(pub u32);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScopeData {
     pub id: ScopeId,
     pub parent: Option<ScopeId>,
@@ -33,6 +34,7 @@ pub enum ScopeKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BindingData {
     pub id: BindingId,
     pub name: String,
@@ -87,6 +89,7 @@ pub enum ImportBindingKind {
 /// Complete scope information for a program. Stored separately from the AST
 /// and linked via position-based lookup maps.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScopeInfo {
     /// All scopes, indexed by ScopeId. scopes[id.0] gives the ScopeData for that scope.
     pub scopes: Vec<ScopeData>,

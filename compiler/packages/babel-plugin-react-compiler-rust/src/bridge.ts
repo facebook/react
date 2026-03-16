@@ -11,7 +11,7 @@ import type * as t from '@babel/types';
 
 export interface CompileSuccess {
   kind: 'success';
-  ast: t.Program | null;
+  ast: t.File | null;
   events: Array<LoggerEvent>;
 }
 
@@ -61,18 +61,14 @@ function getRustCompile(): (
 }
 
 export function compileWithRust(
-  ast: t.Program,
+  ast: t.File,
   scopeInfo: ScopeInfo,
   options: ResolvedOptions,
-  comments: Array<t.Comment>,
 ): CompileResult {
   const compile = getRustCompile();
 
-  // Attach comments to the AST for Rust (Babel stores them separately)
-  const astWithComments = {...ast, comments};
-
   const resultJson = compile(
-    JSON.stringify(astWithComments),
+    JSON.stringify(ast),
     JSON.stringify(scopeInfo),
     JSON.stringify(options),
   );

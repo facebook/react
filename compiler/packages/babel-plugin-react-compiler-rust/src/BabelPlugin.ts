@@ -42,12 +42,7 @@ export default function BabelPluginReactCompilerRust(
           const scopeInfo = extractScopeInfo(prog);
 
           // Step 5: Call Rust compiler
-          const result = compileWithRust(
-            prog.node,
-            scopeInfo,
-            opts,
-            pass.file.ast.comments ?? [],
-          );
+          const result = compileWithRust(pass.file.ast, scopeInfo, opts);
 
           // Step 6: Forward logger events
           const logger = (pass.opts as PluginOptions).logger;
