@@ -9,44 +9,48 @@
 //! Currently only runs BuildHIR (lowering); optimization passes will be added later.
 
 use react_compiler_ast::scope::ScopeInfo;
+use react_compiler_diagnostics::CompilerError;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::ReactFunctionType;
 use react_compiler_lowering::FunctionNode;
 
-use super::compile_result::DebugLogEntry;
+use super::compile_result::{CodegenFunction, DebugLogEntry};
 use super::plugin_options::PluginOptions;
 use crate::debug_print;
-
-/// Error type for pipeline failures.
-pub enum CompileError {
-    Lowering(String),
-}
 
 /// Run the compilation pipeline on a single function.
 ///
 /// Currently: creates an Environment, runs BuildHIR (lowering), and produces
-/// debug output. Returns debug log entries on success.
+/// debug output via the callback. Returns a CodegenFunction with zeroed memo
+/// stats on success (codegen is not yet implemented).
 pub fn compile_fn(
     func: &FunctionNode<'_>,
     fn_name: Option<&str>,
     scope_info: &ScopeInfo,
     fn_type: ReactFunctionType,
     _options: &PluginOptions,
-) -> Result<Vec<DebugLogEntry>, CompileError> {
+    debug_log: &mut dyn FnMut(DebugLogEntry),
+) -> Result<CodegenFunction, CompilerError> {
     let mut env = Environment::new();
     env.fn_type = fn_type;
 
-    let hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)
-        .map_err(|e| CompileError::Lowering(debug_print::format_errors(&e)))?;
+    let hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
 
     let debug_hir = debug_print::debug_hir(&hir, &env);
 
-    Ok(vec![DebugLogEntry {
+    debug_log(DebugLogEntry {
         kind: "hir",
-        name: format!(
-            "BuildHIR{}",
-            fn_name.map(|n| format!(": {}", n)).unwrap_or_default()
-        ),
+        name: "HIR".to_string(),
         value: debug_hir,
-    }])
+    });
+
+    Ok(CodegenFunction {
+        loc: None,
+        memo_slots_used: 0,
+        memo_blocks: 0,
+        memo_values: 0,
+        pruned_memo_blocks: 0,
+        pruned_memo_values: 0,
+        outlined: Vec::new(),
+    })
 }

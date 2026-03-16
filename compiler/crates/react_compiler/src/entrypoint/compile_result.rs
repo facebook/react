@@ -1,5 +1,6 @@
 use serde::Serialize;
 use react_compiler_diagnostics::SourceLocation;
+use react_compiler_hir::ReactFunctionType;
 
 /// Main result type returned by the compile function.
 /// Serialized to JSON and returned to the JS shim.
@@ -60,6 +61,26 @@ impl DebugLogEntry {
             value: value.into(),
         }
     }
+}
+
+/// Placeholder for codegen output. Since codegen isn't implemented yet,
+/// all memo fields default to 0. Matches the TS `CodegenFunction` shape.
+#[derive(Debug, Clone)]
+pub struct CodegenFunction {
+    pub loc: Option<SourceLocation>,
+    pub memo_slots_used: u32,
+    pub memo_blocks: u32,
+    pub memo_values: u32,
+    pub pruned_memo_blocks: u32,
+    pub pruned_memo_values: u32,
+    pub outlined: Vec<OutlinedFunction>,
+}
+
+/// An outlined function extracted during compilation.
+#[derive(Debug, Clone)]
+pub struct OutlinedFunction {
+    pub func: CodegenFunction,
+    pub fn_type: Option<ReactFunctionType>,
 }
 
 /// Logger events emitted during compilation.

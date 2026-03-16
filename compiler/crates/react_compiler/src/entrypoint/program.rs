@@ -23,12 +23,17 @@ use react_compiler_ast::patterns::PatternLike;
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::statements::*;
 use react_compiler_ast::{File, Program};
-use react_compiler_diagnostics::SourceLocation;
+use react_compiler_diagnostics::{
+    CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
+};
 use react_compiler_hir::ReactFunctionType;
 use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
-use super::compile_result::{CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo, DebugLogEntry, LoggerEvent};
+use super::compile_result::{
+    CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo, DebugLogEntry,
+    LoggerEvent,
+};
 use super::imports::{
     get_react_compiler_runtime_module, validate_restricted_imports, ProgramContext,
 };
@@ -80,21 +85,6 @@ enum CompileSourceKind {
     Outlined,
 }
 
-/// Result of attempting to compile a function
-enum TryCompileResult {
-    /// Compilation succeeded, with debug log entries from the pipeline
-    Compiled { debug_logs: Vec<DebugLogEntry> },
-    /// Compilation produced an error
-    Error(CompileError),
-}
-
-/// Represents a compilation error (either a structured CompilerError or an opaque error)
-#[allow(dead_code)]
-enum CompileError {
-    Structured(CompilerErrorInfo),
-    Opaque(String),
-}
-
 // -----------------------------------------------------------------------
 // Directive helpers
 // -----------------------------------------------------------------------
@@ -106,7 +96,7 @@ enum CompileError {
 fn try_find_directive_enabling_memoization<'a>(
     directives: &'a [Directive],
     opts: &PluginOptions,
-) -> Result<Option<&'a Directive>, CompileError> {
+) -> Result<Option<&'a Directive>, CompilerError> {
     // Check standard opt-in directives
     let opt_in = directives
         .iter()
@@ -144,7 +134,7 @@ fn find_directive_disabling_memoization<'a>(
 fn find_directives_dynamic_gating<'a>(
     directives: &'a [Directive],
     opts: &PluginOptions,
-) -> Result<Option<&'a Directive>, CompileError> {
+) -> Result<Option<&'a Directive>, CompilerError> {
     if opts.dynamic_gating.is_none() {
         return Ok(None);
     }
@@ -171,39 +161,27 @@ fn find_directives_dynamic_gating<'a>(
     }
 
     if !errors.is_empty() {
-        return Err(CompileError::Structured(CompilerErrorInfo {
-            reason: errors[0].clone(),
-            description: None,
-            details: errors
-                .into_iter()
-                .map(|e| CompilerErrorDetailInfo {
-                    category: "Gating".to_string(),
-                    reason: e,
-                    description: None,
-                    loc: None,
-                })
-                .collect(),
-        }));
+        let mut err = CompilerError::new();
+        for e in errors {
+            err.push_error_detail(CompilerErrorDetail::new(ErrorCategory::Gating, e));
+        }
+        return Err(err);
     }
 
     if matches.len() > 1 {
         let names: Vec<String> = matches.iter().map(|(d, _)| d.value.value.clone()).collect();
-        return Err(CompileError::Structured(CompilerErrorInfo {
-            reason: "Multiple dynamic gating directives found".to_string(),
-            description: Some(format!(
+        let mut err = CompilerError::new();
+        err.push_error_detail(
+            CompilerErrorDetail::new(
+                ErrorCategory::Gating,
+                "Multiple dynamic gating directives found",
+            )
+            .with_description(format!(
                 "Expected a single directive but found [{}]",
                 names.join(", ")
             )),
-            details: vec![CompilerErrorDetailInfo {
-                category: "Gating".to_string(),
-                reason: "Multiple dynamic gating directives found".to_string(),
-                description: Some(format!(
-                    "Expected a single directive but found [{}]",
-                    names.join(", ")
-                )),
-                loc: None,
-            }],
-        }));
+        );
+        return Err(err);
     }
 
     if matches.len() == 1 {
@@ -888,22 +866,32 @@ fn base_node_loc(base: &BaseNode) -> Option<SourceLocation> {
 // -----------------------------------------------------------------------
 
 /// Log an error as a LoggerEvent
-fn log_error(err: &CompileError, fn_loc: Option<SourceLocation>) -> Vec<LoggerEvent> {
+fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>) -> Vec<LoggerEvent> {
     let mut events = Vec::new();
-    match err {
-        CompileError::Structured(info) => {
-            for detail in &info.details {
+    for detail in &err.details {
+        match detail {
+            CompilerErrorOrDiagnostic::Diagnostic(d) => {
                 events.push(LoggerEvent::CompileError {
                     fn_loc: fn_loc.clone(),
-                    detail: detail.clone(),
+                    detail: CompilerErrorDetailInfo {
+                        category: format!("{:?}", d.category),
+                        reason: d.reason.clone(),
+                        description: d.description.clone(),
+                        loc: d.primary_location().copied(),
+                    },
                 });
             }
-        }
-        CompileError::Opaque(msg) => {
-            events.push(LoggerEvent::PipelineError {
-                fn_loc,
-                data: msg.clone(),
-            });
+            CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                events.push(LoggerEvent::CompileError {
+                    fn_loc: fn_loc.clone(),
+                    detail: CompilerErrorDetailInfo {
+                        category: format!("{:?}", d.category),
+                        reason: d.reason.clone(),
+                        description: d.description.clone(),
+                        loc: d.loc,
+                    },
+                });
+            }
         }
     }
     events
@@ -913,50 +901,69 @@ fn log_error(err: &CompileError, fn_loc: Option<SourceLocation>) -> Vec<LoggerEv
 /// Returns Some(CompileResult::Error) if the error should be surfaced as fatal,
 /// otherwise returns None (error was logged only).
 fn handle_error(
-    err: &CompileError,
+    err: &CompilerError,
     opts: &PluginOptions,
     fn_loc: Option<SourceLocation>,
     events: &mut Vec<LoggerEvent>,
-    debug_logs: &Vec<DebugLogEntry>,
+    debug_logs: &[DebugLogEntry],
 ) -> Option<CompileResult> {
     // Log the error
     events.extend(log_error(err, fn_loc.clone()));
 
     let should_panic = match opts.panic_threshold.as_str() {
         "all_errors" => true,
-        "critical_errors" => {
-            // Only panic for real errors (not warnings)
-            matches!(err, CompileError::Opaque(_))
-                || matches!(err, CompileError::Structured(info) if !info.details.is_empty())
-        }
+        "critical_errors" => err.has_errors(),
         _ => false,
     };
 
     // Config errors always cause a panic
-    let is_config_error = matches!(err, CompileError::Structured(info)
-        if info.details.iter().any(|d| d.category == "Config"));
+    let is_config_error = err.details.iter().any(|d| match d {
+        CompilerErrorOrDiagnostic::Diagnostic(d) => d.category == ErrorCategory::Config,
+        CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category == ErrorCategory::Config,
+    });
 
     if should_panic || is_config_error {
-        let error_info = match err {
-            CompileError::Structured(info) => info.clone(),
-            CompileError::Opaque(msg) => CompilerErrorInfo {
-                reason: msg.clone(),
-                description: None,
-                details: vec![CompilerErrorDetailInfo {
-                    category: "Unknown".to_string(),
-                    reason: msg.clone(),
-                    description: None,
-                    loc: None,
-                }],
-            },
-        };
+        let error_info = compiler_error_to_info(err);
         Some(CompileResult::Error {
             error: error_info,
             events: events.clone(),
-            debug_logs: debug_logs.clone(),
+            debug_logs: debug_logs.to_vec(),
         })
     } else {
         None
+    }
+}
+
+/// Convert a diagnostics CompilerError to a serializable CompilerErrorInfo.
+fn compiler_error_to_info(err: &CompilerError) -> CompilerErrorInfo {
+    let details: Vec<CompilerErrorDetailInfo> = err
+        .details
+        .iter()
+        .map(|d| match d {
+            CompilerErrorOrDiagnostic::Diagnostic(d) => CompilerErrorDetailInfo {
+                category: format!("{:?}", d.category),
+                reason: d.reason.clone(),
+                description: d.description.clone(),
+                loc: d.primary_location().copied(),
+            },
+            CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
+                category: format!("{:?}", d.category),
+                reason: d.reason.clone(),
+                description: d.description.clone(),
+                loc: d.loc,
+            },
+        })
+        .collect();
+
+    let (reason, description) = details
+        .first()
+        .map(|d| (d.reason.clone(), d.description.clone()))
+        .unwrap_or_else(|| ("Unknown error".to_string(), None));
+
+    CompilerErrorInfo {
+        reason,
+        description,
+        details,
     }
 }
 
@@ -966,67 +973,45 @@ fn handle_error(
 
 /// Attempt to compile a single function.
 ///
-/// Currently returns NotImplemented since the compilation pipeline (HIR lowering,
-/// optimization passes, codegen) is not yet ported to Rust.
+/// Returns `CodegenFunction` on success or `CompilerError` on failure.
+/// Debug log entries are collected via the `debug_logs` parameter.
 fn try_compile_function(
     source: &CompileSource<'_>,
     scope_info: &ScopeInfo,
     suppressions: &[SuppressionRange],
     options: &PluginOptions,
-) -> TryCompileResult {
+    debug_logs: &mut Vec<DebugLogEntry>,
+) -> Result<CodegenFunction, CompilerError> {
     // Check for suppressions that affect this function
     if let (Some(start), Some(end)) = (source.fn_start, source.fn_end) {
         let affecting = filter_suppressions_that_affect_function(suppressions, start, end);
         if !affecting.is_empty() {
             let owned: Vec<SuppressionRange> = affecting.into_iter().cloned().collect();
-            let compiler_error = suppressions_to_compiler_error(&owned);
-            // Convert the CompilerError into our CompileError type
-            let details: Vec<CompilerErrorDetailInfo> = compiler_error
-                .details()
-                .iter()
-                .map(|d| CompilerErrorDetailInfo {
-                    category: format!("{:?}", d.category),
-                    reason: d.reason.clone(),
-                    description: d.description.clone(),
-                    loc: d.loc.clone(),
-                })
-                .collect();
-            return TryCompileResult::Error(CompileError::Structured(CompilerErrorInfo {
-                reason: "Suppression found".to_string(),
-                description: None,
-                details,
-            }));
+            return Err(suppressions_to_compiler_error(&owned));
         }
     }
 
     // Run the compilation pipeline
-    match pipeline::compile_fn(
+    pipeline::compile_fn(
         &source.fn_node,
         source.fn_name.as_deref(),
         scope_info,
         source.fn_type,
         options,
-    ) {
-        Ok(debug_logs) => TryCompileResult::Compiled { debug_logs },
-        Err(pipeline::CompileError::Lowering(msg)) => {
-            TryCompileResult::Error(CompileError::Structured(CompilerErrorInfo {
-                reason: "Lowering error".to_string(),
-                description: Some(msg),
-                details: vec![],
-            }))
-        }
-    }
+        &mut |entry| debug_logs.push(entry),
+    )
 }
 
 /// Process a single function: check directives, attempt compilation, handle results.
 ///
-/// Returns logger events and any debug log entries from the pipeline.
+/// Returns `Ok((events, debug_logs))` on success or non-fatal error,
+/// or `Err(CompileResult)` if a fatal error should short-circuit the program.
 fn process_fn(
     source: &CompileSource<'_>,
     scope_info: &ScopeInfo,
     context: &ProgramContext,
     opts: &PluginOptions,
-) -> (Vec<LoggerEvent>, Vec<DebugLogEntry>) {
+) -> Result<(Vec<LoggerEvent>, Vec<DebugLogEntry>), CompileResult> {
     let mut events = Vec::new();
     let mut debug_logs = Vec::new();
 
@@ -1040,7 +1025,7 @@ fn process_fn(
         Ok(d) => d,
         Err(err) => {
             events.extend(log_error(&err, source.fn_loc.clone()));
-            return (events, debug_logs);
+            return Ok((events, debug_logs));
         }
     };
 
@@ -1050,35 +1035,25 @@ fn process_fn(
         scope_info,
         &context.suppressions,
         opts,
+        &mut debug_logs,
     );
 
     match compile_result {
-        TryCompileResult::Error(err) => {
+        Err(err) => {
             if opt_out.is_some() {
                 // If there's an opt-out, just log the error (don't escalate)
                 events.extend(log_error(&err, source.fn_loc.clone()));
             } else {
-                // Use handle_error logic (simplified since we can't throw)
-                events.extend(log_error(&err, source.fn_loc.clone()));
+                // Apply panic threshold logic
+                if let Some(result) =
+                    handle_error(&err, opts, source.fn_loc.clone(), &mut events, &debug_logs)
+                {
+                    return Err(result);
+                }
             }
-            return (events, debug_logs);
+            Ok((events, debug_logs))
         }
-        TryCompileResult::Compiled { debug_logs: fn_debug_logs } => {
-            debug_logs.extend(fn_debug_logs);
-
-            // Emit a CompileSkip event since optimization passes aren't implemented yet
-            events.push(LoggerEvent::CompileSkip {
-                fn_loc: source.fn_loc.clone(),
-                reason: "Rust compilation pipeline incomplete (lowering only)".to_string(),
-                loc: None,
-            });
-            // When the pipeline is implemented, this path will:
-            // 1. Check opt-out directives
-            // 2. Log CompileSuccess
-            // 3. Check module scope opt-out
-            // 4. Check output mode
-            // 5. Check compilation mode + opt-in
-
+        Ok(codegen_fn) => {
             // Check opt-out
             if !opts.ignore_use_no_forget && opt_out.is_some() {
                 let opt_out_value = &opt_out.unwrap().value.value;
@@ -1087,23 +1062,23 @@ fn process_fn(
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
                     loc: opt_out.and_then(|d| d.base.loc.as_ref().map(convert_loc)),
                 });
-                return (events, debug_logs);
+                return Ok((events, debug_logs));
             }
 
-            // Log success (placeholder values)
+            // Log success with memo stats from CodegenFunction
             events.push(LoggerEvent::CompileSuccess {
                 fn_loc: source.fn_loc.clone(),
                 fn_name: source.fn_name.clone(),
-                memo_slots: 0,
-                memo_blocks: 0,
-                memo_values: 0,
-                pruned_memo_blocks: 0,
-                pruned_memo_values: 0,
+                memo_slots: codegen_fn.memo_slots_used,
+                memo_blocks: codegen_fn.memo_blocks,
+                memo_values: codegen_fn.memo_values,
+                pruned_memo_blocks: codegen_fn.pruned_memo_blocks,
+                pruned_memo_values: codegen_fn.pruned_memo_values,
             });
 
             // Check module scope opt-out
             if context.has_module_scope_opt_out {
-                return (events, debug_logs);
+                return Ok((events, debug_logs));
             }
 
             // Check output mode
@@ -1112,16 +1087,16 @@ fn process_fn(
                 .as_deref()
                 .unwrap_or(if opts.no_emit { "lint" } else { "client" });
             if output_mode == "lint" {
-                return (events, debug_logs);
+                return Ok((events, debug_logs));
             }
 
             // Check annotation mode
             if opts.compilation_mode == "annotation" && opt_in.is_none() {
-                return (events, debug_logs);
+                return Ok((events, debug_logs));
             }
 
             // Here we would apply the compiled function to the AST
-            (events, debug_logs)
+            Ok((events, debug_logs))
         }
     }
 }
@@ -1562,23 +1537,7 @@ pub fn compile_program(
         .get("restrictedImports")
         .and_then(|v| serde_json::from_value(v.clone()).ok());
     if let Some(err) = validate_restricted_imports(program, &restricted_imports) {
-        // Convert CompilerError to our error type
-        let details: Vec<CompilerErrorDetailInfo> = err
-            .details()
-            .iter()
-            .map(|d| CompilerErrorDetailInfo {
-                category: format!("{:?}", d.category),
-                reason: d.reason.clone(),
-                description: d.description.clone(),
-                loc: d.loc.clone(),
-            })
-            .collect();
-        let compile_err = CompileError::Structured(CompilerErrorInfo {
-            reason: "Restricted import found".to_string(),
-            description: None,
-            details,
-        });
-        if let Some(result) = handle_error(&compile_err, &options, None, &mut events, &debug_logs) {
+        if let Some(result) = handle_error(&err, &options, None, &mut events, &debug_logs) {
             return result;
         }
         return CompileResult::Success {
@@ -1648,9 +1607,15 @@ pub fn compile_program(
 
     // Process each function
     for source in &queue {
-        let (fn_events, fn_debug_logs) = process_fn(source, &scope, &context, &options);
-        events.extend(fn_events);
-        debug_logs.extend(fn_debug_logs);
+        match process_fn(source, &scope, &context, &options) {
+            Ok((fn_events, fn_debug_logs)) => {
+                events.extend(fn_events);
+                debug_logs.extend(fn_debug_logs);
+            }
+            Err(fatal_result) => {
+                return fatal_result;
+            }
+        }
     }
 
     // If there's a module scope opt-out and we somehow compiled functions,
@@ -1672,53 +1637,6 @@ pub fn compile_program(
         ast: None,
         events,
         debug_logs,
-    }
-}
-
-// -----------------------------------------------------------------------
-// Trait for accessing CompilerError details
-// -----------------------------------------------------------------------
-
-/// Extension trait to access details from CompilerError (from react_compiler_diagnostics)
-trait CompilerErrorExt {
-    fn details(&self) -> Vec<CompilerErrorDetailView>;
-}
-
-struct CompilerErrorDetailView {
-    category: String,
-    reason: String,
-    description: Option<String>,
-    loc: Option<SourceLocation>,
-}
-
-impl CompilerErrorExt for react_compiler_diagnostics::CompilerError {
-    fn details(&self) -> Vec<CompilerErrorDetailView> {
-        // Extract details from the CompilerError's diagnostics
-        self.details
-            .iter()
-            .map(|d| {
-                let (category, reason, description, loc) = match d {
-                    react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(detail) => (
-                        format!("{:?}", detail.category),
-                        detail.reason.clone(),
-                        detail.description.clone(),
-                        detail.loc.clone(),
-                    ),
-                    react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(diag) => (
-                        format!("{:?}", diag.category),
-                        diag.reason.clone(),
-                        diag.description.clone(),
-                        diag.primary_location().cloned(),
-                    ),
-                };
-                CompilerErrorDetailView {
-                    category,
-                    reason,
-                    description,
-                    loc,
-                }
-            })
-            .collect()
     }
 }
 
