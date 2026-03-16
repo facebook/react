@@ -8,8 +8,9 @@ pub fn run_pipeline(
     ast: &File,
     scope: &ScopeInfo,
     env: &mut Environment,
+    function_index: usize,
 ) -> Result<String, CompilerError> {
-    let hir = lower(ast, scope, env)?;
+    let hir = lower(ast, scope, env, function_index)?;
     if target_pass == "HIR" {
         if env.has_errors() {
             return Ok(crate::debug_print::format_errors(env.errors()));

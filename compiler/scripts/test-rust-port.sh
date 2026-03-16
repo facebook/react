@@ -89,7 +89,7 @@ RUST_PANICKED=0
 OUTPUT_MISMATCH=0
 FAILURES=()
 
-TS_BINARY="$REPO_ROOT/compiler/scripts/ts-compile-fixture.mjs"
+TS_BINARY="$REPO_ROOT/compiler/scripts/ts-compile-fixture.ts"
 
 for fixture in "${FIXTURES[@]}"; do
   fixture_path="$FIXTURE_DIR/$fixture"
@@ -99,7 +99,7 @@ for fixture in "${FIXTURES[@]}"; do
   # Run TS binary
   ts_output_file="$TMPDIR/ts-output"
   ts_exit=0
-  node "$TS_BINARY" "$PASS" "$fixture_path" > "$ts_output_file" 2>&1 || ts_exit=$?
+  npx tsx "$TS_BINARY" "$PASS" "$fixture_path" > "$ts_output_file" 2>&1 || ts_exit=$?
 
   # Run Rust binary
   rust_output_file="$TMPDIR/rust-output"
@@ -159,7 +159,7 @@ for failure_info in "${FAILURES[@]}"; do
     # Re-run to capture outputs for diff display
     ts_out="$TMPDIR/ts-diff-display"
     rust_out="$TMPDIR/rust-diff-display"
-    node "$TS_BINARY" "$PASS" "$fixture_path" > "$ts_out" 2>&1 || true
+    npx tsx "$TS_BINARY" "$PASS" "$fixture_path" > "$ts_out" 2>&1 || true
     "$RUST_BINARY" "$PASS" "$ast_json" "$scope_json" > "$rust_out" 2>&1 || true
     diff -u --label "TypeScript" --label "Rust" "$ts_out" "$rust_out" | head -50 | while IFS= read -r line; do
       case "$line" in

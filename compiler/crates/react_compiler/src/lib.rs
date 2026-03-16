@@ -1,4 +1,5 @@
 pub mod debug_print;
+pub mod fixture_utils;
 pub mod pipeline;
 
 // Re-export from new crates for backwards compatibility

@@ -1,5 +1,6 @@
 use std::fs;
 use std::process;
+use react_compiler::fixture_utils::count_top_level_functions;
 use react_compiler::pipeline::run_pipeline;
 use react_compiler_hir::environment::Environment;
 
@@ -28,18 +29,30 @@ fn main() {
         process::exit(1);
     });
 
-    // TODO: Add config matching TS binary:
-    //   compilationMode: "all"
-    //   assertValidMutableRanges: true
-    //   enableReanimatedCheck: false
-    //   target: "19"
-    let mut env = Environment::new();
+    let num_functions = count_top_level_functions(&ast);
+    if num_functions == 0 {
+        eprintln!("No top-level functions found in fixture");
+        process::exit(1);
+    }
 
-    match run_pipeline(pass, &ast, &scope, &mut env) {
-        Ok(output) => print!("{}", output),
-        Err(e) => {
-            // Compiler errors go to stdout for diffing
-            print!("{}", react_compiler::debug_print::format_errors(&e));
+    let mut outputs: Vec<String> = Vec::new();
+
+    for function_index in 0..num_functions {
+        // Fresh environment per function
+        // TODO: Add config matching TS binary:
+        //   compilationMode: "all"
+        //   assertValidMutableRanges: true
+        //   enableReanimatedCheck: false
+        //   target: "19"
+        let mut env = Environment::new();
+
+        match run_pipeline(pass, &ast, &scope, &mut env, function_index) {
+            Ok(output) => outputs.push(output),
+            Err(e) => {
+                outputs.push(react_compiler::debug_print::format_errors(&e));
+            }
         }
     }
+
+    print!("{}", outputs.join("\n---\n"));
 }

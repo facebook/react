@@ -8,10 +8,14 @@ use react_compiler_hir::environment::Environment;
 use crate::hir_builder::HirBuilder;
 
 /// Main entry point: lower an AST function into HIR.
+///
+/// `function_index` selects which top-level function in the file to lower
+/// (0-based, in source order).
 pub fn lower(
     ast: &File,
     scope_info: &ScopeInfo,
     env: &mut Environment,
+    function_index: usize,
 ) -> Result<HirFunction, CompilerError> {
     todo!("lower not yet implemented - M4")
 }
