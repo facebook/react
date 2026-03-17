@@ -360,8 +360,14 @@ fn convert_update_operator(op: &react_compiler_ast::operators::UpdateOperator) -
 // lower_member_expression
 // =============================================================================
 
+enum MemberProperty {
+    Literal(PropertyLiteral),
+    Computed(Place),
+}
+
 struct LoweredMemberExpression {
     object: Place,
+    property: MemberProperty,
     value: InstructionValue,
 }
 
@@ -383,7 +389,7 @@ fn lower_member_expression_with_object(
     let object = lowered_object;
 
     if !member.computed {
-        let property = match member.property.as_ref() {
+        let prop_literal = match member.property.as_ref() {
             Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
             Expression::NumericLiteral(lit) => {
                 PropertyLiteral::Number(FloatValue::new(lit.value))
@@ -401,33 +407,34 @@ fn lower_member_expression_with_object(
                 });
                 return LoweredMemberExpression {
                     object,
+                    property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
                     value: InstructionValue::UnsupportedNode { node_type: None, loc },
                 };
             }
         };
         let value = InstructionValue::PropertyLoad {
             object: object.clone(),
-            property,
+            property: prop_literal.clone(),
             loc,
         };
-        LoweredMemberExpression { object, value }
+        LoweredMemberExpression { object, property: MemberProperty::Literal(prop_literal), value }
     } else {
         if let Expression::NumericLiteral(lit) = member.property.as_ref() {
-            let property = PropertyLiteral::Number(FloatValue::new(lit.value));
+            let prop_literal = PropertyLiteral::Number(FloatValue::new(lit.value));
             let value = InstructionValue::PropertyLoad {
                 object: object.clone(),
-                property,
+                property: prop_literal.clone(),
                 loc,
             };
-            return LoweredMemberExpression { object, value };
+            return LoweredMemberExpression { object, property: MemberProperty::Literal(prop_literal), value };
         }
         let property = lower_expression_to_temporary(builder, &member.property);
         let value = InstructionValue::ComputedLoad {
             object: object.clone(),
-            property,
+            property: property.clone(),
             loc,
         };
-        LoweredMemberExpression { object, value }
+        LoweredMemberExpression { object, property: MemberProperty::Computed(property), value }
     }
 }
 
@@ -442,7 +449,7 @@ fn lower_member_expression_impl(
 
     if !member.computed {
         // Non-computed: property must be an identifier or numeric literal
-        let property = match member.property.as_ref() {
+        let prop_literal = match member.property.as_ref() {
             Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
             Expression::NumericLiteral(lit) => {
                 PropertyLiteral::Number(FloatValue::new(lit.value))
@@ -460,35 +467,36 @@ fn lower_member_expression_impl(
                 });
                 return LoweredMemberExpression {
                     object,
+                    property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
                     value: InstructionValue::UnsupportedNode { node_type: None, loc },
                 };
             }
         };
         let value = InstructionValue::PropertyLoad {
             object: object.clone(),
-            property,
+            property: prop_literal.clone(),
             loc,
         };
-        LoweredMemberExpression { object, value }
+        LoweredMemberExpression { object, property: MemberProperty::Literal(prop_literal), value }
     } else {
         // Computed: check for numeric literal first (treated as PropertyLoad in TS)
         if let Expression::NumericLiteral(lit) = member.property.as_ref() {
-            let property = PropertyLiteral::Number(FloatValue::new(lit.value));
+            let prop_literal = PropertyLiteral::Number(FloatValue::new(lit.value));
             let value = InstructionValue::PropertyLoad {
                 object: object.clone(),
-                property,
+                property: prop_literal.clone(),
                 loc,
             };
-            return LoweredMemberExpression { object, value };
+            return LoweredMemberExpression { object, property: MemberProperty::Literal(prop_literal), value };
         }
         // Otherwise lower property to temporary for ComputedLoad
         let property = lower_expression_to_temporary(builder, &member.property);
         let value = InstructionValue::ComputedLoad {
             object: object.clone(),
-            property,
+            property: property.clone(),
             loc,
         };
-        LoweredMemberExpression { object, value }
+        LoweredMemberExpression { object, property: MemberProperty::Computed(property), value }
     }
 }
 
@@ -772,6 +780,7 @@ fn lower_expression(
                     };
                     let lowered = lower_member_expression(builder, member);
                     let object = lowered.object;
+                    let lowered_property = lowered.property;
                     let prev_value = lower_value_to_temporary(builder, lowered.value);
 
                     let one = lower_value_to_temporary(builder, InstructionValue::Primitive {
@@ -785,43 +794,24 @@ fn lower_expression(
                         loc: loc.clone(),
                     });
 
-                    // Store back
-                    if !member.computed {
-                        match &*member.property {
-                            Expression::Identifier(prop_id) => {
-                                lower_value_to_temporary(builder, InstructionValue::PropertyStore {
-                                    object,
-                                    property: PropertyLiteral::String(prop_id.name.clone()),
-                                    value: updated.clone(),
-                                    loc: loc.clone(),
-                                });
-                            }
-                            Expression::NumericLiteral(num) => {
-                                lower_value_to_temporary(builder, InstructionValue::PropertyStore {
-                                    object,
-                                    property: PropertyLiteral::Number(FloatValue::new(num.value)),
-                                    value: updated.clone(),
-                                    loc: loc.clone(),
-                                });
-                            }
-                            _ => {
-                                let prop = lower_expression_to_temporary(builder, &member.property);
-                                lower_value_to_temporary(builder, InstructionValue::ComputedStore {
-                                    object,
-                                    property: prop,
-                                    value: updated.clone(),
-                                    loc: loc.clone(),
-                                });
-                            }
+                    // Store back using the property from the lowered member expression
+                    match lowered_property {
+                        MemberProperty::Literal(prop_literal) => {
+                            lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                object,
+                                property: prop_literal,
+                                value: updated.clone(),
+                                loc: loc.clone(),
+                            });
                         }
-                    } else {
-                        let prop = lower_expression_to_temporary(builder, &member.property);
-                        lower_value_to_temporary(builder, InstructionValue::ComputedStore {
-                            object,
-                            property: prop,
-                            value: updated.clone(),
-                            loc: loc.clone(),
-                        });
+                        MemberProperty::Computed(prop_place) => {
+                            lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                object,
+                                property: prop_place,
+                                value: updated.clone(),
+                                loc: loc.clone(),
+                            });
+                        }
                     }
 
                     // Return previous for postfix, updated for prefix
@@ -1174,7 +1164,7 @@ fn lower_expression(
                                     loc: ident_loc,
                                 };
                                 if builder.is_context_identifier(&ident.name, start) {
-                                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                                    lower_value_to_temporary(builder, InstructionValue::StoreContext {
                                         lvalue: LValue {
                                             kind: InstructionKind::Reassign,
                                             place: place.clone(),
@@ -1182,9 +1172,9 @@ fn lower_expression(
                                         value: binary_place,
                                         loc: loc.clone(),
                                     });
-                                    InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
+                                    InstructionValue::LoadContext { place, loc }
                                 } else {
-                                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                                    lower_value_to_temporary(builder, InstructionValue::StoreLocal {
                                         lvalue: LValue {
                                             kind: InstructionKind::Reassign,
                                             place: place.clone(),
@@ -1193,7 +1183,7 @@ fn lower_expression(
                                         type_annotation: None,
                                         loc: loc.clone(),
                                     });
-                                    InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
+                                    InstructionValue::LoadLocal { place, loc }
                                 }
                             }
                             _ => {
@@ -1213,6 +1203,7 @@ fn lower_expression(
                         let member_loc = convert_opt_loc(&member.base.loc);
                         let lowered = lower_member_expression(builder, member);
                         let object = lowered.object;
+                        let lowered_property = lowered.property;
                         let current_value = lower_value_to_temporary(builder, lowered.value);
                         let right = lower_expression_to_temporary(builder, &expr.right);
                         let result = lower_value_to_temporary(builder, InstructionValue::BinaryExpression {
@@ -1221,43 +1212,24 @@ fn lower_expression(
                             right,
                             loc: member_loc.clone(),
                         });
-                        // Store back
-                        if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
-                            match &*member.property {
-                                react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
-                                    lower_value_to_temporary(builder, InstructionValue::PropertyStore {
-                                        object,
-                                        property: PropertyLiteral::String(prop_id.name.clone()),
-                                        value: result.clone(),
-                                        loc: member_loc,
-                                    });
-                                }
-                                react_compiler_ast::expressions::Expression::NumericLiteral(num) => {
-                                    lower_value_to_temporary(builder, InstructionValue::PropertyStore {
-                                        object,
-                                        property: PropertyLiteral::Number(FloatValue::new(num.value)),
-                                        value: result.clone(),
-                                        loc: member_loc,
-                                    });
-                                }
-                                _ => {
-                                    let prop = lower_expression_to_temporary(builder, &member.property);
-                                    lower_value_to_temporary(builder, InstructionValue::ComputedStore {
-                                        object,
-                                        property: prop,
-                                        value: result.clone(),
-                                        loc: member_loc,
-                                    });
-                                }
+                        // Store back using the property from the lowered member expression
+                        match lowered_property {
+                            MemberProperty::Literal(prop_literal) => {
+                                lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                    object,
+                                    property: prop_literal,
+                                    value: result.clone(),
+                                    loc: member_loc,
+                                });
                             }
-                        } else {
-                            let prop = lower_expression_to_temporary(builder, &member.property);
-                            lower_value_to_temporary(builder, InstructionValue::ComputedStore {
-                                object,
-                                property: prop,
-                                value: result.clone(),
-                                loc: member_loc,
-                            });
+                            MemberProperty::Computed(prop_place) => {
+                                lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                    object,
+                                    property: prop_place,
+                                    value: result.clone(),
+                                    loc: member_loc,
+                                });
+                            }
                         }
                         InstructionValue::LoadLocal { place: result.clone(), loc: result.loc.clone() }
                     }
@@ -2151,7 +2123,7 @@ fn lower_statement(
             if let Some(_handler) = builder.resolve_throw_handler() {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
-                    reason: "Support throw statements inside try/catch".to_string(),
+                    reason: "(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch".to_string(),
                     description: None,
                     loc: loc.clone(),
                     suggestions: None,
@@ -2632,7 +2604,7 @@ fn lower_statement(
                 loc: left_loc.clone(),
             });
 
-            match for_in.left.as_ref() {
+            let assign_result = match for_in.left.as_ref() {
                 react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
                     if var_decl.declarations.len() != 1 {
                         builder.record_error(CompilerErrorDetail {
@@ -2654,23 +2626,10 @@ fn lower_statement(
                             &declarator.id,
                             next_property.clone(),
                             AssignmentStyle::Assignment,
-                        );
+                        )
+                    } else {
+                        None
                     }
-                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
-                        place: next_property,
-                        loc: left_loc.clone(),
-                    });
-                    builder.terminate_with_continuation(
-                        Terminal::Branch {
-                            test,
-                            consequent: loop_block,
-                            alternate: continuation_id,
-                            fallthrough: continuation_id,
-                            id: EvaluationOrder(0),
-                            loc: left_loc,
-                        },
-                        continuation_block,
-                    );
                 }
                 react_compiler_ast::statements::ForInOfLeft::Pattern(pattern) => {
                     lower_assignment(
@@ -2680,24 +2639,26 @@ fn lower_statement(
                         pattern,
                         next_property.clone(),
                         AssignmentStyle::Assignment,
-                    );
-                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
-                        place: next_property,
-                        loc: left_loc.clone(),
-                    });
-                    builder.terminate_with_continuation(
-                        Terminal::Branch {
-                            test,
-                            consequent: loop_block,
-                            alternate: continuation_id,
-                            fallthrough: continuation_id,
-                            id: EvaluationOrder(0),
-                            loc: left_loc,
-                        },
-                        continuation_block,
-                    );
+                    )
                 }
-            }
+            };
+            // Use the assign result (StoreLocal temp) as the test, matching TS behavior
+            let test_value = assign_result.unwrap_or(next_property);
+            let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
+                place: test_value,
+                loc: left_loc.clone(),
+            });
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test,
+                    consequent: loop_block,
+                    alternate: continuation_id,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                continuation_block,
+            );
         }
         Statement::ForOfStatement(for_of) => {
             let loc = convert_opt_loc(&for_of.base.loc);
@@ -2780,7 +2741,7 @@ fn lower_statement(
                 loc: left_loc.clone(),
             });
 
-            match for_of.left.as_ref() {
+            let assign_result = match for_of.left.as_ref() {
                 react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
                     if var_decl.declarations.len() != 1 {
                         builder.record_error(CompilerErrorDetail {
@@ -2802,23 +2763,10 @@ fn lower_statement(
                             &declarator.id,
                             advance_iterator.clone(),
                             AssignmentStyle::Assignment,
-                        );
+                        )
+                    } else {
+                        None
                     }
-                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
-                        place: advance_iterator,
-                        loc: left_loc.clone(),
-                    });
-                    builder.terminate_with_continuation(
-                        Terminal::Branch {
-                            test,
-                            consequent: loop_block,
-                            alternate: continuation_id,
-                            fallthrough: continuation_id,
-                            id: EvaluationOrder(0),
-                            loc: left_loc,
-                        },
-                        continuation_block,
-                    );
                 }
                 react_compiler_ast::statements::ForInOfLeft::Pattern(pattern) => {
                     lower_assignment(
@@ -2828,24 +2776,26 @@ fn lower_statement(
                         pattern,
                         advance_iterator.clone(),
                         AssignmentStyle::Assignment,
-                    );
-                    let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
-                        place: advance_iterator,
-                        loc: left_loc.clone(),
-                    });
-                    builder.terminate_with_continuation(
-                        Terminal::Branch {
-                            test,
-                            consequent: loop_block,
-                            alternate: continuation_id,
-                            fallthrough: continuation_id,
-                            id: EvaluationOrder(0),
-                            loc: left_loc,
-                        },
-                        continuation_block,
-                    );
+                    )
                 }
-            }
+            };
+            // Use the assign result (StoreLocal temp) as the test, matching TS behavior
+            let test_value = assign_result.unwrap_or(advance_iterator);
+            let test = lower_value_to_temporary(builder, InstructionValue::LoadLocal {
+                place: test_value,
+                loc: left_loc.clone(),
+            });
+            builder.terminate_with_continuation(
+                Terminal::Branch {
+                    test,
+                    consequent: loop_block,
+                    alternate: continuation_id,
+                    fallthrough: continuation_id,
+                    id: EvaluationOrder(0),
+                    loc: loc.clone(),
+                },
+                continuation_block,
+            );
         }
         Statement::SwitchStatement(switch_stmt) => {
             let loc = convert_opt_loc(&switch_stmt.base.loc);
@@ -3276,9 +3226,14 @@ fn lower_identifier_for_assignment(
     name: &str,
     start: u32,
 ) -> Option<IdentifierForAssignment> {
-    let binding = builder.resolve_identifier(name, start, ident_loc);
+    let binding = builder.resolve_identifier(name, start, ident_loc.clone());
     match binding {
         VariableBinding::Identifier { identifier, binding_kind, .. } => {
+            // Set the identifier's loc from the declaration site (not for reassignments,
+            // which should keep the original declaration loc)
+            if kind != InstructionKind::Reassign {
+                builder.set_identifier_declaration_loc(identifier, &ident_loc);
+            }
             if binding_kind == BindingKind::Const && kind == InstructionKind::Reassign {
                 builder.record_error(CompilerErrorDetail {
                     reason: "Cannot reassign a `const` variable".to_string(),
@@ -3335,7 +3290,7 @@ fn lower_assignment(
     target: &react_compiler_ast::patterns::PatternLike,
     value: Place,
     assignment_style: AssignmentStyle,
-) {
+) -> Option<Place> {
     use react_compiler_ast::patterns::PatternLike;
 
     match target {
@@ -3352,13 +3307,15 @@ fn lower_assignment(
             match result {
                 None => {
                     // Error already recorded
+                    return None;
                 }
                 Some(IdentifierForAssignment::Global { name }) => {
-                    lower_value_to_temporary(builder, InstructionValue::StoreGlobal {
+                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreGlobal {
                         name,
                         value,
                         loc,
                     });
+                    return Some(temp);
                 }
                 Some(IdentifierForAssignment::Place(place)) => {
                     let start = id.base.start.unwrap_or(0);
@@ -3389,22 +3346,24 @@ fn lower_assignment(
                                 suggestions: None,
                                 description: None,
                             });
-                            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
-                            return;
+                            let temp = lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+                            return Some(temp);
                         }
-                        lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                        let temp = lower_value_to_temporary(builder, InstructionValue::StoreContext {
                             lvalue: LValue { place, kind },
                             value,
                             loc,
                         });
+                        return Some(temp);
                     } else {
                         let type_annotation = extract_type_annotation_name(&id.type_annotation);
-                        lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                        let temp = lower_value_to_temporary(builder, InstructionValue::StoreLocal {
                             lvalue: LValue { place, kind },
                             value,
                             type_annotation,
                             loc,
                         });
+                        return Some(temp);
                     }
                 }
             }
@@ -3420,7 +3379,7 @@ fn lower_assignment(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return;
+                return None;
             }
             let object = lower_expression_to_temporary(builder, &member.object);
             if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
@@ -3472,6 +3431,7 @@ fn lower_assignment(
                     });
                 }
             }
+            None
         }
 
         PatternLike::ArrayPattern(pattern) => {
@@ -3614,6 +3574,7 @@ fn lower_assignment(
                 let followup_loc = pattern_like_hir_loc(path).or(loc.clone());
                 lower_assignment(builder, followup_loc, kind, path, place, assignment_style);
             }
+            None
         }
 
         PatternLike::ObjectPattern(pattern) => {
@@ -3797,6 +3758,7 @@ fn lower_assignment(
                 let followup_loc = pattern_like_hir_loc(path).or(loc.clone());
                 lower_assignment(builder, followup_loc, kind, path, place, assignment_style);
             }
+            None
         }
 
         PatternLike::AssignmentPattern(pattern) => {
@@ -3876,12 +3838,12 @@ fn lower_assignment(
             );
 
             // Recursively assign the resolved value to the left pattern
-            lower_assignment(builder, pat_loc, kind, &pattern.left, temp, assignment_style);
+            lower_assignment(builder, pat_loc, kind, &pattern.left, temp, assignment_style)
         }
 
         PatternLike::RestElement(rest) => {
             // Delegate to the argument pattern
-            lower_assignment(builder, loc, kind, &rest.argument, value, assignment_style);
+            lower_assignment(builder, loc, kind, &rest.argument, value, assignment_style)
         }
     }
 }
@@ -4398,11 +4360,15 @@ fn lower_function_declaration(
             let binding = builder.resolve_identifier(name, start, ident_loc.clone());
             match binding {
                 VariableBinding::Identifier { identifier, .. } => {
+                    // Set the identifier's declaration loc from the name
+                    builder.set_identifier_declaration_loc(identifier, &ident_loc);
+                    // Use the full function declaration loc for the Place,
+                    // matching the TS behavior where lowerAssignment uses stmt.node.loc
                     let place = Place {
                         identifier,
                         reactive: false,
                         effect: Effect::Unknown,
-                        loc: ident_loc,
+                        loc: loc.clone(),
                     };
                     if builder.is_context_identifier(name, start) {
                         lower_value_to_temporary(builder, InstructionValue::StoreContext {
@@ -4558,6 +4524,8 @@ fn lower_inner(
                 let binding = builder.resolve_identifier(&ident.name, start, param_loc.clone());
                 match binding {
                     VariableBinding::Identifier { identifier, .. } => {
+                        // Set the identifier's loc from the declaration (param) site
+                        builder.set_identifier_declaration_loc(identifier, &param_loc);
                         let place = Place {
                             identifier,
                             effect: Effect::Unknown,

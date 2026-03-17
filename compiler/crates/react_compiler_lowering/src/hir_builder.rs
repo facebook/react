@@ -632,6 +632,14 @@ impl<'a> HirBuilder<'a> {
         id
     }
 
+    /// Set the loc on an identifier to the declaration-site loc.
+    /// This overrides any previously-set loc (which may have come from a reference site).
+    pub fn set_identifier_declaration_loc(&mut self, id: IdentifierId, loc: &Option<SourceLocation>) {
+        if let Some(loc_val) = loc {
+            self.env.identifiers[id.0 as usize].loc = Some(loc_val.clone());
+        }
+    }
+
     /// Resolve an identifier reference to a VariableBinding.
     ///
     /// Uses ScopeInfo to determine whether the reference is:
