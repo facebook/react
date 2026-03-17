@@ -2641,11 +2641,17 @@ function lowerExpression(
 
         // Store the previous value to a temporary
         const previousValuePlace = lowerValueToTemporary(builder, value);
+        const capturedPreviousValue = lowerValueToTemporary(builder, {
+          kind: 'LoadLocal',
+          place: {...previousValuePlace},
+          loc: exprLoc,
+        });
+
         // Store the new value to a temporary
         const updatedValue = lowerValueToTemporary(builder, {
           kind: 'BinaryExpression',
           operator: binaryOperator,
-          left: {...previousValuePlace},
+          left: {...capturedPreviousValue},
           right: lowerValueToTemporary(builder, {
             kind: 'Primitive',
             value: 1,
@@ -2678,7 +2684,7 @@ function lowerExpression(
           kind: 'LoadLocal',
           place: expr.node.prefix
             ? {...newValuePlace}
-            : {...previousValuePlace},
+            : {...capturedPreviousValue},
           loc: exprLoc,
         };
       }
