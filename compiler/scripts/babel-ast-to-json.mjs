@@ -156,18 +156,125 @@ function collectScopeInfo(ast) {
     return id;
   }
 
+  // Track context identifiers: variables that are shared between a function
+  // and its nested closures via mutation.
+  // identifierInfo maps Babel binding -> { reassigned, reassignedByInnerFn, referencedByInnerFn }
+  const identifierInfo = new Map();
+  const functionStack = []; // stack of function NodePaths for tracking nesting
+
+  const withFunctionScope = {
+    enter(path) {
+      functionStack.push(path);
+    },
+    exit() {
+      functionStack.pop();
+    },
+  };
+
   traverse(ast, {
     enter(path) {
       ensureScope(path.scope);
     },
+    FunctionDeclaration: withFunctionScope,
+    FunctionExpression: withFunctionScope,
+    ArrowFunctionExpression: withFunctionScope,
+    ObjectMethod: withFunctionScope,
     Identifier(path) {
       if (!path.isReferencedIdentifier()) return;
       const binding = path.scope.getBinding(path.node.name);
       if (binding && bindingMap.has(binding)) {
         referenceToBinding[String(path.node.start)] = bindingMap.get(binding);
+
+        // Track referencedByInnerFn
+        const currentFn = functionStack.at(-1) ?? null;
+        if (currentFn != null) {
+          const bindingAboveLambda = currentFn.scope.parent.getBinding(path.node.name);
+          if (binding === bindingAboveLambda) {
+            let info = identifierInfo.get(binding);
+            if (!info) {
+              info = { reassigned: false, reassignedByInnerFn: false, referencedByInnerFn: false };
+              identifierInfo.set(binding, info);
+            }
+            info.referencedByInnerFn = true;
+          }
+        }
+      }
+    },
+    AssignmentExpression(path) {
+      const left = path.get("left");
+      if (left.isLVal()) {
+        handleAssignmentForContext(left, functionStack, identifierInfo);
+      }
+    },
+    UpdateExpression(path) {
+      const argument = path.get("argument");
+      if (argument.isLVal()) {
+        handleAssignmentForContext(argument, functionStack, identifierInfo);
       }
     },
   });
+
+  function handleAssignmentForContext(lvalPath, fnStack, infoMap) {
+    const node = lvalPath.node;
+    if (!node) return;
+    switch (node.type) {
+      case "Identifier": {
+        const name = node.name;
+        const binding = lvalPath.scope.getBinding(name);
+        if (!binding || !bindingMap.has(binding)) break;
+        let info = infoMap.get(binding);
+        if (!info) {
+          info = { reassigned: false, reassignedByInnerFn: false, referencedByInnerFn: false };
+          infoMap.set(binding, info);
+        }
+        info.reassigned = true;
+        const currentFn = fnStack.at(-1) ?? null;
+        if (currentFn != null) {
+          const bindingAboveLambda = currentFn.scope.parent.getBinding(name);
+          if (binding === bindingAboveLambda) {
+            info.reassignedByInnerFn = true;
+          }
+        }
+        break;
+      }
+      case "ArrayPattern": {
+        for (const element of lvalPath.get("elements")) {
+          if (element.node) handleAssignmentForContext(element, fnStack, infoMap);
+        }
+        break;
+      }
+      case "ObjectPattern": {
+        for (const property of lvalPath.get("properties")) {
+          if (property.isObjectProperty()) {
+            handleAssignmentForContext(property.get("value"), fnStack, infoMap);
+          } else if (property.isRestElement()) {
+            handleAssignmentForContext(property, fnStack, infoMap);
+          }
+        }
+        break;
+      }
+      case "AssignmentPattern": {
+        handleAssignmentForContext(lvalPath.get("left"), fnStack, infoMap);
+        break;
+      }
+      case "RestElement": {
+        handleAssignmentForContext(lvalPath.get("argument"), fnStack, infoMap);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  // Compute contextIdentifiers: binding IDs of context variables
+  const contextIdentifiers = [];
+  for (const [binding, info] of identifierInfo) {
+    if (info.reassignedByInnerFn || (info.reassigned && info.referencedByInnerFn)) {
+      if (bindingMap.has(binding)) {
+        contextIdentifiers.push(bindingMap.get(binding));
+      }
+    }
+  }
 
   // Record declaration identifiers in reference_to_binding
   for (const [binding, bid] of bindingMap) {
@@ -181,6 +288,7 @@ function collectScopeInfo(ast) {
     bindings,
     nodeToScope,
     referenceToBinding,
+    contextIdentifiers,
     programScope: 0,
   };
 }

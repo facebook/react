@@ -90,6 +90,10 @@ pub struct HirBuilder<'a> {
     function_scope: ScopeId,
     /// The scope of the outermost component/hook function (for gather_captured_context).
     component_scope: ScopeId,
+    /// Set of BindingIds for variables declared in scopes between component_scope
+    /// and any inner function scope, that are referenced from an inner function scope.
+    /// These need StoreContext/LoadContext instead of StoreLocal/LoadLocal.
+    context_identifiers: std::collections::HashSet<BindingId>,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -113,9 +117,15 @@ impl<'a> HirBuilder<'a> {
         bindings: Option<IndexMap<BindingId, IdentifierId>>,
         context: Option<IndexMap<BindingId, Option<SourceLocation>>>,
         entry_block_kind: Option<BlockKind>,
+        used_names: Option<IndexMap<String, BindingId>>,
     ) -> Self {
         let entry = env.next_block_id();
         let kind = entry_block_kind.unwrap_or(BlockKind::Block);
+        // Pre-compute context identifiers: variables declared in scopes between
+        // component_scope and inner function scopes that are referenced from those
+        // inner function scopes. These are local variables that are captured by
+        // nested functions and need StoreContext/LoadContext semantics.
+        let context_identifiers = compute_context_identifiers(scope_info, component_scope);
         HirBuilder {
             completed: IndexMap::new(),
             current: new_block(entry, kind),
@@ -123,7 +133,7 @@ impl<'a> HirBuilder<'a> {
             scopes: Vec::new(),
             context: context.unwrap_or_default(),
             bindings: bindings.unwrap_or_default(),
-            used_names: IndexMap::new(),
+            used_names: used_names.unwrap_or_default(),
             env,
             scope_info,
             exception_handler_stack: Vec::new(),
@@ -131,6 +141,7 @@ impl<'a> HirBuilder<'a> {
             fbt_depth: 0,
             function_scope,
             component_scope,
+            context_identifiers,
         }
     }
 
@@ -169,6 +180,19 @@ impl<'a> HirBuilder<'a> {
     /// Access the bindings map.
     pub fn bindings(&self) -> &IndexMap<BindingId, IdentifierId> {
         &self.bindings
+    }
+
+    /// Access the used names map.
+    pub fn used_names(&self) -> &IndexMap<String, BindingId> {
+        &self.used_names
+    }
+
+    /// Merge used names from a child builder back into this builder.
+    /// This ensures name deduplication works across function scopes.
+    pub fn merge_used_names(&mut self, child_used_names: IndexMap<String, BindingId>) {
+        for (name, binding_id) in child_used_names {
+            self.used_names.entry(name).or_insert(binding_id);
+        }
     }
 
     /// Push an instruction onto the current block.
@@ -483,7 +507,7 @@ impl<'a> HirBuilder<'a> {
     /// 5. Remove unnecessary try-catch
     /// 6. Number all instructions and terminals
     /// 7. Mark predecessor blocks
-    pub fn build(mut self) -> (HIR, Vec<Instruction>) {
+    pub fn build(mut self) -> (HIR, Vec<Instruction>, IndexMap<String, BindingId>) {
         let mut hir = HIR {
             blocks: std::mem::take(&mut self.completed),
             entry: self.entry,
@@ -525,7 +549,8 @@ impl<'a> HirBuilder<'a> {
         mark_instruction_ids(&mut hir, &mut instructions);
         mark_predecessors(&mut hir);
 
-        (hir, instructions)
+        let used_names = self.used_names;
+        (hir, instructions, used_names)
     }
 
     // -----------------------------------------------------------------------
@@ -689,6 +714,14 @@ impl<'a> HirBuilder<'a> {
                     return false;
                 }
 
+                // Check if this binding is in the pre-computed context identifiers set.
+                // This catches both:
+                // 1. Variables declared in ancestor scopes (captured from outer functions)
+                // 2. Variables declared locally but captured by inner functions
+                if self.context_identifiers.contains(&binding_data.id) {
+                    return true;
+                }
+
                 // If in the function's own scope, it's local, not context
                 if binding_data.scope == self.function_scope {
                     return false;
@@ -704,6 +737,19 @@ impl<'a> HirBuilder<'a> {
             }
         }
     }
+}
+
+/// Compute the set of BindingIds for variables that are "context identifiers":
+/// variables declared in scopes between `component_scope` and inner function
+/// scopes, that are referenced from within those inner function scopes.
+///
+/// This matches the TS `Environment.#contextIdentifiers` set which is used to
+/// determine whether to emit StoreContext/LoadContext vs StoreLocal/LoadLocal.
+fn compute_context_identifiers(
+    scope_info: &ScopeInfo,
+    _component_scope: ScopeId,
+) -> std::collections::HashSet<BindingId> {
+    scope_info.context_identifiers.iter().copied().collect()
 }
 
 /// Check if `ancestor` is an ancestor scope of `descendant` by walking the

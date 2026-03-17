@@ -623,7 +623,8 @@ fn lower_expression(
             let test_block = builder.reserve(BlockKind::Value);
             let test_block_id = test_block.id;
             let place = build_temporary_place(builder, loc.clone());
-            let left_place = build_temporary_place(builder, loc.clone());
+            let left_loc = expression_loc(&expr.left);
+            let left_place = build_temporary_place(builder, left_loc);
 
             // Block for short-circuit case: store left value as result, goto continuation
             let consequent_block = builder.enter(BlockKind::Value, |builder, _block_id| {
@@ -957,26 +958,26 @@ fn lower_expression(
                                     loc: ident_loc,
                                 };
                                 if builder.is_context_identifier(&ident.name, start) {
-                                    lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreContext {
                                         lvalue: LValue {
                                             kind: InstructionKind::Reassign,
                                             place: place.clone(),
                                         },
                                         value: right,
-                                        loc: loc.clone(),
+                                        loc: place.loc.clone(),
                                     });
-                                    InstructionValue::LoadContext { place, loc }
+                                    InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
                                 } else {
-                                    lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreLocal {
                                         lvalue: LValue {
                                             kind: InstructionKind::Reassign,
                                             place: place.clone(),
                                         },
                                         value: right,
                                         type_annotation: None,
-                                        loc: loc.clone(),
+                                        loc: place.loc.clone(),
                                     });
-                                    InstructionValue::LoadLocal { place, loc }
+                                    InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
                                 }
                             }
                             _ => {
@@ -985,25 +986,59 @@ fn lower_expression(
                                 let temp = lower_value_to_temporary(builder, InstructionValue::StoreGlobal {
                                     name,
                                     value: right,
-                                    loc: loc.clone(),
+                                    loc: ident_loc,
                                 });
                                 InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
                             }
                         }
                     }
-                    _ => {
-                        // Destructuring or member expression assignment - delegate to lower_assignment
+                    react_compiler_ast::patterns::PatternLike::MemberExpression(member) => {
+                        // Member expression assignment: a.b = value or a[b] = value
                         let right = lower_expression_to_temporary(builder, &expr.right);
-                        let is_destructure = matches!(
-                            &*expr.left,
-                            react_compiler_ast::patterns::PatternLike::ObjectPattern(_)
-                                | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
-                        );
-                        let style = if is_destructure {
-                            AssignmentStyle::Destructure
+                        let left_loc = convert_opt_loc(&member.base.loc);
+                        let object = lower_expression_to_temporary(builder, &member.object);
+                        let temp = if !member.computed {
+                            match &*member.property {
+                                react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
+                                    lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                        object,
+                                        property: PropertyLiteral::String(prop_id.name.clone()),
+                                        value: right,
+                                        loc: left_loc,
+                                    })
+                                }
+                                react_compiler_ast::expressions::Expression::NumericLiteral(num) => {
+                                    lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                        object,
+                                        property: PropertyLiteral::Number(FloatValue::new(num.value)),
+                                        value: right,
+                                        loc: left_loc,
+                                    })
+                                }
+                                _ => {
+                                    let prop = lower_expression_to_temporary(builder, &member.property);
+                                    lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                        object,
+                                        property: prop,
+                                        value: right,
+                                        loc: left_loc,
+                                    })
+                                }
+                            }
                         } else {
-                            AssignmentStyle::Assignment
+                            let prop = lower_expression_to_temporary(builder, &member.property);
+                            lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                object,
+                                property: prop,
+                                value: right,
+                                loc: left_loc,
+                            })
                         };
+                        InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
+                    }
+                    _ => {
+                        // Destructuring assignment
+                        let right = lower_expression_to_temporary(builder, &expr.right);
                         let left_loc = pattern_like_hir_loc(&expr.left);
                         lower_assignment(
                             builder,
@@ -1011,7 +1046,7 @@ fn lower_expression(
                             InstructionKind::Reassign,
                             &expr.left,
                             right.clone(),
-                            style,
+                            AssignmentStyle::Destructure,
                         );
                         InstructionValue::LoadLocal { place: right, loc }
                     }
@@ -1076,7 +1111,7 @@ fn lower_expression(
                                     loc: ident_loc,
                                 };
                                 if builder.is_context_identifier(&ident.name, start) {
-                                    lower_value_to_temporary(builder, InstructionValue::StoreContext {
+                                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreContext {
                                         lvalue: LValue {
                                             kind: InstructionKind::Reassign,
                                             place: place.clone(),
@@ -1084,9 +1119,9 @@ fn lower_expression(
                                         value: binary_place,
                                         loc: loc.clone(),
                                     });
-                                    InstructionValue::LoadContext { place, loc }
+                                    InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
                                 } else {
-                                    lower_value_to_temporary(builder, InstructionValue::StoreLocal {
+                                    let temp = lower_value_to_temporary(builder, InstructionValue::StoreLocal {
                                         lvalue: LValue {
                                             kind: InstructionKind::Reassign,
                                             place: place.clone(),
@@ -1095,7 +1130,7 @@ fn lower_expression(
                                         type_annotation: None,
                                         loc: loc.clone(),
                                     });
-                                    InstructionValue::LoadLocal { place, loc }
+                                    InstructionValue::LoadLocal { place: temp.clone(), loc: temp.loc.clone() }
                                 }
                             }
                             _ => {
@@ -2021,7 +2056,7 @@ fn lower_statement(
             } else {
                 let undefined_value = InstructionValue::Primitive {
                     value: PrimitiveValue::Undefined,
-                    loc: loc.clone(),
+                    loc: None,
                 };
                 lower_value_to_temporary(builder, undefined_value)
             };
@@ -3110,7 +3145,7 @@ pub fn lower(
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =
         IndexMap::new();
 
-    let hir_func = lower_inner(
+    let (hir_func, _used_names) = lower_inner(
         params,
         body,
         ast_id,
@@ -3120,6 +3155,7 @@ pub fn lower(
         scope_info,
         env,
         None,          // no pre-existing bindings for top-level
+        None,          // no pre-existing used_names for top-level
         context_map,
         scope_id,
         scope_id, // component_scope = function_scope for top-level
@@ -3556,7 +3592,6 @@ fn lower_assignment(
             let pat_loc = convert_opt_loc(&pattern.base.loc);
 
             let temp = build_temporary_place(builder, pat_loc.clone());
-            promote_temporary(builder, temp.identifier);
 
             let test_block = builder.reserve(BlockKind::Value);
             let continuation_block = builder.reserve(builder.current_block_kind());
@@ -4030,12 +4065,13 @@ fn lower_function(
         merged
     };
 
-    // Clone parent bindings to pass to the inner lower
+    // Clone parent bindings and used_names to pass to the inner lower
     let parent_bindings = builder.bindings().clone();
+    let parent_used_names = builder.used_names().clone();
 
     // Use scope_info_and_env_mut to avoid conflicting borrows
     let (scope_info, env) = builder.scope_info_and_env_mut();
-    let hir_func = lower_inner(
+    let (hir_func, child_used_names) = lower_inner(
         params,
         body,
         id,
@@ -4045,11 +4081,17 @@ fn lower_function(
         scope_info,
         env,
         Some(parent_bindings),
+        Some(parent_used_names),
         merged_context,
         function_scope,
         component_scope,
         false, // nested function
     );
+
+    // Merge the child's used_names back into the parent builder
+    // This ensures name deduplication works across function scopes,
+    // matching the TS behavior where #bindings is shared by reference
+    builder.merge_used_names(child_used_names);
 
     let func_id = builder.environment_mut().add_function(hir_func);
     LoweredFunction { func: func_id }
@@ -4097,9 +4139,10 @@ fn lower_function_declaration(
     };
 
     let parent_bindings = builder.bindings().clone();
+    let parent_used_names = builder.used_names().clone();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
-    let hir_func = lower_inner(
+    let (hir_func, child_used_names) = lower_inner(
         &func_decl.params,
         FunctionBody::Block(&func_decl.body),
         func_decl.id.as_ref().map(|id| id.name.as_str()),
@@ -4109,11 +4152,14 @@ fn lower_function_declaration(
         scope_info,
         env,
         Some(parent_bindings),
+        Some(parent_used_names),
         merged_context,
         function_scope,
         component_scope,
         false, // nested function
     );
+
+    builder.merge_used_names(child_used_names);
 
     let func_id = builder.environment_mut().add_function(hir_func);
     let lowered_func = LoweredFunction { func: func_id };
@@ -4214,9 +4260,10 @@ fn lower_function_for_object_method(
     };
 
     let parent_bindings = builder.bindings().clone();
+    let parent_used_names = builder.used_names().clone();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
-    let hir_func = lower_inner(
+    let (hir_func, child_used_names) = lower_inner(
         &method.params,
         FunctionBody::Block(&method.body),
         None,
@@ -4226,11 +4273,14 @@ fn lower_function_for_object_method(
         scope_info,
         env,
         Some(parent_bindings),
+        Some(parent_used_names),
         merged_context,
         function_scope,
         component_scope,
         false, // nested function
     );
+
+    builder.merge_used_names(child_used_names);
 
     let func_id = builder.environment_mut().add_function(hir_func);
     LoweredFunction { func: func_id }
@@ -4248,11 +4298,12 @@ fn lower_inner(
     scope_info: &ScopeInfo,
     env: &mut Environment,
     parent_bindings: Option<IndexMap<react_compiler_ast::scope::BindingId, IdentifierId>>,
+    parent_used_names: Option<IndexMap<String, react_compiler_ast::scope::BindingId>>,
     context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>>,
     function_scope: react_compiler_ast::scope::ScopeId,
     component_scope: react_compiler_ast::scope::ScopeId,
     is_top_level: bool,
-) -> HirFunction {
+) -> (HirFunction, IndexMap<String, react_compiler_ast::scope::BindingId>) {
     let mut builder = HirBuilder::new(
         env,
         scope_info,
@@ -4261,6 +4312,7 @@ fn lower_inner(
         parent_bindings,
         Some(context_map.clone()),
         None,
+        parent_used_names,
     );
 
     // Build context places from the captured refs
@@ -4398,12 +4450,12 @@ fn lower_inner(
     );
 
     // Build the HIR
-    let (hir_body, instructions) = builder.build();
+    let (hir_body, instructions, used_names) = builder.build();
 
     // Create the returns place
     let returns = crate::hir_builder::create_temporary_place(env, loc.clone());
 
-    HirFunction {
+    (HirFunction {
         loc,
         id: id.map(|s| s.to_string()),
         name_hint: None,
@@ -4418,7 +4470,7 @@ fn lower_inner(
         is_async,
         directives,
         aliasing_effects: None,
-    }
+    }, used_names)
 }
 
 fn lower_jsx_element_name(

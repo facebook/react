@@ -103,6 +103,12 @@ pub struct ScopeInfo {
     /// Only present for identifiers that resolve to a binding (not globals).
     pub reference_to_binding: HashMap<u32, BindingId>,
 
+    /// Binding IDs of variables that are "context identifiers" — shared between
+    /// a function and its nested closures via mutation. These need
+    /// StoreContext/LoadContext instead of StoreLocal/LoadLocal.
+    #[serde(default)]
+    pub context_identifiers: Vec<BindingId>,
+
     /// The program-level (module) scope. Always scopes[0].
     pub program_scope: ScopeId,
 }
