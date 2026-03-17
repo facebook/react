@@ -179,12 +179,29 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         if (violation.isAssignmentExpression()) {
           const left = violation.get('left');
           mapPatternIdentifiers(left, bindingId, babelBinding.identifier.name, referenceToBinding);
+          // Also record locs for pattern identifiers
+          if (left.isIdentifier() && left.node.start != null && left.node.loc != null) {
+            referenceLocs[left.node.start] = [
+              left.node.loc.start.line,
+              left.node.loc.start.column,
+              left.node.loc.end.line,
+              left.node.loc.end.column,
+            ];
+          }
         } else if (violation.isUpdateExpression()) {
           const arg = violation.get('argument');
           if (arg.isIdentifier()) {
             const start = arg.node.start;
             if (start != null) {
               referenceToBinding[start] = bindingId;
+              if (arg.node.loc != null) {
+                referenceLocs[start] = [
+                  arg.node.loc.start.line,
+                  arg.node.loc.start.column,
+                  arg.node.loc.end.line,
+                  arg.node.loc.end.column,
+                ];
+              }
             }
           }
         } else if (
@@ -200,6 +217,14 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const bindingStart = babelBinding.identifier.start;
       if (bindingStart != null) {
         referenceToBinding[bindingStart] = bindingId;
+        if (babelBinding.identifier.loc != null) {
+          referenceLocs[bindingStart] = [
+            babelBinding.identifier.loc.start.line,
+            babelBinding.identifier.loc.start.column,
+            babelBinding.identifier.loc.end.line,
+            babelBinding.identifier.loc.end.column,
+          ];
+        }
       }
     }
 
