@@ -55,7 +55,23 @@ pub struct CompilerErrorDetailInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub severity: Option<String>,
+    /// Error/hint items. When present, these carry location info
+    /// instead of the top-level `loc` field.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub details: Option<Vec<CompilerErrorItemInfo>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub loc: Option<SourceLocation>,
+}
+
+/// Individual error or hint item within a CompilerErrorDetailInfo.
+#[derive(Debug, Clone, Serialize)]
+pub struct CompilerErrorItemInfo {
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loc: Option<SourceLocation>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
 }
 
 /// Debug log entry for debugLogIRs support.

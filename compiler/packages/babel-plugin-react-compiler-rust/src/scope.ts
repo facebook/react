@@ -39,6 +39,53 @@ export interface ScopeInfo {
 }
 
 /**
+ * Recursively map identifier references inside a pattern (including destructuring)
+ * to a binding. Only maps identifiers that match the binding name.
+ */
+function mapPatternIdentifiers(
+  path: NodePath,
+  bindingId: number,
+  bindingName: string,
+  referenceToBinding: Record<number, number>,
+): void {
+  if (path.isIdentifier()) {
+    if (path.node.name === bindingName) {
+      const start = path.node.start;
+      if (start != null) {
+        referenceToBinding[start] = bindingId;
+      }
+    }
+  } else if (path.isArrayPattern()) {
+    for (const element of path.get('elements')) {
+      if (element.node != null) {
+        mapPatternIdentifiers(element as NodePath, bindingId, bindingName, referenceToBinding);
+      }
+    }
+  } else if (path.isObjectPattern()) {
+    for (const prop of path.get('properties')) {
+      if (prop.isRestElement()) {
+        mapPatternIdentifiers(prop.get('argument'), bindingId, bindingName, referenceToBinding);
+      } else if (prop.isObjectProperty()) {
+        mapPatternIdentifiers(prop.get('value') as NodePath, bindingId, bindingName, referenceToBinding);
+      }
+    }
+  } else if (path.isAssignmentPattern()) {
+    mapPatternIdentifiers(path.get('left') as NodePath, bindingId, bindingName, referenceToBinding);
+  } else if (path.isRestElement()) {
+    mapPatternIdentifiers(path.get('argument'), bindingId, bindingName, referenceToBinding);
+  } else if (path.isMemberExpression()) {
+    // MemberExpression in LVal position (e.g., a.b = ...)
+    const obj = path.get('object');
+    if (obj.isIdentifier() && obj.node.name === bindingName) {
+      const start = obj.node.start;
+      if (start != null) {
+        referenceToBinding[start] = bindingId;
+      }
+    }
+  }
+}
+
+/**
  * Extract scope information from a Babel Program path.
  * Converts Babel's scope tree into the flat ScopeInfo format
  * expected by the Rust compiler.
@@ -119,12 +166,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       for (const violation of babelBinding.constantViolations) {
         if (violation.isAssignmentExpression()) {
           const left = violation.get('left');
-          if (left.isIdentifier()) {
-            const start = left.node.start;
-            if (start != null) {
-              referenceToBinding[start] = bindingId;
-            }
-          }
+          mapPatternIdentifiers(left, bindingId, babelBinding.identifier.name, referenceToBinding);
         } else if (violation.isUpdateExpression()) {
           const arg = violation.get('argument');
           if (arg.isIdentifier()) {
@@ -138,12 +180,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
           violation.isForInStatement()
         ) {
           const left = violation.get('left');
-          if (left.isIdentifier()) {
-            const start = left.node.start;
-            if (start != null) {
-              referenceToBinding[start] = bindingId;
-            }
-          }
+          mapPatternIdentifiers(left, bindingId, babelBinding.identifier.name, referenceToBinding);
         }
       }
 

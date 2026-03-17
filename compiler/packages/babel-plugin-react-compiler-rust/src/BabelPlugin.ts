@@ -46,15 +46,27 @@ export default function BabelPluginReactCompilerRust(
           const result = compileWithRust(pass.file.ast, scopeInfo, opts);
 
           // Step 6: Forward logger events and debug logs
+          // Use orderedLog when available to maintain correct interleaving
+          // of events and debug entries (matching TS compiler behavior).
           const logger = (pass.opts as PluginOptions).logger;
-          if (logger && result.events) {
-            for (const event of result.events) {
-              logger.logEvent(filename, event);
+          if (logger && result.orderedLog && result.orderedLog.length > 0) {
+            for (const item of result.orderedLog) {
+              if (item.type === 'event') {
+                logger.logEvent(filename, item.event);
+              } else if (item.type === 'debug' && logger.debugLogIRs) {
+                logger.debugLogIRs(item.entry);
+              }
             }
-          }
-          if (logger?.debugLogIRs && result.debugLogs) {
-            for (const entry of result.debugLogs) {
-              logger.debugLogIRs(entry);
+          } else {
+            if (logger && result.events) {
+              for (const event of result.events) {
+                logger.logEvent(filename, event);
+              }
+            }
+            if (logger?.debugLogIRs && result.debugLogs) {
+              for (const entry of result.debugLogs) {
+                logger.debugLogIRs(entry);
+              }
             }
           }
 

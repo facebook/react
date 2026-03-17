@@ -782,8 +782,11 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::UnsupportedNode { loc } => {
-                self.line(&format!("UnsupportedNode {{ loc: {} }}", format_loc(loc)));
+            InstructionValue::UnsupportedNode { node_type, loc } => {
+                match node_type {
+                    Some(t) => self.line(&format!("UnsupportedNode {{ type: {:?}, loc: {} }}", t, format_loc(loc))),
+                    None => self.line(&format!("UnsupportedNode {{ loc: {} }}", format_loc(loc))),
+                }
             }
             InstructionValue::LoadLocal { place, loc } => {
                 self.line("LoadLocal {");

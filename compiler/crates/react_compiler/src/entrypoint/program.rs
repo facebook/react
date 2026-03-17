@@ -31,8 +31,8 @@ use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
 use super::compile_result::{
-    CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo, DebugLogEntry,
-    LoggerEvent,
+    CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo,
+    DebugLogEntry, LoggerEvent,
 };
 use super::imports::{
     ProgramContext, get_react_compiler_runtime_module, validate_restricted_imports,
@@ -859,7 +859,9 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut 
                         category: format!("{:?}", d.category),
                         reason: d.reason.clone(),
                         description: d.description.clone(),
-                        loc: d.primary_location().copied(),
+                        severity: Some(format!("{:?}", d.severity())),
+                        details: None,
+                        loc: None, // CompilerDiagnostic doesn't expose loc directly
                     },
                 });
             }
@@ -870,6 +872,8 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut 
                         category: format!("{:?}", d.category),
                         reason: d.reason.clone(),
                         description: d.description.clone(),
+                        severity: Some(format!("{:?}", d.severity())),
+                        details: None,
                         loc: d.loc,
                     },
                 });
@@ -924,12 +928,16 @@ fn compiler_error_to_info(err: &CompilerError) -> CompilerErrorInfo {
                 category: format!("{:?}", d.category),
                 reason: d.reason.clone(),
                 description: d.description.clone(),
-                loc: d.primary_location().copied(),
+                severity: Some(format!("{:?}", d.severity())),
+                details: None,
+                loc: None,
             },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
                 category: format!("{:?}", d.category),
                 reason: d.reason.clone(),
                 description: d.description.clone(),
+                severity: Some(format!("{:?}", d.severity())),
+                details: None,
                 loc: d.loc,
             },
         })

@@ -707,6 +707,7 @@ pub enum InstructionValue {
         loc: Option<SourceLocation>,
     },
     UnsupportedNode {
+        node_type: Option<String>,
         loc: Option<SourceLocation>,
     },
 }

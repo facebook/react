@@ -96,6 +96,57 @@ fn expression_loc(expr: &react_compiler_ast::expressions::Expression) -> Option<
     convert_opt_loc(&loc)
 }
 
+/// Get the Babel-style type name of an Expression node (e.g. "Identifier", "NumericLiteral").
+fn expression_type_name(expr: &react_compiler_ast::expressions::Expression) -> &'static str {
+    use react_compiler_ast::expressions::Expression;
+    match expr {
+        Expression::Identifier(_) => "Identifier",
+        Expression::StringLiteral(_) => "StringLiteral",
+        Expression::NumericLiteral(_) => "NumericLiteral",
+        Expression::BooleanLiteral(_) => "BooleanLiteral",
+        Expression::NullLiteral(_) => "NullLiteral",
+        Expression::BigIntLiteral(_) => "BigIntLiteral",
+        Expression::RegExpLiteral(_) => "RegExpLiteral",
+        Expression::CallExpression(_) => "CallExpression",
+        Expression::MemberExpression(_) => "MemberExpression",
+        Expression::OptionalCallExpression(_) => "OptionalCallExpression",
+        Expression::OptionalMemberExpression(_) => "OptionalMemberExpression",
+        Expression::BinaryExpression(_) => "BinaryExpression",
+        Expression::LogicalExpression(_) => "LogicalExpression",
+        Expression::UnaryExpression(_) => "UnaryExpression",
+        Expression::UpdateExpression(_) => "UpdateExpression",
+        Expression::ConditionalExpression(_) => "ConditionalExpression",
+        Expression::AssignmentExpression(_) => "AssignmentExpression",
+        Expression::SequenceExpression(_) => "SequenceExpression",
+        Expression::ArrowFunctionExpression(_) => "ArrowFunctionExpression",
+        Expression::FunctionExpression(_) => "FunctionExpression",
+        Expression::ObjectExpression(_) => "ObjectExpression",
+        Expression::ArrayExpression(_) => "ArrayExpression",
+        Expression::NewExpression(_) => "NewExpression",
+        Expression::TemplateLiteral(_) => "TemplateLiteral",
+        Expression::TaggedTemplateExpression(_) => "TaggedTemplateExpression",
+        Expression::AwaitExpression(_) => "AwaitExpression",
+        Expression::YieldExpression(_) => "YieldExpression",
+        Expression::SpreadElement(_) => "SpreadElement",
+        Expression::MetaProperty(_) => "MetaProperty",
+        Expression::ClassExpression(_) => "ClassExpression",
+        Expression::PrivateName(_) => "PrivateName",
+        Expression::Super(_) => "Super",
+        Expression::Import(_) => "Import",
+        Expression::ThisExpression(_) => "ThisExpression",
+        Expression::ParenthesizedExpression(_) => "ParenthesizedExpression",
+        Expression::JSXElement(_) => "JSXElement",
+        Expression::JSXFragment(_) => "JSXFragment",
+        Expression::AssignmentPattern(_) => "AssignmentPattern",
+        Expression::TSAsExpression(_) => "TSAsExpression",
+        Expression::TSSatisfiesExpression(_) => "TSSatisfiesExpression",
+        Expression::TSNonNullExpression(_) => "TSNonNullExpression",
+        Expression::TSTypeAssertion(_) => "TSTypeAssertion",
+        Expression::TSInstantiationExpression(_) => "TSInstantiationExpression",
+        Expression::TypeCastExpression(_) => "TypeCastExpression",
+    }
+}
+
 /// Extract the type annotation name from an identifier's typeAnnotation field.
 /// The Babel AST stores type annotations as:
 /// { "type": "TSTypeAnnotation", "typeAnnotation": { "type": "TSTypeReference", ... } }
@@ -350,7 +401,7 @@ fn lower_member_expression_with_object(
                 });
                 return LoweredMemberExpression {
                     object,
-                    value: InstructionValue::UnsupportedNode { loc },
+                    value: InstructionValue::UnsupportedNode { node_type: None, loc },
                 };
             }
         };
@@ -409,7 +460,7 @@ fn lower_member_expression_impl(
                 });
                 return LoweredMemberExpression {
                     object,
-                    value: InstructionValue::UnsupportedNode { loc },
+                    value: InstructionValue::UnsupportedNode { node_type: None, loc },
                 };
             }
         };
@@ -502,7 +553,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { loc };
+                return InstructionValue::UnsupportedNode { node_type: None, loc };
             }
             let left = lower_expression_to_temporary(builder, &bin.left);
             let right = lower_expression_to_temporary(builder, &bin.right);
@@ -540,7 +591,7 @@ fn lower_expression(
                                             description: None,
                                             suggestions: None,
                                         });
-                                        InstructionValue::UnsupportedNode { loc }
+                                        InstructionValue::UnsupportedNode { node_type: None, loc }
                                     }
                                 }
                             } else {
@@ -561,7 +612,7 @@ fn lower_expression(
                                 description: None,
                                 suggestions: None,
                             });
-                            InstructionValue::UnsupportedNode { loc }
+                            InstructionValue::UnsupportedNode { node_type: None, loc }
                         }
                     }
                 }
@@ -575,7 +626,7 @@ fn lower_expression(
                         description: None,
                         suggestions: None,
                     });
-                    InstructionValue::UnsupportedNode { loc }
+                    InstructionValue::UnsupportedNode { node_type: None, loc }
                 }
                 op => {
                     let value = lower_expression_to_temporary(builder, &unary.argument);
@@ -782,12 +833,12 @@ fn lower_expression(
                     if builder.is_context_identifier(&ident.name, start) {
                         builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Todo,
-                            reason: "UpdateExpression to variables captured within lambdas is not yet supported".to_string(),
+                            reason: "(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.".to_string(),
                             description: None,
                             loc: loc.clone(),
                             suggestions: None,
                         });
-                        return InstructionValue::UnsupportedNode { loc };
+                        return InstructionValue::UnsupportedNode { node_type: None, loc };
                     }
 
                     let ident_loc = convert_opt_loc(&ident.base.loc);
@@ -801,7 +852,7 @@ fn lower_expression(
                                 loc: loc.clone(),
                                 suggestions: None,
                             });
-                            return InstructionValue::UnsupportedNode { loc };
+                            return InstructionValue::UnsupportedNode { node_type: None, loc };
                         }
                         _ => {}
                     }
@@ -810,12 +861,12 @@ fn lower_expression(
                         _ => {
                             builder.record_error(CompilerErrorDetail {
                                 category: ErrorCategory::Todo,
-                                reason: "UpdateExpression with non-local identifier".to_string(),
+                                reason: "(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global".to_string(),
                                 description: None,
                                 loc: loc.clone(),
                                 suggestions: None,
                             });
-                            return InstructionValue::UnsupportedNode { loc };
+                            return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), loc };
                         }
                     };
                     let lvalue_place = Place {
@@ -857,7 +908,7 @@ fn lower_expression(
                         loc: loc.clone(),
                         suggestions: None,
                     });
-                    InstructionValue::UnsupportedNode { loc }
+                    InstructionValue::UnsupportedNode { node_type: None, loc }
                 }
             }
         }
@@ -951,7 +1002,18 @@ fn lower_expression(
                         let ident_loc = convert_opt_loc(&ident.base.loc);
                         let binding = builder.resolve_identifier(&ident.name, start, ident_loc.clone());
                         match binding {
-                            VariableBinding::Identifier { identifier, .. } => {
+                            VariableBinding::Identifier { identifier, binding_kind } => {
+                                // Check for const reassignment
+                                if binding_kind == BindingKind::Const {
+                                    builder.record_error(CompilerErrorDetail {
+                                        reason: "Cannot reassign a `const` variable".to_string(),
+                                        category: ErrorCategory::Syntax,
+                                        loc: ident_loc.clone(),
+                                        description: Some(format!("`{}` is declared as const", &ident.name)),
+                                        suggestions: None,
+                                    });
+                                    return InstructionValue::UnsupportedNode { node_type: Some("Identifier".to_string()), loc: ident_loc };
+                                }
                                 let place = Place {
                                     identifier,
                                     reactive: false,
@@ -998,7 +1060,7 @@ fn lower_expression(
                         let right = lower_expression_to_temporary(builder, &expr.right);
                         let left_loc = convert_opt_loc(&member.base.loc);
                         let object = lower_expression_to_temporary(builder, &member.object);
-                        let temp = if !member.computed {
+                        let temp = if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
                             match &*member.property {
                                 react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
                                     lower_value_to_temporary(builder, InstructionValue::PropertyStore {
@@ -1076,14 +1138,14 @@ fn lower_expression(
                             description: None,
                             suggestions: None,
                         });
-                        return InstructionValue::UnsupportedNode { loc };
+                        return InstructionValue::UnsupportedNode { node_type: None, loc };
                     }
                     AssignmentOperator::Assign => unreachable!(),
                 };
                 let binary_op = match binary_op {
                     Some(op) => op,
                     None => {
-                        return InstructionValue::UnsupportedNode { loc };
+                        return InstructionValue::UnsupportedNode { node_type: None, loc };
                     }
                 };
 
@@ -1160,12 +1222,20 @@ fn lower_expression(
                             loc: member_loc.clone(),
                         });
                         // Store back
-                        if !member.computed {
+                        if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
                             match &*member.property {
                                 react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
                                     lower_value_to_temporary(builder, InstructionValue::PropertyStore {
                                         object,
                                         property: PropertyLiteral::String(prop_id.name.clone()),
+                                        value: result.clone(),
+                                        loc: member_loc,
+                                    });
+                                }
+                                react_compiler_ast::expressions::Expression::NumericLiteral(num) => {
+                                    lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                        object,
+                                        property: PropertyLiteral::Number(FloatValue::new(num.value)),
                                         value: result.clone(),
                                         loc: member_loc,
                                     });
@@ -1199,7 +1269,7 @@ fn lower_expression(
                             description: None,
                             suggestions: None,
                         });
-                        InstructionValue::UnsupportedNode { loc }
+                        InstructionValue::UnsupportedNode { node_type: None, loc }
                     }
                 }
             }
@@ -1216,7 +1286,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { loc };
+                return InstructionValue::UnsupportedNode { node_type: None, loc };
             }
 
             let continuation_block = builder.reserve(builder.current_block_kind());
@@ -1346,7 +1416,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { loc };
+                return InstructionValue::UnsupportedNode { node_type: None, loc };
             }
             assert!(
                 tagged.quasi.quasis.len() == 1,
@@ -1369,12 +1439,12 @@ fn lower_expression(
             let loc = convert_opt_loc(&yld.base.loc);
             builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
-                reason: "yield is not yet supported".to_string(),
+                reason: "(BuildHIR::lowerExpression) Handle YieldExpression expressions".to_string(),
                 description: None,
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::SpreadElement(spread) => {
             // SpreadElement should be handled by the parent context (array/object/call)
@@ -1392,12 +1462,12 @@ fn lower_expression(
             } else {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
-                    reason: "MetaProperty expressions other than import.meta are not yet supported".to_string(),
+                    reason: "(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta".to_string(),
                     description: None,
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                InstructionValue::UnsupportedNode { loc }
+                InstructionValue::UnsupportedNode { node_type: Some("MetaProperty".to_string()), loc }
             }
         }
         Expression::ClassExpression(cls) => {
@@ -1409,7 +1479,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::PrivateName(pn) => {
             let loc = convert_opt_loc(&pn.base.loc);
@@ -1420,7 +1490,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::Super(sup) => {
             let loc = convert_opt_loc(&sup.base.loc);
@@ -1431,7 +1501,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::Import(imp) => {
             let loc = convert_opt_loc(&imp.base.loc);
@@ -1442,7 +1512,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::ThisExpression(this) => {
             let loc = convert_opt_loc(&this.base.loc);
@@ -1453,7 +1523,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::ParenthesizedExpression(paren) => {
             lower_expression(builder, &paren.expression)
@@ -1595,7 +1665,7 @@ fn lower_expression(
                 description: None,
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::TSAsExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
@@ -1628,7 +1698,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { loc }
+            InstructionValue::UnsupportedNode { node_type: None, loc }
         }
         Expression::RegExpLiteral(re) => {
             let loc = convert_opt_loc(&re.base.loc);
@@ -2106,7 +2176,7 @@ fn lower_statement(
             use react_compiler_ast::patterns::PatternLike;
             if matches!(var_decl.kind, VariableDeclarationKind::Var) {
                 builder.record_error(CompilerErrorDetail {
-                    reason: "Handle var kinds in VariableDeclaration".to_string(),
+                    reason: "(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration".to_string(),
                     category: ErrorCategory::Todo,
                     loc: convert_opt_loc(&var_decl.base.loc),
                     description: None,
@@ -2549,7 +2619,14 @@ fn lower_statement(
             );
 
             // Lower the init: NextPropertyOf + assignment
-            let left_loc = loc.clone(); // Use for_in loc as fallback
+            let left_loc = match for_in.left.as_ref() {
+                react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
+                    convert_opt_loc(&var_decl.base.loc).or(loc.clone())
+                }
+                react_compiler_ast::statements::ForInOfLeft::Pattern(pat) => {
+                    pattern_like_hir_loc(pat).or(loc.clone())
+                }
+            };
             let next_property = lower_value_to_temporary(builder, InstructionValue::NextPropertyOf {
                 value,
                 loc: left_loc.clone(),
@@ -2689,7 +2766,14 @@ fn lower_statement(
             );
 
             // Test block: IteratorNext, assign, branch
-            let left_loc = loc.clone();
+            let left_loc = match for_of.left.as_ref() {
+                react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
+                    convert_opt_loc(&var_decl.base.loc).or(loc.clone())
+                }
+                react_compiler_ast::statements::ForInOfLeft::Pattern(pat) => {
+                    pattern_like_hir_loc(pat).or(loc.clone())
+                }
+            };
             let advance_iterator = lower_value_to_temporary(builder, InstructionValue::IteratorNext {
                 iterator: iterator.clone(),
                 collection: value.clone(),
@@ -3006,7 +3090,7 @@ fn lower_statement(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
         }
         Statement::FunctionDeclaration(func_decl) => {
             lower_function_declaration(builder, func_decl);
@@ -3020,7 +3104,7 @@ fn lower_statement(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("ClassDeclaration".to_string()), loc });
         }
         Statement::ImportDeclaration(_)
         | Statement::ExportNamedDeclaration(_)
@@ -3040,16 +3124,16 @@ fn lower_statement(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
         }
         // TypeScript/Flow declarations are type-only, skip them
         Statement::TSEnumDeclaration(e) => {
             let loc = convert_opt_loc(&e.base.loc);
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("TSEnumDeclaration".to_string()), loc });
         }
         Statement::EnumDeclaration(e) => {
             let loc = convert_opt_loc(&e.base.loc);
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("EnumDeclaration".to_string()), loc });
         }
         // TypeScript/Flow type declarations are type-only, skip them
         Statement::TSTypeAliasDeclaration(_)
@@ -3305,7 +3389,7 @@ fn lower_assignment(
                                 suggestions: None,
                                 description: None,
                             });
-                            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { loc });
+                            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
                             return;
                         }
                         lower_value_to_temporary(builder, InstructionValue::StoreContext {
@@ -3339,7 +3423,7 @@ fn lower_assignment(
                 return;
             }
             let object = lower_expression_to_temporary(builder, &member.object);
-            if !member.computed {
+            if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
                 match &*member.property {
                     react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
                         lower_value_to_temporary(builder, InstructionValue::PropertyStore {
@@ -3359,28 +3443,63 @@ fn lower_assignment(
                     }
                     _ => {
                         builder.record_error(CompilerErrorDetail {
-                            reason: "Unsupported property type in MemberExpression assignment".to_string(),
+                            reason: format!("(BuildHIR::lowerAssignment) Handle {} properties in MemberExpression", expression_type_name(&member.property)),
                             category: ErrorCategory::Todo,
-                            loc,
+                            loc: expression_loc(&member.property),
                             description: None,
                             suggestions: None,
                         });
+                        lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
                     }
                 }
             } else {
-                let property_place = lower_expression_to_temporary(builder, &member.property);
-                lower_value_to_temporary(builder, InstructionValue::ComputedStore {
-                    object,
-                    property: property_place,
-                    value,
-                    loc,
-                });
+                if matches!(&*member.property, react_compiler_ast::expressions::Expression::PrivateName(_)) {
+                    builder.record_error(CompilerErrorDetail {
+                        reason: "(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property".to_string(),
+                        category: ErrorCategory::Todo,
+                        loc: expression_loc(&member.property),
+                        description: None,
+                        suggestions: None,
+                    });
+                    lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+                } else {
+                    let property_place = lower_expression_to_temporary(builder, &member.property);
+                    lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                        object,
+                        property: property_place,
+                        value,
+                        loc,
+                    });
+                }
             }
         }
 
         PatternLike::ArrayPattern(pattern) => {
             let mut items: Vec<ArrayPatternElement> = Vec::new();
             let mut followups: Vec<(Place, &PatternLike)> = Vec::new();
+
+            // Compute forceTemporaries: when kind is Reassign and any element is
+            // non-identifier, a context variable, or a non-local binding
+            let force_temporaries = kind == InstructionKind::Reassign && pattern.elements.iter().any(|elem| {
+                match elem {
+                    Some(PatternLike::Identifier(id)) => {
+                        let start = id.base.start.unwrap_or(0);
+                        if builder.is_context_identifier(&id.name, start) {
+                            return true;
+                        }
+                        let ident_loc = convert_opt_loc(&id.base.loc);
+                        match builder.resolve_identifier(&id.name, start, ident_loc) {
+                            VariableBinding::Identifier { .. } => false,
+                            _ => true,
+                        }
+                    }
+                    _ => {
+                        // Non-identifier element (including None/holes) or RestElement
+                        // Only non-None non-identifier elements trigger forceTemporaries
+                        elem.is_some() && !matches!(elem, Some(PatternLike::Identifier(_)))
+                    }
+                }
+            });
 
             for element in &pattern.elements {
                 match element {
@@ -3390,23 +3509,38 @@ fn lower_assignment(
                     Some(PatternLike::RestElement(rest)) => {
                         match &*rest.argument {
                             PatternLike::Identifier(id) => {
-                                match lower_identifier_for_assignment(
-                                    builder,
-                                    convert_opt_loc(&rest.base.loc),
-                                    convert_opt_loc(&id.base.loc),
-                                    kind,
-                                    &id.name,
-                                    id.base.start.unwrap_or(0),
-                                ) {
-                                    Some(IdentifierForAssignment::Place(place)) => {
-                                        items.push(ArrayPatternElement::Spread(SpreadPattern { place }));
+                                let start = id.base.start.unwrap_or(0);
+                                let is_context = builder.is_context_identifier(&id.name, start);
+                                let can_use_direct = !force_temporaries
+                                    && (matches!(assignment_style, AssignmentStyle::Assignment)
+                                        || !is_context);
+                                if can_use_direct {
+                                    match lower_identifier_for_assignment(
+                                        builder,
+                                        convert_opt_loc(&rest.base.loc),
+                                        convert_opt_loc(&id.base.loc),
+                                        kind,
+                                        &id.name,
+                                        start,
+                                    ) {
+                                        Some(IdentifierForAssignment::Place(place)) => {
+                                            items.push(ArrayPatternElement::Spread(SpreadPattern { place }));
+                                        }
+                                        Some(IdentifierForAssignment::Global { .. }) => {
+                                            let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
+                                            promote_temporary(builder, temp.identifier);
+                                            items.push(ArrayPatternElement::Spread(SpreadPattern { place: temp.clone() }));
+                                            followups.push((temp, &rest.argument));
+                                        }
+                                        None => {
+                                            // Error already recorded
+                                        }
                                     }
-                                    _ => {
-                                        let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
-                                        promote_temporary(builder, temp.identifier);
-                                        items.push(ArrayPatternElement::Spread(SpreadPattern { place: temp.clone() }));
-                                        followups.push((temp, &rest.argument));
-                                    }
+                                } else {
+                                    let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
+                                    promote_temporary(builder, temp.identifier);
+                                    items.push(ArrayPatternElement::Spread(SpreadPattern { place: temp.clone() }));
+                                    followups.push((temp, &rest.argument));
                                 }
                             }
                             _ => {
@@ -3418,26 +3552,39 @@ fn lower_assignment(
                         }
                     }
                     Some(PatternLike::Identifier(id)) => {
-                        match lower_identifier_for_assignment(
-                            builder,
-                            convert_opt_loc(&id.base.loc),
-                            convert_opt_loc(&id.base.loc),
-                            kind,
-                            &id.name,
-                            id.base.start.unwrap_or(0),
-                        ) {
-                            Some(IdentifierForAssignment::Place(place)) => {
-                                items.push(ArrayPatternElement::Place(place));
+                        let start = id.base.start.unwrap_or(0);
+                        let is_context = builder.is_context_identifier(&id.name, start);
+                        let can_use_direct = !force_temporaries
+                            && (matches!(assignment_style, AssignmentStyle::Assignment)
+                                || !is_context);
+                        if can_use_direct {
+                            match lower_identifier_for_assignment(
+                                builder,
+                                convert_opt_loc(&id.base.loc),
+                                convert_opt_loc(&id.base.loc),
+                                kind,
+                                &id.name,
+                                start,
+                            ) {
+                                Some(IdentifierForAssignment::Place(place)) => {
+                                    items.push(ArrayPatternElement::Place(place));
+                                }
+                                Some(IdentifierForAssignment::Global { .. }) => {
+                                    let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
+                                    promote_temporary(builder, temp.identifier);
+                                    items.push(ArrayPatternElement::Place(temp.clone()));
+                                    followups.push((temp, element.as_ref().unwrap()));
+                                }
+                                None => {
+                                    items.push(ArrayPatternElement::Hole);
+                                }
                             }
-                            Some(IdentifierForAssignment::Global { .. }) => {
-                                let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
-                                promote_temporary(builder, temp.identifier);
-                                items.push(ArrayPatternElement::Place(temp.clone()));
-                                followups.push((temp, element.as_ref().unwrap()));
-                            }
-                            None => {
-                                items.push(ArrayPatternElement::Hole);
-                            }
+                        } else {
+                            // Context variable or force_temporaries: use promoted temporary
+                            let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
+                            promote_temporary(builder, temp.identifier);
+                            items.push(ArrayPatternElement::Place(temp.clone()));
+                            followups.push((temp, element.as_ref().unwrap()));
                         }
                     }
                     Some(other) => {
@@ -3473,33 +3620,77 @@ fn lower_assignment(
             let mut properties: Vec<ObjectPropertyOrSpread> = Vec::new();
             let mut followups: Vec<(Place, &PatternLike)> = Vec::new();
 
+            // Compute forceTemporaries for ObjectPattern
+            let force_temporaries = kind == InstructionKind::Reassign && pattern.properties.iter().any(|prop| {
+                use react_compiler_ast::patterns::ObjectPatternProperty;
+                match prop {
+                    ObjectPatternProperty::RestElement(_) => true,
+                    ObjectPatternProperty::ObjectProperty(obj_prop) => {
+                        match &*obj_prop.value {
+                            PatternLike::Identifier(id) => {
+                                let start = id.base.start.unwrap_or(0);
+                                let ident_loc = convert_opt_loc(&id.base.loc);
+                                match builder.resolve_identifier(&id.name, start, ident_loc) {
+                                    VariableBinding::Identifier { .. } => false,
+                                    _ => true,
+                                }
+                            }
+                            _ => true,
+                        }
+                    }
+                }
+            });
+
             for prop in &pattern.properties {
                 match prop {
                     react_compiler_ast::patterns::ObjectPatternProperty::RestElement(rest) => {
                         match &*rest.argument {
                             PatternLike::Identifier(id) => {
-                                match lower_identifier_for_assignment(
-                                    builder,
-                                    convert_opt_loc(&rest.base.loc),
-                                    convert_opt_loc(&id.base.loc),
-                                    kind,
-                                    &id.name,
-                                    id.base.start.unwrap_or(0),
-                                ) {
-                                    Some(IdentifierForAssignment::Place(place)) => {
-                                        properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
+                                let start = id.base.start.unwrap_or(0);
+                                let is_context = builder.is_context_identifier(&id.name, start);
+                                let can_use_direct = !force_temporaries
+                                    && (matches!(assignment_style, AssignmentStyle::Assignment)
+                                        || !is_context);
+                                if can_use_direct {
+                                    match lower_identifier_for_assignment(
+                                        builder,
+                                        convert_opt_loc(&rest.base.loc),
+                                        convert_opt_loc(&id.base.loc),
+                                        kind,
+                                        &id.name,
+                                        start,
+                                    ) {
+                                        Some(IdentifierForAssignment::Place(place)) => {
+                                            properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
+                                        }
+                                        Some(IdentifierForAssignment::Global { .. }) => {
+                                            builder.record_error(CompilerErrorDetail {
+                                                reason: "Expected reassignment of globals to enable forceTemporaries".to_string(),
+                                                category: ErrorCategory::Todo,
+                                                loc: convert_opt_loc(&rest.base.loc),
+                                                description: None,
+                                                suggestions: None,
+                                            });
+                                        }
+                                        None => {}
                                     }
-                                    _ => {
-                                        let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
-                                        promote_temporary(builder, temp.identifier);
-                                        properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place: temp.clone() }));
-                                        followups.push((temp, &rest.argument));
-                                    }
+                                } else {
+                                    let temp = build_temporary_place(builder, convert_opt_loc(&rest.base.loc));
+                                    promote_temporary(builder, temp.identifier);
+                                    properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place: temp.clone() }));
+                                    followups.push((temp, &rest.argument));
                                 }
                             }
                             _ => {
                                 builder.record_error(CompilerErrorDetail {
-                                    reason: "Handle non-identifier rest element in ObjectPattern".to_string(),
+                                    reason: format!("(BuildHIR::lowerAssignment) Handle {} rest element in ObjectPattern",
+                                        match &*rest.argument {
+                                            PatternLike::ObjectPattern(_) => "ObjectPattern",
+                                            PatternLike::ArrayPattern(_) => "ArrayPattern",
+                                            PatternLike::AssignmentPattern(_) => "AssignmentPattern",
+                                            PatternLike::MemberExpression(_) => "MemberExpression",
+                                            _ => "unknown",
+                                        }),
                                     category: ErrorCategory::Todo,
                                     loc: convert_opt_loc(&rest.base.loc),
                                     description: None,
@@ -3511,7 +3702,7 @@ fn lower_assignment(
                     react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(obj_prop) => {
                         if obj_prop.computed {
                             builder.record_error(CompilerErrorDetail {
-                                reason: "Handle computed properties in ObjectPattern".to_string(),
+                                reason: "(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern".to_string(),
                                 category: ErrorCategory::Todo,
                                 loc: convert_opt_loc(&obj_prop.base.loc),
                                 description: None,
@@ -3527,34 +3718,50 @@ fn lower_assignment(
 
                         match &*obj_prop.value {
                             PatternLike::Identifier(id) => {
-                                match lower_identifier_for_assignment(
-                                    builder,
-                                    convert_opt_loc(&id.base.loc),
-                                    convert_opt_loc(&id.base.loc),
-                                    kind,
-                                    &id.name,
-                                    id.base.start.unwrap_or(0),
-                                ) {
-                                    Some(IdentifierForAssignment::Place(place)) => {
-                                        properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
-                                            key,
-                                            property_type: ObjectPropertyType::Property,
-                                            place,
-                                        }));
+                                let start = id.base.start.unwrap_or(0);
+                                let is_context = builder.is_context_identifier(&id.name, start);
+                                let can_use_direct = !force_temporaries
+                                    && (matches!(assignment_style, AssignmentStyle::Assignment)
+                                        || !is_context);
+                                if can_use_direct {
+                                    match lower_identifier_for_assignment(
+                                        builder,
+                                        convert_opt_loc(&id.base.loc),
+                                        convert_opt_loc(&id.base.loc),
+                                        kind,
+                                        &id.name,
+                                        start,
+                                    ) {
+                                        Some(IdentifierForAssignment::Place(place)) => {
+                                            properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
+                                                key,
+                                                property_type: ObjectPropertyType::Property,
+                                                place,
+                                            }));
+                                        }
+                                        Some(IdentifierForAssignment::Global { .. }) => {
+                                            builder.record_error(CompilerErrorDetail {
+                                                reason: "Expected reassignment of globals to enable forceTemporaries".to_string(),
+                                                category: ErrorCategory::Todo,
+                                                loc: convert_opt_loc(&id.base.loc),
+                                                description: None,
+                                                suggestions: None,
+                                            });
+                                        }
+                                        None => {
+                                            continue;
+                                        }
                                     }
-                                    Some(IdentifierForAssignment::Global { .. }) => {
-                                        let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
-                                        promote_temporary(builder, temp.identifier);
-                                        properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
-                                            key,
-                                            property_type: ObjectPropertyType::Property,
-                                            place: temp.clone(),
-                                        }));
-                                        followups.push((temp, &*obj_prop.value));
-                                    }
-                                    None => {
-                                        continue;
-                                    }
+                                } else {
+                                    // Context variable or force_temporaries: use promoted temporary
+                                    let temp = build_temporary_place(builder, convert_opt_loc(&id.base.loc));
+                                    promote_temporary(builder, temp.identifier);
+                                    properties.push(ObjectPropertyOrSpread::Property(ObjectProperty {
+                                        key,
+                                        property_type: ObjectPropertyType::Property,
+                                        place: temp.clone(),
+                                    }));
+                                    followups.push((temp, &*obj_prop.value));
                                 }
                             }
                             other => {
@@ -4778,11 +4985,11 @@ fn lower_reorderable_expression(
         builder.record_error(CompilerErrorDetail {
             category: ErrorCategory::Todo,
             reason: format!(
-                "(BuildHIR::node.lowerReorderableExpression) Expression type `{:?}` cannot be safely reordered",
-                std::mem::discriminant(expr)
+                "(BuildHIR::node.lowerReorderableExpression) Expression type `{}` cannot be safely reordered",
+                expression_type_name(expr)
             ),
             description: None,
-            loc: None,
+            loc: expression_loc(expr),
             suggestions: None,
         });
     }
