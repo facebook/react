@@ -1332,8 +1332,9 @@ fn lower_expression(
                         properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
                     }
                     react_compiler_ast::expressions::ObjectExpressionProperty::ObjectMethod(method) => {
-                        let prop = lower_object_method(builder, method);
-                        properties.push(ObjectPropertyOrSpread::Property(prop));
+                        if let Some(prop) = lower_object_method(builder, method) {
+                            properties.push(ObjectPropertyOrSpread::Property(prop));
+                        }
                     }
                 }
             }
@@ -3482,7 +3483,7 @@ fn lower_assignment(
                 return None;
             }
             let object = lower_expression_to_temporary(builder, &member.object);
-            if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
+            let temp = if !member.computed || matches!(&*member.property, react_compiler_ast::expressions::Expression::NumericLiteral(_)) {
                 match &*member.property {
                     react_compiler_ast::expressions::Expression::Identifier(prop_id) => {
                         lower_value_to_temporary(builder, InstructionValue::PropertyStore {
@@ -3490,7 +3491,7 @@ fn lower_assignment(
                             property: PropertyLiteral::String(prop_id.name.clone()),
                             value,
                             loc,
-                        });
+                        })
                     }
                     react_compiler_ast::expressions::Expression::NumericLiteral(num) => {
                         lower_value_to_temporary(builder, InstructionValue::PropertyStore {
@@ -3498,7 +3499,7 @@ fn lower_assignment(
                             property: PropertyLiteral::Number(FloatValue::new(num.value)),
                             value,
                             loc,
-                        });
+                        })
                     }
                     _ => {
                         builder.record_error(CompilerErrorDetail {
@@ -3508,7 +3509,7 @@ fn lower_assignment(
                             description: None,
                             suggestions: None,
                         });
-                        lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+                        lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc })
                     }
                 }
             } else {
@@ -3520,7 +3521,7 @@ fn lower_assignment(
                         description: None,
                         suggestions: None,
                     });
-                    lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+                    lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc })
                 } else {
                     let property_place = lower_expression_to_temporary(builder, &member.property);
                     lower_value_to_temporary(builder, InstructionValue::ComputedStore {
@@ -3528,10 +3529,10 @@ fn lower_assignment(
                         property: property_place,
                         value,
                         loc,
-                    });
+                    })
                 }
-            }
-            None
+            };
+            Some(temp)
         }
 
         PatternLike::ArrayPattern(pattern) => {
@@ -3658,7 +3659,7 @@ fn lower_assignment(
                 }
             }
 
-            lower_value_to_temporary(builder, InstructionValue::Destructure {
+            let temporary = lower_value_to_temporary(builder, InstructionValue::Destructure {
                 lvalue: LValuePattern {
                     pattern: Pattern::Array(ArrayPattern {
                         items,
@@ -3666,7 +3667,7 @@ fn lower_assignment(
                     }),
                     kind,
                 },
-                value,
+                value: value.clone(),
                 loc: loc.clone(),
             });
 
@@ -3674,7 +3675,7 @@ fn lower_assignment(
                 let followup_loc = pattern_like_hir_loc(path).or(loc.clone());
                 lower_assignment(builder, followup_loc, kind, path, place, assignment_style);
             }
-            None
+            Some(temporary)
         }
 
         PatternLike::ObjectPattern(pattern) => {
@@ -3842,7 +3843,7 @@ fn lower_assignment(
                 }
             }
 
-            lower_value_to_temporary(builder, InstructionValue::Destructure {
+            let temporary = lower_value_to_temporary(builder, InstructionValue::Destructure {
                 lvalue: LValuePattern {
                     pattern: Pattern::Object(ObjectPattern {
                         properties,
@@ -3850,7 +3851,7 @@ fn lower_assignment(
                     }),
                     kind,
                 },
-                value,
+                value: value.clone(),
                 loc: loc.clone(),
             });
 
@@ -3858,7 +3859,7 @@ fn lower_assignment(
                 let followup_loc = pattern_like_hir_loc(path).or(loc.clone());
                 lower_assignment(builder, followup_loc, kind, path, place, assignment_style);
             }
-            None
+            Some(temporary)
         }
 
         PatternLike::AssignmentPattern(pattern) => {
@@ -4981,16 +4982,22 @@ fn trim_jsx_text(original: &str) -> Option<String> {
 fn lower_object_method(
     builder: &mut HirBuilder,
     method: &react_compiler_ast::expressions::ObjectMethod,
-) -> ObjectProperty {
+) -> Option<ObjectProperty> {
     use react_compiler_ast::expressions::ObjectMethodKind;
     if !matches!(method.kind, ObjectMethodKind::Method) {
+        let kind_str = match method.kind {
+            ObjectMethodKind::Get => "get",
+            ObjectMethodKind::Set => "set",
+            ObjectMethodKind::Method => "method",
+        };
         builder.record_error(CompilerErrorDetail {
-            reason: "Getter and setter methods are not supported".to_string(),
+            reason: format!("(BuildHIR::lowerExpression) Handle {} functions in ObjectExpression", kind_str),
             category: ErrorCategory::Todo,
             loc: convert_opt_loc(&method.base.loc),
             description: None,
             suggestions: None,
         });
+        return None;
     }
     let key = lower_object_property_key(builder, &method.key, method.computed)
         .unwrap_or(ObjectPropertyKey::String { name: String::new() });
@@ -5004,11 +5011,11 @@ fn lower_object_method(
     };
     let method_place = lower_value_to_temporary(builder, method_value);
 
-    ObjectProperty {
+    Some(ObjectProperty {
         key,
         property_type: ObjectPropertyType::Method,
         place: method_place,
-    }
+    })
 }
 
 fn lower_object_property_key(
@@ -5082,7 +5089,14 @@ fn is_reorderable_expression(
                     // global, safe to reorder
                     true
                 }
-                Some(_) => allow_local_identifiers,
+                Some(b) => {
+                    if b.scope == builder.scope_info().program_scope {
+                        // Module-scope binding (ModuleLocal, imports), safe to reorder
+                        true
+                    } else {
+                        allow_local_identifiers
+                    }
+                }
             }
         }
         Expression::RegExpLiteral(_)
@@ -5125,14 +5139,20 @@ fn is_reorderable_expression(
             })
         }
         Expression::MemberExpression(member) => {
-            // Allow member expressions where the innermost object is a global
+            // Allow member expressions where the innermost object is a global or module-local
             let mut inner = member.object.as_ref();
             while let Expression::MemberExpression(m) = inner {
                 inner = m.object.as_ref();
             }
             if let Expression::Identifier(ident) = inner {
                 let start = ident.base.start.unwrap_or(0);
-                builder.scope_info().resolve_reference(start).is_none()
+                match builder.scope_info().resolve_reference(start) {
+                    None => true, // global
+                    Some(binding) => {
+                        // Module-scope bindings (ModuleLocal, imports) are safe to reorder
+                        binding.scope == builder.scope_info().program_scope
+                    }
+                }
             } else {
                 false
             }

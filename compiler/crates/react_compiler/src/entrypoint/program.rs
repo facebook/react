@@ -139,7 +139,7 @@ fn find_directives_dynamic_gating<'a>(
 
     let pattern = Regex::new(r"^use memo if\(([^\)]*)\)$").expect("Invalid dynamic gating regex");
 
-    let mut errors: Vec<String> = Vec::new();
+    let mut errors: Vec<CompilerErrorDetail> = Vec::new();
     let mut matches: Vec<(&'a Directive, String)> = Vec::new();
 
     for directive in directives {
@@ -149,10 +149,13 @@ fn find_directives_dynamic_gating<'a>(
                 if is_valid_identifier(ident) {
                     matches.push((directive, ident.to_string()));
                 } else {
-                    errors.push(format!(
-                        "Dynamic gating directive is not a valid JavaScript identifier: '{}'",
-                        directive.value.value
-                    ));
+                    let mut detail = CompilerErrorDetail::new(
+                        ErrorCategory::Gating,
+                        "Dynamic gating directive is not a valid JavaScript identifier",
+                    )
+                    .with_description(format!("Found '{}'", directive.value.value));
+                    detail.loc = directive.base.loc.as_ref().map(convert_loc);
+                    errors.push(detail);
                 }
             }
         }
@@ -161,7 +164,7 @@ fn find_directives_dynamic_gating<'a>(
     if !errors.is_empty() {
         let mut err = CompilerError::new();
         for e in errors {
-            err.push_error_detail(CompilerErrorDetail::new(ErrorCategory::Gating, e));
+            err.push_error_detail(e);
         }
         return Err(err);
     }
@@ -169,16 +172,16 @@ fn find_directives_dynamic_gating<'a>(
     if matches.len() > 1 {
         let names: Vec<String> = matches.iter().map(|(d, _)| d.value.value.clone()).collect();
         let mut err = CompilerError::new();
-        err.push_error_detail(
-            CompilerErrorDetail::new(
-                ErrorCategory::Gating,
-                "Multiple dynamic gating directives found",
-            )
-            .with_description(format!(
-                "Expected a single directive but found [{}]",
-                names.join(", ")
-            )),
-        );
+        let mut detail = CompilerErrorDetail::new(
+            ErrorCategory::Gating,
+            "Multiple dynamic gating directives found",
+        )
+        .with_description(format!(
+            "Expected a single directive but found [{}]",
+            names.join(", ")
+        ));
+        detail.loc = matches[0].0.base.loc.as_ref().map(convert_loc);
+        err.push_error_detail(detail);
         return Err(err);
     }
 
@@ -190,6 +193,7 @@ fn find_directives_dynamic_gating<'a>(
 }
 
 /// Simple check for valid JavaScript identifier (alphanumeric + underscore + $, starting with letter/$/_ )
+/// Also rejects reserved words like `true`, `false`, `null`, etc.
 fn is_valid_identifier(s: &str) -> bool {
     if s.is_empty() {
         return false;
@@ -199,7 +203,19 @@ fn is_valid_identifier(s: &str) -> bool {
     if !first.is_alphabetic() && first != '_' && first != '$' {
         return false;
     }
-    chars.all(|c| c.is_alphanumeric() || c == '_' || c == '$')
+    if !chars.all(|c| c.is_alphanumeric() || c == '_' || c == '$') {
+        return false;
+    }
+    // Check for reserved words (matching Babel's t.isValidIdentifier)
+    !matches!(s,
+        "break" | "case" | "catch" | "continue" | "debugger" | "default" | "do" |
+        "else" | "finally" | "for" | "function" | "if" | "in" | "instanceof" |
+        "new" | "return" | "switch" | "this" | "throw" | "try" | "typeof" |
+        "var" | "void" | "while" | "with" | "class" | "const" | "enum" |
+        "export" | "extends" | "import" | "super" | "implements" | "interface" |
+        "let" | "package" | "private" | "protected" | "public" | "static" |
+        "yield" | "null" | "true" | "false" | "delete"
+    )
 }
 
 // -----------------------------------------------------------------------

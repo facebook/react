@@ -15,7 +15,7 @@ use react_compiler_ast::literals::StringLiteral;
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::statements::Statement;
 use react_compiler_ast::{Program, SourceType};
-use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory, Position, SourceLocation};
 
 use super::compile_result::{DebugLogEntry, LoggerEvent, OrderedLogItem};
 use super::plugin_options::{CompilerTarget, PluginOptions};
@@ -211,13 +211,16 @@ pub fn validate_restricted_imports(
     for stmt in &program.body {
         if let Statement::ImportDeclaration(import) = stmt {
             if restricted.contains(import.source.value.as_str()) {
-                error.push_error_detail(
-                    CompilerErrorDetail::new(
-                        ErrorCategory::Todo,
-                        "Bailing out due to blocklisted import",
-                    )
-                    .with_description(format!("Import from module {}", import.source.value)),
-                );
+                let mut detail = CompilerErrorDetail::new(
+                    ErrorCategory::Todo,
+                    "Bailing out due to blocklisted import",
+                )
+                .with_description(format!("Import from module {}", import.source.value));
+                detail.loc = import.base.loc.as_ref().map(|loc| SourceLocation {
+                    start: Position { line: loc.start.line, column: loc.start.column },
+                    end: Position { line: loc.end.line, column: loc.end.column },
+                });
+                error.push_error_detail(detail);
             }
         }
     }
