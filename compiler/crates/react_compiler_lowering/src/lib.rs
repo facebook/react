@@ -18,6 +18,7 @@ pub use build_hir::lower;
 
 // Re-export post-build helper functions used by optimization passes
 pub use hir_builder::{
+    create_temporary_place,
     each_terminal_successor,
     get_reverse_postordered_blocks,
     mark_instruction_ids,

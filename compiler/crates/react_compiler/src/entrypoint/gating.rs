@@ -85,11 +85,8 @@ pub fn apply_gating_rewrites(
             let original_stmt = program.body[rewrite.original_index].clone();
             let original_fn = extract_function_node_from_stmt(&original_stmt);
 
-            let gating_expression = build_gating_expression(
-                rewrite.compiled_fn,
-                original_fn,
-                &gating_imported_name,
-            );
+            let gating_expression =
+                build_gating_expression(rewrite.compiled_fn, original_fn, &gating_imported_name);
 
             // Determine how to rewrite based on context
             if !rewrite.is_export_default {
@@ -109,11 +106,10 @@ pub fn apply_gating_rewrites(
                     program.body[rewrite.original_index] = var_decl;
                 } else {
                     // Replace with the conditional expression directly (e.g. arrow/expression)
-                    let expr_stmt =
-                        Statement::ExpressionStatement(ExpressionStatement {
-                            base: BaseNode::default(),
-                            expression: Box::new(gating_expression),
-                        });
+                    let expr_stmt = Statement::ExpressionStatement(ExpressionStatement {
+                        base: BaseNode::default(),
+                        expression: Box::new(gating_expression),
+                    });
                     program.body[rewrite.original_index] = expr_stmt;
                 }
             } else {
@@ -146,9 +142,7 @@ pub fn apply_gating_rewrites(
                     );
                     // Replace the original statement with the var decl, then insert re-export after
                     program.body[rewrite.original_index] = var_decl;
-                    program
-                        .body
-                        .insert(rewrite.original_index + 1, re_export);
+                    program.body.insert(rewrite.original_index + 1, re_export);
                 } else {
                     // Anonymous export default or arrow: replace the declaration content
                     // with the conditional expression
@@ -232,13 +226,10 @@ fn insert_additional_function_declaration(
     let _ = compiled_id; // used above for the assert
 
     // Generate unique names
-    let gating_condition_name = context.new_uid(
-        &format!("{}_result", gating_function_identifier_name),
-    );
-    let unoptimized_fn_name =
-        context.new_uid(&format!("{}_unoptimized", original_fn_name.name));
-    let optimized_fn_name =
-        context.new_uid(&format!("{}_optimized", original_fn_name.name));
+    let gating_condition_name =
+        context.new_uid(&format!("{}_result", gating_function_identifier_name));
+    let unoptimized_fn_name = context.new_uid(&format!("{}_unoptimized", original_fn_name.name));
+    let optimized_fn_name = context.new_uid(&format!("{}_optimized", original_fn_name.name));
 
     // Step 1: rename existing functions
     compiled.id = Some(make_identifier(&optimized_fn_name));
@@ -274,10 +265,8 @@ fn insert_additional_function_declaration(
             }
             _ => {
                 new_params.push(PatternLike::Identifier(make_identifier(&arg_name)));
-                new_args_optimized
-                    .push(Expression::Identifier(make_identifier(&arg_name)));
-                new_args_unoptimized
-                    .push(Expression::Identifier(make_identifier(&arg_name)));
+                new_args_optimized.push(Expression::Identifier(make_identifier(&arg_name)));
+                new_args_unoptimized.push(Expression::Identifier(make_identifier(&arg_name)));
             }
         }
     }
@@ -467,9 +456,7 @@ fn get_fn_decl_name_from_export_default(stmt: &Statement) -> Option<String> {
 /// "original" side of the gating expression).
 fn extract_function_node_from_stmt(stmt: &Statement) -> CompiledFunctionNode {
     match stmt {
-        Statement::FunctionDeclaration(fd) => {
-            CompiledFunctionNode::FunctionDeclaration(fd.clone())
-        }
+        Statement::FunctionDeclaration(fd) => CompiledFunctionNode::FunctionDeclaration(fd.clone()),
         Statement::ExpressionStatement(es) => match es.expression.as_ref() {
             Expression::ArrowFunctionExpression(arrow) => {
                 CompiledFunctionNode::ArrowFunctionExpression(arrow.clone())
@@ -491,9 +478,7 @@ fn extract_function_node_from_stmt(stmt: &Statement) -> CompiledFunctionNode {
                     Expression::FunctionExpression(fe) => {
                         CompiledFunctionNode::FunctionExpression(fe.clone())
                     }
-                    _ => panic!(
-                        "Expected function expression in export default for gating"
-                    ),
+                    _ => panic!("Expected function expression in export default for gating"),
                 }
             }
             _ => panic!("Expected function in export default declaration for gating"),

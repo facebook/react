@@ -1,13 +1,11 @@
 use std::collections::HashSet;
 
-use react_compiler_diagnostics::{
-    CompilerError, CompilerErrorOrDiagnostic, SourceLocation,
-};
-use react_compiler_hir::{
-    BasicBlock, BlockId, HirFunction, IdentifierId, IdentifierName, Instruction,
-    InstructionValue, LValue, ParamPattern, Pattern, Place, ScopeId, Terminal, Type,
-};
+use react_compiler_diagnostics::{CompilerError, CompilerErrorOrDiagnostic, SourceLocation};
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::{
+    BasicBlock, BlockId, HirFunction, IdentifierId, IdentifierName, Instruction, InstructionValue,
+    LValue, ParamPattern, Pattern, Place, ScopeId, Terminal, Type,
+};
 
 // =============================================================================
 // DebugPrinter struct
@@ -287,7 +285,10 @@ impl<'a> DebugPrinter<'a> {
                     IdentifierName::Named(n) => ("named", n.as_str()),
                     IdentifierName::Promoted(n) => ("promoted", n.as_str()),
                 };
-                self.line(&format!("name: {{ kind: \"{}\", value: \"{}\" }}", kind, value));
+                self.line(&format!(
+                    "name: {{ kind: \"{}\", value: \"{}\" }}",
+                    kind, value
+                ));
             }
             None => self.line("name: null"),
         }
@@ -338,7 +339,11 @@ impl<'a> DebugPrinter<'a> {
         if let Some(ty) = self.env.types.get(type_id.0 as usize) {
             match ty {
                 Type::Primitive => "Primitive".to_string(),
-                Type::Function { shape_id, return_type, is_constructor } => {
+                Type::Function {
+                    shape_id,
+                    return_type,
+                    is_constructor,
+                } => {
                     format!(
                         "Function {{ shapeId: {}, return: {}, isConstructor: {} }}",
                         match shape_id {
@@ -361,10 +366,17 @@ impl<'a> DebugPrinter<'a> {
                 Type::TypeVar { id } => format!("Type({})", id.0),
                 Type::Poly => "Poly".to_string(),
                 Type::Phi { operands } => {
-                    let ops: Vec<String> = operands.iter().map(|op| self.format_type_value(op)).collect();
+                    let ops: Vec<String> = operands
+                        .iter()
+                        .map(|op| self.format_type_value(op))
+                        .collect();
                     format!("Phi {{ operands: [{}] }}", ops.join(", "))
                 }
-                Type::Property { object_type, object_name, property_name } => {
+                Type::Property {
+                    object_type,
+                    object_name,
+                    property_name,
+                } => {
                     let prop_str = match property_name {
                         react_compiler_hir::PropertyNameKind::Literal { value } => {
                             format!("\"{}\"", format_property_literal(value))
@@ -390,7 +402,11 @@ impl<'a> DebugPrinter<'a> {
     fn format_type_value(&self, ty: &Type) -> String {
         match ty {
             Type::Primitive => "Primitive".to_string(),
-            Type::Function { shape_id, return_type, is_constructor } => {
+            Type::Function {
+                shape_id,
+                return_type,
+                is_constructor,
+            } => {
                 format!(
                     "Function {{ shapeId: {}, return: {}, isConstructor: {} }}",
                     match shape_id {
@@ -413,10 +429,17 @@ impl<'a> DebugPrinter<'a> {
             Type::TypeVar { id } => format!("Type({})", id.0),
             Type::Poly => "Poly".to_string(),
             Type::Phi { operands } => {
-                let ops: Vec<String> = operands.iter().map(|op| self.format_type_value(op)).collect();
+                let ops: Vec<String> = operands
+                    .iter()
+                    .map(|op| self.format_type_value(op))
+                    .collect();
                 format!("Phi {{ operands: [{}] }}", ops.join(", "))
             }
-            Type::Property { object_type, object_name, property_name } => {
+            Type::Property {
+                object_type,
+                object_name,
+                property_name,
+            } => {
                 let prop_str = match property_name {
                     react_compiler_hir::PropertyNameKind::Literal { value } => {
                         format!("\"{}\"", format_property_literal(value))
@@ -591,7 +614,11 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::UnaryExpression { operator, value, loc } => {
+            InstructionValue::UnaryExpression {
+                operator,
+                value,
+                loc,
+            } => {
                 self.line("UnaryExpression {");
                 self.indent();
                 self.line(&format!("operator: \"{}\"", operator));
@@ -600,7 +627,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::BinaryExpression { operator, left, right, loc } => {
+            InstructionValue::BinaryExpression {
+                operator,
+                left,
+                right,
+                loc,
+            } => {
                 self.line("BinaryExpression {");
                 self.indent();
                 self.line(&format!("operator: \"{}\"", operator));
@@ -638,7 +670,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::MethodCall { receiver, property, args, loc } => {
+            InstructionValue::MethodCall {
+                receiver,
+                property,
+                args,
+                loc,
+            } => {
                 self.line("MethodCall {");
                 self.indent();
                 self.format_place_field("receiver", receiver);
@@ -676,7 +713,14 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::JsxExpression { tag, props, children, loc, opening_loc, closing_loc } => {
+            InstructionValue::JsxExpression {
+                tag,
+                props,
+                children,
+                loc,
+                opening_loc,
+                closing_loc,
+            } => {
                 self.line("JsxExpression {");
                 self.indent();
                 match tag {
@@ -749,7 +793,11 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::DeclareLocal { lvalue, type_annotation, loc } => {
+            InstructionValue::DeclareLocal {
+                lvalue,
+                type_annotation,
+                loc,
+            } => {
                 self.line("DeclareLocal {");
                 self.indent();
                 self.format_lvalue("lvalue", lvalue);
@@ -776,7 +824,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::StoreLocal { lvalue, value, type_annotation, loc } => {
+            InstructionValue::StoreLocal {
+                lvalue,
+                value,
+                type_annotation,
+                loc,
+            } => {
                 self.line("StoreLocal {");
                 self.indent();
                 self.format_lvalue("lvalue", lvalue);
@@ -826,35 +879,61 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::PropertyLoad { object, property, loc } => {
+            InstructionValue::PropertyLoad {
+                object,
+                property,
+                loc,
+            } => {
                 self.line("PropertyLoad {");
                 self.indent();
                 self.format_place_field("object", object);
-                self.line(&format!("property: \"{}\"", format_property_literal(property)));
+                self.line(&format!(
+                    "property: \"{}\"",
+                    format_property_literal(property)
+                ));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::PropertyStore { object, property, value, loc } => {
+            InstructionValue::PropertyStore {
+                object,
+                property,
+                value,
+                loc,
+            } => {
                 self.line("PropertyStore {");
                 self.indent();
                 self.format_place_field("object", object);
-                self.line(&format!("property: \"{}\"", format_property_literal(property)));
+                self.line(&format!(
+                    "property: \"{}\"",
+                    format_property_literal(property)
+                ));
                 self.format_place_field("value", value);
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::PropertyDelete { object, property, loc } => {
+            InstructionValue::PropertyDelete {
+                object,
+                property,
+                loc,
+            } => {
                 self.line("PropertyDelete {");
                 self.indent();
                 self.format_place_field("object", object);
-                self.line(&format!("property: \"{}\"", format_property_literal(property)));
+                self.line(&format!(
+                    "property: \"{}\"",
+                    format_property_literal(property)
+                ));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::ComputedLoad { object, property, loc } => {
+            InstructionValue::ComputedLoad {
+                object,
+                property,
+                loc,
+            } => {
                 self.line("ComputedLoad {");
                 self.indent();
                 self.format_place_field("object", object);
@@ -863,7 +942,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::ComputedStore { object, property, value, loc } => {
+            InstructionValue::ComputedStore {
+                object,
+                property,
+                value,
+                loc,
+            } => {
                 self.line("ComputedStore {");
                 self.indent();
                 self.format_place_field("object", object);
@@ -873,7 +957,11 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::ComputedDelete { object, property, loc } => {
+            InstructionValue::ComputedDelete {
+                object,
+                property,
+                loc,
+            } => {
                 self.line("ComputedDelete {");
                 self.indent();
                 self.format_place_field("object", object);
@@ -899,7 +987,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::FunctionExpression { name, name_hint, lowered_func, expr_type, loc } => {
+            InstructionValue::FunctionExpression {
+                name,
+                name_hint,
+                lowered_func,
+                expr_type,
+                loc,
+            } => {
                 self.line("FunctionExpression {");
                 self.indent();
                 self.line(&format!(
@@ -922,7 +1016,10 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::ObjectMethod { loc, lowered_func: _ } => {
+            InstructionValue::ObjectMethod {
+                loc,
+                lowered_func: _,
+            } => {
                 self.line("ObjectMethod {");
                 self.indent();
                 self.line("loweredFunc: <HIRFunction>");
@@ -946,7 +1043,11 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::TemplateLiteral { subexprs, quasis, loc } => {
+            InstructionValue::TemplateLiteral {
+                subexprs,
+                quasis,
+                loc,
+            } => {
                 self.line("TemplateLiteral {");
                 self.indent();
                 self.line("subexprs:");
@@ -973,16 +1074,28 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::RegExpLiteral { pattern, flags, loc } => {
+            InstructionValue::RegExpLiteral {
+                pattern,
+                flags,
+                loc,
+            } => {
                 self.line(&format!(
                     "RegExpLiteral {{ pattern: \"{}\", flags: \"{}\", loc: {} }}",
-                    pattern, flags, format_loc(loc)
+                    pattern,
+                    flags,
+                    format_loc(loc)
                 ));
             }
-            InstructionValue::MetaProperty { meta, property, loc } => {
+            InstructionValue::MetaProperty {
+                meta,
+                property,
+                loc,
+            } => {
                 self.line(&format!(
                     "MetaProperty {{ meta: \"{}\", property: \"{}\", loc: {} }}",
-                    meta, property, format_loc(loc)
+                    meta,
+                    property,
+                    format_loc(loc)
                 ));
             }
             InstructionValue::Await { value, loc } => {
@@ -1001,7 +1114,11 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::IteratorNext { iterator, collection, loc } => {
+            InstructionValue::IteratorNext {
+                iterator,
+                collection,
+                loc,
+            } => {
                 self.line("IteratorNext {");
                 self.indent();
                 self.format_place_field("iterator", iterator);
@@ -1021,7 +1138,12 @@ impl<'a> DebugPrinter<'a> {
             InstructionValue::Debugger { loc } => {
                 self.line(&format!("Debugger {{ loc: {} }}", format_loc(loc)));
             }
-            InstructionValue::PostfixUpdate { lvalue, operation, value, loc } => {
+            InstructionValue::PostfixUpdate {
+                lvalue,
+                operation,
+                value,
+                loc,
+            } => {
                 self.line("PostfixUpdate {");
                 self.indent();
                 self.format_place_field("lvalue", lvalue);
@@ -1031,7 +1153,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::PrefixUpdate { lvalue, operation, value, loc } => {
+            InstructionValue::PrefixUpdate {
+                lvalue,
+                operation,
+                value,
+                loc,
+            } => {
                 self.line("PrefixUpdate {");
                 self.indent();
                 self.format_place_field("lvalue", lvalue);
@@ -1041,7 +1168,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::StartMemoize { manual_memo_id, deps, deps_loc: _, loc } => {
+            InstructionValue::StartMemoize {
+                manual_memo_id,
+                deps,
+                deps_loc: _,
+                loc,
+            } => {
                 self.line("StartMemoize {");
                 self.indent();
                 self.line(&format!("manualMemoId: {}", manual_memo_id));
@@ -1051,20 +1183,32 @@ impl<'a> DebugPrinter<'a> {
                         self.indent();
                         for (i, dep) in d.iter().enumerate() {
                             let root_str = match &dep.root {
-                                react_compiler_hir::ManualMemoDependencyRoot::Global { identifier_name } => {
+                                react_compiler_hir::ManualMemoDependencyRoot::Global {
+                                    identifier_name,
+                                } => {
                                     format!("Global(\"{}\")", identifier_name)
                                 }
-                                react_compiler_hir::ManualMemoDependencyRoot::NamedLocal { value, constant } => {
-                                    format!("NamedLocal({}, constant={})", value.identifier.0, constant)
+                                react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
+                                    value,
+                                    constant,
+                                } => {
+                                    format!(
+                                        "NamedLocal({}, constant={})",
+                                        value.identifier.0, constant
+                                    )
                                 }
                             };
-                            let path_str: String = dep.path.iter().map(|p| {
-                                format!(
-                                    "{}.{}",
-                                    if p.optional { "?" } else { "" },
-                                    format_property_literal(&p.property)
-                                )
-                            }).collect();
+                            let path_str: String = dep
+                                .path
+                                .iter()
+                                .map(|p| {
+                                    format!(
+                                        "{}.{}",
+                                        if p.optional { "?" } else { "" },
+                                        format_property_literal(&p.property)
+                                    )
+                                })
+                                .collect();
                             self.line(&format!("[{}] {}{}", i, root_str, path_str));
                         }
                         self.dedent();
@@ -1075,7 +1219,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::FinishMemoize { manual_memo_id, decl, pruned, loc } => {
+            InstructionValue::FinishMemoize {
+                manual_memo_id,
+                decl,
+                pruned,
+                loc,
+            } => {
                 self.line("FinishMemoize {");
                 self.indent();
                 self.line(&format!("manualMemoId: {}", manual_memo_id));
@@ -1094,7 +1243,14 @@ impl<'a> DebugPrinter<'a> {
 
     fn format_terminal(&mut self, terminal: &Terminal) {
         match terminal {
-            Terminal::If { test, consequent, alternate, fallthrough, id, loc } => {
+            Terminal::If {
+                test,
+                consequent,
+                alternate,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("If {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1106,7 +1262,14 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Branch { test, consequent, alternate, fallthrough, id, loc } => {
+            Terminal::Branch {
+                test,
+                consequent,
+                alternate,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Branch {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1118,7 +1281,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Logical { operator, test, fallthrough, id, loc } => {
+            Terminal::Logical {
+                operator,
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Logical {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1129,7 +1298,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Ternary { test, fallthrough, id, loc } => {
+            Terminal::Ternary {
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Ternary {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1139,7 +1313,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Optional { optional, test, fallthrough, id, loc } => {
+            Terminal::Optional {
+                optional,
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Optional {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1159,7 +1339,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Return { value, return_variant, id, loc, effects } => {
+            Terminal::Return {
+                value,
+                return_variant,
+                id,
+                loc,
+                effects,
+            } => {
                 self.line("Return {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1180,7 +1366,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Goto { block, variant, id, loc } => {
+            Terminal::Goto {
+                block,
+                variant,
+                id,
+                loc,
+            } => {
                 self.line("Goto {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1190,7 +1381,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Switch { test, cases, fallthrough, id, loc } => {
+            Terminal::Switch {
+                test,
+                cases,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Switch {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1218,7 +1415,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::DoWhile { loop_block, test, fallthrough, id, loc } => {
+            Terminal::DoWhile {
+                loop_block,
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("DoWhile {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1229,7 +1432,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::While { test, loop_block, fallthrough, id, loc } => {
+            Terminal::While {
+                test,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("While {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1240,7 +1449,15 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::For { init, test, update, loop_block, fallthrough, id, loc } => {
+            Terminal::For {
+                init,
+                test,
+                update,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("For {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1259,7 +1476,14 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::ForOf { init, test, loop_block, fallthrough, id, loc } => {
+            Terminal::ForOf {
+                init,
+                test,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("ForOf {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1271,7 +1495,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::ForIn { init, loop_block, fallthrough, id, loc } => {
+            Terminal::ForIn {
+                init,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("ForIn {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1282,7 +1512,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Label { block, fallthrough, id, loc } => {
+            Terminal::Label {
+                block,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Label {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1292,7 +1527,12 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Sequence { block, fallthrough, id, loc } => {
+            Terminal::Sequence {
+                block,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Sequence {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1316,7 +1556,13 @@ impl<'a> DebugPrinter<'a> {
                     format_loc(loc)
                 ));
             }
-            Terminal::MaybeThrow { continuation, handler, id, loc, effects } => {
+            Terminal::MaybeThrow {
+                continuation,
+                handler,
+                id,
+                loc,
+                effects,
+            } => {
                 self.line("MaybeThrow {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1343,7 +1589,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Scope { fallthrough, block, scope, id, loc } => {
+            Terminal::Scope {
+                fallthrough,
+                block,
+                scope,
+                id,
+                loc,
+            } => {
                 self.line("Scope {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1354,7 +1606,13 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::PrunedScope { fallthrough, block, scope, id, loc } => {
+            Terminal::PrunedScope {
+                fallthrough,
+                block,
+                scope,
+                id,
+                loc,
+            } => {
                 self.line("PrunedScope {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1365,7 +1623,14 @@ impl<'a> DebugPrinter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            Terminal::Try { block, handler_binding, handler, fallthrough, id, loc } => {
+            Terminal::Try {
+                block,
+                handler_binding,
+                handler,
+                fallthrough,
+                id,
+                loc,
+            } => {
                 self.line("Try {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
@@ -1521,12 +1786,22 @@ fn format_non_local_binding(binding: &react_compiler_hir::NonLocalBinding) -> St
             format!("ModuleLocal {{ name: \"{}\" }}", name)
         }
         react_compiler_hir::NonLocalBinding::ImportDefault { name, module } => {
-            format!("ImportDefault {{ name: \"{}\", module: \"{}\" }}", name, module)
+            format!(
+                "ImportDefault {{ name: \"{}\", module: \"{}\" }}",
+                name, module
+            )
         }
         react_compiler_hir::NonLocalBinding::ImportNamespace { name, module } => {
-            format!("ImportNamespace {{ name: \"{}\", module: \"{}\" }}", name, module)
+            format!(
+                "ImportNamespace {{ name: \"{}\", module: \"{}\" }}",
+                name, module
+            )
         }
-        react_compiler_hir::NonLocalBinding::ImportSpecifier { name, module, imported } => {
+        react_compiler_hir::NonLocalBinding::ImportSpecifier {
+            name,
+            module,
+            imported,
+        } => {
             format!(
                 "ImportSpecifier {{ name: \"{}\", module: \"{}\", imported: \"{}\" }}",
                 name, module, imported

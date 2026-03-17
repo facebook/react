@@ -35,23 +35,21 @@ use super::compile_result::{
     LoggerEvent,
 };
 use super::imports::{
-    get_react_compiler_runtime_module, validate_restricted_imports, ProgramContext,
+    ProgramContext, get_react_compiler_runtime_module, validate_restricted_imports,
 };
 use super::pipeline;
 use super::plugin_options::{CompilerOutputMode, PluginOptions};
 use super::suppression::{
-    filter_suppressions_that_affect_function, find_program_suppressions,
-    suppressions_to_compiler_error, SuppressionRange,
+    SuppressionRange, filter_suppressions_that_affect_function, find_program_suppressions,
+    suppressions_to_compiler_error,
 };
 
 // -----------------------------------------------------------------------
 // Constants
 // -----------------------------------------------------------------------
 
-const DEFAULT_ESLINT_SUPPRESSIONS: &[&str] = &[
-    "react-hooks/exhaustive-deps",
-    "react-hooks/rules-of-hooks",
-];
+const DEFAULT_ESLINT_SUPPRESSIONS: &[&str] =
+    &["react-hooks/exhaustive-deps", "react-hooks/rules-of-hooks"];
 
 /// Directives that opt a function into memoization
 const OPT_IN_DIRECTIVES: &[&str] = &["use forget", "use memo"];
@@ -367,10 +365,7 @@ fn returns_non_node_in_stmt(stmt: &Statement) -> bool {
 /// Check if a function returns non-node values.
 /// For arrow functions with expression body, checks the expression directly.
 /// For block bodies, walks the statements.
-fn returns_non_node_fn(
-    params: &[PatternLike],
-    body: &FunctionBody,
-) -> bool {
+fn returns_non_node_fn(params: &[PatternLike], body: &FunctionBody) -> bool {
     let _ = params;
     match body {
         FunctionBody::Block(block) => returns_non_node_in_stmts(&block.body),
@@ -502,9 +497,7 @@ fn calls_hooks_or_creates_jsx_in_stmt(stmt: &Statement) -> bool {
             }
             false
         }
-        Statement::LabeledStatement(labeled) => {
-            calls_hooks_or_creates_jsx_in_stmt(&labeled.body)
-        }
+        Statement::LabeledStatement(labeled) => calls_hooks_or_creates_jsx_in_stmt(&labeled.body),
         Statement::WithStatement(with) => {
             calls_hooks_or_creates_jsx_in_expr(&with.object)
                 || calls_hooks_or_creates_jsx_in_stmt(&with.body)
@@ -581,14 +574,11 @@ fn calls_hooks_or_creates_jsx_in_expr(expr: &Expression) -> bool {
         Expression::AssignmentExpression(assign) => {
             calls_hooks_or_creates_jsx_in_expr(&assign.right)
         }
-        Expression::SequenceExpression(seq) => {
-            seq.expressions
-                .iter()
-                .any(|e| calls_hooks_or_creates_jsx_in_expr(e))
-        }
-        Expression::UnaryExpression(unary) => {
-            calls_hooks_or_creates_jsx_in_expr(&unary.argument)
-        }
+        Expression::SequenceExpression(seq) => seq
+            .expressions
+            .iter()
+            .any(|e| calls_hooks_or_creates_jsx_in_expr(e)),
+        Expression::UnaryExpression(unary) => calls_hooks_or_creates_jsx_in_expr(&unary.argument),
         Expression::UpdateExpression(update) => {
             calls_hooks_or_creates_jsx_in_expr(&update.argument)
         }
@@ -600,9 +590,7 @@ fn calls_hooks_or_creates_jsx_in_expr(expr: &Expression) -> bool {
             calls_hooks_or_creates_jsx_in_expr(&member.object)
                 || calls_hooks_or_creates_jsx_in_expr(&member.property)
         }
-        Expression::SpreadElement(spread) => {
-            calls_hooks_or_creates_jsx_in_expr(&spread.argument)
-        }
+        Expression::SpreadElement(spread) => calls_hooks_or_creates_jsx_in_expr(&spread.argument),
         Expression::AwaitExpression(await_expr) => {
             calls_hooks_or_creates_jsx_in_expr(&await_expr.argument)
         }
@@ -635,19 +623,13 @@ fn calls_hooks_or_creates_jsx_in_expr(expr: &Expression) -> bool {
             calls_hooks_or_creates_jsx_in_expr(&paren.expression)
         }
         Expression::TSAsExpression(ts) => calls_hooks_or_creates_jsx_in_expr(&ts.expression),
-        Expression::TSSatisfiesExpression(ts) => {
-            calls_hooks_or_creates_jsx_in_expr(&ts.expression)
-        }
-        Expression::TSNonNullExpression(ts) => {
-            calls_hooks_or_creates_jsx_in_expr(&ts.expression)
-        }
+        Expression::TSSatisfiesExpression(ts) => calls_hooks_or_creates_jsx_in_expr(&ts.expression),
+        Expression::TSNonNullExpression(ts) => calls_hooks_or_creates_jsx_in_expr(&ts.expression),
         Expression::TSTypeAssertion(ts) => calls_hooks_or_creates_jsx_in_expr(&ts.expression),
         Expression::TSInstantiationExpression(ts) => {
             calls_hooks_or_creates_jsx_in_expr(&ts.expression)
         }
-        Expression::TypeCastExpression(tc) => {
-            calls_hooks_or_creates_jsx_in_expr(&tc.expression)
-        }
+        Expression::TypeCastExpression(tc) => calls_hooks_or_creates_jsx_in_expr(&tc.expression),
         Expression::NewExpression(new) => {
             if calls_hooks_or_creates_jsx_in_expr(&new.callee) {
                 return true;
@@ -736,7 +718,8 @@ fn get_react_function_type(
         if let Ok(Some(_)) = opt_in {
             // If there's an opt-in directive, use name heuristics but fall back to Other
             return Some(
-                get_component_or_hook_like(name, params, body, parent_callee_name).unwrap_or(ReactFunctionType::Other),
+                get_component_or_hook_like(name, params, body, parent_callee_name)
+                    .unwrap_or(ReactFunctionType::Other),
             );
         }
     }
@@ -1023,12 +1006,7 @@ fn process_fn(
     };
 
     // Attempt compilation
-    let compile_result = try_compile_function(
-        source,
-        scope_info,
-        output_mode,
-        context,
-    );
+    let compile_result = try_compile_function(source, scope_info, output_mode, context);
 
     match compile_result {
         Err(err) => {
@@ -1037,9 +1015,7 @@ fn process_fn(
                 log_error(&err, source.fn_loc.clone(), context);
             } else {
                 // Apply panic threshold logic
-                if let Some(result) =
-                    handle_error(&err, source.fn_loc.clone(), context)
-                {
+                if let Some(result) = handle_error(&err, source.fn_loc.clone(), context) {
                     return Err(result);
                 }
             }
@@ -1156,11 +1132,7 @@ fn fn_info_from_func_expr<'a>(
     parent_callee_name: Option<String>,
 ) -> FunctionInfo<'a> {
     FunctionInfo {
-        name: expr
-            .id
-            .as_ref()
-            .map(|id| id.name.clone())
-            .or(inferred_name),
+        name: expr.id.as_ref().map(|id| id.name.clone()).or(inferred_name),
         fn_node: FunctionNode::FunctionExpression(expr),
         params: &expr.params,
         body: FunctionBody::Block(&expr.body),
@@ -1304,26 +1276,14 @@ fn find_functions_to_compile<'a>(
 
                         match init.as_ref() {
                             Expression::FunctionExpression(func) => {
-                                let info = fn_info_from_func_expr(
-                                    func,
-                                    inferred_name,
-                                    None,
-                                );
-                                if let Some(source) =
-                                    try_make_compile_source(info, opts, context)
-                                {
+                                let info = fn_info_from_func_expr(func, inferred_name, None);
+                                if let Some(source) = try_make_compile_source(info, opts, context) {
                                     queue.push(source);
                                 }
                             }
                             Expression::ArrowFunctionExpression(arrow) => {
-                                let info = fn_info_from_arrow(
-                                    arrow,
-                                    inferred_name,
-                                    None,
-                                );
-                                if let Some(source) =
-                                    try_make_compile_source(info, opts, context)
-                                {
+                                let info = fn_info_from_arrow(arrow, inferred_name, None);
+                                if let Some(source) = try_make_compile_source(info, opts, context) {
                                     queue.push(source);
                                 }
                             }
@@ -1354,37 +1314,27 @@ fn find_functions_to_compile<'a>(
                             queue.push(source);
                         }
                     }
-                    ExportDefaultDecl::Expression(expr) => {
-                        match expr.as_ref() {
-                            Expression::FunctionExpression(func) => {
-                                let info = fn_info_from_func_expr(func, None, None);
-                                if let Some(source) =
-                                    try_make_compile_source(info, opts, context)
-                                {
-                                    queue.push(source);
-                                }
+                    ExportDefaultDecl::Expression(expr) => match expr.as_ref() {
+                        Expression::FunctionExpression(func) => {
+                            let info = fn_info_from_func_expr(func, None, None);
+                            if let Some(source) = try_make_compile_source(info, opts, context) {
+                                queue.push(source);
                             }
-                            Expression::ArrowFunctionExpression(arrow) => {
-                                let info = fn_info_from_arrow(arrow, None, None);
-                                if let Some(source) =
-                                    try_make_compile_source(info, opts, context)
-                                {
-                                    queue.push(source);
-                                }
+                        }
+                        Expression::ArrowFunctionExpression(arrow) => {
+                            let info = fn_info_from_arrow(arrow, None, None);
+                            if let Some(source) = try_make_compile_source(info, opts, context) {
+                                queue.push(source);
                             }
-                            other => {
-                                if let Some(info) =
-                                    try_extract_wrapped_function(other, None)
-                                {
-                                    if let Some(source) =
-                                        try_make_compile_source(info, opts, context)
-                                    {
-                                        queue.push(source);
-                                    }
+                        }
+                        other => {
+                            if let Some(info) = try_extract_wrapped_function(other, None) {
+                                if let Some(source) = try_make_compile_source(info, opts, context) {
+                                    queue.push(source);
                                 }
                             }
                         }
-                    }
+                    },
                     ExportDefaultDecl::ClassDeclaration(_) => {
                         // Skip classes
                     }
@@ -1396,9 +1346,7 @@ fn find_functions_to_compile<'a>(
                     match declaration.as_ref() {
                         Declaration::FunctionDeclaration(func) => {
                             let info = fn_info_from_decl(func);
-                            if let Some(source) =
-                                try_make_compile_source(info, opts, context)
-                            {
+                            if let Some(source) = try_make_compile_source(info, opts, context) {
                                 queue.push(source);
                             }
                         }
@@ -1409,11 +1357,8 @@ fn find_functions_to_compile<'a>(
 
                                     match init.as_ref() {
                                         Expression::FunctionExpression(func) => {
-                                            let info = fn_info_from_func_expr(
-                                                func,
-                                                inferred_name,
-                                                None,
-                                            );
+                                            let info =
+                                                fn_info_from_func_expr(func, inferred_name, None);
                                             if let Some(source) =
                                                 try_make_compile_source(info, opts, context)
                                             {
@@ -1421,11 +1366,8 @@ fn find_functions_to_compile<'a>(
                                             }
                                         }
                                         Expression::ArrowFunctionExpression(arrow) => {
-                                            let info = fn_info_from_arrow(
-                                                arrow,
-                                                inferred_name,
-                                                None,
-                                            );
+                                            let info =
+                                                fn_info_from_arrow(arrow, inferred_name, None);
                                             if let Some(source) =
                                                 try_make_compile_source(info, opts, context)
                                             {
@@ -1433,10 +1375,9 @@ fn find_functions_to_compile<'a>(
                                             }
                                         }
                                         other => {
-                                            if let Some(info) = try_extract_wrapped_function(
-                                                other,
-                                                inferred_name,
-                                            ) {
+                                            if let Some(info) =
+                                                try_extract_wrapped_function(other, inferred_name)
+                                            {
                                                 if let Some(source) =
                                                     try_make_compile_source(info, opts, context)
                                                 {
@@ -1499,11 +1440,7 @@ fn apply_compiled_functions(_compiled_fns: &[CompiledFunction<'_>], _program: &m
 /// - findFunctionsToCompile: traverse program to find components and hooks
 /// - processFn: per-function compilation with directive and suppression handling
 /// - applyCompiledFunctions: replace original functions with compiled versions
-pub fn compile_program(
-    file: File,
-    scope: ScopeInfo,
-    options: PluginOptions,
-) -> CompileResult {
+pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> CompileResult {
     // Compute output mode once, up front
     let output_mode = CompilerOutputMode::from_opts(&options);
 
@@ -1559,17 +1496,12 @@ pub fn compile_program(
         // Don't check for ESLint suppressions if both validations are enabled
         None
     } else {
-        Some(
-            options
-                .eslint_suppression_rules
-                .clone()
-                .unwrap_or_else(|| {
-                    DEFAULT_ESLINT_SUPPRESSIONS
-                        .iter()
-                        .map(|s| s.to_string())
-                        .collect()
-                }),
-        )
+        Some(options.eslint_suppression_rules.clone().unwrap_or_else(|| {
+            DEFAULT_ESLINT_SUPPRESSIONS
+                .iter()
+                .map(|s| s.to_string())
+                .collect()
+        }))
     };
 
     // Find program-level suppressions from comments

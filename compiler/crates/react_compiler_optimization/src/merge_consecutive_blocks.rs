@@ -16,8 +16,8 @@
 use std::collections::{HashMap, HashSet};
 
 use react_compiler_hir::{
-    BlockId, BlockKind, Effect, HirFunction, Instruction,
-    InstructionId, InstructionValue, Place, Terminal, GENERATED_SOURCE,
+    BlockId, BlockKind, Effect, GENERATED_SOURCE, HirFunction, Instruction, InstructionId,
+    InstructionValue, Place, Terminal,
 };
 use react_compiler_lowering::{mark_predecessors, terminal_fallthrough};
 

@@ -5,6 +5,6 @@ pub mod fixture_utils;
 // Re-export from new crates for backwards compatibility
 pub use react_compiler_diagnostics;
 pub use react_compiler_hir;
-pub use react_compiler_hir::environment;
 pub use react_compiler_hir as hir;
+pub use react_compiler_hir::environment;
 pub use react_compiler_lowering::lower;

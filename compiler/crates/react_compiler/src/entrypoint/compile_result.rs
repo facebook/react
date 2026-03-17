@@ -1,6 +1,6 @@
-use serde::Serialize;
 use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
+use serde::Serialize;
 
 /// Main result type returned by the compile function.
 /// Serialized to JSON and returned to the JS shim.

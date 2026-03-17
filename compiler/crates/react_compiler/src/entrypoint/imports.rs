@@ -343,9 +343,10 @@ fn is_non_namespaced_import(import: &ImportDeclaration) -> bool {
         .specifiers
         .iter()
         .all(|s| matches!(s, ImportSpecifier::ImportSpecifier(_)))
-        && import.import_kind.as_ref().map_or(true, |k| {
-            matches!(k, ImportKind::Value)
-        })
+        && import
+            .import_kind
+            .as_ref()
+            .map_or(true, |k| matches!(k, ImportKind::Value))
 }
 
 /// Check if a name follows the React hook naming convention (use[A-Z0-9]...).

@@ -35,6 +35,11 @@ pub struct Environment {
     // via DeclareContext to avoid duplicate hoisting.
     // Uses u32 to avoid depending on react_compiler_ast types.
     hoisted_identifiers: HashSet<u32>,
+
+    // Config flags for validation passes
+    pub validate_preserve_existing_memoization_guarantees: bool,
+    pub validate_no_set_state_in_render: bool,
+    pub enable_preserve_existing_memoization_guarantees: bool,
 }
 
 impl Environment {
@@ -63,6 +68,9 @@ impl Environment {
             fn_type: ReactFunctionType::Other,
             output_mode: OutputMode::Client,
             hoisted_identifiers: HashSet::new(),
+            validate_preserve_existing_memoization_guarantees: true,
+            validate_no_set_state_in_render: false,
+            enable_preserve_existing_memoization_guarantees: false,
         }
     }
 

@@ -97,7 +97,10 @@ pub fn find_program_suppressions(
         }
 
         // Check for Flow suppression (only if not already within a block)
-        if flow_suppressions && disable_comment.is_none() && flow_suppression_pattern.is_match(&data.value) {
+        if flow_suppressions
+            && disable_comment.is_none()
+            && flow_suppression_pattern.is_match(&data.value)
+        {
             disable_comment = Some(data.clone());
             enable_comment = Some(data.clone());
             source = Some(SuppressionSource::Flow);
@@ -212,11 +215,8 @@ pub fn suppressions_to_compiler_error(suppressions: &[SuppressionRange]) -> Comp
             suppression.disable_comment.value.trim()
         );
 
-        let mut diagnostic = CompilerDiagnostic::new(
-            ErrorCategory::Suppression,
-            reason,
-            Some(description),
-        );
+        let mut diagnostic =
+            CompilerDiagnostic::new(ErrorCategory::Suppression, reason, Some(description));
 
         diagnostic.suggestions = Some(vec![CompilerSuggestion {
             description: suggestion.to_string(),

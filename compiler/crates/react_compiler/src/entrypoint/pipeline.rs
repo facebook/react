@@ -10,8 +10,8 @@
 
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_diagnostics::CompilerError;
-use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_hir::ReactFunctionType;
+use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_lowering::FunctionNode;
 
 use super::compile_result::{CodegenFunction, DebugLogEntry};
@@ -59,6 +59,33 @@ pub fn compile_fn(
     // that trigger false invariant violations.
     let _ = react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env);
     react_compiler_validation::validate_use_memo(&hir, &mut env);
+
+    // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
+    // output modes, so we run it unconditionally.
+    react_compiler_optimization::drop_manual_memoization(&mut hir, &mut env).map_err(|diag| {
+        let mut err = CompilerError::new();
+        err.push_diagnostic(diag);
+        err
+    })?;
+
+    let debug_drop_memo = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("DropManualMemoization", debug_drop_memo));
+
+    react_compiler_optimization::inline_immediately_invoked_function_expressions(
+        &mut hir, &mut env,
+    );
+
+    let debug_inline_iifes = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new(
+        "InlineImmediatelyInvokedFunctionExpressions",
+        debug_inline_iifes,
+    ));
+
+    // Standalone merge pass (TS pipeline calls this unconditionally after IIFE inlining)
+    react_compiler_optimization::merge_consecutive_blocks::merge_consecutive_blocks(&mut hir);
+
+    let debug_merge = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
 
     Ok(CodegenFunction {
         loc: None,
