@@ -1,4 +1,5 @@
 pub mod build_hir;
+pub mod find_context_identifiers;
 pub mod hir_builder;
 
 use react_compiler_ast::expressions::{ArrowFunctionExpression, FunctionExpression};

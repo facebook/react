@@ -114,6 +114,7 @@ impl<'a> HirBuilder<'a> {
         scope_info: &'a ScopeInfo,
         function_scope: ScopeId,
         component_scope: ScopeId,
+        context_identifiers: std::collections::HashSet<BindingId>,
         bindings: Option<IndexMap<BindingId, IdentifierId>>,
         context: Option<IndexMap<BindingId, Option<SourceLocation>>>,
         entry_block_kind: Option<BlockKind>,
@@ -121,11 +122,6 @@ impl<'a> HirBuilder<'a> {
     ) -> Self {
         let entry = env.next_block_id();
         let kind = entry_block_kind.unwrap_or(BlockKind::Block);
-        // Pre-compute context identifiers: variables declared in scopes between
-        // component_scope and inner function scopes that are referenced from those
-        // inner function scopes. These are local variables that are captured by
-        // nested functions and need StoreContext/LoadContext semantics.
-        let context_identifiers = compute_context_identifiers(scope_info, component_scope);
         HirBuilder {
             completed: IndexMap::new(),
             current: new_block(entry, kind),
@@ -168,6 +164,11 @@ impl<'a> HirBuilder<'a> {
     /// Access the context map.
     pub fn context(&self) -> &IndexMap<BindingId, Option<SourceLocation>> {
         &self.context
+    }
+
+    /// Access the pre-computed context identifiers set.
+    pub fn context_identifiers(&self) -> &std::collections::HashSet<BindingId> {
+        &self.context_identifiers
     }
 
     /// Access scope_info and environment mutably at the same time.
@@ -737,19 +738,6 @@ impl<'a> HirBuilder<'a> {
             }
         }
     }
-}
-
-/// Compute the set of BindingIds for variables that are "context identifiers":
-/// variables declared in scopes between `component_scope` and inner function
-/// scopes, that are referenced from within those inner function scopes.
-///
-/// This matches the TS `Environment.#contextIdentifiers` set which is used to
-/// determine whether to emit StoreContext/LoadContext vs StoreLocal/LoadLocal.
-fn compute_context_identifiers(
-    scope_info: &ScopeInfo,
-    _component_scope: ScopeId,
-) -> std::collections::HashSet<BindingId> {
-    scope_info.context_identifiers.iter().copied().collect()
 }
 
 /// Check if `ancestor` is an ancestor scope of `descendant` by walking the

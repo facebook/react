@@ -7,6 +7,7 @@ pub mod operators;
 pub mod patterns;
 pub mod scope;
 pub mod statements;
+pub mod visitor;
 
 use serde::{Deserialize, Serialize};
 

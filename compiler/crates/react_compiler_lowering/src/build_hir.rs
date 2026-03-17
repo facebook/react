@@ -6,6 +6,7 @@ use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 
 use crate::FunctionNode;
+use crate::find_context_identifiers::find_context_identifiers;
 use crate::hir_builder::HirBuilder;
 
 // =============================================================================
@@ -3141,6 +3142,9 @@ pub fn lower(
         .copied()
         .unwrap_or(scope_info.program_scope);
 
+    // Pre-compute context identifiers: variables captured across function boundaries
+    let context_identifiers = find_context_identifiers(func, scope_info);
+
     // For top-level functions, context is empty (no captured refs)
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =
         IndexMap::new();
@@ -3159,6 +3163,7 @@ pub fn lower(
         context_map,
         scope_id,
         scope_id, // component_scope = function_scope for top-level
+        &context_identifiers,
         true, // is_top_level
     );
 
@@ -4068,6 +4073,7 @@ fn lower_function(
     // Clone parent bindings and used_names to pass to the inner lower
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
+    let context_ids = builder.context_identifiers().clone();
 
     // Use scope_info_and_env_mut to avoid conflicting borrows
     let (scope_info, env) = builder.scope_info_and_env_mut();
@@ -4085,6 +4091,7 @@ fn lower_function(
         merged_context,
         function_scope,
         component_scope,
+        &context_ids,
         false, // nested function
     );
 
@@ -4140,6 +4147,7 @@ fn lower_function_declaration(
 
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
+    let context_ids = builder.context_identifiers().clone();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
     let (hir_func, child_used_names) = lower_inner(
@@ -4156,6 +4164,7 @@ fn lower_function_declaration(
         merged_context,
         function_scope,
         component_scope,
+        &context_ids,
         false, // nested function
     );
 
@@ -4261,6 +4270,7 @@ fn lower_function_for_object_method(
 
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
+    let context_ids = builder.context_identifiers().clone();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
     let (hir_func, child_used_names) = lower_inner(
@@ -4277,6 +4287,7 @@ fn lower_function_for_object_method(
         merged_context,
         function_scope,
         component_scope,
+        &context_ids,
         false, // nested function
     );
 
@@ -4302,6 +4313,7 @@ fn lower_inner(
     context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>>,
     function_scope: react_compiler_ast::scope::ScopeId,
     component_scope: react_compiler_ast::scope::ScopeId,
+    context_identifiers: &HashSet<react_compiler_ast::scope::BindingId>,
     is_top_level: bool,
 ) -> (HirFunction, IndexMap<String, react_compiler_ast::scope::BindingId>) {
     let mut builder = HirBuilder::new(
@@ -4309,6 +4321,7 @@ fn lower_inner(
         scope_info,
         function_scope,
         component_scope,
+        context_identifiers.clone(),
         parent_bindings,
         Some(context_map.clone()),
         None,

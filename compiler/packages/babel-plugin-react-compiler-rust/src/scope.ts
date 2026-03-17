@@ -35,7 +35,6 @@ export interface ScopeInfo {
   bindings: Array<BindingData>;
   nodeToScope: Record<number, number>;
   referenceToBinding: Record<number, number>;
-  contextIdentifiers: Array<number>;
   programScope: number;
 }
 
@@ -185,165 +184,13 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const programScopeUid = String(program.scope.uid);
   const programScopeId = scopeUidToId.get(programScopeUid) ?? 0;
 
-  // Compute context identifiers: variables shared between a function and its
-  // nested closures via mutation. Matches findContextIdentifiers logic.
-  const contextIdentifiers = computeContextIdentifiers(program, bindings, scopeUidToId);
-
   return {
     scopes,
     bindings,
     nodeToScope,
     referenceToBinding,
-    contextIdentifiers,
     programScope: programScopeId,
   };
-}
-
-function computeContextIdentifiers(
-  program: NodePath<t.Program>,
-  bindings: Array<BindingData>,
-  scopeUidToId: Map<string, number>,
-): Array<number> {
-  type IdentifierInfo = {
-    reassigned: boolean;
-    reassignedByInnerFn: boolean;
-    referencedByInnerFn: boolean;
-    bindingId: number;
-  };
-
-  const identifierInfoMap = new Map</* Babel binding */ object, IdentifierInfo>();
-  const functionStack: Array<NodePath> = [];
-
-  const withFunctionScope = {
-    enter(path: NodePath) {
-      functionStack.push(path);
-    },
-    exit() {
-      functionStack.pop();
-    },
-  };
-
-  function getOrCreateInfo(babelBinding: any, bindingId: number): IdentifierInfo {
-    let info = identifierInfoMap.get(babelBinding);
-    if (!info) {
-      info = {
-        reassigned: false,
-        reassignedByInnerFn: false,
-        referencedByInnerFn: false,
-        bindingId,
-      };
-      identifierInfoMap.set(babelBinding, info);
-    }
-    return info;
-  }
-
-  function handleAssignment(lvalPath: NodePath): void {
-    const node = lvalPath.node;
-    if (!node) return;
-    switch (node.type) {
-      case 'Identifier': {
-        const path = lvalPath as NodePath<t.Identifier>;
-        const name = path.node.name;
-        const binding = path.scope.getBinding(name);
-        if (!binding) break;
-        const uid = String(binding.scope.uid);
-        const scopeId = scopeUidToId.get(uid);
-        if (scopeId === undefined) break;
-        // Find this binding's ID
-        const bindingId = bindings.findIndex(
-          b => b.name === name && b.scope === scopeId,
-        );
-        if (bindingId === -1) break;
-        const info = getOrCreateInfo(binding, bindingId);
-        info.reassigned = true;
-        const currentFn = functionStack.at(-1) ?? null;
-        if (currentFn != null) {
-          const bindingAboveLambda = (currentFn as any).scope?.parent?.getBinding(name);
-          if (binding === bindingAboveLambda) {
-            info.reassignedByInnerFn = true;
-          }
-        }
-        break;
-      }
-      case 'ArrayPattern': {
-        for (const element of (lvalPath as NodePath<t.ArrayPattern>).get('elements')) {
-          if (element.node) handleAssignment(element as NodePath);
-        }
-        break;
-      }
-      case 'ObjectPattern': {
-        for (const property of (lvalPath as NodePath<t.ObjectPattern>).get('properties')) {
-          if (property.isObjectProperty()) {
-            handleAssignment(property.get('value') as NodePath);
-          } else if (property.isRestElement()) {
-            handleAssignment(property as NodePath);
-          }
-        }
-        break;
-      }
-      case 'AssignmentPattern': {
-        handleAssignment((lvalPath as NodePath<t.AssignmentPattern>).get('left'));
-        break;
-      }
-      case 'RestElement': {
-        handleAssignment((lvalPath as NodePath<t.RestElement>).get('argument'));
-        break;
-      }
-      default:
-        break;
-    }
-  }
-
-  program.traverse({
-    FunctionDeclaration: withFunctionScope,
-    FunctionExpression: withFunctionScope,
-    ArrowFunctionExpression: withFunctionScope,
-    ObjectMethod: withFunctionScope,
-    Identifier(path: NodePath<t.Identifier>) {
-      if (!path.isReferencedIdentifier()) return;
-      const name = path.node.name;
-      const binding = path.scope.getBinding(name);
-      if (!binding) return;
-      const uid = String(binding.scope.uid);
-      const scopeId = scopeUidToId.get(uid);
-      if (scopeId === undefined) return;
-      const bindingId = bindings.findIndex(
-        b => b.name === name && b.scope === scopeId,
-      );
-      if (bindingId === -1) return;
-      const currentFn = functionStack.at(-1) ?? null;
-      if (currentFn != null) {
-        const bindingAboveLambda = (currentFn as any).scope?.parent?.getBinding(name);
-        if (binding === bindingAboveLambda) {
-          const info = getOrCreateInfo(binding, bindingId);
-          info.referencedByInnerFn = true;
-        }
-      }
-    },
-    AssignmentExpression(path: NodePath<t.AssignmentExpression>) {
-      const left = path.get('left');
-      if (left.isLVal()) {
-        handleAssignment(left);
-      }
-    },
-    UpdateExpression(path: NodePath<t.UpdateExpression>) {
-      const argument = path.get('argument');
-      if (argument.isLVal()) {
-        handleAssignment(argument as NodePath);
-      }
-    },
-  });
-
-  const result: Array<number> = [];
-  for (const info of identifierInfoMap.values()) {
-    if (
-      info.reassignedByInnerFn ||
-      (info.reassigned && info.referencedByInnerFn)
-    ) {
-      result.push(info.bindingId);
-    }
-  }
-  return result;
 }
 
 function getScopeKind(path: NodePath): string {

@@ -1,0 +1,278 @@
+//! Rust equivalent of the TypeScript `FindContextIdentifiers` pass.
+//!
+//! Determines which bindings need StoreContext/LoadContext semantics by
+//! walking the AST with scope tracking to find variables that cross
+//! function boundaries.
+
+use std::collections::{HashMap, HashSet};
+
+use react_compiler_ast::expressions::*;
+use react_compiler_ast::patterns::*;
+use react_compiler_ast::scope::*;
+use react_compiler_ast::statements::FunctionDeclaration;
+use react_compiler_ast::visitor::{AstWalker, Visitor};
+
+use crate::FunctionNode;
+
+#[derive(Default)]
+struct BindingInfo {
+    reassigned: bool,
+    reassigned_by_inner_fn: bool,
+    referenced_by_inner_fn: bool,
+}
+
+struct ContextIdentifierVisitor<'a> {
+    scope_info: &'a ScopeInfo,
+    /// Stack of inner function scopes encountered during traversal.
+    /// Empty when at the top level of the function being compiled.
+    function_stack: Vec<ScopeId>,
+    binding_info: HashMap<BindingId, BindingInfo>,
+}
+
+impl<'a> ContextIdentifierVisitor<'a> {
+    fn push_function_scope(&mut self, start: Option<u32>) {
+        if let Some(start) = start {
+            if let Some(&scope) = self.scope_info.node_to_scope.get(&start) {
+                self.function_stack.push(scope);
+            }
+        }
+    }
+
+    fn pop_function_scope(&mut self, start: Option<u32>) {
+        if start
+            .and_then(|s| self.scope_info.node_to_scope.get(&s))
+            .is_some()
+        {
+            self.function_stack.pop();
+        }
+    }
+
+    fn handle_reassignment_identifier(&mut self, name: &str, current_scope: ScopeId) {
+        if let Some(binding_id) = self.scope_info.get_binding(current_scope, name) {
+            let info = self.binding_info.entry(binding_id).or_default();
+            info.reassigned = true;
+            if let Some(&fn_scope) = self.function_stack.last() {
+                let binding = &self.scope_info.bindings[binding_id.0 as usize];
+                if is_captured_by_function(self.scope_info, binding.scope, fn_scope) {
+                    info.reassigned_by_inner_fn = true;
+                }
+            }
+        }
+    }
+}
+
+impl Visitor for ContextIdentifierVisitor<'_> {
+    fn enter_function_declaration(&mut self, node: &FunctionDeclaration, _: &[ScopeId]) {
+        self.push_function_scope(node.base.start);
+    }
+    fn leave_function_declaration(&mut self, node: &FunctionDeclaration, _: &[ScopeId]) {
+        self.pop_function_scope(node.base.start);
+    }
+    fn enter_function_expression(&mut self, node: &FunctionExpression, _: &[ScopeId]) {
+        self.push_function_scope(node.base.start);
+    }
+    fn leave_function_expression(&mut self, node: &FunctionExpression, _: &[ScopeId]) {
+        self.pop_function_scope(node.base.start);
+    }
+    fn enter_arrow_function_expression(
+        &mut self,
+        node: &ArrowFunctionExpression,
+        _: &[ScopeId],
+    ) {
+        self.push_function_scope(node.base.start);
+    }
+    fn leave_arrow_function_expression(
+        &mut self,
+        node: &ArrowFunctionExpression,
+        _: &[ScopeId],
+    ) {
+        self.pop_function_scope(node.base.start);
+    }
+    fn enter_object_method(&mut self, node: &ObjectMethod, _: &[ScopeId]) {
+        self.push_function_scope(node.base.start);
+    }
+    fn leave_object_method(&mut self, node: &ObjectMethod, _: &[ScopeId]) {
+        self.pop_function_scope(node.base.start);
+    }
+
+    fn enter_identifier(&mut self, node: &Identifier, _scope_stack: &[ScopeId]) {
+        let start = match node.base.start {
+            Some(s) => s,
+            None => return,
+        };
+        // Only process identifiers that resolve to a binding (referenced or declaration)
+        let binding_id = match self.scope_info.reference_to_binding.get(&start) {
+            Some(&id) => id,
+            None => return,
+        };
+        // If not inside a nested function, nothing to track
+        let &fn_scope = match self.function_stack.last() {
+            Some(s) => s,
+            None => return,
+        };
+        let binding = &self.scope_info.bindings[binding_id.0 as usize];
+        if is_captured_by_function(self.scope_info, binding.scope, fn_scope) {
+            let info = self.binding_info.entry(binding_id).or_default();
+            info.referenced_by_inner_fn = true;
+        }
+    }
+
+    fn enter_assignment_expression(
+        &mut self,
+        node: &AssignmentExpression,
+        scope_stack: &[ScopeId],
+    ) {
+        let current_scope = scope_stack
+            .last()
+            .copied()
+            .unwrap_or(self.scope_info.program_scope);
+        walk_lval_for_reassignment(self, &node.left, current_scope);
+    }
+
+    fn enter_update_expression(&mut self, node: &UpdateExpression, scope_stack: &[ScopeId]) {
+        if let Expression::Identifier(ident) = node.argument.as_ref() {
+            let current_scope = scope_stack
+                .last()
+                .copied()
+                .unwrap_or(self.scope_info.program_scope);
+            self.handle_reassignment_identifier(&ident.name, current_scope);
+        }
+    }
+}
+
+/// Recursively walk an LVal pattern to find all reassignment target identifiers.
+fn walk_lval_for_reassignment(
+    visitor: &mut ContextIdentifierVisitor<'_>,
+    pattern: &PatternLike,
+    current_scope: ScopeId,
+) {
+    match pattern {
+        PatternLike::Identifier(ident) => {
+            visitor.handle_reassignment_identifier(&ident.name, current_scope);
+        }
+        PatternLike::ArrayPattern(pat) => {
+            for element in &pat.elements {
+                if let Some(el) = element {
+                    walk_lval_for_reassignment(visitor, el, current_scope);
+                }
+            }
+        }
+        PatternLike::ObjectPattern(pat) => {
+            for prop in &pat.properties {
+                match prop {
+                    ObjectPatternProperty::ObjectProperty(p) => {
+                        walk_lval_for_reassignment(visitor, &p.value, current_scope);
+                    }
+                    ObjectPatternProperty::RestElement(p) => {
+                        walk_lval_for_reassignment(visitor, &p.argument, current_scope);
+                    }
+                }
+            }
+        }
+        PatternLike::AssignmentPattern(pat) => {
+            walk_lval_for_reassignment(visitor, &pat.left, current_scope);
+        }
+        PatternLike::RestElement(pat) => {
+            walk_lval_for_reassignment(visitor, &pat.argument, current_scope);
+        }
+        PatternLike::MemberExpression(_) => {
+            // Interior mutability - not a variable reassignment
+        }
+    }
+}
+
+/// Check if a binding declared at `binding_scope` is captured by a function at `function_scope`.
+/// Returns true if the binding is declared above the function (in the parent scope or higher).
+fn is_captured_by_function(
+    scope_info: &ScopeInfo,
+    binding_scope: ScopeId,
+    function_scope: ScopeId,
+) -> bool {
+    let fn_parent = match scope_info.scopes[function_scope.0 as usize].parent {
+        Some(p) => p,
+        None => return false,
+    };
+    if binding_scope == fn_parent {
+        return true;
+    }
+    // Walk up from fn_parent to see if binding_scope is an ancestor
+    let mut current = scope_info.scopes[fn_parent.0 as usize].parent;
+    while let Some(scope_id) = current {
+        if scope_id == binding_scope {
+            return true;
+        }
+        current = scope_info.scopes[scope_id.0 as usize].parent;
+    }
+    false
+}
+
+/// Find context identifiers for a function: variables that are captured across
+/// function boundaries and need StoreContext/LoadContext semantics.
+///
+/// A binding is a context identifier if:
+/// - It is reassigned from inside a nested function (`reassignedByInnerFn`), OR
+/// - It is reassigned AND referenced from inside a nested function
+///   (`reassigned && referencedByInnerFn`)
+///
+/// This is the Rust equivalent of the TypeScript `FindContextIdentifiers` pass.
+pub fn find_context_identifiers(
+    func: &FunctionNode<'_>,
+    scope_info: &ScopeInfo,
+) -> HashSet<BindingId> {
+    let func_start = match func {
+        FunctionNode::FunctionDeclaration(d) => d.base.start.unwrap_or(0),
+        FunctionNode::FunctionExpression(e) => e.base.start.unwrap_or(0),
+        FunctionNode::ArrowFunctionExpression(a) => a.base.start.unwrap_or(0),
+    };
+    let func_scope = scope_info
+        .node_to_scope
+        .get(&func_start)
+        .copied()
+        .unwrap_or(scope_info.program_scope);
+
+    let mut visitor = ContextIdentifierVisitor {
+        scope_info,
+        function_stack: Vec::new(),
+        binding_info: HashMap::new(),
+    };
+    let mut walker = AstWalker::with_initial_scope(scope_info, func_scope);
+
+    // Walk params and body (like Babel's func.traverse())
+    match func {
+        FunctionNode::FunctionDeclaration(d) => {
+            for param in &d.params {
+                walker.walk_pattern(&mut visitor, param);
+            }
+            walker.walk_block_statement(&mut visitor, &d.body);
+        }
+        FunctionNode::FunctionExpression(e) => {
+            for param in &e.params {
+                walker.walk_pattern(&mut visitor, param);
+            }
+            walker.walk_block_statement(&mut visitor, &e.body);
+        }
+        FunctionNode::ArrowFunctionExpression(a) => {
+            for param in &a.params {
+                walker.walk_pattern(&mut visitor, param);
+            }
+            match a.body.as_ref() {
+                ArrowFunctionBody::BlockStatement(block) => {
+                    walker.walk_block_statement(&mut visitor, block);
+                }
+                ArrowFunctionBody::Expression(expr) => {
+                    walker.walk_expression(&mut visitor, expr);
+                }
+            }
+        }
+    }
+
+    // Collect results
+    visitor
+        .binding_info
+        .into_iter()
+        .filter(|(_, info)| {
+            info.reassigned_by_inner_fn || (info.reassigned && info.referenced_by_inner_fn)
+        })
+        .map(|(id, _)| id)
+        .collect()
+}
