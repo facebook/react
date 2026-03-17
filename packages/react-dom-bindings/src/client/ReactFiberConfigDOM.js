@@ -4520,18 +4520,30 @@ export function setFocusIfFocusable(
   //
   // We could compare the node to document.activeElement after focus,
   // but this would not handle the case where application code managed focus to automatically blur.
+  const element = ((node: any): HTMLElement);
+
+  // If this element is already the active element, it's focusable and already
+  // focused. Calling .focus() on it would be a no-op (no focus event fires),
+  // so we short-circuit here.
+  if (element.ownerDocument.activeElement === element) {
+    return true;
+  }
+
   let didFocus = false;
   const handleFocus = () => {
     didFocus = true;
   };
 
-  const element = ((node: any): HTMLElement);
   try {
-    element.addEventListener('focus', handleFocus);
+    // Listen on the document in the capture phase so we detect focus even when
+    // it lands on a different element than the one we called .focus() on. This
+    // happens with <label> elements (focus delegates to the associated input)
+    // and shadow hosts with delegatesFocus.
+    element.ownerDocument.addEventListener('focus', handleFocus, true);
     // $FlowFixMe[method-unbinding]
     (element.focus || HTMLElement.prototype.focus).call(element, focusOptions);
   } finally {
-    element.removeEventListener('focus', handleFocus);
+    element.ownerDocument.removeEventListener('focus', handleFocus, true);
   }
 
   return didFocus;
