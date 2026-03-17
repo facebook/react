@@ -1,6 +1,16 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use crate::*;
-use react_compiler_diagnostics::{CompilerDiagnostic, CompilerError, CompilerErrorDetail};
+use crate::default_module_type_provider::default_module_type_provider;
+use crate::environment_config::EnvironmentConfig;
+use crate::globals::{self, Global, GlobalRegistry, install_type_config};
+use crate::object_shape::{
+    FunctionSignature, HookKind, HookSignatureBuilder, ShapeRegistry,
+    BUILT_IN_MIXED_READONLY_ID,
+    add_hook, default_mutating_hook, default_nonmutating_hook,
+};
+use react_compiler_diagnostics::{
+    CompilerDiagnostic, CompilerError, CompilerErrorDetail, ErrorCategory,
+};
 
 /// Output mode for the compiler, mirrored from the entrypoint's CompilerOutputMode.
 /// Stored on Environment so pipeline passes can access it.
@@ -36,42 +46,89 @@ pub struct Environment {
     // Uses u32 to avoid depending on react_compiler_ast types.
     hoisted_identifiers: HashSet<u32>,
 
-    // Config flags for validation passes
+    // Config flags for validation passes (kept for backwards compat with existing pipeline code)
     pub validate_preserve_existing_memoization_guarantees: bool,
     pub validate_no_set_state_in_render: bool,
     pub enable_preserve_existing_memoization_guarantees: bool,
 
+    // Type system registries
+    globals: GlobalRegistry,
+    pub shapes: ShapeRegistry,
+    module_types: HashMap<String, Option<Global>>,
+
+    // Environment configuration (feature flags, custom hooks, etc.)
+    pub config: EnvironmentConfig,
+
+    // Cached default hook types (lazily initialized)
+    default_nonmutating_hook: Option<Global>,
+    default_mutating_hook: Option<Global>,
 }
 
 impl Environment {
-    /// Number of built-in type slots pre-allocated by the TypeScript compiler's
-    /// global shapes/globals initialization (ObjectShape.ts, Globals.ts).
-    /// We reserve the same slots so that type IDs are consistent between TS and Rust.
-    const BUILTIN_TYPE_COUNT: u32 = 28;
-
     pub fn new() -> Self {
-        // Pre-allocate built-in type slots to match the TypeScript compiler's
-        // global type counter (28 types are allocated during module initialization
-        // for built-in shapes and globals).
-        let mut types = Vec::with_capacity(Self::BUILTIN_TYPE_COUNT as usize);
-        for i in 0..Self::BUILTIN_TYPE_COUNT {
-            types.push(Type::TypeVar { id: TypeId(i) });
+        Self::with_config(EnvironmentConfig::default())
+    }
+
+    /// Create a new Environment with the given configuration.
+    ///
+    /// Initializes the shape and global registries, registers custom hooks,
+    /// and sets up the module type cache.
+    pub fn with_config(config: EnvironmentConfig) -> Self {
+        let mut shapes = globals::build_builtin_shapes();
+        let mut global_registry = globals::build_default_globals(&mut shapes);
+
+        // Register custom hooks from config
+        for (hook_name, hook) in &config.custom_hooks {
+            // Don't overwrite existing globals (matches TS invariant)
+            if global_registry.contains_key(hook_name) {
+                continue;
+            }
+            let return_type = if hook.transitive_mixed_data {
+                Type::Object {
+                    shape_id: Some(BUILT_IN_MIXED_READONLY_ID.to_string()),
+                }
+            } else {
+                Type::Poly
+            };
+            let hook_type = add_hook(
+                &mut shapes,
+                HookSignatureBuilder {
+                    rest_param: Some(hook.effect_kind),
+                    return_type,
+                    return_value_kind: hook.value_kind,
+                    hook_kind: HookKind::Custom,
+                    no_alias: hook.no_alias,
+                    ..Default::default()
+                },
+                None,
+            );
+            global_registry.insert(hook_name.clone(), hook_type);
         }
+
+        // TODO: enableCustomTypeDefinitionForReanimated — register reanimated module type.
 
         Self {
             next_block_id_counter: 0,
             next_scope_id_counter: 0,
             identifiers: Vec::new(),
-            types,
+            types: Vec::new(),
             scopes: Vec::new(),
             functions: Vec::new(),
             errors: CompilerError::new(),
             fn_type: ReactFunctionType::Other,
             output_mode: OutputMode::Client,
             hoisted_identifiers: HashSet::new(),
-            validate_preserve_existing_memoization_guarantees: true,
-            validate_no_set_state_in_render: false,
-            enable_preserve_existing_memoization_guarantees: false,
+            validate_preserve_existing_memoization_guarantees: config
+                .validate_preserve_existing_memoization_guarantees,
+            validate_no_set_state_in_render: config.validate_no_set_state_in_render,
+            enable_preserve_existing_memoization_guarantees: config
+                .enable_preserve_existing_memoization_guarantees,
+            globals: global_registry,
+            shapes,
+            module_types: HashMap::new(),
+            default_nonmutating_hook: None,
+            default_mutating_hook: None,
+            config,
         }
     }
 
@@ -191,10 +248,431 @@ impl Environment {
     pub fn add_hoisted_identifier(&mut self, binding_id: u32) {
         self.hoisted_identifiers.insert(binding_id);
     }
+
+    // =========================================================================
+    // Type resolution methods (ported from Environment.ts)
+    // =========================================================================
+
+    /// Resolve a non-local binding to its type. Ported from TS `getGlobalDeclaration`.
+    ///
+    /// The `loc` parameter is used for error diagnostics when validating module type
+    /// configurations. Pass `None` if no source location is available.
+    pub fn get_global_declaration(
+        &mut self,
+        binding: &NonLocalBinding,
+        loc: Option<SourceLocation>,
+    ) -> Option<Global> {
+        match binding {
+            NonLocalBinding::ModuleLocal { name, .. } => {
+                if is_hook_name(name) {
+                    Some(self.get_custom_hook_type())
+                } else {
+                    None
+                }
+            }
+            NonLocalBinding::Global { name, .. } => {
+                if let Some(ty) = self.globals.get(name) {
+                    return Some(ty.clone());
+                }
+                if is_hook_name(name) {
+                    Some(self.get_custom_hook_type())
+                } else {
+                    None
+                }
+            }
+            NonLocalBinding::ImportSpecifier {
+                name,
+                module,
+                imported,
+            } => {
+                if self.is_known_react_module(module) {
+                    if let Some(ty) = self.globals.get(imported) {
+                        return Some(ty.clone());
+                    }
+                    if is_hook_name(imported) || is_hook_name(name) {
+                        return Some(self.get_custom_hook_type());
+                    }
+                    return None;
+                }
+
+                // Try module type provider. We resolve first, then do property
+                // lookup on the cloned result to avoid double-borrow of self.
+                let module_type = self.resolve_module_type(module);
+                if let Some(module_type) = module_type {
+                    if let Some(imported_type) = Self::get_property_type_from_shapes(
+                        &self.shapes,
+                        &module_type,
+                        imported,
+                    ) {
+                        // Validate hook-name vs hook-type consistency
+                        let expect_hook = is_hook_name(imported);
+                        let is_hook = self.get_hook_kind_for_type(&imported_type).is_some();
+                        if expect_hook != is_hook {
+                            self.record_error(
+                            CompilerErrorDetail::new(
+                                ErrorCategory::Config,
+                                "Invalid type configuration for module",
+                            )
+                            .with_description(format!(
+                                "Expected type for `import {{{}}} from '{}'` {} based on the exported name",
+                                imported,
+                                module,
+                                if expect_hook { "to be a hook" } else { "not to be a hook" }
+                            ))
+                            .with_loc(loc),
+                        );
+                        }
+                        return Some(imported_type);
+                    }
+                }
+
+                if is_hook_name(imported) || is_hook_name(name) {
+                    Some(self.get_custom_hook_type())
+                } else {
+                    None
+                }
+            }
+            NonLocalBinding::ImportDefault { name, module }
+            | NonLocalBinding::ImportNamespace { name, module } => {
+                let is_default = matches!(binding, NonLocalBinding::ImportDefault { .. });
+
+                if self.is_known_react_module(module) {
+                    if let Some(ty) = self.globals.get(name) {
+                        return Some(ty.clone());
+                    }
+                    if is_hook_name(name) {
+                        return Some(self.get_custom_hook_type());
+                    }
+                    return None;
+                }
+
+                let module_type = self.resolve_module_type(module);
+                if let Some(module_type) = module_type {
+                    let imported_type = if is_default {
+                        Self::get_property_type_from_shapes(
+                            &self.shapes,
+                            &module_type,
+                            "default",
+                        )
+                    } else {
+                        Some(module_type)
+                    };
+                    if let Some(imported_type) = imported_type {
+                        // Validate hook-name vs hook-type consistency
+                        let expect_hook = is_hook_name(module);
+                        let is_hook = self.get_hook_kind_for_type(&imported_type).is_some();
+                        if expect_hook != is_hook {
+                            self.record_error(
+                            CompilerErrorDetail::new(
+                                ErrorCategory::Config,
+                                "Invalid type configuration for module",
+                            )
+                            .with_description(format!(
+                                "Expected type for `import ... from '{}'` {} based on the module name",
+                                module,
+                                if expect_hook { "to be a hook" } else { "not to be a hook" }
+                            ))
+                            .with_loc(loc),
+                        );
+                        }
+                        return Some(imported_type);
+                    }
+                }
+
+                if is_hook_name(name) {
+                    Some(self.get_custom_hook_type())
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    /// Static helper: resolve a property type using only the shapes registry.
+    /// Used internally to avoid double-borrow of `self`. Includes hook-name
+    /// fallback matching TS `getPropertyType`.
+    fn get_property_type_from_shapes(
+        shapes: &ShapeRegistry,
+        receiver: &Type,
+        property: &str,
+    ) -> Option<Type> {
+        let shape_id = match receiver {
+            Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
+            _ => None,
+        };
+        if let Some(shape_id) = shape_id {
+            let shape = shapes.get(shape_id)?;
+            if let Some(ty) = shape.properties.get(property) {
+                return Some(ty.clone());
+            }
+            if let Some(ty) = shape.properties.get("*") {
+                return Some(ty.clone());
+            }
+            // Hook-name fallback: callers that need the custom hook type
+            // check is_hook_name after this returns None, which produces
+            // the same result as the TS getPropertyType hook-name fallback.
+        }
+        None
+    }
+
+    /// Get the type of a named property on a receiver type.
+    /// Ported from TS `getPropertyType`.
+    pub fn get_property_type(&mut self, receiver: &Type, property: &str) -> Option<Type> {
+        let shape_id = match receiver {
+            Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
+            _ => None,
+        };
+        if let Some(shape_id) = shape_id {
+            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
+                panic!(
+                    "[HIR] Forget internal error: cannot resolve shape {}",
+                    shape_id
+                )
+            });
+            if let Some(ty) = shape.properties.get(property) {
+                return Some(ty.clone());
+            }
+            // Fall through to wildcard
+            if let Some(ty) = shape.properties.get("*") {
+                return Some(ty.clone());
+            }
+            // If property name looks like a hook, return custom hook type
+            if is_hook_name(property) {
+                return Some(self.get_custom_hook_type());
+            }
+            return None;
+        }
+        // No shape ID — if property looks like a hook, return custom hook type
+        if is_hook_name(property) {
+            return Some(self.get_custom_hook_type());
+        }
+        None
+    }
+
+    /// Get the type of a numeric property on a receiver type.
+    /// Ported from the numeric branch of TS `getPropertyType`.
+    pub fn get_property_type_numeric(&self, receiver: &Type) -> Option<Type> {
+        let shape_id = match receiver {
+            Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
+            _ => None,
+        };
+        if let Some(shape_id) = shape_id {
+            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
+                panic!(
+                    "[HIR] Forget internal error: cannot resolve shape {}",
+                    shape_id
+                )
+            });
+            return shape.properties.get("*").cloned();
+        }
+        None
+    }
+
+    /// Get the fallthrough (wildcard `*`) property type for computed property access.
+    /// Ported from TS `getFallthroughPropertyType`.
+    pub fn get_fallthrough_property_type(&self, receiver: &Type) -> Option<Type> {
+        let shape_id = match receiver {
+            Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
+            _ => None,
+        };
+        if let Some(shape_id) = shape_id {
+            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
+                panic!(
+                    "[HIR] Forget internal error: cannot resolve shape {}",
+                    shape_id
+                )
+            });
+            return shape.properties.get("*").cloned();
+        }
+        None
+    }
+
+    /// Get the function signature for a function type.
+    /// Ported from TS `getFunctionSignature`.
+    pub fn get_function_signature(&self, ty: &Type) -> Option<&FunctionSignature> {
+        let shape_id = match ty {
+            Type::Function { shape_id, .. } => shape_id.as_deref(),
+            _ => return None,
+        };
+        if let Some(shape_id) = shape_id {
+            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
+                panic!(
+                    "[HIR] Forget internal error: cannot resolve shape {}",
+                    shape_id
+                )
+            });
+            return shape.function_type.as_ref();
+        }
+        None
+    }
+
+    /// Get the hook kind for a type, if it represents a hook.
+    /// Ported from TS `getHookKindForType` in HIR.ts.
+    pub fn get_hook_kind_for_type(&self, ty: &Type) -> Option<&HookKind> {
+        self.get_function_signature(ty)
+            .and_then(|sig| sig.hook_kind.as_ref())
+    }
+
+    /// Resolve the module type provider for a given module name.
+    /// Caches results. Uses `defaultModuleTypeProvider` (hardcoded).
+    ///
+    /// TODO: Support custom moduleTypeProvider from config (requires JS function callback).
+    fn resolve_module_type(&mut self, module_name: &str) -> Option<Global> {
+        if let Some(cached) = self.module_types.get(module_name) {
+            return cached.clone();
+        }
+
+        let module_config = default_module_type_provider(module_name);
+        let module_type = module_config.map(|config| {
+            install_type_config(
+                &mut self.globals,
+                &mut self.shapes,
+                &config,
+                module_name,
+                (),
+            )
+        });
+        self.module_types
+            .insert(module_name.to_string(), module_type.clone());
+        module_type
+    }
+
+    fn is_known_react_module(&self, module_name: &str) -> bool {
+        let lower = module_name.to_lowercase();
+        lower == "react" || lower == "react-dom"
+    }
+
+    fn get_custom_hook_type(&mut self) -> Global {
+        if self.config.enable_assume_hooks_follow_rules_of_react {
+            if self.default_nonmutating_hook.is_none() {
+                self.default_nonmutating_hook =
+                    Some(default_nonmutating_hook(&mut self.shapes));
+            }
+            self.default_nonmutating_hook.clone().unwrap()
+        } else {
+            if self.default_mutating_hook.is_none() {
+                self.default_mutating_hook =
+                    Some(default_mutating_hook(&mut self.shapes));
+            }
+            self.default_mutating_hook.clone().unwrap()
+        }
+    }
+
+    /// Get a reference to the shapes registry.
+    pub fn shapes(&self) -> &ShapeRegistry {
+        &self.shapes
+    }
+
+    /// Get a reference to the globals registry.
+    pub fn globals(&self) -> &GlobalRegistry {
+        &self.globals
+    }
 }
 
 impl Default for Environment {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Check if a name matches the React hook naming convention: `use[A-Z0-9]`.
+/// Ported from TS `isHookName` in Environment.ts.
+pub fn is_hook_name(name: &str) -> bool {
+    if name.len() < 4 {
+        return false;
+    }
+    if !name.starts_with("use") {
+        return false;
+    }
+    let fourth_char = name.as_bytes()[3];
+    fourth_char.is_ascii_uppercase() || fourth_char.is_ascii_digit()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_hook_name() {
+        assert!(is_hook_name("useState"));
+        assert!(is_hook_name("useEffect"));
+        assert!(is_hook_name("useMyHook"));
+        assert!(is_hook_name("use3rdParty"));
+        assert!(!is_hook_name("use"));
+        assert!(!is_hook_name("used"));
+        assert!(!is_hook_name("useless"));
+        assert!(!is_hook_name("User"));
+        assert!(!is_hook_name("foo"));
+    }
+
+    #[test]
+    fn test_environment_has_globals() {
+        let env = Environment::new();
+        assert!(env.globals().contains_key("useState"));
+        assert!(env.globals().contains_key("useEffect"));
+        assert!(env.globals().contains_key("useRef"));
+        assert!(env.globals().contains_key("Math"));
+        assert!(env.globals().contains_key("console"));
+        assert!(env.globals().contains_key("Array"));
+        assert!(env.globals().contains_key("Object"));
+    }
+
+    #[test]
+    fn test_get_property_type_array() {
+        let mut env = Environment::new();
+        let array_type = Type::Object {
+            shape_id: Some("BuiltInArray".to_string()),
+        };
+        let map_type = env.get_property_type(&array_type, "map");
+        assert!(map_type.is_some());
+        let push_type = env.get_property_type(&array_type, "push");
+        assert!(push_type.is_some());
+        let nonexistent = env.get_property_type(&array_type, "nonExistentMethod");
+        assert!(nonexistent.is_none());
+    }
+
+    #[test]
+    fn test_get_function_signature() {
+        let env = Environment::new();
+        let use_state_type = env.globals().get("useState").unwrap();
+        let sig = env.get_function_signature(use_state_type);
+        assert!(sig.is_some());
+        let sig = sig.unwrap();
+        assert!(sig.hook_kind.is_some());
+        assert_eq!(sig.hook_kind.as_ref().unwrap(), &HookKind::UseState);
+    }
+
+    #[test]
+    fn test_get_global_declaration() {
+        let mut env = Environment::new();
+        // Global binding
+        let binding = NonLocalBinding::Global {
+            name: "Math".to_string(),
+        };
+        let result = env.get_global_declaration(&binding, None);
+        assert!(result.is_some());
+
+        // Import from react
+        let binding = NonLocalBinding::ImportSpecifier {
+            name: "useState".to_string(),
+            module: "react".to_string(),
+            imported: "useState".to_string(),
+        };
+        let result = env.get_global_declaration(&binding, None);
+        assert!(result.is_some());
+
+        // Unknown global
+        let binding = NonLocalBinding::Global {
+            name: "unknownThing".to_string(),
+        };
+        let result = env.get_global_declaration(&binding, None);
+        assert!(result.is_none());
+
+        // Hook-like name gets default hook type
+        let binding = NonLocalBinding::Global {
+            name: "useCustom".to_string(),
+        };
+        let result = env.get_global_declaration(&binding, None);
+        assert!(result.is_some());
     }
 }

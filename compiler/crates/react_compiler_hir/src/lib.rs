@@ -1,4 +1,9 @@
+pub mod default_module_type_provider;
 pub mod environment;
+pub mod environment_config;
+pub mod globals;
+pub mod object_shape;
+pub mod type_config;
 
 pub use react_compiler_diagnostics::{SourceLocation, Position, GENERATED_SOURCE};
 

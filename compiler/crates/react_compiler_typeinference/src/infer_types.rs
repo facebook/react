@@ -11,38 +11,34 @@
 use std::collections::HashMap;
 
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::object_shape::{
+    ShapeRegistry,
+    BUILT_IN_PROPS_ID, BUILT_IN_ARRAY_ID, BUILT_IN_FUNCTION_ID, BUILT_IN_JSX_ID,
+    BUILT_IN_OBJECT_ID, BUILT_IN_USE_REF_ID, BUILT_IN_REF_VALUE_ID, BUILT_IN_MIXED_READONLY_ID,
+};
 use react_compiler_hir::{
     ArrayPatternElement, BinaryOperator, FunctionId, HirFunction, Identifier, IdentifierId,
-    IdentifierName, InstructionKind, InstructionValue, JsxAttribute, LoweredFunction,
-    ObjectPropertyKey, ObjectPropertyOrSpread, ParamPattern, Pattern, PropertyLiteral,
-    PropertyNameKind, ReactFunctionType, Terminal, Type, TypeId,
+    IdentifierName, InstructionId, InstructionKind, InstructionValue, JsxAttribute, LoweredFunction,
+    ObjectPropertyKey, ObjectPropertyOrSpread, ParamPattern, Pattern,
+    PropertyLiteral, PropertyNameKind, ReactFunctionType, Terminal, Type, TypeId,
 };
 use react_compiler_ssa::enter_ssa::placeholder_function;
-
-// BuiltIn shape ID constants (matching TS ObjectShape.ts)
-const BUILT_IN_PROPS_ID: &str = "BuiltInProps";
-const BUILT_IN_ARRAY_ID: &str = "BuiltInArray";
-const BUILT_IN_FUNCTION_ID: &str = "BuiltInFunction";
-const BUILT_IN_JSX_ID: &str = "BuiltInJsx";
-const BUILT_IN_OBJECT_ID: &str = "BuiltInObject";
-const BUILT_IN_USE_REF_ID: &str = "BuiltInUseRefId";
-// const BUILT_IN_REF_VALUE_ID: &str = "BuiltInRefValue";
-// const BUILT_IN_SET_STATE_ID: &str = "BuiltInSetState";
-const BUILT_IN_MIXED_READONLY_ID: &str = "BuiltInMixedReadonly";
 
 // =============================================================================
 // Public API
 // =============================================================================
 
 pub fn infer_types(func: &mut HirFunction, env: &mut Environment) {
-    let mut unifier = Unifier::new();
+    let enable_treat_ref_like_identifiers_as_refs =
+        env.config.enable_treat_ref_like_identifiers_as_refs;
+    let mut unifier = Unifier::new(enable_treat_ref_like_identifiers_as_refs);
     generate(func, env, &mut unifier);
     apply_function(
         func,
         &env.functions,
         &mut env.identifiers,
         &mut env.types,
-        &unifier,
+        &mut unifier,
     );
 }
 
@@ -82,6 +78,47 @@ fn is_primitive_binary_op(op: &BinaryOperator) -> bool {
             | BinaryOperator::GreaterEqual
             | BinaryOperator::LessEqual
     )
+}
+
+/// Resolve a property type from the shapes registry.
+fn resolve_property_type(
+    shapes: &ShapeRegistry,
+    resolved_object: &Type,
+    property_name: &PropertyNameKind,
+) -> Option<Type> {
+    let shape_id = match resolved_object {
+        Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
+        _ => return None,
+    };
+    let shape_id = shape_id?;
+    let shape = shapes.get(shape_id)?;
+
+    match property_name {
+        PropertyNameKind::Literal { value } => match value {
+            PropertyLiteral::String(s) => shape
+                .properties
+                .get(s.as_str())
+                .or_else(|| shape.properties.get("*"))
+                .cloned(),
+            PropertyLiteral::Number(_) => shape.properties.get("*").cloned(),
+        },
+        PropertyNameKind::Computed { .. } => shape.properties.get("*").cloned(),
+    }
+}
+
+/// Check if a property access looks like a ref pattern (e.g. `ref.current`, `fooRef.current`).
+/// Matches TS `isRefLikeName` in InferTypes.ts.
+fn is_ref_like_name(object_name: &str, property_name: &PropertyNameKind) -> bool {
+    let is_current = match property_name {
+        PropertyNameKind::Literal {
+            value: PropertyLiteral::String(s),
+        } => s == "current",
+        _ => false,
+    };
+    if !is_current {
+        return false;
+    }
+    object_name == "ref" || object_name.ends_with("Ref")
 }
 
 /// Type equality matching TS `typeEquals`.
@@ -163,6 +200,19 @@ fn generate(func: &HirFunction, env: &mut Environment, unifier: &mut Unifier) {
         }
     }
 
+    // Pre-resolve LoadGlobal types. We do this before the instruction loop
+    // because get_global_declaration needs &mut env, but generate_instruction_types
+    // takes split borrows on env fields.
+    let mut global_types: HashMap<InstructionId, Type> = HashMap::new();
+    for &instr_id in func.body.blocks.values().flat_map(|b| &b.instructions) {
+        let instr = &func.instructions[instr_id.0 as usize];
+        if let InstructionValue::LoadGlobal { binding, loc, .. } = &instr.value {
+            if let Some(global_type) = env.get_global_declaration(binding, *loc) {
+                global_types.insert(instr_id, global_type);
+            }
+        }
+    }
+
     let mut names: HashMap<IdentifierId, String> = HashMap::new();
     let mut return_types: Vec<Type> = Vec::new();
 
@@ -178,15 +228,19 @@ fn generate(func: &HirFunction, env: &mut Environment, unifier: &mut Unifier) {
             unifier.unify(left, Type::Phi { operands });
         }
 
-        // Instructions
+        // Instructions — use split borrows: &env.identifiers, &env.shapes
+        // are immutable, while &mut env.types and &mut env.functions are mutable.
         for &instr_id in &block.instructions {
             let instr = &func.instructions[instr_id.0 as usize];
             generate_instruction_types(
                 instr,
+                instr_id,
                 &env.identifiers,
                 &mut env.types,
                 &mut env.functions,
                 &mut names,
+                &global_types,
+                &env.shapes,
                 unifier,
             );
         }
@@ -213,6 +267,8 @@ fn generate_for_function_id(
     types: &mut Vec<Type>,
     functions: &mut Vec<HirFunction>,
     names: &mut HashMap<IdentifierId, String>,
+    global_types: &HashMap<InstructionId, Type>,
+    shapes: &ShapeRegistry,
     unifier: &mut Unifier,
 ) {
     // Take the function out temporarily to avoid borrow conflicts
@@ -262,7 +318,7 @@ fn generate_for_function_id(
 
         for &instr_id in &block.instructions {
             let instr = &inner.instructions[instr_id.0 as usize];
-            generate_instruction_types(instr, identifiers, types, functions, names, unifier);
+            generate_instruction_types(instr, instr_id, identifiers, types, functions, names, global_types, shapes, unifier);
         }
 
         if let Terminal::Return { ref value, .. } = block.terminal {
@@ -291,10 +347,13 @@ fn generate_for_function_id(
 
 fn generate_instruction_types(
     instr: &react_compiler_hir::Instruction,
+    instr_id: InstructionId,
     identifiers: &[Identifier],
     types: &mut Vec<Type>,
     functions: &mut Vec<HirFunction>,
     names: &mut HashMap<IdentifierId, String>,
+    global_types: &HashMap<InstructionId, Type>,
+    shapes: &ShapeRegistry,
     unifier: &mut Unifier,
 ) {
     let left = get_type(instr.lvalue.identifier, identifiers);
@@ -365,9 +424,10 @@ fn generate_instruction_types(
         }
 
         InstructionValue::LoadGlobal { .. } => {
-            // TODO: env.getGlobalDeclaration() not ported yet.
-            // This prevents type inference for built-in hooks (useState, useRef, etc.)
-            // and other globals. Depends on porting the shapes/globals system.
+            // Type was pre-resolved in generate() via env.get_global_declaration()
+            if let Some(global_type) = global_types.get(&instr_id) {
+                unifier.unify(left, global_type.clone());
+            }
         }
 
         InstructionValue::CallExpression { callee, .. } => {
@@ -428,7 +488,7 @@ fn generate_instruction_types(
         InstructionValue::PropertyLoad { object, property, .. } => {
             let object_type = get_type(object.identifier, identifiers);
             let object_name = get_name(names, object.identifier);
-            unifier.unify(
+            unifier.unify_with_shapes(
                 left,
                 Type::Property {
                     object_type: Box::new(object_type),
@@ -437,6 +497,7 @@ fn generate_instruction_types(
                         value: property.clone(),
                     },
                 },
+                shapes,
             );
         }
 
@@ -444,7 +505,7 @@ fn generate_instruction_types(
             let object_type = get_type(object.identifier, identifiers);
             let object_name = get_name(names, object.identifier);
             let prop_type = get_type(property.identifier, identifiers);
-            unifier.unify(
+            unifier.unify_with_shapes(
                 left,
                 Type::Property {
                     object_type: Box::new(object_type),
@@ -453,6 +514,7 @@ fn generate_instruction_types(
                         value: Box::new(prop_type),
                     },
                 },
+                shapes,
             );
         }
 
@@ -479,7 +541,7 @@ fn generate_instruction_types(
                                 let item_type = get_type(place.identifier, identifiers);
                                 let value_type = get_type(value.identifier, identifiers);
                                 let object_name = get_name(names, value.identifier);
-                                unifier.unify(
+                                unifier.unify_with_shapes(
                                     item_type,
                                     Type::Property {
                                         object_type: Box::new(value_type),
@@ -488,6 +550,7 @@ fn generate_instruction_types(
                                             value: PropertyLiteral::String(i.to_string()),
                                         },
                                     },
+                                    shapes,
                                 );
                             }
                             ArrayPatternElement::Spread(spread) => {
@@ -515,7 +578,7 @@ fn generate_instruction_types(
                                         get_type(obj_prop.place.identifier, identifiers);
                                     let value_type = get_type(value.identifier, identifiers);
                                     let object_name = get_name(names, value.identifier);
-                                    unifier.unify(
+                                    unifier.unify_with_shapes(
                                         prop_place_type,
                                         Type::Property {
                                             object_type: Box::new(value_type),
@@ -524,6 +587,7 @@ fn generate_instruction_types(
                                                 value: PropertyLiteral::String(name.clone()),
                                             },
                                         },
+                                        shapes,
                                     );
                                 }
                                 _ => {}
@@ -548,7 +612,7 @@ fn generate_instruction_types(
             ..
         } => {
             // Recurse into inner function first
-            generate_for_function_id(*func_id, identifiers, types, functions, names, unifier);
+            generate_for_function_id(*func_id, identifiers, types, functions, names, global_types, shapes, unifier);
             // Get the inner function's return type
             let inner_func = &functions[func_id.0 as usize];
             let inner_return_type = get_type(inner_func.returns.identifier, identifiers);
@@ -570,13 +634,35 @@ fn generate_instruction_types(
             lowered_func: LoweredFunction { func: func_id },
             ..
         } => {
-            generate_for_function_id(*func_id, identifiers, types, functions, names, unifier);
+            generate_for_function_id(*func_id, identifiers, types, functions, names, global_types, shapes, unifier);
             unifier.unify(left, Type::ObjectMethod);
         }
 
-        InstructionValue::JsxExpression { .. } | InstructionValue::JsxFragment { .. } => {
-            // TODO: enableTreatRefLikeIdentifiersAsRefs not ported (treated as false).
-            // When ported, JsxExpression `ref` props should be unified with BuiltInUseRefId.
+        InstructionValue::JsxExpression { props, .. } => {
+            if unifier.enable_treat_ref_like_identifiers_as_refs {
+                for prop in props {
+                    if let JsxAttribute::Attribute { name, place } = prop {
+                        if name == "ref" {
+                            let ref_type = get_type(place.identifier, identifiers);
+                            unifier.unify(
+                                ref_type,
+                                Type::Object {
+                                    shape_id: Some(BUILT_IN_USE_REF_ID.to_string()),
+                                },
+                            );
+                        }
+                    }
+                }
+            }
+            unifier.unify(
+                left,
+                Type::Object {
+                    shape_id: Some(BUILT_IN_JSX_ID.to_string()),
+                },
+            );
+        }
+
+        InstructionValue::JsxFragment { .. } => {
             unifier.unify(
                 left,
                 Type::Object {
@@ -605,7 +691,7 @@ fn generate_instruction_types(
             let dummy = make_type(types);
             let object_type = get_type(object.identifier, identifiers);
             let object_name = get_name(names, object.identifier);
-            unifier.unify(
+            unifier.unify_with_shapes(
                 dummy,
                 Type::Property {
                     object_type: Box::new(object_type),
@@ -614,6 +700,7 @@ fn generate_instruction_types(
                         value: property.clone(),
                     },
                 },
+                shapes,
             );
         }
 
@@ -977,24 +1064,71 @@ fn apply_instruction_operands(
 
 struct Unifier {
     substitutions: HashMap<TypeId, Type>,
+    enable_treat_ref_like_identifiers_as_refs: bool,
 }
 
 impl Unifier {
-    fn new() -> Self {
+    fn new(enable_treat_ref_like_identifiers_as_refs: bool) -> Self {
         Unifier {
             substitutions: HashMap::new(),
+            enable_treat_ref_like_identifiers_as_refs,
         }
     }
 
     fn unify(&mut self, t_a: Type, t_b: Type) {
+        self.unify_impl(t_a, t_b, None);
+    }
+
+    fn unify_with_shapes(&mut self, t_a: Type, t_b: Type, shapes: &ShapeRegistry) {
+        self.unify_impl(t_a, t_b, Some(shapes));
+    }
+
+    fn unify_impl(
+        &mut self,
+        t_a: Type,
+        t_b: Type,
+        shapes: Option<&ShapeRegistry>,
+    ) {
         // Handle Property in the RHS position
-        if let Type::Property { .. } = &t_b {
-            // TODO: enableTreatRefLikeIdentifiersAsRefs not ported (treated as false).
-            // TODO: env.getPropertyType() / getFallthroughPropertyType() not ported.
-            // When ported, this should resolve known property types (e.g. `.current`
-            // on refs, array methods, hook return types) and recursively unify.
-            // Currently all property-based type inference is lost. Depends on porting
-            // the shapes/globals system.
+        if let Type::Property {
+            ref object_type,
+            ref object_name,
+            ref property_name,
+        } = t_b
+        {
+            // Check enableTreatRefLikeIdentifiersAsRefs
+            if self.enable_treat_ref_like_identifiers_as_refs
+                && is_ref_like_name(object_name, property_name)
+            {
+                self.unify_impl(
+                    *object_type.clone(),
+                    Type::Object {
+                        shape_id: Some(BUILT_IN_USE_REF_ID.to_string()),
+                    },
+                    shapes,
+                );
+                self.unify_impl(
+                    t_a,
+                    Type::Object {
+                        shape_id: Some(BUILT_IN_REF_VALUE_ID.to_string()),
+                    },
+                    shapes,
+                );
+                return;
+            }
+
+            // Resolve property type via the shapes registry
+            let resolved_object = self.get(object_type);
+            if let Some(shapes) = shapes {
+                let property_type = resolve_property_type(
+                    shapes,
+                    &resolved_object,
+                    property_name,
+                );
+                if let Some(property_type) = property_type {
+                    self.unify_impl(t_a, property_type, Some(shapes));
+                }
+            }
             return;
         }
 
