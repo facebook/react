@@ -157,7 +157,7 @@ impl<'a> DebugPrinter<'a> {
         block: &BasicBlock,
         instructions: &[Instruction],
     ) {
-        self.line(&format!("bb{} ({:?}):", block_id.0, block.kind));
+        self.line(&format!("bb{} ({}):", block_id.0, block.kind));
         self.indent();
 
         // preds
@@ -248,7 +248,7 @@ impl<'a> DebugPrinter<'a> {
         let is_seen = self.seen_identifiers.contains(&place.identifier);
         if is_seen {
             self.line(&format!(
-                "{}: Place {{ identifier: Identifier({}), effect: {:?}, reactive: {}, loc: {} }}",
+                "{}: Place {{ identifier: Identifier({}), effect: {}, reactive: {}, loc: {} }}",
                 field_name,
                 place.identifier.0,
                 place.effect,
@@ -262,7 +262,7 @@ impl<'a> DebugPrinter<'a> {
             self.indent();
             self.format_identifier(place.identifier);
             self.dedent();
-            self.line(&format!("effect: {:?}", place.effect));
+            self.line(&format!("effect: {}", place.effect));
             self.line(&format!("reactive: {}", place.reactive));
             self.line(&format!("loc: {}", format_loc(&place.loc)));
             self.dedent();
@@ -284,8 +284,8 @@ impl<'a> DebugPrinter<'a> {
         match &ident.name {
             Some(name) => {
                 let (kind, value) = match name {
-                    IdentifierName::Named(n) => ("Named", n.as_str()),
-                    IdentifierName::Promoted(n) => ("Promoted", n.as_str()),
+                    IdentifierName::Named(n) => ("named", n.as_str()),
+                    IdentifierName::Promoted(n) => ("promoted", n.as_str()),
                 };
                 self.line(&format!("name: {{ kind: \"{}\", value: \"{}\" }}", kind, value));
             }
@@ -491,7 +491,7 @@ impl<'a> DebugPrinter<'a> {
                             self.line(&format!("[{}] ObjectProperty {{", i));
                             self.indent();
                             self.line(&format!("key: {}", format_object_property_key(&p.key)));
-                            self.line(&format!("type: \"{:?}\"", p.property_type));
+                            self.line(&format!("type: \"{}\"", p.property_type));
                             self.format_place_field("place", &p.place);
                             self.dedent();
                             self.line("}");
@@ -573,7 +573,7 @@ impl<'a> DebugPrinter<'a> {
                             self.line(&format!("[{}] ObjectProperty {{", i));
                             self.indent();
                             self.line(&format!("key: {}", format_object_property_key(&p.key)));
-                            self.line(&format!("type: \"{:?}\"", p.property_type));
+                            self.line(&format!("type: \"{}\"", p.property_type));
                             self.format_place_field("place", &p.place);
                             self.dedent();
                             self.line("}");
@@ -594,7 +594,7 @@ impl<'a> DebugPrinter<'a> {
             InstructionValue::UnaryExpression { operator, value, loc } => {
                 self.line("UnaryExpression {");
                 self.indent();
-                self.line(&format!("operator: \"{:?}\"", operator));
+                self.line(&format!("operator: \"{}\"", operator));
                 self.format_place_field("value", value);
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
@@ -603,7 +603,7 @@ impl<'a> DebugPrinter<'a> {
             InstructionValue::BinaryExpression { operator, left, right, loc } => {
                 self.line("BinaryExpression {");
                 self.indent();
-                self.line(&format!("operator: \"{:?}\"", operator));
+                self.line(&format!("operator: \"{}\"", operator));
                 self.format_place_field("left", left);
                 self.format_place_field("right", right);
                 self.line(&format!("loc: {}", format_loc(loc)));
@@ -1122,7 +1122,7 @@ impl<'a> DebugPrinter<'a> {
                 self.line("Logical {");
                 self.indent();
                 self.line(&format!("id: {}", id.0));
-                self.line(&format!("operator: \"{:?}\"", operator));
+                self.line(&format!("operator: \"{}\"", operator));
                 self.line(&format!("test: bb{}", test.0));
                 self.line(&format!("fallthrough: bb{}", fallthrough.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
@@ -1452,12 +1452,6 @@ impl<'a> DebugPrinter<'a> {
 pub fn debug_hir(hir: &HirFunction, env: &Environment) -> String {
     let mut printer = DebugPrinter::new(env);
     printer.format_function(hir, 0);
-
-    // Print outlined functions from the environment's function arena
-    for (idx, func) in env.functions.iter().enumerate() {
-        printer.line("");
-        printer.format_function(func, idx + 1);
-    }
 
     printer.line("");
     printer.line("Environment:");

@@ -52,89 +52,135 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   // Map from Babel scope uid to our scope id
   const scopeUidToId = new Map<string, number>();
 
-  // Collect all scopes by traversing the program
-  program.traverse({
-    enter(path) {
-      const babelScope = path.scope;
-      const uid = String(babelScope.uid);
+  // Helper to register a scope and its bindings
+  function registerScope(
+    babelScope: ReturnType<NodePath['scope']['constructor']> & {
+      uid: number;
+      parent: {uid: number} | null;
+      bindings: Record<string, any>;
+    },
+    path: NodePath | null,
+  ): void {
+    const uid = String(babelScope.uid);
+    if (scopeUidToId.has(uid)) return;
 
-      // Only process each scope once
-      if (scopeUidToId.has(uid)) return;
+    const scopeId = scopes.length;
+    scopeUidToId.set(uid, scopeId);
 
-      const scopeId = scopes.length;
-      scopeUidToId.set(uid, scopeId);
+    // Determine parent scope id
+    let parentId: number | null = null;
+    if (babelScope.parent) {
+      const parentUid = String(babelScope.parent.uid);
+      if (scopeUidToId.has(parentUid)) {
+        parentId = scopeUidToId.get(parentUid)!;
+      }
+    }
 
-      // Determine parent scope id
-      let parentId: number | null = null;
-      if (babelScope.parent) {
-        const parentUid = String(babelScope.parent.uid);
-        if (scopeUidToId.has(parentUid)) {
-          parentId = scopeUidToId.get(parentUid)!;
+    // Determine scope kind
+    const kind = path != null ? getScopeKind(path) : 'program';
+
+    // Collect bindings declared in this scope
+    const scopeBindings: Record<string, number> = {};
+    const ownBindings = babelScope.bindings;
+    for (const name of Object.keys(ownBindings)) {
+      const babelBinding = ownBindings[name];
+      if (!babelBinding) continue;
+
+      const bindingId = bindings.length;
+      scopeBindings[name] = bindingId;
+
+      const bindingData: BindingData = {
+        id: bindingId,
+        name,
+        kind: getBindingKind(babelBinding),
+        scope: scopeId,
+        declarationType: babelBinding.path.node.type,
+      };
+
+      // Check for import bindings
+      if (babelBinding.kind === 'module') {
+        const importData = getImportData(babelBinding);
+        if (importData) {
+          bindingData.import = importData;
         }
       }
 
-      // Determine scope kind
-      const kind = getScopeKind(path);
+      bindings.push(bindingData);
 
-      // Collect bindings declared in this scope
-      const scopeBindings: Record<string, number> = {};
-      const ownBindings = babelScope.bindings;
-      for (const name of Object.keys(ownBindings)) {
-        const babelBinding = ownBindings[name];
-        if (!babelBinding) continue;
-
-        const bindingId = bindings.length;
-        scopeBindings[name] = bindingId;
-
-        const bindingData: BindingData = {
-          id: bindingId,
-          name,
-          kind: getBindingKind(babelBinding),
-          scope: scopeId,
-          declarationType: babelBinding.path.node.type,
-        };
-
-        // Check for import bindings
-        if (babelBinding.kind === 'module') {
-          const importData = getImportData(babelBinding);
-          if (importData) {
-            bindingData.import = importData;
-          }
-        }
-
-        bindings.push(bindingData);
-
-        // Map identifier references to bindings
-        for (const ref of babelBinding.referencePaths) {
-          const start = ref.node.start;
-          if (start != null) {
-            referenceToBinding[start] = bindingId;
-          }
-        }
-
-        // Map the binding identifier itself
-        const bindingStart = babelBinding.identifier.start;
-        if (bindingStart != null) {
-          referenceToBinding[bindingStart] = bindingId;
+      // Map identifier references to bindings
+      for (const ref of babelBinding.referencePaths) {
+        const start = ref.node.start;
+        if (start != null) {
+          referenceToBinding[start] = bindingId;
         }
       }
 
-      // Map AST node to scope
+      // Map constant violations (LHS of assignments like `a = b`, `a++`, `for (a of ...)`)
+      for (const violation of babelBinding.constantViolations) {
+        if (violation.isAssignmentExpression()) {
+          const left = violation.get('left');
+          if (left.isIdentifier()) {
+            const start = left.node.start;
+            if (start != null) {
+              referenceToBinding[start] = bindingId;
+            }
+          }
+        } else if (violation.isUpdateExpression()) {
+          const arg = violation.get('argument');
+          if (arg.isIdentifier()) {
+            const start = arg.node.start;
+            if (start != null) {
+              referenceToBinding[start] = bindingId;
+            }
+          }
+        } else if (
+          violation.isForOfStatement() ||
+          violation.isForInStatement()
+        ) {
+          const left = violation.get('left');
+          if (left.isIdentifier()) {
+            const start = left.node.start;
+            if (start != null) {
+              referenceToBinding[start] = bindingId;
+            }
+          }
+        }
+      }
+
+      // Map the binding identifier itself
+      const bindingStart = babelBinding.identifier.start;
+      if (bindingStart != null) {
+        referenceToBinding[bindingStart] = bindingId;
+      }
+    }
+
+    // Map AST node to scope
+    if (path != null) {
       const nodeStart = path.node.start;
       if (nodeStart != null) {
         nodeToScope[nodeStart] = scopeId;
       }
+    }
 
-      scopes.push({
-        id: scopeId,
-        parent: parentId,
-        kind,
-        bindings: scopeBindings,
-      });
+    scopes.push({
+      id: scopeId,
+      parent: parentId,
+      kind,
+      bindings: scopeBindings,
+    });
+  }
+
+  // Register the program scope first (program.traverse doesn't visit the Program node itself)
+  registerScope(program.scope as any, program);
+
+  // Collect all child scopes by traversing the program
+  program.traverse({
+    enter(path) {
+      registerScope(path.scope as any, path);
     },
   });
 
-  // Ensure program scope exists
+  // Program scope should always be id 0
   const programScopeUid = String(program.scope.uid);
   const programScopeId = scopeUidToId.get(programScopeUid) ?? 0;
 

@@ -34,7 +34,11 @@ export default function BabelPluginReactCompilerRust(
           }
 
           // Step 3: Pre-filter — any potential React functions?
-          if (!hasReactLikeFunctions(prog)) {
+          // Skip prefilter when compilationMode is 'all' (compiles all functions)
+          if (
+            opts.compilationMode !== 'all' &&
+            !hasReactLikeFunctions(prog)
+          ) {
             return;
           }
 

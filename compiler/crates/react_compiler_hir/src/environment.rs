@@ -38,12 +38,25 @@ pub struct Environment {
 }
 
 impl Environment {
+    /// Number of built-in type slots pre-allocated by the TypeScript compiler's
+    /// global shapes/globals initialization (ObjectShape.ts, Globals.ts).
+    /// We reserve the same slots so that type IDs are consistent between TS and Rust.
+    const BUILTIN_TYPE_COUNT: u32 = 28;
+
     pub fn new() -> Self {
+        // Pre-allocate built-in type slots to match the TypeScript compiler's
+        // global type counter (28 types are allocated during module initialization
+        // for built-in shapes and globals).
+        let mut types = Vec::with_capacity(Self::BUILTIN_TYPE_COUNT as usize);
+        for i in 0..Self::BUILTIN_TYPE_COUNT {
+            types.push(Type::TypeVar { id: TypeId(i) });
+        }
+
         Self {
             next_block_id_counter: 0,
             next_scope_id_counter: 0,
             identifiers: Vec::new(),
-            types: Vec::new(),
+            types,
             scopes: Vec::new(),
             functions: Vec::new(),
             errors: CompilerError::new(),

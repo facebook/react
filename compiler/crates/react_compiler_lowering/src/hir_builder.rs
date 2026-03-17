@@ -458,6 +458,11 @@ impl<'a> HirBuilder<'a> {
         id
     }
 
+    /// Set the source location for an identifier.
+    pub fn set_identifier_loc(&mut self, id: IdentifierId, loc: Option<SourceLocation>) {
+        self.env.identifiers[id.0 as usize].loc = loc;
+    }
+
     /// Record an error on the environment.
     pub fn record_error(&mut self, error: CompilerErrorDetail) {
         self.env.record_error(error);
@@ -608,7 +613,7 @@ impl<'a> HirBuilder<'a> {
     /// - ImportDefault, ImportSpecifier, ImportNamespace (program-scope import binding)
     /// - ModuleLocal (program-scope non-import binding)
     /// - Identifier (local binding, resolved via resolve_binding)
-    pub fn resolve_identifier(&mut self, name: &str, start_offset: u32) -> VariableBinding {
+    pub fn resolve_identifier(&mut self, name: &str, start_offset: u32, loc: Option<SourceLocation>) -> VariableBinding {
         let binding_data = self.scope_info.resolve_reference(start_offset);
 
         match binding_data {
@@ -657,7 +662,7 @@ impl<'a> HirBuilder<'a> {
                         react_compiler_ast::scope::BindingKind::Local => BindingKind::Local,
                         react_compiler_ast::scope::BindingKind::Unknown => BindingKind::Unknown,
                     };
-                    let identifier_id = self.resolve_binding(name, binding_id);
+                    let identifier_id = self.resolve_binding_with_loc(name, binding_id, loc);
                     VariableBinding::Identifier {
                         identifier: identifier_id,
                         binding_kind,

@@ -154,7 +154,7 @@ fn lower_identifier(
     start: u32,
     loc: Option<SourceLocation>,
 ) -> Place {
-    let binding = builder.resolve_identifier(name, start);
+    let binding = builder.resolve_identifier(name, start, loc.clone());
     match binding {
         VariableBinding::Identifier { identifier, .. } => {
             Place {
@@ -723,7 +723,7 @@ fn lower_expression(
                         return InstructionValue::UnsupportedNode { loc };
                     }
 
-                    let binding = builder.resolve_identifier(&ident.name, start);
+                    let binding = builder.resolve_identifier(&ident.name, start, loc.clone());
                     match &binding {
                         VariableBinding::Global { .. } => {
                             builder.record_error(CompilerErrorDetail {
@@ -880,10 +880,10 @@ fn lower_expression(
                         // Handle simple identifier assignment directly
                         let start = ident.base.start.unwrap_or(0);
                         let right = lower_expression_to_temporary(builder, &expr.right);
-                        let binding = builder.resolve_identifier(&ident.name, start);
+                        let ident_loc = convert_opt_loc(&ident.base.loc);
+                        let binding = builder.resolve_identifier(&ident.name, start, ident_loc.clone());
                         match binding {
                             VariableBinding::Identifier { identifier, .. } => {
-                                let ident_loc = convert_opt_loc(&ident.base.loc);
                                 let place = Place {
                                     identifier,
                                     reactive: false,
@@ -998,10 +998,10 @@ fn lower_expression(
                             right,
                             loc: loc.clone(),
                         });
-                        let binding = builder.resolve_identifier(&ident.name, start);
+                        let ident_loc = convert_opt_loc(&ident.base.loc);
+                        let binding = builder.resolve_identifier(&ident.name, start, ident_loc.clone());
                         match binding {
                             VariableBinding::Identifier { identifier, .. } => {
-                                let ident_loc = convert_opt_loc(&ident.base.loc);
                                 let place = Place {
                                     identifier,
                                     reactive: false,
@@ -1974,7 +1974,7 @@ fn lower_statement(
                 } else if let PatternLike::Identifier(id) = &declarator.id {
                     // No init: emit DeclareLocal or DeclareContext
                     let id_loc = convert_opt_loc(&id.base.loc);
-                    let binding = builder.resolve_identifier(&id.name, id.base.start.unwrap_or(0));
+                    let binding = builder.resolve_identifier(&id.name, id.base.start.unwrap_or(0), id_loc.clone());
                     match binding {
                         VariableBinding::Identifier { identifier, .. } => {
                             let place = Place {
@@ -3005,11 +3005,12 @@ enum IdentifierForAssignment {
 fn lower_identifier_for_assignment(
     builder: &mut HirBuilder,
     loc: Option<SourceLocation>,
+    ident_loc: Option<SourceLocation>,
     kind: InstructionKind,
     name: &str,
     start: u32,
 ) -> Option<IdentifierForAssignment> {
-    let binding = builder.resolve_identifier(name, start);
+    let binding = builder.resolve_identifier(name, start, ident_loc);
     match binding {
         VariableBinding::Identifier { identifier, binding_kind, .. } => {
             if binding_kind == BindingKind::Const && kind == InstructionKind::Reassign {
@@ -3073,9 +3074,11 @@ fn lower_assignment(
 
     match target {
         PatternLike::Identifier(id) => {
+            let id_loc = convert_opt_loc(&id.base.loc);
             let result = lower_identifier_for_assignment(
                 builder,
                 loc.clone(),
+                id_loc,
                 kind,
                 &id.name,
                 id.base.start.unwrap_or(0),
@@ -3207,6 +3210,7 @@ fn lower_assignment(
                                 match lower_identifier_for_assignment(
                                     builder,
                                     convert_opt_loc(&rest.base.loc),
+                                    convert_opt_loc(&id.base.loc),
                                     kind,
                                     &id.name,
                                     id.base.start.unwrap_or(0),
@@ -3233,6 +3237,7 @@ fn lower_assignment(
                     Some(PatternLike::Identifier(id)) => {
                         match lower_identifier_for_assignment(
                             builder,
+                            convert_opt_loc(&id.base.loc),
                             convert_opt_loc(&id.base.loc),
                             kind,
                             &id.name,
@@ -3293,6 +3298,7 @@ fn lower_assignment(
                                 match lower_identifier_for_assignment(
                                     builder,
                                     convert_opt_loc(&rest.base.loc),
+                                    convert_opt_loc(&id.base.loc),
                                     kind,
                                     &id.name,
                                     id.base.start.unwrap_or(0),
@@ -3340,6 +3346,7 @@ fn lower_assignment(
                             PatternLike::Identifier(id) => {
                                 match lower_identifier_for_assignment(
                                     builder,
+                                    convert_opt_loc(&id.base.loc),
                                     convert_opt_loc(&id.base.loc),
                                     kind,
                                     &id.name,
@@ -3983,10 +3990,10 @@ fn lower_function_declaration(
     if let Some(ref name) = func_name {
         if let Some(id_node) = &func_decl.id {
             let start = id_node.base.start.unwrap_or(0);
-            let binding = builder.resolve_identifier(name, start);
+            let ident_loc = convert_opt_loc(&id_node.base.loc);
+            let binding = builder.resolve_identifier(name, start, ident_loc.clone());
             match binding {
                 VariableBinding::Identifier { identifier, .. } => {
-                    let ident_loc = convert_opt_loc(&id_node.base.loc);
                     let place = Place {
                         identifier,
                         reactive: false,
@@ -4133,10 +4140,10 @@ fn lower_inner(
         match param {
             react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
                 let start = ident.base.start.unwrap_or(0);
-                let binding = builder.resolve_identifier(&ident.name, start);
+                let param_loc = convert_opt_loc(&ident.base.loc);
+                let binding = builder.resolve_identifier(&ident.name, start, param_loc.clone());
                 match binding {
                     VariableBinding::Identifier { identifier, .. } => {
-                        let param_loc = convert_opt_loc(&ident.base.loc);
                         let place = Place {
                             identifier,
                             effect: Effect::Unknown,

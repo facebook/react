@@ -250,6 +250,49 @@ function formatEvents(events: CapturedEvent[]): string {
     .join('\n');
 }
 
+// --- Normalize opaque IDs ---
+// Type IDs and Identifier IDs are opaque identifiers whose absolute values
+// differ between TS and Rust due to differences in allocation order.
+// We normalize by remapping each unique ID to a sequential index.
+function normalizeIds(text: string): string {
+  const typeMap = new Map<string, number>();
+  let nextTypeId = 0;
+  const idMap = new Map<string, number>();
+  let nextIdId = 0;
+  const declMap = new Map<string, number>();
+  let nextDeclId = 0;
+
+  return text
+    .replace(/Type\(\d+\)/g, match => {
+      if (!typeMap.has(match)) {
+        typeMap.set(match, nextTypeId++);
+      }
+      return `Type(${typeMap.get(match)})`;
+    })
+    .replace(/((?:id|declarationId): )(\d+)/g, (_match, prefix, num) => {
+      if (prefix === 'id: ') {
+        const key = `id:${num}`;
+        if (!idMap.has(key)) {
+          idMap.set(key, nextIdId++);
+        }
+        return `${prefix}${idMap.get(key)}`;
+      } else {
+        const key = `decl:${num}`;
+        if (!declMap.has(key)) {
+          declMap.set(key, nextDeclId++);
+        }
+        return `${prefix}${declMap.get(key)}`;
+      }
+    })
+    .replace(/Identifier\((\d+)\)/g, (_match, num) => {
+      const key = `id:${num}`;
+      if (!idMap.has(key)) {
+        idMap.set(key, nextIdId++);
+      }
+      return `Identifier(${idMap.get(key)})`;
+    });
+}
+
 // --- Simple unified diff ---
 function unifiedDiff(expected: string, actual: string): string {
   const expectedLines = expected.split('\n');
@@ -340,7 +383,7 @@ for (const fixturePath of fixtures) {
   // Check entry count mismatch
   if (tsEntries.length !== rustEntries.length) {
     failed++;
-    if (failures.length < 10) {
+    if (failures.length < 50) {
       failures.push({
         fixture: relPath,
         kind: 'count_mismatch',
@@ -353,14 +396,17 @@ for (const fixturePath of fixtures) {
     continue;
   }
 
-  // Compare entry content
+  // Compare entry content (normalize Type IDs which are opaque and differ
+  // between TS and Rust due to the TS global type counter)
   let allMatch = true;
   let firstDiff = '';
   for (let i = 0; i < tsEntries.length; i++) {
-    if (tsEntries[i].value !== rustEntries[i].value) {
+    const tsNorm = normalizeIds(tsEntries[i].value);
+    const rustNorm = normalizeIds(rustEntries[i].value);
+    if (tsNorm !== rustNorm) {
       allMatch = false;
       if (!firstDiff) {
-        firstDiff = unifiedDiff(tsEntries[i].value, rustEntries[i].value);
+        firstDiff = unifiedDiff(tsNorm, rustNorm);
       }
       break;
     }
@@ -382,7 +428,7 @@ for (const fixturePath of fixtures) {
     passed++;
   } else {
     failed++;
-    if (failures.length < 10) {
+    if (failures.length < 50) {
       failures.push({
         fixture: relPath,
         kind: 'content_mismatch',
