@@ -2083,11 +2083,14 @@ fn lower_block_statement_inner(
             }
 
             // Find the first reference (not declaration) to this binding in the statement's range.
+            // Exclude JSX identifier references since TS hoisting traversal only visits
+            // Identifier nodes, not JSXIdentifier nodes.
             let first_ref = builder.scope_info().reference_to_binding.iter()
                 .filter(|(ref_start, ref_binding_id)| {
                     **ref_start >= stmt_start && **ref_start < stmt_end
                         && **ref_binding_id == *binding_id
                         && Some(**ref_start) != *decl_start
+                        && !builder.scope_info().jsx_reference_positions.contains(ref_start)
                 })
                 .map(|(ref_start, _)| *ref_start)
                 .min();
@@ -3145,9 +3148,24 @@ fn lower_statement(
                         AssignmentStyle::Assignment,
                     );
                 }
-                // Lower the catch body
-                for stmt in &handler_clause.body.body {
-                    lower_statement(builder, stmt, None);
+                // Lower the catch body using lower_block_statement to get hoisting support.
+                // Match TS behavior where `lowerStatement(builder, handlerPath.get('body'))`
+                // processes the catch body as a BlockStatement (with hoisting).
+                // Use the catch clause's scope since the catch body block shares
+                // the CatchClause scope in Babel (contains the catch param binding).
+                // Use the catch clause's scope (which contains the catch param binding).
+                // Fall back to the body block's own scope if the catch clause scope is missing.
+                let catch_scope = handler_clause.base.start
+                    .and_then(|start| builder.scope_info().node_to_scope.get(&start).copied())
+                    .or_else(|| handler_clause.body.base.start
+                        .and_then(|start| builder.scope_info().node_to_scope.get(&start).copied()));
+                if let Some(scope_id) = catch_scope {
+                    lower_block_statement_with_scope(builder, &handler_clause.body, scope_id);
+                } else {
+                    // No scope found — this shouldn't happen with well-formed Babel output.
+                    // Fall back to plain block lowering (no hoisting) rather than panicking,
+                    // since this is a non-critical degradation.
+                    lower_block_statement(builder, &handler_clause.body);
                 }
                 Terminal::Goto {
                     block: continuation_id,
@@ -3385,7 +3403,7 @@ pub fn lower(
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =
         IndexMap::new();
 
-    let (hir_func, _used_names) = lower_inner(
+    let (hir_func, _used_names, _child_bindings) = lower_inner(
         params,
         body,
         ast_id,
@@ -4448,7 +4466,7 @@ fn lower_function(
 
     // Use scope_info_and_env_mut to avoid conflicting borrows
     let (scope_info, env) = builder.scope_info_and_env_mut();
-    let (hir_func, child_used_names) = lower_inner(
+    let (hir_func, child_used_names, child_bindings) = lower_inner(
         params,
         body,
         id,
@@ -4466,10 +4484,11 @@ fn lower_function(
         false, // nested function
     );
 
-    // Merge the child's used_names back into the parent builder
+    // Merge the child's used_names and bindings back into the parent builder.
     // This ensures name deduplication works across function scopes,
-    // matching the TS behavior where #bindings is shared by reference
+    // matching the TS behavior where #bindings is shared by reference.
     builder.merge_used_names(child_used_names);
+    builder.merge_bindings(child_bindings);
 
     let func_id = builder.environment_mut().add_function(hir_func);
     LoweredFunction { func: func_id }
@@ -4521,7 +4540,7 @@ fn lower_function_declaration(
     let context_ids = builder.context_identifiers().clone();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
-    let (hir_func, child_used_names) = lower_inner(
+    let (hir_func, child_used_names, child_bindings) = lower_inner(
         &func_decl.params,
         FunctionBody::Block(&func_decl.body),
         func_decl.id.as_ref().map(|id| id.name.as_str()),
@@ -4540,6 +4559,10 @@ fn lower_function_declaration(
     );
 
     builder.merge_used_names(child_used_names);
+    // Merge child bindings so the parent can reuse the same IdentifierIds
+    // for bindings that were already resolved by the child. This matches TS
+    // behavior where the parent and child share the same #bindings map by reference.
+    builder.merge_bindings(child_bindings);
 
     let func_id = builder.environment_mut().add_function(hir_func);
     let lowered_func = LoweredFunction { func: func_id };
@@ -4554,12 +4577,26 @@ fn lower_function_declaration(
     };
     let fn_place = lower_value_to_temporary(builder, fn_value);
 
-    // Resolve the binding for the function name and store
+    // Resolve the binding for the function name and store.
+    // Note: we must resolve from the function's INNER scope, not using reference_to_binding
+    // directly. This matches TS behavior where Babel's `path.scope.getBinding()` resolves
+    // from the function declaration's inner scope. If there's an inner variable that shadows
+    // the function name (e.g., `function hasErrors() { let hasErrors = ... }`), Babel's
+    // scope resolution finds the inner binding, not the outer function binding.
     if let Some(ref name) = func_name {
         if let Some(id_node) = &func_decl.id {
             let start = id_node.base.start.unwrap_or(0);
             let ident_loc = convert_opt_loc(&id_node.base.loc);
-            let binding = builder.resolve_identifier(name, start, ident_loc.clone());
+            // Look up the binding from the function's inner scope, which may shadow
+            // the outer binding with the same name
+            let inner_binding_id = builder.scope_info().get_binding(function_scope, name);
+            let binding = if let Some(inner_bid) = inner_binding_id {
+                let binding_kind = crate::convert_binding_kind(&builder.scope_info().bindings[inner_bid.0 as usize].kind);
+                let identifier_id = builder.resolve_binding_with_loc(name, inner_bid, ident_loc.clone());
+                VariableBinding::Identifier { identifier: identifier_id, binding_kind }
+            } else {
+                builder.resolve_identifier(name, start, ident_loc.clone())
+            };
             match binding {
                 VariableBinding::Identifier { identifier, .. } => {
                     // Don't override the identifier's declaration loc here.
@@ -4650,7 +4687,7 @@ fn lower_function_for_object_method(
     let context_ids = builder.context_identifiers().clone();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
-    let (hir_func, child_used_names) = lower_inner(
+    let (hir_func, child_used_names, child_bindings) = lower_inner(
         &method.params,
         FunctionBody::Block(&method.body),
         None,
@@ -4669,6 +4706,7 @@ fn lower_function_for_object_method(
     );
 
     builder.merge_used_names(child_used_names);
+    builder.merge_bindings(child_bindings);
 
     let func_id = builder.environment_mut().add_function(hir_func);
     LoweredFunction { func: func_id }
@@ -4692,7 +4730,7 @@ fn lower_inner(
     component_scope: react_compiler_ast::scope::ScopeId,
     context_identifiers: &HashSet<react_compiler_ast::scope::BindingId>,
     is_top_level: bool,
-) -> (HirFunction, IndexMap<String, react_compiler_ast::scope::BindingId>) {
+) -> (HirFunction, IndexMap<String, react_compiler_ast::scope::BindingId>, IndexMap<react_compiler_ast::scope::BindingId, IdentifierId>) {
     let mut builder = HirBuilder::new(
         env,
         scope_info,
@@ -4843,7 +4881,7 @@ fn lower_inner(
     );
 
     // Build the HIR
-    let (hir_body, instructions, used_names) = builder.build();
+    let (hir_body, instructions, used_names, child_bindings) = builder.build();
 
     // Create the returns place
     let returns = crate::hir_builder::create_temporary_place(env, loc.clone());
@@ -4863,7 +4901,7 @@ fn lower_inner(
         is_async,
         directives,
         aliasing_effects: None,
-    }, used_names)
+    }, used_names, child_bindings)
 }
 
 fn lower_jsx_element_name(

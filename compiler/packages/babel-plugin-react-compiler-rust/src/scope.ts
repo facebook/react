@@ -37,6 +37,7 @@ export interface ScopeInfo {
   nodeToScope: Record<number, number>;
   referenceToBinding: Record<number, number>;
   referenceLocs: Record<number, [number, number, number, number]>;
+  jsxReferencePositions: Array<number>;
   programScope: number;
 }
 
@@ -98,6 +99,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const nodeToScope: Record<number, number> = {};
   const referenceToBinding: Record<number, number> = {};
   const referenceLocs: Record<number, [number, number, number, number]> = {};
+  const jsxReferencePositions: Set<number> = new Set();
 
   // Map from Babel scope uid to our scope id
   const scopeUidToId = new Map<string, number>();
@@ -179,6 +181,10 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
               ref.node.loc.end.line,
               ref.node.loc.end.column,
             ];
+          }
+          // Track JSXIdentifier references separately for hoisting analysis
+          if (ref.isJSXIdentifier()) {
+            jsxReferencePositions.add(start);
           }
         }
       }
@@ -288,6 +294,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     nodeToScope,
     referenceToBinding,
     referenceLocs,
+    jsxReferencePositions: Array.from(jsxReferencePositions),
     programScope: programScopeId,
   };
 }

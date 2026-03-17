@@ -4,6 +4,21 @@ pub mod hir_builder;
 
 use react_compiler_ast::expressions::{ArrowFunctionExpression, FunctionExpression};
 use react_compiler_ast::statements::FunctionDeclaration;
+use react_compiler_hir::BindingKind;
+
+/// Convert AST binding kind to HIR binding kind.
+pub fn convert_binding_kind(kind: &react_compiler_ast::scope::BindingKind) -> BindingKind {
+    match kind {
+        react_compiler_ast::scope::BindingKind::Var => BindingKind::Var,
+        react_compiler_ast::scope::BindingKind::Let => BindingKind::Let,
+        react_compiler_ast::scope::BindingKind::Const => BindingKind::Const,
+        react_compiler_ast::scope::BindingKind::Param => BindingKind::Param,
+        react_compiler_ast::scope::BindingKind::Module => BindingKind::Module,
+        react_compiler_ast::scope::BindingKind::Hoisted => BindingKind::Hoisted,
+        react_compiler_ast::scope::BindingKind::Local => BindingKind::Local,
+        react_compiler_ast::scope::BindingKind::Unknown => BindingKind::Unknown,
+    }
+}
 
 /// Represents a reference to a function AST node for lowering.
 /// Analogous to TS's `NodePath<t.Function>` / `BabelFn`.

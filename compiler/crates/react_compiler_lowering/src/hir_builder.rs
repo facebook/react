@@ -232,6 +232,15 @@ impl<'a> HirBuilder<'a> {
         }
     }
 
+    /// Merge bindings (binding_id -> IdentifierId) from a child builder back into this builder.
+    /// This matches TS behavior where parent and child share the same #bindings map by reference,
+    /// so bindings resolved by the child are automatically visible to the parent.
+    pub fn merge_bindings(&mut self, child_bindings: IndexMap<BindingId, IdentifierId>) {
+        for (binding_id, identifier_id) in child_bindings {
+            self.bindings.entry(binding_id).or_insert(identifier_id);
+        }
+    }
+
     /// Push an instruction onto the current block.
     ///
     /// Adds the instruction to the flat instruction table and records
@@ -558,7 +567,7 @@ impl<'a> HirBuilder<'a> {
     /// 5. Remove unnecessary try-catch
     /// 6. Number all instructions and terminals
     /// 7. Mark predecessor blocks
-    pub fn build(mut self) -> (HIR, Vec<Instruction>, IndexMap<String, BindingId>) {
+    pub fn build(mut self) -> (HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>) {
         let mut hir = HIR {
             blocks: std::mem::take(&mut self.completed),
             entry: self.entry,
@@ -601,7 +610,8 @@ impl<'a> HirBuilder<'a> {
         mark_predecessors(&mut hir);
 
         let used_names = self.used_names;
-        (hir, instructions, used_names)
+        let bindings = self.bindings;
+        (hir, instructions, used_names, bindings)
     }
 
     // -----------------------------------------------------------------------
@@ -622,17 +632,44 @@ impl<'a> HirBuilder<'a> {
     /// Map a BindingId to an HIR IdentifierId, with an optional source location.
     pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> IdentifierId {
         // Check for unsupported names BEFORE the cache check.
-        // In TS, resolveBinding records these errors on EVERY call, not just first resolution.
+        // In TS, resolveBinding records fbt errors when node.name === 'fbt'. After a name collision
+        // causes a rename (e.g., "fbt" -> "fbt_0"), TS's scope.rename changes the AST node's name,
+        // preventing subsequent fbt error recording. We simulate this by checking whether the
+        // resolved name for this binding is still "fbt" (not renamed to "fbt_0" etc.).
         if name == "fbt" {
-            self.env.record_error(CompilerErrorDetail {
-                category: ErrorCategory::Todo,
-                reason: "Support local variables named `fbt`".to_string(),
-                description: Some(
-                    "Local variables named `fbt` may conflict with the fbt plugin and are not yet supported".to_string(),
-                ),
-                loc: loc.clone(),
-                suggestions: None,
-            });
+            // Check if this binding was previously resolved to a renamed version
+            let should_record_fbt_error = if let Some(&identifier_id) = self.bindings.get(&binding_id) {
+                // Already resolved - check if the resolved name is still "fbt"
+                match &self.env.identifiers[identifier_id.0 as usize].name {
+                    Some(IdentifierName::Named(resolved_name)) => resolved_name == "fbt",
+                    _ => false,
+                }
+            } else {
+                // First resolution - always record
+                true
+            };
+            if should_record_fbt_error {
+                let error_loc = self.scope_info.bindings[binding_id.0 as usize]
+                    .declaration_start
+                    .and_then(|start| {
+                        self.scope_info.reference_locs.get(&start).map(|locs| {
+                            SourceLocation {
+                                start: Position { line: locs[0], column: locs[1] },
+                                end: Position { line: locs[2], column: locs[3] },
+                            }
+                        })
+                    })
+                    .or_else(|| loc.clone());
+                self.env.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "Support local variables named `fbt`".to_string(),
+                    description: Some(
+                        "Local variables named `fbt` may conflict with the fbt plugin and are not yet supported".to_string(),
+                    ),
+                    loc: error_loc,
+                    suggestions: None,
+                });
+            }
         }
 
         // If we've already resolved this binding, return the cached IdentifierId
@@ -754,16 +791,7 @@ impl<'a> HirBuilder<'a> {
                 } else {
                     // Local binding: resolve via resolve_binding
                     let binding_id = binding.id;
-                    let binding_kind = match &binding.kind {
-                        react_compiler_ast::scope::BindingKind::Var => BindingKind::Var,
-                        react_compiler_ast::scope::BindingKind::Let => BindingKind::Let,
-                        react_compiler_ast::scope::BindingKind::Const => BindingKind::Const,
-                        react_compiler_ast::scope::BindingKind::Param => BindingKind::Param,
-                        react_compiler_ast::scope::BindingKind::Module => BindingKind::Module,
-                        react_compiler_ast::scope::BindingKind::Hoisted => BindingKind::Hoisted,
-                        react_compiler_ast::scope::BindingKind::Local => BindingKind::Local,
-                        react_compiler_ast::scope::BindingKind::Unknown => BindingKind::Unknown,
-                    };
+                    let binding_kind = crate::convert_binding_kind(&binding.kind);
                     let identifier_id = self.resolve_binding_with_loc(name, binding_id, loc);
                     VariableBinding::Identifier {
                         identifier: identifier_id,
