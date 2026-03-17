@@ -60,8 +60,14 @@ export default function BabelPluginReactCompilerRust(
               const dotIdx = errMsg.indexOf('. ');
               const reason =
                 dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
-              const description =
+              let description =
                 dotIdx >= 0 ? errMsg.substring(dotIdx + 2) : undefined;
+              // Strip trailing period from description (the TS compiler's
+              // CompilerDiagnostic.toString() adds ". description." but the
+              // detail.description field doesn't include the trailing period)
+              if (description?.endsWith('.')) {
+                description = description.slice(0, -1);
+              }
               logger.logEvent(filename, {
                 kind: 'CompileError',
                 fnName: null,

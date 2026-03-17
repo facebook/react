@@ -42,6 +42,14 @@ pub fn compile_fn(
 
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
 
+    // Check for Invariant errors after lowering, before logging HIR.
+    // In TS, Invariant errors throw from recordError(), aborting lower() before
+    // the HIR entry is logged. The thrown error contains ONLY the Invariant error,
+    // not other recorded (non-Invariant) errors.
+    if env.has_invariant_errors() {
+        return Err(env.take_invariant_errors());
+    }
+
     let debug_hir = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("HIR", debug_hir));
 
@@ -86,6 +94,11 @@ pub fn compile_fn(
 
     let debug_merge = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
+
+    // Check for accumulated errors (matches TS Pipeline.ts: env.hasErrors() → Err)
+    if env.has_errors() {
+        return Err(env.take_errors());
+    }
 
     Ok(CodegenFunction {
         loc: None,

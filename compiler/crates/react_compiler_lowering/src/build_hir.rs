@@ -1096,7 +1096,7 @@ fn lower_expression(
                         // Destructuring assignment
                         let right = lower_expression_to_temporary(builder, &expr.right);
                         let left_loc = pattern_like_hir_loc(&expr.left);
-                        lower_assignment(
+                        let result = lower_assignment(
                             builder,
                             left_loc,
                             InstructionKind::Reassign,
@@ -1104,7 +1104,10 @@ fn lower_expression(
                             right.clone(),
                             AssignmentStyle::Destructure,
                         );
-                        InstructionValue::LoadLocal { place: right, loc }
+                        match result {
+                            Some(place) => InstructionValue::LoadLocal { place: place.clone(), loc: place.loc.clone() },
+                            None => InstructionValue::LoadLocal { place: right, loc },
+                        }
                     }
                 }
             } else {
@@ -1603,6 +1606,35 @@ fn lower_expression(
 
             // Check if this is an fbt/fbs tag, which requires special whitespace handling
             let is_fbt = matches!(&tag, JsxTag::Builtin(b) if b.name == "fbt" || b.name == "fbs");
+
+            // Check that fbt/fbs tags are module-level imports, not local bindings.
+            // Matches TS: CompilerError.invariant(tagIdentifier.kind !== 'Identifier', ...)
+            if is_fbt {
+                let tag_name = match &tag {
+                    JsxTag::Builtin(b) => b.name.clone(),
+                    _ => "fbt".to_string(),
+                };
+                // Get the opening element's name identifier and check if it's a local binding
+                if let react_compiler_ast::jsx::JSXElementName::JSXIdentifier(jsx_id) = &jsx_element.opening_element.name {
+                    let id_loc = convert_opt_loc(&jsx_id.base.loc);
+                    // Check if fbt/fbs tag name resolves to a local binding.
+                    // JSX identifiers may not be in our position-based reference map,
+                    // so check if ANY binding with this name exists in the function scope.
+                    let is_local_binding = builder.has_local_binding(&jsx_id.name);
+                    if is_local_binding {
+                        // Record as a Diagnostic (not ErrorDetail) to match TS behavior
+                        // where CompilerError.invariant creates a CompilerDiagnostic.
+                        // CompilerDiagnostic doesn't have a top-level loc field.
+                        builder.environment_mut().record_diagnostic(
+                            react_compiler_diagnostics::CompilerDiagnostic::new(
+                                ErrorCategory::Invariant,
+                                &format!("<{}> tags should be module-level imports", tag_name),
+                                None,
+                            )
+                        );
+                    }
+                }
+            }
 
             // Check for duplicate fbt:enum, fbt:plural, fbt:pronoun tags
             if is_fbt {
@@ -3019,25 +3051,79 @@ fn lower_statement(
             // Set up handler binding if catch has a param
             let handler_binding_info: Option<(Place, react_compiler_ast::patterns::PatternLike)> =
                 if let Some(param) = &handler_clause.param {
-                    let param_loc = convert_opt_loc(&pattern_like_loc(param));
-                    let id = builder.make_temporary(param_loc.clone());
-                    promote_temporary(builder, id);
-                    let place = Place {
-                        identifier: id,
-                        effect: Effect::Unknown,
-                        reactive: false,
-                        loc: param_loc.clone(),
-                    };
-                    // Emit DeclareLocal for the catch binding
-                    lower_value_to_temporary(builder, InstructionValue::DeclareLocal {
-                        lvalue: LValue {
-                            kind: InstructionKind::Catch,
-                            place: place.clone(),
-                        },
-                        type_annotation: None,
-                        loc: param_loc,
-                    });
-                    Some((place, param.clone()))
+                    // Check for destructuring in catch clause params.
+                    // Match TS behavior: Babel doesn't register destructured catch bindings
+                    // in its scope, so resolveIdentifier fails and records an invariant error.
+                    let is_destructuring = matches!(
+                        param,
+                        react_compiler_ast::patterns::PatternLike::ObjectPattern(_)
+                        | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
+                    );
+                    if is_destructuring {
+                        // Iterate the pattern to find all identifier locs for error reporting
+                        fn collect_identifier_locs(
+                            pat: &react_compiler_ast::patterns::PatternLike,
+                            locs: &mut Vec<Option<SourceLocation>>,
+                        ) {
+                            match pat {
+                                react_compiler_ast::patterns::PatternLike::Identifier(id) => {
+                                    locs.push(convert_opt_loc(&id.base.loc));
+                                }
+                                react_compiler_ast::patterns::PatternLike::ObjectPattern(obj) => {
+                                    for prop in &obj.properties {
+                                        match prop {
+                                            react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(p) => {
+                                                collect_identifier_locs(&p.value, locs);
+                                            }
+                                            react_compiler_ast::patterns::ObjectPatternProperty::RestElement(r) => {
+                                                collect_identifier_locs(&r.argument, locs);
+                                            }
+                                        }
+                                    }
+                                }
+                                react_compiler_ast::patterns::PatternLike::ArrayPattern(arr) => {
+                                    for elem in &arr.elements {
+                                        if let Some(e) = elem {
+                                            collect_identifier_locs(e, locs);
+                                        }
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                        let mut id_locs = Vec::new();
+                        collect_identifier_locs(param, &mut id_locs);
+                        for id_loc in id_locs {
+                            builder.record_error(CompilerErrorDetail {
+                                reason: "(BuildHIR::lowerAssignment) Could not find binding for declaration.".to_string(),
+                                category: ErrorCategory::Invariant,
+                                loc: id_loc,
+                                description: None,
+                                suggestions: None,
+                            });
+                        }
+                        None
+                    } else {
+                        let param_loc = convert_opt_loc(&pattern_like_loc(param));
+                        let id = builder.make_temporary(param_loc.clone());
+                        promote_temporary(builder, id);
+                        let place = Place {
+                            identifier: id,
+                            effect: Effect::Unknown,
+                            reactive: false,
+                            loc: param_loc.clone(),
+                        };
+                        // Emit DeclareLocal for the catch binding
+                        lower_value_to_temporary(builder, InstructionValue::DeclareLocal {
+                            lvalue: LValue {
+                                kind: InstructionKind::Catch,
+                                place: place.clone(),
+                            },
+                            type_annotation: None,
+                            loc: param_loc,
+                        });
+                        Some((place, param.clone()))
+                    }
                 } else {
                     None
                 };
@@ -4476,8 +4562,10 @@ fn lower_function_declaration(
             let binding = builder.resolve_identifier(name, start, ident_loc.clone());
             match binding {
                 VariableBinding::Identifier { identifier, .. } => {
-                    // Set the identifier's declaration loc from the name
-                    builder.set_identifier_declaration_loc(identifier, &ident_loc);
+                    // Don't override the identifier's declaration loc here.
+                    // For function redeclarations (e.g., `function x() {} function x() {}`),
+                    // the identifier's loc should remain the first declaration's loc,
+                    // which was already set during define_binding.
                     // Use the full function declaration loc for the Place,
                     // matching the TS behavior where lowerAssignment uses stmt.node.loc
                     let place = Place {

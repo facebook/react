@@ -136,6 +136,15 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const babelBinding = ownBindings[name];
       if (!babelBinding) continue;
 
+      // Validate identifier name (match TS compiler's makeIdentifierName/validateIdentifierName).
+      // The trailing period in the message is intentional - it matches the TS compiler's
+      // CompilerDiagnostic.toString() format: "reason. description."
+      if (isReservedWord(name)) {
+        throw new Error(
+          `Expected a non-reserved identifier name. \`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name.`,
+        );
+      }
+
       const bindingId = bindings.length;
       scopeBindings[name] = bindingId;
 
@@ -210,6 +219,21 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         ) {
           const left = violation.get('left');
           mapPatternIdentifiers(left, bindingId, babelBinding.identifier.name, referenceToBinding);
+        } else if (violation.isFunctionDeclaration()) {
+          // Function redeclarations: `function x() {} function x() {}`
+          // Map the function name identifier to the binding
+          const funcId = (violation.node as any).id;
+          if (funcId?.start != null) {
+            referenceToBinding[funcId.start] = bindingId;
+            if (funcId.loc != null) {
+              referenceLocs[funcId.start] = [
+                funcId.loc.start.line,
+                funcId.loc.start.column,
+                funcId.loc.end.line,
+                funcId.loc.end.column,
+              ];
+            }
+          }
         }
       }
 
@@ -336,4 +360,19 @@ function getImportData(binding: {
     return {source, kind: 'named', imported: importedName};
   }
   return undefined;
+}
+
+// Reserved words matching Babel's t.isValidIdentifier check
+const RESERVED_WORDS = new Set([
+  'break', 'case', 'catch', 'continue', 'debugger', 'default', 'do',
+  'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof',
+  'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof',
+  'var', 'void', 'while', 'with', 'class', 'const', 'enum',
+  'export', 'extends', 'import', 'super', 'implements', 'interface',
+  'let', 'package', 'private', 'protected', 'public', 'static',
+  'yield', 'null', 'true', 'false', 'delete',
+]);
+
+function isReservedWord(name: string): boolean {
+  return RESERVED_WORDS.has(name);
 }

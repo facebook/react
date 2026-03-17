@@ -6,6 +6,22 @@ use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 
 // ---------------------------------------------------------------------------
+// Reserved word check (matches TS isReservedWord)
+// ---------------------------------------------------------------------------
+
+fn is_reserved_word(s: &str) -> bool {
+    matches!(s,
+        "break" | "case" | "catch" | "continue" | "debugger" | "default" | "do" |
+        "else" | "finally" | "for" | "function" | "if" | "in" | "instanceof" |
+        "new" | "return" | "switch" | "this" | "throw" | "try" | "typeof" |
+        "var" | "void" | "while" | "with" | "class" | "const" | "enum" |
+        "export" | "extends" | "import" | "super" | "implements" | "interface" |
+        "let" | "package" | "private" | "protected" | "public" | "static" |
+        "yield" | "null" | "true" | "false" | "delete"
+    )
+}
+
+// ---------------------------------------------------------------------------
 // Scope types for tracking break/continue targets
 // ---------------------------------------------------------------------------
 
@@ -513,6 +529,20 @@ impl<'a> HirBuilder<'a> {
         self.env.record_error(error);
     }
 
+    /// Check if a name has a local binding (non-module-level).
+    /// This is used for checking if fbt/fbs JSX tags are local bindings
+    /// (which is not supported). Unlike resolve_identifier, this doesn't
+    /// require a source position.
+    pub fn has_local_binding(&self, name: &str) -> bool {
+        // Check used_names to see if this name has been bound locally
+        if let Some(&binding_id) = self.used_names.get(name) {
+            // Check that the binding is NOT in the program scope (i.e., it's local)
+            let binding = &self.scope_info.bindings[binding_id.0 as usize];
+            return binding.scope != self.scope_info.program_scope;
+        }
+        false
+    }
+
     /// Return the kind of the current block.
     pub fn current_block_kind(&self) -> BlockKind {
         self.current.kind
@@ -591,12 +621,8 @@ impl<'a> HirBuilder<'a> {
 
     /// Map a BindingId to an HIR IdentifierId, with an optional source location.
     pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> IdentifierId {
-        // If we've already resolved this binding, return the cached IdentifierId
-        if let Some(&identifier_id) = self.bindings.get(&binding_id) {
-            return identifier_id;
-        }
-
-        // Check for unsupported names (only on first resolution to avoid duplicate errors)
+        // Check for unsupported names BEFORE the cache check.
+        // In TS, resolveBinding records these errors on EVERY call, not just first resolution.
         if name == "fbt" {
             self.env.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
@@ -608,13 +634,21 @@ impl<'a> HirBuilder<'a> {
                 suggestions: None,
             });
         }
-        if name == "this" {
+
+        // If we've already resolved this binding, return the cached IdentifierId
+        if let Some(&identifier_id) = self.bindings.get(&binding_id) {
+            return identifier_id;
+        }
+
+        if is_reserved_word(name) {
+            // Match TS behavior: makeIdentifierName throws for reserved words,
+            // which propagates as a CompileUnexpectedThrow + CompileError.
+            // Note: this is normally caught earlier in scope.ts, but kept as a safety net.
             self.env.record_error(CompilerErrorDetail {
-                category: ErrorCategory::UnsupportedSyntax,
-                reason: "`this` is not supported syntax".to_string(),
+                category: ErrorCategory::Syntax,
+                reason: "Expected a non-reserved identifier name".to_string(),
                 description: Some(
-                    "React Compiler does not support compiling functions that use `this`"
-                        .to_string(),
+                    format!("`{}` is a reserved word in JavaScript and cannot be used as an identifier name", name),
                 ),
                 loc: loc.clone(),
                 suggestions: None,

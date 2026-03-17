@@ -40,6 +40,7 @@ pub struct Environment {
     pub validate_preserve_existing_memoization_guarantees: bool,
     pub validate_no_set_state_in_render: bool,
     pub enable_preserve_existing_memoization_guarantees: bool,
+
 }
 
 impl Environment {
@@ -144,12 +145,41 @@ impl Environment {
         self.errors.has_any_errors()
     }
 
+    /// Check if any recorded errors have Invariant category.
+    /// In TS, Invariant errors throw immediately from recordError(),
+    /// which aborts the current operation.
+    pub fn has_invariant_errors(&self) -> bool {
+        self.errors.has_invariant_errors()
+    }
+
     pub fn errors(&self) -> &CompilerError {
         &self.errors
     }
 
     pub fn take_errors(&mut self) -> CompilerError {
         std::mem::take(&mut self.errors)
+    }
+
+    /// Take only the Invariant errors, leaving non-Invariant errors in place.
+    /// In TS, Invariant errors throw as a separate CompilerError, so only
+    /// the Invariant error is surfaced.
+    pub fn take_invariant_errors(&mut self) -> CompilerError {
+        let mut invariant = CompilerError::new();
+        let mut remaining = CompilerError::new();
+        let old = std::mem::take(&mut self.errors);
+        for detail in old.details {
+            let is_invariant = match &detail {
+                react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => d.category == react_compiler_diagnostics::ErrorCategory::Invariant,
+                react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category == react_compiler_diagnostics::ErrorCategory::Invariant,
+            };
+            if is_invariant {
+                invariant.details.push(detail);
+            } else {
+                remaining.details.push(detail);
+            }
+        }
+        self.errors = remaining;
+        invariant
     }
 
     /// Check if a binding has been hoisted (via DeclareContext) already.

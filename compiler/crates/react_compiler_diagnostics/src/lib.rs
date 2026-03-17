@@ -238,8 +238,32 @@ impl CompilerError {
         !self.details.is_empty()
     }
 
+    /// Check if any error detail has Invariant category.
+    pub fn has_invariant_errors(&self) -> bool {
+        self.details.iter().any(|d| {
+            let cat = match d {
+                CompilerErrorOrDiagnostic::Diagnostic(d) => d.category,
+                CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category,
+            };
+            cat == ErrorCategory::Invariant
+        })
+    }
+
     pub fn merge(&mut self, other: CompilerError) {
         self.details.extend(other.details);
+    }
+
+    /// Check if all error details are non-invariant.
+    /// In TS, this is used to determine if an error thrown during compilation
+    /// should be logged as CompileUnexpectedThrow.
+    pub fn is_all_non_invariant(&self) -> bool {
+        self.details.iter().all(|d| {
+            let cat = match d {
+                CompilerErrorOrDiagnostic::Diagnostic(d) => d.category,
+                CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category,
+            };
+            cat != ErrorCategory::Invariant
+        })
     }
 }
 
