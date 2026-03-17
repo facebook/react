@@ -100,6 +100,15 @@ pub fn compile_fn(
         return Err(env.take_errors());
     }
 
+    react_compiler_ssa::enter_ssa(&mut hir, &mut env).map_err(|diag| {
+        let mut err = CompilerError::new();
+        err.push_diagnostic(diag);
+        err
+    })?;
+
+    let debug_ssa = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("SSA", debug_ssa));
+
     Ok(CodegenFunction {
         loc: None,
         memo_slots_used: 0,
