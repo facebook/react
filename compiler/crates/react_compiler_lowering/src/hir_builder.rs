@@ -110,8 +110,6 @@ pub struct HirBuilder<'a> {
     /// and any inner function scope, that are referenced from an inner function scope.
     /// These need StoreContext/LoadContext instead of StoreLocal/LoadLocal.
     context_identifiers: std::collections::HashSet<BindingId>,
-    /// Counter for generating unique TypeIds (for TypeVar types).
-    type_counter: u32,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -156,7 +154,6 @@ impl<'a> HirBuilder<'a> {
             function_scope,
             component_scope,
             context_identifiers,
-            type_counter: 0,
         }
     }
 
@@ -170,11 +167,11 @@ impl<'a> HirBuilder<'a> {
         self.env
     }
 
-    /// Create a new unique TypeVar type.
+    /// Create a new unique TypeVar type, allocated from the environment's type arena
+    /// so that TypeIds are consistent with identifier type slots.
     pub fn make_type(&mut self) -> Type {
-        let id = TypeId(self.type_counter);
-        self.type_counter += 1;
-        Type::TypeVar { id }
+        let type_id = self.env.make_type();
+        Type::TypeVar { id: type_id }
     }
 
     /// Access the scope info.
