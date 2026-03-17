@@ -94,6 +94,8 @@ pub struct HirBuilder<'a> {
     /// and any inner function scope, that are referenced from an inner function scope.
     /// These need StoreContext/LoadContext instead of StoreLocal/LoadLocal.
     context_identifiers: std::collections::HashSet<BindingId>,
+    /// Counter for generating unique TypeIds (for TypeVar types).
+    type_counter: u32,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -138,6 +140,7 @@ impl<'a> HirBuilder<'a> {
             function_scope,
             component_scope,
             context_identifiers,
+            type_counter: 0,
         }
     }
 
@@ -149,6 +152,13 @@ impl<'a> HirBuilder<'a> {
     /// Access the environment mutably.
     pub fn environment_mut(&mut self) -> &mut Environment {
         self.env
+    }
+
+    /// Create a new unique TypeVar type.
+    pub fn make_type(&mut self) -> Type {
+        let id = TypeId(self.type_counter);
+        self.type_counter += 1;
+        Type::TypeVar { id }
     }
 
     /// Access the scope info.
@@ -581,7 +591,12 @@ impl<'a> HirBuilder<'a> {
 
     /// Map a BindingId to an HIR IdentifierId, with an optional source location.
     pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> IdentifierId {
-        // Check for unsupported names
+        // If we've already resolved this binding, return the cached IdentifierId
+        if let Some(&identifier_id) = self.bindings.get(&binding_id) {
+            return identifier_id;
+        }
+
+        // Check for unsupported names (only on first resolution to avoid duplicate errors)
         if name == "fbt" {
             self.env.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
@@ -589,7 +604,7 @@ impl<'a> HirBuilder<'a> {
                 description: Some(
                     "Local variables named `fbt` may conflict with the fbt plugin and are not yet supported".to_string(),
                 ),
-                loc: None,
+                loc: loc.clone(),
                 suggestions: None,
             });
         }
@@ -601,14 +616,9 @@ impl<'a> HirBuilder<'a> {
                     "React Compiler does not support compiling functions that use `this`"
                         .to_string(),
                 ),
-                loc: None,
+                loc: loc.clone(),
                 suggestions: None,
             });
-        }
-
-        // If we've already resolved this binding, return the cached IdentifierId
-        if let Some(&identifier_id) = self.bindings.get(&binding_id) {
-            return identifier_id;
         }
 
         // Find a unique name: start with the original name, then try name_0, name_1, ...

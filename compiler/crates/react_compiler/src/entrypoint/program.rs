@@ -537,9 +537,11 @@ fn calls_hooks_or_creates_jsx_in_expr(expr: &Expression) -> bool {
             false
         }
         Expression::OptionalCallExpression(call) => {
-            if expr_is_hook(&call.callee) {
-                return true;
-            }
+            // Note: OptionalCallExpression is NOT treated as a hook call for
+            // the purpose of determining function type. The TS code only checks
+            // regular CallExpression nodes in callsHooksOrCreatesJsx.
+            // We still recurse into the callee and arguments to find other
+            // hook calls or JSX.
             if calls_hooks_or_creates_jsx_in_expr(&call.callee) {
                 return true;
             }
@@ -616,8 +618,13 @@ fn calls_hooks_or_creates_jsx_in_expr(expr: &Expression) -> bool {
             ObjectExpressionProperty::SpreadElement(s) => {
                 calls_hooks_or_creates_jsx_in_expr(&s.argument)
             }
-            // ObjectMethod is a nested function scope, skip
-            ObjectExpressionProperty::ObjectMethod(_) => false,
+            // ObjectMethod: traverse into its body to find hooks/JSX.
+            // This matches the TS behavior where Babel's traverse enters
+            // ObjectMethod (only FunctionDeclaration, FunctionExpression,
+            // and ArrowFunctionExpression are skipped).
+            ObjectExpressionProperty::ObjectMethod(m) => {
+                calls_hooks_or_creates_jsx_in_stmts(&m.body.body)
+            }
         }),
         Expression::ParenthesizedExpression(paren) => {
             calls_hooks_or_creates_jsx_in_expr(&paren.expression)
@@ -663,6 +670,58 @@ fn calls_hooks_or_creates_jsx(body: &FunctionBody) -> bool {
 
 /// Check if the function parameters are valid for a React component.
 /// Components can have 0 params, 1 param (props), or 2 params (props + ref).
+/// Check if a parameter's type annotation is valid for a React component prop.
+/// Returns false for primitive type annotations that indicate this is NOT a component.
+fn is_valid_props_annotation(param: &PatternLike) -> bool {
+    let type_annotation = match param {
+        PatternLike::Identifier(id) => id.type_annotation.as_deref(),
+        PatternLike::ObjectPattern(op) => op.type_annotation.as_deref(),
+        PatternLike::ArrayPattern(ap) => ap.type_annotation.as_deref(),
+        PatternLike::AssignmentPattern(ap) => ap.type_annotation.as_deref(),
+        PatternLike::RestElement(re) => re.type_annotation.as_deref(),
+        PatternLike::MemberExpression(_) => None,
+    };
+    let annot = match type_annotation {
+        Some(val) => val,
+        None => return true, // No annotation = valid
+    };
+    let annot_type = match annot.get("type").and_then(|v| v.as_str()) {
+        Some(t) => t,
+        None => return true,
+    };
+    match annot_type {
+        "TSTypeAnnotation" => {
+            let inner_type = annot.get("typeAnnotation")
+                .and_then(|v| v.get("type"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            !matches!(inner_type,
+                "TSArrayType" | "TSBigIntKeyword" | "TSBooleanKeyword"
+                | "TSConstructorType" | "TSFunctionType" | "TSLiteralType"
+                | "TSNeverKeyword" | "TSNumberKeyword" | "TSStringKeyword"
+                | "TSSymbolKeyword" | "TSTupleType"
+            )
+        }
+        "TypeAnnotation" => {
+            let inner_type = annot.get("typeAnnotation")
+                .and_then(|v| v.get("type"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            !matches!(inner_type,
+                "ArrayTypeAnnotation" | "BooleanLiteralTypeAnnotation"
+                | "BooleanTypeAnnotation" | "EmptyTypeAnnotation"
+                | "FunctionTypeAnnotation" | "NullLiteralTypeAnnotation"
+                | "NumberLiteralTypeAnnotation" | "NumberTypeAnnotation"
+                | "StringLiteralTypeAnnotation" | "StringTypeAnnotation"
+                | "SymbolTypeAnnotation" | "ThisTypeAnnotation"
+                | "TupleTypeAnnotation"
+            )
+        }
+        "Noop" => true,
+        _ => true,
+    }
+}
+
 fn is_valid_component_params(params: &[PatternLike]) -> bool {
     if params.is_empty() {
         return true;
@@ -672,6 +731,10 @@ fn is_valid_component_params(params: &[PatternLike]) -> bool {
     }
     // First param cannot be a rest element
     if matches!(params[0], PatternLike::RestElement(_)) {
+        return false;
+    }
+    // Check type annotation on first param
+    if !is_valid_props_annotation(&params[0]) {
         return false;
     }
     if params.len() == 1 {
@@ -1406,6 +1469,16 @@ fn find_functions_to_compile<'a>(
                 }
             }
 
+            // ExpressionStatement: check for bare forwardRef/memo calls
+            // e.g. React.memo(props => { ... })
+            Statement::ExpressionStatement(expr_stmt) => {
+                if let Some(info) = try_extract_wrapped_function(&expr_stmt.expression, None) {
+                    if let Some(source) = try_make_compile_source(info, opts, context) {
+                        queue.push(source);
+                    }
+                }
+            }
+
             // All other statement types are ignored (imports, type declarations, etc.)
             _ => {}
         }
@@ -1488,7 +1561,8 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
     // Validate restricted imports from the environment config
     let restricted_imports: Option<Vec<String>> = options
         .environment
-        .get("restrictedImports")
+        .get("validateBlocklistedImports")
+        .or_else(|| options.environment.get("restrictedImports"))
         .and_then(|v| serde_json::from_value(v.clone()).ok());
 
     // Determine if we should check for eslint suppressions

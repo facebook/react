@@ -1388,7 +1388,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { node_type: None, loc };
+                return InstructionValue::UnsupportedNode { node_type: Some("TaggedTemplateExpression".to_string()), loc };
             }
             assert!(
                 tagged.quasi.quasis.len() == 1,
@@ -1588,6 +1588,37 @@ fn lower_expression(
             // Check if this is an fbt/fbs tag, which requires special whitespace handling
             let is_fbt = matches!(&tag, JsxTag::Builtin(b) if b.name == "fbt" || b.name == "fbs");
 
+            // Check for duplicate fbt:enum, fbt:plural, fbt:pronoun tags
+            if is_fbt {
+                let tag_name = match &tag {
+                    JsxTag::Builtin(b) => b.name.as_str(),
+                    _ => "fbt",
+                };
+                let mut enum_locs: Vec<Option<SourceLocation>> = Vec::new();
+                let mut plural_locs: Vec<Option<SourceLocation>> = Vec::new();
+                let mut pronoun_locs: Vec<Option<SourceLocation>> = Vec::new();
+                collect_fbt_sub_tags(&jsx_element.children, tag_name, &mut enum_locs, &mut plural_locs, &mut pronoun_locs);
+
+                for (name, locations) in [("enum", &enum_locs), ("plural", &plural_locs), ("pronoun", &pronoun_locs)] {
+                    if locations.len() > 1 {
+                        use react_compiler_diagnostics::CompilerDiagnosticDetail;
+                        let details: Vec<CompilerDiagnosticDetail> = locations.iter().map(|loc| {
+                            CompilerDiagnosticDetail::Error {
+                                message: Some(format!("Multiple `<{}:{}>` tags found", tag_name, name)),
+                                loc: loc.clone(),
+                            }
+                        }).collect();
+                        let mut diag = react_compiler_diagnostics::CompilerDiagnostic::new(
+                            ErrorCategory::Todo,
+                            "Support duplicate fbt tags",
+                            Some(format!("Support `<{}>` tags with multiple `<{}:{}>` values", tag_name, tag_name, name)),
+                        );
+                        diag.details = details;
+                        builder.environment_mut().record_diagnostic(diag);
+                    }
+                }
+            }
+
             // Increment fbt counter before traversing into children, as whitespace
             // in jsx text is handled differently for fbt subtrees.
             if is_fbt {
@@ -1642,24 +1673,37 @@ fn lower_expression(
         Expression::TSAsExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
             let value = lower_expression_to_temporary(builder, &ts.expression);
-            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+            let type_annotation = &*ts.type_annotation;
+            let type_ = lower_type_annotation(type_annotation, builder);
+            let type_annotation_name = get_type_annotation_name(type_annotation);
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("as".to_string()), loc }
         }
         Expression::TSSatisfiesExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
             let value = lower_expression_to_temporary(builder, &ts.expression);
-            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+            let type_annotation = &*ts.type_annotation;
+            let type_ = lower_type_annotation(type_annotation, builder);
+            let type_annotation_name = get_type_annotation_name(type_annotation);
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("satisfies".to_string()), loc }
         }
         Expression::TSNonNullExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TSTypeAssertion(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
             let value = lower_expression_to_temporary(builder, &ts.expression);
-            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+            let type_annotation = &*ts.type_annotation;
+            let type_ = lower_type_annotation(type_annotation, builder);
+            let type_annotation_name = get_type_annotation_name(type_annotation);
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("as".to_string()), loc }
         }
         Expression::TSInstantiationExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TypeCastExpression(tc) => {
             let loc = convert_opt_loc(&tc.base.loc);
             let value = lower_expression_to_temporary(builder, &tc.expression);
-            InstructionValue::TypeCastExpression { value, type_: Type::Poly, loc }
+            // Flow TypeCastExpression: typeAnnotation is a TypeAnnotation node wrapping the actual type
+            let inner_type = tc.type_annotation.get("typeAnnotation").unwrap_or(&*tc.type_annotation);
+            let type_ = lower_type_annotation(inner_type, builder);
+            let type_annotation_name = get_type_annotation_name(inner_type);
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("cast".to_string()), loc }
         }
         Expression::BigIntLiteral(big) => {
             let loc = convert_opt_loc(&big.base.loc);
@@ -1935,7 +1979,18 @@ fn lower_block_statement_inner(
     // expression names are local to the expression and should never be hoisted.
     let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder.scope_info()
         .scope_bindings(scope_id)
-        .filter(|b| !matches!(b.kind, AstBindingKind::Param) && b.declaration_type != "FunctionExpression")
+        .filter(|b| {
+            !matches!(b.kind, AstBindingKind::Param)
+            && b.declaration_type != "FunctionExpression"
+            // Skip type-only declarations (TypeAlias, OpaqueType, InterfaceDeclaration, etc.)
+            && !matches!(b.declaration_type.as_str(),
+                "TypeAlias" | "OpaqueType" | "InterfaceDeclaration"
+                | "DeclareVariable" | "DeclareFunction" | "DeclareClass"
+                | "DeclareModule" | "DeclareInterface" | "DeclareOpaqueType"
+                | "TSTypeAliasDeclaration" | "TSInterfaceDeclaration"
+                | "TSEnumDeclaration" | "TSModuleDeclaration"
+            )
+        })
         .map(|b| (b.id, b.name.clone(), b.kind.clone(), b.declaration_type.clone(), b.declaration_start))
         .collect();
 
@@ -5109,9 +5164,54 @@ fn is_reorderable_expression(
     }
 }
 
-fn lower_type(_node: &react_compiler_ast::expressions::Expression) -> Type {
-    // Type lowering is a future enhancement; return Poly for now
-    Type::Poly
+/// Extract the type name from a type annotation serde_json::Value.
+/// Returns the "type" field value, e.g. "TSTypeReference", "GenericTypeAnnotation".
+fn get_type_annotation_name(val: &serde_json::Value) -> Option<String> {
+    val.get("type").and_then(|v| v.as_str()).map(|s| s.to_string())
+}
+
+/// Lower a type annotation JSON value to an HIR Type.
+/// Mirrors the TS `lowerType` function.
+fn lower_type_annotation(val: &serde_json::Value, builder: &mut HirBuilder) -> Type {
+    let type_name = match val.get("type").and_then(|v| v.as_str()) {
+        Some(name) => name,
+        None => return builder.make_type(),
+    };
+    match type_name {
+        "GenericTypeAnnotation" => {
+            // Check if it's Array
+            if let Some(id) = val.get("id") {
+                if id.get("type").and_then(|v| v.as_str()) == Some("Identifier") {
+                    if id.get("name").and_then(|v| v.as_str()) == Some("Array") {
+                        return Type::Object { shape_id: Some("BuiltInArray".to_string()) };
+                    }
+                }
+            }
+            builder.make_type()
+        }
+        "TSTypeReference" => {
+            if let Some(type_name_val) = val.get("typeName") {
+                if type_name_val.get("type").and_then(|v| v.as_str()) == Some("Identifier") {
+                    if type_name_val.get("name").and_then(|v| v.as_str()) == Some("Array") {
+                        return Type::Object { shape_id: Some("BuiltInArray".to_string()) };
+                    }
+                }
+            }
+            builder.make_type()
+        }
+        "ArrayTypeAnnotation" | "TSArrayType" => {
+            Type::Object { shape_id: Some("BuiltInArray".to_string()) }
+        }
+        "BooleanLiteralTypeAnnotation" | "BooleanTypeAnnotation"
+        | "NullLiteralTypeAnnotation" | "NumberLiteralTypeAnnotation"
+        | "NumberTypeAnnotation" | "StringLiteralTypeAnnotation"
+        | "StringTypeAnnotation" | "TSBooleanKeyword" | "TSNullKeyword"
+        | "TSNumberKeyword" | "TSStringKeyword" | "TSSymbolKeyword"
+        | "TSUndefinedKeyword" | "TSVoidKeyword" | "VoidTypeAnnotation" => {
+            Type::Primitive
+        }
+        _ => builder.make_type(),
+    }
 }
 
 /// Gather captured context variables for a nested function.
@@ -5177,4 +5277,40 @@ pub enum AssignmentStyle {
     Assignment,
     /// Destructuring assignment
     Destructure,
+}
+
+/// Collect locations of fbt:enum, fbt:plural, fbt:pronoun sub-tags
+/// within the children of an fbt/fbs JSX element.
+fn collect_fbt_sub_tags(
+    children: &[react_compiler_ast::jsx::JSXChild],
+    tag_name: &str,
+    enum_locs: &mut Vec<Option<SourceLocation>>,
+    plural_locs: &mut Vec<Option<SourceLocation>>,
+    pronoun_locs: &mut Vec<Option<SourceLocation>>,
+) {
+    use react_compiler_ast::jsx::{JSXChild, JSXElementName};
+    for child in children {
+        match child {
+            JSXChild::JSXElement(el) => {
+                // Check if the opening element name is a namespaced name matching the fbt tag
+                if let JSXElementName::JSXNamespacedName(ns) = &el.opening_element.name {
+                    if ns.namespace.name == tag_name {
+                        let loc = convert_opt_loc(&ns.base.loc);
+                        match ns.name.name.as_str() {
+                            "enum" => enum_locs.push(loc),
+                            "plural" => plural_locs.push(loc),
+                            "pronoun" => pronoun_locs.push(loc),
+                            _ => {}
+                        }
+                    }
+                }
+                // Also recurse into children
+                collect_fbt_sub_tags(&el.children, tag_name, enum_locs, plural_locs, pronoun_locs);
+            }
+            JSXChild::JSXFragment(frag) => {
+                collect_fbt_sub_tags(&frag.children, tag_name, enum_locs, plural_locs, pronoun_locs);
+            }
+            _ => {}
+        }
+    }
 }

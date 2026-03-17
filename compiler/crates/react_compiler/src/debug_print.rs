@@ -704,11 +704,17 @@ impl<'a> DebugPrinter<'a> {
                     format_loc(loc)
                 ));
             }
-            InstructionValue::TypeCastExpression { value, type_, loc } => {
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind, loc } => {
                 self.line("TypeCastExpression {");
                 self.indent();
                 self.format_place_field("value", value);
-                self.line(&format!("type: {:?}", type_));
+                self.line(&format!("type: {}", self.format_type_value(type_)));
+                if let Some(annotation_name) = type_annotation_name {
+                    self.line(&format!("typeAnnotation: {}", annotation_name));
+                }
+                if let Some(annotation_kind) = type_annotation_kind {
+                    self.line(&format!("typeAnnotationKind: \"{}\"", annotation_kind));
+                }
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");

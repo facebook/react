@@ -568,6 +568,8 @@ pub enum InstructionValue {
     TypeCastExpression {
         value: Place,
         type_: Type,
+        type_annotation_name: Option<String>,
+        type_annotation_kind: Option<String>,
         loc: Option<SourceLocation>,
     },
     JsxExpression {
