@@ -778,6 +778,9 @@ fn lower_expression(
                         react_compiler_ast::operators::UpdateOperator::Increment => BinaryOperator::Add,
                         react_compiler_ast::operators::UpdateOperator::Decrement => BinaryOperator::Subtract,
                     };
+                    // Use the member expression's loc (not the update expression's)
+                    // to match TS behavior where the inner operations use leftExpr.node.loc
+                    let member_loc = convert_opt_loc(&member.base.loc);
                     let lowered = lower_member_expression(builder, member);
                     let object = lowered.object;
                     let lowered_property = lowered.property;
@@ -791,7 +794,7 @@ fn lower_expression(
                         operator: binary_op,
                         left: prev_value.clone(),
                         right: one,
-                        loc: loc.clone(),
+                        loc: member_loc.clone(),
                     });
 
                     // Store back using the property from the lowered member expression
@@ -801,7 +804,7 @@ fn lower_expression(
                                 object,
                                 property: prop_literal,
                                 value: updated.clone(),
-                                loc: loc.clone(),
+                                loc: member_loc,
                             });
                         }
                         MemberProperty::Computed(prop_place) => {
@@ -809,7 +812,7 @@ fn lower_expression(
                                 object,
                                 property: prop_place,
                                 value: updated.clone(),
-                                loc: loc.clone(),
+                                loc: member_loc,
                             });
                         }
                     }
@@ -1200,6 +1203,8 @@ fn lower_expression(
                     }
                     react_compiler_ast::patterns::PatternLike::MemberExpression(member) => {
                         // a.b += right: read, compute, store
+                        // Match TS behavior: return the PropertyStore/ComputedStore value
+                        // directly (let the caller lower it to a temporary)
                         let member_loc = convert_opt_loc(&member.base.loc);
                         let lowered = lower_member_expression(builder, member);
                         let object = lowered.object;
@@ -1212,26 +1217,25 @@ fn lower_expression(
                             right,
                             loc: member_loc.clone(),
                         });
-                        // Store back using the property from the lowered member expression
+                        // Return the store instruction value directly (matching TS behavior)
                         match lowered_property {
                             MemberProperty::Literal(prop_literal) => {
-                                lower_value_to_temporary(builder, InstructionValue::PropertyStore {
+                                InstructionValue::PropertyStore {
                                     object,
                                     property: prop_literal,
-                                    value: result.clone(),
+                                    value: result,
                                     loc: member_loc,
-                                });
+                                }
                             }
                             MemberProperty::Computed(prop_place) => {
-                                lower_value_to_temporary(builder, InstructionValue::ComputedStore {
+                                InstructionValue::ComputedStore {
                                     object,
                                     property: prop_place,
-                                    value: result.clone(),
+                                    value: result,
                                     loc: member_loc,
-                                });
+                                }
                             }
                         }
-                        InstructionValue::LoadLocal { place: result.clone(), loc: result.loc.clone() }
                     }
                     _ => {
                         builder.record_error(CompilerErrorDetail {
@@ -1384,7 +1388,7 @@ fn lower_expression(
             if !tagged.quasi.expressions.is_empty() {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
-                    reason: "Handle tagged template with interpolations".to_string(),
+                    reason: "(BuildHIR::lowerExpression) Handle tagged template with interpolations".to_string(),
                     description: None,
                     loc: loc.clone(),
                     suggestions: None,
@@ -1396,6 +1400,17 @@ fn lower_expression(
                 "there should be only one quasi as we don't support interpolations yet"
             );
             let quasi = &tagged.quasi.quasis[0];
+            // Check if raw and cooked values differ (e.g., graphql tagged templates)
+            if quasi.value.raw != quasi.value.cooked.clone().unwrap_or_default() {
+                builder.record_error(CompilerErrorDetail {
+                    category: ErrorCategory::Todo,
+                    reason: "(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value".to_string(),
+                    description: None,
+                    loc: loc.clone(),
+                    suggestions: None,
+                });
+                return InstructionValue::UnsupportedNode { node_type: Some("TaggedTemplateExpression".to_string()), loc };
+            }
             let value = TemplateQuasi {
                 raw: quasi.value.raw.clone(),
                 cooked: quasi.value.cooked.clone(),
@@ -5259,6 +5274,23 @@ fn gather_captured_context(
             continue;
         }
         let binding = &scope_info.bindings[binding_id.0 as usize];
+        // Skip references that are actually the binding's own declaration site
+        // (e.g., the function name in `function x() {}` is mapped in referenceToBinding
+        // but is not a true captured reference)
+        if binding.declaration_start == Some(ref_start) {
+            continue;
+        }
+        // Skip type-only bindings (e.g., Flow/TypeScript type aliases)
+        // These are not runtime values and should not be captured as context
+        if binding.declaration_type == "TypeAlias"
+            || binding.declaration_type == "OpaqueType"
+            || binding.declaration_type == "InterfaceDeclaration"
+            || binding.declaration_type == "TSTypeAliasDeclaration"
+            || binding.declaration_type == "TSInterfaceDeclaration"
+            || binding.declaration_type == "TSEnumDeclaration"
+        {
+            continue;
+        }
         if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
             // Use the binding's identifier location as the source location for
             // the context variable, falling back to a generated location from the reference.

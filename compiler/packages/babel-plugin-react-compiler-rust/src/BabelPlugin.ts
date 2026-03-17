@@ -40,7 +40,41 @@ export default function BabelPluginReactCompilerRust(
           }
 
           // Step 4: Extract scope info
-          const scopeInfo = extractScopeInfo(prog);
+          let scopeInfo;
+          try {
+            scopeInfo = extractScopeInfo(prog);
+          } catch (e) {
+            // Scope extraction can fail on unsupported syntax (e.g., `this` parameters).
+            // Report as CompileUnexpectedThrow + CompileError, matching TS compiler behavior
+            // when compilation throws unexpectedly.
+            const logger = (pass.opts as PluginOptions).logger;
+            const errMsg = e instanceof Error ? e.message : String(e);
+            if (logger) {
+              logger.logEvent(filename, {
+                kind: 'CompileUnexpectedThrow',
+                fnName: null,
+                data: `Error: ${errMsg}`,
+              });
+              // Parse the Babel error message to extract reason and description
+              // Format: "reason. description"
+              const dotIdx = errMsg.indexOf('. ');
+              const reason =
+                dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
+              const description =
+                dotIdx >= 0 ? errMsg.substring(dotIdx + 2) : undefined;
+              logger.logEvent(filename, {
+                kind: 'CompileError',
+                fnName: null,
+                detail: {
+                  reason,
+                  severity: 'Error',
+                  category: 'Syntax',
+                  description,
+                },
+              });
+            }
+            return;
+          }
 
           // Step 5: Call Rust compiler
           const result = compileWithRust(pass.file.ast, scopeInfo, opts);

@@ -1388,6 +1388,11 @@ fn find_functions_to_compile<'a>(
                                         queue.push(source);
                                     }
                                 }
+                                // In 'all' mode, also find nested function expressions
+                                // (e.g., const _ = { useHook: () => {} })
+                                if opts.compilation_mode == "all" {
+                                    find_nested_functions_in_expr(other, opts, context, &mut queue);
+                                }
                             }
                         }
                     }
@@ -1493,6 +1498,12 @@ fn find_functions_to_compile<'a>(
                         queue.push(source);
                     }
                 }
+                // In 'all' mode, also find function expressions/arrows nested
+                // in top-level expression statements (e.g., `Foo = () => ...`,
+                // `unknownFunction(function() { ... })`)
+                if opts.compilation_mode == "all" {
+                    find_nested_functions_in_expr(&expr_stmt.expression, opts, context, &mut queue);
+                }
             }
 
             // All other statement types are ignored (imports, type declarations, etc.)
@@ -1501,6 +1512,117 @@ fn find_functions_to_compile<'a>(
     }
 
     queue
+}
+
+/// Recursively find function expressions and arrow functions nested within
+/// an expression.  This is used in `compilationMode: 'all'` to match the
+/// TypeScript compiler's Babel traverse behavior, which visits every
+/// FunctionExpression / ArrowFunctionExpression in the AST (but only
+/// compiles those whose parent scope is the program scope).
+fn find_nested_functions_in_expr<'a>(
+    expr: &'a Expression,
+    opts: &PluginOptions,
+    context: &mut ProgramContext,
+    queue: &mut Vec<CompileSource<'a>>,
+) {
+    match expr {
+        Expression::FunctionExpression(func) => {
+            let info = fn_info_from_func_expr(func, None, None);
+            if let Some(source) = try_make_compile_source(info, opts, context) {
+                queue.push(source);
+            }
+            // Don't recurse into the function body (nested functions are not
+            // at program scope level)
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            let info = fn_info_from_arrow(arrow, None, None);
+            if let Some(source) = try_make_compile_source(info, opts, context) {
+                queue.push(source);
+            }
+            // Don't recurse into the function body
+        }
+        // Skip class expressions (they may reference `this`)
+        Expression::ClassExpression(_) => {}
+        // Recurse into sub-expressions
+        Expression::AssignmentExpression(assign) => {
+            find_nested_functions_in_expr(&assign.right, opts, context, queue);
+        }
+        Expression::CallExpression(call) => {
+            for arg in &call.arguments {
+                find_nested_functions_in_expr(arg, opts, context, queue);
+            }
+        }
+        Expression::SequenceExpression(seq) => {
+            for expr in &seq.expressions {
+                find_nested_functions_in_expr(expr, opts, context, queue);
+            }
+        }
+        Expression::ConditionalExpression(cond) => {
+            find_nested_functions_in_expr(&cond.consequent, opts, context, queue);
+            find_nested_functions_in_expr(&cond.alternate, opts, context, queue);
+        }
+        Expression::LogicalExpression(logical) => {
+            find_nested_functions_in_expr(&logical.left, opts, context, queue);
+            find_nested_functions_in_expr(&logical.right, opts, context, queue);
+        }
+        Expression::BinaryExpression(binary) => {
+            find_nested_functions_in_expr(&binary.left, opts, context, queue);
+            find_nested_functions_in_expr(&binary.right, opts, context, queue);
+        }
+        Expression::UnaryExpression(unary) => {
+            find_nested_functions_in_expr(&unary.argument, opts, context, queue);
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in &arr.elements {
+                if let Some(e) = elem {
+                    find_nested_functions_in_expr(e, opts, context, queue);
+                }
+            }
+        }
+        Expression::ObjectExpression(obj) => {
+            for prop in &obj.properties {
+                match prop {
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        find_nested_functions_in_expr(&p.value, opts, context, queue);
+                    }
+                    ObjectExpressionProperty::SpreadElement(s) => {
+                        find_nested_functions_in_expr(&s.argument, opts, context, queue);
+                    }
+                    ObjectExpressionProperty::ObjectMethod(_) => {}
+                }
+            }
+        }
+        Expression::NewExpression(new) => {
+            for arg in &new.arguments {
+                find_nested_functions_in_expr(arg, opts, context, queue);
+            }
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            find_nested_functions_in_expr(&paren.expression, opts, context, queue);
+        }
+        Expression::OptionalCallExpression(call) => {
+            for arg in &call.arguments {
+                find_nested_functions_in_expr(arg, opts, context, queue);
+            }
+        }
+        Expression::TSAsExpression(ts) => {
+            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
+        }
+        Expression::TSSatisfiesExpression(ts) => {
+            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
+        }
+        Expression::TSNonNullExpression(ts) => {
+            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
+        }
+        Expression::TSTypeAssertion(ts) => {
+            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
+        }
+        Expression::TypeCastExpression(tc) => {
+            find_nested_functions_in_expr(&tc.expression, opts, context, queue);
+        }
+        // Leaf expressions or expressions that don't contain functions
+        _ => {}
+    }
 }
 
 // -----------------------------------------------------------------------
