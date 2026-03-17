@@ -18,13 +18,12 @@ export const {
   alwaysThrottleRetries,
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
-  enableHiddenSubtreeInsertionEffectCleanup,
+  enableEffectEventMutationPhase,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableTrustedTypesIntegration,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
@@ -32,8 +31,9 @@ export const {
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,
-  enableAsyncDebugInfo,
+  enableFragmentRefsTextNodes,
   enableInternalInstanceMap,
+  enableParallelTransitions,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -43,9 +43,10 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-
+export const enableTrustedTypesIntegration: boolean = true;
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
+export const enableAsyncDebugInfo: boolean = true;
 export const enableCPUSuspense: boolean = true;
 export const enableMoveBefore: boolean = false;
 export const disableInputAttributeSyncing: boolean = false;
@@ -70,8 +71,6 @@ export const enableLegacyCache: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
 
 export const enableTaint: boolean = false;
-
-export const enableHalt: boolean = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.

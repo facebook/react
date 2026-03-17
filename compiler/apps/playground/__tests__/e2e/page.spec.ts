@@ -283,37 +283,6 @@ test('error is displayed when config has validation error', async ({page}) => {
   expect(output.replace(/\s+/g, ' ')).toContain('Unexpected compilationMode');
 });
 
-test('disableMemoizationForDebugging flag works as expected', async ({
-  page,
-}) => {
-  const store: Store = {
-    source: TEST_SOURCE,
-    config: `import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
-
-({
-  environment: {
-    disableMemoizationForDebugging: true
-  }
-} satisfies PluginOptions);`,
-    showInternals: false,
-  };
-  const hash = encodeStore(store);
-  await page.goto(`/#${hash}`, {waitUntil: 'networkidle'});
-  await page.waitForFunction(isMonacoLoaded);
-  await expandConfigs(page);
-  await page.screenshot({
-    fullPage: true,
-    path: 'test-results/07-config-disableMemoizationForDebugging-flag.png',
-  });
-
-  const text =
-    (await page.locator('.monaco-editor-output').allInnerTexts()) ?? [];
-  const output = await formatPrint(text);
-
-  expect(output).not.toEqual('');
-  expect(output).toMatchSnapshot('disableMemoizationForDebugging-output.txt');
-});
-
 test('error is displayed when source has syntax error', async ({page}) => {
   const syntaxErrorSource = `function TestComponent(props) {
   const oops = props.

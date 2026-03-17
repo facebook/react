@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {codeFrameColumns} from '@babel/code-frame';
 import type {PluginObj} from '@babel/core';
 import type {parseConfigPragmaForTests as ParseConfigPragma} from 'babel-plugin-react-compiler/src/Utils/TestUtils';
 import type {printFunctionWithOutlined as PrintFunctionWithOutlined} from 'babel-plugin-react-compiler/src/HIR/PrintHIR';
@@ -15,7 +14,7 @@ import {
   PARSE_CONFIG_PRAGMA_IMPORT,
   PRINT_HIR_IMPORT,
   PRINT_REACTIVE_IR_IMPORT,
-  PROJECT_SRC,
+  BABEL_PLUGIN_SRC,
 } from './constants';
 import {TestFixture, getBasename, isExpectError} from './fixture-utils';
 import {TestResult, writeOutputToString} from './reporter';
@@ -65,7 +64,7 @@ async function compile(
   let compileResult: TransformResult | null = null;
   let error: string | null = null;
   try {
-    const importedCompilerPlugin = require(PROJECT_SRC) as Record<
+    const importedCompilerPlugin = require(BABEL_PLUGIN_SRC) as Record<
       string,
       unknown
     >;

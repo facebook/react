@@ -64,7 +64,10 @@ import {captureCommitPhaseError} from './ReactFiberWorkLoop';
 import {trackHostMutation} from './ReactFiberMutationTracking';
 
 import {runWithFiberInDEV} from './ReactCurrentFiber';
-import {enableFragmentRefs} from 'shared/ReactFeatureFlags';
+import {
+  enableFragmentRefs,
+  enableFragmentRefsTextNodes,
+} from 'shared/ReactFeatureFlags';
 
 export function commitHostMount(finishedWork: Fiber) {
   const type = finishedWork.type;
@@ -258,7 +261,8 @@ export function commitNewChildToFragmentInstances(
   parentFragmentInstances: null | Array<FragmentInstanceType>,
 ): void {
   if (
-    fiber.tag !== HostComponent ||
+    (fiber.tag !== HostComponent &&
+      !(enableFragmentRefsTextNodes && fiber.tag === HostText)) ||
     // Only run fragment insertion effects for initial insertions
     fiber.alternate !== null ||
     parentFragmentInstances === null

@@ -228,6 +228,14 @@ export type ReactErrorInfoProd = {
   +digest: string,
 };
 
+export type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
 export type ReactErrorInfoDev = {
   +digest?: string,
   +name: string,
@@ -235,6 +243,7 @@ export type ReactErrorInfoDev = {
   +stack: ReactStackTrace,
   +env: string,
   +owner?: null | string,
+  cause?: JSONValue,
 };
 
 export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
