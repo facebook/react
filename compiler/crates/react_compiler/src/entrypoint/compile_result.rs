@@ -14,6 +14,10 @@ pub enum CompileResult {
         events: Vec<LoggerEvent>,
         #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
         debug_logs: Vec<DebugLogEntry>,
+        /// Unified ordered log interleaving events and debug entries.
+        /// Items appear in the order they were emitted during compilation.
+        #[serde(rename = "orderedLog", skip_serializing_if = "Vec::is_empty")]
+        ordered_log: Vec<OrderedLogItem>,
     },
     /// A fatal error occurred and panicThreshold dictates it should throw.
     Error {
@@ -21,7 +25,17 @@ pub enum CompileResult {
         events: Vec<LoggerEvent>,
         #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
         debug_logs: Vec<DebugLogEntry>,
+        #[serde(rename = "orderedLog", skip_serializing_if = "Vec::is_empty")]
+        ordered_log: Vec<OrderedLogItem>,
     },
+}
+
+/// An item in the ordered log, which can be either a logger event or a debug entry.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum OrderedLogItem {
+    Event { event: LoggerEvent },
+    Debug { entry: DebugLogEntry },
 }
 
 /// Structured error information for the JS shim.

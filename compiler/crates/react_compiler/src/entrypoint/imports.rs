@@ -17,7 +17,7 @@ use react_compiler_ast::statements::Statement;
 use react_compiler_ast::{Program, SourceType};
 use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
 
-use super::compile_result::{DebugLogEntry, LoggerEvent};
+use super::compile_result::{DebugLogEntry, LoggerEvent, OrderedLogItem};
 use super::plugin_options::{CompilerTarget, PluginOptions};
 use super::suppression::SuppressionRange;
 
@@ -42,6 +42,9 @@ pub struct ProgramContext {
     pub has_module_scope_opt_out: bool,
     pub events: Vec<LoggerEvent>,
     pub debug_logs: Vec<DebugLogEntry>,
+    /// Unified ordered log that interleaves events and debug entries
+    /// in the order they were emitted during compilation.
+    pub ordered_log: Vec<OrderedLogItem>,
 
     // Internal state
     already_compiled: HashSet<u32>,
@@ -67,6 +70,7 @@ impl ProgramContext {
             has_module_scope_opt_out,
             events: Vec::new(),
             debug_logs: Vec::new(),
+            ordered_log: Vec::new(),
             already_compiled: HashSet::new(),
             known_referenced_names: HashSet::new(),
             imports: HashMap::new(),
@@ -175,11 +179,13 @@ impl ProgramContext {
 
     /// Log a compilation event.
     pub fn log_event(&mut self, event: LoggerEvent) {
+        self.ordered_log.push(OrderedLogItem::Event { event: event.clone() });
         self.events.push(event);
     }
 
     /// Log a debug entry (for debugLogIRs support).
     pub fn log_debug(&mut self, entry: DebugLogEntry) {
+        self.ordered_log.push(OrderedLogItem::Debug { entry: entry.clone() });
         self.debug_logs.push(entry);
     }
 

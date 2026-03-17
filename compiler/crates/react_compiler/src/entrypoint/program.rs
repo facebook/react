@@ -907,6 +907,7 @@ fn handle_error(
             error: error_info,
             events: context.events.clone(),
             debug_logs: context.debug_logs.clone(),
+            ordered_log: context.ordered_log.clone(),
         })
     } else {
         None
@@ -1460,6 +1461,7 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
             ast: None,
             events: early_events,
             debug_logs: early_debug_logs,
+            ordered_log: Vec::new(),
         };
     }
 
@@ -1471,6 +1473,7 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
             ast: None,
             events: early_events,
             debug_logs: early_debug_logs,
+            ordered_log: Vec::new(),
         };
     }
 
@@ -1536,6 +1539,7 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
             ast: None,
             events: context.events,
             debug_logs: context.debug_logs,
+            ordered_log: context.ordered_log,
         };
     }
 
@@ -1577,6 +1581,7 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
             ast: None,
             events: context.events,
             debug_logs: context.debug_logs,
+            ordered_log: context.ordered_log,
         };
     }
 
@@ -1587,6 +1592,7 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
         ast: None,
         events: context.events,
         debug_logs: context.debug_logs,
+        ordered_log: context.ordered_log,
     }
 }
 
