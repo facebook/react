@@ -114,6 +114,11 @@ pub fn compile_fn(
     let debug_eliminate_phi = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("EliminateRedundantPhi", debug_eliminate_phi));
 
+    react_compiler_optimization::constant_propagation(&mut hir, &mut env);
+
+    let debug_const_prop = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("ConstantPropagation", debug_const_prop));
+
     Ok(CodegenFunction {
         loc: None,
         memo_slots_used: 0,

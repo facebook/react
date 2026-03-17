@@ -1759,7 +1759,15 @@ fn format_primitive(prim: &react_compiler_hir::PrimitiveValue) -> String {
         react_compiler_hir::PrimitiveValue::Null => "null".to_string(),
         react_compiler_hir::PrimitiveValue::Undefined => "undefined".to_string(),
         react_compiler_hir::PrimitiveValue::Boolean(b) => format!("{}", b),
-        react_compiler_hir::PrimitiveValue::Number(n) => format!("{}", n.value()),
+        react_compiler_hir::PrimitiveValue::Number(n) => {
+            let v = n.value();
+            // Match JS String(-0) === "0" behavior
+            if v == 0.0 && v.is_sign_negative() {
+                "0".to_string()
+            } else {
+                format!("{}", v)
+            }
+        }
         react_compiler_hir::PrimitiveValue::String(s) => {
             // Format like JS JSON.stringify: escape control chars and quotes but NOT non-ASCII unicode
             let mut result = String::with_capacity(s.len() + 2);
