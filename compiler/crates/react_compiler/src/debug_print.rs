@@ -1025,7 +1025,7 @@ impl<'a> DebugPrinter<'a> {
                 self.line("PostfixUpdate {");
                 self.indent();
                 self.format_place_field("lvalue", lvalue);
-                self.line(&format!("operation: \"{:?}\"", operation));
+                self.line(&format!("operation: \"{}\"", operation));
                 self.format_place_field("value", value);
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
@@ -1035,7 +1035,7 @@ impl<'a> DebugPrinter<'a> {
                 self.line("PrefixUpdate {");
                 self.indent();
                 self.format_place_field("lvalue", lvalue);
-                self.line(&format!("operation: \"{:?}\"", operation));
+                self.line(&format!("operation: \"{}\"", operation));
                 self.format_place_field("value", value);
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
