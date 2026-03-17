@@ -2760,5 +2760,49 @@ describe('FragmentRefs', () => {
       window.scrollTo = originalScrollTo;
       restoreRange();
     });
+
+    // @gate enableFragmentRefs
+    it('does not deduplicate listeners with mismatched passive option', async () => {
+      const fragmentRef = React.createRef();
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <Fragment ref={fragmentRef}>
+            <div id="child" />
+          </Fragment>,
+        );
+      });
+
+      const logs = [];
+      const handler = () => logs.push('fired');
+
+      // Register with passive: false
+      fragmentRef.current.addEventListener('click', handler, {passive: false});
+      // Register with passive: true - DOM spec: these are DIFFERENT listeners
+      fragmentRef.current.addEventListener('click', handler, {passive: true});
+
+      document.querySelector('#child').click();
+      // Both should fire because passive:false and passive:true are distinct
+      expect(logs).toEqual(['fired', 'fired']);
+
+      // Remove with passive: false only removes the passive:false registration
+      fragmentRef.current.removeEventListener('click', handler, {passive: false});
+
+      logs.length = 0;
+      document.querySelector('#child').click();
+      // passive:true listener should still fire
+      expect(logs).toEqual(['fired']);
+
+      fragmentRef.current.removeEventListener('click', handler, {passive: true});
+
+      logs.length = 0;
+      document.querySelector('#child').click();
+      expect(logs).toEqual([]);
+
+      document.body.removeChild(container);
+    });
   });
 });
