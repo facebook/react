@@ -119,6 +119,11 @@ pub fn compile_fn(
     let debug_const_prop = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("ConstantPropagation", debug_const_prop));
 
+    react_compiler_typeinference::infer_types(&mut hir, &mut env);
+
+    let debug_infer_types = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("InferTypes", debug_infer_types));
+
     Ok(CodegenFunction {
         loc: None,
         memo_slots_used: 0,

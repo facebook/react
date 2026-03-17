@@ -1,0 +1,8 @@
+[package]
+name = "react_compiler_typeinference"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+react_compiler_hir = { path = "../react_compiler_hir" }
+react_compiler_ssa = { path = "../react_compiler_ssa" }

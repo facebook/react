@@ -10,6 +10,7 @@ react_compiler_hir = { path = "../react_compiler_hir" }
 react_compiler_lowering = { path = "../react_compiler_lowering" }
 react_compiler_optimization = { path = "../react_compiler_optimization" }
 react_compiler_ssa = { path = "../react_compiler_ssa" }
+react_compiler_typeinference = { path = "../react_compiler_typeinference" }
 react_compiler_validation = { path = "../react_compiler_validation" }
 regex = "1"
 serde = { version = "1", features = ["derive"] }

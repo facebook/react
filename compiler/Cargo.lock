@@ -177,6 +177,7 @@ dependencies = [
  "react_compiler_lowering",
  "react_compiler_optimization",
  "react_compiler_ssa",
+ "react_compiler_typeinference",
  "react_compiler_validation",
  "regex",
  "serde",
@@ -250,6 +251,14 @@ dependencies = [
  "react_compiler_diagnostics",
  "react_compiler_hir",
  "react_compiler_lowering",
+]
+
+[[package]]
+name = "react_compiler_typeinference"
+version = "0.1.0"
+dependencies = [
+ "react_compiler_hir",
+ "react_compiler_ssa",
 ]
 
 [[package]]
