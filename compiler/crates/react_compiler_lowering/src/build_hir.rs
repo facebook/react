@@ -2213,6 +2213,9 @@ fn lower_statement(
                     let binding = builder.resolve_identifier(&id.name, id.base.start.unwrap_or(0), id_loc.clone());
                     match binding {
                         VariableBinding::Identifier { identifier, .. } => {
+                            // Update the identifier's loc to the declaration site
+                            // (it may have been first created at a reference site during hoisting)
+                            builder.set_identifier_declaration_loc(identifier, &id_loc);
                             let place = Place {
                                 identifier,
                                 effect: Effect::Unknown,
