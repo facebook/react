@@ -6,7 +6,7 @@
 //! Compilation pipeline for a single function.
 //!
 //! Analogous to TS `Pipeline.ts` (`compileFn` → `run` → `runWithEnvironment`).
-//! Currently only runs BuildHIR (lowering); optimization passes will be added later.
+//! Currently runs BuildHIR (lowering) and PruneMaybeThrows.
 
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_diagnostics::CompilerError;
@@ -40,11 +40,19 @@ pub fn compile_fn(
         CompilerOutputMode::Lint => OutputMode::Lint,
     };
 
-    let hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
+    let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
 
     let debug_hir = debug_print::debug_hir(&hir, &env);
-
     context.log_debug(DebugLogEntry::new("HIR", debug_hir));
+
+    react_compiler_optimization::prune_maybe_throws(&mut hir).map_err(|diag| {
+        let mut err = CompilerError::new();
+        err.push_diagnostic(diag);
+        err
+    })?;
+
+    let debug_prune = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
 
     Ok(CodegenFunction {
         loc: None,
