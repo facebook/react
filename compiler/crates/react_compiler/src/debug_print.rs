@@ -1754,7 +1754,26 @@ fn format_primitive(prim: &react_compiler_hir::PrimitiveValue) -> String {
         react_compiler_hir::PrimitiveValue::Undefined => "undefined".to_string(),
         react_compiler_hir::PrimitiveValue::Boolean(b) => format!("{}", b),
         react_compiler_hir::PrimitiveValue::Number(n) => format!("{}", n.value()),
-        react_compiler_hir::PrimitiveValue::String(s) => format!("{:?}", s),
+        react_compiler_hir::PrimitiveValue::String(s) => {
+            // Format like JS JSON.stringify: escape control chars and quotes but NOT non-ASCII unicode
+            let mut result = String::with_capacity(s.len() + 2);
+            result.push('"');
+            for c in s.chars() {
+                match c {
+                    '"' => result.push_str("\\\""),
+                    '\\' => result.push_str("\\\\"),
+                    '\n' => result.push_str("\\n"),
+                    '\r' => result.push_str("\\r"),
+                    '\t' => result.push_str("\\t"),
+                    c if c.is_control() => {
+                        result.push_str(&format!("\\u{{{:04x}}}", c as u32));
+                    }
+                    c => result.push(c),
+                }
+            }
+            result.push('"');
+            result
+        }
     }
 }
 

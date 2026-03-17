@@ -156,6 +156,11 @@ impl<'a> HirBuilder<'a> {
         self.scope_info
     }
 
+    /// Access the function scope (the scope of the function being compiled).
+    pub fn function_scope(&self) -> ScopeId {
+        self.function_scope
+    }
+
     /// Access the component scope.
     pub fn component_scope(&self) -> ScopeId {
         self.component_scope
@@ -169,6 +174,11 @@ impl<'a> HirBuilder<'a> {
     /// Access the pre-computed context identifiers set.
     pub fn context_identifiers(&self) -> &std::collections::HashSet<BindingId> {
         &self.context_identifiers
+    }
+
+    /// Add a binding to the context identifiers set (used by hoisting).
+    pub fn add_context_identifier(&mut self, binding_id: BindingId) {
+        self.context_identifiers.insert(binding_id);
     }
 
     /// Access scope_info and environment mutably at the same time.

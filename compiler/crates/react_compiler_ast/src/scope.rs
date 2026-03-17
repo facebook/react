@@ -45,6 +45,10 @@ pub struct BindingData {
     /// "VariableDeclarator"). Used by the compiler to distinguish function
     /// declarations from variable declarations during hoisting.
     pub declaration_type: String,
+    /// The start offset of the binding's declaration identifier.
+    /// Used to distinguish declaration sites from references in `reference_to_binding`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declaration_start: Option<u32>,
     /// For import bindings: the source module and import details.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub import: Option<ImportBindingData>,
@@ -102,6 +106,11 @@ pub struct ScopeInfo {
     /// Maps an Identifier AST node's start offset to the binding it resolves to.
     /// Only present for identifiers that resolve to a binding (not globals).
     pub reference_to_binding: HashMap<u32, BindingId>,
+
+    /// Maps an identifier reference's start offset to its source location [start_line, start_col, end_line, end_col].
+    /// Used for hoisting to set the correct location on DeclareContext instructions.
+    #[serde(default)]
+    pub reference_locs: HashMap<u32, [u32; 4]>,
 
     /// The program-level (module) scope. Always scopes[0].
     pub program_scope: ScopeId,

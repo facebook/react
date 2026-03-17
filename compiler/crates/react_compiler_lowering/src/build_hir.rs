@@ -911,9 +911,9 @@ fn lower_expression(
             let place = build_temporary_place(builder, loc.clone());
 
             // Block for the consequent (test is truthy)
+            let consequent_ast_loc = expression_loc(&expr.consequent);
             let consequent_block = builder.enter(BlockKind::Value, |builder, _block_id| {
                 let consequent = lower_expression_to_temporary(builder, &expr.consequent);
-                let consequent_loc = consequent.loc.clone();
                 lower_value_to_temporary(builder, InstructionValue::StoreLocal {
                     lvalue: LValue {
                         kind: InstructionKind::Const,
@@ -927,14 +927,14 @@ fn lower_expression(
                     block: continuation_id,
                     variant: GotoVariant::Break,
                     id: EvaluationOrder(0),
-                    loc: consequent_loc,
+                    loc: consequent_ast_loc,
                 }
             });
 
             // Block for the alternate (test is falsy)
+            let alternate_ast_loc = expression_loc(&expr.alternate);
             let alternate_block = builder.enter(BlockKind::Value, |builder, _block_id| {
                 let alternate = lower_expression_to_temporary(builder, &expr.alternate);
-                let alternate_loc = alternate.loc.clone();
                 lower_value_to_temporary(builder, InstructionValue::StoreLocal {
                     lvalue: LValue {
                         kind: InstructionKind::Const,
@@ -948,7 +948,7 @@ fn lower_expression(
                     block: continuation_id,
                     variant: GotoVariant::Break,
                     id: EvaluationOrder(0),
-                    loc: alternate_loc,
+                    loc: alternate_ast_loc,
                 }
             });
 
@@ -1894,12 +1894,29 @@ fn lower_block_statement(
     builder: &mut HirBuilder,
     block: &react_compiler_ast::statements::BlockStatement,
 ) {
+    lower_block_statement_inner(builder, block, None);
+}
+
+fn lower_block_statement_with_scope(
+    builder: &mut HirBuilder,
+    block: &react_compiler_ast::statements::BlockStatement,
+    scope_override: react_compiler_ast::scope::ScopeId,
+) {
+    lower_block_statement_inner(builder, block, Some(scope_override));
+}
+
+fn lower_block_statement_inner(
+    builder: &mut HirBuilder,
+    block: &react_compiler_ast::statements::BlockStatement,
+    scope_override: Option<react_compiler_ast::scope::ScopeId>,
+) {
     use react_compiler_ast::scope::BindingKind as AstBindingKind;
     use react_compiler_ast::statements::Statement;
 
-    // Look up the block's scope to identify hoistable bindings
-    let block_scope_id = block.base.start.and_then(|start| {
-        builder.scope_info().node_to_scope.get(&start).copied()
+    // Look up the block's scope to identify hoistable bindings.
+    // Use the scope override if provided (for function body blocks that share the function's scope).
+    let block_scope_id = scope_override.or_else(|| {
+        block.base.start.and_then(|start| builder.scope_info().node_to_scope.get(&start).copied())
     });
 
     let scope_id = match block_scope_id {
@@ -1913,11 +1930,13 @@ fn lower_block_statement(
         }
     };
 
-    // Collect hoistable bindings from this scope (non-param bindings)
-    let hoistable: Vec<(BindingId, String, AstBindingKind, String)> = builder.scope_info()
+    // Collect hoistable bindings from this scope (non-param bindings).
+    // Exclude bindings whose declaration_type is "FunctionExpression" since named function
+    // expression names are local to the expression and should never be hoisted.
+    let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder.scope_info()
         .scope_bindings(scope_id)
-        .filter(|b| !matches!(b.kind, AstBindingKind::Param))
-        .map(|b| (b.id, b.name.clone(), b.kind.clone(), b.declaration_type.clone()))
+        .filter(|b| !matches!(b.kind, AstBindingKind::Param) && b.declaration_type != "FunctionExpression")
+        .map(|b| (b.id, b.name.clone(), b.kind.clone(), b.declaration_type.clone(), b.declaration_start))
         .collect();
 
     if hoistable.is_empty() {
@@ -1951,21 +1970,26 @@ fn lower_block_statement(
             name: String,
             kind: AstBindingKind,
             declaration_type: String,
+            first_ref_pos: u32,
         }
         let mut will_hoist: Vec<HoistInfo> = Vec::new();
 
-        for (binding_id, name, kind, decl_type) in &hoistable {
+        for (binding_id, name, kind, decl_type, decl_start) in &hoistable {
             if declared.contains(binding_id) {
                 continue;
             }
 
-            // Check if this binding is referenced in the statement's range
-            let is_referenced = builder.scope_info().reference_to_binding.iter()
-                .any(|(&ref_start, &ref_binding_id)| {
-                    ref_start >= stmt_start && ref_start < stmt_end && ref_binding_id == *binding_id
-                });
+            // Find the first reference (not declaration) to this binding in the statement's range.
+            let first_ref = builder.scope_info().reference_to_binding.iter()
+                .filter(|(ref_start, ref_binding_id)| {
+                    **ref_start >= stmt_start && **ref_start < stmt_end
+                        && **ref_binding_id == *binding_id
+                        && Some(**ref_start) != *decl_start
+                })
+                .map(|(ref_start, _)| *ref_start)
+                .min();
 
-            if is_referenced {
+            if let Some(first_ref_pos) = first_ref {
                 // Hoist if: (1) binding is "hoisted" kind (function declaration), or
                 // (2) reference is inside a nested function
                 let should_hoist = matches!(kind, AstBindingKind::Hoisted) || has_nested_functions;
@@ -1975,10 +1999,15 @@ fn lower_block_statement(
                         name: name.clone(),
                         kind: kind.clone(),
                         declaration_type: decl_type.clone(),
+                        first_ref_pos,
                     });
                 }
             }
         }
+
+        // Sort by first reference position to match TS traversal order
+        will_hoist.sort_by_key(|h| h.first_ref_pos);
+
 
         // Emit DeclareContext for hoisted bindings
         for info in &will_hoist {
@@ -2022,18 +2051,27 @@ fn lower_block_statement(
                 }
             };
 
+            // Look up the reference location for the DeclareContext instruction
+            let ref_loc = builder.scope_info().reference_locs.get(&info.first_ref_pos).map(|loc| {
+                SourceLocation {
+                    start: Position { line: loc[0], column: loc[1] },
+                    end: Position { line: loc[2], column: loc[3] },
+                }
+            });
             let identifier = builder.resolve_binding(&info.name, info.binding_id);
             let place = Place {
                 effect: Effect::Unknown,
                 identifier,
                 reactive: false,
-                loc: None,
+                loc: ref_loc.clone(),
             };
             lower_value_to_temporary(builder, InstructionValue::DeclareContext {
                 lvalue: LValue { kind: hoist_kind, place },
-                loc: None,
+                loc: ref_loc,
             });
             builder.environment_mut().add_hoisted_identifier(info.binding_id.0);
+            // Hoisted identifiers also become context identifiers (matching TS addHoistedIdentifier)
+            builder.add_context_identifier(info.binding_id);
         }
 
         // After processing the statement, mark any bindings it declares as "seen".
@@ -2909,6 +2947,7 @@ fn lower_statement(
                 if let Some(param) = &handler_clause.param {
                     let param_loc = convert_opt_loc(&pattern_like_loc(param));
                     let id = builder.make_temporary(param_loc.clone());
+                    promote_temporary(builder, id);
                     let place = Place {
                         identifier: id,
                         effect: Effect::Unknown,
@@ -2932,11 +2971,14 @@ fn lower_statement(
             // Create the handler (catch) block
             let handler_binding_for_block = handler_binding_info.clone();
             let handler_loc = convert_opt_loc(&handler_clause.base.loc);
+            // Use the catch param's loc for the assignment, matching TS: handlerBinding.path.node.loc
+            let handler_param_loc = handler_clause.param.as_ref()
+                .and_then(|p| convert_opt_loc(&pattern_like_loc(p)));
             let handler_block = builder.enter(BlockKind::Catch, |builder, _block_id| {
                 if let Some((ref place, ref pattern)) = handler_binding_for_block {
                     lower_assignment(
                         builder,
-                        handler_loc.clone(),
+                        handler_param_loc.clone().or_else(|| handler_loc.clone()),
                         InstructionKind::Catch,
                         pattern,
                         place.clone(),
@@ -4614,9 +4656,10 @@ fn lower_inner(
                 .iter()
                 .map(|d| d.value.value.clone())
                 .collect();
-            // Use lower_block_statement to get hoisting support for the function body,
-            // matching the TS which calls lowerStatement(builder, body) on the BlockStatement.
-            lower_block_statement(&mut builder, block);
+            // Use lower_block_statement_with_scope to get hoisting support for the function body.
+            // Pass the function scope since in Babel, a function body BlockStatement shares
+            // the function's scope (node_to_scope maps the function node, not the block).
+            lower_block_statement_with_scope(&mut builder, block, function_scope);
         }
     }
 
@@ -4721,15 +4764,18 @@ fn lower_jsx_member_expression(
     expr: &react_compiler_ast::jsx::JSXMemberExpression,
 ) -> Place {
     use react_compiler_ast::jsx::JSXMemberExprObject;
+    // Use the full member expression's loc for instruction locs (matching TS: exprPath.node.loc)
+    let expr_loc = convert_opt_loc(&expr.base.loc);
     let object = match &*expr.object {
         JSXMemberExprObject::JSXIdentifier(id) => {
-            let loc = convert_opt_loc(&id.base.loc);
+            let id_loc = convert_opt_loc(&id.base.loc);
             let start = id.base.start.unwrap_or(0);
-            let place = lower_identifier(builder, &id.name, start, loc.clone());
+            // Use identifier's own loc for the place, but member expression's loc for the instruction
+            let place = lower_identifier(builder, &id.name, start, id_loc);
             let load_value = if builder.is_context_identifier(&id.name, start) {
-                InstructionValue::LoadContext { place, loc }
+                InstructionValue::LoadContext { place, loc: expr_loc.clone() }
             } else {
-                InstructionValue::LoadLocal { place, loc }
+                InstructionValue::LoadLocal { place, loc: expr_loc.clone() }
             };
             lower_value_to_temporary(builder, load_value)
         }
@@ -4738,11 +4784,10 @@ fn lower_jsx_member_expression(
         }
     };
     let prop_name = &expr.property.name;
-    let loc = convert_opt_loc(&expr.property.base.loc);
     let value = InstructionValue::PropertyLoad {
         object,
         property: PropertyLiteral::String(prop_name.clone()),
-        loc,
+        loc: expr_loc,
     };
     lower_value_to_temporary(builder, value)
 }

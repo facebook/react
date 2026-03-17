@@ -21,6 +21,7 @@ export interface BindingData {
   kind: string;
   scope: number;
   declarationType: string;
+  declarationStart?: number;
   import?: ImportBindingData;
 }
 
@@ -35,6 +36,7 @@ export interface ScopeInfo {
   bindings: Array<BindingData>;
   nodeToScope: Record<number, number>;
   referenceToBinding: Record<number, number>;
+  referenceLocs: Record<number, [number, number, number, number]>;
   programScope: number;
 }
 
@@ -95,6 +97,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const bindings: Array<BindingData> = [];
   const nodeToScope: Record<number, number> = {};
   const referenceToBinding: Record<number, number> = {};
+  const referenceLocs: Record<number, [number, number, number, number]> = {};
 
   // Map from Babel scope uid to our scope id
   const scopeUidToId = new Map<string, number>();
@@ -142,6 +145,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         kind: getBindingKind(babelBinding),
         scope: scopeId,
         declarationType: babelBinding.path.node.type,
+        declarationStart: babelBinding.identifier.start ?? undefined,
       };
 
       // Check for import bindings
@@ -159,6 +163,14 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         const start = ref.node.start;
         if (start != null) {
           referenceToBinding[start] = bindingId;
+          if (ref.node.loc != null) {
+            referenceLocs[start] = [
+              ref.node.loc.start.line,
+              ref.node.loc.start.column,
+              ref.node.loc.end.line,
+              ref.node.loc.end.column,
+            ];
+          }
         }
       }
 
@@ -226,6 +238,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     bindings,
     nodeToScope,
     referenceToBinding,
+    referenceLocs,
     programScope: programScopeId,
   };
 }
