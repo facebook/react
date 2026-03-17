@@ -109,6 +109,11 @@ pub fn compile_fn(
     let debug_ssa = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("SSA", debug_ssa));
 
+    react_compiler_ssa::eliminate_redundant_phi(&mut hir, &mut env);
+
+    let debug_eliminate_phi = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("EliminateRedundantPhi", debug_eliminate_phi));
+
     Ok(CodegenFunction {
         loc: None,
         memo_slots_used: 0,

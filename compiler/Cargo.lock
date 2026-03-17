@@ -176,6 +176,7 @@ dependencies = [
  "react_compiler_hir",
  "react_compiler_lowering",
  "react_compiler_optimization",
+ "react_compiler_ssa",
  "react_compiler_validation",
  "regex",
  "serde",
@@ -232,6 +233,16 @@ dependencies = [
 
 [[package]]
 name = "react_compiler_optimization"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "react_compiler_diagnostics",
+ "react_compiler_hir",
+ "react_compiler_lowering",
+]
+
+[[package]]
+name = "react_compiler_ssa"
 version = "0.1.0"
 dependencies = [
  "indexmap",
