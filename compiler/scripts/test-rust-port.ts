@@ -100,20 +100,23 @@ const rustPlugin =
   require('../packages/babel-plugin-react-compiler-rust/src').default;
 
 // --- Types ---
-interface CapturedEntry {
+interface LogEntry {
+  kind: 'entry';
   name: string;
   value: string;
 }
 
-interface CapturedEvent {
-  kind: string;
+interface LogEvent {
+  kind: 'event';
+  eventKind: string;
   fnName: string | null;
   detail: string;
 }
 
+type LogItem = LogEntry | LogEvent;
+
 interface CompileOutput {
-  entries: CapturedEntry[];
-  events: CapturedEvent[];
+  log: LogItem[];
   error: string | null;
 }
 
@@ -145,6 +148,19 @@ function discoverFixtures(rootPath: string): string[] {
   return results;
 }
 
+// --- Format a source location for comparison ---
+function formatLoc(loc: unknown): string {
+  if (loc == null) return '(none)';
+  if (typeof loc === 'symbol') return '(generated)';
+  const l = loc as Record<string, unknown>;
+  const start = l.start as Record<string, unknown> | undefined;
+  const end = l.end as Record<string, unknown> | undefined;
+  if (start && end) {
+    return `${start.line}:${start.column}-${end.line}:${end.column}`;
+  }
+  return String(loc);
+}
+
 // --- Compile a fixture through a Babel plugin and capture debug entries ---
 function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
   const source = fs.readFileSync(fixturePath, 'utf8');
@@ -155,12 +171,13 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
     compilationMode: 'all',
   });
 
-  // Capture debug entries and logger events
-  const entries: CapturedEntry[] = [];
-  const events: CapturedEvent[] = [];
+  // Capture debug entries and logger events in order, stopping after the target pass
+  const log: LogItem[] = [];
+  let reachedTarget = false;
 
   const logger = {
     logEvent(_filename: string | null, event: Record<string, unknown>): void {
+      if (reachedTarget) return;
       const kind = event.kind as string;
       if (
         kind === 'CompileError' ||
@@ -172,27 +189,60 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
         let detail: string;
         if (kind === 'CompileError') {
           const d = event.detail as Record<string, unknown> | undefined;
-          detail = d
-            ? `${d.reason ?? ''}${d.description ? ': ' + d.description : ''}`
-            : '(no detail)';
+          if (d) {
+            const lines = [
+              `reason: ${d.reason ?? '(none)'}`,
+              `severity: ${d.severity ?? '(none)'}`,
+              `category: ${d.category ?? '(none)'}`,
+            ];
+            if (d.description) {
+              lines.push(`description: ${d.description}`);
+            }
+            // CompilerDiagnostic has a details array of error/hint items
+            const details = d.details as
+              | Array<Record<string, unknown>>
+              | undefined;
+            if (details && details.length > 0) {
+              for (const item of details) {
+                if (item.kind === 'error') {
+                  lines.push(
+                    `  error: ${formatLoc(item.loc)}${item.message ? ': ' + item.message : ''}`,
+                  );
+                } else if (item.kind === 'hint') {
+                  lines.push(`  hint: ${item.message ?? ''}`);
+                }
+              }
+            }
+            // Legacy CompilerErrorDetail has loc directly
+            if (d.loc && !details) {
+              lines.push(`loc: ${formatLoc(d.loc)}`);
+            }
+            detail = lines.join('\n    ');
+          } else {
+            detail = '(no detail)';
+          }
         } else if (kind === 'CompileSkip') {
           detail = (event.reason as string) ?? '(no reason)';
         } else {
           detail = (event.data as string) ?? '(no data)';
         }
-        events.push({kind, fnName, detail});
+        log.push({kind: 'event', eventKind: kind, fnName, detail});
       }
     },
     debugLogIRs(entry: CompilerPipelineValue): void {
+      if (reachedTarget) return;
+      if (entry.name === 'EnvironmentConfig') return;
       if (entry.kind === 'hir') {
         // TS pipeline emits HIR objects — convert to debug string
-        entries.push({
+        log.push({
+          kind: 'entry',
           name: entry.name,
           value: printDebugHIR(entry.value),
         });
       } else if (entry.kind === 'debug') {
         // Rust pipeline (and TS EnvironmentConfig) emits pre-formatted strings
-        entries.push({
+        log.push({
+          kind: 'entry',
           name: entry.name,
           value: entry.value,
         });
@@ -204,6 +254,9 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
           `TODO: test-rust-port does not yet support '${entry.kind}' log entries ` +
             `(pass "${entry.name}"). Extend the debugLogIRs handler to support this kind.`,
         );
+      }
+      if (entry.name === passArg) {
+        reachedTarget = true;
       }
     },
   };
@@ -240,13 +293,19 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
     error = e instanceof Error ? e.message : String(e);
   }
 
-  return {entries, events, error};
+  return {log, error};
 }
 
-// --- Format events as comparable string ---
-function formatEvents(events: CapturedEvent[]): string {
-  return events
-    .map(e => `[${e.kind}]${e.fnName ? ' ' + e.fnName : ''}: ${e.detail}`)
+// --- Format log items as comparable string ---
+function formatLog(log: LogItem[]): string {
+  return log
+    .map(item => {
+      if (item.kind === 'entry') {
+        return `## ${item.name}\n${item.value}`;
+      } else {
+        return `[${item.eventKind}]${item.fnName ? ' ' + item.fnName : ''}: ${item.detail}`;
+      }
+    })
     .join('\n');
 }
 
@@ -344,7 +403,6 @@ let failed = 0;
 let tsHadEntries = false;
 const failures: Array<{
   fixture: string;
-  kind: 'count_mismatch' | 'content_mismatch' | 'error';
   detail: string;
 }> = [];
 
@@ -353,86 +411,23 @@ for (const fixturePath of fixtures) {
   const ts = compileFixture('ts', fixturePath);
   const rust = compileFixture('rust', fixturePath);
 
-  // Filter entries for the requested pass
-  const tsEntries = ts.entries.filter(e => e.name === passArg);
-  const rustEntries = rust.entries.filter(e => e.name === passArg);
-
-  if (tsEntries.length > 0) {
+  // Check if TS produced any entries for the target pass
+  if (ts.log.some(item => item.kind === 'entry' && item.name === passArg)) {
     tsHadEntries = true;
   }
 
-  // If neither has debug entries for this pass, compare events only
-  if (tsEntries.length === 0 && rustEntries.length === 0) {
-    const tsEvents = formatEvents(ts.events);
-    const rustEvents = formatEvents(rust.events);
-    if (tsEvents === rustEvents) {
-      passed++;
-    } else {
-      failed++;
-      if (failures.length < 10) {
-        failures.push({
-          fixture: relPath,
-          kind: 'content_mismatch',
-          detail: '  Events differ:\n' + unifiedDiff(tsEvents, rustEvents),
-        });
-      }
-    }
-    continue;
-  }
+  // Compare the full log (entries + events in order, up to target pass)
+  const tsFormatted = normalizeIds(formatLog(ts.log));
+  const rustFormatted = normalizeIds(formatLog(rust.log));
 
-  // Check entry count mismatch
-  if (tsEntries.length !== rustEntries.length) {
-    failed++;
-    if (failures.length < 50) {
-      failures.push({
-        fixture: relPath,
-        kind: 'count_mismatch',
-        detail:
-          `TS produced ${tsEntries.length} entries, Rust produced ${rustEntries.length} entries` +
-          (ts.error ? `\n  TS error: ${ts.error}` : '') +
-          (rust.error ? `\n  Rust error: ${rust.error}` : ''),
-      });
-    }
-    continue;
-  }
-
-  // Compare entry content (normalize Type IDs which are opaque and differ
-  // between TS and Rust due to the TS global type counter)
-  let allMatch = true;
-  let firstDiff = '';
-  for (let i = 0; i < tsEntries.length; i++) {
-    const tsNorm = normalizeIds(tsEntries[i].value);
-    const rustNorm = normalizeIds(rustEntries[i].value);
-    if (tsNorm !== rustNorm) {
-      allMatch = false;
-      if (!firstDiff) {
-        firstDiff = unifiedDiff(tsNorm, rustNorm);
-      }
-      break;
-    }
-  }
-
-  // Compare error events
-  const tsEvents = formatEvents(ts.events);
-  const rustEvents = formatEvents(rust.events);
-  if (tsEvents !== rustEvents) {
-    allMatch = false;
-    if (!firstDiff) {
-      firstDiff = unifiedDiff(tsEvents, rustEvents);
-    } else {
-      firstDiff += '\n\n  Events differ:\n' + unifiedDiff(tsEvents, rustEvents);
-    }
-  }
-
-  if (allMatch) {
+  if (tsFormatted === rustFormatted) {
     passed++;
   } else {
     failed++;
     if (failures.length < 50) {
       failures.push({
         fixture: relPath,
-        kind: 'content_mismatch',
-        detail: firstDiff,
+        detail: unifiedDiff(tsFormatted, rustFormatted),
       });
     }
   }
@@ -455,13 +450,7 @@ if (!tsHadEntries) {
 // --- Show failures ---
 for (const failure of failures) {
   console.log(`${RED}FAIL${RESET} ${failure.fixture}`);
-  if (failure.kind === 'count_mismatch') {
-    console.log(`  ${failure.detail}`);
-  } else if (failure.kind === 'content_mismatch') {
-    console.log(failure.detail);
-  } else {
-    console.log(`  ${failure.detail}`);
-  }
+  console.log(failure.detail);
   console.log('');
 }
 
