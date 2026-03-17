@@ -145,13 +145,13 @@ describe('ReactInteractionTracing', () => {
     }
   }
 
-  function AsyncText({text}) {
+  function AsyncText({ text }) {
     const fullText = readText(text);
     Scheduler.log(fullText);
     return fullText;
   }
 
-  function Text({text}) {
+  function Text({ text }) {
     Scheduler.log(text);
     return text;
   }
@@ -177,7 +177,7 @@ describe('ReactInteractionTracing', () => {
     jest.advanceTimersByTime(ms);
     // Wait until the end of the current tick
     // We cannot use a timer since we're faking them
-    return Promise.resolve().then(() => {});
+    return Promise.resolve().then(() => { });
   }
 
   // @gate enableTransitionTracing
@@ -216,7 +216,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({navigate}) {
+    function App({ navigate }) {
       return (
         <div>
           {navigate ? (
@@ -305,7 +305,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll(['Page One']);
 
       await act(async () => {
-        startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+        startTransition(() => navigateToPageTwo(), { name: 'page transition' });
 
         ReactNoop.expire(1000);
         await advanceTimers(1000);
@@ -367,7 +367,7 @@ describe('ReactInteractionTracing', () => {
             navigateToPageTwo();
             setText();
           },
-          {name: 'page transition'},
+          { name: 'page transition' },
         );
 
         ReactNoop.expire(1000);
@@ -434,7 +434,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      startTransition(() => navigateToPageTwo(), { name: 'page transition' });
 
       ReactNoop.expire(1000);
       await advanceTimers(1000);
@@ -530,7 +530,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      startTransition(() => navigateToPageTwo(), { name: 'page transition' });
 
       await waitForAll([
         'Suspend [Page Two]',
@@ -551,7 +551,7 @@ describe('ReactInteractionTracing', () => {
         'onTransitionComplete(page transition, 1000, 2000)',
       ]);
 
-      startTransition(() => showTextFn(), {name: 'text transition'});
+      startTransition(() => showTextFn(), { name: 'text transition' });
       await waitForAll([
         'Suspend [Show Text]',
         'Show Text Loading...',
@@ -641,7 +641,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      startTransition(() => navigateToPageTwo(), { name: 'page transition' });
       ReactNoop.expire(1000);
       await advanceTimers(1000);
 
@@ -657,7 +657,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => showTextFn(), {name: 'show text'});
+      startTransition(() => showTextFn(), { name: 'show text' });
 
       await waitForAll([
         'Suspend [Show Text]',
@@ -763,7 +763,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      startTransition(() => navigateToPageTwo(), { name: 'page transition' });
       ReactNoop.expire(1000);
       await advanceTimers(1000);
 
@@ -899,8 +899,8 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => setNavigate(), {name: 'navigate'});
-      startTransition(() => setShowTextOne(), {name: 'show text one'});
+      startTransition(() => setNavigate(), { name: 'navigate' });
+      startTransition(() => setShowTextOne(), { name: 'show text one' });
       ReactNoop.expire(1000);
       await advanceTimers(1000);
 
@@ -937,7 +937,7 @@ describe('ReactInteractionTracing', () => {
         'onTransitionProgress(show text one, 1000, 3000, [show text one, <null>])',
       ]);
 
-      startTransition(() => setShowTextTwo(), {name: 'show text two'});
+      startTransition(() => setShowTextTwo(), { name: 'show text two' });
       ReactNoop.expire(1000);
       await advanceTimers(1000);
 
@@ -1064,7 +1064,7 @@ describe('ReactInteractionTracing', () => {
       await waitForAll(['Page One']);
 
       await act(async () => {
-        startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+        startTransition(() => navigateToPageTwo(), { name: 'page transition' });
 
         ReactNoop.expire(1000);
         await advanceTimers(1000);
@@ -1150,7 +1150,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      startTransition(() => navigateToPageTwo(), { name: 'page transition' });
 
       ReactNoop.expire(1000);
       await advanceTimers(1000);
@@ -1272,7 +1272,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(async () => {
-      startTransition(() => navigateToPageTwo(), {name: 'page transition'});
+      startTransition(() => navigateToPageTwo(), { name: 'page transition' });
 
       ReactNoop.expire(1000);
       await advanceTimers(1000);
@@ -1373,7 +1373,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({navigate, markerName}) {
+    function App({ navigate, markerName }) {
       return (
         <div>
           {navigate ? (
@@ -1485,7 +1485,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({navigate, showMarker}) {
+    function App({ navigate, showMarker }) {
       return (
         <div>
           {navigate ? (
@@ -1650,7 +1650,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({navigate, deleteOne}) {
+    function App({ navigate, deleteOne }) {
       return (
         <div>
           {navigate ? (
@@ -1790,7 +1790,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({navigate, deleteOne}) {
+    function App({ navigate, deleteOne }) {
       return (
         <div>
           {navigate ? (
@@ -1957,7 +1957,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({show}) {
+    function App({ show }) {
       return (
         <React.unstable_TracingMarker name="parent">
           {show ? (
@@ -2078,7 +2078,7 @@ describe('ReactInteractionTracing', () => {
       },
     };
 
-    function App({show, showSuspense}) {
+    function App({ show, showSuspense }) {
       return (
         <React.unstable_TracingMarker name="parent">
           {show ? (
@@ -2206,7 +2206,7 @@ describe('ReactInteractionTracing', () => {
         );
       },
     };
-    function App({markerName, markerKey}) {
+    function App({ markerName, markerKey }) {
       return (
         <React.unstable_TracingMarker name={markerName} key={markerKey}>
           <Text text={markerName} />
@@ -2249,8 +2249,8 @@ describe('ReactInteractionTracing', () => {
       ]);
       assertConsoleErrorDev([
         'Changing the name of a tracing marker after mount is not supported. ' +
-          'To remount the tracing marker, pass it a new key.\n' +
-          '    in App (at **)',
+        'To remount the tracing marker, pass it a new key.\n' +
+        '    in App (at **)',
       ]);
       startTransition(
         () => root.render(<App markerName="three" markerKey="new key" />),
@@ -2307,7 +2307,7 @@ describe('ReactInteractionTracing', () => {
       unstable_transitionCallbacks: transitionCallbacks,
     });
     await act(() => {
-      startTransition(() => root.render(<App />), {name: 'transition'});
+      startTransition(() => root.render(<App />), { name: 'transition' });
       ReactNoop.expire(1000);
       advanceTimers(1000);
     });
@@ -2373,7 +2373,7 @@ describe('ReactInteractionTracing', () => {
 
     await act(async () => {
       ReactNoop.discreteUpdates(() =>
-        startTransition(() => root.render(<App />), {name: 'page transition'}),
+        startTransition(() => root.render(<App />), { name: 'page transition' }),
       );
       ReactNoop.expire(1000);
       await advanceTimers(1000);
@@ -2443,7 +2443,7 @@ describe('ReactInteractionTracing', () => {
     });
 
     await act(() => {
-      startTransition(() => root.render(<App />), {name: 'transition'});
+      startTransition(() => root.render(<App />), { name: 'transition' });
       ReactNoop.expire(1000);
       advanceTimers(1000);
     });
@@ -2500,7 +2500,7 @@ describe('ReactInteractionTracing', () => {
       };
     };
 
-    function App({name}) {
+    function App({ name }) {
       return (
         <>
           <Suspense name={name} fallback={<Text text={`Loading ${name}...`} />}>
@@ -2566,6 +2566,109 @@ describe('ReactInteractionTracing', () => {
       'Text two',
       'onTransitionProgress(transition two, 0, 3000, []) /root two/',
       'onTransitionComplete(transition two, 0, 3000) /root two/',
+    ]);
+  });
+  // @gate enableTransitionTracing
+  it('should correctly track start times for interleaved transitions (regression test)', async () => {
+    const transitionCallbacks = {
+      onTransitionStart: (name, startTime) => {
+        Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
+      },
+      onTransitionComplete: (name, startTime, endTime) => {
+        Scheduler.log(
+          `onTransitionComplete(${name}, ${startTime}, ${endTime})`,
+        );
+      },
+    };
+
+    function App({ name }) {
+      return (
+        <Suspense name={name} fallback={<Text text={`Loading ${name}...`} />}>
+          <AsyncText text={`Text ${name}`} />
+        </Suspense>
+      );
+    }
+
+    // Use two separate roots to simulate independent actions that might otherwise race on global state
+    const rootOne = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+
+    const rootTwo = ReactNoop.createRoot({
+      unstable_transitionCallbacks: transitionCallbacks,
+    });
+
+    // 1. Initial State
+    await act(async () => {
+      rootOne.render(null);
+      rootTwo.render(null);
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    // 2. Start Transition A at 1000ms
+    await act(async () => {
+      startTransition(() => rootOne.render(<App name="A" />), {
+        name: 'Transition A',
+      });
+
+      await waitForAll([
+        'Suspend [Text A]',
+        'Loading A...',
+        'Suspend [Text A]', // Pre-warm
+        'onTransitionStart(Transition A, 1000)',
+      ]);
+    });
+
+    // 3. Advance to 2000ms
+    await act(async () => {
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    // 4. Start Transition B at 2000ms
+    await act(async () => {
+      startTransition(() => rootTwo.render(<App name="B" />), {
+        name: 'Transition B',
+      });
+
+      await waitForAll([
+        'Suspend [Text B]',
+        'Loading B...',
+        'Suspend [Text B]', // Pre-warm
+        'onTransitionStart(Transition B, 2000)',
+      ]);
+    });
+
+    // 5. Advance to 3000ms
+    await act(async () => {
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    // 6. Resolve A. It started at 1000ms.
+    // If globals were clobbered by B, it might say 2000ms or some other wrong time.
+    await act(async () => {
+      await resolveText('Text A');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    assertLog([
+      'Text A',
+      'onTransitionComplete(Transition A, 1000, 4000)',
+    ]);
+
+    // 7. Resolve B. Started at 2000ms.
+    await act(async () => {
+      await resolveText('Text B');
+      ReactNoop.expire(1000);
+      await advanceTimers(1000);
+    });
+
+    assertLog([
+      'Text B',
+      'onTransitionComplete(Transition B, 2000, 5000)',
     ]);
   });
 });
