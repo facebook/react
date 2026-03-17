@@ -54,6 +54,12 @@ pub fn compile_fn(
     let debug_prune = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
 
+    // TODO: propagate with `?` once lowering is complete. Currently suppressed
+    // because incomplete lowering can produce inconsistent context/local references
+    // that trigger false invariant violations.
+    let _ = react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env);
+    react_compiler_validation::validate_use_memo(&hir, &mut env);
+
     Ok(CodegenFunction {
         loc: None,
         memo_slots_used: 0,

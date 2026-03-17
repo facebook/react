@@ -1143,6 +1143,19 @@ pub enum NonLocalBinding {
     },
 }
 
+impl NonLocalBinding {
+    /// Returns the `name` field common to all variants.
+    pub fn name(&self) -> &str {
+        match self {
+            NonLocalBinding::ImportDefault { name, .. }
+            | NonLocalBinding::ImportSpecifier { name, .. }
+            | NonLocalBinding::ImportNamespace { name, .. }
+            | NonLocalBinding::ModuleLocal { name, .. }
+            | NonLocalBinding::Global { name, .. } => name,
+        }
+    }
+}
+
 // =============================================================================
 // Type system (from Types.ts)
 // =============================================================================
