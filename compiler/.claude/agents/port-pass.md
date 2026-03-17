@@ -28,7 +28,7 @@ You will receive:
 ### Phase 2: New Types
 - Add any new types needed by this pass
 - Place them in the appropriate crate (usually the target crate or `react_compiler_hir`)
-- Follow arena patterns: use `IdentifierId`, `ScopeId`, `FunctionId`, `TypeId` (not inline data)
+- IMPORTANT: Follow the data modeling guidelines in docs/rust-port/rust-port-architecture.md for arena types (non-exhaustive types to pay extra attention to: `Identifier`, `HirFunction`, `ReactiveScope`, `Environment` etc)
 
 ### Phase 3: Crate Setup (if new crate needed)
 - Create `Cargo.toml` with appropriate dependencies
@@ -38,22 +38,7 @@ You will receive:
 
 ### Phase 4: Port the Pass
 - Create the Rust file(s) corresponding to the TypeScript source
-- Follow these translation patterns:
-
-| TypeScript | Rust |
-|---|---|
-| `switch (value.kind)` | `match &value` (exhaustive) |
-| `Map<Identifier, T>` | `HashMap<IdentifierId, T>` |
-| `Set<Identifier>` | `HashSet<IdentifierId>` |
-| `Map`/`Set` with iteration order | `IndexMap`/`IndexSet` |
-| `for...of` with `Set.delete()` | `set.retain(\|x\| ...)` |
-| `instr.value = { kind: 'X', ... }` | `std::mem::replace` + reconstruct |
-| `{ ...place, effect: Effect.Read }` | `Place { effect: Effect::Read, ..place.clone() }` |
-| `array.filter(x => ...)` | `vec.retain(\|x\| ...)` |
-| `identifier.mutableRange.end = x` | `env.identifiers[id].mutable_range.end = x` |
-| `!` (non-null assertion) | `.unwrap()` |
-| `CompilerError.invariant()` / `throw` | `return Err(CompilerDiagnostic)` |
-| Builder closures setting outer vars | Return values from closures |
+- Follow the translation guidelines from docs/rust-port/rust-port-architecture.md
 
 Key conventions:
 - **Place is Clone**: `Place` stores `IdentifierId`, making it cheap to clone
