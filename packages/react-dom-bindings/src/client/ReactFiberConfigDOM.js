@@ -183,6 +183,7 @@ export type Props = {
   checked?: boolean,
   defaultChecked?: boolean,
   multiple?: boolean,
+  type?: string,
   src?: string | Blob | MediaSource | MediaStream, // TODO: Response
   srcSet?: string,
   loading?: 'eager' | 'lazy',
@@ -217,7 +218,7 @@ export type Instance = Element;
 export type TextInstance = Text;
 
 type InstanceWithFragmentHandles = Instance & {
-  unstable_reactFragments?: Set<FragmentInstanceType>,
+  reactFragments?: Set<FragmentInstanceType>,
 };
 
 declare class ActivityInterface extends Comment {}
@@ -469,6 +470,44 @@ export function createHoistableInstance(
 }
 
 let didWarnScriptTags = false;
+function isScriptDataBlock(props: Props): boolean {
+  const scriptType = props.type;
+  if (typeof scriptType !== 'string' || scriptType === '') {
+    return false;
+  }
+  const lower = scriptType.toLowerCase();
+  // Special non-MIME keywords recognized by the HTML spec
+  // TODO: May be fine to also not warn about having these types be parsed as "parser-inserted"
+  if (
+    lower === 'module' ||
+    lower === 'importmap' ||
+    lower === 'speculationrules'
+  ) {
+    return false;
+  }
+  // JavaScript MIME types per https://mimesniff.spec.whatwg.org/#javascript-mime-type
+  switch (lower) {
+    case 'application/ecmascript':
+    case 'application/javascript':
+    case 'application/x-ecmascript':
+    case 'application/x-javascript':
+    case 'text/ecmascript':
+    case 'text/javascript':
+    case 'text/javascript1.0':
+    case 'text/javascript1.1':
+    case 'text/javascript1.2':
+    case 'text/javascript1.3':
+    case 'text/javascript1.4':
+    case 'text/javascript1.5':
+    case 'text/jscript':
+    case 'text/livescript':
+    case 'text/x-ecmascript':
+    case 'text/x-javascript':
+      return false;
+  }
+  // Any other non-empty type value means this is a data block
+  return true;
+}
 const warnedUnknownTags: {
   [key: string]: boolean,
 } = {
@@ -526,7 +565,13 @@ export function createInstance(
           // set to true and it does not execute
           const div = ownerDocument.createElement('div');
           if (__DEV__) {
-            if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+            if (
+              enableTrustedTypesIntegration &&
+              !didWarnScriptTags &&
+              // Data block scripts are not executed by UAs anyway so
+              // we don't need to warn: https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type
+              !isScriptDataBlock(props)
+            ) {
               console.error(
                 'Encountered a script tag while rendering React component. ' +
                   'Scripts inside React components are never executed when rendering ' +
@@ -3056,13 +3101,16 @@ function indexOfEventListener(
   listener: EventListener,
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
 ): number {
+  if (eventListeners.length === 0) {
+    return -1;
+  }
+  const normalizedOptions = normalizeListenerOptions(optionsOrUseCapture);
   for (let i = 0; i < eventListeners.length; i++) {
     const item = eventListeners[i];
     if (
       item.type === type &&
       item.listener === listener &&
-      normalizeListenerOptions(item.optionsOrUseCapture) ===
-        normalizeListenerOptions(optionsOrUseCapture)
+      normalizeListenerOptions(item.optionsOrUseCapture) === normalizedOptions
     ) {
       return i;
     }
@@ -3154,18 +3202,34 @@ function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
-  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
-  //   does not contain document.activeElement
+  // Early exit if activeElement is not within the fragment's parent
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const activeElement = parentHostInstance.ownerDocument.activeElement;
+  if (activeElement === null || !parentHostInstance.contains(activeElement)) {
+    return;
+  }
+
   traverseFragmentInstance(
     this._fragmentFiber,
     blurActiveElementWithinFragment,
+    activeElement,
   );
 };
-function blurActiveElementWithinFragment(child: Fiber): boolean {
-  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
+function blurActiveElementWithinFragment(
+  child: Fiber,
+  activeElement: Element,
+): boolean {
+  // Skip text nodes - they can't be focused
+  if (enableFragmentRefsTextNodes && child.tag === HostText) {
+    return false;
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
-  const ownerDocument = instance.ownerDocument;
-  if (instance === ownerDocument.activeElement) {
+  if (instance === activeElement) {
     // $FlowFixMe[prop-missing]
     instance.blur();
     return true;
@@ -3312,46 +3376,45 @@ FragmentInstance.prototype.compareDocumentPosition = function (
     );
   }
 
-  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
-  const lastElement = getInstanceFromHostFiber<Instance>(
+  const firstNode = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastNode = getInstanceFromHostFiber<Instance>(
     children[children.length - 1],
   );
 
   // If the fragment has been portaled into another host instance, we need to
   // our best guess is to use the parent of the child instance, rather than
   // the fiber tree host parent.
-  const firstInstance = getInstanceFromHostFiber<Instance>(children[0]);
   const parentHostInstanceFromDOM = fiberIsPortaledIntoHost(this._fragmentFiber)
-    ? (firstInstance.parentElement: ?Instance)
+    ? (firstNode.parentElement: ?Instance)
     : parentHostInstance;
 
   if (parentHostInstanceFromDOM == null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
 
-  // Check if first and last element are actually in the expected document position
-  // before relying on them as source of truth for other contained elements
-  const firstElementIsContained =
-    parentHostInstanceFromDOM.compareDocumentPosition(firstElement) &
+  // Check if first and last node are actually in the expected document position
+  // before relying on them as source of truth for other contained nodes
+  const firstNodeIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(firstNode) &
     Node.DOCUMENT_POSITION_CONTAINED_BY;
-  const lastElementIsContained =
-    parentHostInstanceFromDOM.compareDocumentPosition(lastElement) &
+  const lastNodeIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(lastNode) &
     Node.DOCUMENT_POSITION_CONTAINED_BY;
-  const firstResult = firstElement.compareDocumentPosition(otherNode);
-  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  const firstResult = firstNode.compareDocumentPosition(otherNode);
+  const lastResult = lastNode.compareDocumentPosition(otherNode);
 
   const otherNodeIsFirstOrLastChild =
-    (firstElementIsContained && firstElement === otherNode) ||
-    (lastElementIsContained && lastElement === otherNode);
+    (firstNodeIsContained && firstNode === otherNode) ||
+    (lastNodeIsContained && lastNode === otherNode);
   const otherNodeIsFirstOrLastChildDisconnected =
-    (!firstElementIsContained && firstElement === otherNode) ||
-    (!lastElementIsContained && lastElement === otherNode);
+    (!firstNodeIsContained && firstNode === otherNode) ||
+    (!lastNodeIsContained && lastNode === otherNode);
   const otherNodeIsWithinFirstOrLastChild =
     firstResult & Node.DOCUMENT_POSITION_CONTAINED_BY ||
     lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
   const otherNodeIsBetweenFirstAndLastChildren =
-    firstElementIsContained &&
-    lastElementIsContained &&
+    firstNodeIsContained &&
+    lastNodeIsContained &&
     firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
     lastResult & Node.DOCUMENT_POSITION_PRECEDING;
 
@@ -3515,10 +3578,10 @@ function addFragmentHandleToInstance(
   fragmentInstance: FragmentInstanceType,
 ): void {
   if (enableFragmentRefsInstanceHandles) {
-    if (instance.unstable_reactFragments == null) {
-      instance.unstable_reactFragments = new Set();
+    if (instance.reactFragments == null) {
+      instance.reactFragments = new Set();
     }
-    instance.unstable_reactFragments.add(fragmentInstance);
+    instance.reactFragments.add(fragmentInstance);
   }
 }
 
@@ -3544,40 +3607,48 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: InstanceWithFragmentHandles,
+  childInstance: InstanceWithFragmentHandles | Text,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  if (childInstance.nodeType === TEXT_NODE) {
+    return;
+  }
+  const instance: InstanceWithFragmentHandles = (childInstance: any);
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childInstance.addEventListener(type, listener, optionsOrUseCapture);
+      instance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childInstance);
+      observer.observe(instance);
     });
   }
   if (enableFragmentRefsInstanceHandles) {
-    addFragmentHandleToInstance(childInstance, fragmentInstance);
+    addFragmentHandleToInstance(instance, fragmentInstance);
   }
 }
 
 export function deleteChildFromFragmentInstance(
-  childInstance: InstanceWithFragmentHandles,
+  childInstance: InstanceWithFragmentHandles | Text,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  if (childInstance.nodeType === TEXT_NODE) {
+    return;
+  }
+  const instance: InstanceWithFragmentHandles = (childInstance: any);
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childInstance.removeEventListener(type, listener, optionsOrUseCapture);
+      instance.removeEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (enableFragmentRefsInstanceHandles) {
-    if (childInstance.unstable_reactFragments != null) {
-      childInstance.unstable_reactFragments.delete(fragmentInstance);
+    if (instance.reactFragments != null) {
+      instance.reactFragments.delete(fragmentInstance);
     }
   }
 }
@@ -4449,18 +4520,30 @@ export function setFocusIfFocusable(
   //
   // We could compare the node to document.activeElement after focus,
   // but this would not handle the case where application code managed focus to automatically blur.
+  const element = ((node: any): HTMLElement);
+
+  // If this element is already the active element, it's focusable and already
+  // focused. Calling .focus() on it would be a no-op (no focus event fires),
+  // so we short-circuit here.
+  if (element.ownerDocument.activeElement === element) {
+    return true;
+  }
+
   let didFocus = false;
   const handleFocus = () => {
     didFocus = true;
   };
 
-  const element = ((node: any): HTMLElement);
   try {
-    element.addEventListener('focus', handleFocus);
+    // Listen on the document in the capture phase so we detect focus even when
+    // it lands on a different element than the one we called .focus() on. This
+    // happens with <label> elements (focus delegates to the associated input)
+    // and shadow hosts with delegatesFocus.
+    element.ownerDocument.addEventListener('focus', handleFocus, true);
     // $FlowFixMe[method-unbinding]
     (element.focus || HTMLElement.prototype.focus).call(element, focusOptions);
   } finally {
-    element.removeEventListener('focus', handleFocus);
+    element.ownerDocument.removeEventListener('focus', handleFocus, true);
   }
 
   return didFocus;

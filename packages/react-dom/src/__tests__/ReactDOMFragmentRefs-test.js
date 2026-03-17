@@ -137,26 +137,18 @@ describe('FragmentRefs', () => {
     const childB = document.querySelector('#childB');
     const childC = document.querySelector('#childC');
 
-    expect(childA.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
-    expect(childB.unstable_reactFragments.has(fragmentRef.current)).toBe(true);
-    expect(childC.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
-    expect(childA.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
-    expect(childB.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
-    expect(childC.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
+    expect(childA.reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childB.reactFragments.has(fragmentRef.current)).toBe(true);
+    expect(childC.reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childA.reactFragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childB.reactFragments.has(fragmentParentRef.current)).toBe(true);
+    expect(childC.reactFragments.has(fragmentParentRef.current)).toBe(true);
 
     await act(() => root.render(<Test show={true} />));
 
     const childD = document.querySelector('#childD');
-    expect(childD.unstable_reactFragments.has(fragmentRef.current)).toBe(false);
-    expect(childD.unstable_reactFragments.has(fragmentParentRef.current)).toBe(
-      true,
-    );
+    expect(childD.reactFragments.has(fragmentRef.current)).toBe(false);
+    expect(childD.reactFragments.has(fragmentParentRef.current)).toBe(true);
   });
 
   describe('focus methods', () => {
@@ -261,6 +253,102 @@ describe('FragmentRefs', () => {
           fragmentRef.current.focus();
         });
         expect(document.activeElement.id).toEqual('child-b');
+        document.activeElement.blur();
+      });
+
+      // @gate enableFragmentRefs
+      it('keeps focus on the first focusable child if already focused', async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <Fragment ref={fragmentRef}>
+              <a id="child-a" href="/">
+                A
+              </a>
+              <a id="child-b" href="/">
+                B
+              </a>
+            </Fragment>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        // Focus the first child manually
+        document.getElementById('child-a').focus();
+        expect(document.activeElement.id).toEqual('child-a');
+
+        // Calling fragment.focus() should keep focus on child-a,
+        // not skip to child-b
+        await act(() => {
+          fragmentRef.current.focus();
+        });
+        expect(document.activeElement.id).toEqual('child-a');
+        document.activeElement.blur();
+      });
+
+      // @gate enableFragmentRefs
+      it('keeps focus on a nested child if already focused', async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <Fragment ref={fragmentRef}>
+              <div>
+                <input id="nested-input" />
+              </div>
+              <a id="sibling-link" href="/">
+                Link
+              </a>
+            </Fragment>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+
+        // Focus the nested input manually
+        document.getElementById('nested-input').focus();
+        expect(document.activeElement.id).toEqual('nested-input');
+
+        // Calling fragment.focus() should keep focus on nested-input
+        await act(() => {
+          fragmentRef.current.focus();
+        });
+        expect(document.activeElement.id).toEqual('nested-input');
+        document.activeElement.blur();
+      });
+
+      // @gate enableFragmentRefs
+      it('focuses the first focusable child in a fieldset', async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
+
+        function Test() {
+          return (
+            <Fragment ref={fragmentRef}>
+              <fieldset>
+                <legend>Shipping</legend>
+                <input id="street" name="street" />
+                <input id="city" name="city" />
+              </fieldset>
+            </Fragment>
+          );
+        }
+
+        await act(() => {
+          root.render(<Test />);
+        });
+        await act(() => {
+          fragmentRef.current.focus();
+        });
+        expect(document.activeElement.id).toEqual('street');
         document.activeElement.blur();
       });
     });
@@ -1104,7 +1192,7 @@ describe('FragmentRefs', () => {
         }
         const observer = new IntersectionObserver(entries => {
           entries.forEach(entry => {
-            const fragmentInstances = entry.target.unstable_reactFragments;
+            const fragmentInstances = entry.target.reactFragments;
             if (fragmentInstances) {
               Array.from(fragmentInstances).forEach(fInstance => {
                 const cbs = targetToCallbackMap.get(fInstance) || [];
