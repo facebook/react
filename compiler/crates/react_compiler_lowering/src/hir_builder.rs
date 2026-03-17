@@ -643,7 +643,21 @@ impl<'a> HirBuilder<'a> {
         let id = self.env.next_identifier_id();
         // Update the name and loc on the allocated identifier
         self.env.identifiers[id.0 as usize].name = Some(IdentifierName::Named(candidate.clone()));
-        if let Some(ref loc) = loc {
+        // Prefer the binding's declaration loc over the reference loc.
+        // This matches TS behavior where Babel's resolveBinding returns the
+        // binding identifier's original loc (the declaration site).
+        let binding = &self.scope_info.bindings[binding_id.0 as usize];
+        let decl_loc = binding.declaration_start.and_then(|start| {
+            self.scope_info.reference_locs.get(&start).map(|locs| {
+                SourceLocation {
+                    start: Position { line: locs[0], column: locs[1] },
+                    end: Position { line: locs[2], column: locs[3] },
+                }
+            })
+        });
+        if let Some(ref dl) = decl_loc {
+            self.env.identifiers[id.0 as usize].loc = Some(dl.clone());
+        } else if let Some(ref loc) = loc {
             self.env.identifiers[id.0 as usize].loc = Some(loc.clone());
         }
 
