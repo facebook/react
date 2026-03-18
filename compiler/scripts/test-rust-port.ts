@@ -591,7 +591,15 @@ for (const pass of PASS_ORDER) {
 
 // --- Summary line ---
 const total = fixtures.length;
-const frontierStr = frontier ?? 'none';
+let frontierStr: string;
+if (frontier != null) {
+  frontierStr = frontier;
+} else if (passArgRaw) {
+  // Explicit pass arg given and it's clean — we can't know the global frontier
+  frontierStr = `${passArg} passes, rerun without a pass name to find frontier`;
+} else {
+  frontierStr = 'none';
+}
 const summaryColor = failed === 0 ? GREEN : RED;
 const summaryLine = `${summaryColor}Results: ${passed} passed, ${failed} failed (${total} total), frontier: ${frontierStr}${RESET}`;
 
