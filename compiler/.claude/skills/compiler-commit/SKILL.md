@@ -40,7 +40,13 @@ Arguments:
    )"
    ```
 
-7. **Do NOT push** unless the user explicitly asks.
+7. **Update orchestrator log**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists and the commit includes Rust changes (`compiler/crates/`):
+   - Run `bash compiler/scripts/test-rust-port.sh <LastPortedPass>` to get current test counts
+   - Update the `# Status` section: set each pass to `complete (N/N)`, `partial (passed/total)`, or `todo` based on the test results
+   - Add a `## YYYYMMDD-HHMMSS` log entry noting the commit and what changed
+   - Stage and amend the commit to include the log update: `git add compiler/docs/rust-port/rust-port-orchestrator-log.md && git commit --amend --no-edit`
+
+8. **Do NOT push** unless the user explicitly asks.
 
 ## Examples
 
