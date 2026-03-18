@@ -1792,8 +1792,8 @@ describe('ReactUpdates', () => {
     expect(subscribers.length).toBe(limit);
   });
 
-  it("does not infinite loop if there's a synchronous render phase update on another component", async () => {
-    if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+  it("warns about potential infinite loop if there's a synchronous render phase update on another component", async () => {
+    if (!__DEV__ || gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
     let setState;
@@ -1809,22 +1809,29 @@ describe('ReactUpdates', () => {
       return null;
     }
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => ReactDOM.flushSync(() => root.render(<App />)));
-    }).rejects.toThrow('Maximum update depth exceeded');
-    assertConsoleErrorDev([
-      'Cannot update a component (`App`) while rendering a different component (`Child`). ' +
-        'To locate the bad setState() call inside `Child`, ' +
-        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
-        '    in App (at **)',
-    ]);
+    const originalConsoleError = console.error;
+    console.error = e => {
+      if (
+        typeof e === 'string' &&
+        e.startsWith(
+          'Maximum update depth exceeded. This could be an infinite loop.',
+        )
+      ) {
+        Scheduler.log('stop');
+      }
+    };
+    try {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<App />);
+      await waitFor(['stop']);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
-  it("does not infinite loop if there's an async render phase update on another component", async () => {
-    if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+  it("warns about potential infinite loop if there's an async render phase update on another component", async () => {
+    if (!__DEV__ || gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
     let setState;
@@ -1840,21 +1847,25 @@ describe('ReactUpdates', () => {
       return null;
     }
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => {
-        React.startTransition(() => root.render(<App />));
-      });
-    }).rejects.toThrow('Maximum update depth exceeded');
-
-    assertConsoleErrorDev([
-      'Cannot update a component (`App`) while rendering a different component (`Child`). ' +
-        'To locate the bad setState() call inside `Child`, ' +
-        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
-        '    in App (at **)',
-    ]);
+    const originalConsoleError = console.error;
+    console.error = e => {
+      if (
+        typeof e === 'string' &&
+        e.startsWith(
+          'Maximum update depth exceeded. This could be an infinite loop.',
+        )
+      ) {
+        Scheduler.log('stop');
+      }
+    };
+    try {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      React.startTransition(() => root.render(<App />));
+      await waitFor(['stop']);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
   // TODO: Replace this branch with @gate pragmas
