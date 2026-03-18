@@ -8,6 +8,7 @@ use react_compiler_hir::environment::Environment;
 use crate::FunctionNode;
 use crate::find_context_identifiers::find_context_identifiers;
 use crate::hir_builder::HirBuilder;
+use crate::identifier_loc_index::{IdentifierLocIndex, build_identifier_loc_index};
 
 // =============================================================================
 // Source location conversion
@@ -2090,7 +2091,7 @@ fn lower_block_statement_inner(
                     **ref_start >= stmt_start && **ref_start < stmt_end
                         && **ref_binding_id == *binding_id
                         && Some(**ref_start) != *decl_start
-                        && !builder.scope_info().jsx_reference_positions.contains(ref_start)
+                        && !builder.is_jsx_identifier(**ref_start)
                 })
                 .map(|(ref_start, _)| *ref_start)
                 .min();
@@ -2158,12 +2159,7 @@ fn lower_block_statement_inner(
             };
 
             // Look up the reference location for the DeclareContext instruction
-            let ref_loc = builder.scope_info().reference_locs.get(&info.first_ref_pos).map(|loc| {
-                SourceLocation {
-                    start: Position { line: loc[0], column: loc[1] },
-                    end: Position { line: loc[2], column: loc[3] },
-                }
-            });
+            let ref_loc = builder.get_identifier_loc(info.first_ref_pos);
             let identifier = builder.resolve_binding(&info.name, info.binding_id);
             let place = Place {
                 effect: Effect::Unknown,
@@ -3399,6 +3395,9 @@ pub fn lower(
     // Pre-compute context identifiers: variables captured across function boundaries
     let context_identifiers = find_context_identifiers(func, scope_info);
 
+    // Build identifier location index from the AST (replaces serialized referenceLocs/jsxReferencePositions)
+    let identifier_locs = build_identifier_loc_index(func, scope_info);
+
     // For top-level functions, context is empty (no captured refs)
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =
         IndexMap::new();
@@ -3419,6 +3418,7 @@ pub fn lower(
         scope_id, // component_scope = function_scope for top-level
         &context_identifiers,
         true, // is_top_level
+        &identifier_locs,
     );
 
     Ok(hir_func)
@@ -4463,6 +4463,7 @@ fn lower_function(
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
     let context_ids = builder.context_identifiers().clone();
+    let ident_locs = builder.identifier_locs();
 
     // Use scope_info_and_env_mut to avoid conflicting borrows
     let (scope_info, env) = builder.scope_info_and_env_mut();
@@ -4482,6 +4483,7 @@ fn lower_function(
         component_scope,
         &context_ids,
         false, // nested function
+        ident_locs,
     );
 
     // Merge the child's used_names and bindings back into the parent builder.
@@ -4538,6 +4540,7 @@ fn lower_function_declaration(
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
     let context_ids = builder.context_identifiers().clone();
+    let ident_locs = builder.identifier_locs();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
     let (hir_func, child_used_names, child_bindings) = lower_inner(
@@ -4556,6 +4559,7 @@ fn lower_function_declaration(
         component_scope,
         &context_ids,
         false, // nested function
+        ident_locs,
     );
 
     builder.merge_used_names(child_used_names);
@@ -4685,6 +4689,7 @@ fn lower_function_for_object_method(
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
     let context_ids = builder.context_identifiers().clone();
+    let ident_locs = builder.identifier_locs();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
     let (hir_func, child_used_names, child_bindings) = lower_inner(
@@ -4703,6 +4708,7 @@ fn lower_function_for_object_method(
         component_scope,
         &context_ids,
         false, // nested function
+        ident_locs,
     );
 
     builder.merge_used_names(child_used_names);
@@ -4730,6 +4736,7 @@ fn lower_inner(
     component_scope: react_compiler_ast::scope::ScopeId,
     context_identifiers: &HashSet<react_compiler_ast::scope::BindingId>,
     is_top_level: bool,
+    identifier_locs: &IdentifierLocIndex,
 ) -> (HirFunction, IndexMap<String, react_compiler_ast::scope::BindingId>, IndexMap<react_compiler_ast::scope::BindingId, IdentifierId>) {
     let mut builder = HirBuilder::new(
         env,
@@ -4741,6 +4748,7 @@ fn lower_inner(
         Some(context_map.clone()),
         None,
         parent_used_names,
+        identifier_locs,
     );
 
     // Build context places from the captured refs

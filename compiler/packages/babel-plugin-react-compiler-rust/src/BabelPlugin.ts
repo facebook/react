@@ -58,8 +58,7 @@ export default function BabelPluginReactCompilerRust(
               // Parse the Babel error message to extract reason and description
               // Format: "reason. description"
               const dotIdx = errMsg.indexOf('. ');
-              const reason =
-                dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
+              const reason = dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
               let description =
                 dotIdx >= 0 ? errMsg.substring(dotIdx + 2) : undefined;
               // Strip trailing period from description (the TS compiler's

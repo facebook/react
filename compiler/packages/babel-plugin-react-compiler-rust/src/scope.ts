@@ -36,8 +36,6 @@ export interface ScopeInfo {
   bindings: Array<BindingData>;
   nodeToScope: Record<number, number>;
   referenceToBinding: Record<number, number>;
-  referenceLocs: Record<number, [number, number, number, number]>;
-  jsxReferencePositions: Array<number>;
   programScope: number;
 }
 
@@ -61,21 +59,46 @@ function mapPatternIdentifiers(
   } else if (path.isArrayPattern()) {
     for (const element of path.get('elements')) {
       if (element.node != null) {
-        mapPatternIdentifiers(element as NodePath, bindingId, bindingName, referenceToBinding);
+        mapPatternIdentifiers(
+          element as NodePath,
+          bindingId,
+          bindingName,
+          referenceToBinding,
+        );
       }
     }
   } else if (path.isObjectPattern()) {
     for (const prop of path.get('properties')) {
       if (prop.isRestElement()) {
-        mapPatternIdentifiers(prop.get('argument'), bindingId, bindingName, referenceToBinding);
+        mapPatternIdentifiers(
+          prop.get('argument'),
+          bindingId,
+          bindingName,
+          referenceToBinding,
+        );
       } else if (prop.isObjectProperty()) {
-        mapPatternIdentifiers(prop.get('value') as NodePath, bindingId, bindingName, referenceToBinding);
+        mapPatternIdentifiers(
+          prop.get('value') as NodePath,
+          bindingId,
+          bindingName,
+          referenceToBinding,
+        );
       }
     }
   } else if (path.isAssignmentPattern()) {
-    mapPatternIdentifiers(path.get('left') as NodePath, bindingId, bindingName, referenceToBinding);
+    mapPatternIdentifiers(
+      path.get('left') as NodePath,
+      bindingId,
+      bindingName,
+      referenceToBinding,
+    );
   } else if (path.isRestElement()) {
-    mapPatternIdentifiers(path.get('argument'), bindingId, bindingName, referenceToBinding);
+    mapPatternIdentifiers(
+      path.get('argument'),
+      bindingId,
+      bindingName,
+      referenceToBinding,
+    );
   } else if (path.isMemberExpression()) {
     // MemberExpression in LVal position (e.g., a.b = ...)
     const obj = path.get('object');
@@ -98,8 +121,6 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const bindings: Array<BindingData> = [];
   const nodeToScope: Record<number, number> = {};
   const referenceToBinding: Record<number, number> = {};
-  const referenceLocs: Record<number, [number, number, number, number]> = {};
-  const jsxReferencePositions: Set<number> = new Set();
 
   // Map from Babel scope uid to our scope id
   const scopeUidToId = new Map<string, number>();
@@ -174,18 +195,6 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         const start = ref.node.start;
         if (start != null) {
           referenceToBinding[start] = bindingId;
-          if (ref.node.loc != null) {
-            referenceLocs[start] = [
-              ref.node.loc.start.line,
-              ref.node.loc.start.column,
-              ref.node.loc.end.line,
-              ref.node.loc.end.column,
-            ];
-          }
-          // Track JSXIdentifier references separately for hoisting analysis
-          if (ref.isJSXIdentifier()) {
-            jsxReferencePositions.add(start);
-          }
         }
       }
 
@@ -193,30 +202,18 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       for (const violation of babelBinding.constantViolations) {
         if (violation.isAssignmentExpression()) {
           const left = violation.get('left');
-          mapPatternIdentifiers(left, bindingId, babelBinding.identifier.name, referenceToBinding);
-          // Also record locs for pattern identifiers
-          if (left.isIdentifier() && left.node.start != null && left.node.loc != null) {
-            referenceLocs[left.node.start] = [
-              left.node.loc.start.line,
-              left.node.loc.start.column,
-              left.node.loc.end.line,
-              left.node.loc.end.column,
-            ];
-          }
+          mapPatternIdentifiers(
+            left,
+            bindingId,
+            babelBinding.identifier.name,
+            referenceToBinding,
+          );
         } else if (violation.isUpdateExpression()) {
           const arg = violation.get('argument');
           if (arg.isIdentifier()) {
             const start = arg.node.start;
             if (start != null) {
               referenceToBinding[start] = bindingId;
-              if (arg.node.loc != null) {
-                referenceLocs[start] = [
-                  arg.node.loc.start.line,
-                  arg.node.loc.start.column,
-                  arg.node.loc.end.line,
-                  arg.node.loc.end.column,
-                ];
-              }
             }
           }
         } else if (
@@ -224,21 +221,18 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
           violation.isForInStatement()
         ) {
           const left = violation.get('left');
-          mapPatternIdentifiers(left, bindingId, babelBinding.identifier.name, referenceToBinding);
+          mapPatternIdentifiers(
+            left,
+            bindingId,
+            babelBinding.identifier.name,
+            referenceToBinding,
+          );
         } else if (violation.isFunctionDeclaration()) {
           // Function redeclarations: `function x() {} function x() {}`
           // Map the function name identifier to the binding
           const funcId = (violation.node as any).id;
           if (funcId?.start != null) {
             referenceToBinding[funcId.start] = bindingId;
-            if (funcId.loc != null) {
-              referenceLocs[funcId.start] = [
-                funcId.loc.start.line,
-                funcId.loc.start.column,
-                funcId.loc.end.line,
-                funcId.loc.end.column,
-              ];
-            }
           }
         }
       }
@@ -247,14 +241,6 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const bindingStart = babelBinding.identifier.start;
       if (bindingStart != null) {
         referenceToBinding[bindingStart] = bindingId;
-        if (babelBinding.identifier.loc != null) {
-          referenceLocs[bindingStart] = [
-            babelBinding.identifier.loc.start.line,
-            babelBinding.identifier.loc.start.column,
-            babelBinding.identifier.loc.end.line,
-            babelBinding.identifier.loc.end.column,
-          ];
-        }
       }
     }
 
@@ -293,8 +279,6 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     bindings,
     nodeToScope,
     referenceToBinding,
-    referenceLocs,
-    jsxReferencePositions: Array.from(jsxReferencePositions),
     programScope: programScopeId,
   };
 }
@@ -371,13 +355,51 @@ function getImportData(binding: {
 
 // Reserved words matching Babel's t.isValidIdentifier check
 const RESERVED_WORDS = new Set([
-  'break', 'case', 'catch', 'continue', 'debugger', 'default', 'do',
-  'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof',
-  'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof',
-  'var', 'void', 'while', 'with', 'class', 'const', 'enum',
-  'export', 'extends', 'import', 'super', 'implements', 'interface',
-  'let', 'package', 'private', 'protected', 'public', 'static',
-  'yield', 'null', 'true', 'false', 'delete',
+  'break',
+  'case',
+  'catch',
+  'continue',
+  'debugger',
+  'default',
+  'do',
+  'else',
+  'finally',
+  'for',
+  'function',
+  'if',
+  'in',
+  'instanceof',
+  'new',
+  'return',
+  'switch',
+  'this',
+  'throw',
+  'try',
+  'typeof',
+  'var',
+  'void',
+  'while',
+  'with',
+  'class',
+  'const',
+  'enum',
+  'export',
+  'extends',
+  'import',
+  'super',
+  'implements',
+  'interface',
+  'let',
+  'package',
+  'private',
+  'protected',
+  'public',
+  'static',
+  'yield',
+  'null',
+  'true',
+  'false',
+  'delete',
 ]);
 
 function isReservedWord(name: string): boolean {

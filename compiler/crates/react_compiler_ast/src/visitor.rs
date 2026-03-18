@@ -64,6 +64,7 @@ pub trait Visitor {
     }
     fn enter_update_expression(&mut self, _node: &UpdateExpression, _scope_stack: &[ScopeId]) {}
     fn enter_identifier(&mut self, _node: &Identifier, _scope_stack: &[ScopeId]) {}
+    fn enter_jsx_identifier(&mut self, _node: &JSXIdentifier, _scope_stack: &[ScopeId]) {}
 }
 
 /// Walks the AST while tracking scope context via `node_to_scope`.
@@ -594,6 +595,7 @@ impl<'a> AstWalker<'a> {
     }
 
     fn walk_jsx_element(&mut self, v: &mut impl Visitor, node: &JSXElement) {
+        self.walk_jsx_element_name(v, &node.opening_element.name);
         for attr in &node.opening_element.attributes {
             match attr {
                 JSXAttributeItem::JSXAttribute(a) => {
@@ -643,5 +645,33 @@ impl<'a> AstWalker<'a> {
             JSXExpressionContainerExpr::Expression(expr) => self.walk_expression(v, expr),
             JSXExpressionContainerExpr::JSXEmptyExpression(_) => {}
         }
+    }
+
+    fn walk_jsx_element_name(&mut self, v: &mut impl Visitor, name: &JSXElementName) {
+        match name {
+            JSXElementName::JSXIdentifier(id) => {
+                v.enter_jsx_identifier(id, &self.scope_stack);
+            }
+            JSXElementName::JSXMemberExpression(expr) => {
+                self.walk_jsx_member_expression(v, expr);
+            }
+            JSXElementName::JSXNamespacedName(_) => {}
+        }
+    }
+
+    fn walk_jsx_member_expression(
+        &mut self,
+        v: &mut impl Visitor,
+        expr: &JSXMemberExpression,
+    ) {
+        match &*expr.object {
+            JSXMemberExprObject::JSXIdentifier(id) => {
+                v.enter_jsx_identifier(id, &self.scope_stack);
+            }
+            JSXMemberExprObject::JSXMemberExpression(inner) => {
+                self.walk_jsx_member_expression(v, inner);
+            }
+        }
+        v.enter_jsx_identifier(&expr.property, &self.scope_stack);
     }
 }

@@ -1,6 +1,7 @@
 pub mod build_hir;
 pub mod find_context_identifiers;
 pub mod hir_builder;
+pub mod identifier_loc_index;
 
 use react_compiler_ast::expressions::{ArrowFunctionExpression, FunctionExpression};
 use react_compiler_ast::statements::FunctionDeclaration;

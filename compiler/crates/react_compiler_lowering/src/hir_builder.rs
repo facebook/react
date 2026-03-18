@@ -1,6 +1,7 @@
 use indexmap::{IndexMap, IndexSet};
 
 use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
+use crate::identifier_loc_index::IdentifierLocIndex;
 use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
@@ -110,6 +111,8 @@ pub struct HirBuilder<'a> {
     /// and any inner function scope, that are referenced from an inner function scope.
     /// These need StoreContext/LoadContext instead of StoreLocal/LoadLocal.
     context_identifiers: std::collections::HashSet<BindingId>,
+    /// Index mapping identifier byte offsets to source locations and JSX status.
+    identifier_locs: &'a IdentifierLocIndex,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -135,6 +138,7 @@ impl<'a> HirBuilder<'a> {
         context: Option<IndexMap<BindingId, Option<SourceLocation>>>,
         entry_block_kind: Option<BlockKind>,
         used_names: Option<IndexMap<String, BindingId>>,
+        identifier_locs: &'a IdentifierLocIndex,
     ) -> Self {
         let entry = env.next_block_id();
         let kind = entry_block_kind.unwrap_or(BlockKind::Block);
@@ -154,6 +158,7 @@ impl<'a> HirBuilder<'a> {
             function_scope,
             component_scope,
             context_identifiers,
+            identifier_locs,
         }
     }
 
@@ -177,6 +182,16 @@ impl<'a> HirBuilder<'a> {
     /// Access the scope info.
     pub fn scope_info(&self) -> &ScopeInfo {
         self.scope_info
+    }
+
+    /// Look up the source location of an identifier by its byte offset.
+    pub fn get_identifier_loc(&self, offset: u32) -> Option<SourceLocation> {
+        self.identifier_locs.get(&offset).map(|entry| entry.loc.clone())
+    }
+
+    /// Check whether a byte offset corresponds to a JSXIdentifier node.
+    pub fn is_jsx_identifier(&self, offset: u32) -> bool {
+        self.identifier_locs.get(&offset).is_some_and(|entry| entry.is_jsx)
     }
 
     /// Access the function scope (the scope of the function being compiled).
@@ -209,6 +224,12 @@ impl<'a> HirBuilder<'a> {
     /// can't prove this through method calls alone.
     pub fn scope_info_and_env_mut(&mut self) -> (&ScopeInfo, &mut Environment) {
         (self.scope_info, self.env)
+    }
+
+    /// Access the identifier location index.
+    /// Returns the 'a reference to avoid conflicts with mutable borrows on self.
+    pub fn identifier_locs(&self) -> &'a IdentifierLocIndex {
+        self.identifier_locs
     }
 
     /// Access the bindings map.
@@ -648,14 +669,7 @@ impl<'a> HirBuilder<'a> {
             if should_record_fbt_error {
                 let error_loc = self.scope_info.bindings[binding_id.0 as usize]
                     .declaration_start
-                    .and_then(|start| {
-                        self.scope_info.reference_locs.get(&start).map(|locs| {
-                            SourceLocation {
-                                start: Position { line: locs[0], column: locs[1] },
-                                end: Position { line: locs[2], column: locs[3] },
-                            }
-                        })
-                    })
+                    .and_then(|start| self.get_identifier_loc(start))
                     .or_else(|| loc.clone());
                 self.env.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
@@ -716,12 +730,7 @@ impl<'a> HirBuilder<'a> {
         // binding identifier's original loc (the declaration site).
         let binding = &self.scope_info.bindings[binding_id.0 as usize];
         let decl_loc = binding.declaration_start.and_then(|start| {
-            self.scope_info.reference_locs.get(&start).map(|locs| {
-                SourceLocation {
-                    start: Position { line: locs[0], column: locs[1] },
-                    end: Position { line: locs[2], column: locs[3] },
-                }
-            })
+            self.get_identifier_loc(start)
         });
         if let Some(ref dl) = decl_loc {
             self.env.identifiers[id.0 as usize].loc = Some(dl.clone());

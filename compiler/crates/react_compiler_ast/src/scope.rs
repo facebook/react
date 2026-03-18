@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Identifies a scope in the scope table. Copy-able, used as an index.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -106,17 +106,6 @@ pub struct ScopeInfo {
     /// Maps an Identifier AST node's start offset to the binding it resolves to.
     /// Only present for identifiers that resolve to a binding (not globals).
     pub reference_to_binding: HashMap<u32, BindingId>,
-
-    /// Maps an identifier reference's start offset to its source location [start_line, start_col, end_line, end_col].
-    /// Used for hoisting to set the correct location on DeclareContext instructions.
-    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
-    pub reference_locs: HashMap<u32, [u32; 4]>,
-
-    /// Set of reference positions that are JSXIdentifier references (not regular Identifier).
-    /// Used to exclude JSX tag references from hoisting analysis, matching TS behavior where
-    /// the hoisting traversal only visits Identifier nodes, not JSXIdentifier nodes.
-    #[serde(default, skip_serializing_if = "HashSet::is_empty")]
-    pub jsx_reference_positions: HashSet<u32>,
 
     /// The program-level (module) scope. Always scopes[0].
     pub program_scope: ScopeId,
