@@ -952,15 +952,23 @@ impl IdentifierName {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum Effect {
+    #[serde(rename = "<unknown>")]
     Unknown,
+    #[serde(rename = "freeze")]
     Freeze,
+    #[serde(rename = "read")]
     Read,
+    #[serde(rename = "capture")]
     Capture,
+    #[serde(rename = "mutate-iterator?")]
     ConditionallyMutateIterator,
+    #[serde(rename = "mutate?")]
     ConditionallyMutate,
+    #[serde(rename = "mutate")]
     Mutate,
+    #[serde(rename = "store")]
     Store,
 }
 

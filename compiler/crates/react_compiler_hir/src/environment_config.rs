@@ -9,16 +9,43 @@
 
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::type_config::ValueKind;
 use crate::Effect;
 
 /// Custom hook configuration, ported from TS `HookSchema`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct HookConfig {
     pub effect_kind: Effect,
     pub value_kind: ValueKind,
+    #[serde(default)]
     pub no_alias: bool,
+    #[serde(default)]
     pub transitive_mixed_data: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ExhaustiveEffectDepsMode {
+    #[serde(rename = "off")]
+    Off,
+    #[serde(rename = "all")]
+    All,
+    #[serde(rename = "missing-only")]
+    MissingOnly,
+    #[serde(rename = "extra-only")]
+    ExtraOnly,
+}
+
+impl Default for ExhaustiveEffectDepsMode {
+    fn default() -> Self {
+        Self::Off
+    }
+}
+
+fn default_true() -> bool {
+    true
 }
 
 /// Compiler environment configuration. Contains feature flags and settings.
@@ -26,9 +53,11 @@ pub struct HookConfig {
 /// Fields that would require passing JS functions across the JS/Rust boundary
 /// are omitted with TODO comments. The Rust port uses hardcoded defaults for
 /// these (e.g., `defaultModuleTypeProvider`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EnvironmentConfig {
     /// Custom hook type definitions, keyed by hook name.
+    #[serde(default)]
     pub custom_hooks: HashMap<String, HookConfig>,
 
     // TODO: moduleTypeProvider — requires JS function callback.
@@ -38,56 +67,84 @@ pub struct EnvironmentConfig {
 
     // TODO: enableResetCacheOnSourceFileChanges — only used in codegen.
 
+    #[serde(default = "default_true")]
     pub enable_preserve_existing_memoization_guarantees: bool,
+    #[serde(default = "default_true")]
     pub validate_preserve_existing_memoization_guarantees: bool,
+    #[serde(default = "default_true")]
     pub validate_exhaustive_memoization_dependencies: bool,
+    #[serde(default)]
     pub validate_exhaustive_effect_dependencies: ExhaustiveEffectDepsMode,
 
     // TODO: flowTypeProvider — requires JS function callback.
 
+    #[serde(default = "default_true")]
     pub enable_optional_dependencies: bool,
+    #[serde(default)]
     pub enable_name_anonymous_functions: bool,
+    #[serde(default = "default_true")]
     pub validate_hooks_usage: bool,
+    #[serde(default = "default_true")]
     pub validate_ref_access_during_render: bool,
+    #[serde(default = "default_true")]
     pub validate_no_set_state_in_render: bool,
+    #[serde(default)]
     pub enable_use_keyed_state: bool,
+    #[serde(default)]
     pub validate_no_set_state_in_effects: bool,
+    #[serde(default)]
     pub validate_no_derived_computations_in_effects: bool,
+    #[serde(default)]
+    #[serde(alias = "validateNoDerivedComputationsInEffects_exp")]
     pub validate_no_derived_computations_in_effects_exp: bool,
+    #[serde(default)]
     pub validate_no_jsx_in_try_statements: bool,
+    #[serde(default)]
     pub validate_static_components: bool,
+    #[serde(default)]
     pub validate_no_capitalized_calls: Option<Vec<String>>,
+    #[serde(default)]
+    #[serde(alias = "restrictedImports")]
     pub validate_blocklisted_imports: Option<Vec<String>>,
+    #[serde(default)]
     pub validate_source_locations: bool,
+    #[serde(default)]
     pub validate_no_impure_functions_in_render: bool,
+    #[serde(default)]
     pub validate_no_freezing_known_mutable_functions: bool,
+    #[serde(default = "default_true")]
     pub enable_assume_hooks_follow_rules_of_react: bool,
+    #[serde(default = "default_true")]
     pub enable_transitively_freeze_function_expressions: bool,
 
     // TODO: enableEmitHookGuards — ExternalFunction, requires codegen.
     // TODO: enableEmitInstrumentForget — InstrumentationSchema, requires codegen.
 
+    #[serde(default = "default_true")]
     pub enable_function_outlining: bool,
+    #[serde(default)]
     pub enable_jsx_outlining: bool,
+    #[serde(default)]
     pub assert_valid_mutable_ranges: bool,
+    #[serde(default)]
+    #[serde(alias = "throwUnknownException__testonly")]
     pub throw_unknown_exception_testonly: bool,
+    #[serde(default)]
     pub enable_custom_type_definition_for_reanimated: bool,
+    #[serde(default = "default_true")]
     pub enable_treat_ref_like_identifiers_as_refs: bool,
+    #[serde(default)]
     pub enable_treat_set_identifiers_as_state_setters: bool,
+    #[serde(default = "default_true")]
     pub validate_no_void_use_memo: bool,
+    #[serde(default = "default_true")]
     pub enable_allow_set_state_from_refs_in_effects: bool,
+    #[serde(default)]
     pub enable_verbose_no_set_state_in_effect: bool,
 
     // 🌲
+    #[serde(default)]
     pub enable_forest: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ExhaustiveEffectDepsMode {
-    Off,
-    All,
-    MissingOnly,
-    ExtraOnly,
 }
 
 impl Default for EnvironmentConfig {

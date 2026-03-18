@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 react_compiler_diagnostics = { path = "../react_compiler_diagnostics" }
 indexmap = "2"
+serde = { version = "1", features = ["derive"] }

@@ -1,3 +1,4 @@
+use react_compiler_hir::environment_config::EnvironmentConfig;
 use serde::{Deserialize, Serialize};
 
 /// Target configuration for the compiler
@@ -64,7 +65,7 @@ pub struct PluginOptions {
     #[serde(default)]
     pub custom_opt_out_directives: Option<Vec<String>>,
     #[serde(default)]
-    pub environment: serde_json::Value,
+    pub environment: EnvironmentConfig,
 }
 
 fn default_compilation_mode() -> String {

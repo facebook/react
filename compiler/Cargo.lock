@@ -207,6 +207,7 @@ version = "0.1.0"
 dependencies = [
  "indexmap",
  "react_compiler_diagnostics",
+ "serde",
 ]
 
 [[package]]

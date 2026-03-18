@@ -27,6 +27,7 @@ use react_compiler_diagnostics::{
     CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::ReactFunctionType;
+use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
@@ -1085,12 +1086,14 @@ fn try_compile_function(
     }
 
     // Run the compilation pipeline
+    let env_config = context.opts.environment.clone();
     pipeline::compile_fn(
         &source.fn_node,
         source.fn_name.as_deref(),
         scope_info,
         source.fn_type,
         output_mode,
+        &env_config,
         context,
     )
 }
@@ -1724,23 +1727,11 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
     }
 
     // Validate restricted imports from the environment config
-    let restricted_imports: Option<Vec<String>> = options
-        .environment
-        .get("validateBlocklistedImports")
-        .or_else(|| options.environment.get("restrictedImports"))
-        .and_then(|v| serde_json::from_value(v.clone()).ok());
+    let restricted_imports = options.environment.validate_blocklisted_imports.clone();
 
     // Determine if we should check for eslint suppressions
-    let validate_exhaustive = options
-        .environment
-        .get("validateExhaustiveMemoizationDependencies")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-    let validate_hooks = options
-        .environment
-        .get("validateHooksUsage")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let validate_exhaustive = options.environment.validate_exhaustive_memoization_dependencies;
+    let validate_hooks = options.environment.validate_hooks_usage;
 
     let eslint_rules: Option<Vec<String>> = if validate_exhaustive && validate_hooks {
         // Don't check for ESLint suppressions if both validations are enabled
@@ -1970,7 +1961,7 @@ mod tests {
             flow_suppressions: true,
             ignore_use_no_forget: false,
             custom_opt_out_directives: None,
-            environment: serde_json::Value::Object(serde_json::Map::new()),
+            environment: EnvironmentConfig::default(),
         };
         assert!(!should_skip_compilation(&program, &options));
     }

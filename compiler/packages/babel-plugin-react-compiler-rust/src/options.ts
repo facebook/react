@@ -69,6 +69,31 @@ function pipelineUsesReanimatedPlugin(
   return false;
 }
 
+/**
+ * Prepare the environment config for JSON serialization to Rust.
+ * Converts Map instances to plain objects and strips non-serializable fields.
+ */
+function serializeEnvironment(
+  rawEnv: Record<string, unknown>,
+): Record<string, unknown> {
+  const environment: Record<string, unknown> = {...rawEnv};
+
+  // Convert customHooks Map to plain object for JSON serialization
+  if (rawEnv.customHooks instanceof Map) {
+    const hooks: Record<string, unknown> = {};
+    for (const [key, value] of rawEnv.customHooks) {
+      hooks[key] = value;
+    }
+    environment.customHooks = hooks;
+  }
+
+  // Remove non-serializable fields (JS functions)
+  delete environment.moduleTypeProvider;
+  delete environment.flowTypeProvider;
+
+  return environment;
+}
+
 export function resolveOptions(
   rawOpts: PluginOptions,
   file: BabelCore.BabelFile,
@@ -115,6 +140,8 @@ export function resolveOptions(
     flowSuppressions: rawOpts.flowSuppressions ?? true,
     ignoreUseNoForget: rawOpts.ignoreUseNoForget ?? false,
     customOptOutDirectives: rawOpts.customOptOutDirectives ?? null,
-    environment: (rawOpts.environment as Record<string, unknown>) ?? {},
+    environment: serializeEnvironment(
+      (rawOpts.environment as Record<string, unknown>) ?? {},
+    ),
   };
 }

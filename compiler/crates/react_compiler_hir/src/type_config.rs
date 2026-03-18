@@ -11,11 +11,16 @@
 use crate::Effect;
 
 /// Mirrors TS `ValueKind` enum for use in config.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ValueKind {
     Mutable,
     Frozen,
     Primitive,
+    #[serde(rename = "maybefrozen")]
+    MaybeFrozen,
+    Global,
+    Context,
 }
 
 /// Mirrors TS `ValueReason` enum for use in config.

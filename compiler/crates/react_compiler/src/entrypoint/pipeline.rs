@@ -12,6 +12,7 @@ use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_diagnostics::CompilerError;
 use react_compiler_hir::ReactFunctionType;
 use react_compiler_hir::environment::{Environment, OutputMode};
+use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 
 use super::compile_result::{CodegenFunction, DebugLogEntry};
@@ -30,9 +31,10 @@ pub fn compile_fn(
     scope_info: &ScopeInfo,
     fn_type: ReactFunctionType,
     mode: CompilerOutputMode,
+    env_config: &EnvironmentConfig,
     context: &mut ProgramContext,
 ) -> Result<CodegenFunction, CompilerError> {
-    let mut env = Environment::new();
+    let mut env = Environment::with_config(env_config.clone());
     env.fn_type = fn_type;
     env.output_mode = match mode {
         CompilerOutputMode::Ssr => OutputMode::Ssr,
