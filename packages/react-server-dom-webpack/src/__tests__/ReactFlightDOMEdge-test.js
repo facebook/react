@@ -1412,6 +1412,68 @@ describe('ReactFlightDOMEdge', () => {
     }
   });
 
+  it('does not leak packed child continuations into client component array props', async () => {
+    const ClientComp = clientExports(function ClientComp({items}) {
+      const flatItems =
+        items.length === 500 && items.every(item => !Array.isArray(item));
+
+      return (
+        <section
+          data-length={items.length}
+          data-flat={flatItems ? 'yes' : 'no'}>
+          {items[0]}
+          {items[items.length - 1]}
+        </section>
+      );
+    });
+
+    function ServerComp() {
+      const flatItems = Array.from({length: 500}, (_, i) => (
+        <div key={i}>{'Item ' + i}</div>
+      ));
+      const nestedItems = Array.from({length: 500}, (_, i) => [
+        <div key={i}>{'Group ' + i}</div>,
+      ]);
+      return (
+        <>
+          <ClientComp items={flatItems} />
+          <ClientComp items={nestedItems} />
+        </>
+      );
+    }
+
+    const clientMetadata = webpackMap[ClientComp.$$id];
+    const translationMap = {
+      [clientMetadata.id]: {
+        '*': clientMetadata,
+      },
+    };
+
+    const stream = await serverAct(() =>
+      passThrough(
+        ReactServerDOMServer.renderToReadableStream(<ServerComp />, webpackMap),
+      ),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: translationMap,
+        moduleLoading: webpackModuleLoading,
+      },
+    });
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<ClientRoot />),
+    );
+
+    expect(await readResult(ssrStream)).toBe(
+      '<section data-length="500" data-flat="yes"><div>Item 0</div><div>Item 499</div></section><section data-length="500" data-flat="no"><div>Group 0</div><div>Group 499</div></section>',
+    );
+  });
+
   it('regression: should not leak serialized size', async () => {
     const MAX_ROW_SIZE = 3200;
     // This test case is a bit convoluted and may no longer trigger the original bug.

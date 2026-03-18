@@ -3540,7 +3540,7 @@ function getReferenceInParent(
     isArray(parent)
   ) {
     parentReference = serializeByValueID(task.id);
-    propertyName = '' + (+parentPropertyName - task.continuationIndex);
+    propertyName = (+parentPropertyName - task.continuationIndex).toString(10);
   } else {
     parentReference = request.writtenObjects.get(parent);
     if (parentReference === undefined) {
