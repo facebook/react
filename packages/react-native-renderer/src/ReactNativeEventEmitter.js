@@ -131,10 +131,12 @@ function extractPluginEvents(
   nativeEventTarget: null | EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null = null;
-  const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
+  const legacyPlugins = ((plugins: any): Array<
+    LegacyPluginModule<AnyNativeEvent>,
+  >);
   for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    const possiblePlugin: LegacyPluginModule<AnyNativeEvent> = legacyPlugins[i];
+    const possiblePlugin = legacyPlugins[i];
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,

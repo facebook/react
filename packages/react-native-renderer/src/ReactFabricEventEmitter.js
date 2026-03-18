@@ -28,10 +28,22 @@ import accumulateInto from './legacy-events/accumulateInto';
 import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
-import {RawEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {
+  RawEventEmitter,
+  ReactNativeViewConfigRegistry,
+  dispatchTrustedEvent,
+  setEventInitTimeStamp,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {getPublicInstance} from './ReactFiberConfigFabric';
+import LegacySyntheticEvent from './LegacySyntheticEvent';
+import {topLevelTypeToEventName} from './ReactNativeEventTypeMapping';
+import {processResponderEvent} from './ReactNativeResponder';
+import {enableNativeEventTargetEventDispatching} from './ReactNativeFeatureFlags';
 
 export {getListener, registrationNameModules as registrationNames};
+
+const {customBubblingEventTypes, customDirectEventTypes} =
+  ReactNativeViewConfigRegistry;
 
 /**
  * Allows registered plugins an opportunity to extract events from top-level
@@ -47,10 +59,12 @@ function extractPluginEvents(
   nativeEventTarget: null | EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null = null;
-  const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
+  const legacyPlugins = ((plugins: any): Array<
+    LegacyPluginModule<AnyNativeEvent>,
+  >);
   for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    const possiblePlugin: LegacyPluginModule<AnyNativeEvent> = legacyPlugins[i];
+    const possiblePlugin = legacyPlugins[i];
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
@@ -84,8 +98,12 @@ function runExtractedPluginEventsInBatch(
 export function dispatchEvent(
   target: null | Object,
   topLevelType: RNTopLevelEventType,
-  nativeEvent: AnyNativeEvent,
+  nativeEventParam: mixed,
 ) {
+  const nativeEvent: AnyNativeEvent =
+    nativeEventParam != null && typeof nativeEventParam === 'object'
+      ? (nativeEventParam: any)
+      : {};
   const targetFiber = (target: null | Fiber);
 
   let eventTarget = null;
@@ -121,18 +139,52 @@ export function dispatchEvent(
     // Note that extracted events are *not* emitted,
     // only events that have a 1:1 mapping with a native event, at least for now.
     const event = {eventName: topLevelType, nativeEvent};
-    // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit(topLevelType, event);
-    // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit('*', event);
 
-    // Heritage plugin event system
-    runExtractedPluginEventsInBatch(
-      topLevelType,
-      targetFiber,
-      nativeEvent,
-      eventTarget,
-    );
+    if (enableNativeEventTargetEventDispatching()) {
+      // Process responder events before normal event dispatch.
+      // This handles touch negotiation (onStartShouldSetResponder, etc.)
+      processResponderEvent(topLevelType, targetFiber, nativeEvent);
+
+      // New EventTarget-based dispatch path
+      if (eventTarget != null) {
+        const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
+        const directDispatchConfig = customDirectEventTypes[topLevelType];
+        const bubbles = bubbleDispatchConfig != null;
+
+        // Skip events that are not registered in the view config
+        if (bubbles || directDispatchConfig != null) {
+          const eventName = topLevelTypeToEventName(topLevelType);
+          const options = {
+            bubbles,
+            cancelable: true,
+          };
+          // Preserve the native event timestamp for backwards compatibility.
+          // The legacy SyntheticEvent system used nativeEvent.timeStamp || nativeEvent.timestamp.
+          const nativeTimestamp =
+            nativeEvent.timeStamp ?? nativeEvent.timestamp;
+          if (typeof nativeTimestamp === 'number') {
+            setEventInitTimeStamp(options, nativeTimestamp);
+          }
+          const syntheticEvent = new LegacySyntheticEvent(
+            eventName,
+            options,
+            nativeEvent,
+          );
+          // $FlowFixMe[incompatible-call]
+          dispatchTrustedEvent(eventTarget, syntheticEvent);
+        }
+      }
+    } else {
+      // Heritage plugin event system
+      runExtractedPluginEventsInBatch(
+        topLevelType,
+        targetFiber,
+        nativeEvent,
+        eventTarget,
+      );
+    }
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's
   // where it would do it.
