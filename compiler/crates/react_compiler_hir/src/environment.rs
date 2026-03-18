@@ -567,6 +567,14 @@ impl Environment {
     pub fn globals(&self) -> &GlobalRegistry {
         &self.globals
     }
+
+    /// Whether validations are enabled for this compilation.
+    /// Ported from TS `get enableValidations()` in Environment.ts.
+    pub fn enable_validations(&self) -> bool {
+        match self.output_mode {
+            OutputMode::Client | OutputMode::Lint | OutputMode::Ssr => true,
+        }
+    }
 }
 
 impl Default for Environment {
