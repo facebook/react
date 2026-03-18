@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f37b15f132708b7550c3cda07649e98c>>
+ * @generated SignedSource<<c95b3e1b287ca8a20bf895742f22585e>>
  */
 
 "use strict";
@@ -15699,7 +15699,7 @@ __DEV__ &&
               ? nestedUpdateCount++
               : ((nestedUpdateCount = 0),
                 (rootWithNestedUpdates = startViewTransitionStartTime)))
-          : (nestedUpdateCount = 0);
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = null));
         rootDidHavePassiveEffects || finalizeRender(endTime, commitEndTime);
         flushSyncWorkAcrossRoots_impl(0, !1);
         markCommitStopped();
@@ -20217,10 +20217,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-3f0b9e61-20260317",
+        version: "19.3.0-native-fb-b4546cd0-20260318",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-3f0b9e61-20260317"
+        reconcilerVersion: "19.3.0-native-fb-b4546cd0-20260318"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

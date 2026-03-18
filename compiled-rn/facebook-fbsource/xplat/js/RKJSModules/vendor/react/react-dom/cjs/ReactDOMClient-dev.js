@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<89d2d949cdc774ee81c8164aba9f3d89>>
+ * @generated SignedSource<<f8abf77786bc5f12b698f8860969bfd1>>
  */
 
 /*
@@ -19623,7 +19623,7 @@ __DEV__ &&
               ? nestedUpdateCount++
               : ((nestedUpdateCount = 0),
                 (rootWithNestedUpdates = startViewTransitionStartTime)))
-          : (nestedUpdateCount = 0);
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = null));
         rootDidHavePassiveEffects || finalizeRender(endTime, commitEndTime);
         if (hasScheduledReplayAttempt) {
           hasScheduledReplayAttempt = !1;
@@ -30343,11 +30343,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-3f0b9e61-20260317" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-b4546cd0-20260318" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-3f0b9e61-20260317\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-b4546cd0-20260318\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -30384,10 +30384,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-3f0b9e61-20260317",
+          version: "19.3.0-native-fb-b4546cd0-20260318",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-3f0b9e61-20260317"
+          reconcilerVersion: "19.3.0-native-fb-b4546cd0-20260318"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -30537,5 +30537,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-3f0b9e61-20260317";
+    exports.version = "19.3.0-native-fb-b4546cd0-20260318";
   })();

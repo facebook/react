@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a0e3a36908716073ae1b0bcdef056ce5>>
+ * @generated SignedSource<<f0f7a9cda79c2d637c436eef79e3ff02>>
  */
 
 /*
@@ -14718,7 +14718,7 @@ function flushSpawnedWork() {
           ? nestedUpdateCount++
           : ((nestedUpdateCount = 0),
             (rootWithNestedUpdates = startViewTransitionStartTime)))
-      : (nestedUpdateCount = 0);
+      : ((nestedUpdateCount = 0), (rootWithNestedUpdates = null));
     rootDidHavePassiveEffects ||
       finalizeRender(abortedViewTransition, commitEndTime);
     if (hasScheduledReplayAttempt) {
@@ -19802,14 +19802,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2397 = React.version;
 if (
-  "19.3.0-native-fb-3f0b9e61-20260317" !==
+  "19.3.0-native-fb-b4546cd0-20260318" !==
   isomorphicReactPackageVersion$jscomp$inline_2397
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2397,
-      "19.3.0-native-fb-3f0b9e61-20260317"
+      "19.3.0-native-fb-b4546cd0-20260318"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -19831,10 +19831,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2404 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-3f0b9e61-20260317",
+  version: "19.3.0-native-fb-b4546cd0-20260318",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-3f0b9e61-20260317",
+  reconcilerVersion: "19.3.0-native-fb-b4546cd0-20260318",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$338 = 0;
@@ -20110,7 +20110,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-native-fb-3f0b9e61-20260317";
+exports.version = "19.3.0-native-fb-b4546cd0-20260318";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

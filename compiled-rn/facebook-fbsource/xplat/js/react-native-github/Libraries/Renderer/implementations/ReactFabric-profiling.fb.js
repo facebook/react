@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a2384c769a867a0c6921637804343213>>
+ * @generated SignedSource<<4f15fb43e3481543cc11c1111a921351>>
  */
 
 "use strict";
@@ -12389,7 +12389,7 @@ function flushSpawnedWork() {
           ? nestedUpdateCount++
           : ((nestedUpdateCount = 0),
             (rootWithNestedUpdates = startViewTransitionStartTime)))
-      : (nestedUpdateCount = 0);
+      : ((nestedUpdateCount = 0), (rootWithNestedUpdates = null));
     rootDidHavePassiveEffects ||
       finalizeRender(abortedViewTransition, commitEndTime);
     flushSyncWorkAcrossRoots_impl(0, !1);
@@ -13416,10 +13416,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1641 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-3f0b9e61-20260317",
+    version: "19.3.0-native-fb-b4546cd0-20260318",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-3f0b9e61-20260317"
+    reconcilerVersion: "19.3.0-native-fb-b4546cd0-20260318"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1641.rendererConfig = extraDevToolsConfig);
