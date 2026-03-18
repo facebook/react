@@ -140,61 +140,7 @@ function applyViewTransitionToHostInstancesRecursive(
   collectMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
-  if (supportsMutation) {
-    let inViewport = false;
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        if (collectMeasurements !== null) {
-          const measurement = measureInstance(instance);
-          collectMeasurements.push(measurement);
-          if (wasInstanceInViewport(measurement)) {
-            inViewport = true;
-          }
-        } else if (!inViewport) {
-          if (wasInstanceInViewport(measureInstance(instance))) {
-            inViewport = true;
-          }
-        }
-        shouldStartViewTransition = true;
-        applyViewTransitionName(
-          instance,
-          viewTransitionHostInstanceIdx === 0
-            ? name
-            : // If we have multiple Host Instances below, we add a suffix to the name to give
-              // each one a unique name.
-              name + '_' + viewTransitionHostInstanceIdx,
-          className,
-        );
-        viewTransitionHostInstanceIdx++;
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        // Skip any nested view transitions for updates since in that case the
-        // inner most one is the one that handles the update.
-      } else {
-        if (
-          applyViewTransitionToHostInstancesRecursive(
-            child.child,
-            name,
-            className,
-            collectMeasurements,
-            stopAtNestedViewTransitions,
-          )
-        ) {
-          inViewport = true;
-        }
-      }
-      child = child.sibling;
-    }
-    return inViewport;
-  } else if (enableViewTransitionForPersistenceMode) {
+  if (!supportsMutation && enableViewTransitionForPersistenceMode) {
     while (child !== null) {
       if (child.tag === HostComponent) {
         const instance: Instance = child.stateNode;
@@ -232,7 +178,59 @@ function applyViewTransitionToHostInstancesRecursive(
     }
     return true;
   }
-  return false;
+  let inViewport = false;
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      const instance: Instance = child.stateNode;
+      if (collectMeasurements !== null) {
+        const measurement = measureInstance(instance);
+        collectMeasurements.push(measurement);
+        if (wasInstanceInViewport(measurement)) {
+          inViewport = true;
+        }
+      } else if (!inViewport) {
+        if (wasInstanceInViewport(measureInstance(instance))) {
+          inViewport = true;
+        }
+      }
+      shouldStartViewTransition = true;
+      applyViewTransitionName(
+        instance,
+        viewTransitionHostInstanceIdx === 0
+          ? name
+          : // If we have multiple Host Instances below, we add a suffix to the name to give
+            // each one a unique name.
+            name + '_' + viewTransitionHostInstanceIdx,
+        className,
+      );
+      viewTransitionHostInstanceIdx++;
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip any hidden subtrees. They were or are effectively not there.
+    } else if (
+      child.tag === ViewTransitionComponent &&
+      stopAtNestedViewTransitions
+    ) {
+      // Skip any nested view transitions for updates since in that case the
+      // inner most one is the one that handles the update.
+    } else {
+      if (
+        applyViewTransitionToHostInstancesRecursive(
+          child.child,
+          name,
+          className,
+          collectMeasurements,
+          stopAtNestedViewTransitions,
+        )
+      ) {
+        inViewport = true;
+      }
+    }
+    child = child.sibling;
+  }
+  return inViewport;
 }
 
 function restoreViewTransitionOnHostInstances(
