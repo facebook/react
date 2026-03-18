@@ -95,6 +95,10 @@ When a pass needs to both iterate over data and mutate the HIR, use two-phase co
 
 Preserve full error details: reason, description, location, suggestions, category. 
 
+## JS→Rust Boundary
+
+The JS side serializes the Babel AST and Babel's scope information (scope tree, bindings, reference-to-binding map) to Rust. Keep this serialization thin: only send the core data structures that Babel already computed during parsing. Any derived analysis — identifier source locations, JSX classification, captured variables, etc. — should be computed on the Rust side by walking the AST. See `scope.ts`.
+
 ## Pipeline and Pass Structure
 
 ```rust

@@ -113,8 +113,18 @@ function mapPatternIdentifiers(
 
 /**
  * Extract scope information from a Babel Program path.
- * Converts Babel's scope tree into the flat ScopeInfo format
- * expected by the Rust compiler.
+ *
+ * The goal here is to serialize only the core scope data structure — scopes,
+ * bindings, and the mappings that link AST positions to them — and leave all
+ * interesting analysis to the Rust side. Babel already computes scope/binding
+ * resolution during parsing, so we extract that work rather than re-implement
+ * it. But any *derived* information (source locations of identifiers, whether
+ * a reference is a JSXIdentifier, which variables are captured across function
+ * boundaries, etc.) is intentionally omitted: the Rust compiler can recover it
+ * by walking the parsed AST it already has.
+ *
+ * Keeping this serialization layer thin makes the JS/Rust boundary easier to
+ * reason about and avoids shipping redundant data across FFI.
  */
 export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const scopes: Array<ScopeData> = [];
