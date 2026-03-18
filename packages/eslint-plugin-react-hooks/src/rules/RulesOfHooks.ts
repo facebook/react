@@ -6,7 +6,7 @@
  */
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-import type {Rule, Scope} from 'eslint';
+import type { Rule, Scope } from 'eslint';
 import type {
   CallExpression,
   CatchClause,
@@ -20,7 +20,7 @@ import type {
 
 // @ts-expect-error untyped module
 import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
-import {getAdditionalEffectHooksFromSettings} from '../shared/Utils';
+import { getAdditionalEffectHooksFromSettings } from '../shared/Utils';
 
 /**
  * Catch all identifiers that begin with "use" followed by an uppercase Latin
@@ -191,6 +191,34 @@ function isUseIdentifier(node: Node): boolean {
   return isReactFunction(node, 'use');
 }
 
+function isReactComponentClass(node: Node): boolean {
+  // Walk up the tree to find the class declaration
+  let current: Node | undefined = node;
+  while (current) {
+    if (current.type === 'ClassDeclaration' || current.type === 'ClassExpression') {
+      const classNode = current as any;
+      if (classNode.superClass) {
+        const superClass = classNode.superClass;
+        // Check for: extends Component, extends React.Component, extends PureComponent, extends React.PureComponent
+        if (superClass.type === 'Identifier') {
+          return superClass.name === 'Component' || superClass.name === 'PureComponent';
+        } else if (superClass.type === 'MemberExpression') {
+          return (
+            superClass.object.type === 'Identifier' &&
+            superClass.object.name === 'React' &&
+            superClass.property.type === 'Identifier' &&
+            (superClass.property.name === 'Component' || superClass.property.name === 'PureComponent')
+          );
+        }
+      }
+      return false;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+
 const rule = {
   meta: {
     type: 'problem',
@@ -255,22 +283,22 @@ const rule = {
     const getSourceCode =
       typeof context.getSourceCode === 'function'
         ? () => {
-            return context.getSourceCode();
-          }
+          return context.getSourceCode();
+        }
         : () => {
-            return context.sourceCode;
-          };
+          return context.sourceCode;
+        };
     /**
      * SourceCode#getScope that also works down to ESLint 3.0.0
      */
     const getScope =
       typeof context.getScope === 'function'
         ? (): Scope.Scope => {
-            return context.getScope();
-          }
+          return context.getScope();
+        }
         : (node: Node): Scope.Scope => {
-            return getSourceCode().getScope(node);
-          };
+          return getSourceCode().getScope(node);
+        };
 
     function hasFlowSuppression(node: Node, suppression: string) {
       const sourceCode = getSourceCode();
@@ -339,7 +367,7 @@ const rule = {
           segment: Rule.CodePathSegment,
           pathHistory?: Set<string>,
         ): bigint {
-          const {cache} = countPathsFromStart;
+          const { cache } = countPathsFromStart;
           let paths = cache.get(segment.id);
           const pathList = new Set<string>(pathHistory);
 
@@ -413,7 +441,7 @@ const rule = {
           segment: Rule.CodePathSegment,
           pathHistory?: Set<string>,
         ): bigint {
-          const {cache} = countPathsToEnd;
+          const { cache } = countPathsToEnd;
           let paths = cache.get(segment.id);
           const pathList = new Set(pathHistory);
 
@@ -479,7 +507,7 @@ const rule = {
         function shortestPathLengthToStart(
           segment: Rule.CodePathSegment,
         ): number {
-          const {cache} = shortestPathLengthToStart;
+          const { cache } = shortestPathLengthToStart;
           let length = cache.get(segment.id);
 
           // If `length` is null then we found a cycle! Return infinity since
@@ -533,7 +561,7 @@ const rule = {
           isInsideComponentOrHook(codePathNode);
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
-            isHook(codePathFunctionName)
+          isHook(codePathFunctionName)
           : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
 
         // Compute the earliest finalizer level using information from the
@@ -679,9 +707,9 @@ const rule = {
                   'same order in every component render.' +
                   (possiblyHasEarlyReturn
                     ? ' Did you accidentally call a React Hook after an' +
-                      ' early return?'
+                    ' early return?'
                     : '');
-                context.report({node: hook, message});
+                context.report({ node: hook, message });
               }
             } else if (
               codePathNode.parent != null &&
@@ -689,7 +717,8 @@ const rule = {
                 // @ts-expect-error `ClassProperty` was removed from typescript-estree in https://github.com/typescript-eslint/typescript-eslint/pull/3806
                 codePathNode.parent.type === 'ClassProperty' ||
                 codePathNode.parent.type === 'PropertyDefinition') &&
-              codePathNode.parent.value === codePathNode
+              codePathNode.parent.value === codePathNode &&
+              isReactComponentClass(codePathNode.parent)
             ) {
               // Custom message for hooks inside a class
               const message =
@@ -698,7 +727,7 @@ const rule = {
                 )}" cannot be called ` +
                 'in a class component. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
-              context.report({node: hook, message});
+              context.report({ node: hook, message });
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =
@@ -708,7 +737,7 @@ const rule = {
                 'React Hook function.' +
                 ' React component names must start with an uppercase letter.' +
                 ' React Hook names must start with the word "use".';
-              context.report({node: hook, message});
+              context.report({ node: hook, message });
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
@@ -717,7 +746,7 @@ const rule = {
                 )}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
                 'React function component or a custom React Hook function.';
-              context.report({node: hook, message});
+              context.report({ node: hook, message });
             } else {
               // Assume in all other cases the user called a hook in some
               // random function callback. This should usually be true for
@@ -732,7 +761,7 @@ const rule = {
                   )}" cannot be called ` +
                   'inside a callback. React Hooks must be called in a ' +
                   'React function component or a custom React Hook function.';
-                context.report({node: hook, message});
+                context.report({ node: hook, message });
               }
             }
           }
