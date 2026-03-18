@@ -86,7 +86,7 @@ The agent will:
    - Launch the `port-pass` agent again with:
      - The review findings
      - Instruction to fix the issues
-     - Instruction to re-run `bash compiler/scripts/test-rust-port.sh $ARGUMENTS` to confirm 0 failures still hold
+     - Instruction to re-run `bash compiler/scripts/test-rust-port.sh` (no args, auto-detects last ported pass) to confirm 0 failures still hold
    - After the agent completes, run `/compiler-review` again
 3. Repeat until review is clean
 

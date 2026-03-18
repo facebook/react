@@ -22,20 +22,14 @@ Arguments:
 
 4. **Update orchestrator log**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists and the commit includes Rust changes (`compiler/crates/`):
 
-   Launch a `general-purpose` subagent to collect test data. The subagent should:
-   - Read `compiler/crates/react_compiler/src/entrypoint/pipeline.rs` to find all ported passes (those with `log_debug!` calls)
-   - Run `bash compiler/scripts/test-rust-port.sh <PassName>` for each ported pass to get pass/total counts
-   - Return a structured summary:
-     ```
-     TEST RESULTS
-     ============
-     - #<num> <PassName>: <passed>/<total>
-     - #<num> <PassName>: <passed>/<total>
-     ...
-     ```
+   Run `test-rust-port` with no arguments to get the overall status:
+   ```bash
+   bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1
+   ```
+   This auto-detects the last ported pass and reports: `Results: <passed> passed, <failed> failed (<total> total), frontier: <PassName|none>`
 
-   After the subagent returns:
-   - Update the `# Status` section: set each pass to `complete (N/N)`, `partial (passed/total)`, or `todo` based on the results
+   Then update the orchestrator log:
+   - Update the `# Status` section with the results (use the frontier and pass/fail counts)
    - Add a `## YYYYMMDD-HHMMSS` log entry noting the commit and what changed
 
 5. **Stage files** — stage only the relevant changed files by name (including the orchestrator log if updated in step 4). Do NOT use `git add -A` or `git add .`.

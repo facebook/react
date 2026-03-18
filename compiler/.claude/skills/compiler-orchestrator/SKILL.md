@@ -123,57 +123,44 @@ Execute these steps in order, looping back to Step 1 after each commit:
 
 ### Step 1: Discover Frontier
 
-Launch a single `general-purpose` subagent to perform all discovery and testing. The subagent should:
+Run `test-rust-port` with no arguments. It auto-detects the last ported pass from `pipeline.rs` and tests all passes up to it, reporting the frontier (earliest pass with failures) in the summary line.
 
-1. Read `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
-2. Identify all ported passes — those with `log_debug!` calls matching pass names from the table above
-3. Map each ported pass to its position number in the table
-4. **Optimization**: Test the LAST ported pass first by running:
-   ```
-   bash compiler/scripts/test-rust-port.sh <LastPortedPassName>
-   ```
-   - If 0 failures: all ported passes are clean — skip binary search
-   - If any failures: binary-search for the earliest failing pass
-5. **Binary search for earliest failure**: Test ported passes from earliest to latest until you find the first one with failures
-6. **Test all ported passes**: Run `test-rust-port.sh` for each ported pass to collect pass/total counts for each
-7. **Check log file**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` does not exist, note this in the response
-8. **Return a structured summary** in exactly this format:
-   ```
-   DISCOVERY RESULTS
-   =================
-   Ported passes:
-   - #<num> <PassName>: <passed>/<total>
-   - #<num> <PassName>: <passed>/<total>
-   ...
+```bash
+bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1
+```
 
-   Frontier: #<num> <PassName> (<FIX|PORT> mode)
-   Log file exists: yes/no
+The summary line format is:
+```
+Results: <passed> passed, <failed> failed (<total> total), frontier: <PassName|none>
+```
 
-   FIX_FAILURE_OUTPUT (only if FIX mode):
-   <full test failure output for the frontier pass>
-   ```
+Parse the summary line to extract:
+- `passed`, `failed`, `total` counts
+- `frontier` — the earliest pass with failures, or `none` if all clean
 
-   If the next unported pass is `BuildReactiveFunction` (#32) or later, instead return:
-   ```
-   Frontier: BLOCKED — next pass is #32 BuildReactiveFunction, test infra needs extending for reactive/ast kinds
-   ```
+If frontier is `none`, determine the next action:
+- Find the last ported pass from `pipeline.rs` (the pass `test-rust-port` auto-detected)
+- Look up the next pass in the Pass Order Reference table
+- If the next pass is `BuildReactiveFunction` (#32) or later, the frontier is **BLOCKED**
+- Otherwise, the mode is **PORT** for that next pass
 
-**Subagent prompt**: Include the Pass Order Reference table from this skill so the subagent knows the pass numbers and names.
+If frontier is a pass name, the mode is **FIX** for that pass. Run test-rust-port again with that pass name to get the failure details:
+```bash
+bash compiler/scripts/test-rust-port.sh <FrontierPassName> 2>&1
+```
 
-After the subagent returns, the main context:
-1. Parses the structured summary
-2. If the log file doesn't exist, creates it with the Status section populated from the subagent's data
-3. Updates the Status section of the log with the pass counts from the subagent
-4. Proceeds to Step 2
+Also check if `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists. If not, create it with the Status section populated from the current state.
+
+Update the orchestrator log Status section, then proceed to Step 2.
 
 ### Step 2: Report Status
 
-Print a status report using the data from the subagent:
+Print a status report:
 ```
 ## Orchestrator Status
 - Ported passes: <count> / 31 (hir passes)
-- All ported passes clean: yes/no
-- Frontier: #<num> <PassName> (<FIX|PORT> mode)
+- Test results: <passed> passed, <failed> failed (<total> total)
+- Frontier: #<num> <PassName> (<FIX|PORT> mode) — or "none (all clean)" or "BLOCKED"
 - Action: <what will happen next>
 ```
 
@@ -194,7 +181,7 @@ Launch a single `general-purpose` subagent to fix the failures. The subagent pro
 5. **Pipeline path**: `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
 
 After the subagent completes:
-1. Parse its results for the final test count
+1. Re-run `bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1` to get updated counts and frontier
 2. If still failing, launch the subagent again with the updated failure output (max 3 rounds total)
 3. Once clean (or after 3 rounds), update the orchestrator log Status section and add a log entry
 4. Go to Step 4 (Review)
@@ -220,7 +207,7 @@ For standard passes, launch a single `general-purpose` subagent with these instr
 3. **Special notes** (if any — e.g., conditional gating, reuse of existing functions)
 
 After the subagent completes:
-1. Parse its results for the final test count
+1. Re-run `bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1` to get updated counts and frontier
 2. Update the orchestrator log Status section and add a log entry
 3. Go to Step 4
 
@@ -234,8 +221,8 @@ Launch a `general-purpose` subagent with these instructions:
 > 2. Read `compiler/docs/rust-port/rust-port-architecture.md` for conventions
 > 3. For each changed Rust file, find and read the corresponding TypeScript source
 > 4. Check for: port fidelity (logic matches TS), convention compliance (arenas, IDs, two-phase patterns), error handling, naming
-> 5. If issues are found, fix them directly, then run `bash compiler/scripts/test-rust-port.sh <LastPortedPass>` to confirm tests still pass
-> 6. Report: list of issues found and whether they were fixed, final test count
+> 5. If issues are found, fix them directly, then run `bash compiler/scripts/test-rust-port.sh` (no args) to confirm tests still pass
+> 6. Report: list of issues found and whether they were fixed, final summary line from test-rust-port
 
 After the subagent completes:
 1. If it reports unfixed issues, launch one more subagent round to address them
@@ -247,13 +234,13 @@ Launch a `general-purpose` subagent with these instructions:
 
 > Verify and commit the compiler changes.
 >
-> 1. Run `bash compiler/scripts/test-rust-port.sh <LastPortedPass>` to confirm tests pass
+> 1. Run `bash compiler/scripts/test-rust-port.sh` (no args) to confirm tests pass — report the summary line
 > 2. Run `yarn prettier-all` from the repo root to format
 > 3. Stage only the relevant changed files by name (do NOT use `git add -A` or `git add .`)
 > 4. Commit with prefix `[rust-compiler]` and the title: `<title>`
 > 5. Use a heredoc for the commit message with a 1-3 sentence summary
 > 6. Do NOT push
-> 7. Report: commit hash, files committed, test count
+> 7. Report: commit hash, files committed, summary line from test-rust-port
 
 After the subagent completes:
 1. Parse its results for the commit hash
