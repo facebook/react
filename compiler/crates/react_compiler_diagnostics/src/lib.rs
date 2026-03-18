@@ -79,13 +79,13 @@ pub struct CompilerSuggestion {
 /// Source location (matches Babel's SourceLocation format)
 /// This is the HIR source location, separate from AST's BaseNode location.
 /// GeneratedSource is represented as None.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct SourceLocation {
     pub start: Position,
     pub end: Position,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Position {
     pub line: u32,
     pub column: u32,

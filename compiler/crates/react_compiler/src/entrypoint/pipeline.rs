@@ -155,6 +155,19 @@ pub fn compile_fn(
     let debug_infer_types = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferTypes", debug_infer_types));
 
+    if env.config.validate_hooks_usage {
+        react_compiler_validation::validate_hooks_usage(&hir, &mut env);
+    }
+
+    if env.config.validate_no_capitalized_calls.is_some() {
+        react_compiler_validation::validate_no_capitalized_calls(&hir, &mut env);
+    }
+
+    react_compiler_optimization::optimize_props_method_calls(&mut hir, &env);
+
+    let debug_optimize_props = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("OptimizePropsMethodCalls", debug_optimize_props));
+
     Ok(CodegenFunction {
         loc: None,
         memo_slots_used: 0,

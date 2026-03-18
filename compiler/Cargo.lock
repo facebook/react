@@ -265,6 +265,7 @@ dependencies = [
 name = "react_compiler_validation"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "react_compiler_diagnostics",
  "react_compiler_hir",
 ]
