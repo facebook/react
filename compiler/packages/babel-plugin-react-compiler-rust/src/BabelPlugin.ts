@@ -75,6 +75,13 @@ export default function BabelPluginReactCompilerRust(
                   severity: 'Error',
                   category: 'Syntax',
                   description,
+                  details: [
+                    {
+                      kind: 'error',
+                      loc: null,
+                      message: 'reserved word',
+                    },
+                  ],
                 },
               });
             }
