@@ -239,30 +239,31 @@ function restoreViewTransitionOnHostInstances(
   child: null | Fiber,
   stopAtNestedViewTransitions: boolean,
 ): void {
-  if (supportsMutation) {
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        restoreViewTransitionName(instance, child.memoizedProps);
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        // Skip any nested view transitions for updates since in that case the
-        // inner most one is the one that handles the update.
-      } else {
-        restoreViewTransitionOnHostInstances(
-          child.child,
-          stopAtNestedViewTransitions,
-        );
-      }
-      child = child.sibling;
+  if (!supportsMutation) {
+    return;
+  }
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      const instance: Instance = child.stateNode;
+      restoreViewTransitionName(instance, child.memoizedProps);
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip any hidden subtrees. They were or are effectively not there.
+    } else if (
+      child.tag === ViewTransitionComponent &&
+      stopAtNestedViewTransitions
+    ) {
+      // Skip any nested view transitions for updates since in that case the
+      // inner most one is the one that handles the update.
+    } else {
+      restoreViewTransitionOnHostInstances(
+        child.child,
+        stopAtNestedViewTransitions,
+      );
     }
+    child = child.sibling;
   }
 }
 
