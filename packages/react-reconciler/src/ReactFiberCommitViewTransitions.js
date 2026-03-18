@@ -446,7 +446,7 @@ export function commitExitViewTransitions(deletion: Fiber): void {
         // Therefore it's possible for onShare to be called with only an old snapshot.
         scheduleViewTransitionEvent(deletion, props.onShare);
       } else {
-        scheduleViewTransitionEvent(deletion, props.onExit);
+        scheduleViewTransitionEvent(deletion, props.onExit, true);
       }
     }
     if (appearingViewTransitions !== null) {
