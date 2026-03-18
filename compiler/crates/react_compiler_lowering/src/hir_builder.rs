@@ -2,7 +2,7 @@ use indexmap::{IndexMap, IndexSet};
 
 use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
 use crate::identifier_loc_index::IdentifierLocIndex;
-use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 
@@ -556,6 +556,11 @@ impl<'a> HirBuilder<'a> {
         self.env.record_error(error);
     }
 
+    /// Record a diagnostic on the environment.
+    pub fn record_diagnostic(&mut self, diagnostic: CompilerDiagnostic) {
+        self.env.record_diagnostic(diagnostic);
+    }
+
     /// Check if a name has a local binding (non-module-level).
     /// This is used for checking if fbt/fbs JSX tags are local bindings
     /// (which is not supported). Unlike resolve_identifier, this doesn't
@@ -692,15 +697,20 @@ impl<'a> HirBuilder<'a> {
             // Match TS behavior: makeIdentifierName throws for reserved words,
             // which propagates as a CompileUnexpectedThrow + CompileError.
             // Note: this is normally caught earlier in scope.ts, but kept as a safety net.
-            self.env.record_error(CompilerErrorDetail {
-                category: ErrorCategory::Syntax,
-                reason: "Expected a non-reserved identifier name".to_string(),
-                description: Some(
-                    format!("`{}` is a reserved word in JavaScript and cannot be used as an identifier name", name),
-                ),
-                loc: loc.clone(),
-                suggestions: None,
-            });
+            self.env.record_diagnostic(
+                CompilerDiagnostic::new(
+                    ErrorCategory::Syntax,
+                    "Expected a non-reserved identifier name",
+                    Some(format!(
+                        "`{}` is a reserved word in JavaScript and cannot be used as an identifier name",
+                        name
+                    )),
+                )
+                .with_detail(CompilerDiagnosticDetail::Error {
+                    loc: None, // GeneratedSource in TS
+                    message: Some("reserved word".to_string()),
+                }),
+            );
         }
 
         // Find a unique name: start with the original name, then try name_0, name_1, ...

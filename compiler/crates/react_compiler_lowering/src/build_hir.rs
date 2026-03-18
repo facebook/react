@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use indexmap::{IndexMap, IndexSet};
 use react_compiler_ast::scope::{BindingId, ScopeInfo, ScopeKind};
-use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 
@@ -1625,13 +1625,17 @@ fn lower_expression(
                     if is_local_binding {
                         // Record as a Diagnostic (not ErrorDetail) to match TS behavior
                         // where CompilerError.invariant creates a CompilerDiagnostic.
-                        // CompilerDiagnostic doesn't have a top-level loc field.
-                        builder.environment_mut().record_diagnostic(
-                            react_compiler_diagnostics::CompilerDiagnostic::new(
+                        let reason = format!("<{}> tags should be module-level imports", tag_name);
+                        builder.record_diagnostic(
+                            CompilerDiagnostic::new(
                                 ErrorCategory::Invariant,
-                                &format!("<{}> tags should be module-level imports", tag_name),
+                                &reason,
                                 None,
                             )
+                            .with_detail(CompilerDiagnosticDetail::Error {
+                                loc: id_loc.clone(),
+                                message: Some(reason.clone()),
+                            }),
                         );
                     }
                 }
@@ -4785,16 +4789,20 @@ fn lower_inner(
                         hir_params.push(ParamPattern::Place(place));
                     }
                     _ => {
-                        builder.record_error(CompilerErrorDetail {
-                            category: ErrorCategory::Invariant,
-                            reason: format!(
-                                "Could not find binding for param `{}`",
-                                ident.name
-                            ),
-                            description: None,
-                            loc: convert_opt_loc(&ident.base.loc),
-                            suggestions: None,
-                        });
+                        builder.record_diagnostic(
+                            CompilerDiagnostic::new(
+                                ErrorCategory::Invariant,
+                                "Could not find binding",
+                                Some(format!(
+                                    "[BuildHIR] Could not find binding for param `{}`",
+                                    ident.name
+                                )),
+                            )
+                            .with_detail(CompilerDiagnosticDetail::Error {
+                                loc: convert_opt_loc(&ident.base.loc),
+                                message: Some("Could not find binding".to_string()),
+                            }),
+                        );
                     }
                 }
             }
@@ -4829,14 +4837,18 @@ fn lower_inner(
                     AssignmentStyle::Assignment,
                 );
             }
-            react_compiler_ast::patterns::PatternLike::MemberExpression(_) => {
-                builder.record_error(CompilerErrorDetail {
-                    category: ErrorCategory::Todo,
-                    reason: "MemberExpression parameters are not supported".to_string(),
-                    description: None,
-                    loc: None,
-                    suggestions: None,
-                });
+            react_compiler_ast::patterns::PatternLike::MemberExpression(member) => {
+                builder.record_diagnostic(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Todo,
+                        "Handle MemberExpression parameters",
+                        Some("[BuildHIR] Add support for MemberExpression parameters".to_string()),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: convert_opt_loc(&member.base.loc),
+                        message: Some("Unsupported parameter type".to_string()),
+                    }),
+                );
             }
         }
     }

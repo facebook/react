@@ -198,8 +198,12 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
             if (d.description) {
               lines.push(`description: ${d.description}`);
             }
-            // CompilerDiagnostic has a details array of error/hint items
-            const details = d.details as
+            // CompilerDiagnostic stores details in this.options.details (no getter),
+            // while Rust JSON has details as a direct field. Check both paths.
+            const opts = (d as Record<string, unknown>).options as
+              | Record<string, unknown>
+              | undefined;
+            const details = (opts?.details ?? d.details) as
               | Array<Record<string, unknown>>
               | undefined;
             if (details && details.length > 0) {
@@ -322,6 +326,7 @@ function normalizeIds(text: string): string {
   let nextDeclId = 0;
 
   return text
+    .replace(/\(generated\)/g, '(none)')
     .replace(/Type\(\d+\)/g, match => {
       if (!typeMap.has(match)) {
         typeMap.set(match, nextTypeId++);

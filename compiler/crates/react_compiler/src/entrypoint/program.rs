@@ -32,7 +32,7 @@ use regex::Regex;
 
 use super::compile_result::{
     CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo,
-    DebugLogEntry, LoggerEvent,
+    CompilerErrorItemInfo, DebugLogEntry, LoggerEvent,
 };
 use super::imports::{
     ProgramContext, get_react_compiler_runtime_module, validate_restricted_imports,
@@ -927,6 +927,33 @@ fn base_node_loc(base: &BaseNode) -> Option<SourceLocation> {
 // Error handling
 // -----------------------------------------------------------------------
 
+/// Convert CompilerDiagnostic details into serializable CompilerErrorItemInfo items.
+fn diagnostic_details_to_items(
+    d: &react_compiler_diagnostics::CompilerDiagnostic,
+) -> Option<Vec<CompilerErrorItemInfo>> {
+    let items: Vec<CompilerErrorItemInfo> = d
+        .details
+        .iter()
+        .map(|item| match item {
+            react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message } => {
+                CompilerErrorItemInfo {
+                    kind: "error".to_string(),
+                    loc: *loc,
+                    message: message.clone(),
+                }
+            }
+            react_compiler_diagnostics::CompilerDiagnosticDetail::Hint { message } => {
+                CompilerErrorItemInfo {
+                    kind: "hint".to_string(),
+                    loc: None,
+                    message: Some(message.clone()),
+                }
+            }
+        })
+        .collect();
+    if items.is_empty() { None } else { Some(items) }
+}
+
 /// Log an error as LoggerEvent(s) directly onto the ProgramContext.
 fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut ProgramContext) {
     for detail in &err.details {
@@ -939,8 +966,8 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut 
                         reason: d.reason.clone(),
                         description: d.description.clone(),
                         severity: Some(format!("{:?}", d.severity())),
-                        details: None,
-                        loc: None, // CompilerDiagnostic doesn't expose loc directly
+                        details: diagnostic_details_to_items(d),
+                        loc: None,
                     },
                 });
             }
@@ -1008,7 +1035,7 @@ fn compiler_error_to_info(err: &CompilerError) -> CompilerErrorInfo {
                 reason: d.reason.clone(),
                 description: d.description.clone(),
                 severity: Some(format!("{:?}", d.severity())),
-                details: None,
+                details: diagnostic_details_to_items(d),
                 loc: None,
             },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
