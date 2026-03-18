@@ -12542,7 +12542,8 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   pendingTransitionTypes = null,
   pendingDidIncludeRenderPhaseUpdate = !1,
   nestedUpdateCount = 0,
-  rootWithNestedUpdates = null;
+  rootWithNestedUpdates = null,
+  nestedUpdateKind = 0;
 function requestUpdateLane() {
   return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
     ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
@@ -13799,13 +13800,20 @@ function flushSpawnedWork() {
     0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
     ensureRootIsScheduled(root);
     passiveSubtreeMask = root.pendingLanes;
-    (enableInfiniteRenderLoopDetection &&
-      (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-    (0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42))
-      ? root === rootWithNestedUpdates
-        ? nestedUpdateCount++
-        : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
-      : (nestedUpdateCount = 0);
+    0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42)
+      ? (root === rootWithNestedUpdates
+          ? nestedUpdateCount++
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)),
+        (nestedUpdateKind = 1))
+      : enableInfiniteRenderLoopDetection &&
+          (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)
+        ? (root === rootWithNestedUpdates
+            ? nestedUpdateCount++
+            : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)),
+          (nestedUpdateKind = 2))
+        : ((nestedUpdateCount = 0),
+          (rootWithNestedUpdates = null),
+          (nestedUpdateKind = 0));
     flushSyncWorkAcrossRoots_impl(0, !1);
     if (enableTransitionTracing) {
       var prevRootTransitionCallbacks = root.transitionCallbacks;
@@ -14019,17 +14027,19 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
-    throw (
-      ((nestedUpdateCount = 0),
-      (rootWithNestedUpdates = null),
-      enableInfiniteRenderLoopDetection &&
-        executionContext & 2 &&
-        null !== workInProgressRoot &&
-        (workInProgressRoot.errorRecoveryDisabledLanes |=
-          workInProgressRootRenderLanes),
-      Error(formatProdErrorMessage(185)))
-    );
+  if (50 < nestedUpdateCount) {
+    nestedUpdateCount = 0;
+    rootWithNestedUpdates = null;
+    var updateKind = nestedUpdateKind;
+    nestedUpdateKind = 0;
+    if (enableInfiniteRenderLoopDetection) {
+      if (
+        1 === updateKind &&
+        !(executionContext & 2 && null !== workInProgressRoot)
+      )
+        throw Error(formatProdErrorMessage(185));
+    } else throw Error(formatProdErrorMessage(185));
+  }
 }
 function scheduleCallback(priorityLevel, callback) {
   return scheduleCallback$3(priorityLevel, callback);
@@ -20283,14 +20293,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2075 = React.version;
 if (
-  "19.3.0-www-modern-3f0b9e61-20260317" !==
+  "19.3.0-www-modern-b4546cd0-20260318" !==
   isomorphicReactPackageVersion$jscomp$inline_2075
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2075,
-      "19.3.0-www-modern-3f0b9e61-20260317"
+      "19.3.0-www-modern-b4546cd0-20260318"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20308,10 +20318,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2638 = {
   bundleType: 0,
-  version: "19.3.0-www-modern-3f0b9e61-20260317",
+  version: "19.3.0-www-modern-b4546cd0-20260318",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-modern-3f0b9e61-20260317"
+  reconcilerVersion: "19.3.0-www-modern-b4546cd0-20260318"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2639 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -20891,4 +20901,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-modern-3f0b9e61-20260317";
+exports.version = "19.3.0-www-modern-b4546cd0-20260318";

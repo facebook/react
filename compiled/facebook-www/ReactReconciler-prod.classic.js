@@ -12457,13 +12457,20 @@ module.exports = function ($$$config) {
       0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
       ensureRootIsScheduled(root);
       passiveSubtreeMask = root.pendingLanes;
-      (enableInfiniteRenderLoopDetection &&
-        (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-      (0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42))
-        ? root === rootWithNestedUpdates
-          ? nestedUpdateCount++
-          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
-        : (nestedUpdateCount = 0);
+      0 !== (lanes & 261930) && 0 !== (passiveSubtreeMask & 42)
+        ? (root === rootWithNestedUpdates
+            ? nestedUpdateCount++
+            : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)),
+          (nestedUpdateKind = 1))
+        : enableInfiniteRenderLoopDetection &&
+            (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)
+          ? (root === rootWithNestedUpdates
+              ? nestedUpdateCount++
+              : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)),
+            (nestedUpdateKind = 2))
+          : ((nestedUpdateCount = 0),
+            (rootWithNestedUpdates = null),
+            (nestedUpdateKind = 0));
       supportsHydration && flushHydrationEvents();
       flushSyncWorkAcrossRoots_impl(0, !1);
       if (enableTransitionTracing) {
@@ -12683,17 +12690,19 @@ module.exports = function ($$$config) {
     retryTimedOutBoundary(boundaryFiber, retryLane);
   }
   function throwIfInfiniteUpdateLoopDetected() {
-    if (50 < nestedUpdateCount)
-      throw (
-        ((nestedUpdateCount = 0),
-        (rootWithNestedUpdates = null),
-        enableInfiniteRenderLoopDetection &&
-          executionContext & 2 &&
-          null !== workInProgressRoot &&
-          (workInProgressRoot.errorRecoveryDisabledLanes |=
-            workInProgressRootRenderLanes),
-        Error(formatProdErrorMessage(185)))
-      );
+    if (50 < nestedUpdateCount) {
+      nestedUpdateCount = 0;
+      rootWithNestedUpdates = null;
+      var updateKind = nestedUpdateKind;
+      nestedUpdateKind = 0;
+      if (enableInfiniteRenderLoopDetection) {
+        if (
+          1 === updateKind &&
+          !(executionContext & 2 && null !== workInProgressRoot)
+        )
+          throw Error(formatProdErrorMessage(185));
+      } else throw Error(formatProdErrorMessage(185));
+    }
   }
   function scheduleCallback(priorityLevel, callback) {
     return scheduleCallback$3(priorityLevel, callback);
@@ -14085,6 +14094,7 @@ module.exports = function ($$$config) {
     pendingDidIncludeRenderPhaseUpdate = !1,
     nestedUpdateCount = 0,
     rootWithNestedUpdates = null,
+    nestedUpdateKind = 0,
     createFiber = enableObjectFiber
       ? createFiberImplObject
       : createFiberImplClass;
@@ -14448,7 +14458,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-3f0b9e61-20260317"
+      reconcilerVersion: "19.3.0-www-classic-b4546cd0-20260318"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

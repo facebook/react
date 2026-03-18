@@ -13968,7 +13968,8 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
   pendingDelayedCommitReason = 0,
   pendingSuspendedViewTransitionReason = null,
   nestedUpdateCount = 0,
-  rootWithNestedUpdates = null;
+  rootWithNestedUpdates = null,
+  nestedUpdateKind = 0;
 function requestUpdateLane() {
   return 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
     ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
@@ -15773,14 +15774,22 @@ function flushSpawnedWork() {
     0 !== (pendingEffectsLanes & 3) && flushPendingEffects();
     ensureRootIsScheduled(root);
     remainingLanes = root.pendingLanes;
-    (enableInfiniteRenderLoopDetection &&
-      (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-    (0 !== (lanes & 261930) && 0 !== (remainingLanes & 42))
+    0 !== (lanes & 261930) && 0 !== (remainingLanes & 42)
       ? ((nestedUpdateScheduled = !0),
         root === rootWithNestedUpdates
           ? nestedUpdateCount++
-          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
-      : (nestedUpdateCount = 0);
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)),
+        (nestedUpdateKind = 1))
+      : enableInfiniteRenderLoopDetection &&
+          (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)
+        ? ((nestedUpdateScheduled = !0),
+          root === rootWithNestedUpdates
+            ? nestedUpdateCount++
+            : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)),
+          (nestedUpdateKind = 2))
+        : ((nestedUpdateCount = 0),
+          (rootWithNestedUpdates = null),
+          (nestedUpdateKind = 0));
     passiveSubtreeMask || finalizeRender(lanes, commitEndTime);
     flushSyncWorkAcrossRoots_impl(0, !1);
     enableSchedulingProfiler && markCommitStopped();
@@ -16047,17 +16056,19 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 function throwIfInfiniteUpdateLoopDetected() {
-  if (50 < nestedUpdateCount)
-    throw (
-      ((nestedUpdateCount = 0),
-      (rootWithNestedUpdates = null),
-      enableInfiniteRenderLoopDetection &&
-        executionContext & 2 &&
-        null !== workInProgressRoot &&
-        (workInProgressRoot.errorRecoveryDisabledLanes |=
-          workInProgressRootRenderLanes),
-      Error(formatProdErrorMessage(185)))
-    );
+  if (50 < nestedUpdateCount) {
+    nestedUpdateCount = 0;
+    rootWithNestedUpdates = null;
+    var updateKind = nestedUpdateKind;
+    nestedUpdateKind = 0;
+    if (enableInfiniteRenderLoopDetection) {
+      if (
+        1 === updateKind &&
+        !(executionContext & 2 && null !== workInProgressRoot)
+      )
+        throw Error(formatProdErrorMessage(185));
+    } else throw Error(formatProdErrorMessage(185));
+  }
 }
 function restorePendingUpdaters(root, lanes) {
   isDevToolsPresent &&
@@ -17504,20 +17515,20 @@ function debounceScrollEnd(targetInst, nativeEvent, nativeEventTarget) {
     (nativeEventTarget[internalScrollTimer] = targetInst));
 }
 for (
-  var i$jscomp$inline_2171 = 0;
-  i$jscomp$inline_2171 < simpleEventPluginEvents.length;
-  i$jscomp$inline_2171++
+  var i$jscomp$inline_2172 = 0;
+  i$jscomp$inline_2172 < simpleEventPluginEvents.length;
+  i$jscomp$inline_2172++
 ) {
-  var eventName$jscomp$inline_2172 =
-      simpleEventPluginEvents[i$jscomp$inline_2171],
-    domEventName$jscomp$inline_2173 =
-      eventName$jscomp$inline_2172.toLowerCase(),
-    capitalizedEvent$jscomp$inline_2174 =
-      eventName$jscomp$inline_2172[0].toUpperCase() +
-      eventName$jscomp$inline_2172.slice(1);
+  var eventName$jscomp$inline_2173 =
+      simpleEventPluginEvents[i$jscomp$inline_2172],
+    domEventName$jscomp$inline_2174 =
+      eventName$jscomp$inline_2173.toLowerCase(),
+    capitalizedEvent$jscomp$inline_2175 =
+      eventName$jscomp$inline_2173[0].toUpperCase() +
+      eventName$jscomp$inline_2173.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_2173,
-    "on" + capitalizedEvent$jscomp$inline_2174
+    domEventName$jscomp$inline_2174,
+    "on" + capitalizedEvent$jscomp$inline_2175
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -22352,16 +22363,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_2402 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_2403 = React.version;
 if (
-  "19.3.0-www-classic-3f0b9e61-20260317" !==
-  isomorphicReactPackageVersion$jscomp$inline_2402
+  "19.3.0-www-classic-b4546cd0-20260318" !==
+  isomorphicReactPackageVersion$jscomp$inline_2403
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_2402,
-      "19.3.0-www-classic-3f0b9e61-20260317"
+      isomorphicReactPackageVersion$jscomp$inline_2403,
+      "19.3.0-www-classic-b4546cd0-20260318"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -22377,27 +22388,27 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var internals$jscomp$inline_2404 = {
+var internals$jscomp$inline_2405 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-3f0b9e61-20260317",
+  version: "19.3.0-www-classic-b4546cd0-20260318",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-3f0b9e61-20260317"
+  reconcilerVersion: "19.3.0-www-classic-b4546cd0-20260318"
 };
 enableSchedulingProfiler &&
-  ((internals$jscomp$inline_2404.getLaneLabelMap = getLaneLabelMap),
-  (internals$jscomp$inline_2404.injectProfilingHooks = injectProfilingHooks));
+  ((internals$jscomp$inline_2405.getLaneLabelMap = getLaneLabelMap),
+  (internals$jscomp$inline_2405.injectProfilingHooks = injectProfilingHooks));
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2968 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2969 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2968.isDisabled &&
-    hook$jscomp$inline_2968.supportsFiber
+    !hook$jscomp$inline_2969.isDisabled &&
+    hook$jscomp$inline_2969.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2968.inject(
-        internals$jscomp$inline_2404
+      (rendererID = hook$jscomp$inline_2969.inject(
+        internals$jscomp$inline_2405
       )),
-        (injectedHook = hook$jscomp$inline_2968);
+        (injectedHook = hook$jscomp$inline_2969);
     } catch (err) {}
 }
 function defaultOnDefaultTransitionIndicator() {
@@ -22815,7 +22826,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-3f0b9e61-20260317";
+exports.version = "19.3.0-www-classic-b4546cd0-20260318";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

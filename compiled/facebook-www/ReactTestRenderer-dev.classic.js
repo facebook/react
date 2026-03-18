@@ -12654,7 +12654,7 @@ __DEV__ &&
             root === rootWithNestedUpdates
               ? nestedUpdateCount++
               : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
-          : (nestedUpdateCount = 0);
+          : ((nestedUpdateCount = 0), (rootWithNestedUpdates = null));
         flushSyncWorkAcrossRoots_impl(0, !1);
       }
     }
@@ -15880,10 +15880,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-3f0b9e61-20260317",
+        version: "19.3.0-www-classic-b4546cd0-20260318",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-3f0b9e61-20260317"
+        reconcilerVersion: "19.3.0-www-classic-b4546cd0-20260318"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16019,5 +16019,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-classic-3f0b9e61-20260317";
+    exports.version = "19.3.0-www-classic-b4546cd0-20260318";
   })();
