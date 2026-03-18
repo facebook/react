@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees:false
+// @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import {useMemo} from 'react';
 import {
   typedCapture,
@@ -43,7 +43,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false
+import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import { useMemo } from "react";
 import {
   typedCapture,

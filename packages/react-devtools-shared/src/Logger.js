@@ -63,7 +63,11 @@ export type LoggerEvent =
         +value: any,
         ...
       },
-    };
+    }
+  | {
+      +event_name: 'selected-editor-pane',
+    }
+  | {+event_name: 'selected-inspected-element-pane'};
 
 export type LogFunction = LoggerEvent => void | Promise<void>;
 

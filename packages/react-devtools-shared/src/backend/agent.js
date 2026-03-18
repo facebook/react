@@ -38,7 +38,7 @@ import type {
   ElementType,
 } from 'react-devtools-shared/src/frontend/types';
 import type {GroupItem} from './views/TraceUpdates/canvas';
-import {gte, isReactNativeEnvironment} from './utils';
+import {isReactNativeEnvironment} from './utils';
 import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
@@ -147,6 +147,7 @@ type OverrideSuspenseParams = {
 };
 
 type OverrideSuspenseMilestoneParams = {
+  rendererID: number,
   suspendedSet: Array<number>,
 };
 
@@ -787,15 +788,14 @@ export default class Agent extends EventEmitter<{
   };
 
   overrideSuspenseMilestone: OverrideSuspenseMilestoneParams => void = ({
+    rendererID,
     suspendedSet,
   }) => {
-    for (const rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-      if (renderer.supportsTogglingSuspense) {
-        renderer.overrideSuspenseMilestone(suspendedSet);
-      }
+    const renderer = ((this._rendererInterfaces[
+      (rendererID: any)
+    ]: any): RendererInterface);
+    if (renderer.supportsTogglingSuspense) {
+      renderer.overrideSuspenseMilestone(suspendedSet);
     }
   };
 
@@ -938,11 +938,19 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  selectNode(target: HostInstance): void {
-    const match = this.getIDForHostInstance(target);
-    if (match !== null) {
-      this._bridge.send('selectElement', match.id);
-    }
+  selectNode(target: HostInstance | null): void {
+    const match = target !== null ? this.getIDForHostInstance(target) : null;
+    this._bridge.send(
+      'selectElement',
+      match !== null
+        ? match.id
+        : // If you click outside a React root in the Elements panel, we want to give
+          // feedback that no selection is possible so we clear the selection.
+          // Otherwise clicking outside a React root is indistinguishable from clicking
+          // a different host node that leads to the same selected React element
+          // due to Component filters
+          null,
+    );
   }
 
   registerRendererInterface(
@@ -952,16 +960,6 @@ export default class Agent extends EventEmitter<{
     this._rendererInterfaces[rendererID] = rendererInterface;
 
     rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
-
-    const renderer = rendererInterface.renderer;
-    if (renderer !== null) {
-      const devRenderer = renderer.bundleType === 1;
-      const enableSuspenseTab =
-        devRenderer && gte(renderer.version, '19.3.0-canary');
-      if (enableSuspenseTab) {
-        this._bridge.send('enableSuspenseTab');
-      }
-    }
 
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
@@ -988,10 +986,7 @@ export default class Agent extends EventEmitter<{
 
   syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
-    if (target == null) {
-      return;
-    }
-    this.selectNode(target);
+    this.selectNode(target == null ? null : target);
   };
 
   shutdown: () => void = () => {
@@ -1080,6 +1075,15 @@ export default class Agent extends EventEmitter<{
           }
         }
         renderer.updateComponentFilters(componentFilters);
+      }
+
+      // Due to the component filters changing, we might be able
+      // to select a closer match for the currently selected host element.
+      // The store will already select a suitable parent if the the current
+      // selection is now filtered out in which cases this will be a no-op.
+      const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
+      if (target != null) {
+        this.selectNode(target);
       }
     };
 

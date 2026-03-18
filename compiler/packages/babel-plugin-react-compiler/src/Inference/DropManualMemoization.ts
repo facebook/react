@@ -31,7 +31,6 @@ import {
   makeInstructionId,
 } from '../HIR';
 import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
-import {Result} from '../Utils/Result';
 
 type ManualMemoCallee = {
   kind: 'useMemo' | 'useCallback';
@@ -65,6 +64,7 @@ export function collectMaybeMemoDependencies(
           identifierName: value.binding.name,
         },
         path: [],
+        loc: value.loc,
       };
     }
     case 'PropertyLoad': {
@@ -73,7 +73,11 @@ export function collectMaybeMemoDependencies(
         return {
           root: object.root,
           // TODO: determine if the access is optional
-          path: [...object.path, {property: value.property, optional}],
+          path: [
+            ...object.path,
+            {property: value.property, optional, loc: value.loc},
+          ],
+          loc: value.loc,
         };
       }
       break;
@@ -92,8 +96,10 @@ export function collectMaybeMemoDependencies(
           root: {
             kind: 'NamedLocal',
             value: {...value.place},
+            constant: false,
           },
           path: [],
+          loc: value.place.loc,
         };
       }
       break;
@@ -287,7 +293,7 @@ function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
   kind: 'useCallback' | 'useMemo',
   sidemap: IdentifierSidemap,
-  errors: CompilerError,
+  env: Environment,
 ): {
   fnPlace: Place;
   depsList: Array<ManualMemoDependency> | null;
@@ -297,7 +303,7 @@ function extractManualMemoizationArgs(
     Place | SpreadPattern | undefined
   >;
   if (fnPlace == null || fnPlace.kind !== 'Identifier') {
-    errors.pushDiagnostic(
+    env.recordError(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
         reason: `Expected a callback function to be passed to ${kind}`,
@@ -329,7 +335,7 @@ function extractManualMemoizationArgs(
       ? sidemap.maybeDepsLists.get(depsListPlace.identifier.id)
       : null;
   if (maybeDepsList == null) {
-    errors.pushDiagnostic(
+    env.recordError(
       CompilerDiagnostic.create({
         category: ErrorCategory.UseMemo,
         reason: `Expected the dependency list for ${kind} to be an array literal`,
@@ -348,7 +354,7 @@ function extractManualMemoizationArgs(
   for (const dep of maybeDepsList.deps) {
     const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
     if (maybeDep == null) {
-      errors.pushDiagnostic(
+      env.recordError(
         CompilerDiagnostic.create({
           category: ErrorCategory.UseMemo,
           reason: `Expected the dependency list to be an array of simple expressions (e.g. \`x\`, \`x.y.z\`, \`x?.y?.z\`)`,
@@ -382,10 +388,7 @@ function extractManualMemoizationArgs(
  * This pass also validates that useMemo callbacks return a value (not void), ensuring that useMemo
  * is only used for memoizing values and not for running arbitrary side effects.
  */
-export function dropManualMemoization(
-  func: HIRFunction,
-): Result<void, CompilerError> {
-  const errors = new CompilerError();
+export function dropManualMemoization(func: HIRFunction): void {
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
     func.env.config.validateNoSetStateInRender ||
@@ -432,7 +435,7 @@ export function dropManualMemoization(
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
             sidemap,
-            errors,
+            func.env,
           );
 
           if (memoDetails == null) {
@@ -460,7 +463,7 @@ export function dropManualMemoization(
              * is rare and likely sketchy.
              */
             if (!sidemap.functions.has(fnPlace.identifier.id)) {
-              errors.pushDiagnostic(
+              func.env.recordError(
                 CompilerDiagnostic.create({
                   category: ErrorCategory.UseMemo,
                   reason: `Expected the first argument to be an inline function expression`,
@@ -545,8 +548,6 @@ export function dropManualMemoization(
       markInstructionIds(func.body);
     }
   }
-
-  return errors.asResult();
 }
 
 function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
@@ -579,17 +580,15 @@ function findOptionalPlaces(fn: HIRFunction): Set<IdentifierId> {
             testBlock = fn.body.blocks.get(terminal.fallthrough)!;
             break;
           }
+          case 'maybe-throw': {
+            testBlock = fn.body.blocks.get(terminal.continuation)!;
+            break;
+          }
           default: {
             CompilerError.invariant(false, {
               reason: `Unexpected terminal in optional`,
-              description: null,
-              details: [
-                {
-                  kind: 'error',
-                  loc: terminal.loc,
-                  message: `Unexpected ${terminal.kind} in optional`,
-                },
-              ],
+              message: `Unexpected ${terminal.kind} in optional`,
+              loc: terminal.loc,
             });
           }
         }

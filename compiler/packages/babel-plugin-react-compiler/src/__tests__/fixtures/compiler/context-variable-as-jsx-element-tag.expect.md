@@ -11,7 +11,7 @@ function Component(props) {
 
   Component = useMemo(() => {
     return Component;
-  });
+  }, [Component]);
 
   return <Component {...props} />;
 }
@@ -36,6 +36,7 @@ function Component(props) {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     Component = Stringify;
 
+    Component;
     Component = Component;
     $[0] = Component;
   } else {

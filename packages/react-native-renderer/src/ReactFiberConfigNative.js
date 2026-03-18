@@ -275,6 +275,7 @@ export function getChildHostContext(
   const isInAParentText =
     type === 'AndroidTextInput' || // Android
     type === 'RCTMultilineTextInputView' || // iOS
+    type === 'RCTSelectableText' ||
     type === 'RCTSinglelineTextInputView' || // iOS
     type === 'RCTText' ||
     type === 'RCTVirtualText';
@@ -712,6 +713,13 @@ export function startGestureTransition(
 }
 
 export function stopViewTransition(transition: RunningViewTransition) {}
+
+export function addViewTransitionFinishedListener(
+  transition: RunningViewTransition,
+  callback: () => void,
+) {
+  callback();
+}
 
 export type ViewTransitionInstance = null | {name: string, ...};
 

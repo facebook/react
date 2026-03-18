@@ -34,6 +34,8 @@ import {
   addChunkDebugInfo,
 } from 'react-client/src/ReactFlightClientConfig';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 export type ServerConsumerModuleMap = null | {
   [clientId: string]: {
     [clientExportName: string]: ClientReferenceManifestEntry,
@@ -245,7 +247,10 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     // default property of this if it was an ESM interop module.
     return moduleExports.__esModule ? moduleExports.default : moduleExports;
   }
-  return moduleExports[metadata[NAME]];
+  if (hasOwnProperty.call(moduleExports, metadata[NAME])) {
+    return moduleExports[metadata[NAME]];
+  }
+  return (undefined: any);
 }
 
 export function getModuleDebugInfo<T>(

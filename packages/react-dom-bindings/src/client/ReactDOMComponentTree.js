@@ -75,6 +75,9 @@ export function detachDeletedInstance(node: Instance): void {
     delete (node: any)[internalEventHandlerListenersKey];
     delete (node: any)[internalEventHandlesSetKey];
     delete (node: any)[internalRootNodeResourcesKey];
+    if (__DEV__) {
+      delete (node: any)[internalInstanceKey];
+    }
     return;
   }
   // TODO: This function is only called on host components. I don't think all of
@@ -97,6 +100,9 @@ export function precacheFiberNode(
 ): void {
   if (enableInternalInstanceMap) {
     internalInstanceMap.set(node, hostInst);
+    if (__DEV__) {
+      (node: any)[internalInstanceKey] = hostInst;
+    }
     return;
   }
   (node: any)[internalInstanceKey] = hostInst;

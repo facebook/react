@@ -1,4 +1,4 @@
-// @validateNoSetStateInEffects @enableAllowSetStateFromRefsInEffects @loggerTestOnly @compilationMode:"infer"
+// @validateNoSetStateInEffects @enableAllowSetStateFromRefsInEffects @loggerTestOnly @compilationMode:"infer" @outputMode:"lint"
 import {useState, useRef, useEffect} from 'react';
 
 function Component({x, y}) {

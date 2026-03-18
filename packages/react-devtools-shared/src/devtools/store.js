@@ -16,7 +16,6 @@ import {
   PROFILING_FLAG_PERFORMANCE_TRACKS_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -144,11 +143,10 @@ export default class Store extends EventEmitter<{
   backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
-  enableSuspenseTab: [],
   error: [Error],
   hookSettings: [$ReadOnly<DevToolsHookSettings>],
-  hostInstanceSelected: [Element['id']],
-  settingsUpdated: [$ReadOnly<DevToolsHookSettings>],
+  hostInstanceSelected: [Element['id'] | null],
+  settingsUpdated: [$ReadOnly<DevToolsHookSettings>, Array<ComponentFilter>],
   mutated: [
     [
       Array<Element['id']>,
@@ -240,8 +238,6 @@ export default class Store extends EventEmitter<{
   _supportsClickToInspect: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
-  // Dynamically set if the renderer supports the Suspense tab.
-  _supportsSuspenseTab: boolean = false;
 
   _isReloadAndProfileFrontendSupported: boolean = false;
   _isReloadAndProfileBackendSupported: boolean = false;
@@ -321,10 +317,6 @@ export default class Store extends EventEmitter<{
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
-    bridge.addListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isReloadAndProfileSupportedByBackend',
@@ -346,7 +338,6 @@ export default class Store extends EventEmitter<{
     bridge.addListener('hookSettings', this.onHookSettings);
     bridge.addListener('backendInitialized', this.onBackendInitialized);
     bridge.addListener('selectElement', this.onHostInstanceSelected);
-    bridge.addListener('enableSuspenseTab', this.onEnableSuspenseTab);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -437,8 +428,23 @@ export default class Store extends EventEmitter<{
 
     this._componentFilters = value;
 
-    // Update persisted filter preferences stored in localStorage.
+    // Update persisted filter preferences
     setSavedComponentFilters(value);
+    if (this._hookSettings === null) {
+      // We changed filters before we got the hook settings.
+      // Wait for hook settings before persisting component filters to not overwrite
+      // persisted hook settings with defaults.
+      // This exists purely as a type safety check; in practice the hook settings
+      // should have arrived before any filter changes could be made.
+      const onHookSettings = (settings: $ReadOnly<DevToolsHookSettings>) => {
+        this._bridge.removeListener('hookSettings', onHookSettings);
+        this.emit('settingsUpdated', settings, value);
+      };
+      this._bridge.addListener('hookSettings', onHookSettings);
+      this._bridge.send('getHookSettings');
+    } else {
+      this.emit('settingsUpdated', this._hookSettings, value);
+    }
 
     // Notify the renderer that filter preferences have changed.
     // This is an expensive operation; it unmounts and remounts the entire tree,
@@ -951,6 +957,12 @@ export default class Store extends EventEmitter<{
       if (root === null) {
         continue;
       }
+      const rendererID = this._rootIDToRendererID.get(rootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for root. This is a bug in React DevTools.',
+        );
+      }
       // TODO: This includes boundaries that can't be suspended due to no support from the renderer.
 
       const suspense = this.getSuspenseByID(rootID);
@@ -966,6 +978,7 @@ export default class Store extends EventEmitter<{
             id: suspense.id,
             environment: environmentName,
             endTime: suspense.endTime,
+            rendererID,
           };
           target.push(rootStep);
         } else {
@@ -984,6 +997,7 @@ export default class Store extends EventEmitter<{
           uniqueSuspendersOnly,
           environments,
           0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+          rendererID,
         );
       }
     }
@@ -1033,6 +1047,7 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspenseTransition(
     uniqueSuspendersOnly: boolean,
+    rendererID: number,
   ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const focusedTransitionID = this._focusedTransition;
@@ -1045,6 +1060,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       environment: null,
       endTime: 0,
+      rendererID,
     });
 
     const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
@@ -1056,6 +1072,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       [],
       0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+      rendererID,
     );
 
     return target;
@@ -1067,6 +1084,7 @@ export default class Store extends EventEmitter<{
     uniqueSuspendersOnly: boolean,
     parentEnvironments: Array<string>,
     parentEndTime: number,
+    rendererID: number,
   ): void {
     for (let i = 0; i < children.length; i++) {
       const child = this.getSuspenseByID(children[i]);
@@ -1100,6 +1118,7 @@ export default class Store extends EventEmitter<{
           id: child.id,
           environment: environmentName,
           endTime: maxEndTime,
+          rendererID,
         });
       }
       this.pushTimelineStepsInDocumentOrder(
@@ -1108,6 +1127,7 @@ export default class Store extends EventEmitter<{
         uniqueSuspendersOnly,
         unionEnvironments,
         maxEndTime,
+        rendererID,
       );
     }
   }
@@ -1115,14 +1135,32 @@ export default class Store extends EventEmitter<{
   getEndTimeOrDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseTimelineStep> {
-    const timeline =
-      this._focusedTransition === 0
-        ? this.getSuspendableDocumentOrderSuspenseInitialPaint(
-            uniqueSuspendersOnly,
-          )
-        : this.getSuspendableDocumentOrderSuspenseTransition(
-            uniqueSuspendersOnly,
-          );
+    let timeline: SuspenseTimelineStep[];
+    if (this._focusedTransition === 0) {
+      timeline =
+        this.getSuspendableDocumentOrderSuspenseInitialPaint(
+          uniqueSuspendersOnly,
+        );
+    } else {
+      const focusedTransitionRootID = this.getRootIDForElement(
+        this._focusedTransition,
+      );
+      if (focusedTransitionRootID === null) {
+        throw new Error(
+          'Failed to find root ID for focused transition. This is a bug in React DevTools.',
+        );
+      }
+      const rendererID = this._rootIDToRendererID.get(focusedTransitionRootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for focused transition root. This is a bug in React DevTools.',
+        );
+      }
+      timeline = this.getSuspendableDocumentOrderSuspenseTransition(
+        uniqueSuspendersOnly,
+        rendererID,
+      );
+    }
 
     if (timeline.length === 0) {
       return timeline;
@@ -1633,45 +1671,6 @@ export default class Store extends EventEmitter<{
 
           break;
         }
-        case TREE_OPERATION_REMOVE_ROOT: {
-          i += 1;
-
-          const id = operations[1];
-
-          if (__DEBUG__) {
-            debug(`Remove root ${id}`);
-          }
-
-          const recursivelyDeleteElements = (elementID: number) => {
-            const element = this._idToElement.get(elementID);
-            this._idToElement.delete(elementID);
-            if (element) {
-              // Mostly for Flow's sake
-              for (let index = 0; index < element.children.length; index++) {
-                recursivelyDeleteElements(element.children[index]);
-              }
-            }
-          };
-
-          const root = this._idToElement.get(id);
-          if (root === undefined) {
-            this._throwAndEmitError(
-              Error(
-                `Cannot remove root "${id}": no matching node was found in the Store.`,
-              ),
-            );
-
-            break;
-          }
-
-          recursivelyDeleteElements(id);
-
-          this._rootIDToCapabilities.delete(id);
-          this._rootIDToRendererID.delete(id);
-          this._roots = this._roots.filter(rootID => rootID !== id);
-          this._weightAcrossRoots -= root.weight;
-          break;
-        }
         case TREE_OPERATION_REORDER_CHILDREN: {
           const id = operations[i + 1];
           const numChildren = operations[i + 2];
@@ -1906,6 +1905,13 @@ export default class Store extends EventEmitter<{
               }
 
               const index = parentSuspense.children.indexOf(id);
+              if (index === -1) {
+                this._throwAndEmitError(
+                  Error(
+                    `Cannot remove suspense node "${id}" from parent "${parentID}" because it is not a child of the parent.`,
+                  ),
+                );
+              }
               parentSuspense.children.splice(index, 1);
             }
           }
@@ -2264,19 +2270,6 @@ export default class Store extends EventEmitter<{
     return didMutate;
   }
 
-  // Certain backends save filters on a per-domain basis.
-  // In order to prevent filter preferences and applied filters from being out of sync,
-  // this message enables the backend to override the frontend's current ("saved") filters.
-  // This action should also override the saved filters too,
-  // else reloading the frontend without reloading the backend would leave things out of sync.
-  onBridgeOverrideComponentFilters: (
-    componentFilters: Array<ComponentFilter>,
-  ) => void = componentFilters => {
-    this._componentFilters = componentFilters;
-
-    setSavedComponentFilters(componentFilters);
-  };
-
   onBridgeShutdown: () => void = () => {
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
@@ -2284,10 +2277,6 @@ export default class Store extends EventEmitter<{
 
     const bridge = this._bridge;
     bridge.removeListener('operations', this.onBridgeOperations);
-    bridge.removeListener(
-      'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters,
-    );
     bridge.removeListener('shutdown', this.onBridgeShutdown);
     bridge.removeListener(
       'isReloadAndProfileSupportedByBackend',
@@ -2381,8 +2370,15 @@ export default class Store extends EventEmitter<{
     this._bridge.send('getHookSettings'); // Warm up cached hook settings
   };
 
-  onHostInstanceSelected: (elementId: number) => void = elementId => {
-    if (this._lastSelectedHostInstanceElementId === elementId) {
+  onHostInstanceSelected: (elementId: number | null) => void = elementId => {
+    if (
+      this._lastSelectedHostInstanceElementId === elementId &&
+      // Force clear selection e.g. when we inspect an element in the Components panel
+      // and then switch to the browser's Elements panel.
+      // We wouldn't want to stay on the inspected element if we're inspecting
+      // an element not owned by React when switching to the browser's Elements panel.
+      elementId !== null
+    ) {
       return;
     }
 
@@ -2412,7 +2408,7 @@ export default class Store extends EventEmitter<{
       this._hookSettings = settings;
 
       this._bridge.send('updateHookSettings', settings);
-      this.emit('settingsUpdated', settings);
+      this.emit('settingsUpdated', settings, this._componentFilters);
     };
 
   onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
@@ -2432,15 +2428,6 @@ export default class Store extends EventEmitter<{
       this.emit('mutated', [[], new Map(), null]);
     }
   }
-
-  get supportsSuspenseTab(): boolean {
-    return this._supportsSuspenseTab;
-  }
-
-  onEnableSuspenseTab = (): void => {
-    this._supportsSuspenseTab = true;
-    this.emit('enableSuspenseTab');
-  };
 
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,

@@ -101,7 +101,7 @@ export type FindHostInstancesForElementID = (
   id: number,
 ) => null | $ReadOnlyArray<HostInstance>;
 
-type Rect = {
+export type Rect = {
   x: number,
   y: number,
   width: number,
@@ -597,4 +597,16 @@ export type DevToolsHookSettings = {
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
+  disableSecondConsoleLogDimmingInStrictMode: boolean,
 };
+
+export type DevToolsSettings = DevToolsHookSettings & {
+  componentFilters: Array<ComponentFilter>,
+};
+
+export type ReactBuildType =
+  | 'deadcode'
+  | 'development'
+  | 'outdated'
+  | 'production'
+  | 'unminified';

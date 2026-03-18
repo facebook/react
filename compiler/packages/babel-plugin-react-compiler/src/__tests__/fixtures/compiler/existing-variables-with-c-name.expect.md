@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees:false
+// @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import {useMemo, useState} from 'react';
 import {ValidateMemoization} from 'shared-runtime';
 
@@ -29,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c2 } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false
+import { c as _c2 } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false @validateExhaustiveMemoizationDependencies:false
 import { useMemo, useState } from "react";
 import { ValidateMemoization } from "shared-runtime";
 

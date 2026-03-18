@@ -6,6 +6,7 @@ const {
   resetAllUnexpectedConsoleCalls,
   patchConsoleMethods,
 } = require('internal-test-utils/consoleMock');
+const path = require('path');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -17,6 +18,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // By default, jest.spyOn also calls the spied method.
   const spyOn = jest.spyOn;
   const noop = jest.fn;
+
+  // Can be used to normalize paths in stackframes
+  global.__REACT_ROOT_PATH_TEST__ = path.resolve(__dirname, '../..');
 
   // Spying on console methods in production builds can mask errors.
   // This is why we added an explicit spyOnDev() helper.
@@ -135,6 +139,13 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
             );
           }
           return Reflect.set(target, key, value, receiver);
+        },
+        get(target, key, receiver) {
+          if (key === 'stack') {
+            // https://github.com/nodejs/node/issues/60862
+            return Reflect.get(target, key);
+          }
+          return Reflect.get(target, key, receiver);
         },
       });
       originalErrorInstances.set(proxy, error);
@@ -307,4 +318,15 @@ jest.mock('async_hooks', () => {
       return (installedHook = actual.createHook(config));
     },
   };
+});
+
+// Ensure async hooks are disabled after each test to prevent cross-test pollution.
+// This is needed because test files that load the Node server (with async debug hooks)
+// can pollute test files that load the Edge server (which doesn't create new hooks
+// to trigger the cleanup in the mock above).
+afterEach(() => {
+  if (installedHook) {
+    installedHook.disable();
+    installedHook = null;
+  }
 });

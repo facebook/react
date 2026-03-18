@@ -124,25 +124,34 @@ async function main() {
         throw new Error(`Unknown release channel ${argv.releaseChannel}`);
     }
   } else {
-    // Running locally, no concurrency. Move each channel's build artifacts into
-    // a temporary directory so that they don't conflict.
-    buildForChannel('stable', '', '');
-    const stableDir = tmp.dirSync().name;
-    crossDeviceRenameSync('./build', stableDir);
-    processStable(stableDir);
-    buildForChannel('experimental', '', '');
-    const experimentalDir = tmp.dirSync().name;
-    crossDeviceRenameSync('./build', experimentalDir);
-    processExperimental(experimentalDir);
+    const releaseChannel = argv.releaseChannel;
+    if (releaseChannel === 'stable') {
+      buildForChannel('stable', '', '');
+      processStable('./build');
+    } else if (releaseChannel === 'experimental') {
+      buildForChannel('experimental', '', '');
+      processExperimental('./build');
+    } else {
+      // Running locally, no concurrency. Move each channel's build artifacts into
+      // a temporary directory so that they don't conflict.
+      buildForChannel('stable', '', '');
+      const stableDir = tmp.dirSync().name;
+      crossDeviceRenameSync('./build', stableDir);
+      processStable(stableDir);
+      buildForChannel('experimental', '', '');
+      const experimentalDir = tmp.dirSync().name;
+      crossDeviceRenameSync('./build', experimentalDir);
+      processExperimental(experimentalDir);
 
-    // Then merge the experimental folder into the stable one. processExperimental
-    // will have already removed conflicting files.
-    //
-    // In CI, merging is handled by the GitHub Download Artifacts plugin.
-    mergeDirsSync(experimentalDir + '/', stableDir + '/');
+      // Then merge the experimental folder into the stable one. processExperimental
+      // will have already removed conflicting files.
+      //
+      // In CI, merging is handled by the GitHub Download Artifacts plugin.
+      mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
-    // Now restore the combined directory back to its original name
-    crossDeviceRenameSync(stableDir, './build');
+      // Now restore the combined directory back to its original name
+      crossDeviceRenameSync(stableDir, './build');
+    }
   }
 }
 

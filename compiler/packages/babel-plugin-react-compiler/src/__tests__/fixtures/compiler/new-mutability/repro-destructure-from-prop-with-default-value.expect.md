@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateExhaustiveMemoizationDependencies:false
 export function useFormatRelativeTime(opts = {}) {
   const {timeZone, minimal} = opts;
   const format = useCallback(function formatWithUnit() {}, [minimal]);
@@ -21,7 +22,7 @@ export function useFormatRelativeTime(opts = {}) {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @validateExhaustiveMemoizationDependencies:false
 export function useFormatRelativeTime(t0) {
   const $ = _c(1);
   const opts = t0 === undefined ? {} : t0;

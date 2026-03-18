@@ -1,3 +1,9 @@
+## 19.2.1 (Dec 3, 2025)
+
+### React Server Components
+
+- Bring React Server Component fixes to Server Actions (@sebmarkbage [#35277](https://github.com/facebook/react/pull/35277))
+
 ## 19.2.0 (October 1st, 2025)
 
 Below is a list of all new features, APIs, and bug fixes.
@@ -71,6 +77,12 @@ Read the [React 19.2 release post](https://react.dev/blog/2025/10/01/react-19-2)
 
 - [createContainer](https://github.com/facebook/react/blob/v19.2.0/packages/react-reconciler/src/ReactFiberReconciler.js#L255-L261) and [createHydrationContainer](https://github.com/facebook/react/blob/v19.2.0/packages/react-reconciler/src/ReactFiberReconciler.js#L305-L312) had their parameter order adjusted after `on*` handlers to account for upcoming experimental APIs
 
+## 19.1.2 (Dec 3, 2025)
+
+### React Server Components
+
+- Bring React Server Component fixes to Server Actions (@sebmarkbage [#35277](https://github.com/facebook/react/pull/35277))
+
 ## 19.1.1 (July 28, 2025)
 
 ### React
@@ -122,6 +134,12 @@ An Owner Stack is a string representing the components that are directly respons
 * Updated the server component wire format to remove IDs for hints and console.log because they have no return value [#31671](https://github.com/facebook/react/pull/31671)
 * Exposed `registerServerReference` in client builds to handle server references in different environments. [#32534](https://github.com/facebook/react/pull/32534)
 * Added react-server-dom-parcel package which integrates Server Components with the [Parcel bundler](https://parceljs.org/) [#31725](https://github.com/facebook/react/pull/31725), [#32132](https://github.com/facebook/react/pull/32132), [#31799](https://github.com/facebook/react/pull/31799), [#32294](https://github.com/facebook/react/pull/32294), [#31741](https://github.com/facebook/react/pull/31741)
+
+## 19.0.1 (Dec 3, 2025)
+
+### React Server Components
+
+- Bring React Server Component fixes to Server Actions (@sebmarkbage [#35277](https://github.com/facebook/react/pull/35277))
 
 ## 19.0.0 (December 5, 2024)
 

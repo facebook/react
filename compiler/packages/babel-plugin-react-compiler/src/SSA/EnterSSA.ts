@@ -10,6 +10,7 @@ import {Environment} from '../HIR/Environment';
 import {
   BasicBlock,
   BlockId,
+  GeneratedSource,
   HIRFunction,
   Identifier,
   IdentifierId,
@@ -69,15 +70,7 @@ class SSABuilder {
   state(): State {
     CompilerError.invariant(this.#current !== null, {
       reason: 'we need to be in a block to access state!',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: null,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
     return this.#states.get(this.#current)!;
   }
@@ -258,15 +251,7 @@ function enterSSAImpl(
   for (const [blockId, block] of func.body.blocks) {
     CompilerError.invariant(!visitedBlocks.has(block), {
       reason: `found a cycle! visiting bb${block.id} again`,
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: null,
-          message: null,
-        },
-      ],
-      suggestions: null,
+      loc: GeneratedSource,
     });
 
     visitedBlocks.add(block);
@@ -277,15 +262,7 @@ function enterSSAImpl(
       // NOTE: func.context should be empty for the root function
       CompilerError.invariant(func.context.length === 0, {
         reason: `Expected function context to be empty for outer function declarations`,
-        description: null,
-        details: [
-          {
-            kind: 'error',
-            loc: func.loc,
-            message: null,
-          },
-        ],
-        suggestions: null,
+        loc: func.loc,
       });
       func.params = func.params.map(param => {
         if (param.kind === 'Identifier') {
@@ -312,15 +289,7 @@ function enterSSAImpl(
         CompilerError.invariant(entry.preds.size === 0, {
           reason:
             'Expected function expression entry block to have zero predecessors',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: null,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: GeneratedSource,
         });
         entry.preds.add(blockId);
         builder.defineFunction(loweredFunc);

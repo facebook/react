@@ -12,6 +12,7 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {ReactFormState, Thenable} from 'shared/ReactTypes';
+
 import {
   preloadModule,
   requireModule,
@@ -72,6 +73,7 @@ type Options = {
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => void,
+  startTime?: number,
 };
 
 function startReadingFromDebugChannelReadableStream(
@@ -133,6 +135,7 @@ export function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
@@ -220,6 +223,7 @@ export function prerender(
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.temporaryReferences : undefined,
+      options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
@@ -250,7 +254,10 @@ export function registerServerActions(manifest: ServerManifest) {
 
 export function decodeReply<T>(
   body: string | FormData,
-  options?: {temporaryReferences?: TemporaryReferenceSet},
+  options?: {
+    temporaryReferences?: TemporaryReferenceSet,
+    arraySizeLimit?: number,
+  },
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
@@ -262,6 +269,7 @@ export function decodeReply<T>(
     '',
     options ? options.temporaryReferences : undefined,
     body,
+    options ? options.arraySizeLimit : undefined,
   );
   const root = getRoot<T>(response);
   close(response);

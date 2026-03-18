@@ -39,6 +39,10 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function normalizeSerializedContent(str) {
+  return str.replaceAll(__REACT_ROOT_PATH_TEST__, '**');
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     // Mock performance.now for timing tests
@@ -228,7 +232,7 @@ describe('ReactFlightDOMEdge', () => {
 
   async function createBufferedUnclosingStream(
     stream: ReadableStream<Uint8Array>,
-  ): ReadableStream<Uint8Array> {
+  ): Promise<ReadableStream<Uint8Array>> {
     const chunks: Array<Uint8Array> = [];
     const reader = stream.getReader();
     while (true) {
@@ -315,6 +319,74 @@ describe('ReactFlightDOMEdge', () => {
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual('<span>Client Component</span>');
+  });
+
+  it('should resolve cyclic references in client component props after two rounds of serialization and deserialization', async () => {
+    const ClientComponent = clientExports(function ClientComponent({data}) {
+      return (
+        <div>{data.self === data ? 'Cycle resolved' : 'Cycle broken'}</div>
+      );
+    });
+    const clientModuleMetadata = webpackMap[ClientComponent.$$id];
+    const consumerModuleId = 'consumer-' + clientModuleMetadata.id;
+    const clientReference = Object.defineProperties(ClientComponent, {
+      $$typeof: {value: Symbol.for('react.client.reference')},
+      $$id: {value: ClientComponent.$$id},
+    });
+    webpackModules[consumerModuleId] = clientReference;
+
+    const cyclic = {self: null};
+    cyclic.self = cyclic;
+
+    const stream1 = ReactServerDOMServer.renderToReadableStream(
+      <React.Fragment key="this-key-is-important-to-repro-a-prior-cycle-serialization-bug">
+        <ClientComponent data={cyclic} />
+      </React.Fragment>,
+      webpackMap,
+    );
+
+    const promise = ReactServerDOMClient.createFromReadableStream(stream1, {
+      serverConsumerManifest: {
+        moduleMap: {
+          [clientModuleMetadata.id]: {
+            '*': {
+              id: consumerModuleId,
+              chunks: [],
+              name: '*',
+            },
+          },
+        },
+        moduleLoading: webpackModuleLoading,
+        serverModuleMap: null,
+      },
+    });
+
+    const errors = [];
+    const stream2 = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(promise, webpackMap, {
+        onError(error) {
+          errors.push(error);
+        },
+      }),
+    );
+
+    expect(errors).toEqual([]);
+
+    const element = await serverAct(() =>
+      ReactServerDOMClient.createFromReadableStream(stream2, {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      }),
+    );
+
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(element),
+    );
+    const result = await readResult(ssrStream);
+
+    expect(result).toBe('<div>Cycle resolved</div>');
   });
 
   it('should be able to load a server reference on a consuming server if a mapping exists', async () => {
@@ -481,8 +553,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(1100);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
+    expect(serializedContent.length).toBeLessThan(1075);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -551,9 +625,11 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
 
-    expect(serializedContent.length).toBeLessThan(490);
+    expect(serializedContent.length).toBeLessThan(465);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -623,8 +699,10 @@ describe('ReactFlightDOMEdge', () => {
     );
     const [stream1, stream2] = passThrough(stream).tee();
 
-    const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(__DEV__ ? 680 : 400);
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream1),
+    );
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 630 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await serverAct(() =>
@@ -657,8 +735,10 @@ describe('ReactFlightDOMEdge', () => {
         <ServerComponent recurse={20} />,
       ),
     );
-    const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 320 * 20 : 0;
+    const serializedContent = normalizeSerializedContent(
+      await readResult(stream),
+    );
+    const expectedDebugInfoSize = __DEV__ ? 295 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
@@ -1040,20 +1120,14 @@ describe('ReactFlightDOMEdge', () => {
     };
 
     ServerModule.greet.bind({}, 'hi');
-    assertConsoleErrorDev(
-      [
-        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+    ]);
 
     ServerModuleImportedOnClient.greet.bind({}, 'hi');
-    assertConsoleErrorDev(
-      [
-        'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+    ]);
   });
 
   it('should supports ReadableStreams with typed arrays', async () => {
@@ -1453,7 +1527,6 @@ describe('ReactFlightDOMEdge', () => {
     ]);
   });
 
-  // @gate enableHalt
   it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -1507,7 +1580,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toBe('<div>hello world</div>');
   });
 
-  // @gate enableHalt
   it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -1587,7 +1659,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(div.textContent).toBe('loading...');
   });
 
-  // @gate enableHalt
   it('should abort parsing an incomplete prerender payload', async () => {
     const infinitePromise = new Promise(() => {});
     const controller = new AbortController();
@@ -1635,7 +1706,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe('Connection closed.');
   });
 
-  // @gate enableHalt
   it('should be able to handle a rejected promise in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1674,7 +1744,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt
   it('should be able to handle an erroring async iterable in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1721,7 +1790,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt
   it('should be able to handle an erroring readable stream in prerender', async () => {
     const expectedError = new Error('Bam!');
     const errors = [];
@@ -1769,7 +1837,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt
   it('can prerender an async iterable', async () => {
     const errors = [];
 
@@ -1813,7 +1880,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(text).toBe('hello world');
   });
 
-  // @gate enableHalt
   it('can prerender a readable stream', async () => {
     const errors = [];
 
@@ -1847,7 +1913,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(result).toBe('hello world');
   });
 
-  // @gate enableHalt
   it('does not return a prerender prelude early when an error is emitted and there are still pending tasks', async () => {
     let rejectPromise;
     const rejectingPromise = new Promise(
@@ -1916,7 +1981,6 @@ describe('ReactFlightDOMEdge', () => {
     expect(error.message).toBe(expectedMessage);
   });
 
-  // @gate enableHalt
   it('does not include source locations in component stacks for halted components', async () => {
     // We only support adding source locations for halted components in the Node.js builds.
 
@@ -2308,5 +2372,35 @@ describe('ReactFlightDOMEdge', () => {
 
     const result = await response;
     expect(result).toEqual({obj: obj, node: 'hi'});
+  });
+
+  it('does not leak the server reference code', async () => {
+    function foo() {
+      return 'foo';
+    }
+
+    const bar = () => {
+      return 'bar';
+    };
+
+    const anonymous = (
+      () => () =>
+        'anonymous'
+    )();
+
+    expect(
+      ReactServerDOMServer.registerServerReference(foo, 'foo-id').toString(),
+    ).toBe('function () { [omitted code] }');
+
+    expect(
+      ReactServerDOMServer.registerServerReference(bar, 'bar-id').toString(),
+    ).toBe('function () { [omitted code] }');
+
+    expect(
+      ReactServerDOMServer.registerServerReference(
+        anonymous,
+        'anonymous-id',
+      ).toString(),
+    ).toBe('function () { [omitted code] }');
   });
 });

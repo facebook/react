@@ -127,6 +127,7 @@ import {
   enableFragmentRefsScrollIntoView,
   enableProfilerTimer,
   enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -182,6 +183,7 @@ export type Props = {
   checked?: boolean,
   defaultChecked?: boolean,
   multiple?: boolean,
+  type?: string,
   src?: string | Blob | MediaSource | MediaStream, // TODO: Response
   srcSet?: string,
   loading?: 'eager' | 'lazy',
@@ -216,7 +218,7 @@ export type Instance = Element;
 export type TextInstance = Text;
 
 type InstanceWithFragmentHandles = Instance & {
-  unstable_reactFragments?: Set<FragmentInstanceType>,
+  reactFragments?: Set<FragmentInstanceType>,
 };
 
 declare class ActivityInterface extends Comment {}
@@ -468,6 +470,44 @@ export function createHoistableInstance(
 }
 
 let didWarnScriptTags = false;
+function isScriptDataBlock(props: Props): boolean {
+  const scriptType = props.type;
+  if (typeof scriptType !== 'string' || scriptType === '') {
+    return false;
+  }
+  const lower = scriptType.toLowerCase();
+  // Special non-MIME keywords recognized by the HTML spec
+  // TODO: May be fine to also not warn about having these types be parsed as "parser-inserted"
+  if (
+    lower === 'module' ||
+    lower === 'importmap' ||
+    lower === 'speculationrules'
+  ) {
+    return false;
+  }
+  // JavaScript MIME types per https://mimesniff.spec.whatwg.org/#javascript-mime-type
+  switch (lower) {
+    case 'application/ecmascript':
+    case 'application/javascript':
+    case 'application/x-ecmascript':
+    case 'application/x-javascript':
+    case 'text/ecmascript':
+    case 'text/javascript':
+    case 'text/javascript1.0':
+    case 'text/javascript1.1':
+    case 'text/javascript1.2':
+    case 'text/javascript1.3':
+    case 'text/javascript1.4':
+    case 'text/javascript1.5':
+    case 'text/jscript':
+    case 'text/livescript':
+    case 'text/x-ecmascript':
+    case 'text/x-javascript':
+      return false;
+  }
+  // Any other non-empty type value means this is a data block
+  return true;
+}
 const warnedUnknownTags: {
   [key: string]: boolean,
 } = {
@@ -525,7 +565,13 @@ export function createInstance(
           // set to true and it does not execute
           const div = ownerDocument.createElement('div');
           if (__DEV__) {
-            if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+            if (
+              enableTrustedTypesIntegration &&
+              !didWarnScriptTags &&
+              // Data block scripts are not executed by UAs anyway so
+              // we don't need to warn: https://html.spec.whatwg.org/multipage/scripting.html#attr-script-type
+              !isScriptDataBlock(props)
+            ) {
               console.error(
                 'Encountered a script tag while rendering React component. ' +
                   'Scripts inside React components are never executed when rendering ' +
@@ -607,10 +653,32 @@ export function createInstance(
   return domElement;
 }
 
+let didWarnForClone = false;
+
 export function cloneMutableInstance(
   instance: Instance,
   keepChildren: boolean,
 ): Instance {
+  if (__DEV__) {
+    // Warn for problematic
+    const tagName = instance.tagName;
+    switch (tagName) {
+      case 'VIDEO':
+      case 'IFRAME':
+        if (!didWarnForClone) {
+          didWarnForClone = true;
+          // TODO: Once we have the ability to avoid cloning the root, suggest an absolutely
+          // positioned ViewTransition instead as the solution.
+          console.warn(
+            'startGestureTransition() required cloning a <%s> element since it exists in ' +
+              'both states of the gesture. This can be problematic since it will load it twice ' +
+              'Try removing or hiding it with <Activity mode="offscreen"> in the optimistic state.',
+            tagName.toLowerCase(),
+          );
+        }
+        break;
+    }
+  }
   return instance.cloneNode(keepChildren);
 }
 
@@ -1996,26 +2064,6 @@ export function hasInstanceAffectedParent(
   return oldRect.height !== newRect.height || oldRect.width !== newRect.width;
 }
 
-function cancelAllViewTransitionAnimations(scope: Element) {
-  // In Safari, we need to manually cancel all manually start animations
-  // or it'll block or interfer with future transitions.
-  // $FlowFixMe[prop-missing]
-  const animations = scope.getAnimations({subtree: true});
-  for (let i = 0; i < animations.length; i++) {
-    const anim = animations[i];
-    const effect: KeyframeEffect = (anim.effect: any);
-    // $FlowFixMe
-    const pseudo: ?string = effect.pseudoElement;
-    if (
-      pseudo != null &&
-      pseudo.startsWith('::view-transition') &&
-      effect.target === scope
-    ) {
-      anim.cancel();
-    }
-  }
-}
-
 // How long to wait for new fonts to load before just committing anyway.
 // This freezes the screen. It needs to be short enough that it doesn't cause too much of
 // an issue when it's a new load and slow, yet long enough that you have a chance to load
@@ -2210,6 +2258,8 @@ export function startViewTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
 
+    const viewTransitionAnimations: Array<Animation> = [];
+
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2224,6 +2274,7 @@ export function startViewTransition(
           pseudoElement != null &&
           pseudoElement.startsWith('::view-transition')
         ) {
+          viewTransitionAnimations.push(animation);
           const keyframes = effect.getKeyframes();
           // Next, we're going to try to optimize this animation in case the auto-generated
           // width/height keyframes are unnecessary.
@@ -2315,7 +2366,12 @@ export function startViewTransition(
     };
     transition.ready.then(readyCallback, handleError);
     transition.finished.finally(() => {
-      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
+        viewTransitionAnimations[i].cancel();
+      }
       // $FlowFixMe[prop-missing]
       if (ownerDocument.__reactViewTransition === transition) {
         // $FlowFixMe[prop-missing]
@@ -2349,6 +2405,7 @@ export function startViewTransition(
 
 export type RunningViewTransition = {
   skipTransition(): void,
+  finished: Promise<void>,
   ...
 };
 
@@ -2384,6 +2441,7 @@ function animateGesture(
   targetElement: Element,
   pseudoElement: string,
   timeline: GestureTimeline,
+  viewTransitionAnimations: Array<Animation>,
   customTimelineCleanup: Array<() => void>,
   rangeStart: number,
   rangeEnd: number,
@@ -2476,7 +2534,7 @@ function animateGesture(
   if (timeline instanceof AnimationTimeline) {
     // Native Timeline
     // $FlowFixMe[incompatible-call]
-    targetElement.animate(keyframes, {
+    const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // Set the timeline to the current gesture timeline to drive the updates.
       timeline: timeline,
@@ -2494,6 +2552,7 @@ function animateGesture(
       rangeStart: (reverse ? rangeEnd : rangeStart) + '%',
       rangeEnd: (reverse ? rangeStart : rangeEnd) + '%',
     });
+    viewTransitionAnimations.push(animation);
   } else {
     // Custom Timeline
     // $FlowFixMe[incompatible-call]
@@ -2512,6 +2571,7 @@ function animateGesture(
       delay: reverse ? rangeEnd : rangeStart,
       duration: reverse ? rangeStart - rangeEnd : rangeEnd - rangeStart,
     });
+    viewTransitionAnimations.push(animation);
     // Let the custom timeline take control of driving the animation.
     const cleanup = timeline.animate(animation);
     if (cleanup) {
@@ -2549,6 +2609,7 @@ export function startGestureTransition(
     // $FlowFixMe[prop-missing]
     ownerDocument.__reactViewTransition = transition;
     const customTimelineCleanup: Array<() => void> = []; // Cleanup Animations started in a CustomTimeline
+    const viewTransitionAnimations: Array<Animation> = [];
     const readyCallback = () => {
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
@@ -2565,7 +2626,10 @@ export function startGestureTransition(
         // $FlowFixMe
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
-        } else if (pseudoElement.startsWith('::view-transition')) {
+        } else if (
+          pseudoElement.startsWith('::view-transition') &&
+          effect.target === documentElement
+        ) {
           const timing = effect.getTiming();
           const duration =
             // $FlowFixMe[prop-missing]
@@ -2658,6 +2722,7 @@ export function startGestureTransition(
             effect.target,
             pseudoElement,
             timeline,
+            viewTransitionAnimations,
             customTimelineCleanup,
             adjustedRangeStart,
             adjustedRangeEnd,
@@ -2685,6 +2750,7 @@ export function startGestureTransition(
                 effect.target,
                 pseudoElementName,
                 timeline,
+                viewTransitionAnimations,
                 customTimelineCleanup,
                 rangeStart,
                 rangeEnd,
@@ -2706,6 +2772,7 @@ export function startGestureTransition(
         duration: 1,
       });
       blockingAnim.pause();
+      viewTransitionAnimations.push(blockingAnim);
       animateCallback();
     };
     // In Chrome, "new" animations are not ready in the ready callback. We have to wait
@@ -2743,7 +2810,12 @@ export function startGestureTransition(
     };
     transition.ready.then(readyForAnimations, handleError);
     transition.finished.finally(() => {
-      cancelAllViewTransitionAnimations((ownerDocument.documentElement: any));
+      for (let i = 0; i < viewTransitionAnimations.length; i++) {
+        // In Safari, we need to manually cancel all manually started animations
+        // or it'll block or interfer with future transitions.
+        // We can't use getAnimations() due to #35336 so we collect them in an array.
+        viewTransitionAnimations[i].cancel();
+      }
       for (let i = 0; i < customTimelineCleanup.length; i++) {
         const cleanup = customTimelineCleanup[i];
         cleanup();
@@ -2780,6 +2852,13 @@ export function startGestureTransition(
 
 export function stopViewTransition(transition: RunningViewTransition) {
   transition.skipTransition();
+}
+
+export function addViewTransitionFinishedListener(
+  transition: RunningViewTransition,
+  callback: () => void,
+) {
+  transition.finished.finally(callback);
 }
 
 interface ViewTransitionPseudoElementType extends mixin$Animatable {
@@ -2923,6 +3002,7 @@ function FragmentInstance(this: FragmentInstanceType, fragmentFiber: Fiber) {
   this._eventListeners = null;
   this._observers = null;
 }
+
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.addEventListener = function (
   this: FragmentInstanceType,
@@ -3021,13 +3101,16 @@ function indexOfEventListener(
   listener: EventListener,
   optionsOrUseCapture: void | EventListenerOptionsOrUseCapture,
 ): number {
+  if (eventListeners.length === 0) {
+    return -1;
+  }
+  const normalizedOptions = normalizeListenerOptions(optionsOrUseCapture);
   for (let i = 0; i < eventListeners.length; i++) {
     const item = eventListeners[i];
     if (
       item.type === type &&
       item.listener === listener &&
-      normalizeListenerOptions(item.optionsOrUseCapture) ===
-        normalizeListenerOptions(optionsOrUseCapture)
+      normalizeListenerOptions(item.optionsOrUseCapture) === normalizedOptions
     ) {
       return i;
     }
@@ -3086,6 +3169,12 @@ function setFocusOnFiberIfFocusable(
   fiber: Fiber,
   focusOptions?: FocusOptions,
 ): boolean {
+  if (enableFragmentRefsTextNodes) {
+    // Skip text nodes - they are not focusable
+    if (fiber.tag === HostText) {
+      return false;
+    }
+  }
   const instance = getInstanceFromHostFiber<Instance>(fiber);
   return setFocusIfFocusable(instance, focusOptions);
 }
@@ -3113,18 +3202,34 @@ function collectChildren(child: Fiber, collection: Array<Fiber>): boolean {
 }
 // $FlowFixMe[prop-missing]
 FragmentInstance.prototype.blur = function (this: FragmentInstanceType): void {
-  // TODO: When we have a parent element reference, we can skip traversal if the fragment's parent
-  //   does not contain document.activeElement
+  // Early exit if activeElement is not within the fragment's parent
+  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  if (parentHostFiber === null) {
+    return;
+  }
+  const parentHostInstance =
+    getInstanceFromHostFiber<Instance>(parentHostFiber);
+  const activeElement = parentHostInstance.ownerDocument.activeElement;
+  if (activeElement === null || !parentHostInstance.contains(activeElement)) {
+    return;
+  }
+
   traverseFragmentInstance(
     this._fragmentFiber,
     blurActiveElementWithinFragment,
+    activeElement,
   );
 };
-function blurActiveElementWithinFragment(child: Fiber): boolean {
-  // TODO: We can get the activeElement from the parent outside of the loop when we have a reference.
+function blurActiveElementWithinFragment(
+  child: Fiber,
+  activeElement: Element,
+): boolean {
+  // Skip text nodes - they can't be focused
+  if (enableFragmentRefsTextNodes && child.tag === HostText) {
+    return false;
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
-  const ownerDocument = instance.ownerDocument;
-  if (instance === ownerDocument.activeElement) {
+  if (instance === activeElement) {
     // $FlowFixMe[prop-missing]
     instance.blur();
     return true;
@@ -3136,6 +3241,28 @@ FragmentInstance.prototype.observeUsing = function (
   this: FragmentInstanceType,
   observer: IntersectionObserver | ResizeObserver,
 ): void {
+  if (__DEV__) {
+    if (enableFragmentRefsTextNodes) {
+      let hasText = false;
+      let hasElement = false;
+      traverseFragmentInstance(this._fragmentFiber, (child: Fiber) => {
+        if (child.tag === HostText) {
+          hasText = true;
+        } else {
+          // Stop traversal, found element
+          hasElement = true;
+          return true;
+        }
+        return false;
+      });
+      if (hasText && !hasElement) {
+        console.error(
+          'observeUsing() was called on a FragmentInstance with only text children. ' +
+            'Observers do not work on text nodes.',
+        );
+      }
+    }
+  }
   if (this._observers === null) {
     this._observers = new Set();
   }
@@ -3146,6 +3273,12 @@ function observeChild(
   child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
+  if (enableFragmentRefsTextNodes) {
+    // Skip text nodes - observers don't work on them
+    if (child.tag === HostText) {
+      return false;
+    }
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
   observer.observe(instance);
   return false;
@@ -3172,6 +3305,12 @@ function unobserveChild(
   child: Fiber,
   observer: IntersectionObserver | ResizeObserver,
 ) {
+  if (enableFragmentRefsTextNodes) {
+    // Skip text nodes - they were never observed
+    if (child.tag === HostText) {
+      return false;
+    }
+  }
   const instance = getInstanceFromHostFiber<Instance>(child);
   observer.unobserve(instance);
   return false;
@@ -3185,9 +3324,17 @@ FragmentInstance.prototype.getClientRects = function (
   return rects;
 };
 function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
-  const instance = getInstanceFromHostFiber<Instance>(child);
-  // $FlowFixMe[method-unbinding]
-  rects.push.apply(rects, instance.getClientRects());
+  if (enableFragmentRefsTextNodes && child.tag === HostText) {
+    const textNode: Text = child.stateNode;
+    const range = textNode.ownerDocument.createRange();
+    range.selectNodeContents(textNode);
+    // $FlowFixMe[method-unbinding]
+    rects.push.apply(rects, range.getClientRects());
+  } else {
+    const instance = getInstanceFromHostFiber<Instance>(child);
+    // $FlowFixMe[method-unbinding]
+    rects.push.apply(rects, instance.getClientRects());
+  }
   return false;
 }
 // $FlowFixMe[prop-missing]
@@ -3229,46 +3376,45 @@ FragmentInstance.prototype.compareDocumentPosition = function (
     );
   }
 
-  const firstElement = getInstanceFromHostFiber<Instance>(children[0]);
-  const lastElement = getInstanceFromHostFiber<Instance>(
+  const firstNode = getInstanceFromHostFiber<Instance>(children[0]);
+  const lastNode = getInstanceFromHostFiber<Instance>(
     children[children.length - 1],
   );
 
   // If the fragment has been portaled into another host instance, we need to
   // our best guess is to use the parent of the child instance, rather than
   // the fiber tree host parent.
-  const firstInstance = getInstanceFromHostFiber<Instance>(children[0]);
   const parentHostInstanceFromDOM = fiberIsPortaledIntoHost(this._fragmentFiber)
-    ? (firstInstance.parentElement: ?Instance)
+    ? (firstNode.parentElement: ?Instance)
     : parentHostInstance;
 
   if (parentHostInstanceFromDOM == null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
 
-  // Check if first and last element are actually in the expected document position
-  // before relying on them as source of truth for other contained elements
-  const firstElementIsContained =
-    parentHostInstanceFromDOM.compareDocumentPosition(firstElement) &
+  // Check if first and last node are actually in the expected document position
+  // before relying on them as source of truth for other contained nodes
+  const firstNodeIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(firstNode) &
     Node.DOCUMENT_POSITION_CONTAINED_BY;
-  const lastElementIsContained =
-    parentHostInstanceFromDOM.compareDocumentPosition(lastElement) &
+  const lastNodeIsContained =
+    parentHostInstanceFromDOM.compareDocumentPosition(lastNode) &
     Node.DOCUMENT_POSITION_CONTAINED_BY;
-  const firstResult = firstElement.compareDocumentPosition(otherNode);
-  const lastResult = lastElement.compareDocumentPosition(otherNode);
+  const firstResult = firstNode.compareDocumentPosition(otherNode);
+  const lastResult = lastNode.compareDocumentPosition(otherNode);
 
   const otherNodeIsFirstOrLastChild =
-    (firstElementIsContained && firstElement === otherNode) ||
-    (lastElementIsContained && lastElement === otherNode);
+    (firstNodeIsContained && firstNode === otherNode) ||
+    (lastNodeIsContained && lastNode === otherNode);
   const otherNodeIsFirstOrLastChildDisconnected =
-    (!firstElementIsContained && firstElement === otherNode) ||
-    (!lastElementIsContained && lastElement === otherNode);
+    (!firstNodeIsContained && firstNode === otherNode) ||
+    (!lastNodeIsContained && lastNode === otherNode);
   const otherNodeIsWithinFirstOrLastChild =
     firstResult & Node.DOCUMENT_POSITION_CONTAINED_BY ||
     lastResult & Node.DOCUMENT_POSITION_CONTAINED_BY;
   const otherNodeIsBetweenFirstAndLastChildren =
-    firstElementIsContained &&
-    lastElementIsContained &&
+    firstNodeIsContained &&
+    lastNodeIsContained &&
     firstResult & Node.DOCUMENT_POSITION_FOLLOWING &&
     lastResult & Node.DOCUMENT_POSITION_PRECEDING;
 
@@ -3393,6 +3539,19 @@ if (enableFragmentRefsScrollIntoView) {
     let i = resolvedAlignToTop ? children.length - 1 : 0;
     while (i !== (resolvedAlignToTop ? -1 : children.length)) {
       const child = children[i];
+      // For text nodes, use Range API to scroll to their position
+      if (enableFragmentRefsTextNodes && child.tag === HostText) {
+        const textNode: Text = child.stateNode;
+        const range = textNode.ownerDocument.createRange();
+        range.selectNodeContents(textNode);
+        const rect = range.getBoundingClientRect();
+        const scrollY = resolvedAlignToTop
+          ? window.scrollY + rect.top
+          : window.scrollY + rect.bottom - window.innerHeight;
+        window.scrollTo(window.scrollX + rect.left, scrollY);
+        i += resolvedAlignToTop ? -1 : 1;
+        continue;
+      }
       const instance = getInstanceFromHostFiber<Instance>(child);
       instance.scrollIntoView(alignToTop);
       i += resolvedAlignToTop ? -1 : 1;
@@ -3419,10 +3578,10 @@ function addFragmentHandleToInstance(
   fragmentInstance: FragmentInstanceType,
 ): void {
   if (enableFragmentRefsInstanceHandles) {
-    if (instance.unstable_reactFragments == null) {
-      instance.unstable_reactFragments = new Set();
+    if (instance.reactFragments == null) {
+      instance.reactFragments = new Set();
     }
-    instance.unstable_reactFragments.add(fragmentInstance);
+    instance.reactFragments.add(fragmentInstance);
   }
 }
 
@@ -3448,40 +3607,48 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: InstanceWithFragmentHandles,
+  childInstance: InstanceWithFragmentHandles | Text,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  if (childInstance.nodeType === TEXT_NODE) {
+    return;
+  }
+  const instance: InstanceWithFragmentHandles = (childInstance: any);
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childInstance.addEventListener(type, listener, optionsOrUseCapture);
+      instance.addEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (fragmentInstance._observers !== null) {
     fragmentInstance._observers.forEach(observer => {
-      observer.observe(childInstance);
+      observer.observe(instance);
     });
   }
   if (enableFragmentRefsInstanceHandles) {
-    addFragmentHandleToInstance(childInstance, fragmentInstance);
+    addFragmentHandleToInstance(instance, fragmentInstance);
   }
 }
 
 export function deleteChildFromFragmentInstance(
-  childInstance: InstanceWithFragmentHandles,
+  childInstance: InstanceWithFragmentHandles | Text,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  if (childInstance.nodeType === TEXT_NODE) {
+    return;
+  }
+  const instance: InstanceWithFragmentHandles = (childInstance: any);
   const eventListeners = fragmentInstance._eventListeners;
   if (eventListeners !== null) {
     for (let i = 0; i < eventListeners.length; i++) {
       const {type, listener, optionsOrUseCapture} = eventListeners[i];
-      childInstance.removeEventListener(type, listener, optionsOrUseCapture);
+      instance.removeEventListener(type, listener, optionsOrUseCapture);
     }
   }
   if (enableFragmentRefsInstanceHandles) {
-    if (childInstance.unstable_reactFragments != null) {
-      childInstance.unstable_reactFragments.delete(fragmentInstance);
+    if (instance.reactFragments != null) {
+      instance.reactFragments.delete(fragmentInstance);
     }
   }
 }
@@ -4353,18 +4520,30 @@ export function setFocusIfFocusable(
   //
   // We could compare the node to document.activeElement after focus,
   // but this would not handle the case where application code managed focus to automatically blur.
+  const element = ((node: any): HTMLElement);
+
+  // If this element is already the active element, it's focusable and already
+  // focused. Calling .focus() on it would be a no-op (no focus event fires),
+  // so we short-circuit here.
+  if (element.ownerDocument.activeElement === element) {
+    return true;
+  }
+
   let didFocus = false;
   const handleFocus = () => {
     didFocus = true;
   };
 
-  const element = ((node: any): HTMLElement);
   try {
-    element.addEventListener('focus', handleFocus);
+    // Listen on the document in the capture phase so we detect focus even when
+    // it lands on a different element than the one we called .focus() on. This
+    // happens with <label> elements (focus delegates to the associated input)
+    // and shadow hosts with delegatesFocus.
+    element.ownerDocument.addEventListener('focus', handleFocus, true);
     // $FlowFixMe[method-unbinding]
     (element.focus || HTMLElement.prototype.focus).call(element, focusOptions);
   } finally {
-    element.removeEventListener('focus', handleFocus);
+    element.ownerDocument.removeEventListener('focus', handleFocus, true);
   }
 
   return didFocus;
@@ -6466,5 +6645,7 @@ export const HostTransitionContext: ReactContext<TransitionStatus> = {
 
 export type FormInstance = HTMLFormElement;
 export function resetFormInstance(form: FormInstance): void {
+  ReactBrowserEventEmitterSetEnabled(true);
   form.reset();
+  ReactBrowserEventEmitterSetEnabled(false);
 }

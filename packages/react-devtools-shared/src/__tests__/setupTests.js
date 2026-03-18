@@ -238,16 +238,13 @@ beforeEach(() => {
 
   // Initialize filters to a known good state.
   setSavedComponentFilters(getDefaultComponentFilters());
-  global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
 
-  // Also initialize inline warnings so that we can test them.
-  global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
-
-  installHook(global, {
+  installHook(global, getDefaultComponentFilters(), {
     appendComponentStack: true,
     breakOnConsoleErrors: false,
     showInlineWarningsAndErrors: true,
     hideConsoleLogsInStrictMode: false,
+    disableSecondConsoleLogDimmingInStrictMode: false,
   });
 
   const bridgeListeners = [];

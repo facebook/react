@@ -826,7 +826,7 @@ declare class WebSocket extends EventTarget {
   bufferedAmount: number;
   extensions: string;
   onopen: (ev: any) => mixed;
-  onmessage: (ev: MessageEvent) => mixed;
+  onmessage: (ev: MessageEvent<>) => mixed;
   onclose: (ev: CloseEvent) => mixed;
   onerror: (ev: any) => mixed;
   binaryType: 'blob' | 'arraybuffer';
@@ -855,8 +855,8 @@ declare class Worker extends EventTarget {
     workerOptions?: WorkerOptions
   ): void;
   onerror: null | ((ev: any) => mixed);
-  onmessage: null | ((ev: MessageEvent) => mixed);
-  onmessageerror: null | ((ev: MessageEvent) => mixed);
+  onmessage: null | ((ev: MessageEvent<>) => mixed);
+  onmessageerror: null | ((ev: MessageEvent<>) => mixed);
   postMessage(message: any, ports?: any): void;
   terminate(): void;
 }
@@ -888,14 +888,14 @@ declare class WorkerGlobalScope extends EventTarget {
 }
 
 declare class DedicatedWorkerGlobalScope extends WorkerGlobalScope {
-  onmessage: (ev: MessageEvent) => mixed;
-  onmessageerror: (ev: MessageEvent) => mixed;
+  onmessage: (ev: MessageEvent<>) => mixed;
+  onmessageerror: (ev: MessageEvent<>) => mixed;
   postMessage(message: any, transfer?: Iterable<any>): void;
 }
 
 declare class SharedWorkerGlobalScope extends WorkerGlobalScope {
   name: string;
-  onconnect: (ev: MessageEvent) => mixed;
+  onconnect: (ev: MessageEvent<>) => mixed;
 }
 
 declare class WorkerLocation {
@@ -2056,8 +2056,8 @@ declare class MessagePort extends EventTarget {
   start(): void;
   close(): void;
 
-  onmessage: null | ((ev: MessageEvent) => mixed);
-  onmessageerror: null | ((ev: MessageEvent) => mixed);
+  onmessage: null | ((ev: MessageEvent<>) => mixed);
+  onmessageerror: null | ((ev: MessageEvent<>) => mixed);
 }
 
 declare class MessageChannel {

@@ -7,7 +7,7 @@ function Component(props) {
 
   Component = useMemo(() => {
     return Component;
-  });
+  }, [Component]);
 
   return <Component {...props} />;
 }
