@@ -121,6 +121,8 @@ Execute these steps in order, looping back to Step 1 after each commit:
 
 ### Step 1: Discover Frontier
 
+Launch a single `general-purpose` subagent to perform all discovery and testing. The subagent should:
+
 1. Read `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
 2. Identify all ported passes — those with `log_debug!` calls matching pass names from the table above
 3. Map each ported pass to its position number in the table
@@ -128,18 +130,43 @@ Execute these steps in order, looping back to Step 1 after each commit:
    ```
    bash compiler/scripts/test-rust-port.sh <LastPortedPassName>
    ```
-   - If 0 failures: all ported passes are clean (test-rust-port tests cumulative output through the named pass). The frontier is the next unported pass — skip to Step 1.6.
-   - If any failures: need to binary-search for the earliest failing pass — continue to Step 1.5.
-5. **Binary search for earliest failure**: Test ported passes from earliest to latest until you find the first one with failures. That pass is the frontier.
-6. **Determine frontier**:
-   - If a ported pass has failures → frontier = that pass (FIX mode)
-   - If all ported passes are clean → frontier = next unported pass (PORT mode)
-   - If the next unported pass is `BuildReactiveFunction` (#32) or later → STOP: report that test infra needs extending for reactive/ast kinds
+   - If 0 failures: all ported passes are clean — skip binary search
+   - If any failures: binary-search for the earliest failing pass
+5. **Binary search for earliest failure**: Test ported passes from earliest to latest until you find the first one with failures
+6. **Test all ported passes**: Run `test-rust-port.sh` for each ported pass to collect pass/total counts for each
+7. **Check log file**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` does not exist, note this in the response
+8. **Return a structured summary** in exactly this format:
+   ```
+   DISCOVERY RESULTS
+   =================
+   Ported passes:
+   - #<num> <PassName>: <passed>/<total>
+   - #<num> <PassName>: <passed>/<total>
+   ...
+
+   Frontier: #<num> <PassName> (<FIX|PORT> mode)
+   Log file exists: yes/no
+
+   FIX_FAILURE_OUTPUT (only if FIX mode):
+   <full test failure output for the frontier pass>
+   ```
+
+   If the next unported pass is `BuildReactiveFunction` (#32) or later, instead return:
+   ```
+   Frontier: BLOCKED — next pass is #32 BuildReactiveFunction, test infra needs extending for reactive/ast kinds
+   ```
+
+**Subagent prompt**: Include the Pass Order Reference table from this skill so the subagent knows the pass numbers and names.
+
+After the subagent returns, the main context:
+1. Parses the structured summary
+2. If the log file doesn't exist, creates it with the Status section populated from the subagent's data
+3. Updates the Status section of the log with the pass counts from the subagent
+4. Proceeds to Step 2
 
 ### Step 2: Report Status
 
-1. Update the Status section of the orchestrator log file with current test results.
-2. Print a status report:
+Print a status report using the data from the subagent:
 ```
 ## Orchestrator Status
 - Ported passes: <count> / 31 (hir passes)

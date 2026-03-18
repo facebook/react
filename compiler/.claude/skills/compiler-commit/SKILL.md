@@ -20,9 +20,27 @@ Arguments:
    - If any files in `compiler/crates/` changed: use `[rust-compiler]`
    - Otherwise: use `[compiler]`
 
-4. **Stage files** — stage only the relevant changed files by name. Do NOT use `git add -A` or `git add .`.
+4. **Update orchestrator log**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists and the commit includes Rust changes (`compiler/crates/`):
 
-5. **Compose commit message**:
+   Launch a `general-purpose` subagent to collect test data. The subagent should:
+   - Read `compiler/crates/react_compiler/src/entrypoint/pipeline.rs` to find all ported passes (those with `log_debug!` calls)
+   - Run `bash compiler/scripts/test-rust-port.sh <PassName>` for each ported pass to get pass/total counts
+   - Return a structured summary:
+     ```
+     TEST RESULTS
+     ============
+     - #<num> <PassName>: <passed>/<total>
+     - #<num> <PassName>: <passed>/<total>
+     ...
+     ```
+
+   After the subagent returns:
+   - Update the `# Status` section: set each pass to `complete (N/N)`, `partial (passed/total)`, or `todo` based on the results
+   - Add a `## YYYYMMDD-HHMMSS` log entry noting the commit and what changed
+
+5. **Stage files** — stage only the relevant changed files by name (including the orchestrator log if updated in step 4). Do NOT use `git add -A` or `git add .`.
+
+6. **Compose commit message**:
    ```
    [prefix] <title>
 
@@ -30,7 +48,7 @@ Arguments:
    ```
    The title comes from $ARGUMENTS. Write the summary yourself based on the actual changes.
 
-6. **Commit** using a heredoc for the message:
+7. **Commit** using a heredoc for the message:
    ```bash
    git commit -m "$(cat <<'EOF'
    [rust-compiler] Title here
@@ -39,12 +57,6 @@ Arguments:
    EOF
    )"
    ```
-
-7. **Update orchestrator log**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists and the commit includes Rust changes (`compiler/crates/`):
-   - Run `bash compiler/scripts/test-rust-port.sh <LastPortedPass>` to get current test counts
-   - Update the `# Status` section: set each pass to `complete (N/N)`, `partial (passed/total)`, or `todo` based on the test results
-   - Add a `## YYYYMMDD-HHMMSS` log entry noting the commit and what changed
-   - Stage and amend the commit to include the log update: `git add compiler/docs/rust-port/rust-port-orchestrator-log.md && git commit --amend --no-edit`
 
 8. **Do NOT push** unless the user explicitly asks.
 
