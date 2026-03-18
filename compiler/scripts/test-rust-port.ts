@@ -11,7 +11,7 @@
  * Runs both compilers through their real Babel plugins, captures debug log
  * entries via the logger API, and diffs output for a specific pass.
  *
- * Usage: npx tsx compiler/scripts/test-rust-port.ts <pass> [<fixtures-path>]
+ * Usage: npx tsx compiler/scripts/test-rust-port.ts [<pass>] [<fixtures-path>]
  */
 
 import * as babel from '@babel/core';
@@ -31,25 +31,76 @@ const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
 const RESET = '\x1b[0m';
 
-// --- Parse args ---
-const [passArg, fixturesPathArg] = process.argv.slice(2);
+const REPO_ROOT = path.resolve(__dirname, '../..');
 
-if (!passArg) {
-  console.error(
-    'Usage: npx tsx compiler/scripts/test-rust-port.ts <pass> [<fixtures-path>]',
+// --- Ordered pass list (HIR passes from Pipeline.ts) ---
+const PASS_ORDER: string[] = [
+  'HIR',
+  'PruneMaybeThrows',
+  'DropManualMemoization',
+  'InlineImmediatelyInvokedFunctionExpressions',
+  'MergeConsecutiveBlocks',
+  'SSA',
+  'EliminateRedundantPhi',
+  'ConstantPropagation',
+  'InferTypes',
+  'OptimizePropsMethodCalls',
+  'AnalyseFunctions',
+  'InferMutationAliasingEffects',
+  'OptimizeForSSR',
+  'DeadCodeElimination',
+  'InferMutationAliasingRanges',
+  'InferReactivePlaces',
+  'RewriteInstructionKindsBasedOnReassignment',
+  'InferReactiveScopeVariables',
+  'MemoizeFbtAndMacroOperandsInSameScope',
+  'NameAnonymousFunctions',
+  'OutlineFunctions',
+  'AlignMethodCallScopes',
+  'AlignObjectMethodScopes',
+  'PruneUnusedLabelsHIR',
+  'AlignReactiveScopesToBlockScopesHIR',
+  'MergeOverlappingReactiveScopesHIR',
+  'BuildReactiveScopeTerminalsHIR',
+  'FlattenReactiveLoopsHIR',
+  'FlattenScopesWithHooksOrUseHIR',
+  'PropagateScopeDependenciesHIR',
+];
+
+// --- Detect last ported pass from pipeline.rs ---
+function detectLastPortedPass(): string {
+  const pipelinePath = path.join(
+    REPO_ROOT,
+    'compiler/crates/react_compiler/src/entrypoint/pipeline.rs',
   );
-  console.error('');
-  console.error('Arguments:');
-  console.error(
-    '  <pass>           Name of the compiler pass to compare (e.g., HIR)',
-  );
-  console.error(
-    '  [<fixtures-path>] Fixture file or directory (default: compiler test fixtures)',
-  );
-  process.exit(1);
+  const content = fs.readFileSync(pipelinePath, 'utf8');
+  const matches = [...content.matchAll(/DebugLogEntry::new\("([^"]+)"/g)];
+  const portedNames = new Set(matches.map(m => m[1]));
+
+  let lastPorted: string | null = null;
+  for (const pass of PASS_ORDER) {
+    if (portedNames.has(pass)) {
+      lastPorted = pass;
+    }
+  }
+  if (!lastPorted) {
+    throw new Error('No ported passes found in pipeline.rs');
+  }
+  return lastPorted;
 }
 
-const REPO_ROOT = path.resolve(__dirname, '../..');
+// --- Parse args ---
+const [passArgRaw, fixturesPathArg] = process.argv.slice(2);
+
+let passArg: string;
+if (passArgRaw) {
+  passArg = passArgRaw;
+} else {
+  passArg = detectLastPortedPass();
+  console.log(
+    `No pass argument given, auto-detected last ported pass: ${BOLD}${passArg}${RESET}`,
+  );
+}
 const DEFAULT_FIXTURES_DIR = path.join(
   REPO_ROOT,
   'compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler',
@@ -300,17 +351,18 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
   return {log, error};
 }
 
+// --- Format a single log item as comparable string ---
+function formatLogItem(item: LogItem): string {
+  if (item.kind === 'entry') {
+    return `## ${item.name}\n${item.value}`;
+  } else {
+    return `[${item.eventKind}]${item.fnName ? ' ' + item.fnName : ''}: ${item.detail}`;
+  }
+}
+
 // --- Format log items as comparable string ---
 function formatLog(log: LogItem[]): string {
-  return log
-    .map(item => {
-      if (item.kind === 'entry') {
-        return `## ${item.name}\n${item.value}`;
-      } else {
-        return `[${item.eventKind}]${item.fnName ? ' ' + item.fnName : ''}: ${item.detail}`;
-      }
-    })
-    .join('\n');
+  return log.map(formatLogItem).join('\n');
 }
 
 // --- Normalize opaque IDs ---
@@ -411,6 +463,54 @@ const failures: Array<{
   detail: string;
 }> = [];
 
+// Per-pass failure tracking for frontier detection
+const perPassResults = new Map<string, {passed: number; failed: number}>();
+for (const pass of PASS_ORDER) {
+  perPassResults.set(pass, {passed: 0, failed: 0});
+}
+
+// --- Find the earliest diverging pass for a fixture ---
+function findDivergencePass(tsLog: LogItem[], rustLog: LogItem[]): string {
+  const maxLen = Math.max(tsLog.length, rustLog.length);
+  for (let i = 0; i < maxLen; i++) {
+    const tsItem = i < tsLog.length ? tsLog[i] : undefined;
+    const rustItem = i < rustLog.length ? rustLog[i] : undefined;
+
+    if (tsItem === undefined || rustItem === undefined) {
+      // One log is shorter — attribute to the pass of the last available entry
+      const item = tsItem ?? rustItem;
+      if (item && item.kind === 'entry') {
+        return item.name;
+      }
+      // For events, attribute to the preceding entry's pass
+      for (let j = i - 1; j >= 0; j--) {
+        const prev = tsLog[j] ?? rustLog[j];
+        if (prev && prev.kind === 'entry') return prev.name;
+      }
+      // No preceding entry — attribute to first pass
+      return PASS_ORDER[0];
+    }
+
+    const tsFormatted = normalizeIds(formatLogItem(tsItem));
+    const rustFormatted = normalizeIds(formatLogItem(rustItem));
+    if (tsFormatted !== rustFormatted) {
+      if (tsItem.kind === 'entry') {
+        return tsItem.name;
+      }
+      // For events, find the most recent entry pass
+      for (let j = i - 1; j >= 0; j--) {
+        if (tsLog[j] && tsLog[j].kind === 'entry') {
+          return (tsLog[j] as LogEntry).name;
+        }
+      }
+      // No preceding entry — attribute to first pass
+      return PASS_ORDER[0];
+    }
+  }
+  // No divergence found (shouldn't happen since caller verified logs differ)
+  return PASS_ORDER[0];
+}
+
 for (const fixturePath of fixtures) {
   const relPath = path.relative(REPO_ROOT, fixturePath);
   const ts = compileFixture('ts', fixturePath);
@@ -427,8 +527,35 @@ for (const fixturePath of fixtures) {
 
   if (tsFormatted === rustFormatted) {
     passed++;
+    // Count as passed for all passes that appeared in the log
+    const seenPasses = new Set<string>();
+    for (const item of ts.log) {
+      if (item.kind === 'entry') seenPasses.add(item.name);
+    }
+    for (const pass of seenPasses) {
+      const stats = perPassResults.get(pass);
+      if (stats) stats.passed++;
+    }
   } else {
     failed++;
+    // Find which pass diverged and attribute the failure
+    const divergePass = findDivergencePass(ts.log, rust.log);
+    const stats = perPassResults.get(divergePass);
+    if (stats) stats.failed++;
+    // Count passes before divergence as passed
+    const seenPasses: string[] = [];
+    for (const item of ts.log) {
+      if (item.kind === 'entry' && item.name !== divergePass) {
+        seenPasses.push(item.name);
+      } else if (item.kind === 'entry') {
+        break;
+      }
+    }
+    for (const pass of seenPasses) {
+      const stats = perPassResults.get(pass);
+      if (stats) stats.passed++;
+    }
+
     if (failures.length < 50) {
       failures.push({
         fixture: relPath,
@@ -452,6 +579,26 @@ if (!tsHadEntries) {
   process.exit(1);
 }
 
+// --- Compute frontier ---
+let frontier: string | null = null;
+for (const pass of PASS_ORDER) {
+  const stats = perPassResults.get(pass);
+  if (stats && stats.failed > 0) {
+    frontier = pass;
+    break;
+  }
+}
+
+// --- Summary line ---
+const total = fixtures.length;
+const frontierStr = frontier ?? 'none';
+const summaryColor = failed === 0 ? GREEN : RED;
+const summaryLine = `${summaryColor}Results: ${passed} passed, ${failed} failed (${total} total), frontier: ${frontierStr}${RESET}`;
+
+// Print summary first
+console.log(summaryLine);
+console.log('');
+
 // --- Show failures ---
 for (const failure of failures) {
   console.log(`${RED}FAIL${RESET} ${failure.fixture}`);
@@ -459,22 +606,13 @@ for (const failure of failures) {
   console.log('');
 }
 
-// --- Summary ---
+// --- Summary again (so tail -1 works) ---
 console.log('---');
-const total = fixtures.length;
-if (failed === 0) {
+if (failures.length < failed) {
   console.log(
-    `${GREEN}Results: ${passed} passed, ${failed} failed (${total} total)${RESET}`,
+    `${DIM}  (showing first ${failures.length} of ${failed} failures)${RESET}`,
   );
-} else {
-  console.log(
-    `${RED}Results: ${passed} passed, ${failed} failed (${total} total)${RESET}`,
-  );
-  if (failures.length < failed) {
-    console.log(
-      `${DIM}  (showing first ${failures.length} of ${failed} failures)${RESET}`,
-    );
-  }
 }
+console.log(summaryLine);
 
 process.exit(failed > 0 ? 1 : 0);
