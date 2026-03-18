@@ -117,6 +117,8 @@ On first run, if the log file doesn't exist, create it with the Status section p
 
 ## Core Loop
 
+**Main context role**: The main context is ONLY an orchestration loop. It parses subagent results, updates the orchestrator log, prints status, and launches the next subagent. The main context MUST NOT read source code, investigate failures, debug issues, or make edits directly. ALL implementation work — fixing, porting, reviewing, verifying — happens in subagents.
+
 Execute these steps in order, looping back to Step 1 after each commit:
 
 ### Step 1: Discover Frontier
@@ -179,44 +181,84 @@ If `$ARGUMENTS` is `status`, stop here.
 
 ### Step 3: Act on Frontier
 
+**Do NOT investigate, read source code, or debug in the main context.** Always delegate to a subagent.
+
 #### 3a. FIX mode (frontier is a ported pass with failures)
 
-1. Launch the `port-pass` agent with:
-   - The pass name
-   - The test failure output
-   - Instruction to fix the failures (not port from scratch)
-   - Instruction to run `bash compiler/scripts/test-rust-port.sh <PassName>` to verify
-2. After the agent completes, re-run the test yourself to confirm
-3. If still failing, launch the agent again with updated failure context
-4. Once clean, add a log entry describing the fix and update the Status section
-5. Go to Step 4 (Review)
+Launch a single `general-purpose` subagent to fix the failures. The subagent prompt MUST include:
+
+1. **The pass name** and its position number
+2. **The full test failure output** from the discovery subagent (copy it verbatim)
+3. **Instructions**: Fix the test failures in the Rust port. Do NOT re-port from scratch. Read the corresponding TypeScript source to understand expected behavior, then fix the Rust implementation to match. After fixing, run `bash compiler/scripts/test-rust-port.sh <PassName>` to verify. Repeat until 0 failures or you've made 3 fix attempts without progress.
+4. **Architecture guide path**: `compiler/docs/rust-port/rust-port-architecture.md`
+5. **Pipeline path**: `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
+
+After the subagent completes:
+1. Parse its results for the final test count
+2. If still failing, launch the subagent again with the updated failure output (max 3 rounds total)
+3. Once clean (or after 3 rounds), update the orchestrator log Status section and add a log entry
+4. Go to Step 4 (Review)
 
 #### 3b. PORT mode (frontier is the next unported pass)
 
 Handle special cases first:
-- **Second PruneMaybeThrows call (#15)**: Don't invoke `/compiler-port`. Just add a second call to `prune_maybe_throws` + `log_debug!` in pipeline.rs. Then run tests.
-- **outlineJSX (between #20 and #21)**: Conditional on `enableJsxOutlining`. Has no log entry. Handle inline or via `/compiler-port outlineJSX`.
+- **Second PruneMaybeThrows call (#15)**: Launch a `general-purpose` subagent to add a second call to `prune_maybe_throws` + `log_debug!` in pipeline.rs, then run tests.
+- **outlineJSX (between #20 and #21)**: Conditional on `enableJsxOutlining`. Has no log entry. Launch a subagent to handle inline or via the compiler-port pattern.
 - **Conditional passes** (#3, #13, #19, #21, #22): Note the condition when delegating.
 
-For standard passes:
-1. Run `/compiler-port <PassName>` — this handles implementation + test-fix loop + review
-2. After it completes, add a log entry describing the port and update the Status section
+For standard passes, launch a single `general-purpose` subagent with these instructions:
+
+1. **Pass name**: `<PassName>` (position #N in the pipeline)
+2. **Instructions**: Port the `<PassName>` pass from TypeScript to Rust. Follow these steps:
+   a. Read the architecture guide at `compiler/docs/rust-port/rust-port-architecture.md`
+   b. Read the pass documentation in `compiler/packages/babel-plugin-react-compiler/docs/passes/`
+   c. Find the TypeScript source by following the import in `compiler/packages/babel-plugin-react-compiler/src/Entrypoint/Pipeline.ts`
+   d. Read the Rust pipeline at `compiler/crates/react_compiler/src/entrypoint/pipeline.rs` and existing crate structure
+   e. Port the pass, create/update crates as needed, wire into pipeline.rs
+   f. Run `bash compiler/scripts/test-rust-port.sh <PassName>` and fix failures in a loop until 0 failures (max 5 attempts)
+   g. Report: files created/modified, final test count, any remaining issues
+3. **Special notes** (if any — e.g., conditional gating, reuse of existing functions)
+
+After the subagent completes:
+1. Parse its results for the final test count
+2. Update the orchestrator log Status section and add a log entry
 3. Go to Step 4
 
 ### Step 4: Review
 
-1. Run `/compiler-review` on uncommitted changes
-2. If issues are found:
-   - Fix the issues (launch port-pass agent or fix directly for small issues)
-   - Run `/compiler-review` again
-3. Repeat until review is clean
+Launch a `general-purpose` subagent with these instructions:
+
+> Review the uncommitted Rust port changes for correctness and convention compliance.
+>
+> 1. Run `git diff HEAD -- compiler/crates/` to get the diff
+> 2. Read `compiler/docs/rust-port/rust-port-architecture.md` for conventions
+> 3. For each changed Rust file, find and read the corresponding TypeScript source
+> 4. Check for: port fidelity (logic matches TS), convention compliance (arenas, IDs, two-phase patterns), error handling, naming
+> 5. If issues are found, fix them directly, then run `bash compiler/scripts/test-rust-port.sh <LastPortedPass>` to confirm tests still pass
+> 6. Report: list of issues found and whether they were fixed, final test count
+
+After the subagent completes:
+1. If it reports unfixed issues, launch one more subagent round to address them
+2. Update the orchestrator log if test counts changed
 
 ### Step 5: Commit
 
-1. Run `/compiler-commit <appropriate message>` — this runs verify + review + commit
-2. Commit whenever: build is clean AND test progress has been made (even partial fixes count)
-3. Add a log entry noting the commit
-4. Work continues after committing — commits are checkpoints, not stopping points
+Launch a `general-purpose` subagent with these instructions:
+
+> Verify and commit the compiler changes.
+>
+> 1. Run `bash compiler/scripts/test-rust-port.sh <LastPortedPass>` to confirm tests pass
+> 2. Run `yarn prettier-all` from the repo root to format
+> 3. Stage only the relevant changed files by name (do NOT use `git add -A` or `git add .`)
+> 4. Commit with prefix `[rust-compiler]` and the title: `<title>`
+> 5. Use a heredoc for the commit message with a 1-3 sentence summary
+> 6. Do NOT push
+> 7. Report: commit hash, files committed, test count
+
+After the subagent completes:
+1. Parse its results for the commit hash
+2. Add a log entry noting the commit
+3. Work continues — commits are checkpoints, not stopping points
 
 ### Step 6: Loop
 
@@ -233,4 +275,4 @@ Go back to Step 1. The loop continues until:
 
 3. **Incremental commits**: Commit after each meaningful unit of progress. Don't batch multiple passes into one commit. Each commit should leave the tree in a clean state.
 
-4. **Delegate, don't duplicate**: Use existing skills (`/compiler-port`, `/compiler-review`, `/compiler-commit`, `/compiler-verify`) for their respective tasks. This skill is the orchestrator, not the implementor.
+4. **Delegate everything**: The main context MUST NOT read source code, investigate bugs, or make edits. It only: parses subagent results, updates the orchestrator log, prints status, and launches the next subagent. All code reading, debugging, fixing, porting, reviewing, and committing happens in subagents.
