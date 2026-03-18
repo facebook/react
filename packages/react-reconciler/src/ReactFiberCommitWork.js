@@ -58,7 +58,6 @@ import {
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableViewTransition,
-  enableViewTransitionForPersistenceMode,
   enableFragmentRefs,
   enableEagerAlternateStateNodeCleanup,
   enableDefaultTransitionIndicator,
@@ -3714,11 +3713,6 @@ function commitPassiveMountOnFiber(
 
       if (isViewTransitionEligible) {
         if (supportsMutation && rootViewTransitionNameCanceled) {
-          restoreRootViewTransitionName(finishedRoot.containerInfo);
-        } else if (
-          enableViewTransitionForPersistenceMode &&
-          rootViewTransitionNameCanceled
-        ) {
           restoreRootViewTransitionName(finishedRoot.containerInfo);
         }
       }

@@ -34,7 +34,6 @@ import {
   hasInstanceAffectedParent,
   wasInstanceInViewport,
 } from './ReactFiberConfig';
-import {enableViewTransitionForPersistenceMode} from 'shared/ReactFeatureFlags';
 import {
   scheduleViewTransitionEvent,
   scheduleGestureTransitionEvent,
@@ -47,6 +46,7 @@ import {trackAnimatingTask} from './ReactProfilerTimer';
 import {
   enableComponentPerformanceTrack,
   enableProfilerTimer,
+  enableViewTransitionForPersistenceMode,
 } from 'shared/ReactFeatureFlags';
 
 export let shouldStartViewTransition: boolean = false;
@@ -195,21 +195,10 @@ function applyViewTransitionToHostInstancesRecursive(
     }
     return inViewport;
   } else if (enableViewTransitionForPersistenceMode) {
-    let inViewport = false;
     while (child !== null) {
       if (child.tag === HostComponent) {
         const instance: Instance = child.stateNode;
-        if (collectMeasurements !== null) {
-          const measurement = measureInstance(instance);
-          collectMeasurements.push(measurement);
-          if (wasInstanceInViewport(measurement)) {
-            inViewport = true;
-          }
-        } else if (!inViewport) {
-          if (wasInstanceInViewport(measureInstance(instance))) {
-            inViewport = true;
-          }
-        }
+        // TODO: calculate whether component is in viewport
         shouldStartViewTransition = true;
         applyViewTransitionName(
           instance,
@@ -231,21 +220,17 @@ function applyViewTransitionToHostInstancesRecursive(
         // Skip any nested view transitions for updates since in that case the
         // inner most one is the one that handles the update.
       } else {
-        if (
-          applyViewTransitionToHostInstancesRecursive(
-            child.child,
-            name,
-            className,
-            collectMeasurements,
-            stopAtNestedViewTransitions,
-          )
-        ) {
-          inViewport = true;
-        }
+        applyViewTransitionToHostInstancesRecursive(
+          child.child,
+          name,
+          className,
+          collectMeasurements,
+          stopAtNestedViewTransitions,
+        );
       }
       child = child.sibling;
     }
-    return inViewport;
+    return true;
   }
   return false;
 }
@@ -255,30 +240,6 @@ function restoreViewTransitionOnHostInstances(
   stopAtNestedViewTransitions: boolean,
 ): void {
   if (supportsMutation) {
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        restoreViewTransitionName(instance, child.memoizedProps);
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        // Skip any nested view transitions for updates since in that case the
-        // inner most one is the one that handles the update.
-      } else {
-        restoreViewTransitionOnHostInstances(
-          child.child,
-          stopAtNestedViewTransitions,
-        );
-      }
-      child = child.sibling;
-    }
-  } else if (enableViewTransitionForPersistenceMode) {
     while (child !== null) {
       if (child.tag === HostComponent) {
         const instance: Instance = child.stateNode;
@@ -831,7 +792,6 @@ function measureViewTransitionHostInstancesRecursive(
     }
     return inViewport;
   } else if (enableViewTransitionForPersistenceMode) {
-    let inViewport = false;
     while (child !== null) {
       if (child.tag === HostComponent) {
         const instance: Instance = child.stateNode;
@@ -842,23 +802,6 @@ function measureViewTransitionHostInstancesRecursive(
           const previousMeasurement =
             previousMeasurements[viewTransitionHostInstanceIdx];
           const nextMeasurement = measureInstance(instance);
-          if (
-            wasInstanceInViewport(previousMeasurement) ||
-            wasInstanceInViewport(nextMeasurement)
-          ) {
-            inViewport = true;
-          }
-          if (
-            (parentViewTransition.flags & Update) === NoFlags &&
-            hasInstanceChanged(previousMeasurement, nextMeasurement)
-          ) {
-            parentViewTransition.flags |= Update;
-          }
-          if (
-            hasInstanceAffectedParent(previousMeasurement, nextMeasurement)
-          ) {
-            parentViewTransition.flags |= AffectedParentLayout;
-          }
         } else {
           parentViewTransition.flags |= AffectedParentLayout;
         }
@@ -869,18 +812,6 @@ function measureViewTransitionHostInstancesRecursive(
               ? newName
               : newName + '_' + viewTransitionHostInstanceIdx,
             className,
-          );
-        }
-        if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {
-          if (viewTransitionCancelableChildren === null) {
-            viewTransitionCancelableChildren = [];
-          }
-          viewTransitionCancelableChildren.push(
-            instance,
-            viewTransitionHostInstanceIdx === 0
-              ? oldName
-              : oldName + '_' + viewTransitionHostInstanceIdx,
-            child.memoizedProps,
           );
         }
         viewTransitionHostInstanceIdx++;
@@ -895,23 +826,19 @@ function measureViewTransitionHostInstancesRecursive(
       ) {
         parentViewTransition.flags |= child.flags & AffectedParentLayout;
       } else {
-        if (
-          measureViewTransitionHostInstancesRecursive(
-            parentViewTransition,
-            child.child,
-            newName,
-            oldName,
-            className,
-            previousMeasurements,
-            stopAtNestedViewTransitions,
-          )
-        ) {
-          inViewport = true;
-        }
+        measureViewTransitionHostInstancesRecursive(
+          parentViewTransition,
+          child.child,
+          newName,
+          oldName,
+          className,
+          previousMeasurements,
+          stopAtNestedViewTransitions,
+        );
       }
       child = child.sibling;
     }
-    return inViewport;
+    return true;
   }
   return true;
 }
