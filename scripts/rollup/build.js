@@ -187,6 +187,7 @@ let getRollupInteropValue = id => {
     'JSResourceReferenceImpl',
     'error-stack-parser',
     'neo-async',
+    'os',
     'webpack/lib/dependencies/ModuleDependency',
     'webpack/lib/dependencies/NullDependency',
     'webpack/lib/Template',
