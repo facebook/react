@@ -84,7 +84,11 @@ var taskIdCounter = 1;
 
 var currentTask = null;
 var currentPriorityLevel: PriorityLevel = NormalPriority;
-
+// NOTE: In Firefox, JavaScript execution can pause due to debugger breakpoints
+// or alert() calls while scheduler work is in progress.
+// When execution resumes, this flag may remain set if cleanup logic
+// does not run as expected, causing the scheduler to believe work
+// is already in progress. See issue #17355 for context.
 // This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
 
