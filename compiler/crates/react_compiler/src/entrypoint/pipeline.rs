@@ -64,9 +64,40 @@ pub fn compile_fn(
 
     // TODO: propagate with `?` once lowering is complete. Currently suppressed
     // because incomplete lowering can produce inconsistent context/local references
-    // that trigger false invariant violations.
-    let _ = react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env);
-    react_compiler_validation::validate_use_memo(&hir, &mut env);
+    // that trigger false invariant violations. We use a temporary error collector
+    // to avoid accumulating false-positive diagnostics on the environment.
+    {
+        let mut temp_errors = CompilerError::new();
+        let _ = react_compiler_validation::validate_context_variable_lvalues_with_errors(
+            &hir,
+            &env.functions,
+            &mut temp_errors,
+        );
+    }
+    let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
+    // Log VoidUseMemo errors as CompileError events (matching TS env.logErrors behavior).
+    // In TS these are logged via env.logErrors() for telemetry, not accumulated as compile errors.
+    for detail in &void_memo_errors.details {
+        let (category, reason, description, severity) = match detail {
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
+                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()))
+            }
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()))
+            }
+        };
+        context.log_event(super::compile_result::LoggerEvent::CompileError {
+            fn_loc: None,
+            detail: super::compile_result::CompilerErrorDetailInfo {
+                category,
+                reason,
+                description,
+                severity: Some(severity),
+                details: None,
+                loc: None,
+            },
+        });
+    }
 
     // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
     // output modes, so we run it unconditionally.

@@ -16,7 +16,7 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory, GENERATED_SOURCE,
 };
 use react_compiler_hir::{
-    BlockId, GotoVariant, HirFunction, Instruction, InstructionValue, Terminal,
+    BlockId, HirFunction, Instruction, InstructionValue, Terminal,
 };
 use react_compiler_lowering::{
     get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
@@ -91,13 +91,8 @@ fn prune_maybe_throws_impl(func: &mut HirFunction) -> Option<HashMap<BlockId, Bl
     let instructions = &func.instructions;
 
     for block in func.body.blocks.values_mut() {
-        let (continuation, eval_order, loc) = match &block.terminal {
-            Terminal::MaybeThrow {
-                continuation,
-                id,
-                loc,
-                ..
-            } => (*continuation, *id, *loc),
+        let continuation = match &block.terminal {
+            Terminal::MaybeThrow { continuation, .. } => *continuation,
             _ => continue,
         };
 
@@ -109,12 +104,13 @@ fn prune_maybe_throws_impl(func: &mut HirFunction) -> Option<HashMap<BlockId, Bl
         if !can_throw {
             let source = terminal_mapping.get(&block.id).copied().unwrap_or(block.id);
             terminal_mapping.insert(continuation, source);
-            block.terminal = Terminal::Goto {
-                block: continuation,
-                variant: GotoVariant::Break,
-                id: eval_order,
-                loc,
-            };
+            // Null out the handler rather than replacing with Goto.
+            // Preserving the MaybeThrow makes the continuations clear for
+            // BuildReactiveFunction, while nulling out the handler tells us
+            // that control cannot flow to the handler.
+            if let Terminal::MaybeThrow { handler, .. } = &mut block.terminal {
+                *handler = None;
+            }
         }
     }
 

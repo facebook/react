@@ -36,13 +36,19 @@ pub fn validate_context_variable_lvalues(
     func: &HirFunction,
     env: &mut Environment,
 ) -> Result<(), CompilerDiagnostic> {
+    validate_context_variable_lvalues_with_errors(func, &env.functions, &mut env.errors)
+}
+
+/// Like [`validate_context_variable_lvalues`], but writes diagnostics into the
+/// provided `errors` instead of `env.errors`. Useful when the caller wants to
+/// discard the diagnostics (e.g. when lowering is incomplete).
+pub fn validate_context_variable_lvalues_with_errors(
+    func: &HirFunction,
+    functions: &[HirFunction],
+    errors: &mut CompilerError,
+) -> Result<(), CompilerDiagnostic> {
     let mut identifier_kinds: IdentifierKinds = HashMap::new();
-    validate_context_variable_lvalues_impl(
-        func,
-        &mut identifier_kinds,
-        &env.functions,
-        &mut env.errors,
-    )
+    validate_context_variable_lvalues_impl(func, &mut identifier_kinds, functions, errors)
 }
 
 fn validate_context_variable_lvalues_impl(

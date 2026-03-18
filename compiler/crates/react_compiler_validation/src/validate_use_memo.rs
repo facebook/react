@@ -11,9 +11,10 @@ use react_compiler_hir::environment::Environment;
 
 /// Validates useMemo() usage patterns.
 ///
-/// Port of ValidateUseMemo.ts
-pub fn validate_use_memo(func: &HirFunction, env: &mut Environment) {
-    validate_use_memo_impl(func, &env.functions, &mut env.errors);
+/// Port of ValidateUseMemo.ts.
+/// Returns VoidUseMemo errors separately (for logging via logErrors, not as compile errors).
+pub fn validate_use_memo(func: &HirFunction, env: &mut Environment) -> CompilerError {
+    validate_use_memo_impl(func, &env.functions, &mut env.errors, env.config.validate_no_void_use_memo)
 }
 
 /// Information about a FunctionExpression needed for validation.
@@ -26,7 +27,8 @@ fn validate_use_memo_impl(
     func: &HirFunction,
     functions: &[HirFunction],
     errors: &mut CompilerError,
-) {
+    validate_no_void_use_memo: bool,
+) -> CompilerError {
     let mut void_memo_errors = CompilerError::new();
     let mut use_memos: HashSet<IdentifierId> = HashSet::new();
     let mut react_ids: HashSet<IdentifierId> = HashSet::new();
@@ -87,6 +89,7 @@ fn validate_use_memo_impl(
                         callee,
                         args,
                         lvalue,
+                        validate_no_void_use_memo,
                     );
                 }
                 InstructionValue::MethodCall {
@@ -103,6 +106,7 @@ fn validate_use_memo_impl(
                         property,
                         args,
                         lvalue,
+                        validate_no_void_use_memo,
                     );
                 }
                 _ => {}
@@ -137,10 +141,7 @@ fn validate_use_memo_impl(
         }
     }
 
-    // In the TS, void memo errors are logged via env.logErrors() for telemetry
-    // but NOT accumulated as compilation errors. Since the Rust port doesn't have
-    // a logger yet, we drop them (matching the no-logger behavior in TS).
-    let _ = void_memo_errors;
+    void_memo_errors
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -155,6 +156,7 @@ fn handle_possible_use_memo_call(
     callee: &Place,
     args: &[PlaceOrSpread],
     lvalue: &Place,
+    validate_no_void_use_memo: bool,
 ) {
     let is_use_memo = use_memos.contains(&callee.identifier);
     if !is_use_memo || args.is_empty() {
@@ -217,8 +219,7 @@ fn handle_possible_use_memo_call(
     // Validate no context variable assignment
     validate_no_context_variable_assignment(body_func, functions, errors);
 
-    // TODO: Gate behind env.config.validateNoVoidUseMemo when config is ported
-    if !has_non_void_return(body_func) {
+    if validate_no_void_use_memo && !has_non_void_return(body_func) {
         void_memo_errors.push_diagnostic(
             CompilerDiagnostic::new(
                 ErrorCategory::VoidUseMemo,
@@ -233,8 +234,10 @@ fn handle_possible_use_memo_call(
                 message: Some("useMemo() callbacks must return a value".to_string()),
             }),
         );
-    } else if let Some(callee_loc) = callee.loc {
-        unused_use_memos.insert(lvalue.identifier, callee_loc);
+    } else if validate_no_void_use_memo {
+        if let Some(callee_loc) = callee.loc {
+            unused_use_memos.insert(lvalue.identifier, callee_loc);
+        }
     }
 }
 
