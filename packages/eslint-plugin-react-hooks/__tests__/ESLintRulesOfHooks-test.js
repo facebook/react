@@ -549,17 +549,6 @@ const allTests = {
     },
     {
       code: normalizeIndent`
-        export default () => {
-          if (isVal) {
-            useState(0);
-          }
-        }
-      `,
-      // TODO: this should error but doesn't.
-      // errors: [genericError('useState')],
-    },
-    {
-      code: normalizeIndent`
         function notAComponent() {
           return new Promise.then(() => {
             useState();
@@ -615,7 +604,7 @@ const allTests = {
             onClick();
           });
           useServerEffect(() => {
-            onClick();  
+            onClick();
           });
         }
       `,
@@ -845,7 +834,7 @@ const allTests = {
     },
     {
       code: normalizeIndent`
-        // Valid because functions created with useEffectEvent can be passed by reference in useLayoutEffect 
+        // Valid because functions created with useEffectEvent can be passed by reference in useLayoutEffect
         // and useInsertionEffect.
         function MyComponent({ theme }) {
           const onClick = useEffectEvent(() => {
@@ -915,6 +904,16 @@ const allTests = {
     },
   ],
   invalid: [
+    {
+      code: normalizeIndent`
+        export default () => {
+          if (isVal) {
+            useState(0);
+          }
+        }
+      `,
+      errors: [functionError('useState', 'default')],
+    },
     {
       syntax: 'flow',
       code: normalizeIndent`
