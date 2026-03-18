@@ -48,7 +48,11 @@ import {
   BRIDGE_PROTOCOL,
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
-import {StrictMode} from 'react-devtools-shared/src/frontend/types';
+import {
+  StrictMode,
+  ActivityHiddenMode,
+  ActivityVisibleMode,
+} from 'react-devtools-shared/src/frontend/types';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {
@@ -1491,6 +1495,8 @@ export default class Store extends EventEmitter<{
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
               isStrictModeNonCompliant,
+              isActivityHidden: false,
+              isInsideHiddenActivity: false,
               key: null,
               nameProp: null,
               ownerID: 0,
@@ -1560,6 +1566,10 @@ export default class Store extends EventEmitter<{
               id,
               isCollapsed: this._collapseNodesByDefault,
               isStrictModeNonCompliant: parentElement.isStrictModeNonCompliant,
+              isActivityHidden: false,
+              isInsideHiddenActivity:
+                parentElement.isInsideHiddenActivity ||
+                parentElement.isActivityHidden,
               key,
               nameProp,
               ownerID,
@@ -1728,6 +1738,42 @@ export default class Store extends EventEmitter<{
             this._recursivelyUpdateSubtree(id, element => {
               element.isStrictModeNonCompliant = false;
             });
+          } else if (mode === ActivityHiddenMode) {
+            const element = this._idToElement.get(id);
+            if (element != null) {
+              element.isActivityHidden = true;
+              element.children.forEach(childID =>
+                this._recursivelyUpdateSubtree(childID, child => {
+                  child.isInsideHiddenActivity = true;
+                }),
+              );
+              // Collapse hidden Activity subtrees by default.
+              if (!element.isCollapsed) {
+                element.isCollapsed = true;
+                if (element.children.length > 0) {
+                  const weightDelta = 1 - element.weight;
+                  const parentElement = this._idToElement.get(element.parentID);
+                  this._adjustParentTreeWeight(parentElement, weightDelta);
+                }
+              }
+            }
+          } else if (mode === ActivityVisibleMode) {
+            const element = this._idToElement.get(id);
+            if (element != null) {
+              element.isActivityHidden = false;
+              element.children.forEach(childID =>
+                this._recursivelyUpdateSubtree(childID, child => {
+                  child.isInsideHiddenActivity = false;
+                }),
+              );
+              // Expand Activity subtree when it becomes visible.
+              if (element.isCollapsed && element.children.length > 0) {
+                element.isCollapsed = false;
+                const weightDelta = element.weight - 1;
+                const parentElement = this._idToElement.get(element.parentID);
+                this._adjustParentTreeWeight(parentElement, weightDelta);
+              }
+            }
           }
 
           if (__DEBUG__) {
@@ -2075,7 +2121,9 @@ export default class Store extends EventEmitter<{
               const previousHasUniqueSuspenders = suspense.hasUniqueSuspenders;
               debug(
                 'Suspender changes',
-                `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} (was ${String(previousHasUniqueSuspenders)})`,
+                `Suspense node ${id} unique suspenders set to ${String(
+                  hasUniqueSuspenders,
+                )} (was ${String(previousHasUniqueSuspenders)})`,
               );
             }
 

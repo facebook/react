@@ -43,6 +43,8 @@ import {
   ElementTypeActivity,
   ElementTypeVirtual,
   StrictMode,
+  ActivityHiddenMode,
+  ActivityVisibleMode,
 } from 'react-devtools-shared/src/frontend/types';
 import {
   deletePathInObject,
@@ -2407,6 +2409,20 @@ export function attach(
           pushOperation(StrictMode);
         }
       }
+
+      // If this is an Activity component, check if it's hidden.
+      if (fiber.tag === ActivityComponent) {
+        const offscreenChild = fiber.child;
+        if (
+          offscreenChild !== null &&
+          offscreenChild.tag === OffscreenComponent &&
+          offscreenChild.memoizedState !== null
+        ) {
+          pushOperation(TREE_OPERATION_SET_SUBTREE_MODE);
+          pushOperation(id);
+          pushOperation(ActivityHiddenMode);
+        }
+      }
     }
 
     let componentLogsEntry = fiberToComponentLogsMap.get(fiber);
@@ -3069,6 +3085,17 @@ export function attach(
       default:
         return false;
     }
+  }
+
+  // Returns true if this is a hidden OffscreenComponent that belongs to
+  // an Activity boundary (as opposed to Suspense). Activity's children
+  // should remain visible in the DevTools tree even when hidden.
+  function isActivityHiddenOffscreen(fiber: Fiber): boolean {
+    return (
+      isHiddenOffscreen(fiber) &&
+      fiber.return !== null &&
+      fiber.return.tag === ActivityComponent
+    );
   }
 
   /**
@@ -3975,7 +4002,16 @@ export function attach(
           isInDisconnectedSubtree = stashedDisconnected;
         }
       } else if (isHiddenOffscreen(fiber)) {
-        // hidden Activity is noisy.
+        if (isActivityHiddenOffscreen(fiber)) {
+          // Activity's hidden children should still be visible in DevTools.
+          if (fiber.child !== null) {
+            mountChildrenRecursively(
+              fiber.child,
+              traceNearestHostComponentUpdate,
+            );
+          }
+        }
+        // Otherwise, hidden Offscreen (e.g. non-Activity) is noisy.
         // Including it may show overlapping Suspense rects
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
@@ -4308,8 +4344,9 @@ export function attach(
     while (child !== null) {
       if (child.kind === FILTERED_FIBER_INSTANCE) {
         const fiber = child.data;
-        if (isHiddenOffscreen(fiber)) {
+        if (isHiddenOffscreen(fiber) && !isActivityHiddenOffscreen(fiber)) {
           // The children of this Offscreen are hidden so they don't get added.
+          // Activity's hidden children are still shown in the tree.
         } else {
           addUnfilteredChildrenIDs(child, nextChildren);
         }
@@ -5093,22 +5130,42 @@ export function attach(
           updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
       } else if (nextIsHidden) {
-        if (prevWasHidden) {
+        if (isActivityHiddenOffscreen(nextFiber)) {
+          // Activity's hidden children stay visible in the DevTools tree.
+          // Whether staying hidden or transitioning to hidden, update normally.
+          updateFlags |= updateChildrenRecursively(
+            nextFiber.child,
+            prevFiber.child,
+            traceNearestHostComponentUpdate,
+          );
+        } else if (prevWasHidden) {
           // still hidden. Nothing to do.
         } else {
           // We're hiding the children. Remove them from the Frontend
           unmountRemainingChildren();
         }
       } else if (prevWasHidden && !nextIsHidden) {
-        // Since we don't mount hidden children and unmount children when hiding,
-        // we need to enter the mount path when revealing.
-        const nextChildSet = nextFiber.child;
-        if (nextChildSet !== null) {
-          mountChildrenRecursively(
-            nextChildSet,
+        if (
+          nextFiber.return !== null &&
+          nextFiber.return.tag === ActivityComponent
+        ) {
+          // Activity children were never unmounted, so just update normally.
+          updateFlags |= updateChildrenRecursively(
+            nextFiber.child,
+            prevFiber.child,
             traceNearestHostComponentUpdate,
           );
-          updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+        } else {
+          // Since we don't mount hidden children and unmount children when hiding,
+          // we need to enter the mount path when revealing.
+          const nextChildSet = nextFiber.child;
+          if (nextChildSet !== null) {
+            mountChildrenRecursively(
+              nextChildSet,
+              traceNearestHostComponentUpdate,
+            );
+            updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+          }
         }
       } else if (
         nextFiber.tag === SuspenseComponent &&
@@ -5242,6 +5299,27 @@ export function attach(
       }
 
       if (fiberInstance !== null) {
+        // Detect Activity hidden/visible mode changes.
+        if (
+          prevFiber.tag === ActivityComponent &&
+          nextFiber.tag === ActivityComponent &&
+          fiberInstance.kind === FIBER_INSTANCE
+        ) {
+          const prevOffscreen = prevFiber.child;
+          const nextOffscreen = nextFiber.child;
+          if (prevOffscreen !== null && nextOffscreen !== null) {
+            const prevHidden = isHiddenOffscreen(prevOffscreen);
+            const nextHidden = isHiddenOffscreen(nextOffscreen);
+            if (prevHidden !== nextHidden) {
+              pushOperation(TREE_OPERATION_SET_SUBTREE_MODE);
+              pushOperation(fiberInstance.id);
+              pushOperation(
+                nextHidden ? ActivityHiddenMode : ActivityVisibleMode,
+              );
+            }
+          }
+        }
+
         removePreviousSuspendedBy(
           fiberInstance,
           previousSuspendedBy,
@@ -5384,9 +5462,11 @@ export function attach(
       if (
         (child.kind === FIBER_INSTANCE ||
           child.kind === FILTERED_FIBER_INSTANCE) &&
-        isHiddenOffscreen(child.data)
+        isHiddenOffscreen(child.data) &&
+        !isActivityHiddenOffscreen(child.data)
       ) {
         // This instance's children should remain disconnected.
+        // Activity's hidden children are still shown in the tree.
       } else {
         reconnectChildrenRecursively(child);
       }
