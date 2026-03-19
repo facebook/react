@@ -235,6 +235,31 @@ function warnForPropDifference(
   }
 }
 
+function hasViewTransition(htmlElement: HTMLElement): boolean {
+  return !!(
+    htmlElement.getAttribute('vt-share') ||
+    htmlElement.getAttribute('vt-exit') ||
+    htmlElement.getAttribute('vt-enter') ||
+    htmlElement.getAttribute('vt-update')
+  );
+}
+
+function isExpectedViewTransitionName(htmlElement: HTMLElement): boolean {
+  if (!hasViewTransition(htmlElement)) {
+    // We didn't expect to see a view transition name applied.
+    return false;
+  }
+  const expectedVtName = htmlElement.getAttribute('vt-name');
+  const actualVtName: string = (htmlElement.style: any)['view-transition-name'];
+  if (expectedVtName) {
+    return expectedVtName === actualVtName;
+  } else {
+    // Auto-generated name.
+    // TODO: If Fizz starts applying a prefix to this name, we need to consider that.
+    return actualVtName.startsWith('_T_');
+  }
+}
+
 function warnForExtraAttributes(
   domElement: Element,
   attributeNames: Set<string>,
@@ -242,10 +267,28 @@ function warnForExtraAttributes(
 ) {
   if (__DEV__) {
     attributeNames.forEach(function (attributeName) {
-      serverDifferences[getPropNameFromAttributeName(attributeName)] =
-        attributeName === 'style'
-          ? getStylesObjectFromElement(domElement)
-          : domElement.getAttribute(attributeName);
+      if (attributeName === 'style') {
+        if (domElement.getAttribute(attributeName) === '') {
+          // Skip empty style. It's fine.
+          return;
+        }
+        const htmlElement = ((domElement: any): HTMLElement);
+        const style = htmlElement.style;
+        const isOnlyVTStyles =
+          (style.length === 1 && style[0] === 'view-transition-name') ||
+          (style.length === 2 &&
+            style[0] === 'view-transition-class' &&
+            style[1] === 'view-transition-name');
+        if (isOnlyVTStyles && isExpectedViewTransitionName(htmlElement)) {
+          // If the only extra style was the view-transition-name that we applied from the Fizz
+          // runtime, then we should ignore it.
+        } else {
+          serverDifferences.style = getStylesObjectFromElement(domElement);
+        }
+      } else {
+        serverDifferences[getPropNameFromAttributeName(attributeName)] =
+          domElement.getAttribute(attributeName);
+      }
     });
   }
 }
@@ -1977,13 +2020,21 @@ function getStylesObjectFromElement(domElement: Element): {
   [styleName: string]: string,
 } {
   const serverValueInObjectForm: {[prop: string]: string} = {};
-  const style = ((domElement: any): HTMLElement).style;
+  const htmlElement: HTMLElement = (domElement: any);
+  const style = htmlElement.style;
   for (let i = 0; i < style.length; i++) {
     const styleName: string = style[i];
     // TODO: We should use the original prop value here if it is equivalent.
     // TODO: We could use the original client capitalization if the equivalent
     // other capitalization exists in the DOM.
-    serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
+    if (
+      styleName === 'view-transition-name' &&
+      isExpectedViewTransitionName(htmlElement)
+    ) {
+      // This is a view transition name added by the Fizz runtime, not the user's props.
+    } else {
+      serverValueInObjectForm[styleName] = style.getPropertyValue(styleName);
+    }
   }
   return serverValueInObjectForm;
 }
@@ -2015,6 +2066,20 @@ function diffHydratedStyles(
   const normalizedClientValue = normalizeMarkupForTextOrAttribute(clientValue);
   const normalizedServerValue = normalizeMarkupForTextOrAttribute(serverValue);
   if (normalizedServerValue === normalizedClientValue) {
+    return;
+  }
+
+  if (
+    // Trailing semi-colon means this was regenerated.
+    normalizedServerValue[normalizedServerValue.length - 1] === ';' &&
+    // TODO: Should we just ignore any style if the style as been manipulated?
+    hasViewTransition((domElement: any))
+  ) {
+    // If this had a view transition we might have applied a view transition
+    // name/class and removed it. If that happens, the style attribute gets
+    // regenerated from the style object. This means we've lost the format
+    // that we sent from the server and is unable to diff it. We just treat
+    // it as passing even if it should be a mismatch in this edge case.
     return;
   }
 

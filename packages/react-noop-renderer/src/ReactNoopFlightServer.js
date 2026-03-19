@@ -20,10 +20,11 @@ import {saveModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightServer from 'react-server/flight';
 
-type Destination = Array<Uint8Array>;
+type Destination = Array<Uint8Array | string>;
 
 const textEncoder = new TextEncoder();
 
+// $FlowFixMe[prop-missing]
 const ReactNoopFlightServer = ReactFlightServer({
   scheduleMicrotask(callback: () => void) {
     callback();
@@ -73,6 +74,7 @@ type Options = {
   signal?: AbortSignal,
   debugChannel?: {onMessage?: (message: string) => void},
   onError?: (error: mixed) => void,
+  startTime?: number,
 };
 
 function render(model: ReactClientValue, options?: Options): Destination {
@@ -80,12 +82,15 @@ function render(model: ReactClientValue, options?: Options): Destination {
   const bundlerConfig = undefined;
   const request = ReactNoopFlightServer.createRequest(
     model,
+    // $FlowFixMe[incompatible-call]
     bundlerConfig,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
+    // $FlowFixMe[incompatible-call]
     __DEV__ && options && options.debugChannel !== undefined,
   );
   const signal = options ? options.signal : undefined;
@@ -106,7 +111,11 @@ function render(model: ReactClientValue, options?: Options): Destination {
     };
   }
   ReactNoopFlightServer.startWork(request);
-  ReactNoopFlightServer.startFlowing(request, destination);
+  ReactNoopFlightServer.startFlowing(
+    request,
+    // $FlowFixMe[incompatible-call]
+    destination,
+  );
   return destination;
 }
 

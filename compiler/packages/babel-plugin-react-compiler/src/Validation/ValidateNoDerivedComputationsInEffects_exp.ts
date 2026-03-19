@@ -244,13 +244,7 @@ export function validateNoDerivedComputationsInEffects_exp(
       reason:
         '[ValidateNoDerivedComputationsInEffects] Fixpoint iteration failed to converge.',
       description: `Fixpoint iteration exceeded ${MAX_FIXPOINT_ITERATIONS} iterations while tracking derivations. This suggests a cyclic dependency in the derivation cache.`,
-      details: [
-        {
-          kind: 'error',
-          loc: fn.loc,
-          message: `Exceeded ${MAX_FIXPOINT_ITERATIONS} iterations in ValidateNoDerivedComputationsInEffects`,
-        },
-      ],
+      loc: fn.loc,
     });
   } while (context.derivationCache.snapshot());
 
@@ -484,14 +478,7 @@ function recordInstructionDerivations(
       case Effect.Unknown: {
         CompilerError.invariant(false, {
           reason: 'Unexpected unknown effect',
-          description: null,
-          details: [
-            {
-              kind: 'error',
-              loc: operand.loc,
-              message: 'Unexpected unknown effect',
-            },
-          ],
+          loc: operand.loc,
         });
       }
       default: {
@@ -539,14 +526,7 @@ function buildTreeNode(
     CompilerError.invariant(childId !== sourceId, {
       reason:
         'Unexpected self-reference: a value should not have itself as a source',
-      description: null,
-      details: [
-        {
-          kind: 'error',
-          loc: sourceMetadata.place.loc,
-          message: null,
-        },
-      ],
+      loc: sourceMetadata.place.loc,
     });
 
     const childNodes = buildTreeNode(

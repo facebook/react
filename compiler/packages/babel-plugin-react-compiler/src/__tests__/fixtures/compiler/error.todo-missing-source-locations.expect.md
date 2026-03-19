@@ -52,7 +52,7 @@ function Component({prop1, prop2}) {
 ## Error
 
 ```
-Found 25 errors:
+Found 22 errors:
 
 Todo: Important source location missing in generated code
 
@@ -302,19 +302,6 @@ error.todo-missing-source-locations.ts:32:14
 
 Todo: Important source location missing in generated code
 
-Source location for ReturnStatement is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
-
-error.todo-missing-source-locations.ts:33:4
-  31 |
-  32 |   const foo = useCallback(() => {
-> 33 |     return a + b;
-     |     ^^^^^^^^^^^^^
-  34 |   }, [a, b]);
-  35 |
-  36 |   function bar() {
-
-Todo: Important source location missing in generated code
-
 Source location for Identifier is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
 
 error.todo-missing-source-locations.ts:34:6
@@ -341,19 +328,6 @@ error.todo-missing-source-locations.ts:34:9
 
 Todo: Important source location missing in generated code
 
-Source location for ReturnStatement is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
-
-error.todo-missing-source-locations.ts:37:4
-  35 |
-  36 |   function bar() {
-> 37 |     return (c + d) * 2;
-     |     ^^^^^^^^^^^^^^^^^^^
-  38 |   }
-  39 |
-  40 |   console.log('Hello, world!');
-
-Todo: Important source location missing in generated code
-
 Source location for ExpressionStatement is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
 
 error.todo-missing-source-locations.ts:40:2
@@ -377,18 +351,6 @@ error.todo-missing-source-locations.ts:40:10
   41 |
   42 |   return [y, foo, bar];
   43 | }
-
-Todo: Important source location missing in generated code
-
-Source location for ReturnStatement is missing in the generated output. This can cause coverage instrumentation to fail to track this code properly, resulting in inaccurate coverage reports..
-
-error.todo-missing-source-locations.ts:42:2
-  40 |   console.log('Hello, world!');
-  41 |
-> 42 |   return [y, foo, bar];
-     |   ^^^^^^^^^^^^^^^^^^^^^
-  43 | }
-  44 |
 ```
           
       
