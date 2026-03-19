@@ -412,10 +412,15 @@ impl SSABuilder {
         let old_id = old_place.identifier;
 
         if self.unknown.contains(&old_id) {
+            let ident = &env.identifiers[old_id.0 as usize];
+            let name = match &ident.name {
+                Some(name) => format!("{}${}", name.value(), old_id.0),
+                None => format!("${}", old_id.0),
+            };
             return Err(CompilerDiagnostic::new(
                 ErrorCategory::Todo,
                 "[hoisting] EnterSSA: Expected identifier to be defined before being used",
-                Some(format!("Identifier {:?} is undefined", old_id)),
+                Some(format!("Identifier {} is undefined", name)),
             ).with_detail(CompilerDiagnosticDetail::Error {
                 loc: old_place.loc,
                 message: None,

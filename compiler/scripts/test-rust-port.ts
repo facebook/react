@@ -33,8 +33,7 @@ const REPO_ROOT = path.resolve(__dirname, '../..');
 
 // --- Parse flags ---
 const rawArgs = process.argv.slice(2);
-const noColor =
-  rawArgs.includes('--no-color') || !!process.env.NO_COLOR;
+const noColor = rawArgs.includes('--no-color') || !!process.env.NO_COLOR;
 const jsonMode = rawArgs.includes('--json');
 const failuresMode = rawArgs.includes('--failures');
 const limitIdx = rawArgs.indexOf('--limit');
@@ -42,8 +41,7 @@ const limitArg = limitIdx >= 0 ? parseInt(rawArgs[limitIdx + 1], 10) : 50;
 
 // Extract positional args (strip flags and flag values)
 const positional = rawArgs.filter(
-  (a, i) =>
-    !a.startsWith('--') && (limitIdx < 0 || i !== limitIdx + 1),
+  (a, i) => !a.startsWith('--') && (limitIdx < 0 || i !== limitIdx + 1),
 );
 
 // --- ANSI colors ---
@@ -148,9 +146,7 @@ try {
   execSync('~/.cargo/bin/cargo build -p react_compiler_napi', {
     cwd: path.join(REPO_ROOT, 'compiler/crates'),
     stdio:
-      jsonMode || failuresMode
-        ? ['inherit', 'pipe', 'inherit']
-        : 'inherit',
+      jsonMode || failuresMode ? ['inherit', 'pipe', 'inherit'] : 'inherit',
     shell: true,
   });
 } catch {
@@ -262,7 +258,10 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
       if (
         kind === 'CompileError' ||
         kind === 'CompileSkip' ||
-        kind === 'CompileUnexpectedThrow' ||
+        // Skip CompileUnexpectedThrow: this is a TS-only artifact logged when a pass
+        // throws instead of recording errors. The Rust port uses Result-based error
+        // propagation, so this event is never emitted and should be excluded from comparison.
+        // kind === 'CompileUnexpectedThrow' ||
         kind === 'PipelineError'
       ) {
         const fnName = (event.fnName as string | null) ?? null;
@@ -406,36 +405,47 @@ function normalizeIds(text: string): string {
   const declMap = new Map<string, number>();
   let nextDeclId = 0;
 
-  return text
-    .replace(/\(generated\)/g, '(none)')
-    .replace(/Type\(\d+\)/g, match => {
-      if (!typeMap.has(match)) {
-        typeMap.set(match, nextTypeId++);
-      }
-      return `Type(${typeMap.get(match)})`;
-    })
-    .replace(/((?:id|declarationId): )(\d+)/g, (_match, prefix, num) => {
-      if (prefix === 'id: ') {
+  return (
+    text
+      .replace(/\(generated\)/g, '(none)')
+      .replace(/Type\(\d+\)/g, match => {
+        if (!typeMap.has(match)) {
+          typeMap.set(match, nextTypeId++);
+        }
+        return `Type(${typeMap.get(match)})`;
+      })
+      .replace(/((?:id|declarationId): )(\d+)/g, (_match, prefix, num) => {
+        if (prefix === 'id: ') {
+          const key = `id:${num}`;
+          if (!idMap.has(key)) {
+            idMap.set(key, nextIdId++);
+          }
+          return `${prefix}${idMap.get(key)}`;
+        } else {
+          const key = `decl:${num}`;
+          if (!declMap.has(key)) {
+            declMap.set(key, nextDeclId++);
+          }
+          return `${prefix}${declMap.get(key)}`;
+        }
+      })
+      .replace(/Identifier\((\d+)\)/g, (_match, num) => {
         const key = `id:${num}`;
         if (!idMap.has(key)) {
           idMap.set(key, nextIdId++);
         }
-        return `${prefix}${idMap.get(key)}`;
-      } else {
-        const key = `decl:${num}`;
-        if (!declMap.has(key)) {
-          declMap.set(key, nextDeclId++);
+        return `Identifier(${idMap.get(key)})`;
+      })
+      // Normalize printed identifiers like "x$5" in error descriptions.
+      // The $N suffix is an opaque IdentifierId that may differ between TS and Rust.
+      .replace(/(\w+)\$(\d+)/g, (_match, name, num) => {
+        const key = `id:${num}`;
+        if (!idMap.has(key)) {
+          idMap.set(key, nextIdId++);
         }
-        return `${prefix}${declMap.get(key)}`;
-      }
-    })
-    .replace(/Identifier\((\d+)\)/g, (_match, num) => {
-      const key = `id:${num}`;
-      if (!idMap.has(key)) {
-        idMap.set(key, nextIdId++);
-      }
-      return `Identifier(${idMap.get(key)})`;
-    });
+        return `${name}\$${idMap.get(key)}`;
+      })
+  );
 }
 
 // --- Simple unified diff ---

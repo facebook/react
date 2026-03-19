@@ -4,11 +4,11 @@ HIR: complete (1653/1653)
 PruneMaybeThrows: complete (1653/1653)
 DropManualMemoization: complete (1652/1652)
 InlineImmediatelyInvokedFunctionExpressions: complete (1652/1652)
-MergeConsecutiveBlocks: partial (1651/1652)
-SSA: partial (1613/1651)
-EliminateRedundantPhi: complete (1613/1613)
-ConstantPropagation: partial (1612/1613)
-InferTypes: partial (916/1612)
+MergeConsecutiveBlocks: complete (1652/1652)
+SSA: complete (1651/1651)
+EliminateRedundantPhi: complete (1651/1651)
+ConstantPropagation: partial (1650/1651)
+InferTypes: partial (942/1650)
 OptimizePropsMethodCalls: complete (916/916)
 AnalyseFunctions: todo
 InferMutationAliasingEffects: todo
@@ -75,3 +75,12 @@ Fixed 15 failures at the PruneMaybeThrows frontier:
 - Fixed validateUseMemo VoidUseMemo event logging to include diagnostic details array.
 - Fixed place formatting in invariant error descriptions to match TS printPlace() output.
 PruneMaybeThrows now 1653/1653, DropManualMemoization 1652/1652, frontier moved to MergeConsecutiveBlocks.
+
+## 20260318-223712 Fix MergeConsecutiveBlocks and SSA failures
+
+Fixed 39 failures (1 MergeConsecutiveBlocks + 38 SSA):
+- Moved env.has_errors() bailout from before SSA to end of pipeline, matching TS behavior.
+- Fixed SSA error event format (CompileUnexpectedThrow filtering, CompilerErrorDetail format).
+- Fixed identifier formatting in SSA error descriptions to match TS printIdentifier() output.
+- Added name$N normalization to test harness.
+MergeConsecutiveBlocks 1652/1652, SSA 1651/1651, frontier moved to ConstantPropagation.

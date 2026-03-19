@@ -144,14 +144,18 @@ pub fn compile_fn(
     let debug_merge = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
 
-    // Check for accumulated errors (matches TS Pipeline.ts: env.hasErrors() → Err)
-    if env.has_errors() {
-        return Err(env.take_errors());
-    }
-
     react_compiler_ssa::enter_ssa(&mut hir, &mut env).map_err(|diag| {
+        // In TS, EnterSSA uses CompilerError.throwTodo() which creates a CompilerErrorDetail
+        // (not a CompilerDiagnostic). We convert here to match the TS event format.
+        let loc = diag.primary_location().cloned();
         let mut err = CompilerError::new();
-        err.push_diagnostic(diag);
+        err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
+            category: diag.category,
+            reason: diag.reason,
+            description: diag.description,
+            loc,
+            suggestions: diag.suggestions,
+        });
         err
     })?;
 
@@ -187,6 +191,12 @@ pub fn compile_fn(
 
     let debug_optimize_props = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("OptimizePropsMethodCalls", debug_optimize_props));
+
+    // Check for accumulated errors at the end of the pipeline
+    // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
+    if env.has_errors() {
+        return Err(env.take_errors());
+    }
 
     Ok(CodegenFunction {
         loc: None,
