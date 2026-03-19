@@ -878,6 +878,11 @@ fn apply_function(
                     ..
                 } => {
                     let inner_func = &functions[func_id.0 as usize];
+                    // Resolve types for captured context variable places (matching TS
+                    // where eachInstructionValueOperand yields func.context places)
+                    for ctx in &inner_func.context {
+                        resolve_identifier(ctx.identifier, identifiers, types, unifier);
+                    }
                     apply_function(inner_func, functions, identifiers, types, unifier);
                 }
                 _ => {}
@@ -1129,7 +1134,7 @@ fn apply_instruction_operands(
             }
         }
         InstructionValue::FunctionExpression { .. } | InstructionValue::ObjectMethod { .. } => {
-            // Inner functions are handled separately via recursion
+            // Inner functions are handled separately via recursion in apply_function
         }
         InstructionValue::TemplateLiteral { subexprs, .. } => {
             for sub in subexprs {

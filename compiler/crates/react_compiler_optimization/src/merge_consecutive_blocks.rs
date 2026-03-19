@@ -16,13 +16,44 @@
 use std::collections::{HashMap, HashSet};
 
 use react_compiler_hir::{
-    BlockId, BlockKind, Effect, GENERATED_SOURCE, HirFunction, Instruction, InstructionId,
-    InstructionValue, Place, Terminal,
+    AliasingEffect, BlockId, BlockKind, Effect, GENERATED_SOURCE, HirFunction, Instruction,
+    InstructionId, InstructionValue, Place, Terminal,
 };
 use react_compiler_lowering::{mark_predecessors, terminal_fallthrough};
+use react_compiler_ssa::enter_ssa::placeholder_function;
 
-/// Merge consecutive blocks in the function's CFG.
-pub fn merge_consecutive_blocks(func: &mut HirFunction) {
+/// Merge consecutive blocks in the function's CFG, including inner functions.
+pub fn merge_consecutive_blocks(func: &mut HirFunction, functions: &mut [HirFunction]) {
+    // Collect inner function IDs for recursive processing
+    let inner_func_ids: Vec<usize> = func
+        .body
+        .blocks
+        .values()
+        .flat_map(|block| block.instructions.iter())
+        .filter_map(|instr_id| {
+            let instr = &func.instructions[instr_id.0 as usize];
+            match &instr.value {
+                InstructionValue::FunctionExpression { lowered_func, .. }
+                | InstructionValue::ObjectMethod { lowered_func, .. } => {
+                    Some(lowered_func.func.0 as usize)
+                }
+                _ => None,
+            }
+        })
+        .collect();
+
+    // Recursively merge consecutive blocks in inner functions
+    for func_id in inner_func_ids {
+        // Use std::mem::replace to temporarily take the inner function out,
+        // process it, then put it back (standard borrow checker workaround)
+        let mut inner_func = std::mem::replace(
+            &mut functions[func_id],
+            placeholder_function(),
+        );
+        merge_consecutive_blocks(&mut inner_func, functions);
+        functions[func_id] = inner_func;
+    }
+
     // Build fallthrough set
     let mut fallthrough_blocks: HashSet<BlockId> = HashSet::new();
     for block in func.body.blocks.values() {
@@ -96,13 +127,16 @@ pub fn merge_consecutive_blocks(func: &mut HirFunction) {
             };
             let instr = Instruction {
                 id: eval_order,
-                lvalue,
+                lvalue: lvalue.clone(),
                 value: InstructionValue::LoadLocal {
-                    place: operand,
+                    place: operand.clone(),
                     loc: GENERATED_SOURCE,
                 },
                 loc: GENERATED_SOURCE,
-                effects: None,
+                effects: Some(vec![AliasingEffect::Alias {
+                    from: operand,
+                    into: lvalue,
+                }]),
             };
             let instr_id = InstructionId(func.instructions.len() as u32);
             func.instructions.push(instr);

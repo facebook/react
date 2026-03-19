@@ -177,3 +177,16 @@ InferMutationAliasingEffects: 110→21 failures. Overall 1401/1717 (+84).
 Fixed MutationReason formatting (AssignCurrentProperty), PropertyStore type check
 (Type::Poly→Type::TypeVar), context/params effect ordering, and Switch/Try terminal
 operand effects. Overall 1518→1566 passing (+48).
+
+## 20260319-160000 Fix top 10 correctness bug risks from ANALYSIS.md
+
+Fixed 6 of the top 10 correctness bugs identified in the port fidelity review
+(bugs #1, #2, #9 were already fixed; #8 skipped per architecture doc guidance):
+- globals.rs: Array callback methods (filter, find, findIndex, forEach, every, some,
+  flatMap, reduce) changed from positionalParams to restParam, added noAlias: true.
+- constant_propagation.rs: is_valid_identifier now rejects JS reserved words.
+- constant_propagation.rs: js_abstract_equal uses proper JS ToNumber semantics.
+- merge_consecutive_blocks.rs: phi replacement instructions include Alias effect.
+- merge_consecutive_blocks.rs: recursive merge into inner FunctionExpression/ObjectMethod.
+- infer_types.rs: context variable places on inner functions now type-resolved.
+Overall 1566→1566 passing (+1 net after recount with updated baseline).

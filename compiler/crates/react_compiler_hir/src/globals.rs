@@ -358,13 +358,13 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Object {
                 shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -375,11 +375,11 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Poly,
             return_value_kind: ValueKind::Mutable,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -390,11 +390,11 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Primitive,
             return_value_kind: ValueKind::Primitive,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -407,11 +407,11 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Capture),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Poly,
             return_value_kind: ValueKind::Mutable,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -423,11 +423,11 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Primitive,
             return_value_kind: ValueKind::Primitive,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -440,13 +440,13 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Object {
                 shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },

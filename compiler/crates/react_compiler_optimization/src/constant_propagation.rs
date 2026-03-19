@@ -119,7 +119,7 @@ fn constant_propagation_impl(
          * Finally, merge together any blocks that are now guaranteed to execute
          * consecutively
          */
-        merge_consecutive_blocks(func);
+        merge_consecutive_blocks(func, &mut env.functions);
 
         // TODO: port assertConsistentIdentifiers(fn) and assertTerminalSuccessorsExist(fn)
         // from TS HIR validation. These are debug assertions that verify structural
@@ -753,6 +753,7 @@ fn read(constants: &Constants, place: &Place) -> Option<Constant> {
 
 /// Check if a string is a valid JavaScript identifier.
 /// Supports Unicode identifier characters per ECMAScript spec (ID_Start / ID_Continue).
+/// Rejects JS reserved words (matching Babel's `isValidIdentifier` default behavior).
 fn is_valid_identifier(s: &str) -> bool {
     if s.is_empty() {
         return false;
@@ -762,7 +763,62 @@ fn is_valid_identifier(s: &str) -> bool {
         Some(c) if is_id_start(c) => {}
         _ => return false,
     }
-    chars.all(is_id_continue)
+    if !chars.all(is_id_continue) {
+        return false;
+    }
+    !is_reserved_word(s)
+}
+
+/// JS reserved words that cannot be used as identifiers.
+/// Includes keywords, future reserved words, and strict mode reserved words.
+fn is_reserved_word(s: &str) -> bool {
+    matches!(
+        s,
+        "break"
+            | "case"
+            | "catch"
+            | "continue"
+            | "debugger"
+            | "default"
+            | "do"
+            | "else"
+            | "finally"
+            | "for"
+            | "function"
+            | "if"
+            | "in"
+            | "instanceof"
+            | "new"
+            | "return"
+            | "switch"
+            | "this"
+            | "throw"
+            | "try"
+            | "typeof"
+            | "var"
+            | "void"
+            | "while"
+            | "with"
+            | "class"
+            | "const"
+            | "enum"
+            | "export"
+            | "extends"
+            | "import"
+            | "super"
+            | "implements"
+            | "interface"
+            | "let"
+            | "package"
+            | "private"
+            | "protected"
+            | "public"
+            | "static"
+            | "yield"
+            | "null"
+            | "true"
+            | "false"
+    )
 }
 
 /// Check if a character is valid as the start of a JS identifier (ID_Start + _ + $).
@@ -947,6 +1003,43 @@ fn js_strict_equal(lhs: &PrimitiveValue, rhs: &PrimitiveValue) -> bool {
     }
 }
 
+/// Convert a string to a number using JS `ToNumber` semantics.
+/// In JS: `""` → 0, `" "` → 0, `" 42 "` → 42, `"0x1A"` → 26, `"Infinity"` → Infinity.
+fn js_to_number(s: &str) -> f64 {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return 0.0;
+    }
+    if trimmed == "Infinity" || trimmed == "+Infinity" {
+        return f64::INFINITY;
+    }
+    if trimmed == "-Infinity" {
+        return f64::NEG_INFINITY;
+    }
+    // Handle hex literals (0x/0X)
+    if trimmed.starts_with("0x") || trimmed.starts_with("0X") {
+        return match u64::from_str_radix(&trimmed[2..], 16) {
+            Ok(v) => v as f64,
+            Err(_) => f64::NAN,
+        };
+    }
+    // Handle octal literals (0o/0O)
+    if trimmed.starts_with("0o") || trimmed.starts_with("0O") {
+        return match u64::from_str_radix(&trimmed[2..], 8) {
+            Ok(v) => v as f64,
+            Err(_) => f64::NAN,
+        };
+    }
+    // Handle binary literals (0b/0B)
+    if trimmed.starts_with("0b") || trimmed.starts_with("0B") {
+        return match u64::from_str_radix(&trimmed[2..], 2) {
+            Ok(v) => v as f64,
+            Err(_) => f64::NAN,
+        };
+    }
+    trimmed.parse::<f64>().unwrap_or(f64::NAN)
+}
+
 fn js_abstract_equal(lhs: &PrimitiveValue, rhs: &PrimitiveValue) -> bool {
     match (lhs, rhs) {
         (PrimitiveValue::Null, PrimitiveValue::Null) => true,
@@ -966,17 +1059,13 @@ fn js_abstract_equal(lhs: &PrimitiveValue, rhs: &PrimitiveValue) -> bool {
         // Cross-type coercions for primitives
         (PrimitiveValue::Number(n), PrimitiveValue::String(s))
         | (PrimitiveValue::String(s), PrimitiveValue::Number(n)) => {
-            // String is coerced to number
-            match s.parse::<f64>() {
-                Ok(sv) => {
-                    let nv = n.value();
-                    if nv.is_nan() || sv.is_nan() {
-                        false
-                    } else {
-                        nv == sv
-                    }
-                }
-                Err(_) => false,
+            // String is coerced to number using JS ToNumber semantics
+            let sv = js_to_number(s);
+            let nv = n.value();
+            if nv.is_nan() || sv.is_nan() {
+                false
+            } else {
+                nv == sv
             }
         }
         (PrimitiveValue::Boolean(b), other) => {

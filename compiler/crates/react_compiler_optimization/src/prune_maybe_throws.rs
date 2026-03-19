@@ -26,7 +26,10 @@ use react_compiler_lowering::{
 use crate::merge_consecutive_blocks::merge_consecutive_blocks;
 
 /// Prune `MaybeThrow` terminals for blocks that cannot throw, then clean up the CFG.
-pub fn prune_maybe_throws(func: &mut HirFunction) -> Result<(), CompilerDiagnostic> {
+pub fn prune_maybe_throws(
+    func: &mut HirFunction,
+    functions: &mut [HirFunction],
+) -> Result<(), CompilerDiagnostic> {
     let terminal_mapping = prune_maybe_throws_impl(func);
     if let Some(terminal_mapping) = terminal_mapping {
         // If terminals have changed then blocks may have become newly unreachable.
@@ -36,7 +39,7 @@ pub fn prune_maybe_throws(func: &mut HirFunction) -> Result<(), CompilerDiagnost
         remove_dead_do_while_statements(&mut func.body);
         remove_unnecessary_try_catch(&mut func.body);
         mark_instruction_ids(&mut func.body, &mut func.instructions);
-        merge_consecutive_blocks(func);
+        merge_consecutive_blocks(func, functions);
 
         // Rewrite phi operands to reference the updated predecessor blocks
         for block in func.body.blocks.values_mut() {

@@ -55,11 +55,13 @@ pub fn compile_fn(
     let debug_hir = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("HIR", debug_hir));
 
-    react_compiler_optimization::prune_maybe_throws(&mut hir).map_err(|diag| {
-        let mut err = CompilerError::new();
-        err.push_diagnostic(diag);
-        err
-    })?;
+    react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions).map_err(
+        |diag| {
+            let mut err = CompilerError::new();
+            err.push_diagnostic(diag);
+            err
+        },
+    )?;
 
     let debug_prune = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
@@ -139,7 +141,10 @@ pub fn compile_fn(
     ));
 
     // Standalone merge pass (TS pipeline calls this unconditionally after IIFE inlining)
-    react_compiler_optimization::merge_consecutive_blocks::merge_consecutive_blocks(&mut hir);
+    react_compiler_optimization::merge_consecutive_blocks::merge_consecutive_blocks(
+        &mut hir,
+        &mut env.functions,
+    );
 
     let debug_merge = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
@@ -216,11 +221,13 @@ pub fn compile_fn(
     context.log_debug(DebugLogEntry::new("DeadCodeElimination", debug_dce));
 
     // Second PruneMaybeThrows call (matches TS Pipeline.ts position #15)
-    react_compiler_optimization::prune_maybe_throws(&mut hir).map_err(|diag| {
-        let mut err = CompilerError::new();
-        err.push_diagnostic(diag);
-        err
-    })?;
+    react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions).map_err(
+        |diag| {
+            let mut err = CompilerError::new();
+            err.push_diagnostic(diag);
+            err
+        },
+    )?;
 
     let debug_prune2 = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune2));
