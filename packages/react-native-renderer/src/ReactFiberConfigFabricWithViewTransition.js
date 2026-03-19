@@ -42,16 +42,14 @@ export type InstanceMeasurement = {
 };
 
 export type RunningViewTransition = {
-  skipTransition(): void,
   finished: Promise<void>,
   ready: Promise<void>,
   ...
 };
 
 interface ViewTransitionPseudoElementType extends mixin$Animatable {
-  _scope: HTMLElement;
-  _selector: string;
-  getComputedStyle(): CSSStyleDeclaration;
+  _pseudo: string;
+  _name: string;
 }
 
 function ViewTransitionPseudoElement(
@@ -76,7 +74,7 @@ export function restoreViewTransitionName(
   props: Props,
 ): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   fabricRestoreViewTransitionName(instance.node);
 }
@@ -88,14 +86,14 @@ export function cancelViewTransitionName(
   props: Props,
 ): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   fabricCancelViewTransitionName(instance.node, oldName);
 }
 
 export function cancelRootViewTransitionName(rootContainer: Container): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('cancelRootViewTransitionName is not implemented');
@@ -104,7 +102,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
 
 export function restoreRootViewTransitionName(rootContainer: Container): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('restoreRootViewTransitionName is not implemented');
@@ -115,7 +113,7 @@ export function cloneRootViewTransitionContainer(
   rootContainer: Container,
 ): Instance {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('cloneRootViewTransitionContainer is not implemented');
@@ -129,7 +127,7 @@ export function removeRootViewTransitionClone(
   clone: Instance,
 ): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('removeRootViewTransitionClone is not implemented');
@@ -138,7 +136,7 @@ export function removeRootViewTransitionClone(
 
 export function measureInstance(instance: Instance): InstanceMeasurement {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   const measurement = fabricMeasureInstance(instance.node);
   return {
@@ -157,7 +155,7 @@ export function measureInstance(instance: Instance): InstanceMeasurement {
 
 export function measureClonedInstance(instance: Instance): InstanceMeasurement {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('measureClonedInstance is not implemented');
@@ -174,7 +172,7 @@ export function wasInstanceInViewport(
   measurement: InstanceMeasurement,
 ): boolean {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   return measurement.view;
 }
@@ -184,7 +182,7 @@ export function hasInstanceChanged(
   newMeasurement: InstanceMeasurement,
 ): boolean {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('hasInstanceChanged is not implemented');
@@ -197,7 +195,7 @@ export function hasInstanceAffectedParent(
   newMeasurement: InstanceMeasurement,
 ): boolean {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('hasInstanceAffectedParent is not implemented');
@@ -218,17 +216,20 @@ export function startGestureTransition(
   finishedAnimation: () => void,
 ): RunningViewTransition {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('startGestureTransition is not implemented');
   }
-  return null;
+  return {
+    finished: new Promise((resolve, reject)=>{}),
+    ready: new Promise((resolve, reject)=>{}),
+  };
 }
 
 export function stopViewTransition(transition: RunningViewTransition): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   if (__DEV__) {
     console.warn('stopViewTransition is not implemented');
@@ -240,7 +241,7 @@ export function addViewTransitionFinishedListener(
   callback: () => void,
 ): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   transition.finished.finally(callback);
 }
@@ -249,7 +250,7 @@ export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   return {
     name,
@@ -264,7 +265,7 @@ export function applyViewTransitionName(
   className: ?string,
 ): void {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   // add view-transition-name to things that might animate for browser
   fabricApplyViewTransitionName(instance.node, name, className);
@@ -284,7 +285,7 @@ export function startViewTransition(
   finishedAnimation: () => void,
 ): null | RunningViewTransition {
   if (!enableViewTransitionForPersistenceMode) {
-    return;
+    shim();
   }
   const transition = fabricStartViewTransition(
     // mutation

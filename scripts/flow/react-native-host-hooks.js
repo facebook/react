@@ -314,9 +314,10 @@ declare const nativeFabricUIManager: {
   ) => void,
   startViewTransition: (
     mutationCallback: () => void,
-    onReady: () => void,
-    onComplete: () => void,
-  ) => boolean,
+  ) => {
+    finished: Promise<void>,
+    ready: Promise<void>,
+  },
   restoreViewTransitionName: (node: Object) => void,
   cancelViewTransitionName: (node: Object, oldName: string) => void,
   ...
