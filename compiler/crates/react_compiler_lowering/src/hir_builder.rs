@@ -1022,7 +1022,7 @@ pub fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -
                         id: block.terminal.evaluation_order(),
                         loc: block.terminal.loc().copied(),
                     },
-                    preds: IndexSet::new(),
+                    preds: block.preds.clone(),
                     phis: Vec::new(),
                 },
             );

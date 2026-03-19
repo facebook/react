@@ -1,15 +1,15 @@
 # Status
 
-HIR: complete (1717/1717)
-PruneMaybeThrows: partial (1715/1717)
-DropManualMemoization: partial (1700/1717)
-InlineImmediatelyInvokedFunctionExpressions: partial (1564/1717)
-MergeConsecutiveBlocks: partial (1564/1717)
-SSA: partial (1519/1717)
-EliminateRedundantPhi: partial (1519/1717)
-ConstantPropagation: partial (1518/1717)
-InferTypes: partial (990/1717)
-OptimizePropsMethodCalls: partial (973/1717)
+HIR: complete (1653/1653)
+PruneMaybeThrows: complete (1653/1653)
+DropManualMemoization: complete (1652/1652)
+InlineImmediatelyInvokedFunctionExpressions: complete (1652/1652)
+MergeConsecutiveBlocks: partial (1651/1652)
+SSA: partial (1613/1651)
+EliminateRedundantPhi: complete (1613/1613)
+ConstantPropagation: partial (1612/1613)
+InferTypes: partial (916/1612)
+OptimizePropsMethodCalls: complete (916/916)
 AnalyseFunctions: todo
 InferMutationAliasingEffects: todo
 OptimizeForSSR: todo
@@ -66,3 +66,12 @@ Fixed multiple bugs exposed by the new inner function debug printing:
 - Added JSXOpeningElement loc tracking in identifier_loc_index for JSX context vars.
 - Added node_type to UnsupportedNode for UpdateExpression and YieldExpression.
 HIR now 1717/1717, frontier back to PruneMaybeThrows.
+
+## 20260318-220322 Fix PruneMaybeThrows and validation pass failures
+
+Fixed 15 failures at the PruneMaybeThrows frontier:
+- Fixed unreachable block predecessor tracking in hir_builder.rs (preds were empty instead of cloned).
+- Implemented validateContextVariableLValues — errors were written to temp_errors and discarded.
+- Fixed validateUseMemo VoidUseMemo event logging to include diagnostic details array.
+- Fixed place formatting in invariant error descriptions to match TS printPlace() output.
+PruneMaybeThrows now 1653/1653, DropManualMemoization 1652/1652, frontier moved to MergeConsecutiveBlocks.

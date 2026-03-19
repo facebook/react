@@ -4,8 +4,8 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, ErrorCategory,
 };
 use react_compiler_hir::{
-    ArrayPatternElement, FunctionId, HirFunction, IdentifierId, InstructionValue, ObjectPropertyOrSpread,
-    Pattern, Place,
+    ArrayPatternElement, FunctionId, HirFunction, Identifier, IdentifierId, InstructionValue,
+    ObjectPropertyOrSpread, Pattern, Place,
 };
 use react_compiler_hir::environment::Environment;
 
@@ -36,7 +36,7 @@ pub fn validate_context_variable_lvalues(
     func: &HirFunction,
     env: &mut Environment,
 ) -> Result<(), CompilerDiagnostic> {
-    validate_context_variable_lvalues_with_errors(func, &env.functions, &mut env.errors)
+    validate_context_variable_lvalues_with_errors(func, &env.functions, &env.identifiers, &mut env.errors)
 }
 
 /// Like [`validate_context_variable_lvalues`], but writes diagnostics into the
@@ -45,16 +45,18 @@ pub fn validate_context_variable_lvalues(
 pub fn validate_context_variable_lvalues_with_errors(
     func: &HirFunction,
     functions: &[HirFunction],
+    identifiers: &[Identifier],
     errors: &mut CompilerError,
 ) -> Result<(), CompilerDiagnostic> {
     let mut identifier_kinds: IdentifierKinds = HashMap::new();
-    validate_context_variable_lvalues_impl(func, &mut identifier_kinds, functions, errors)
+    validate_context_variable_lvalues_impl(func, &mut identifier_kinds, functions, identifiers, errors)
 }
 
 fn validate_context_variable_lvalues_impl(
     func: &HirFunction,
     identifier_kinds: &mut IdentifierKinds,
     functions: &[HirFunction],
+    identifiers: &[Identifier],
     errors: &mut CompilerError,
 ) -> Result<(), CompilerDiagnostic> {
     let mut inner_function_ids: Vec<FunctionId> = Vec::new();
@@ -67,25 +69,25 @@ fn validate_context_variable_lvalues_impl(
             match value {
                 InstructionValue::DeclareContext { lvalue, .. }
                 | InstructionValue::StoreContext { lvalue, .. } => {
-                    visit(identifier_kinds, &lvalue.place, VarRefKind::Context, errors)?;
+                    visit(identifier_kinds, &lvalue.place, VarRefKind::Context, identifiers, errors)?;
                 }
                 InstructionValue::LoadContext { place, .. } => {
-                    visit(identifier_kinds, place, VarRefKind::Context, errors)?;
+                    visit(identifier_kinds, place, VarRefKind::Context, identifiers, errors)?;
                 }
                 InstructionValue::StoreLocal { lvalue, .. }
                 | InstructionValue::DeclareLocal { lvalue, .. } => {
-                    visit(identifier_kinds, &lvalue.place, VarRefKind::Local, errors)?;
+                    visit(identifier_kinds, &lvalue.place, VarRefKind::Local, identifiers, errors)?;
                 }
                 InstructionValue::LoadLocal { place, .. } => {
-                    visit(identifier_kinds, place, VarRefKind::Local, errors)?;
+                    visit(identifier_kinds, place, VarRefKind::Local, identifiers, errors)?;
                 }
                 InstructionValue::PostfixUpdate { lvalue, .. }
                 | InstructionValue::PrefixUpdate { lvalue, .. } => {
-                    visit(identifier_kinds, lvalue, VarRefKind::Local, errors)?;
+                    visit(identifier_kinds, lvalue, VarRefKind::Local, identifiers, errors)?;
                 }
                 InstructionValue::Destructure { lvalue, .. } => {
                     for place in each_pattern_operand(&lvalue.pattern) {
-                        visit(identifier_kinds, place, VarRefKind::Destructure, errors)?;
+                        visit(identifier_kinds, place, VarRefKind::Destructure, identifiers, errors)?;
                     }
                 }
                 InstructionValue::FunctionExpression { lowered_func, .. }
@@ -103,7 +105,7 @@ fn validate_context_variable_lvalues_impl(
     // Process inner functions after the block loop to avoid borrow conflicts
     for func_id in inner_function_ids {
         let inner_func = &functions[func_id.0 as usize];
-        validate_context_variable_lvalues_impl(inner_func, identifier_kinds, functions, errors)?;
+        validate_context_variable_lvalues_impl(inner_func, identifier_kinds, functions, identifiers, errors)?;
     }
 
     Ok(())
@@ -138,10 +140,22 @@ fn collect_pattern_operands<'a>(pattern: &'a Pattern, places: &mut Vec<&'a Place
     }
 }
 
+/// Format a place like TS `printPlace()`: `<effect> <name>$<id>`
+fn format_place(place: &Place, identifiers: &[Identifier]) -> String {
+    let id = place.identifier;
+    let ident = &identifiers[id.0 as usize];
+    let name = match &ident.name {
+        Some(n) => n.value().to_string(),
+        None => String::new(),
+    };
+    format!("{} {}${}", place.effect, name, id.0)
+}
+
 fn visit(
     identifiers: &mut IdentifierKinds,
     place: &Place,
     kind: VarRefKind,
+    env_identifiers: &[Identifier],
     errors: &mut CompilerError,
 ) -> Result<(), CompilerDiagnostic> {
     if let Some((prev_place, prev_kind)) = identifiers.get(&place.identifier) {
@@ -167,12 +181,13 @@ fn visit(
                 );
                 return Ok(());
             }
+            let place_str = format_place(place, env_identifiers);
             return Err(CompilerDiagnostic::new(
                 ErrorCategory::Invariant,
                 "Expected all references to a variable to be consistently local or context references",
                 Some(format!(
-                    "Identifier ${} is referenced as a {} variable, but was previously referenced as a {} variable",
-                    place.identifier.0, kind, prev_kind
+                    "Identifier {} is referenced as a {} variable, but was previously referenced as a {} variable",
+                    place_str, kind, prev_kind
                 )),
             )
             .with_detail(CompilerDiagnosticDetail::Error {

@@ -15,7 +15,7 @@ use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 
-use super::compile_result::{CodegenFunction, DebugLogEntry};
+use super::compile_result::{CodegenFunction, CompilerErrorDetailInfo, CompilerErrorItemInfo, DebugLogEntry};
 use super::imports::ProgramContext;
 use super::plugin_options::CompilerOutputMode;
 use crate::debug_print;
@@ -64,38 +64,54 @@ pub fn compile_fn(
     let debug_prune = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
 
-    // TODO: propagate with `?` once lowering is complete. Currently suppressed
-    // because incomplete lowering can produce inconsistent context/local references
-    // that trigger false invariant violations. We use a temporary error collector
-    // to avoid accumulating false-positive diagnostics on the environment.
-    {
-        let mut temp_errors = CompilerError::new();
-        let _ = react_compiler_validation::validate_context_variable_lvalues_with_errors(
-            &hir,
-            &env.functions,
-            &mut temp_errors,
-        );
+    // Validate context variable lvalues (matches TS Pipeline.ts: validateContextVariableLValues(hir))
+    // In TS, this calls env.recordError() which accumulates on env.errors.
+    // Invariant violations are propagated as Err.
+    if let Err(diag) = react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env) {
+        let mut err = CompilerError::new();
+        err.push_diagnostic(diag);
+        return Err(err);
     }
+
     let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
     // Log VoidUseMemo errors as CompileError events (matching TS env.logErrors behavior).
     // In TS these are logged via env.logErrors() for telemetry, not accumulated as compile errors.
     for detail in &void_memo_errors.details {
-        let (category, reason, description, severity) = match detail {
+        let (category, reason, description, severity, details) = match detail {
             react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()))
+                let items: Option<Vec<CompilerErrorItemInfo>> = {
+                    let v: Vec<CompilerErrorItemInfo> = d.details.iter().map(|item| match item {
+                        react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message } => {
+                            CompilerErrorItemInfo {
+                                kind: "error".to_string(),
+                                loc: *loc,
+                                message: message.clone(),
+                            }
+                        }
+                        react_compiler_diagnostics::CompilerDiagnosticDetail::Hint { message } => {
+                            CompilerErrorItemInfo {
+                                kind: "hint".to_string(),
+                                loc: None,
+                                message: Some(message.clone()),
+                            }
+                        }
+                    }).collect();
+                    if v.is_empty() { None } else { Some(v) }
+                };
+                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()), items)
             }
             react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {
-                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()))
+                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()), None)
             }
         };
         context.log_event(super::compile_result::LoggerEvent::CompileError {
             fn_loc: None,
-            detail: super::compile_result::CompilerErrorDetailInfo {
+            detail: CompilerErrorDetailInfo {
                 category,
                 reason,
                 description,
                 severity: Some(severity),
-                details: None,
+                details,
                 loc: None,
             },
         });
