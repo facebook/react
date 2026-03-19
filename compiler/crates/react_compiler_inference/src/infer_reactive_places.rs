@@ -455,10 +455,13 @@ fn is_stable_type(ty: &Type) -> bool {
                 "BuiltInSetState"
                     | "BuiltInSetActionState"
                     | "BuiltInDispatch"
-                    | "BuiltInUseRefId"
                     | "BuiltInStartTransition"
                     | "BuiltInSetOptimistic"
             )
+        }
+        // useRef returns an Object type with BuiltInUseRefId shape
+        Type::Object { shape_id: Some(id) } => {
+            matches!(id.as_str(), "BuiltInUseRefId")
         }
         _ => false,
     }
@@ -662,7 +665,7 @@ fn apply_reactive_flags_replay(
 
             // Value operands: isReactive is called, so set flag if reactive
             let instr = &mut func.instructions[instr_id.0 as usize];
-            set_reactive_on_value_operands(&mut instr.value, &reactive_ids);
+            set_reactive_on_value_operands(&mut instr.value, &reactive_ids, Some(env));
 
             // Lvalues: markReactive is called only when hasReactiveInput
             if has_reactive_input {
@@ -816,23 +819,30 @@ fn set_reactive_on_terminal(terminal: &mut Terminal, reactive_ids: &HashSet<Iden
 fn set_reactive_on_value_operands(
     value: &mut InstructionValue,
     reactive_ids: &HashSet<IdentifierId>,
+    env: Option<&mut Environment>,
 ) {
     match value {
         InstructionValue::LoadLocal { place, .. }
         | InstructionValue::LoadContext { place, .. } => {
             set_reactive_on_place(place, reactive_ids);
         }
-        InstructionValue::StoreLocal { lvalue, value: val, .. }
-        | InstructionValue::StoreContext { lvalue, value: val, .. } => {
+        InstructionValue::StoreLocal { value: val, .. } => {
+            // StoreLocal: TS eachInstructionValueOperand yields only the value
+            set_reactive_on_place(val, reactive_ids);
+        }
+        InstructionValue::StoreContext { lvalue, value: val, .. } => {
+            // StoreContext: TS eachInstructionValueOperand yields lvalue.place AND value
             set_reactive_on_place(&mut lvalue.place, reactive_ids);
             set_reactive_on_place(val, reactive_ids);
         }
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. } => {
-            set_reactive_on_place(&mut lvalue.place, reactive_ids);
+        InstructionValue::DeclareLocal { .. }
+        | InstructionValue::DeclareContext { .. } => {
+            // TS eachInstructionValueOperand yields nothing for DeclareLocal/DeclareContext
+            // lvalue.place reactive flag is set via set_reactive_on_value_lvalues when hasReactiveInput
         }
-        InstructionValue::Destructure { lvalue, value: val, .. } => {
-            set_reactive_on_pattern(&mut lvalue.pattern, reactive_ids);
+        InstructionValue::Destructure { value: val, .. } => {
+            // TS eachInstructionValueOperand yields only the value for Destructure
+            // Pattern places are lvalues, set via set_reactive_on_value_lvalues when hasReactiveInput
             set_reactive_on_place(val, reactive_ids);
         }
         InstructionValue::BinaryExpression { left, right, .. } => {
@@ -964,13 +974,11 @@ fn set_reactive_on_value_operands(
         InstructionValue::NextPropertyOf { value: val, .. } => {
             set_reactive_on_place(val, reactive_ids);
         }
-        InstructionValue::PrefixUpdate { value: val, lvalue, .. } => {
+        InstructionValue::PrefixUpdate { value: val, .. }
+        | InstructionValue::PostfixUpdate { value: val, .. } => {
+            // TS eachInstructionValueOperand yields only the value for PrefixUpdate/PostfixUpdate
+            // lvalue reactive flag is set via set_reactive_on_value_lvalues when hasReactiveInput
             set_reactive_on_place(val, reactive_ids);
-            set_reactive_on_place(lvalue, reactive_ids);
-        }
-        InstructionValue::PostfixUpdate { value: val, lvalue, .. } => {
-            set_reactive_on_place(val, reactive_ids);
-            set_reactive_on_place(lvalue, reactive_ids);
         }
         InstructionValue::TemplateLiteral { subexprs, .. } => {
             for s in subexprs {
@@ -999,9 +1007,17 @@ fn set_reactive_on_value_operands(
         InstructionValue::FinishMemoize { decl, .. } => {
             set_reactive_on_place(decl, reactive_ids);
         }
-        InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. }
-        | InstructionValue::Primitive { .. }
+        InstructionValue::FunctionExpression { lowered_func, .. }
+        | InstructionValue::ObjectMethod { lowered_func, .. } => {
+            // Set reactive on context variables (captured from outer scope)
+            if let Some(env) = env {
+                let inner_func = &mut env.functions[lowered_func.func.0 as usize];
+                for ctx in &mut inner_func.context {
+                    set_reactive_on_place(ctx, reactive_ids);
+                }
+            }
+        }
+        InstructionValue::Primitive { .. }
         | InstructionValue::LoadGlobal { .. }
         | InstructionValue::Debugger { .. }
         | InstructionValue::RegExpLiteral { .. }
@@ -1095,13 +1111,21 @@ fn apply_reactive_flags_to_inner_func(
     for (_block_id, block) in &mut inner_func.body.blocks {
         for instr_id in &block.instructions {
             let instr = &mut inner_func.instructions[instr_id.0 as usize];
-            set_reactive_on_value_operands(&mut instr.value, reactive_ids);
+            // Pass None for env since we can't borrow env mutably again here.
+            // Context variables for nested FunctionExpression/ObjectMethod will be
+            // handled when we recurse into them below.
+            set_reactive_on_value_operands(&mut instr.value, reactive_ids, None);
         }
         set_reactive_on_terminal(&mut block.terminal, reactive_ids);
     }
 
-    // Recurse into nested functions
+    // Recurse into nested functions, and set reactive on their context variables
     for nested_id in nested_func_ids {
+        // Set reactive on the nested function's context variables
+        let nested_func = &mut env.functions[nested_id.0 as usize];
+        for ctx in &mut nested_func.context {
+            set_reactive_on_place(ctx, reactive_ids);
+        }
         apply_reactive_flags_to_inner_func(nested_id, env, reactive_ids);
     }
 }
@@ -1132,8 +1156,13 @@ fn each_instruction_value_operand_places(
         | InstructionValue::LoadContext { place, .. } => {
             result.push(place.clone());
         }
-        InstructionValue::StoreLocal { value: val, .. }
-        | InstructionValue::StoreContext { value: val, .. } => {
+        InstructionValue::StoreLocal { value: val, .. } => {
+            // TS: StoreLocal yields only the value
+            result.push(val.clone());
+        }
+        InstructionValue::StoreContext { lvalue, value: val, .. } => {
+            // TS: StoreContext yields lvalue.place AND value
+            result.push(lvalue.place.clone());
             result.push(val.clone());
         }
         InstructionValue::Destructure { value: val, .. } => {
@@ -1284,9 +1313,13 @@ fn each_instruction_value_operand_places(
         InstructionValue::FinishMemoize { decl, .. } => {
             result.push(decl.clone());
         }
-        InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. } => {
-            // Context variables are handled separately
+        InstructionValue::FunctionExpression { lowered_func, .. }
+        | InstructionValue::ObjectMethod { lowered_func, .. } => {
+            // Yield context variables (captured from outer scope)
+            let inner_func = &_env.functions[lowered_func.func.0 as usize];
+            for ctx in &inner_func.context {
+                result.push(ctx.clone());
+            }
         }
         _ => {}
     }
