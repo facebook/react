@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use crate::object_shape::*;
 use crate::type_config::{
-    AliasingEffectConfig, AliasingSignatureConfig, BuiltInTypeRef,
+    AliasingEffectConfig, AliasingSignatureConfig, ApplyArgConfig, BuiltInTypeRef,
     TypeConfig, TypeReferenceConfig, ValueKind, ValueReason,
 };
 use crate::Effect;
@@ -294,14 +294,61 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Object {
                 shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
+            aliasing: Some(AliasingSignatureConfig {
+                receiver: "@receiver".to_string(),
+                params: vec!["@callback".to_string()],
+                rest: None,
+                returns: "@returns".to_string(),
+                temporaries: vec![
+                    "@item".to_string(),
+                    "@callbackReturn".to_string(),
+                    "@thisArg".to_string(),
+                ],
+                effects: vec![
+                    // Map creates a new mutable array
+                    AliasingEffectConfig::Create {
+                        into: "@returns".to_string(),
+                        value: ValueKind::Mutable,
+                        reason: ValueReason::KnownReturnSignature,
+                    },
+                    // The first arg to the callback is an item extracted from the receiver array
+                    AliasingEffectConfig::CreateFrom {
+                        from: "@receiver".to_string(),
+                        into: "@item".to_string(),
+                    },
+                    // The undefined this for the callback
+                    AliasingEffectConfig::Create {
+                        into: "@thisArg".to_string(),
+                        value: ValueKind::Primitive,
+                        reason: ValueReason::KnownReturnSignature,
+                    },
+                    // Calls the callback, returning the result into a temporary
+                    AliasingEffectConfig::Apply {
+                        receiver: "@thisArg".to_string(),
+                        function: "@callback".to_string(),
+                        mutates_function: false,
+                        args: vec![
+                            ApplyArgConfig::Place("@item".to_string()),
+                            ApplyArgConfig::Hole,
+                            ApplyArgConfig::Place("@receiver".to_string()),
+                        ],
+                        into: "@callbackReturn".to_string(),
+                    },
+                    // Captures the result of the callback into the return array
+                    AliasingEffectConfig::Capture {
+                        from: "@callbackReturn".to_string(),
+                        into: "@returns".to_string(),
+                    },
+                ],
+            }),
             ..Default::default()
         },
         None,
@@ -461,6 +508,30 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
             callee_effect: Effect::Store,
             return_type: Type::Primitive,
             return_value_kind: ValueKind::Primitive,
+            aliasing: Some(AliasingSignatureConfig {
+                receiver: "@receiver".to_string(),
+                params: Vec::new(),
+                rest: Some("@rest".to_string()),
+                returns: "@returns".to_string(),
+                temporaries: Vec::new(),
+                effects: vec![
+                    // Push directly mutates the array itself
+                    AliasingEffectConfig::Mutate {
+                        value: "@receiver".to_string(),
+                    },
+                    // The arguments are captured into the array
+                    AliasingEffectConfig::Capture {
+                        from: "@rest".to_string(),
+                        into: "@receiver".to_string(),
+                    },
+                    // Returns the new length, a primitive
+                    AliasingEffectConfig::Create {
+                        into: "@returns".to_string(),
+                        value: ValueKind::Primitive,
+                        reason: ValueReason::KnownReturnSignature,
+                    },
+                ],
+            }),
             ..Default::default()
         },
         None,
@@ -618,6 +689,29 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
                 shape_id: Some(BUILT_IN_SET_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            aliasing: Some(AliasingSignatureConfig {
+                receiver: "@receiver".to_string(),
+                params: Vec::new(),
+                rest: Some("@rest".to_string()),
+                returns: "@returns".to_string(),
+                temporaries: Vec::new(),
+                effects: vec![
+                    // Set.add returns the receiver Set
+                    AliasingEffectConfig::Assign {
+                        from: "@receiver".to_string(),
+                        into: "@returns".to_string(),
+                    },
+                    // Set.add mutates the set itself
+                    AliasingEffectConfig::Mutate {
+                        value: "@receiver".to_string(),
+                    },
+                    // Captures the rest params into the set
+                    AliasingEffectConfig::Capture {
+                        from: "@rest".to_string(),
+                        into: "@receiver".to_string(),
+                    },
+                ],
+            }),
             ..Default::default()
         },
         None,
@@ -1542,6 +1636,25 @@ fn build_typed_globals(
                 shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            aliasing: Some(AliasingSignatureConfig {
+                receiver: "@receiver".to_string(),
+                params: vec!["@object".to_string()],
+                rest: None,
+                returns: "@returns".to_string(),
+                temporaries: Vec::new(),
+                effects: vec![
+                    AliasingEffectConfig::Create {
+                        into: "@returns".to_string(),
+                        value: ValueKind::Mutable,
+                        reason: ValueReason::KnownReturnSignature,
+                    },
+                    // Only keys are captured, and keys are immutable
+                    AliasingEffectConfig::ImmutableCapture {
+                        from: "@object".to_string(),
+                        into: "@returns".to_string(),
+                    },
+                ],
+            }),
             ..Default::default()
         },
         None,
@@ -1570,6 +1683,25 @@ fn build_typed_globals(
                 shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            aliasing: Some(AliasingSignatureConfig {
+                receiver: "@receiver".to_string(),
+                params: vec!["@object".to_string()],
+                rest: None,
+                returns: "@returns".to_string(),
+                temporaries: Vec::new(),
+                effects: vec![
+                    AliasingEffectConfig::Create {
+                        into: "@returns".to_string(),
+                        value: ValueKind::Mutable,
+                        reason: ValueReason::KnownReturnSignature,
+                    },
+                    // Object values are captured into the return
+                    AliasingEffectConfig::Capture {
+                        from: "@object".to_string(),
+                        into: "@returns".to_string(),
+                    },
+                ],
+            }),
             ..Default::default()
         },
         None,
@@ -1584,6 +1716,25 @@ fn build_typed_globals(
                 shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
             },
             return_value_kind: ValueKind::Mutable,
+            aliasing: Some(AliasingSignatureConfig {
+                receiver: "@receiver".to_string(),
+                params: vec!["@object".to_string()],
+                rest: None,
+                returns: "@returns".to_string(),
+                temporaries: Vec::new(),
+                effects: vec![
+                    AliasingEffectConfig::Create {
+                        into: "@returns".to_string(),
+                        value: ValueKind::Mutable,
+                        reason: ValueReason::KnownReturnSignature,
+                    },
+                    // Object values are captured into the return
+                    AliasingEffectConfig::Capture {
+                        from: "@object".to_string(),
+                        into: "@returns".to_string(),
+                    },
+                ],
+            }),
             ..Default::default()
         },
         None,

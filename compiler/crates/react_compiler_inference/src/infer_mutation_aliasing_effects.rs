@@ -1206,8 +1206,11 @@ fn apply_effect(
                 }, initialized, effects, env, func);
 
                 let all_operands = build_apply_operands(receiver, function, args);
-                for (operand, is_function_operand, is_spread) in &all_operands {
-                    if *is_function_operand && !mutates_function {
+                for (operand, _is_function_operand, is_spread) in &all_operands {
+                    // In TS, the check is `operand !== effect.function || effect.mutatesFunction`.
+                    // This compares by reference identity, so for CallExpression/NewExpression
+                    // where receiver === function, BOTH are skipped when !mutatesFunction.
+                    if operand.identifier == function.identifier && !mutates_function {
                         // Don't mutate callee for non-mutating calls
                     } else {
                         apply_effect(context, state, AliasingEffect::MutateTransitiveConditionally {
@@ -1227,8 +1230,15 @@ fn apply_effect(
                         into: into.clone(),
                     }, initialized, effects, env, func);
 
-                    for (other, other_is_func, _) in &all_operands {
-                        if other.identifier == operand.identifier {
+                    // In TS, `other === arg` compares the Place extracted from
+                    // `otherArg` with the original `arg` element. For Identifier
+                    // args, the extracted Place IS the arg, so this is a reference
+                    // identity check. For Spread args, the extracted Place is
+                    // `.place` which is never `===` the Spread wrapper object,
+                    // so NO pairs are skipped when the outer arg is a Spread
+                    // (including self-pairs, producing self-captures).
+                    for (other, _other_is_func, _other_is_spread) in &all_operands {
+                        if !is_spread && other.identifier == operand.identifier {
                             continue;
                         }
                         apply_effect(context, state, AliasingEffect::Capture {
