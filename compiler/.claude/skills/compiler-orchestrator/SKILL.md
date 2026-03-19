@@ -123,30 +123,33 @@ Execute these steps in order, looping back to Step 1 after each commit:
 
 ### Step 1: Discover Frontier
 
-Run `test-rust-port` with no arguments. It auto-detects the last ported pass from `pipeline.rs` and tests all passes up to it, reporting the frontier (earliest pass with failures) in the summary line.
+Run `test-rust-port` with `--json` to get machine-readable results:
 
 ```bash
-bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1
+bash compiler/scripts/test-rust-port.sh --json 2>/dev/null
 ```
 
-The summary line format is:
-```
-Results: <passed> passed, <failed> failed (<total> total), frontier: <PassName|none>
-```
+This outputs a single JSON object with fields: `pass`, `autoDetected`, `total`, `passed`, `failed`, `frontier`, `perPass`, `failures`.
 
-Parse the summary line to extract:
+Parse the JSON to extract:
 - `passed`, `failed`, `total` counts
-- `frontier` — the earliest pass with failures, or `none` if all clean
+- `frontier` — the earliest pass with failures, or `null` if all clean
+- `perPass` — per-pass breakdown of passed/failed counts
 
-If frontier is `none`, determine the next action:
-- Find the last ported pass from `pipeline.rs` (the pass `test-rust-port` auto-detected)
+If frontier is `null`, determine the next action:
+- The `pass` field shows the last ported pass (auto-detected from pipeline.rs)
 - Look up the next pass in the Pass Order Reference table
 - If the next pass is `BuildReactiveFunction` (#32) or later, the frontier is **BLOCKED**
 - Otherwise, the mode is **PORT** for that next pass
 
-If frontier is a pass name, the mode is **FIX** for that pass. Run test-rust-port again with that pass name to get the failure details:
+If frontier is a pass name, the mode is **FIX** for that pass. Use `--failures` to get the full list of failing fixture paths:
 ```bash
-bash compiler/scripts/test-rust-port.sh <FrontierPassName> 2>&1
+bash compiler/scripts/test-rust-port.sh <FrontierPassName> --failures
+```
+
+Then run specific failing fixtures to get diffs for investigation:
+```bash
+bash compiler/scripts/test-rust-port.sh <FrontierPassName> <fixture-path> --no-color
 ```
 
 Also check if `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists. If not, create it with the Status section populated from the current state.
@@ -181,8 +184,8 @@ Launch a single `general-purpose` subagent to fix the failures. The subagent pro
 5. **Pipeline path**: `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
 
 After the subagent completes:
-1. Re-run `bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1` to get updated counts and frontier
-2. If still failing, launch the subagent again with the updated failure output (max 3 rounds total)
+1. Re-run `bash compiler/scripts/test-rust-port.sh --json 2>/dev/null` to get updated counts and frontier
+2. If still failing, launch the subagent again with the updated failure list (max 3 rounds total)
 3. Once clean (or after 3 rounds), update the orchestrator log Status section and add a log entry
 4. Go to Step 4 (Review)
 
@@ -207,7 +210,7 @@ For standard passes, launch a single `general-purpose` subagent with these instr
 3. **Special notes** (if any — e.g., conditional gating, reuse of existing functions)
 
 After the subagent completes:
-1. Re-run `bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1` to get updated counts and frontier
+1. Re-run `bash compiler/scripts/test-rust-port.sh --json 2>/dev/null` to get updated counts and frontier
 2. Update the orchestrator log Status section and add a log entry
 3. Go to Step 4
 

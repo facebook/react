@@ -11,7 +11,13 @@
  * Runs both compilers through their real Babel plugins, captures debug log
  * entries via the logger API, and diffs output for a specific pass.
  *
- * Usage: npx tsx compiler/scripts/test-rust-port.ts [<pass>] [<fixtures-path>]
+ * Usage: npx tsx compiler/scripts/test-rust-port.ts [<pass>] [<fixtures-path>] [flags]
+ *
+ * Flags:
+ *   --no-color   Disable ANSI color codes (also respects NO_COLOR env var)
+ *   --json       Output a single JSON object to stdout (machine-readable)
+ *   --failures   Print only failing fixture paths, one per line
+ *   --limit N    Max failures to display with diffs (default: 50, 0 = all)
  */
 
 import * as babel from '@babel/core';
@@ -23,15 +29,31 @@ import {parseConfigPragmaForTests} from '../packages/babel-plugin-react-compiler
 import {printDebugHIR} from '../packages/babel-plugin-react-compiler/src/HIR/DebugPrintHIR';
 import type {CompilerPipelineValue} from '../packages/babel-plugin-react-compiler/src/Entrypoint/Pipeline';
 
-// --- ANSI colors ---
-const RED = '\x1b[0;31m';
-const GREEN = '\x1b[0;32m';
-const YELLOW = '\x1b[0;33m';
-const BOLD = '\x1b[1m';
-const DIM = '\x1b[2m';
-const RESET = '\x1b[0m';
-
 const REPO_ROOT = path.resolve(__dirname, '../..');
+
+// --- Parse flags ---
+const rawArgs = process.argv.slice(2);
+const noColor =
+  rawArgs.includes('--no-color') || !!process.env.NO_COLOR;
+const jsonMode = rawArgs.includes('--json');
+const failuresMode = rawArgs.includes('--failures');
+const limitIdx = rawArgs.indexOf('--limit');
+const limitArg = limitIdx >= 0 ? parseInt(rawArgs[limitIdx + 1], 10) : 50;
+
+// Extract positional args (strip flags and flag values)
+const positional = rawArgs.filter(
+  (a, i) =>
+    !a.startsWith('--') && (limitIdx < 0 || i !== limitIdx + 1),
+);
+
+// --- ANSI colors ---
+const useColor = !noColor && !jsonMode && !failuresMode;
+const RED = useColor ? '\x1b[0;31m' : '';
+const GREEN = useColor ? '\x1b[0;32m' : '';
+const YELLOW = useColor ? '\x1b[0;33m' : '';
+const BOLD = useColor ? '\x1b[1m' : '';
+const DIM = useColor ? '\x1b[2m' : '';
+const RESET = useColor ? '\x1b[0m' : '';
 
 // --- Ordered pass list (HIR passes from Pipeline.ts) ---
 const PASS_ORDER: string[] = [
@@ -90,16 +112,18 @@ function detectLastPortedPass(): string {
 }
 
 // --- Parse args ---
-const [passArgRaw, fixturesPathArg] = process.argv.slice(2);
+const [passArgRaw, fixturesPathArg] = positional;
 
 let passArg: string;
 if (passArgRaw) {
   passArg = passArgRaw;
 } else {
   passArg = detectLastPortedPass();
-  console.log(
-    `No pass argument given, auto-detected last ported pass: ${BOLD}${passArg}${RESET}`,
-  );
+  if (!jsonMode && !failuresMode) {
+    console.log(
+      `No pass argument given, auto-detected last ported pass: ${BOLD}${passArg}${RESET}`,
+    );
+  }
 }
 const DEFAULT_FIXTURES_DIR = path.join(
   REPO_ROOT,
@@ -117,11 +141,16 @@ const NATIVE_DIR = path.join(
 );
 const NATIVE_NODE_PATH = path.join(NATIVE_DIR, 'index.node');
 
-console.log('Building Rust native module...');
+if (!jsonMode && !failuresMode) {
+  console.log('Building Rust native module...');
+}
 try {
   execSync('~/.cargo/bin/cargo build -p react_compiler_napi', {
     cwd: path.join(REPO_ROOT, 'compiler/crates'),
-    stdio: 'inherit',
+    stdio:
+      jsonMode || failuresMode
+        ? ['inherit', 'pipe', 'inherit']
+        : 'inherit',
     shell: true,
   });
 } catch {
@@ -450,10 +479,12 @@ if (fixtures.length === 0) {
   process.exit(1);
 }
 
-console.log(
-  `Testing ${BOLD}${fixtures.length}${RESET} fixtures for pass: ${BOLD}${passArg}${RESET}`,
-);
-console.log('');
+if (!jsonMode && !failuresMode) {
+  console.log(
+    `Testing ${BOLD}${fixtures.length}${RESET} fixtures for pass: ${BOLD}${passArg}${RESET}`,
+  );
+  console.log('');
+}
 
 let passed = 0;
 let failed = 0;
@@ -462,6 +493,7 @@ const failures: Array<{
   fixture: string;
   detail: string;
 }> = [];
+const failedFixtures: string[] = [];
 
 // Per-pass failure tracking for frontier detection
 const perPassResults = new Map<string, {passed: number; failed: number}>();
@@ -556,7 +588,8 @@ for (const fixturePath of fixtures) {
       if (stats) stats.passed++;
     }
 
-    if (failures.length < 50) {
+    failedFixtures.push(relPath);
+    if (limitArg === 0 || failures.length < limitArg) {
       failures.push({
         fixture: relPath,
         detail: unifiedDiff(tsFormatted, rustFormatted),
@@ -589,7 +622,7 @@ for (const pass of PASS_ORDER) {
   }
 }
 
-// --- Summary line ---
+// --- Summary ---
 const total = fixtures.length;
 let frontierStr: string;
 if (frontier != null) {
@@ -600,27 +633,63 @@ if (frontier != null) {
 } else {
   frontierStr = 'none';
 }
-const summaryColor = failed === 0 ? GREEN : RED;
-const summaryLine = `${summaryColor}Results: ${passed} passed, ${failed} failed (${total} total), frontier: ${frontierStr}${RESET}`;
 
-// Print summary first
-console.log(summaryLine);
-console.log('');
+// --- Per-pass breakdown ---
+const perPassParts: string[] = [];
+for (const pass of PASS_ORDER) {
+  const stats = perPassResults.get(pass);
+  if (stats && (stats.passed > 0 || stats.failed > 0)) {
+    perPassParts.push(`${pass} ${stats.passed}/${stats.passed + stats.failed}`);
+  }
+}
 
-// --- Show failures ---
-for (const failure of failures) {
-  console.log(`${RED}FAIL${RESET} ${failure.fixture}`);
-  console.log(failure.detail);
+// --- Output ---
+if (jsonMode) {
+  const output = {
+    pass: passArg,
+    autoDetected: !passArgRaw,
+    total,
+    passed,
+    failed,
+    frontier: frontier,
+    perPass: Object.fromEntries(
+      [...perPassResults.entries()].filter(
+        ([_, v]) => v.passed > 0 || v.failed > 0,
+      ),
+    ),
+    failures: failedFixtures,
+  };
+  console.log(JSON.stringify(output));
+} else if (failuresMode) {
+  for (const f of failedFixtures) {
+    console.log(f);
+  }
+} else {
+  const summaryColor = failed === 0 ? GREEN : RED;
+  const summaryLine = `${summaryColor}Results: ${passed} passed, ${failed} failed (${total} total), frontier: ${frontierStr}${RESET}`;
+
+  // Print summary first
+  console.log(summaryLine);
+  if (perPassParts.length > 0) {
+    console.log(`Per-pass: ${perPassParts.join(', ')}`);
+  }
   console.log('');
-}
 
-// --- Summary again (so tail -1 works) ---
-console.log('---');
-if (failures.length < failed) {
-  console.log(
-    `${DIM}  (showing first ${failures.length} of ${failed} failures)${RESET}`,
-  );
+  // --- Show failures ---
+  for (const failure of failures) {
+    console.log(`${RED}FAIL${RESET} ${failure.fixture}`);
+    console.log(failure.detail);
+    console.log('');
+  }
+
+  // --- Summary again (so tail -1 works) ---
+  console.log('---');
+  if (failures.length < failed) {
+    console.log(
+      `${DIM}  (showing first ${failures.length} of ${failed} failures)${RESET}`,
+    );
+  }
+  console.log(summaryLine);
 }
-console.log(summaryLine);
 
 process.exit(failed > 0 ? 1 : 0);

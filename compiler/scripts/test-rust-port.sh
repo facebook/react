@@ -7,7 +7,8 @@
 # Thin wrapper that delegates to the TS test script.
 # The TS script handles building the native module itself.
 #
-# Usage: bash compiler/scripts/test-rust-port.sh <pass> [<fixtures-path>]
+# Usage: bash compiler/scripts/test-rust-port.sh [<pass>] [<fixtures-path>] [flags]
+# Flags: --no-color, --json, --failures, --limit N
 
 set -eo pipefail
 

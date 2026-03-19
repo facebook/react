@@ -22,14 +22,14 @@ Arguments:
 
 4. **Update orchestrator log**: If `compiler/docs/rust-port/rust-port-orchestrator-log.md` exists and the commit includes Rust changes (`compiler/crates/`):
 
-   Run `test-rust-port` with no arguments to get the overall status:
+   Run `test-rust-port` with `--json` to get machine-readable results:
    ```bash
-   bash compiler/scripts/test-rust-port.sh 2>&1 | tail -1
+   bash compiler/scripts/test-rust-port.sh --json 2>/dev/null
    ```
-   This auto-detects the last ported pass and reports: `Results: <passed> passed, <failed> failed (<total> total), frontier: <PassName|none>`
+   This outputs a JSON object with fields: `pass`, `autoDetected`, `total`, `passed`, `failed`, `frontier`, `perPass`, `failures`.
 
    Then update the orchestrator log:
-   - Update the `# Status` section with the results (use the frontier and pass/fail counts)
+   - Update the `# Status` section with the results (use the frontier, per-pass counts, and pass/fail totals)
    - Add a `## YYYYMMDD-HHMMSS` log entry noting the commit and what changed
 
 5. **Stage files** — stage only the relevant changed files by name (including the orchestrator log if updated in step 4). Do NOT use `git add -A` or `git add .`.
