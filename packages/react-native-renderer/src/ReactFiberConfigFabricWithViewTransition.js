@@ -175,8 +175,8 @@ export function startGestureTransition(
     console.warn('startGestureTransition is not implemented');
   }
   return {
-    finished: new Promise((resolve, reject) => {}),
-    ready: new Promise((resolve, reject) => {}),
+    finished: Promise.resolve(),
+    ready: Promise.resolve(),
   };
 }
 
