@@ -684,7 +684,45 @@ function measureViewTransitionHostInstancesRecursive(
   previousMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
-  if (supportsMutation) {
+  if (!supportsMutation && enableViewTransitionForPersistenceMode) {
+    while (child !== null) {
+      if (child.tag === HostComponent) {
+        const instance: Instance = child.stateNode;
+        if ((parentViewTransition.flags & Update) !== NoFlags) {
+          applyViewTransitionName(
+            instance,
+            viewTransitionHostInstanceIdx === 0
+              ? newName
+              : newName + '_' + viewTransitionHostInstanceIdx,
+            className,
+          );
+        }
+        viewTransitionHostInstanceIdx++;
+      } else if (
+        child.tag === OffscreenComponent &&
+        child.memoizedState !== null
+      ) {
+        // Skip any hidden subtrees. They were or are effectively not there.
+      } else if (
+        child.tag === ViewTransitionComponent &&
+        stopAtNestedViewTransitions
+      ) {
+        parentViewTransition.flags |= child.flags & AffectedParentLayout;
+      } else {
+        measureViewTransitionHostInstancesRecursive(
+          parentViewTransition,
+          child.child,
+          newName,
+          oldName,
+          className,
+          previousMeasurements,
+          stopAtNestedViewTransitions,
+        );
+      }
+      child = child.sibling;
+    }
+    return true;
+  }
     let inViewport = false;
     while (child !== null) {
       if (child.tag === HostComponent) {
@@ -790,56 +828,6 @@ function measureViewTransitionHostInstancesRecursive(
       child = child.sibling;
     }
     return inViewport;
-  } else if (enableViewTransitionForPersistenceMode) {
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        if (
-          previousMeasurements !== null &&
-          viewTransitionHostInstanceIdx < previousMeasurements.length
-        ) {
-          const previousMeasurement =
-            previousMeasurements[viewTransitionHostInstanceIdx];
-          const nextMeasurement = measureInstance(instance);
-        } else {
-          parentViewTransition.flags |= AffectedParentLayout;
-        }
-        if ((parentViewTransition.flags & Update) !== NoFlags) {
-          applyViewTransitionName(
-            instance,
-            viewTransitionHostInstanceIdx === 0
-              ? newName
-              : newName + '_' + viewTransitionHostInstanceIdx,
-            className,
-          );
-        }
-        viewTransitionHostInstanceIdx++;
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        parentViewTransition.flags |= child.flags & AffectedParentLayout;
-      } else {
-        measureViewTransitionHostInstancesRecursive(
-          parentViewTransition,
-          child.child,
-          newName,
-          oldName,
-          className,
-          previousMeasurements,
-          stopAtNestedViewTransitions,
-        );
-      }
-      child = child.sibling;
-    }
-    return true;
-  }
-  return true;
 }
 
 export function measureUpdateViewTransition(
