@@ -1971,16 +1971,10 @@ const allTests = {
       `,
       // Explicitly test error messages here for various cases
       errors: [
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
+        useEffectEventError('onClick', true),
+        useEffectEventError('onClick', true),
+        useEffectEventError('onClick', false),
+        useEffectEventError('onClick', false),
       ],
     },
     {
@@ -2008,16 +2002,10 @@ const allTests = {
       `,
       // Explicitly test error messages here for various cases
       errors: [
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          'Effects and Effect Events in the same component.',
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
-        `\`onClick\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-          `Effects and Effect Events in the same component. ` +
-          `It cannot be assigned to a variable or passed down.`,
+        useEffectEventError('onClick', true),
+        useEffectEventError('onClick', true),
+        useEffectEventError('onClick', false),
+        useEffectEventError('onClick', false),
       ],
     },
   ],
@@ -2025,87 +2013,80 @@ const allTests = {
 
 function conditionalError(hook, hasPreviousFinalizer = false) {
   return {
-    message:
-      `React Hook "${hook}" is called conditionally. React Hooks must be ` +
-      'called in the exact same order in every component render.' +
-      (hasPreviousFinalizer
+    messageId: 'calledConditionally',
+    data: {
+      hookName: hook,
+      earlyReturnHint: hasPreviousFinalizer
         ? ' Did you accidentally call a React Hook after an early return?'
-        : ''),
+        : '',
+    },
   };
 }
 
 function loopError(hook) {
   return {
-    message:
-      `React Hook "${hook}" may be executed more than once. Possibly ` +
-      'because it is called in a loop. React Hooks must be called in the ' +
-      'exact same order in every component render.',
+    messageId: 'executedMoreThanOnce',
+    data: {hookName: hook},
   };
 }
 
 function functionError(hook, fn) {
   return {
-    message:
-      `React Hook "${hook}" is called in function "${fn}" that is neither ` +
-      'a React function component nor a custom React Hook function.' +
-      ' React component names must start with an uppercase letter.' +
-      ' React Hook names must start with the word "use".',
+    messageId: 'calledInInvalidFunction',
+    data: {hookName: hook, functionName: fn},
   };
 }
 
 function genericError(hook) {
   return {
-    message:
-      `React Hook "${hook}" cannot be called inside a callback. React Hooks ` +
-      'must be called in a React function component or a custom React ' +
-      'Hook function.',
+    messageId: 'calledInsideCallback',
+    data: {hookName: hook},
   };
 }
 
 function topLevelError(hook) {
   return {
-    message:
-      `React Hook "${hook}" cannot be called at the top level. React Hooks ` +
-      'must be called in a React function component or a custom React ' +
-      'Hook function.',
+    messageId: 'calledAtTopLevel',
+    data: {hookName: hook},
   };
 }
 
 function classError(hook) {
   return {
-    message:
-      `React Hook "${hook}" cannot be called in a class component. React Hooks ` +
-      'must be called in a React function component or a custom React ' +
-      'Hook function.',
+    messageId: 'calledInClass',
+    data: {hookName: hook},
   };
 }
 
 function useEffectEventError(fn, called) {
   if (fn === null) {
     return {
-      message:
-        `React Hook "useEffectEvent" can only be called at the top level of your component.` +
-        ` It cannot be passed down.`,
+      messageId: 'useEffectEventTopLevel',
     };
   }
 
   return {
-    message:
-      `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-      'Effects and Effect Events in the same component.' +
-      (called ? '' : ' It cannot be assigned to a variable or passed down.'),
+    messageId: 'useEffectEventInvalidUsage',
+    data: {
+      functionName: fn,
+      passDownHint: called
+        ? ''
+        : ' It cannot be assigned to a variable or passed down.',
+    },
   };
 }
 
 function asyncComponentHookError(fn) {
   return {
-    message: `React Hook "${fn}" cannot be called in an async function.`,
+    messageId: 'calledInAsyncFunction',
+    data: {hookName: fn},
   };
 }
 
 function tryCatchUseError(fn) {
   return {
-    message: `React Hook "${fn}" cannot be called in a try/catch block.`,
+    messageId: 'useInTryCatch',
+    data: {hookName: fn},
   };
 }
 
