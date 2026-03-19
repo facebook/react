@@ -1,6 +1,6 @@
 # Status
 
-HIR: complete (1717/1717)
+HIR: partial (775/1717)
 PruneMaybeThrows: partial (1715/1717)
 DropManualMemoization: partial (1700/1717)
 InlineImmediatelyInvokedFunctionExpressions: partial (1564/1717)
@@ -47,3 +47,9 @@ ConstantPropagation (199), InferTypes (727), OptimizePropsMethodCalls (745).
 Fixed error.reserved-words.ts failure. The `BabelPlugin.ts` catch block was missing
 the `details` array in the CompileError event for reserved word errors from scope serialization.
 HIR now 1717/1717, frontier moved to PruneMaybeThrows.
+
+## 20260318-160000 Print inner functions in debug HIR output
+
+Changed debug HIR printer (TS + Rust) to print full inner function bodies inline
+instead of `loweredFunc: <HIRFunction>` placeholder. Also removed `Function #N:` header.
+HIR regressed to 775/1717 as inner function differences are now visible.

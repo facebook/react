@@ -30,12 +30,12 @@ import type {IdentifierId, ScopeId} from './HIR';
 
 export function printDebugHIR(fn: HIRFunction): string {
   const printer = new DebugPrinter();
-  printer.formatFunction(fn, 0);
+  printer.formatFunction(fn);
 
   const outlined = fn.env.getOutlinedFunctions();
   for (let i = 0; i < outlined.length; i++) {
     printer.line('');
-    printer.formatFunction(outlined[i].fn, i + 1);
+    printer.formatFunction(outlined[i].fn);
   }
 
   printer.line('');
@@ -70,8 +70,7 @@ class DebugPrinter {
     return this.output.join('\n');
   }
 
-  formatFunction(fn: HIRFunction, index: number): void {
-    this.line(`Function #${index}:`);
+  formatFunction(fn: HIRFunction): void {
     this.indent();
     this.line(`id: ${fn.id !== null ? `"${fn.id}"` : 'null'}`);
     this.line(
@@ -599,7 +598,8 @@ class DebugPrinter {
           );
           this.line(`type: "${instrValue.type}"`);
         }
-        this.line(`loweredFunc: <HIRFunction>`);
+        this.line(`loweredFunc:`);
+        this.formatFunction(instrValue.loweredFunc.func);
         this.line(`loc: ${this.formatLoc(instrValue.loc)}`);
         this.dedent();
         this.line('}');

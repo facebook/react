@@ -51,8 +51,7 @@ impl<'a> DebugPrinter<'a> {
     // Function
     // =========================================================================
 
-    fn format_function(&mut self, func: &HirFunction, index: usize) {
-        self.line(&format!("Function #{}:", index));
+    fn format_function(&mut self, func: &HirFunction) {
         self.indent();
         self.line(&format!(
             "id: {}",
@@ -1020,18 +1019,22 @@ impl<'a> DebugPrinter<'a> {
                     }
                 ));
                 self.line(&format!("type: \"{:?}\"", expr_type));
-                self.line("loweredFunc: <HIRFunction>");
+                self.line("loweredFunc:");
+                let inner_func = &self.env.functions[lowered_func.func.0 as usize];
+                self.format_function(inner_func);
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
             }
             InstructionValue::ObjectMethod {
                 loc,
-                lowered_func: _,
+                lowered_func,
             } => {
                 self.line("ObjectMethod {");
                 self.indent();
-                self.line("loweredFunc: <HIRFunction>");
+                self.line("loweredFunc:");
+                let inner_func = &self.env.functions[lowered_func.func.0 as usize];
+                self.format_function(inner_func);
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -1725,7 +1728,7 @@ impl<'a> DebugPrinter<'a> {
 
 pub fn debug_hir(hir: &HirFunction, env: &Environment) -> String {
     let mut printer = DebugPrinter::new(env);
-    printer.format_function(hir, 0);
+    printer.format_function(hir);
 
     printer.line("");
     printer.line("Environment:");
