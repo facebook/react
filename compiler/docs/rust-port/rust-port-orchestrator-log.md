@@ -11,7 +11,7 @@ ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
 AnalyseFunctions: partial (1104/1108)
-InferMutationAliasingEffects: partial (902/1104)
+InferMutationAliasingEffects: partial (1102/1104)
 OptimizeForSSR: todo
 DeadCodeElimination: todo
 PruneMaybeThrows (2nd): todo
@@ -119,3 +119,10 @@ context variable effect classification, and built-in method calleeEffects in glo
 Added mutableOnlyIfOperandsAreMutable optimization for Array methods.
 968 passed (+12), AnalyseFunctions 1104/1108, InferMutationAliasingEffects 902/1104.
 Remaining failures need inferMutationAliasingRanges and aliasing config porting.
+
+## 20260319-023425 Add aliasing signature configs and fix Apply effects
+
+Added aliasing configs for Array.push, Array.map, Set.add, Object.entries/keys/values.
+Fixed spread argument self-capture and NewExpression callee mutation check.
+InferMutationAliasingEffects: 202→2 failures. 1168/1717 passing overall.
+Remaining 549 failures mostly from inner function analysis needing sub-passes.
