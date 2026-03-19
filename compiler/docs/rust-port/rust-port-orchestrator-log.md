@@ -13,7 +13,7 @@ OptimizePropsMethodCalls: complete (1651/1651)
 AnalyseFunctions: partial (1104/1108)
 InferMutationAliasingEffects: partial (1102/1104)
 OptimizeForSSR: todo
-DeadCodeElimination: todo
+DeadCodeElimination: complete (1102/1102)
 PruneMaybeThrows (2nd): todo
 InferMutationAliasingRanges: todo
 InferReactivePlaces: todo
@@ -126,3 +126,9 @@ Added aliasing configs for Array.push, Array.map, Set.add, Object.entries/keys/v
 Fixed spread argument self-capture and NewExpression callee mutation check.
 InferMutationAliasingEffects: 202→2 failures. 1168/1717 passing overall.
 Remaining 549 failures mostly from inner function analysis needing sub-passes.
+
+## 20260319-025540 Port DeadCodeElimination pass
+
+Ported DeadCodeElimination (#14) from TypeScript into react_compiler_optimization crate.
+Wired into pipeline and inner function analysis (lower_with_mutation_aliasing).
+DCE 1102/1102, 0 failures. Overall 1168/1717.

@@ -210,6 +210,11 @@ pub fn compile_fn(
     let debug_infer_effects = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferMutationAliasingEffects", debug_infer_effects));
 
+    react_compiler_optimization::dead_code_elimination(&mut hir, &env);
+
+    let debug_dce = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("DeadCodeElimination", debug_dce));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

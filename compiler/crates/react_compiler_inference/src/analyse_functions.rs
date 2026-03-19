@@ -102,14 +102,14 @@ where
     analyse_functions(func, env, debug_logger);
 
     // Phase 2: Run inferMutationAliasingEffects on the inner function
-    // Note: remaining sub-passes (deadCodeElimination, inferMutationAliasingRanges, etc.)
-    // are not yet ported, so we just run the effects inference for now.
     crate::infer_mutation_aliasing_effects::infer_mutation_aliasing_effects(
         func, env, true,
     );
 
+    // deadCodeElimination for inner functions
+    react_compiler_optimization::dead_code_elimination(func, env);
+
     // TODO: The following sub-passes are not yet ported:
-    // deadCodeElimination(fn);
     // rewriteInstructionKindsBasedOnReassignment(fn);
     // inferReactiveScopeVariables(fn);
 
