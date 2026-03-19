@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<81c7bc296133ccdbcbfdb6090a3ff8dd>>
+ * @generated SignedSource<<c09e2fec84fcac65750051638a0487c4>>
  */
 
 "use strict";
@@ -118,6 +118,7 @@ __DEV__ &&
         type === REACT_STRICT_MODE_TYPE ||
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
+        type === REACT_VIEW_TRANSITION_TYPE ||
         ("object" === typeof type &&
           null !== type &&
           (type.$$typeof === REACT_LAZY_TYPE ||

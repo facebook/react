@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0fe086fe47f6a4c39b7cbbbe839fbc2d>>
+ * @generated SignedSource<<217ca628de03dca3193eb5361aa84e57>>
  */
 
 "use strict";
@@ -116,6 +116,7 @@ exports.isValidElementType = function (type) {
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
+    type === REACT_VIEW_TRANSITION_TYPE ||
     ("object" === typeof type &&
       null !== type &&
       (type.$$typeof === REACT_LAZY_TYPE ||
