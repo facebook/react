@@ -306,9 +306,7 @@ declare const nativeFabricUIManager: {
     name: string,
     className: ?string,
   ) => void,
-  startViewTransition: (
-    mutationCallback: () => void,
-  ) => {
+  startViewTransition: (mutationCallback: () => void) => {
     finished: Promise<void>,
     ready: Promise<void>,
   },

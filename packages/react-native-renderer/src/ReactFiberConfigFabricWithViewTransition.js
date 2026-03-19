@@ -16,20 +16,10 @@ import type {
   GestureTimeline,
 } from './ReactFiberConfigFabric';
 
-import {enableViewTransitionForPersistenceMode} from 'shared/ReactFeatureFlags';
-
 const {
   applyViewTransitionName: fabricApplyViewTransitionName,
   startViewTransition: fabricStartViewTransition,
 } = nativeFabricUIManager;
-
-function shim(...args: any): empty {
-  throw new Error(
-    'The current renderer does not support view transitions. ' +
-      'This error is likely caused by a bug in React. ' +
-      'Please file an issue.',
-  );
-}
 
 export type InstanceMeasurement = {
   rect: {x: number, y: number, width: number, height: number},
@@ -189,8 +179,8 @@ export function startGestureTransition(
     console.warn('startGestureTransition is not implemented');
   }
   return {
-    finished: new Promise((resolve, reject)=>{}),
-    ready: new Promise((resolve, reject)=>{}),
+    finished: new Promise((resolve, reject) => {}),
+    ready: new Promise((resolve, reject) => {}),
   };
 }
 
