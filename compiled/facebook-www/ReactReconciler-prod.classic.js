@@ -8488,7 +8488,7 @@ module.exports = function ($$$config) {
     previousMeasurements,
     stopAtNestedViewTransitions
   ) {
-    if (!supportsMutation) return !0;
+    if (!supportsMutation) return !1;
     for (var inViewport = !1; null !== child; ) {
       if (5 === child.tag) {
         var instance = child.stateNode;
@@ -14458,7 +14458,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-d594643e-20260319"
+      reconcilerVersion: "19.3.0-www-classic-6a04c369-20260319"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

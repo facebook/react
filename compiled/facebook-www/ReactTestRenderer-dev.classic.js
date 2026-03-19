@@ -10168,7 +10168,7 @@ __DEV__ &&
     ) {
       for (var inViewport = !1; null !== child; ) {
         if (5 === child.tag) {
-          var instance = child.stateNode;
+          var _instance2 = child.stateNode;
           null !== previousMeasurements &&
           viewTransitionHostInstanceIdx < previousMeasurements.length
             ? (inViewport = !0)
@@ -10177,7 +10177,7 @@ __DEV__ &&
             (null === viewTransitionCancelableChildren &&
               (viewTransitionCancelableChildren = []),
             viewTransitionCancelableChildren.push(
-              instance,
+              _instance2,
               0 === viewTransitionHostInstanceIdx
                 ? oldName
                 : oldName + "_" + viewTransitionHostInstanceIdx,
@@ -16731,10 +16731,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-d594643e-20260319",
+        version: "19.3.0-www-classic-6a04c369-20260319",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-d594643e-20260319"
+        reconcilerVersion: "19.3.0-www-classic-6a04c369-20260319"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16870,5 +16870,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-classic-d594643e-20260319";
+    exports.version = "19.3.0-www-classic-6a04c369-20260319";
   })();
