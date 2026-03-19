@@ -301,12 +301,6 @@ declare const nativeFabricUIManager: {
   unstable_ContinuousEventPriority: number,
   unstable_IdleEventPriority: number,
   unstable_getCurrentEventPriority: () => number,
-  measureInstance: (node: Object) => {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-  },
   applyViewTransitionName: (
     node: Object,
     name: string,
@@ -318,7 +312,5 @@ declare const nativeFabricUIManager: {
     finished: Promise<void>,
     ready: Promise<void>,
   },
-  restoreViewTransitionName: (node: Object) => void,
-  cancelViewTransitionName: (node: Object, oldName: string) => void,
   ...
 };
