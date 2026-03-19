@@ -140,43 +140,47 @@ function applyViewTransitionToHostInstancesRecursive(
   collectMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
-  if (!supportsMutation && enableViewTransitionForPersistenceMode) {
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        // TODO: calculate whether component is in viewport
-        shouldStartViewTransition = true;
-        applyViewTransitionName(
-          instance,
-          viewTransitionHostInstanceIdx === 0
-            ? name
-            : name + '_' + viewTransitionHostInstanceIdx,
-          className,
-        );
-        viewTransitionHostInstanceIdx++;
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        // Skip any nested view transitions for updates since in that case the
-        // inner most one is the one that handles the update.
-      } else {
-        applyViewTransitionToHostInstancesRecursive(
-          child.child,
-          name,
-          className,
-          collectMeasurements,
-          stopAtNestedViewTransitions,
-        );
+  if (!supportsMutation) {
+    if (enableViewTransitionForPersistenceMode) {
+      while (child !== null) {
+        if (child.tag === HostComponent) {
+          const instance: Instance = child.stateNode;
+          // TODO: calculate whether component is in viewport
+          shouldStartViewTransition = true;
+          applyViewTransitionName(
+            instance,
+            viewTransitionHostInstanceIdx === 0
+              ? name
+              : name + '_' + viewTransitionHostInstanceIdx,
+            className,
+          );
+          viewTransitionHostInstanceIdx++;
+        } else if (
+          child.tag === OffscreenComponent &&
+          child.memoizedState !== null
+        ) {
+          // Skip any hidden subtrees. They were or are effectively not there.
+        } else if (
+          child.tag === ViewTransitionComponent &&
+          stopAtNestedViewTransitions
+        ) {
+          // Skip any nested view transitions for updates since in that case the
+          // inner most one is the one that handles the update.
+        } else {
+          applyViewTransitionToHostInstancesRecursive(
+            child.child,
+            name,
+            className,
+            collectMeasurements,
+            stopAtNestedViewTransitions,
+          );
+        }
+        child = child.sibling;
       }
-      child = child.sibling;
+      return true;
+    } else {
+      return false;
     }
-    return true;
   }
   let inViewport = false;
   while (child !== null) {
@@ -684,134 +688,32 @@ function measureViewTransitionHostInstancesRecursive(
   previousMeasurements: null | Array<InstanceMeasurement>,
   stopAtNestedViewTransitions: boolean,
 ): boolean {
-  if (!supportsMutation && enableViewTransitionForPersistenceMode) {
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        if ((parentViewTransition.flags & Update) !== NoFlags) {
-          applyViewTransitionName(
-            instance,
-            viewTransitionHostInstanceIdx === 0
-              ? newName
-              : newName + '_' + viewTransitionHostInstanceIdx,
-            className,
-          );
-        }
-        viewTransitionHostInstanceIdx++;
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        parentViewTransition.flags |= child.flags & AffectedParentLayout;
-      } else {
-        measureViewTransitionHostInstancesRecursive(
-          parentViewTransition,
-          child.child,
-          newName,
-          oldName,
-          className,
-          previousMeasurements,
-          stopAtNestedViewTransitions,
-        );
-      }
-      child = child.sibling;
-    }
-    return true;
-  }
-    let inViewport = false;
-    while (child !== null) {
-      if (child.tag === HostComponent) {
-        const instance: Instance = child.stateNode;
-        if (
-          previousMeasurements !== null &&
-          viewTransitionHostInstanceIdx < previousMeasurements.length
+  if (!supportsMutation) {
+    if (enableViewTransitionForPersistenceMode) {
+      while (child !== null) {
+        if (child.tag === HostComponent) {
+          const instance: Instance = child.stateNode;
+          if ((parentViewTransition.flags & Update) !== NoFlags) {
+            applyViewTransitionName(
+              instance,
+              viewTransitionHostInstanceIdx === 0
+                ? newName
+                : newName + '_' + viewTransitionHostInstanceIdx,
+              className,
+            );
+          }
+          viewTransitionHostInstanceIdx++;
+        } else if (
+          child.tag === OffscreenComponent &&
+          child.memoizedState !== null
         ) {
-          // The previous measurement of the Instance in this location within the ViewTransition.
-          // Note that this might not be the same exact Instance if the Instances within the
-          // ViewTransition changed.
-          const previousMeasurement =
-            previousMeasurements[viewTransitionHostInstanceIdx];
-          const nextMeasurement = measureInstance(instance);
-          if (
-            wasInstanceInViewport(previousMeasurement) ||
-            wasInstanceInViewport(nextMeasurement)
-          ) {
-            // If either the old or new state was within the viewport we have to animate this.
-            // But if it turns out that none of them were we'll be able to skip it.
-            inViewport = true;
-          }
-          if (
-            (parentViewTransition.flags & Update) === NoFlags &&
-            hasInstanceChanged(previousMeasurement, nextMeasurement)
-          ) {
-            parentViewTransition.flags |= Update;
-          }
-          if (
-            hasInstanceAffectedParent(previousMeasurement, nextMeasurement)
-          ) {
-            // If this instance size within its parent has changed it might have caused the
-            // parent to relayout which needs a cross fade.
-            parentViewTransition.flags |= AffectedParentLayout;
-          }
+          // Skip any hidden subtrees. They were or are effectively not there.
+        } else if (
+          child.tag === ViewTransitionComponent &&
+          stopAtNestedViewTransitions
+        ) {
+          parentViewTransition.flags |= child.flags & AffectedParentLayout;
         } else {
-          // If there was an insertion of extra nodes, we have to assume they affected the parent.
-          // It should have already been marked as an Update due to the mutation.
-          parentViewTransition.flags |= AffectedParentLayout;
-        }
-        if ((parentViewTransition.flags & Update) !== NoFlags) {
-          // We might update this node so we need to apply its new name for the new state.
-          // Additionally in the ApplyGesture case we also need to do this because the clone
-          // will have the name but this one won't.
-          applyViewTransitionName(
-            instance,
-            viewTransitionHostInstanceIdx === 0
-              ? newName
-              : // If we have multiple Host Instances below, we add a suffix to the name to give
-                // each one a unique name.
-                newName + '_' + viewTransitionHostInstanceIdx,
-            className,
-          );
-        }
-        if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {
-          // It turns out that we had no other deeper mutations, the child transitions didn't
-          // affect the parent layout and this instance hasn't changed size. So we can skip
-          // animating it. However, in the current model this only works if the parent also
-          // doesn't animate. So we have to queue these and wait until we complete the parent
-          // to cancel them.
-          if (viewTransitionCancelableChildren === null) {
-            viewTransitionCancelableChildren = [];
-          }
-          viewTransitionCancelableChildren.push(
-            instance,
-            viewTransitionHostInstanceIdx === 0
-              ? oldName
-              : // If we have multiple Host Instances below, we add a suffix to the name to give
-                // each one a unique name.
-                oldName + '_' + viewTransitionHostInstanceIdx,
-            child.memoizedProps,
-          );
-        }
-        viewTransitionHostInstanceIdx++;
-      } else if (
-        child.tag === OffscreenComponent &&
-        child.memoizedState !== null
-      ) {
-        // Skip any hidden subtrees. They were or are effectively not there.
-      } else if (
-        child.tag === ViewTransitionComponent &&
-        stopAtNestedViewTransitions
-      ) {
-        // Skip any nested view transitions for updates since in that case the
-        // inner most one is the one that handles the update.
-        // If this inner boundary resized we need to bubble that information up.
-        parentViewTransition.flags |= child.flags & AffectedParentLayout;
-      } else {
-        if (
           measureViewTransitionHostInstancesRecursive(
             parentViewTransition,
             child.child,
@@ -820,14 +722,118 @@ function measureViewTransitionHostInstancesRecursive(
             className,
             previousMeasurements,
             stopAtNestedViewTransitions,
-          )
+          );
+        }
+        child = child.sibling;
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+  let inViewport = false;
+  while (child !== null) {
+    if (child.tag === HostComponent) {
+      const instance: Instance = child.stateNode;
+      if (
+        previousMeasurements !== null &&
+        viewTransitionHostInstanceIdx < previousMeasurements.length
+      ) {
+        // The previous measurement of the Instance in this location within the ViewTransition.
+        // Note that this might not be the same exact Instance if the Instances within the
+        // ViewTransition changed.
+        const previousMeasurement =
+          previousMeasurements[viewTransitionHostInstanceIdx];
+        const nextMeasurement = measureInstance(instance);
+        if (
+          wasInstanceInViewport(previousMeasurement) ||
+          wasInstanceInViewport(nextMeasurement)
         ) {
+          // If either the old or new state was within the viewport we have to animate this.
+          // But if it turns out that none of them were we'll be able to skip it.
           inViewport = true;
         }
+        if (
+          (parentViewTransition.flags & Update) === NoFlags &&
+          hasInstanceChanged(previousMeasurement, nextMeasurement)
+        ) {
+          parentViewTransition.flags |= Update;
+        }
+        if (hasInstanceAffectedParent(previousMeasurement, nextMeasurement)) {
+          // If this instance size within its parent has changed it might have caused the
+          // parent to relayout which needs a cross fade.
+          parentViewTransition.flags |= AffectedParentLayout;
+        }
+      } else {
+        // If there was an insertion of extra nodes, we have to assume they affected the parent.
+        // It should have already been marked as an Update due to the mutation.
+        parentViewTransition.flags |= AffectedParentLayout;
       }
-      child = child.sibling;
+      if ((parentViewTransition.flags & Update) !== NoFlags) {
+        // We might update this node so we need to apply its new name for the new state.
+        // Additionally in the ApplyGesture case we also need to do this because the clone
+        // will have the name but this one won't.
+        applyViewTransitionName(
+          instance,
+          viewTransitionHostInstanceIdx === 0
+            ? newName
+            : // If we have multiple Host Instances below, we add a suffix to the name to give
+              // each one a unique name.
+              newName + '_' + viewTransitionHostInstanceIdx,
+          className,
+        );
+      }
+      if (!inViewport || (parentViewTransition.flags & Update) === NoFlags) {
+        // It turns out that we had no other deeper mutations, the child transitions didn't
+        // affect the parent layout and this instance hasn't changed size. So we can skip
+        // animating it. However, in the current model this only works if the parent also
+        // doesn't animate. So we have to queue these and wait until we complete the parent
+        // to cancel them.
+        if (viewTransitionCancelableChildren === null) {
+          viewTransitionCancelableChildren = [];
+        }
+        viewTransitionCancelableChildren.push(
+          instance,
+          viewTransitionHostInstanceIdx === 0
+            ? oldName
+            : // If we have multiple Host Instances below, we add a suffix to the name to give
+              // each one a unique name.
+              oldName + '_' + viewTransitionHostInstanceIdx,
+          child.memoizedProps,
+        );
+      }
+      viewTransitionHostInstanceIdx++;
+    } else if (
+      child.tag === OffscreenComponent &&
+      child.memoizedState !== null
+    ) {
+      // Skip any hidden subtrees. They were or are effectively not there.
+    } else if (
+      child.tag === ViewTransitionComponent &&
+      stopAtNestedViewTransitions
+    ) {
+      // Skip any nested view transitions for updates since in that case the
+      // inner most one is the one that handles the update.
+      // If this inner boundary resized we need to bubble that information up.
+      parentViewTransition.flags |= child.flags & AffectedParentLayout;
+    } else {
+      if (
+        measureViewTransitionHostInstancesRecursive(
+          parentViewTransition,
+          child.child,
+          newName,
+          oldName,
+          className,
+          previousMeasurements,
+          stopAtNestedViewTransitions,
+        )
+      ) {
+        inViewport = true;
+      }
     }
-    return inViewport;
+    child = child.sibling;
+  }
+  return inViewport;
 }
 
 export function measureUpdateViewTransition(
