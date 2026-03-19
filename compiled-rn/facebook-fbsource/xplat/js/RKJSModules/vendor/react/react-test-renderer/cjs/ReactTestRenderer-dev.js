@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b60c128012e9c4bd4cf39055566cb4e9>>
+ * @generated SignedSource<<9e5c3ff16bee95fd295dbff6365dc650>>
  */
 
 "use strict";
@@ -10301,7 +10301,7 @@ __DEV__ &&
     ) {
       for (var inViewport = !1; null !== child; ) {
         if (5 === child.tag) {
-          var instance = child.stateNode;
+          var _instance2 = child.stateNode;
           null !== previousMeasurements &&
           viewTransitionHostInstanceIdx < previousMeasurements.length
             ? (inViewport = !0)
@@ -10310,7 +10310,7 @@ __DEV__ &&
             (null === viewTransitionCancelableChildren &&
               (viewTransitionCancelableChildren = []),
             viewTransitionCancelableChildren.push(
-              instance,
+              _instance2,
               0 === viewTransitionHostInstanceIdx
                 ? oldName
                 : oldName + "_" + viewTransitionHostInstanceIdx,
@@ -17011,10 +17011,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-d594643e-20260319",
+        version: "19.3.0-native-fb-6a04c369-20260319",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-d594643e-20260319"
+        reconcilerVersion: "19.3.0-native-fb-6a04c369-20260319"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17160,5 +17160,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.3.0-native-fb-d594643e-20260319";
+    exports.version = "19.3.0-native-fb-6a04c369-20260319";
   })();
