@@ -205,6 +205,11 @@ pub fn compile_fn(
     let debug_analyse_functions = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("AnalyseFunctions", debug_analyse_functions));
 
+    react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false);
+
+    let debug_infer_effects = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("InferMutationAliasingEffects", debug_infer_effects));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

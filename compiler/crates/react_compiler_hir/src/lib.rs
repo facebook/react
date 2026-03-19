@@ -6,7 +6,7 @@ pub mod globals;
 pub mod object_shape;
 pub mod type_config;
 
-pub use react_compiler_diagnostics::{SourceLocation, Position, GENERATED_SOURCE};
+pub use react_compiler_diagnostics::{SourceLocation, Position, GENERATED_SOURCE, CompilerDiagnostic, ErrorCategory};
 
 use indexmap::{IndexMap, IndexSet};
 
@@ -112,7 +112,7 @@ pub struct HirFunction {
     pub generator: bool,
     pub is_async: bool,
     pub directives: Vec<String>,
-    pub aliasing_effects: Option<Vec<()>>,
+    pub aliasing_effects: Option<Vec<AliasingEffect>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -199,7 +199,7 @@ pub enum Terminal {
         return_variant: ReturnVariant,
         id: EvaluationOrder,
         loc: Option<SourceLocation>,
-        effects: Option<Vec<()>>,
+        effects: Option<Vec<AliasingEffect>>,
     },
     Goto {
         block: BlockId,
@@ -305,7 +305,7 @@ pub enum Terminal {
         handler: Option<BlockId>,
         id: EvaluationOrder,
         loc: Option<SourceLocation>,
-        effects: Option<Vec<()>>,
+        effects: Option<Vec<AliasingEffect>>,
     },
     Try {
         block: BlockId,
@@ -464,7 +464,7 @@ pub struct Instruction {
     pub lvalue: Place,
     pub value: InstructionValue,
     pub loc: Option<SourceLocation>,
-    pub effects: Option<Vec<()>>,
+    pub effects: Option<Vec<AliasingEffect>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1217,4 +1217,185 @@ pub enum PropertyNameKind {
 pub struct ReactiveScope {
     pub id: ScopeId,
     pub range: MutableRange,
+}
+
+// =============================================================================
+// Aliasing effects (runtime types, from AliasingEffects.ts)
+// =============================================================================
+
+use crate::object_shape::FunctionSignature;
+use crate::type_config::{ValueKind, ValueReason};
+
+/// Reason for a mutation, used for generating hints (e.g. rename to "Ref").
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MutationReason {
+    AssignCurrentProperty,
+}
+
+/// Describes the aliasing/mutation/data-flow effects of an instruction or terminal.
+/// Ported from TS `AliasingEffect` in `AliasingEffects.ts`.
+#[derive(Debug, Clone)]
+pub enum AliasingEffect {
+    /// Marks the given value and its direct aliases as frozen.
+    Freeze {
+        value: Place,
+        reason: ValueReason,
+    },
+    /// Mutate the value and any direct aliases.
+    Mutate {
+        value: Place,
+        reason: Option<MutationReason>,
+    },
+    /// Mutate the value conditionally (only if mutable).
+    MutateConditionally {
+        value: Place,
+    },
+    /// Mutate the value and transitive captures.
+    MutateTransitive {
+        value: Place,
+    },
+    /// Mutate the value and transitive captures conditionally.
+    MutateTransitiveConditionally {
+        value: Place,
+    },
+    /// Information flow from `from` to `into` (non-aliasing capture).
+    Capture {
+        from: Place,
+        into: Place,
+    },
+    /// Direct aliasing: mutation of `into` implies mutation of `from`.
+    Alias {
+        from: Place,
+        into: Place,
+    },
+    /// Potential aliasing relationship.
+    MaybeAlias {
+        from: Place,
+        into: Place,
+    },
+    /// Direct assignment: `into = from`.
+    Assign {
+        from: Place,
+        into: Place,
+    },
+    /// Creates a value of the given kind at the given place.
+    Create {
+        into: Place,
+        value: ValueKind,
+        reason: ValueReason,
+    },
+    /// Creates a new value with the same kind as the source.
+    CreateFrom {
+        from: Place,
+        into: Place,
+    },
+    /// Immutable data flow (escape analysis only, no mutable range influence).
+    ImmutableCapture {
+        from: Place,
+        into: Place,
+    },
+    /// Function call application.
+    Apply {
+        receiver: Place,
+        function: Place,
+        mutates_function: bool,
+        args: Vec<PlaceOrSpreadOrHole>,
+        into: Place,
+        signature: Option<FunctionSignature>,
+        loc: Option<SourceLocation>,
+    },
+    /// Function expression creation with captures.
+    CreateFunction {
+        captures: Vec<Place>,
+        function_id: FunctionId,
+        into: Place,
+    },
+    /// Mutation of a value known to be frozen (error).
+    MutateFrozen {
+        place: Place,
+        error: CompilerDiagnostic,
+    },
+    /// Mutation of a global value (error).
+    MutateGlobal {
+        place: Place,
+        error: CompilerDiagnostic,
+    },
+    /// Side-effect not safe during render.
+    Impure {
+        place: Place,
+        error: CompilerDiagnostic,
+    },
+    /// Value is accessed during render.
+    Render {
+        place: Place,
+    },
+}
+
+/// Combined Place/Spread/Hole for Apply args.
+#[derive(Debug, Clone)]
+pub enum PlaceOrSpreadOrHole {
+    Place(Place),
+    Spread(SpreadPattern),
+    Hole,
+}
+
+/// Aliasing signature for function calls.
+/// Ported from TS `AliasingSignature` in `AliasingEffects.ts`.
+#[derive(Debug, Clone)]
+pub struct AliasingSignature {
+    pub receiver: IdentifierId,
+    pub params: Vec<IdentifierId>,
+    pub rest: Option<IdentifierId>,
+    pub returns: IdentifierId,
+    pub effects: Vec<AliasingEffect>,
+    pub temporaries: Vec<Place>,
+}
+
+// =============================================================================
+// Type helper functions (ported from HIR.ts)
+// =============================================================================
+
+use crate::object_shape::{
+    BUILT_IN_ARRAY_ID, BUILT_IN_JSX_ID, BUILT_IN_MAP_ID, BUILT_IN_REF_VALUE_ID,
+    BUILT_IN_SET_ID, BUILT_IN_USE_REF_ID,
+};
+
+/// Returns true if the type (looked up via identifier) is primitive.
+pub fn is_primitive_type(ty: &Type) -> bool {
+    matches!(ty, Type::Primitive)
+}
+
+/// Returns true if the type is an array.
+pub fn is_array_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_ARRAY_ID)
+}
+
+/// Returns true if the type is a Set.
+pub fn is_set_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_SET_ID)
+}
+
+/// Returns true if the type is a Map.
+pub fn is_map_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_MAP_ID)
+}
+
+/// Returns true if the type is JSX.
+pub fn is_jsx_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_JSX_ID)
+}
+
+/// Returns true if the identifier type is a ref value.
+pub fn is_ref_value_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_REF_VALUE_ID)
+}
+
+/// Returns true if the identifier type is useRef.
+pub fn is_use_ref_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_USE_REF_ID)
+}
+
+/// Returns true if the type is a ref or ref value.
+pub fn is_ref_or_ref_value(ty: &Type) -> bool {
+    is_use_ref_type(ty) || is_ref_value_type(ty)
 }

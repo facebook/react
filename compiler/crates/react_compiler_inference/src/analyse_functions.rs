@@ -99,17 +99,19 @@ where
     // Phase 1: Recursively analyse nested functions first (depth-first)
     analyse_functions(func, env, debug_logger);
 
+    // Phase 2: Run inferMutationAliasingEffects on the inner function
+    // Note: remaining sub-passes (deadCodeElimination, inferMutationAliasingRanges, etc.)
+    // are not yet ported, so we just run the effects inference for now.
+    crate::infer_mutation_aliasing_effects::infer_mutation_aliasing_effects(
+        func, env, true,
+    );
+
     // TODO: The following sub-passes are not yet ported:
-    // inferMutationAliasingEffects(fn, {isFunctionExpression: true});
     // deadCodeElimination(fn);
     // let functionEffects = inferMutationAliasingRanges(fn, {isFunctionExpression: true});
     // rewriteInstructionKindsBasedOnReassignment(fn);
     // inferReactiveScopeVariables(fn);
     // fn.aliasingEffects = functionEffects;
-
-    // Phase 2: populate the Effect of each context variable.
-    // Since sub-passes are not yet ported, we skip effect classification.
-    // The context variable effects remain as-is (their default from lowering).
 
     // Log the inner function's state (mirrors TS: fn.env.logger?.debugLogIRs)
     debug_logger(func, env);

@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use react_compiler_diagnostics::{CompilerError, CompilerErrorOrDiagnostic, SourceLocation};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
-    BasicBlock, BlockId, HirFunction, IdentifierId, IdentifierName, Instruction, InstructionValue,
-    LValue, ParamPattern, Pattern, Place, ScopeId, Terminal, Type,
+    AliasingEffect, BasicBlock, BlockId, HirFunction, IdentifierId, IdentifierName, Instruction,
+    InstructionValue, LValue, ParamPattern, Pattern, Place, PlaceOrSpreadOrHole, ScopeId, Terminal, Type,
 };
 
 // =============================================================================
@@ -45,6 +45,81 @@ impl<'a> DebugPrinter<'a> {
 
     fn to_string_output(&self) -> String {
         self.output.join("\n")
+    }
+
+    /// Format an AliasingEffect to match the TS debug output format.
+    /// The format uses: `Kind { field1: value1, field2: value2 }` with identifier IDs.
+    fn format_effect(&self, effect: &AliasingEffect) -> String {
+        match effect {
+            AliasingEffect::Freeze { value, reason } => {
+                format!("Freeze {{ value: {}, reason: {} }}", value.identifier.0, format_value_reason(*reason))
+            }
+            AliasingEffect::Mutate { value, reason } => {
+                match reason {
+                    Some(react_compiler_hir::MutationReason::AssignCurrentProperty) => {
+                        format!("Mutate {{ value: {}, reason: assign-current-property }}", value.identifier.0)
+                    }
+                    None => format!("Mutate {{ value: {} }}", value.identifier.0),
+                }
+            }
+            AliasingEffect::MutateConditionally { value } => {
+                format!("MutateConditionally {{ value: {} }}", value.identifier.0)
+            }
+            AliasingEffect::MutateTransitive { value } => {
+                format!("MutateTransitive {{ value: {} }}", value.identifier.0)
+            }
+            AliasingEffect::MutateTransitiveConditionally { value } => {
+                format!("MutateTransitiveConditionally {{ value: {} }}", value.identifier.0)
+            }
+            AliasingEffect::Capture { from, into } => {
+                format!("Capture {{ into: {}, from: {} }}", into.identifier.0, from.identifier.0)
+            }
+            AliasingEffect::Alias { from, into } => {
+                format!("Alias {{ into: {}, from: {} }}", into.identifier.0, from.identifier.0)
+            }
+            AliasingEffect::MaybeAlias { from, into } => {
+                format!("MaybeAlias {{ into: {}, from: {} }}", into.identifier.0, from.identifier.0)
+            }
+            AliasingEffect::Assign { from, into } => {
+                format!("Assign {{ into: {}, from: {} }}", into.identifier.0, from.identifier.0)
+            }
+            AliasingEffect::Create { into, value, reason } => {
+                format!("Create {{ into: {}, value: {}, reason: {} }}", into.identifier.0, format_value_kind(*value), format_value_reason(*reason))
+            }
+            AliasingEffect::CreateFrom { from, into } => {
+                format!("CreateFrom {{ into: {}, from: {} }}", into.identifier.0, from.identifier.0)
+            }
+            AliasingEffect::ImmutableCapture { from, into } => {
+                format!("ImmutableCapture {{ into: {}, from: {} }}", into.identifier.0, from.identifier.0)
+            }
+            AliasingEffect::Apply { receiver, function, mutates_function, args, into, .. } => {
+                let args_str: Vec<String> = args.iter().map(|a| match a {
+                    PlaceOrSpreadOrHole::Hole => "hole".to_string(),
+                    PlaceOrSpreadOrHole::Place(p) => p.identifier.0.to_string(),
+                    PlaceOrSpreadOrHole::Spread(s) => format!("...{}", s.place.identifier.0),
+                }).collect();
+                format!("Apply {{ into: {}, receiver: {}, function: {}, mutatesFunction: {}, args: [{}] }}",
+                    into.identifier.0, receiver.identifier.0, function.identifier.0,
+                    mutates_function, args_str.join(", "))
+            }
+            AliasingEffect::CreateFunction { captures, function_id, into } => {
+                let cap_str: Vec<String> = captures.iter().map(|p| p.identifier.0.to_string()).collect();
+                format!("CreateFunction {{ into: {}, function: {}, captures: [{}] }}",
+                    into.identifier.0, function_id.0, cap_str.join(", "))
+            }
+            AliasingEffect::MutateFrozen { place, error } => {
+                format!("MutateFrozen {{ place: {}, reason: {:?} }}", place.identifier.0, error.reason)
+            }
+            AliasingEffect::MutateGlobal { place, error } => {
+                format!("MutateGlobal {{ place: {}, reason: {:?} }}", place.identifier.0, error.reason)
+            }
+            AliasingEffect::Impure { place, error } => {
+                format!("Impure {{ place: {}, reason: {:?} }}", place.identifier.0, error.reason)
+            }
+            AliasingEffect::Render { place } => {
+                format!("Render {{ place: {} }}", place.identifier.0)
+            }
+        }
     }
 
     // =========================================================================
@@ -109,8 +184,8 @@ impl<'a> DebugPrinter<'a> {
             Some(effects) => {
                 self.line("aliasingEffects:");
                 self.indent();
-                for (i, _) in effects.iter().enumerate() {
-                    self.line(&format!("[{}] ()", i));
+                for (i, eff) in effects.iter().enumerate() {
+                    self.line(&format!("[{}] {}", i, self.format_effect(eff)));
                 }
                 self.dedent();
             }
@@ -225,8 +300,8 @@ impl<'a> DebugPrinter<'a> {
             Some(effects) => {
                 self.line("effects:");
                 self.indent();
-                for (i, _) in effects.iter().enumerate() {
-                    self.line(&format!("[{}] ()", i));
+                for (i, eff) in effects.iter().enumerate() {
+                    self.line(&format!("[{}] {}", i, self.format_effect(eff)));
                 }
                 self.dedent();
             }
@@ -1367,8 +1442,8 @@ impl<'a> DebugPrinter<'a> {
                     Some(e) => {
                         self.line("effects:");
                         self.indent();
-                        for (i, _) in e.iter().enumerate() {
-                            self.line(&format!("[{}] ()", i));
+                        for (i, eff) in e.iter().enumerate() {
+                            self.line(&format!("[{}] {}", i, self.format_effect(eff)));
                         }
                         self.dedent();
                     }
@@ -1590,8 +1665,8 @@ impl<'a> DebugPrinter<'a> {
                     Some(e) => {
                         self.line("effects:");
                         self.indent();
-                        for (i, _) in e.iter().enumerate() {
-                            self.line(&format!("[{}] ()", i));
+                        for (i, eff) in e.iter().enumerate() {
+                            self.line(&format!("[{}] {}", i, self.format_effect(eff)));
                         }
                         self.dedent();
                     }
@@ -1846,6 +1921,52 @@ fn format_non_local_binding(binding: &react_compiler_hir::NonLocalBinding) -> St
                 name, module, imported
             )
         }
+    }
+}
+
+// =============================================================================
+// Helpers for effect formatting
+// =============================================================================
+
+fn format_place_short(place: &Place, env: &Environment) -> String {
+    let ident = &env.identifiers[place.identifier.0 as usize];
+    // Match TS printIdentifier: name$id + scope
+    let name = match &ident.name {
+        Some(name) => name.value().to_string(),
+        None => String::new(),
+    };
+    let scope = match ident.scope {
+        Some(scope_id) => format!(":{}", scope_id.0),
+        None => String::new(),
+    };
+    format!("{}${}{}", name, place.identifier.0, scope)
+}
+
+fn format_value_kind(kind: react_compiler_hir::type_config::ValueKind) -> &'static str {
+    match kind {
+        react_compiler_hir::type_config::ValueKind::Mutable => "mutable",
+        react_compiler_hir::type_config::ValueKind::Frozen => "frozen",
+        react_compiler_hir::type_config::ValueKind::Primitive => "primitive",
+        react_compiler_hir::type_config::ValueKind::MaybeFrozen => "maybe-frozen",
+        react_compiler_hir::type_config::ValueKind::Global => "global",
+        react_compiler_hir::type_config::ValueKind::Context => "context",
+    }
+}
+
+fn format_value_reason(reason: react_compiler_hir::type_config::ValueReason) -> &'static str {
+    match reason {
+        react_compiler_hir::type_config::ValueReason::KnownReturnSignature => "known-return-signature",
+        react_compiler_hir::type_config::ValueReason::State => "state",
+        react_compiler_hir::type_config::ValueReason::ReducerState => "reducer-state",
+        react_compiler_hir::type_config::ValueReason::Context => "context",
+        react_compiler_hir::type_config::ValueReason::Effect => "effect",
+        react_compiler_hir::type_config::ValueReason::HookCaptured => "hook-captured",
+        react_compiler_hir::type_config::ValueReason::HookReturn => "hook-return",
+        react_compiler_hir::type_config::ValueReason::Global => "global",
+        react_compiler_hir::type_config::ValueReason::JsxCaptured => "jsx-captured",
+        react_compiler_hir::type_config::ValueReason::StoreLocal => "store-local",
+        react_compiler_hir::type_config::ValueReason::ReactiveFunctionArgument => "reactive-function-argument",
+        react_compiler_hir::type_config::ValueReason::Other => "other",
     }
 }
 

@@ -24,7 +24,7 @@ pub enum ValueKind {
 }
 
 /// Mirrors TS `ValueReason` enum for use in config.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ValueReason {
     KnownReturnSignature,
     State,

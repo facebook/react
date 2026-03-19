@@ -219,6 +219,7 @@ name = "react_compiler_inference"
 version = "0.1.0"
 dependencies = [
  "indexmap",
+ "react_compiler_diagnostics",
  "react_compiler_hir",
 ]
 
