@@ -1,0 +1,8 @@
+[package]
+name = "react_compiler_inference"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+react_compiler_hir = { path = "../react_compiler_hir" }
+indexmap = "2"

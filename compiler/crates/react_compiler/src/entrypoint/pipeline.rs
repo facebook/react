@@ -192,6 +192,19 @@ pub fn compile_fn(
     let debug_optimize_props = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("OptimizePropsMethodCalls", debug_optimize_props));
 
+    // AnalyseFunctions logs inner function state from within the pass
+    // (mirrors TS: fn.env.logger?.debugLogIRs({ name: 'AnalyseFunction (inner)', ... }))
+    let mut inner_logs: Vec<String> = Vec::new();
+    react_compiler_inference::analyse_functions(&mut hir, &mut env, &mut |inner_func, inner_env| {
+        inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
+    });
+    for inner_log in inner_logs {
+        context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log));
+    }
+
+    let debug_analyse_functions = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("AnalyseFunctions", debug_analyse_functions));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
