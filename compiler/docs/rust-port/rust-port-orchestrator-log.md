@@ -10,7 +10,7 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: todo
+AnalyseFunctions: partial (1108/1651)
 InferMutationAliasingEffects: todo
 OptimizeForSSR: todo
 DeadCodeElimination: todo
@@ -104,3 +104,10 @@ Fixed all 708 InferTypes failures plus 1 OptimizePropsMethodCalls failure:
 - Implemented enableTreatSetIdentifiersAsStateSetters config support.
 - Fixed validateHooksUsage error ordering for nested functions.
 All 1717 tests passing, 0 failures. Next pass to port: #11 AnalyseFunctions.
+
+## 20260318-235832 Port AnalyseFunctions pass skeleton
+
+Ported AnalyseFunctions pass (#11) from TypeScript. Created react_compiler_inference crate.
+Pass skeleton is correct but inner function analysis depends on sub-passes not yet ported.
+1108/1651 passing (543 crash during inner function analysis).
+Commit: 92cc807a9f
