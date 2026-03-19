@@ -63,6 +63,15 @@ impl DisjointSet {
         root
     }
 
+    /// Find the root of the set containing `item`, returning None if the item
+    /// was never added to the set. Matches TS DisjointSet.find() behavior.
+    pub(crate) fn find_opt(&mut self, item: IdentifierId) -> Option<IdentifierId> {
+        if !self.entries.contains_key(&item) {
+            return None;
+        }
+        Some(self.find(item))
+    }
+
     /// Union all items into one set.
     pub(crate) fn union(&mut self, items: &[IdentifierId]) {
         if items.is_empty() {

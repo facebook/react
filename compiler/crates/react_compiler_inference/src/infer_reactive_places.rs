@@ -57,9 +57,21 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
             false,
         );
 
-    // Fixpoint iteration
+    // Collect block IDs for iteration
+    let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
+
+    // Track phi operand reactive flags during fixpoint.
+    // In TS, isReactive() sets place.reactive as a side effect. But when a phi
+    // is already reactive, the TS `continue`s and skips operand processing.
+    // We track which phi operand Places should be marked reactive.
+    // Key: (block_id, phi_idx, operand_idx), Value: should be reactive
+    let mut phi_operand_reactive: HashMap<(BlockId, usize, usize), bool> =
+        HashMap::new();
+
+    // Fixpoint iteration — compute reactive set
     loop {
-        for (_block_id, block) in &func.body.blocks {
+        for block_id in &block_ids {
+            let block = func.body.blocks.get(block_id).unwrap();
             let has_reactive_control = is_reactive_controlled_block(
                 block.id,
                 func,
@@ -68,15 +80,21 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
             );
 
             // Process phi nodes
-            for phi in &block.phis {
+            let block = func.body.blocks.get(block_id).unwrap();
+            for (phi_idx, phi) in block.phis.iter().enumerate() {
                 if reactive_map.is_reactive(phi.place.identifier) {
+                    // TS does `continue` here — skips operand isReactive calls.
+                    // phi operand reactive flags stay as they were from last visit.
                     continue;
                 }
                 let mut is_phi_reactive = false;
-                for (_pred, operand) in &phi.operands {
-                    if reactive_map.is_reactive(operand.identifier) {
+                for (op_idx, (_pred, operand)) in phi.operands.iter().enumerate() {
+                    let op_reactive = reactive_map.is_reactive(operand.identifier);
+                    // Record the reactive state for this operand at this point
+                    phi_operand_reactive.insert((*block_id, phi_idx, op_idx), op_reactive);
+                    if op_reactive {
                         is_phi_reactive = true;
-                        break;
+                        break; // TS breaks here — remaining operands NOT visited
                     }
                 }
                 if is_phi_reactive {
@@ -97,6 +115,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
             }
 
             // Process instructions
+            let block = func.body.blocks.get(block_id).unwrap();
             for instr_id in &block.instructions {
                 let instr = &func.instructions[instr_id.0 as usize];
 
@@ -195,9 +214,8 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
     propagate_reactivity_to_inner_functions_outer(func, env, &mut reactive_map);
 
     // Now apply reactive flags by replaying the traversal pattern.
-    // In TS, place.reactive is set as a side effect of isReactive() and markReactive().
-    // We need to set reactive=true on exactly the same place occurrences.
-    apply_reactive_flags_replay(func, env, &mut reactive_map, &mut stable_sidemap);
+    apply_reactive_flags_replay(func, env, &mut reactive_map, &mut stable_sidemap,
+                                &phi_operand_reactive);
 }
 
 // =============================================================================
@@ -220,12 +238,16 @@ impl<'a> ReactivityMap<'a> {
     }
 
     fn is_reactive(&mut self, id: IdentifierId) -> bool {
-        let canonical = self.aliased_identifiers.find(id);
+        // Match TS behavior: use find_opt which returns None for items not in the
+        // disjoint set (never union'd). TS find() returns null for unknown items.
+        let canonical = self.aliased_identifiers.find_opt(id).unwrap_or(id);
         self.reactive.contains(&canonical)
     }
 
     fn mark_reactive(&mut self, id: IdentifierId) {
-        let canonical = self.aliased_identifiers.find(id);
+        // Match TS behavior: use find_opt which returns None for items not in the
+        // disjoint set. TS find() returns null for unknown items.
+        let canonical = self.aliased_identifiers.find_opt(id).unwrap_or(id);
         if self.reactive.insert(canonical) {
             self.has_changes = true;
         }
@@ -582,6 +604,7 @@ fn apply_reactive_flags_replay(
     env: &mut Environment,
     reactive_map: &mut ReactivityMap,
     stable_sidemap: &mut StableSidemap,
+    phi_operand_reactive: &HashMap<(BlockId, usize, usize), bool>,
 ) {
     let reactive_ids = build_reactive_id_set(reactive_map);
 
@@ -596,28 +619,35 @@ fn apply_reactive_flags_replay(
     }
 
     // 2. Walk blocks — replay the fixpoint traversal pattern
-    // We need block IDs in iteration order, plus instruction IDs
     let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
 
     for block_id in &block_ids {
         let block = func.body.blocks.get(block_id).unwrap();
 
         // 2a. Phi nodes
+        // Use the phi_operand_reactive map to set operand reactive flags,
+        // matching the TS behavior where flags are set based on the reactive
+        // state at the time the phi was processed (not the final state).
         let phi_count = block.phis.len();
         for phi_idx in 0..phi_count {
             let block = func.body.blocks.get_mut(block_id).unwrap();
             let phi = &mut block.phis[phi_idx];
 
-            // isReactive is called on phi.place
+            // isReactive is called on phi.place (uses final state)
             if reactive_ids.contains(&phi.place.identifier) {
                 phi.place.reactive = true;
             }
 
-            // isReactive is called on each operand
-            for (_pred, operand) in &mut phi.operands {
-                if reactive_ids.contains(&operand.identifier) {
-                    operand.reactive = true;
+            // Phi operand reactive flags use the tracked state from the fixpoint
+            for (op_idx, (_pred, operand)) in phi.operands.iter_mut().enumerate() {
+                if let Some(&is_reactive) = phi_operand_reactive.get(&(*block_id, phi_idx, op_idx)) {
+                    if is_reactive {
+                        operand.reactive = true;
+                    }
                 }
+                // If not in the map, the operand was never visited by isReactive
+                // (e.g., operands after the first reactive one were skipped due to break,
+                // or the phi was already reactive and all operands were skipped)
             }
         }
 
@@ -690,23 +720,19 @@ fn apply_reactive_flags_replay(
     apply_reactive_flags_to_inner_functions(func, env, &reactive_ids);
 }
 
-fn build_reactive_id_set(reactive_map: &ReactivityMap) -> HashSet<IdentifierId> {
+fn build_reactive_id_set(reactive_map: &mut ReactivityMap) -> HashSet<IdentifierId> {
+    // The reactive set contains canonical IDs. We need to expand to include
+    // all aliased IDs whose canonical form is reactive.
     let mut result = HashSet::new();
     // All canonical reactive IDs
     for &id in &reactive_map.reactive {
         result.insert(id);
     }
-    // All IDs whose canonical form is reactive
-    for (&id, &_parent) in &reactive_map.aliased_identifiers.entries {
-        // Walk up to find root (without path compression since we have immutable ref)
-        let mut current = id;
-        loop {
-            match reactive_map.aliased_identifiers.entries.get(&current) {
-                Some(&parent) if parent != current => current = parent,
-                _ => break,
-            }
-        }
-        if reactive_map.reactive.contains(&current) {
+    // All IDs in the disjoint set whose canonical form is reactive
+    let keys: Vec<IdentifierId> = reactive_map.aliased_identifiers.entries.keys().copied().collect();
+    for id in keys {
+        let canonical = reactive_map.aliased_identifiers.find(id);
+        if reactive_map.reactive.contains(&canonical) {
             result.insert(id);
         }
     }
@@ -722,6 +748,7 @@ fn set_reactive_on_place(place: &mut Place, reactive_ids: &HashSet<IdentifierId>
         place.reactive = true;
     }
 }
+
 
 /// Set reactive flags on value lvalues (from `eachInstructionValueLValue`).
 /// Only called when `hasReactiveInput` is true, matching TS behavior.
@@ -944,18 +971,28 @@ fn set_reactive_on_value_operands(
                 }
             }
         }
-        InstructionValue::PropertyStore { object, value: val, .. }
-        | InstructionValue::ComputedStore { object, value: val, .. } => {
+        InstructionValue::PropertyStore { object, value: val, .. } => {
             set_reactive_on_place(object, reactive_ids);
             set_reactive_on_place(val, reactive_ids);
         }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::ComputedLoad { object, .. } => {
+        InstructionValue::ComputedStore { object, property, value: val, .. } => {
+            set_reactive_on_place(object, reactive_ids);
+            set_reactive_on_place(property, reactive_ids);
+            set_reactive_on_place(val, reactive_ids);
+        }
+        InstructionValue::PropertyLoad { object, .. } => {
             set_reactive_on_place(object, reactive_ids);
         }
-        InstructionValue::PropertyDelete { object, .. }
-        | InstructionValue::ComputedDelete { object, .. } => {
+        InstructionValue::ComputedLoad { object, property, .. } => {
             set_reactive_on_place(object, reactive_ids);
+            set_reactive_on_place(property, reactive_ids);
+        }
+        InstructionValue::PropertyDelete { object, .. } => {
+            set_reactive_on_place(object, reactive_ids);
+        }
+        InstructionValue::ComputedDelete { object, property, .. } => {
+            set_reactive_on_place(object, reactive_ids);
+            set_reactive_on_place(property, reactive_ids);
         }
         InstructionValue::Await { value: val, .. } => {
             set_reactive_on_place(val, reactive_ids);
@@ -1252,18 +1289,28 @@ fn each_instruction_value_operand_places(
                 }
             }
         }
-        InstructionValue::PropertyStore { object, value: val, .. }
-        | InstructionValue::ComputedStore { object, value: val, .. } => {
+        InstructionValue::PropertyStore { object, value: val, .. } => {
             result.push(object.clone());
             result.push(val.clone());
         }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::ComputedLoad { object, .. } => {
+        InstructionValue::ComputedStore { object, property, value: val, .. } => {
+            result.push(object.clone());
+            result.push(property.clone());
+            result.push(val.clone());
+        }
+        InstructionValue::PropertyLoad { object, .. } => {
             result.push(object.clone());
         }
-        InstructionValue::PropertyDelete { object, .. }
-        | InstructionValue::ComputedDelete { object, .. } => {
+        InstructionValue::ComputedLoad { object, property, .. } => {
             result.push(object.clone());
+            result.push(property.clone());
+        }
+        InstructionValue::PropertyDelete { object, .. } => {
+            result.push(object.clone());
+        }
+        InstructionValue::ComputedDelete { object, property, .. } => {
+            result.push(object.clone());
+            result.push(property.clone());
         }
         InstructionValue::Await { value: val, .. } => {
             result.push(val.clone());
