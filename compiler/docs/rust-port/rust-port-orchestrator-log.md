@@ -8,8 +8,8 @@ MergeConsecutiveBlocks: complete (1652/1652)
 SSA: complete (1651/1651)
 EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
-InferTypes: partial (942/1650)
-OptimizePropsMethodCalls: complete (916/916)
+InferTypes: complete (1651/1651)
+OptimizePropsMethodCalls: complete (1651/1651)
 AnalyseFunctions: todo
 InferMutationAliasingEffects: todo
 OptimizeForSSR: todo
@@ -90,3 +90,17 @@ MergeConsecutiveBlocks 1652/1652, SSA 1651/1651, frontier moved to ConstantPropa
 Fixed PostfixUpdate constant propagation using the instruction loc instead of the
 previous constant's loc. Now uses prev_loc from the matched constant.
 ConstantPropagation 1651/1651, frontier moved to InferTypes (708 failures).
+
+## 20260318-235832 Fix InferTypes pass — 708 failures resolved
+
+Fixed all 708 InferTypes failures plus 1 OptimizePropsMethodCalls failure:
+- Added `<generated_N>` shape ID normalization to test harness.
+- Fixed built-in hook shape definitions (useState, useReducer, etc.) to use specific
+  indexed properties instead of wildcard-only shapes.
+- Fixed React namespace to reuse built-in hook types instead of auto-generating new ones.
+- Added console/global/globalThis typed properties to shape definitions.
+- Implemented Reanimated module type provider.
+- Fixed inner function global type pre-resolution and hook property name fallback.
+- Implemented enableTreatSetIdentifiersAsStateSetters config support.
+- Fixed validateHooksUsage error ordering for nested functions.
+All 1717 tests passing, 0 failures. Next pass to port: #11 AnalyseFunctions.
