@@ -230,6 +230,23 @@ pub fn compile_fn(
     let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
 
+    react_compiler_inference::infer_reactive_places(&mut hir, &mut env);
+
+    let debug_reactive_places = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("InferReactivePlaces", debug_reactive_places));
+
+    react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(&mut hir, &env);
+
+    let debug_rewrite = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("RewriteInstructionKindsBasedOnReassignment", debug_rewrite));
+
+    if env.enable_memoization() {
+        react_compiler_inference::infer_reactive_scope_variables(&mut hir, &mut env);
+
+        let debug_infer_scopes = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("InferReactiveScopeVariables", debug_infer_scopes));
+    }
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

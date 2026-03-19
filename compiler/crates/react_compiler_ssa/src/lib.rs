@@ -1,5 +1,7 @@
 pub mod enter_ssa;
 mod eliminate_redundant_phi;
+mod rewrite_instruction_kinds_based_on_reassignment;
 
 pub use enter_ssa::enter_ssa;
 pub use eliminate_redundant_phi::eliminate_redundant_phi;
+pub use rewrite_instruction_kinds_based_on_reassignment::rewrite_instruction_kinds_based_on_reassignment;

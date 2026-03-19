@@ -11,14 +11,14 @@ ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
 AnalyseFunctions: partial (1234/1240)
-InferMutationAliasingEffects: partial (1218/1234)
+InferMutationAliasingEffects: partial (1219/1234)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1218/1218)
-PruneMaybeThrows (2nd): complete (1690/1690)
-InferMutationAliasingRanges: partial (1181/1218)
-InferReactivePlaces: todo
-RewriteInstructionKindsBasedOnReassignment: todo
-InferReactiveScopeVariables: todo
+DeadCodeElimination: complete (1219/1219)
+PruneMaybeThrows (2nd): complete (1929/1929)
+InferMutationAliasingRanges: partial (1169/1219)
+InferReactivePlaces: partial (951/1169)
+RewriteInstructionKindsBasedOnReassignment: partial (943/951)
+InferReactiveScopeVariables: partial (112/943)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -140,3 +140,11 @@ Ported InferMutationAliasingRanges (#16) — computes mutable ranges, Place effe
 and function-level effects. Wired into pipeline and inner function analysis.
 InferMutationAliasingRanges 1181/1218 (37 failures from unported inferReactiveScopeVariables).
 Overall 1247/1717 (+79).
+
+## 20260319-092045 Port InferReactivePlaces, RewriteInstructionKinds, InferReactiveScopeVariables
+
+Ported three passes in parallel:
+- InferReactivePlaces (#17): 951/1169 (81.3%) — post-dominator frontier differences
+- RewriteInstructionKindsBasedOnReassignment (#18): 943/951 (98.7%)
+- InferReactiveScopeVariables (#19): 112/943 (11.9%) — major issues with scope assignment
+Overall 179/1717. InferReactiveScopeVariables needs significant fixing.

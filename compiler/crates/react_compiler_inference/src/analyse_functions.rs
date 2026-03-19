@@ -8,10 +8,9 @@
 //!
 //! Ported from TypeScript `src/Inference/AnalyseFunctions.ts`.
 //!
-//! Runs inferMutationAliasingEffects, deadCodeElimination, and
-//! inferMutationAliasingRanges on each inner function. The sub-passes
-//! rewriteInstructionKindsBasedOnReassignment and inferReactiveScopeVariables
-//! are not yet ported.
+//! Runs inferMutationAliasingEffects, deadCodeElimination,
+//! inferMutationAliasingRanges, rewriteInstructionKindsBasedOnReassignment,
+//! and inferReactiveScopeVariables on each inner function.
 
 use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
@@ -106,9 +105,11 @@ where
         func, env, true,
     );
 
-    // TODO: The following sub-passes are not yet ported:
-    // rewriteInstructionKindsBasedOnReassignment(fn);
-    // inferReactiveScopeVariables(fn);
+    // rewriteInstructionKindsBasedOnReassignment
+    react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(func, env);
+
+    // inferReactiveScopeVariables on the inner function
+    crate::infer_reactive_scope_variables::infer_reactive_scope_variables(func, env);
 
     func.aliasing_effects = Some(function_effects.clone());
 

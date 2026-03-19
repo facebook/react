@@ -583,6 +583,16 @@ impl Environment {
         &self.globals
     }
 
+    /// Whether memoization is enabled for this compilation.
+    /// Ported from TS `get enableMemoization()` in Environment.ts.
+    /// Returns true for client/lint modes, false for SSR.
+    pub fn enable_memoization(&self) -> bool {
+        match self.output_mode {
+            OutputMode::Client | OutputMode::Lint => true,
+            OutputMode::Ssr => false,
+        }
+    }
+
     /// Whether validations are enabled for this compilation.
     /// Ported from TS `get enableValidations()` in Environment.ts.
     pub fn enable_validations(&self) -> bool {
