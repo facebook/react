@@ -10,15 +10,15 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1610/1616)
-InferMutationAliasingEffects: partial (1500/1610)
+AnalyseFunctions: partial (1614/1620)
+InferMutationAliasingEffects: partial (1593/1614)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1500/1500)
-PruneMaybeThrows (2nd): complete (1903/1903)
-InferMutationAliasingRanges: partial (1443/1500)
-InferReactivePlaces: partial (1270/1443)
-RewriteInstructionKindsBasedOnReassignment: partial (1250/1270)
-InferReactiveScopeVariables: complete (1250/1250)
+DeadCodeElimination: complete (1593/1593)
+PruneMaybeThrows (2nd): complete (1911/1911)
+InferMutationAliasingRanges: partial (1535/1593)
+InferReactivePlaces: partial (1357/1535)
+RewriteInstructionKindsBasedOnReassignment: partial (1335/1357)
+InferReactiveScopeVariables: complete (1335/1335)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -164,3 +164,10 @@ Fixed three bugs in InferReactivePlaces:
 - Fixed useRef stable type detection (Object type, not just Function).
 - Separated value operand vs lvalue flag setting to avoid over-marking.
 InferReactivePlaces 1270/1443 (173 failures). Overall 1316/1717 (+217).
+
+## 20260319-111719 Fix InferMutationAliasingEffects function expression Apply effects
+
+Added function expression value tracking for Apply effects — when a callee is a
+locally-declared function expression with known aliasing effects, use its signature
+instead of falling through to the default "no signature" path.
+InferMutationAliasingEffects: 110→21 failures. Overall 1401/1717 (+84).

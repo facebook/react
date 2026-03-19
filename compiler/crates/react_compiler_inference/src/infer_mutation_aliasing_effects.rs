@@ -128,6 +128,8 @@ pub fn infer_mutation_aliasing_effects(
         hoisted_context_declarations,
         non_mutating_spreads,
         effect_value_id_cache: HashMap::new(),
+        function_values: HashMap::new(),
+        function_signature_cache: HashMap::new(),
     };
 
     let mut iteration_count = 0;
@@ -480,6 +482,11 @@ struct Context {
     /// Cache of ValueIds keyed by effect hash, ensuring stable allocation-site identity
     /// across fixpoint iterations. Mirrors TS `effectInstructionValueCache`.
     effect_value_id_cache: HashMap<String, ValueId>,
+    /// Maps ValueId to FunctionId for function expressions, so we can look up
+    /// locally-declared functions when processing Apply effects.
+    function_values: HashMap<ValueId, FunctionId>,
+    /// Cache of function expression signatures, keyed by FunctionId
+    function_signature_cache: HashMap<FunctionId, AliasingSignature>,
 }
 
 impl Context {
@@ -1089,6 +1096,8 @@ fn apply_effect(
             }
 
             let value_id = context.get_or_create_value_id(&effect);
+            // Track this value as a function expression so Apply can look it up
+            context.function_values.insert(value_id, function_id);
             state.initialize(value_id, AbstractValue {
                 kind: if is_mutable { ValueKind::Mutable } else { ValueKind::Frozen },
                 reason: HashSet::new(),
@@ -1175,9 +1184,40 @@ fn apply_effect(
             }
         }
         AliasingEffect::Apply { ref receiver, ref function, mutates_function, ref args, ref into, ref signature, ref loc } => {
-            // Try to use aliasing signature from function values
-            // For simplicity in the initial port, we use the default behavior:
-            // create mutable result, conditionally mutate all operands, capture into result
+            // First, check if the callee is a locally-declared function expression
+            // whose aliasing effects we already know (TS lines 1016-1068)
+            if state.is_defined(function.identifier) {
+                let function_values = state.values_for(function.identifier);
+                if function_values.len() == 1 {
+                    let value_id = function_values[0];
+                    if let Some(func_id) = context.function_values.get(&value_id).copied() {
+                        let inner_func = &env.functions[func_id.0 as usize];
+                        if inner_func.aliasing_effects.is_some() {
+                            // Build or retrieve the signature from the function expression
+                            if !context.function_signature_cache.contains_key(&func_id) {
+                                let sig = build_signature_from_function_expression(env, func_id);
+                                context.function_signature_cache.insert(func_id, sig);
+                            }
+                            let sig = context.function_signature_cache.get(&func_id).unwrap().clone();
+                            let inner_func = &env.functions[func_id.0 as usize];
+                            let context_places: Vec<Place> = inner_func.context.clone();
+                            let sig_effects = compute_effects_for_aliasing_signature(
+                                env, &sig, into, receiver, args, &context_places, loc.as_ref(),
+                            );
+                            if let Some(sig_effs) = sig_effects {
+                                // Conditionally mutate the function itself first
+                                apply_effect(context, state, AliasingEffect::MutateTransitiveConditionally {
+                                    value: function.clone(),
+                                }, initialized, effects, env, func);
+                                for se in sig_effs {
+                                    apply_effect(context, state, se, initialized, effects, env, func);
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             if let Some(sig) = signature {
                 if let Some(ref aliasing) = sig.aliasing {
                     let sig_effects = compute_effects_for_aliasing_signature_config(
@@ -2254,6 +2294,227 @@ fn compute_effects_for_aliasing_signature_config(
                 } else {
                     return None;
                 }
+            }
+        }
+    }
+
+    Some(effects)
+}
+
+// =============================================================================
+// Function expression signature building
+// =============================================================================
+
+/// Build an AliasingSignature from a function expression's params/returns/aliasing effects.
+/// Corresponds to TS `buildSignatureFromFunctionExpression`.
+fn build_signature_from_function_expression(
+    env: &mut Environment,
+    func_id: FunctionId,
+) -> AliasingSignature {
+    let inner_func = &env.functions[func_id.0 as usize];
+    let mut params: Vec<IdentifierId> = Vec::new();
+    let mut rest: Option<IdentifierId> = None;
+    for param in &inner_func.params {
+        match param {
+            ParamPattern::Place(p) => params.push(p.identifier),
+            ParamPattern::Spread(s) => rest = Some(s.place.identifier),
+        }
+    }
+    let returns = inner_func.returns.identifier;
+    let aliasing_effects = inner_func.aliasing_effects.clone().unwrap_or_default();
+    let loc = inner_func.loc;
+
+    if rest.is_none() {
+        let temp = create_temp_place(env, loc);
+        rest = Some(temp.identifier);
+    }
+
+    AliasingSignature {
+        receiver: IdentifierId(0),
+        params,
+        rest,
+        returns,
+        effects: aliasing_effects,
+        temporaries: Vec::new(),
+    }
+}
+
+/// Compute effects by substituting an AliasingSignature (IdentifierId-based)
+/// with actual arguments. Corresponds to TS `computeEffectsForSignature`.
+fn compute_effects_for_aliasing_signature(
+    env: &mut Environment,
+    signature: &AliasingSignature,
+    lvalue: &Place,
+    receiver: &Place,
+    args: &[PlaceOrSpreadOrHole],
+    context: &[Place],
+    _loc: Option<&SourceLocation>,
+) -> Option<Vec<AliasingEffect>> {
+    if signature.params.len() > args.len()
+        || (args.len() > signature.params.len() && signature.rest.is_none())
+    {
+        return None;
+    }
+
+    let mut substitutions: HashMap<IdentifierId, Vec<Place>> = HashMap::new();
+    substitutions.insert(signature.receiver, vec![receiver.clone()]);
+    substitutions.insert(signature.returns, vec![lvalue.clone()]);
+
+    for (i, arg) in args.iter().enumerate() {
+        match arg {
+            PlaceOrSpreadOrHole::Hole => continue,
+            PlaceOrSpreadOrHole::Place(place)
+            | PlaceOrSpreadOrHole::Spread(react_compiler_hir::SpreadPattern { place }) => {
+                let is_spread = matches!(arg, PlaceOrSpreadOrHole::Spread(_));
+                if !is_spread && i < signature.params.len() {
+                    substitutions.insert(signature.params[i], vec![place.clone()]);
+                } else if let Some(rest_id) = signature.rest {
+                    substitutions.entry(rest_id).or_default().push(place.clone());
+                } else {
+                    return None;
+                }
+            }
+        }
+    }
+
+    // Add context variable substitutions (identity mapping)
+    for operand in context {
+        substitutions.insert(operand.identifier, vec![operand.clone()]);
+    }
+
+    // Create temporaries
+    for temp in &signature.temporaries {
+        let temp_place = create_temp_place(env, receiver.loc);
+        substitutions.insert(temp.identifier, vec![temp_place]);
+    }
+
+    let mut effects: Vec<AliasingEffect> = Vec::new();
+
+    for eff in &signature.effects {
+        match eff {
+            AliasingEffect::MaybeAlias { from, into }
+            | AliasingEffect::Assign { from, into }
+            | AliasingEffect::ImmutableCapture { from, into }
+            | AliasingEffect::Alias { from, into }
+            | AliasingEffect::CreateFrom { from, into }
+            | AliasingEffect::Capture { from, into } => {
+                let from_places = substitutions.get(&from.identifier).cloned().unwrap_or_default();
+                let to_places = substitutions.get(&into.identifier).cloned().unwrap_or_default();
+                for f in &from_places {
+                    for t in &to_places {
+                        effects.push(match eff {
+                            AliasingEffect::MaybeAlias { .. } => AliasingEffect::MaybeAlias { from: f.clone(), into: t.clone() },
+                            AliasingEffect::Assign { .. } => AliasingEffect::Assign { from: f.clone(), into: t.clone() },
+                            AliasingEffect::ImmutableCapture { .. } => AliasingEffect::ImmutableCapture { from: f.clone(), into: t.clone() },
+                            AliasingEffect::Alias { .. } => AliasingEffect::Alias { from: f.clone(), into: t.clone() },
+                            AliasingEffect::CreateFrom { .. } => AliasingEffect::CreateFrom { from: f.clone(), into: t.clone() },
+                            AliasingEffect::Capture { .. } => AliasingEffect::Capture { from: f.clone(), into: t.clone() },
+                            _ => unreachable!(),
+                        });
+                    }
+                }
+            }
+            AliasingEffect::Impure { place, error } => {
+                let values = substitutions.get(&place.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::Impure { place: v, error: error.clone() });
+                }
+            }
+            AliasingEffect::MutateFrozen { place, error } => {
+                let values = substitutions.get(&place.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::MutateFrozen { place: v, error: error.clone() });
+                }
+            }
+            AliasingEffect::MutateGlobal { place, error } => {
+                let values = substitutions.get(&place.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::MutateGlobal { place: v, error: error.clone() });
+                }
+            }
+            AliasingEffect::Render { place } => {
+                let values = substitutions.get(&place.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::Render { place: v });
+                }
+            }
+            AliasingEffect::Mutate { value, reason } => {
+                let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::Mutate { value: v, reason: reason.clone() });
+                }
+            }
+            AliasingEffect::MutateConditionally { value } => {
+                let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::MutateConditionally { value: v });
+                }
+            }
+            AliasingEffect::MutateTransitive { value } => {
+                let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::MutateTransitive { value: v });
+                }
+            }
+            AliasingEffect::MutateTransitiveConditionally { value } => {
+                let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::MutateTransitiveConditionally { value: v });
+                }
+            }
+            AliasingEffect::Freeze { value, reason } => {
+                let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
+                for v in values {
+                    effects.push(AliasingEffect::Freeze { value: v, reason: *reason });
+                }
+            }
+            AliasingEffect::Create { into, value, reason } => {
+                let intos = substitutions.get(&into.identifier).cloned().unwrap_or_default();
+                for v in intos {
+                    effects.push(AliasingEffect::Create { into: v, value: *value, reason: *reason });
+                }
+            }
+            AliasingEffect::Apply { receiver: r, function: f, mutates_function: mf, args: a, into: i, signature: s, loc: l } => {
+                let recv = substitutions.get(&r.identifier).and_then(|v| v.first()).cloned();
+                let func = substitutions.get(&f.identifier).and_then(|v| v.first()).cloned();
+                let apply_into = substitutions.get(&i.identifier).and_then(|v| v.first()).cloned();
+                if let (Some(recv), Some(func), Some(apply_into)) = (recv, func, apply_into) {
+                    let mut apply_args: Vec<PlaceOrSpreadOrHole> = Vec::new();
+                    for arg in a {
+                        match arg {
+                            PlaceOrSpreadOrHole::Hole => apply_args.push(PlaceOrSpreadOrHole::Hole),
+                            PlaceOrSpreadOrHole::Place(p) => {
+                                if let Some(places) = substitutions.get(&p.identifier) {
+                                    if let Some(place) = places.first() {
+                                        apply_args.push(PlaceOrSpreadOrHole::Place(place.clone()));
+                                    }
+                                }
+                            }
+                            PlaceOrSpreadOrHole::Spread(sp) => {
+                                if let Some(places) = substitutions.get(&sp.place.identifier) {
+                                    if let Some(place) = places.first() {
+                                        apply_args.push(PlaceOrSpreadOrHole::Spread(react_compiler_hir::SpreadPattern { place: place.clone() }));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    effects.push(AliasingEffect::Apply {
+                        receiver: recv,
+                        function: func,
+                        mutates_function: *mf,
+                        args: apply_args,
+                        into: apply_into,
+                        signature: s.clone(),
+                        loc: _loc.copied(),
+                    });
+                } else {
+                    return None;
+                }
+            }
+            AliasingEffect::CreateFunction { .. } => {
+                // Not supported in signature substitution
+                return None;
             }
         }
     }
