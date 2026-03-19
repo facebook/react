@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -105,7 +106,8 @@ pub struct ScopeInfo {
 
     /// Maps an Identifier AST node's start offset to the binding it resolves to.
     /// Only present for identifiers that resolve to a binding (not globals).
-    pub reference_to_binding: HashMap<u32, BindingId>,
+    /// Uses IndexMap to preserve insertion order (source order from serialization).
+    pub reference_to_binding: IndexMap<u32, BindingId>,
 
     /// The program-level (module) scope. Always scopes[0].
     pub program_scope: ScopeId,

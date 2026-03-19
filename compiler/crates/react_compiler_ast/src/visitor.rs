@@ -65,6 +65,18 @@ pub trait Visitor {
     fn enter_update_expression(&mut self, _node: &UpdateExpression, _scope_stack: &[ScopeId]) {}
     fn enter_identifier(&mut self, _node: &Identifier, _scope_stack: &[ScopeId]) {}
     fn enter_jsx_identifier(&mut self, _node: &JSXIdentifier, _scope_stack: &[ScopeId]) {}
+    fn enter_jsx_opening_element(
+        &mut self,
+        _node: &JSXOpeningElement,
+        _scope_stack: &[ScopeId],
+    ) {
+    }
+    fn leave_jsx_opening_element(
+        &mut self,
+        _node: &JSXOpeningElement,
+        _scope_stack: &[ScopeId],
+    ) {
+    }
 }
 
 /// Walks the AST while tracking scope context via `node_to_scope`.
@@ -595,7 +607,9 @@ impl<'a> AstWalker<'a> {
     }
 
     fn walk_jsx_element(&mut self, v: &mut impl Visitor, node: &JSXElement) {
+        v.enter_jsx_opening_element(&node.opening_element, &self.scope_stack);
         self.walk_jsx_element_name(v, &node.opening_element.name);
+        v.leave_jsx_opening_element(&node.opening_element, &self.scope_stack);
         for attr in &node.opening_element.attributes {
             match attr {
                 JSXAttributeItem::JSXAttribute(a) => {

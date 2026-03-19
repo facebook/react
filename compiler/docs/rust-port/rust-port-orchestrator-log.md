@@ -1,6 +1,6 @@
 # Status
 
-HIR: partial (775/1717)
+HIR: complete (1717/1717)
 PruneMaybeThrows: partial (1715/1717)
 DropManualMemoization: partial (1700/1717)
 InlineImmediatelyInvokedFunctionExpressions: partial (1564/1717)
@@ -53,3 +53,16 @@ HIR now 1717/1717, frontier moved to PruneMaybeThrows.
 Changed debug HIR printer (TS + Rust) to print full inner function bodies inline
 instead of `loweredFunc: <HIRFunction>` placeholder. Also removed `Function #N:` header.
 HIR regressed to 775/1717 as inner function differences are now visible.
+
+## 20260318-210850 Fix inner function lowering bugs in HIR pass
+
+Fixed multiple bugs exposed by the new inner function debug printing:
+- Removed extra `is_context_identifier` fallback in hir_builder.rs that incorrectly
+  emitted LoadContext instead of LoadLocal for non-context captured variables.
+- Fixed source locations in gather_captured_context using IdentifierLocIndex lookup
+  instead of fabricated byte-offset-based locs.
+- Changed ScopeInfo.reference_to_binding from HashMap to IndexMap for deterministic
+  insertion-order iteration matching Babel's traversal order.
+- Added JSXOpeningElement loc tracking in identifier_loc_index for JSX context vars.
+- Added node_type to UnsupportedNode for UpdateExpression and YieldExpression.
+HIR now 1717/1717, frontier back to PruneMaybeThrows.

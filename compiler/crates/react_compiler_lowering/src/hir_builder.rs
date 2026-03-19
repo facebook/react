@@ -836,43 +836,12 @@ impl<'a> HirBuilder<'a> {
                 }
 
                 // Check if this binding is in the pre-computed context identifiers set.
-                // This catches both:
-                // 1. Variables declared in ancestor scopes (captured from outer functions)
-                // 2. Variables declared locally but captured by inner functions
-                if self.context_identifiers.contains(&binding_data.id) {
-                    return true;
-                }
-
-                // If in the function's own scope, it's local, not context
-                if binding_data.scope == self.function_scope {
-                    return false;
-                }
-
-                // Check if the binding's scope is an ancestor of function_scope
-                // (but not function_scope itself, since those are local)
-                is_ancestor_scope(
-                    self.scope_info,
-                    binding_data.scope,
-                    self.function_scope,
-                )
+                self.context_identifiers.contains(&binding_data.id)
             }
         }
     }
 }
 
-/// Check if `ancestor` is an ancestor scope of `descendant` by walking the
-/// parent chain from `descendant` upward. Returns true if `ancestor` is found
-/// in the parent chain (exclusive of `descendant` itself).
-fn is_ancestor_scope(scope_info: &ScopeInfo, ancestor: ScopeId, descendant: ScopeId) -> bool {
-    let mut current = scope_info.scopes[descendant.0 as usize].parent;
-    while let Some(scope_id) = current {
-        if scope_id == ancestor {
-            return true;
-        }
-        current = scope_info.scopes[scope_id.0 as usize].parent;
-    }
-    false
-}
 
 // ---------------------------------------------------------------------------
 // Terminal helper functions

@@ -798,15 +798,17 @@ fn lower_expression(
                         loc: member_loc.clone(),
                     });
 
-                    // Store back using the property from the lowered member expression
-                    match lowered_property {
+                    // Store back using the property from the lowered member expression.
+                    // For prefix, the result is the PropertyStore/ComputedStore lvalue
+                    // (matching TS which uses newValuePlace). For postfix, it's prev_value.
+                    let new_value_place = match lowered_property {
                         MemberProperty::Literal(prop_literal) => {
                             lower_value_to_temporary(builder, InstructionValue::PropertyStore {
                                 object,
                                 property: prop_literal,
                                 value: updated.clone(),
                                 loc: member_loc,
-                            });
+                            })
                         }
                         MemberProperty::Computed(prop_place) => {
                             lower_value_to_temporary(builder, InstructionValue::ComputedStore {
@@ -814,12 +816,12 @@ fn lower_expression(
                                 property: prop_place,
                                 value: updated.clone(),
                                 loc: member_loc,
-                            });
+                            })
                         }
-                    }
+                    };
 
-                    // Return previous for postfix, updated for prefix
-                    let result_place = if update.prefix { updated } else { prev_value };
+                    // Return previous for postfix, newValuePlace for prefix
+                    let result_place = if update.prefix { new_value_place } else { prev_value };
                     InstructionValue::LoadLocal { place: result_place.clone(), loc: result_place.loc.clone() }
                 }
                 Expression::Identifier(ident) => {
@@ -832,7 +834,7 @@ fn lower_expression(
                             loc: loc.clone(),
                             suggestions: None,
                         });
-                        return InstructionValue::UnsupportedNode { node_type: None, loc };
+                        return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), loc };
                     }
 
                     let ident_loc = convert_opt_loc(&ident.base.loc);
@@ -846,7 +848,7 @@ fn lower_expression(
                                 loc: loc.clone(),
                                 suggestions: None,
                             });
-                            return InstructionValue::UnsupportedNode { node_type: None, loc };
+                            return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), loc };
                         }
                         _ => {}
                     }
@@ -1436,7 +1438,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: Some("YieldExpression".to_string()), loc }
         }
         Expression::SpreadElement(spread) => {
             // SpreadElement should be handled by the parent context (array/object/call)
@@ -4444,6 +4446,12 @@ fn lower_function(
     let component_scope = builder.component_scope();
     let scope_info = builder.scope_info();
 
+    // Clone parent bindings and used_names to pass to the inner lower
+    let parent_bindings = builder.bindings().clone();
+    let parent_used_names = builder.used_names().clone();
+    let context_ids = builder.context_identifiers().clone();
+    let ident_locs = builder.identifier_locs();
+
     // Gather captured context
     let captured_context = gather_captured_context(
         scope_info,
@@ -4451,23 +4459,21 @@ fn lower_function(
         component_scope,
         func_start,
         func_end,
+        ident_locs,
     );
 
-    // Merge parent context with captured context
+    // Merge parent context with captured context.
+    // The locally-gathered captured context overrides the parent's loc values,
+    // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
+    // where later entries win.
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
         let mut merged = parent_context;
         for (k, v) in captured_context {
-            merged.entry(k).or_insert(v);
+            merged.insert(k, v);
         }
         merged
     };
-
-    // Clone parent bindings and used_names to pass to the inner lower
-    let parent_bindings = builder.bindings().clone();
-    let parent_used_names = builder.used_names().clone();
-    let context_ids = builder.context_identifiers().clone();
-    let ident_locs = builder.identifier_locs();
 
     // Use scope_info_and_env_mut to avoid conflicting borrows
     let (scope_info, env) = builder.scope_info_and_env_mut();
@@ -4522,6 +4528,11 @@ fn lower_function_declaration(
     let component_scope = builder.component_scope();
     let scope_info = builder.scope_info();
 
+    let parent_bindings = builder.bindings().clone();
+    let parent_used_names = builder.used_names().clone();
+    let context_ids = builder.context_identifiers().clone();
+    let ident_locs = builder.identifier_locs();
+
     // Gather captured context
     let captured_context = gather_captured_context(
         scope_info,
@@ -4529,22 +4540,20 @@ fn lower_function_declaration(
         component_scope,
         func_start,
         func_end,
+        ident_locs,
     );
 
-    // Merge parent context with captured context
+    // Merge parent context with captured context.
+    // The locally-gathered captured context overrides the parent's loc values,
+    // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
         let mut merged = parent_context;
         for (k, v) in captured_context {
-            merged.entry(k).or_insert(v);
+            merged.insert(k, v);
         }
         merged
     };
-
-    let parent_bindings = builder.bindings().clone();
-    let parent_used_names = builder.used_names().clone();
-    let context_ids = builder.context_identifiers().clone();
-    let ident_locs = builder.identifier_locs();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
     let (hir_func, child_used_names, child_bindings) = lower_inner(
@@ -4673,27 +4682,31 @@ fn lower_function_for_object_method(
     let component_scope = builder.component_scope();
     let scope_info = builder.scope_info();
 
+    let parent_bindings = builder.bindings().clone();
+    let parent_used_names = builder.used_names().clone();
+    let context_ids = builder.context_identifiers().clone();
+    let ident_locs = builder.identifier_locs();
+
     let captured_context = gather_captured_context(
         scope_info,
         function_scope,
         component_scope,
         func_start,
         func_end,
+        ident_locs,
     );
 
+    // Merge parent context with captured context.
+    // The locally-gathered captured context overrides the parent's loc values,
+    // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
         let mut merged = parent_context;
         for (k, v) in captured_context {
-            merged.entry(k).or_insert(v);
+            merged.insert(k, v);
         }
         merged
     };
-
-    let parent_bindings = builder.bindings().clone();
-    let parent_used_names = builder.used_names().clone();
-    let context_ids = builder.context_identifiers().clone();
-    let ident_locs = builder.identifier_locs();
 
     let (scope_info, env) = builder.scope_info_and_env_mut();
     let (hir_func, child_used_names, child_bindings) = lower_inner(
@@ -5406,6 +5419,7 @@ fn gather_captured_context(
     component_scope: react_compiler_ast::scope::ScopeId,
     func_start: u32,
     func_end: u32,
+    identifier_locs: &IdentifierLocIndex,
 ) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
     let parent_scope = scope_info.scopes[function_scope.0 as usize].parent;
     let pure_scopes = match parent_scope {
@@ -5426,6 +5440,16 @@ fn gather_captured_context(
         if binding.declaration_start == Some(ref_start) {
             continue;
         }
+        // Skip function/class declaration names that are not expression references.
+        // In the TS, gatherCapturedContext traverses with an Expression visitor, so
+        // it never encounters function declaration names. But reference_to_binding
+        // includes constant violations for function redeclarations (e.g., the second
+        // `function x() {}` in a scope), so we must filter them out here.
+        if let Some(entry) = identifier_locs.get(&ref_start) {
+            if entry.is_declaration_name {
+                continue;
+            }
+        }
         // Skip type-only bindings (e.g., Flow/TypeScript type aliases)
         // These are not runtime values and should not be captured as context
         if binding.declaration_type == "TypeAlias"
@@ -5438,11 +5462,16 @@ fn gather_captured_context(
             continue;
         }
         if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
-            // Use the binding's identifier location as the source location for
-            // the context variable, falling back to a generated location from the reference.
-            let loc = Some(SourceLocation {
-                start: Position { line: 0, column: ref_start },
-                end: Position { line: 0, column: ref_start },
+            let loc = identifier_locs.get(&ref_start).map(|entry| {
+                // For JSX identifiers that are part of an opening element name,
+                // use the JSXOpeningElement's loc (which spans the full tag) to match
+                // the TS behavior where handleMaybeDependency receives the
+                // JSXOpeningElement path and uses path.node.loc.
+                if let Some(oe_loc) = &entry.opening_element_loc {
+                    oe_loc.clone()
+                } else {
+                    entry.loc.clone()
+                }
             });
             captured.insert(binding.id, loc);
         }

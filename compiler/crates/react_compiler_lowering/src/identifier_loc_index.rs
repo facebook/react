@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 use react_compiler_ast::expressions::*;
-use react_compiler_ast::jsx::JSXIdentifier;
+use react_compiler_ast::jsx::{JSXIdentifier, JSXOpeningElement};
 use react_compiler_ast::scope::{ScopeId, ScopeInfo};
 use react_compiler_ast::statements::FunctionDeclaration;
 use react_compiler_ast::visitor::{AstWalker, Visitor};
@@ -19,6 +19,16 @@ use crate::FunctionNode;
 pub struct IdentifierLocEntry {
     pub loc: SourceLocation,
     pub is_jsx: bool,
+    /// For JSX identifiers that are the root name of a JSXOpeningElement,
+    /// stores the JSXOpeningElement's loc (which spans the full tag).
+    /// This matches the TS behavior where `handleMaybeDependency` receives
+    /// the JSXOpeningElement path and uses `path.node.loc`.
+    pub opening_element_loc: Option<SourceLocation>,
+    /// True if this identifier is the name of a function/class declaration
+    /// (not an expression reference). Used by `gather_captured_context` to
+    /// skip non-expression positions, matching the TS behavior where the
+    /// Expression visitor doesn't visit declaration names.
+    pub is_declaration_name: bool,
 }
 
 /// Index mapping byte offset → (SourceLocation, is_jsx) for all Identifier
@@ -27,6 +37,8 @@ pub type IdentifierLocIndex = HashMap<u32, IdentifierLocEntry>;
 
 struct IdentifierLocVisitor {
     index: IdentifierLocIndex,
+    /// Tracks the current JSXOpeningElement's loc while walking its name.
+    current_opening_element_loc: Option<SourceLocation>,
 }
 
 fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocation {
@@ -43,13 +55,15 @@ fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocati
 }
 
 impl IdentifierLocVisitor {
-    fn insert_identifier(&mut self, node: &Identifier) {
+    fn insert_identifier(&mut self, node: &Identifier, is_declaration_name: bool) {
         if let (Some(start), Some(loc)) = (node.base.start, &node.base.loc) {
             self.index.insert(
                 start,
                 IdentifierLocEntry {
                     loc: convert_loc(loc),
                     is_jsx: false,
+                    opening_element_loc: None,
+                    is_declaration_name,
                 },
             );
         }
@@ -58,7 +72,7 @@ impl IdentifierLocVisitor {
 
 impl Visitor for IdentifierLocVisitor {
     fn enter_identifier(&mut self, node: &Identifier, _scope_stack: &[ScopeId]) {
-        self.insert_identifier(node);
+        self.insert_identifier(node, false);
     }
 
     fn enter_jsx_identifier(&mut self, node: &JSXIdentifier, _scope_stack: &[ScopeId]) {
@@ -68,9 +82,19 @@ impl Visitor for IdentifierLocVisitor {
                 IdentifierLocEntry {
                     loc: convert_loc(loc),
                     is_jsx: true,
+                    opening_element_loc: self.current_opening_element_loc.clone(),
+                    is_declaration_name: false,
                 },
             );
         }
+    }
+
+    fn enter_jsx_opening_element(&mut self, node: &JSXOpeningElement, _scope_stack: &[ScopeId]) {
+        self.current_opening_element_loc = node.base.loc.as_ref().map(|loc| convert_loc(loc));
+    }
+
+    fn leave_jsx_opening_element(&mut self, _node: &JSXOpeningElement, _scope_stack: &[ScopeId]) {
+        self.current_opening_element_loc = None;
     }
 
     // Visit function/class declaration and expression name identifiers,
@@ -78,13 +102,13 @@ impl Visitor for IdentifierLocVisitor {
     // other Visitor consumers like find_context_identifiers).
     fn enter_function_declaration(&mut self, node: &FunctionDeclaration, _scope_stack: &[ScopeId]) {
         if let Some(id) = &node.id {
-            self.insert_identifier(id);
+            self.insert_identifier(id, true);
         }
     }
 
     fn enter_function_expression(&mut self, node: &FunctionExpression, _scope_stack: &[ScopeId]) {
         if let Some(id) = &node.id {
-            self.insert_identifier(id);
+            self.insert_identifier(id, true);
         }
     }
 }
@@ -107,6 +131,7 @@ pub fn build_identifier_loc_index(
 
     let mut visitor = IdentifierLocVisitor {
         index: HashMap::new(),
+        current_opening_element_loc: None,
     };
     let mut walker = AstWalker::with_initial_scope(scope_info, func_scope);
 
