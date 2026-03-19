@@ -10,15 +10,15 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1630/1636)
-InferMutationAliasingEffects: partial (1609/1630)
+AnalyseFunctions: partial (1636/1642)
+InferMutationAliasingEffects: partial (1613/1636)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1609/1609)
-PruneMaybeThrows (2nd): complete (1762/1762)
-InferMutationAliasingRanges: partial (1591/1609)
-InferReactivePlaces: partial (1526/1591)
-RewriteInstructionKindsBasedOnReassignment: partial (1500/1526)
-InferReactiveScopeVariables: complete (1500/1500)
+DeadCodeElimination: complete (1613/1613)
+PruneMaybeThrows (2nd): complete (1764/1764)
+InferMutationAliasingRanges: partial (1594/1613)
+InferReactivePlaces: partial (1528/1594)
+RewriteInstructionKindsBasedOnReassignment: partial (1502/1528)
+InferReactiveScopeVariables: complete (1502/1502)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -190,3 +190,10 @@ Fixed 6 of the top 10 correctness bugs identified in the port fidelity review
 - merge_consecutive_blocks.rs: recursive merge into inner FunctionExpression/ObjectMethod.
 - infer_types.rs: context variable places on inner functions now type-resolved.
 Overall 1566→1566 passing (+1 net after recount with updated baseline).
+
+## 20260319-164422 Fix InferMutationAliasingRanges FunctionExpression/ObjectMethod operand handling
+
+Added FunctionExpression and ObjectMethod arms to apply_operand_effects in
+infer_mutation_aliasing_ranges.rs. Context variables of inner functions now get
+their mutableRange.start fixup applied, preventing invalid [0:N] ranges.
+Overall 1566→1568 passing (+2).

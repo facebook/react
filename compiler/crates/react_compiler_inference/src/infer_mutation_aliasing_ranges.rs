@@ -1515,6 +1515,38 @@ fn apply_operand_effects(
         InstructionValue::FinishMemoize { decl, .. } => {
             apply(decl, env);
         }
+        InstructionValue::FunctionExpression { lowered_func, .. }
+        | InstructionValue::ObjectMethod { lowered_func, .. } => {
+            // Context variables of inner functions are operands of the
+            // FunctionExpression/ObjectMethod instruction. We need to apply
+            // the mutable range fixup and effect assignment to them.
+            // The context Places live in env.functions[func_id].context.
+            let func_id = lowered_func.func;
+            let ctx_ids: Vec<IdentifierId> = env.functions[func_id.0 as usize]
+                .context
+                .iter()
+                .map(|c| c.identifier)
+                .collect();
+            for ctx_id in &ctx_ids {
+                // Fix up mutable range start
+                let ident = &env.identifiers[ctx_id.0 as usize];
+                if ident.mutable_range.end > eval_order
+                    && ident.mutable_range.start == EvaluationOrder(0)
+                {
+                    env.identifiers[ctx_id.0 as usize].mutable_range.start = eval_order;
+                }
+                // Apply effect
+                if let Some(&effect) = operand_effects.get(ctx_id) {
+                    // Update the context Place's effect in the inner function
+                    let inner_func = &mut env.functions[func_id.0 as usize];
+                    for ctx_place in &mut inner_func.context {
+                        if ctx_place.identifier == *ctx_id {
+                            ctx_place.effect = effect;
+                        }
+                    }
+                }
+            }
+        }
         _ => {}
     }
 }
