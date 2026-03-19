@@ -10,12 +10,12 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1104/1108)
-InferMutationAliasingEffects: partial (1102/1104)
+AnalyseFunctions: partial (1234/1240)
+InferMutationAliasingEffects: partial (1218/1234)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1102/1102)
-PruneMaybeThrows (2nd): todo
-InferMutationAliasingRanges: todo
+DeadCodeElimination: complete (1218/1218)
+PruneMaybeThrows (2nd): complete (1690/1690)
+InferMutationAliasingRanges: partial (1181/1218)
 InferReactivePlaces: todo
 RewriteInstructionKindsBasedOnReassignment: todo
 InferReactiveScopeVariables: todo
@@ -132,3 +132,11 @@ Remaining 549 failures mostly from inner function analysis needing sub-passes.
 Ported DeadCodeElimination (#14) from TypeScript into react_compiler_optimization crate.
 Wired into pipeline and inner function analysis (lower_with_mutation_aliasing).
 DCE 1102/1102, 0 failures. Overall 1168/1717.
+
+## 20260319-041553 Port PruneMaybeThrows (2nd) and InferMutationAliasingRanges
+
+Added second PruneMaybeThrows call (#15) to pipeline.
+Ported InferMutationAliasingRanges (#16) — computes mutable ranges, Place effects,
+and function-level effects. Wired into pipeline and inner function analysis.
+InferMutationAliasingRanges 1181/1218 (37 failures from unported inferReactiveScopeVariables).
+Overall 1247/1717 (+79).

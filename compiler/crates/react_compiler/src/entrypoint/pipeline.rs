@@ -215,6 +215,21 @@ pub fn compile_fn(
     let debug_dce = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("DeadCodeElimination", debug_dce));
 
+    // Second PruneMaybeThrows call (matches TS Pipeline.ts position #15)
+    react_compiler_optimization::prune_maybe_throws(&mut hir).map_err(|diag| {
+        let mut err = CompilerError::new();
+        err.push_diagnostic(diag);
+        err
+    })?;
+
+    let debug_prune2 = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune2));
+
+    react_compiler_inference::infer_mutation_aliasing_ranges(&mut hir, &mut env, false);
+
+    let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

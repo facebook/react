@@ -102,10 +102,10 @@ impl<'a> DebugPrinter<'a> {
                     into.identifier.0, receiver.identifier.0, function.identifier.0,
                     mutates_function, args_str.join(", "))
             }
-            AliasingEffect::CreateFunction { captures, function_id, into } => {
+            AliasingEffect::CreateFunction { captures, function_id: _, into } => {
                 let cap_str: Vec<String> = captures.iter().map(|p| p.identifier.0.to_string()).collect();
-                format!("CreateFunction {{ into: {}, function: {}, captures: [{}] }}",
-                    into.identifier.0, function_id.0, cap_str.join(", "))
+                format!("CreateFunction {{ into: {}, captures: [{}] }}",
+                    into.identifier.0, cap_str.join(", "))
             }
             AliasingEffect::MutateFrozen { place, error } => {
                 format!("MutateFrozen {{ place: {}, reason: {:?} }}", place.identifier.0, error.reason)
