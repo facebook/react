@@ -16,9 +16,11 @@
 
 use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
+use std::collections::HashSet;
+
 use react_compiler_hir::{
-    BlockId, Effect, EvaluationOrder, FunctionId, HirFunction, IdentifierId, InstructionValue,
-    MutableRange, Place, ReactFunctionType, HIR,
+    AliasingEffect, BlockId, Effect, EvaluationOrder, FunctionId, HirFunction, IdentifierId,
+    InstructionValue, MutableRange, Place, ReactFunctionType, HIR,
 };
 
 /// Analyse all nested function expressions and object methods in `func`.
@@ -108,13 +110,107 @@ where
 
     // TODO: The following sub-passes are not yet ported:
     // deadCodeElimination(fn);
-    // let functionEffects = inferMutationAliasingRanges(fn, {isFunctionExpression: true});
     // rewriteInstructionKindsBasedOnReassignment(fn);
     // inferReactiveScopeVariables(fn);
-    // fn.aliasingEffects = functionEffects;
+
+    // Collect function effects from instruction effects.
+    // Ideally this would come from inferMutationAliasingRanges, but since that
+    // pass isn't ported yet, we collect effects directly from instructions.
+    // This is an approximation that gives downstream passes something to work with.
+    let mut function_effects: Vec<AliasingEffect> = Vec::new();
+    for (_block_id, block) in &func.body.blocks {
+        for instr_id in &block.instructions {
+            let instr = &func.instructions[instr_id.0 as usize];
+            if let Some(ref effects) = instr.effects {
+                function_effects.extend(effects.iter().cloned());
+            }
+        }
+        // Also collect terminal effects
+        if let Some(ref effects) = terminal_effects(&block.terminal) {
+            function_effects.extend(effects.iter().cloned());
+        }
+    }
+    func.aliasing_effects = Some(function_effects.clone());
+
+    // Phase 3: Populate the Effect of each context variable to use in inferring
+    // the outer function. Corresponds to TS Phase 2 in lowerWithMutationAliasing.
+    //
+    // We use instruction-level effects as an approximation for what
+    // inferMutationAliasingRanges would return. We only consider effects that
+    // directly reference a context variable's identifier to avoid over-counting
+    // internal operations as captures.
+    let context_ids: HashSet<IdentifierId> = func.context.iter()
+        .map(|p| p.identifier)
+        .collect();
+
+    // Determine which context variables are captured or mutated.
+    // Since we don't have inferMutationAliasingRanges, we approximate by
+    // looking at instruction effects. We only consider:
+    // - Direct mutations of context variable identifiers
+    // - Capture/Alias/MaybeAlias where a context variable is the source
+    //   (matching what inferMutationAliasingRanges would report)
+    // - MutateFrozen/MutateGlobal of context variables
+    let mut captured_or_mutated: HashSet<IdentifierId> = HashSet::new();
+    for effect in &function_effects {
+        match effect {
+            AliasingEffect::Mutate { value, .. }
+            | AliasingEffect::MutateTransitive { value }
+            | AliasingEffect::MutateTransitiveConditionally { value }
+            | AliasingEffect::MutateConditionally { value } => {
+                if context_ids.contains(&value.identifier) {
+                    captured_or_mutated.insert(value.identifier);
+                }
+            }
+            AliasingEffect::MutateFrozen { place, .. }
+            | AliasingEffect::MutateGlobal { place, .. } => {
+                if context_ids.contains(&place.identifier) {
+                    captured_or_mutated.insert(place.identifier);
+                }
+            }
+            AliasingEffect::Capture { from, .. }
+            | AliasingEffect::Alias { from, .. }
+            | AliasingEffect::MaybeAlias { from, .. }
+            | AliasingEffect::CreateFrom { from, .. }
+            | AliasingEffect::Assign { from, .. } => {
+                if context_ids.contains(&from.identifier) {
+                    captured_or_mutated.insert(from.identifier);
+                }
+            }
+            AliasingEffect::Impure { .. }
+            | AliasingEffect::Render { .. }
+            | AliasingEffect::CreateFunction { .. }
+            | AliasingEffect::Create { .. }
+            | AliasingEffect::Freeze { .. }
+            | AliasingEffect::ImmutableCapture { .. }
+            | AliasingEffect::Apply { .. } => {
+                // no-op
+            }
+        }
+    }
+
+    for operand in &mut func.context {
+        if captured_or_mutated.contains(&operand.identifier)
+            || operand.effect == Effect::Capture
+        {
+            operand.effect = Effect::Capture;
+        } else {
+            operand.effect = Effect::Read;
+        }
+    }
 
     // Log the inner function's state (mirrors TS: fn.env.logger?.debugLogIRs)
     debug_logger(func, env);
+}
+
+/// Extract effects from a terminal, if any.
+fn terminal_effects(terminal: &react_compiler_hir::Terminal) -> Option<Vec<AliasingEffect>> {
+    match terminal {
+        react_compiler_hir::Terminal::Return { effects, .. }
+        | react_compiler_hir::Terminal::MaybeThrow { effects, .. } => {
+            effects.clone()
+        }
+        _ => None,
+    }
 }
 
 /// Create a placeholder HirFunction for temporarily swapping an inner function

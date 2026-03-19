@@ -10,8 +10,8 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1108/1651)
-InferMutationAliasingEffects: todo
+AnalyseFunctions: partial (1104/1108)
+InferMutationAliasingEffects: partial (902/1104)
 OptimizeForSSR: todo
 DeadCodeElimination: todo
 PruneMaybeThrows (2nd): todo
@@ -111,3 +111,11 @@ Ported AnalyseFunctions pass (#11) from TypeScript. Created react_compiler_infer
 Pass skeleton is correct but inner function analysis depends on sub-passes not yet ported.
 1108/1651 passing (543 crash during inner function analysis).
 Commit: 92cc807a9f
+
+## 20260319-014600 Fix InferMutationAliasingEffects effect inference bugs
+
+Fixed legacy signature effects, inner function aliasingEffects population (Phase 2/3),
+context variable effect classification, and built-in method calleeEffects in globals.rs.
+Added mutableOnlyIfOperandsAreMutable optimization for Array methods.
+968 passed (+12), AnalyseFunctions 1104/1108, InferMutationAliasingEffects 902/1104.
+Remaining failures need inferMutationAliasingRanges and aliasing config porting.

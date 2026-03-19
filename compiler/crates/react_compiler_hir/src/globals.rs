@@ -211,13 +211,30 @@ fn pure_primitive_fn(shapes: &mut ShapeRegistry) -> Type {
 fn build_array_shape(shapes: &mut ShapeRegistry) {
     let index_of = pure_primitive_fn(shapes);
     let includes = pure_primitive_fn(shapes);
-    let pop = simple_function(shapes, Vec::new(), None, Type::Poly, ValueKind::Mutable);
-    let at = simple_function(
+    let pop = add_function(
         shapes,
-        vec![Effect::Read],
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Store,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
         None,
-        Type::Poly,
-        ValueKind::Mutable,
+        false,
+    );
+    let at = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
     );
     let concat = add_function(
         shapes,
@@ -436,12 +453,18 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
-    let push = simple_function(
+    let push = add_function(
         shapes,
         Vec::new(),
-        Some(Effect::Capture),
-        Type::Primitive,
-        ValueKind::Primitive,
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Capture),
+            callee_effect: Effect::Store,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
     );
     let length = Type::Primitive;
     let reverse = add_function(
@@ -488,22 +511,55 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
-    let unshift = simple_function(
+    let unshift = add_function(
         shapes,
         Vec::new(),
-        Some(Effect::Capture),
-        Type::Primitive,
-        ValueKind::Primitive,
-    );
-    let keys = simple_function(
-        shapes,
-        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Capture),
+            callee_effect: Effect::Store,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
         None,
-        Type::Poly,
-        ValueKind::Mutable,
+        false,
     );
-    let values = keys.clone();
-    let entries = keys.clone();
+    let keys = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let values = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let entries = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let to_string = pure_primitive_fn(shapes);
     let last_index_of = pure_primitive_fn(shapes);
 
@@ -595,9 +651,42 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
-    let values = simple_function(shapes, Vec::new(), None, Type::Poly, ValueKind::Mutable);
-    let keys = values.clone();
-    let entries = values.clone();
+    let values = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let keys = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let entries = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
 
     add_object(
         shapes,
@@ -617,12 +706,30 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
 
 fn build_map_shape(shapes: &mut ShapeRegistry) {
     let has = pure_primitive_fn(shapes);
-    let get = simple_function(
+    let get = add_function(
         shapes,
-        vec![Effect::Read],
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
         None,
-        Type::Poly,
-        ValueKind::Mutable,
+        false,
+    );
+    let clear = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Store,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
     );
     let set = add_function(
         shapes,
@@ -667,9 +774,42 @@ fn build_map_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
-    let values = simple_function(shapes, Vec::new(), None, Type::Poly, ValueKind::Mutable);
-    let keys = values.clone();
-    let entries = values.clone();
+    let values = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let keys = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let entries = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
 
     add_object(
         shapes,
@@ -678,6 +818,7 @@ fn build_map_shape(shapes: &mut ShapeRegistry) {
             ("has".to_string(), has),
             ("get".to_string(), get),
             ("set".to_string(), set),
+            ("clear".to_string(), clear),
             ("delete".to_string(), delete),
             ("size".to_string(), size),
             ("forEach".to_string(), for_each),

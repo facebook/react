@@ -1893,6 +1893,30 @@ fn compute_effects_for_legacy_signature(
         });
     }
 
+    // If the function is mutable only if operands are mutable, and all
+    // arguments are immutable/non-mutating, short-circuit with simple aliasing.
+    if signature.mutable_only_if_operands_are_mutable
+        && are_arguments_immutable_and_non_mutating(state, args, env)
+    {
+        effects.push(AliasingEffect::Alias {
+            from: receiver.clone(),
+            into: lvalue.clone(),
+        });
+        for arg in args {
+            match arg {
+                PlaceOrSpreadOrHole::Hole => continue,
+                PlaceOrSpreadOrHole::Place(place)
+                | PlaceOrSpreadOrHole::Spread(react_compiler_hir::SpreadPattern { place }) => {
+                    effects.push(AliasingEffect::ImmutableCapture {
+                        from: place.clone(),
+                        into: lvalue.clone(),
+                    });
+                }
+            }
+        }
+        return effects;
+    }
+
     let mut stores: Vec<Place> = Vec::new();
     let mut captures: Vec<Place> = Vec::new();
 
@@ -1999,6 +2023,58 @@ fn get_argument_effect(sig_effect: Effect, is_spread: bool) -> Effect {
     } else {
         Effect::ConditionallyMutateIterator
     }
+}
+
+/// Returns true if all of the arguments are both non-mutable (immutable or frozen)
+/// _and_ are not functions which might mutate their arguments.
+///
+/// Corresponds to TS `areArgumentsImmutableAndNonMutating`.
+fn are_arguments_immutable_and_non_mutating(
+    state: &InferenceState,
+    args: &[PlaceOrSpreadOrHole],
+    env: &Environment,
+) -> bool {
+    for arg in args {
+        match arg {
+            PlaceOrSpreadOrHole::Hole => continue,
+            PlaceOrSpreadOrHole::Place(place)
+            | PlaceOrSpreadOrHole::Spread(react_compiler_hir::SpreadPattern { place }) => {
+                // Check if it's a function type with a known signature
+                let is_place = matches!(arg, PlaceOrSpreadOrHole::Place(_));
+                if is_place {
+                    let ty = &env.types[env.identifiers[place.identifier.0 as usize].type_.0 as usize];
+                    if let Type::Function { .. } = ty {
+                        let fn_shape = env.get_function_signature(ty);
+                        if let Some(fn_sig) = fn_shape {
+                            let has_mutable_param = fn_sig.positional_params.iter()
+                                .any(|e| is_known_mutable_effect(*e));
+                            let has_mutable_rest = fn_sig.rest_param
+                                .map_or(false, |e| is_known_mutable_effect(e));
+                            return !has_mutable_param && !has_mutable_rest;
+                        }
+                    }
+                }
+
+                let kind = state.kind(place.identifier);
+                match kind.kind {
+                    ValueKind::Primitive | ValueKind::Frozen => {
+                        // Immutable values are ok, continue checking
+                    }
+                    _ => {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn is_known_mutable_effect(effect: Effect) -> bool {
+    matches!(
+        effect,
+        Effect::Store | Effect::Mutate | Effect::ConditionallyMutate
+    )
 }
 
 // =============================================================================
