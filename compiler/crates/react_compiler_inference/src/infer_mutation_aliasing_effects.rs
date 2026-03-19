@@ -1546,7 +1546,7 @@ fn compute_signature_for_instruction(
             let mutation_reason: Option<MutationReason> = {
                 let obj_ty = &env.types[env.identifiers[object.identifier.0 as usize].type_.0 as usize];
                 if let react_compiler_hir::PropertyLiteral::String(prop_name) = property {
-                    if prop_name == "current" && matches!(obj_ty, Type::Poly) {
+                    if prop_name == "current" && matches!(obj_ty, Type::TypeVar { .. }) {
                         Some(MutationReason::AssignCurrentProperty)
                     } else {
                         None

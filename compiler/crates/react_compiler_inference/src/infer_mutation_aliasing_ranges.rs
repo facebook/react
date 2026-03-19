@@ -699,16 +699,17 @@ pub fn infer_mutation_aliasing_ranges(
         }
     }
 
-    // Collect function effects for params and context vars
+    // Collect function effects for context vars and params
+    // NOTE: TS iterates [...fn.context, ...fn.params] — context first, then params
+    for ctx in &func.context {
+        collect_param_effects(&state, ctx, &mut function_effects);
+    }
     for param in &func.params {
         let place = match param {
             react_compiler_hir::ParamPattern::Place(p) => p,
             react_compiler_hir::ParamPattern::Spread(s) => &s.place,
         };
         collect_param_effects(&state, place, &mut function_effects);
-    }
-    for ctx in &func.context {
-        collect_param_effects(&state, ctx, &mut function_effects);
     }
 
     // Set effect on mutated params/context vars
@@ -1688,8 +1689,16 @@ fn set_terminal_operand_effects_read(terminal: &mut react_compiler_hir::Terminal
         | react_compiler_hir::Terminal::Branch { test, .. } => {
             test.effect = Effect::Read;
         }
-        react_compiler_hir::Terminal::Switch { test, .. } => {
+        react_compiler_hir::Terminal::Switch { test, cases, .. } => {
             test.effect = Effect::Read;
+            for case_ in cases {
+                if let Some(ref mut case_test) = case_.test {
+                    case_test.effect = Effect::Read;
+                }
+            }
+        }
+        react_compiler_hir::Terminal::Try { handler_binding: Some(binding), .. } => {
+            binding.effect = Effect::Read;
         }
         _ => {}
     }

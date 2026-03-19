@@ -57,7 +57,7 @@ impl<'a> DebugPrinter<'a> {
             AliasingEffect::Mutate { value, reason } => {
                 match reason {
                     Some(react_compiler_hir::MutationReason::AssignCurrentProperty) => {
-                        format!("Mutate {{ value: {}, reason: assign-current-property }}", value.identifier.0)
+                        format!("Mutate {{ value: {}, reason: AssignCurrentProperty }}", value.identifier.0)
                     }
                     None => format!("Mutate {{ value: {} }}", value.identifier.0),
                 }
