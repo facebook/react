@@ -187,7 +187,7 @@ After the subagent completes:
 1. Re-run `bash compiler/scripts/test-rust-port.sh --json 2>/dev/null` to get updated counts and frontier
 2. If still failing, launch the subagent again with the updated failure list (max 3 rounds total)
 3. Once clean (or after 3 rounds), update the orchestrator log Status section and add a log entry
-4. Go to Step 4 (Review)
+4. Go to Step 4 (Review and Commit)
 
 #### 3b. PORT mode (frontier is the next unported pass)
 
@@ -212,45 +212,24 @@ For standard passes, launch a single `general-purpose` subagent with these instr
 After the subagent completes:
 1. Re-run `bash compiler/scripts/test-rust-port.sh --json 2>/dev/null` to get updated counts and frontier
 2. Update the orchestrator log Status section and add a log entry
-3. Go to Step 4
+3. Go to Step 4 (Review and Commit)
 
-### Step 4: Review
+### Step 4: Review and Commit
 
-Launch a `general-purpose` subagent with these instructions:
+Use `/compiler-commit <title>` to review, verify, and commit the changes. This skill:
+1. Runs `/compiler-verify` (tests, lint, format)
+2. Runs `/compiler-review` on uncommitted changes — stops if issues are found
+3. Updates the orchestrator log with test results
+4. Commits with the correct `[rust-compiler]` prefix
 
-> Review the uncommitted Rust port changes for correctness and convention compliance.
->
-> 1. Run `git diff HEAD -- compiler/crates/` to get the diff
-> 2. Read `compiler/docs/rust-port/rust-port-architecture.md` for conventions
-> 3. For each changed Rust file, find and read the corresponding TypeScript source
-> 4. Check for: port fidelity (logic matches TS), convention compliance (arenas, IDs, two-phase patterns), error handling, naming
-> 5. If issues are found, fix them directly, then run `bash compiler/scripts/test-rust-port.sh` (no args) to confirm tests still pass
-> 6. Report: list of issues found and whether they were fixed, final summary line from test-rust-port
+Choose a descriptive commit title based on what the subagent did (e.g., "Port AnalyseFunctions pass" or "Fix SSA phi node ordering").
 
-After the subagent completes:
-1. If it reports unfixed issues, launch one more subagent round to address them
-2. Update the orchestrator log if test counts changed
-
-### Step 5: Commit
-
-Launch a `general-purpose` subagent with these instructions:
-
-> Verify and commit the compiler changes.
->
-> 1. Run `bash compiler/scripts/test-rust-port.sh` (no args) to confirm tests pass — report the summary line
-> 2. Run `yarn prettier-all` from the repo root to format
-> 3. Stage only the relevant changed files by name (do NOT use `git add -A` or `git add .`)
-> 4. Commit with prefix `[rust-compiler]` and the title: `<title>`
-> 5. Use a heredoc for the commit message with a 1-3 sentence summary
-> 6. Do NOT push
-> 7. Report: commit hash, files committed, summary line from test-rust-port
-
-After the subagent completes:
-1. Parse its results for the commit hash
+After committing:
+1. Parse the commit hash from the output
 2. Add a log entry noting the commit
 3. Work continues — commits are checkpoints, not stopping points
 
-### Step 6: Loop
+### Step 5: Loop
 
 Go back to Step 1. The loop continues until:
 - All hir passes are ported and clean (up to #31)
