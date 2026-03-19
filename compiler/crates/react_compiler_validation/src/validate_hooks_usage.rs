@@ -414,11 +414,18 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) {
 }
 
 /// Visit a function expression to check for hook calls inside it.
+/// Processes instructions in order, visiting nested functions immediately
+/// (before processing subsequent calls) to match TS error ordering.
 fn visit_function_expression(env: &mut Environment, func_id: FunctionId) {
-    // Collect data we need from the inner function to avoid borrow issues.
+    // Collect items in instruction order to process them sequentially.
+    // Each item is either a call to check or a nested function to visit.
+    enum Item {
+        Call(IdentifierId, Option<SourceLocation>),
+        NestedFunc(FunctionId),
+    }
+
     let func = &env.functions[func_id.0 as usize];
-    let mut calls: Vec<(IdentifierId, Option<SourceLocation>)> = Vec::new();
-    let mut nested_funcs: Vec<FunctionId> = Vec::new();
+    let mut items: Vec<Item> = Vec::new();
 
     for (_block_id, block) in &func.body.blocks {
         for &instr_id in &block.instructions {
@@ -426,45 +433,49 @@ fn visit_function_expression(env: &mut Environment, func_id: FunctionId) {
             match &instr.value {
                 InstructionValue::ObjectMethod { lowered_func, .. }
                 | InstructionValue::FunctionExpression { lowered_func, .. } => {
-                    nested_funcs.push(lowered_func.func);
+                    items.push(Item::NestedFunc(lowered_func.func));
                 }
                 InstructionValue::CallExpression { callee, .. } => {
-                    calls.push((callee.identifier, callee.loc));
+                    items.push(Item::Call(callee.identifier, callee.loc));
                 }
                 InstructionValue::MethodCall { property, .. } => {
-                    calls.push((property.identifier, property.loc));
+                    items.push(Item::Call(property.identifier, property.loc));
                 }
                 _ => {}
             }
         }
     }
 
-    // Now process calls and nested funcs
-    for (identifier_id, loc) in calls {
-        let identifier = &env.identifiers[identifier_id.0 as usize];
-        let ty = &env.types[identifier.type_.0 as usize];
-        let hook_kind = env.get_hook_kind_for_type(ty).cloned();
-        if let Some(hook_kind) = hook_kind {
-            let description = format!(
-                "Cannot call {} within a function expression",
-                if hook_kind == HookKind::Custom {
-                    "hook"
-                } else {
-                    hook_kind_display(&hook_kind)
+    // Process items in instruction order (matching TS which visits nested
+    // functions immediately before processing subsequent calls)
+    for item in items {
+        match item {
+            Item::Call(identifier_id, loc) => {
+                let identifier = &env.identifiers[identifier_id.0 as usize];
+                let ty = &env.types[identifier.type_.0 as usize];
+                let hook_kind = env.get_hook_kind_for_type(ty).cloned();
+                if let Some(hook_kind) = hook_kind {
+                    let description = format!(
+                        "Cannot call {} within a function expression",
+                        if hook_kind == HookKind::Custom {
+                            "hook"
+                        } else {
+                            hook_kind_display(&hook_kind)
+                        }
+                    );
+                    env.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::Hooks,
+                        reason: "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)".to_string(),
+                        description: Some(description),
+                        loc,
+                        suggestions: None,
+                    });
                 }
-            );
-            env.record_error(CompilerErrorDetail {
-                category: ErrorCategory::Hooks,
-                reason: "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)".to_string(),
-                description: Some(description),
-                loc,
-                suggestions: None,
-            });
+            }
+            Item::NestedFunc(nested_func_id) => {
+                visit_function_expression(env, nested_func_id);
+            }
         }
-    }
-
-    for nested_func_id in nested_funcs {
-        visit_function_expression(env, nested_func_id);
     }
 }
 

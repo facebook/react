@@ -10,17 +10,18 @@
 
 use std::collections::HashMap;
 
-use react_compiler_hir::environment::Environment;
+use react_compiler_hir::environment::{Environment, is_hook_name};
 use react_compiler_hir::object_shape::{
     ShapeRegistry,
     BUILT_IN_PROPS_ID, BUILT_IN_ARRAY_ID, BUILT_IN_FUNCTION_ID, BUILT_IN_JSX_ID,
     BUILT_IN_OBJECT_ID, BUILT_IN_USE_REF_ID, BUILT_IN_REF_VALUE_ID, BUILT_IN_MIXED_READONLY_ID,
+    BUILT_IN_SET_STATE_ID,
 };
 use react_compiler_hir::{
     ArrayPatternElement, BinaryOperator, FunctionId, HirFunction, Identifier, IdentifierId,
     IdentifierName, InstructionId, InstructionKind, InstructionValue, JsxAttribute, LoweredFunction,
-    ObjectPropertyKey, ObjectPropertyOrSpread, ParamPattern, Pattern,
-    PropertyLiteral, PropertyNameKind, ReactFunctionType, Terminal, Type, TypeId,
+    NonLocalBinding, ObjectPropertyKey, ObjectPropertyOrSpread, ParamPattern, Pattern,
+    PropertyLiteral, PropertyNameKind, ReactFunctionType, SourceLocation, Terminal, Type, TypeId,
 };
 use react_compiler_ssa::enter_ssa::placeholder_function;
 
@@ -31,8 +32,17 @@ use react_compiler_ssa::enter_ssa::placeholder_function;
 pub fn infer_types(func: &mut HirFunction, env: &mut Environment) {
     let enable_treat_ref_like_identifiers_as_refs =
         env.config.enable_treat_ref_like_identifiers_as_refs;
-    let mut unifier = Unifier::new(enable_treat_ref_like_identifiers_as_refs);
+    let enable_treat_set_identifiers_as_state_setters =
+        env.config.enable_treat_set_identifiers_as_state_setters;
+    // Pre-compute custom hook type for property resolution fallback
+    let custom_hook_type = env.get_custom_hook_type_opt();
+    let mut unifier = Unifier::new(
+        enable_treat_ref_like_identifiers_as_refs,
+        custom_hook_type,
+        enable_treat_set_identifiers_as_state_setters,
+    );
     generate(func, env, &mut unifier);
+
     apply_function(
         func,
         &env.functions,
@@ -59,6 +69,71 @@ fn make_type(types: &mut Vec<Type>) -> Type {
     Type::TypeVar { id }
 }
 
+/// Pre-resolve LoadGlobal types for a single function's instructions.
+fn pre_resolve_globals(
+    func: &HirFunction,
+    function_key: u32,
+    env: &mut Environment,
+    global_types: &mut HashMap<(u32, InstructionId), Type>,
+) {
+    for &instr_id in func.body.blocks.values().flat_map(|b| &b.instructions) {
+        let instr = &func.instructions[instr_id.0 as usize];
+        if let InstructionValue::LoadGlobal { binding, loc, .. } = &instr.value {
+            if let Some(global_type) = env.get_global_declaration(binding, *loc) {
+                global_types.insert((function_key, instr_id), global_type);
+            }
+        }
+    }
+}
+
+/// Recursively pre-resolve LoadGlobal types for an inner function and its children.
+fn pre_resolve_globals_recursive(
+    func_id: FunctionId,
+    env: &mut Environment,
+    global_types: &mut HashMap<(u32, InstructionId), Type>,
+) {
+    // Collect LoadGlobal bindings and child function IDs in one pass to avoid
+    // borrow conflicts (we need &env.functions to read, then &mut env for
+    // get_global_declaration).
+    let inner = &env.functions[func_id.0 as usize];
+    let mut load_globals: Vec<(InstructionId, NonLocalBinding, Option<SourceLocation>)> = Vec::new();
+    let mut child_func_ids: Vec<FunctionId> = Vec::new();
+
+    for block in inner.body.blocks.values() {
+        for &instr_id in &block.instructions {
+            let instr = &inner.instructions[instr_id.0 as usize];
+            match &instr.value {
+                InstructionValue::LoadGlobal { binding, loc, .. } => {
+                    load_globals.push((instr_id, binding.clone(), *loc));
+                }
+                InstructionValue::FunctionExpression {
+                    lowered_func: LoweredFunction { func: fid },
+                    ..
+                }
+                | InstructionValue::ObjectMethod {
+                    lowered_func: LoweredFunction { func: fid },
+                    ..
+                } => {
+                    child_func_ids.push(*fid);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Now resolve globals (no longer borrowing env.functions)
+    for (instr_id, binding, loc) in load_globals {
+        if let Some(global_type) = env.get_global_declaration(&binding, loc) {
+            global_types.insert((func_id.0, instr_id), global_type);
+        }
+    }
+
+    // Recurse into child functions
+    for child_id in child_func_ids {
+        pre_resolve_globals_recursive(child_id, env, global_types);
+    }
+}
+
 fn is_primitive_binary_op(op: &BinaryOperator) -> bool {
     matches!(
         op,
@@ -81,14 +156,28 @@ fn is_primitive_binary_op(op: &BinaryOperator) -> bool {
 }
 
 /// Resolve a property type from the shapes registry.
+/// If `custom_hook_type` is provided and the property name looks like a hook,
+/// it will be used as a fallback when no matching property is found (matching
+/// TS `getPropertyType` behavior).
 fn resolve_property_type(
     shapes: &ShapeRegistry,
     resolved_object: &Type,
     property_name: &PropertyNameKind,
+    custom_hook_type: Option<&Type>,
 ) -> Option<Type> {
     let shape_id = match resolved_object {
         Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
-        _ => return None,
+        _ => {
+            // No shape, but if property name is hook-like, return hook type
+            if let Some(hook_type) = custom_hook_type {
+                if let PropertyNameKind::Literal { value: PropertyLiteral::String(s) } = property_name {
+                    if is_hook_name(s) {
+                        return Some(hook_type.clone());
+                    }
+                }
+            }
+            return None;
+        }
     };
     let shape_id = shape_id?;
     let shape = shapes.get(shape_id)?;
@@ -99,7 +188,16 @@ fn resolve_property_type(
                 .properties
                 .get(s.as_str())
                 .or_else(|| shape.properties.get("*"))
-                .cloned(),
+                .cloned()
+                // Hook-name fallback: if property is not found in shape but looks
+                // like a hook name, return the custom hook type
+                .or_else(|| {
+                    if is_hook_name(s) {
+                        custom_hook_type.cloned()
+                    } else {
+                        None
+                    }
+                }),
             PropertyLiteral::Number(_) => shape.properties.get("*").cloned(),
         },
         PropertyNameKind::Computed { .. } => shape.properties.get("*").cloned(),
@@ -200,16 +298,28 @@ fn generate(func: &HirFunction, env: &mut Environment, unifier: &mut Unifier) {
         }
     }
 
-    // Pre-resolve LoadGlobal types. We do this before the instruction loop
-    // because get_global_declaration needs &mut env, but generate_instruction_types
-    // takes split borrows on env fields.
-    let mut global_types: HashMap<InstructionId, Type> = HashMap::new();
+    // Pre-resolve LoadGlobal types for all functions (outer + inner). We do
+    // this before the instruction loop because get_global_declaration needs
+    // &mut env, but generate_instruction_types takes split borrows on env fields.
+    // The key is (function_key, InstructionId) where function_key is u32::MAX
+    // for the outer function and FunctionId.0 for inner functions.
+    let mut global_types: HashMap<(u32, InstructionId), Type> = HashMap::new();
+    pre_resolve_globals(func, u32::MAX, env, &mut global_types);
+    // Also pre-resolve inner functions recursively
     for &instr_id in func.body.blocks.values().flat_map(|b| &b.instructions) {
         let instr = &func.instructions[instr_id.0 as usize];
-        if let InstructionValue::LoadGlobal { binding, loc, .. } = &instr.value {
-            if let Some(global_type) = env.get_global_declaration(binding, *loc) {
-                global_types.insert(instr_id, global_type);
+        match &instr.value {
+            InstructionValue::FunctionExpression {
+                lowered_func: LoweredFunction { func: func_id },
+                ..
             }
+            | InstructionValue::ObjectMethod {
+                lowered_func: LoweredFunction { func: func_id },
+                ..
+            } => {
+                pre_resolve_globals_recursive(*func_id, env, &mut global_types);
+            }
+            _ => {}
         }
     }
 
@@ -235,6 +345,7 @@ fn generate(func: &HirFunction, env: &mut Environment, unifier: &mut Unifier) {
             generate_instruction_types(
                 instr,
                 instr_id,
+                u32::MAX,
                 &env.identifiers,
                 &mut env.types,
                 &mut env.functions,
@@ -267,7 +378,7 @@ fn generate_for_function_id(
     types: &mut Vec<Type>,
     functions: &mut Vec<HirFunction>,
     names: &mut HashMap<IdentifierId, String>,
-    global_types: &HashMap<InstructionId, Type>,
+    global_types: &HashMap<(u32, InstructionId), Type>,
     shapes: &ShapeRegistry,
     unifier: &mut Unifier,
 ) {
@@ -318,7 +429,7 @@ fn generate_for_function_id(
 
         for &instr_id in &block.instructions {
             let instr = &inner.instructions[instr_id.0 as usize];
-            generate_instruction_types(instr, instr_id, identifiers, types, functions, names, global_types, shapes, unifier);
+            generate_instruction_types(instr, instr_id, func_id.0, identifiers, types, functions, names, global_types, shapes, unifier);
         }
 
         if let Terminal::Return { ref value, .. } = block.terminal {
@@ -348,11 +459,12 @@ fn generate_for_function_id(
 fn generate_instruction_types(
     instr: &react_compiler_hir::Instruction,
     instr_id: InstructionId,
+    function_key: u32,
     identifiers: &[Identifier],
     types: &mut Vec<Type>,
     functions: &mut Vec<HirFunction>,
     names: &mut HashMap<IdentifierId, String>,
-    global_types: &HashMap<InstructionId, Type>,
+    global_types: &HashMap<(u32, InstructionId), Type>,
     shapes: &ShapeRegistry,
     unifier: &mut Unifier,
 ) {
@@ -425,19 +537,25 @@ fn generate_instruction_types(
 
         InstructionValue::LoadGlobal { .. } => {
             // Type was pre-resolved in generate() via env.get_global_declaration()
-            if let Some(global_type) = global_types.get(&instr_id) {
+            if let Some(global_type) = global_types.get(&(function_key, instr_id)) {
                 unifier.unify(left, global_type.clone());
             }
         }
 
         InstructionValue::CallExpression { callee, .. } => {
             let return_type = make_type(types);
-            // enableTreatSetIdentifiersAsStateSetters is skipped (treated as false)
+            let mut shape_id = None;
+            if unifier.enable_treat_set_identifiers_as_state_setters {
+                let name = get_name(names, callee.identifier);
+                if name.starts_with("set") {
+                    shape_id = Some(BUILT_IN_SET_STATE_ID.to_string());
+                }
+            }
             let callee_type = get_type(callee.identifier, identifiers);
             unifier.unify(
                 callee_type,
                 Type::Function {
-                    shape_id: None,
+                    shape_id,
                     return_type: Box::new(return_type.clone()),
                     is_constructor: false,
                 },
@@ -1065,13 +1183,21 @@ fn apply_instruction_operands(
 struct Unifier {
     substitutions: HashMap<TypeId, Type>,
     enable_treat_ref_like_identifiers_as_refs: bool,
+    enable_treat_set_identifiers_as_state_setters: bool,
+    custom_hook_type: Option<Type>,
 }
 
 impl Unifier {
-    fn new(enable_treat_ref_like_identifiers_as_refs: bool) -> Self {
+    fn new(
+        enable_treat_ref_like_identifiers_as_refs: bool,
+        custom_hook_type: Option<Type>,
+        enable_treat_set_identifiers_as_state_setters: bool,
+    ) -> Self {
         Unifier {
             substitutions: HashMap::new(),
             enable_treat_ref_like_identifiers_as_refs,
+            enable_treat_set_identifiers_as_state_setters,
+            custom_hook_type,
         }
     }
 
@@ -1124,6 +1250,7 @@ impl Unifier {
                     shapes,
                     &resolved_object,
                     property_name,
+                    self.custom_hook_type.as_ref(),
                 );
                 if let Some(property_type) = property_type {
                     self.unify_impl(t_a, property_type, Some(shapes));

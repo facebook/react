@@ -105,7 +105,16 @@ impl Environment {
             global_registry.insert(hook_name.clone(), hook_type);
         }
 
-        // TODO: enableCustomTypeDefinitionForReanimated — register reanimated module type.
+        // Register reanimated module type when enabled
+        let mut module_types: HashMap<String, Option<Global>> = HashMap::new();
+        if config.enable_custom_type_definition_for_reanimated {
+            let reanimated_module_type =
+                globals::get_reanimated_module_type(&mut shapes);
+            module_types.insert(
+                "react-native-reanimated".to_string(),
+                Some(reanimated_module_type),
+            );
+        }
 
         Self {
             next_block_id_counter: 0,
@@ -125,7 +134,7 @@ impl Environment {
                 .enable_preserve_existing_memoization_guarantees,
             globals: global_registry,
             shapes,
-            module_types: HashMap::new(),
+            module_types,
             default_nonmutating_hook: None,
             default_mutating_hook: None,
             config,
@@ -556,6 +565,12 @@ impl Environment {
             }
             self.default_mutating_hook.clone().unwrap()
         }
+    }
+
+    /// Public accessor for the custom hook type, used by InferTypes for
+    /// property resolution fallback when a property name looks like a hook.
+    pub fn get_custom_hook_type_opt(&mut self) -> Option<Global> {
+        Some(self.get_custom_hook_type())
     }
 
     /// Get a reference to the shapes registry.

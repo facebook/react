@@ -552,12 +552,20 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
 
 fn build_set_shape(shapes: &mut ShapeRegistry) {
     let has = pure_primitive_fn(shapes);
-    let add = simple_function(
+    let add = add_function(
         shapes,
-        vec![Effect::Capture],
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Capture],
+            callee_effect: Effect::Store,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_SET_ID.to_string()),
+            },
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
         None,
-        Type::Poly,
-        ValueKind::Mutable,
+        false,
     );
     let delete = add_function(
         shapes,
@@ -622,7 +630,9 @@ fn build_map_shape(shapes: &mut ShapeRegistry) {
         FunctionSignatureBuilder {
             positional_params: vec![Effect::Capture, Effect::Capture],
             callee_effect: Effect::Store,
-            return_type: Type::Poly,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_MAP_ID.to_string()),
+            },
             return_value_kind: ValueKind::Mutable,
             ..Default::default()
         },
@@ -680,12 +690,20 @@ fn build_map_shape(shapes: &mut ShapeRegistry) {
 
 fn build_weak_set_shape(shapes: &mut ShapeRegistry) {
     let has = pure_primitive_fn(shapes);
-    let add = simple_function(
+    let add = add_function(
         shapes,
-        vec![Effect::Capture],
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Capture],
+            callee_effect: Effect::Store,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_WEAK_SET_ID.to_string()),
+            },
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
         None,
-        Type::Poly,
-        ValueKind::Mutable,
+        false,
     );
     let delete = add_function(
         shapes,
@@ -727,7 +745,9 @@ fn build_weak_map_shape(shapes: &mut ShapeRegistry) {
         FunctionSignatureBuilder {
             positional_params: vec![Effect::Capture, Effect::Capture],
             callee_effect: Effect::Store,
-            return_type: Type::Poly,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_WEAK_MAP_ID.to_string()),
+            },
             return_value_kind: ValueKind::Mutable,
             ..Default::default()
         },
@@ -780,14 +800,22 @@ fn build_object_shape(shapes: &mut ShapeRegistry) {
 }
 
 fn build_ref_shapes(shapes: &mut ShapeRegistry) {
-    // BuiltInUseRefId: { current: Poly }
+    // BuiltInUseRefId: { current: Object { shapeId: BuiltInRefValue } }
     add_object(
         shapes,
         Some(BUILT_IN_USE_REF_ID),
-        vec![("current".to_string(), Type::Poly)],
+        vec![("current".to_string(), Type::Object {
+            shape_id: Some(BUILT_IN_REF_VALUE_ID.to_string()),
+        })],
     );
-    // BuiltInRefValue: Poly (the .current value itself)
-    add_object(shapes, Some(BUILT_IN_REF_VALUE_ID), Vec::new());
+    // BuiltInRefValue: { *: Object { shapeId: BuiltInRefValue } } (self-referencing)
+    add_object(
+        shapes,
+        Some(BUILT_IN_REF_VALUE_ID),
+        vec![("*".to_string(), Type::Object {
+            shape_id: Some(BUILT_IN_REF_VALUE_ID.to_string()),
+        })],
+    );
 }
 
 fn build_state_shapes(shapes: &mut ShapeRegistry) {
@@ -805,15 +833,18 @@ fn build_state_shapes(shapes: &mut ShapeRegistry) {
         false,
     );
 
-    // BuiltInUseState: object with [0] and [1] (via wildcard) — use Poly wildcard
+    // BuiltInUseState: object with [0] = Poly (state), [1] = setState function
     add_object(
         shapes,
         Some(BUILT_IN_USE_STATE_ID),
-        vec![("*".to_string(), Type::Poly)],
+        vec![
+            ("0".to_string(), Type::Poly),
+            ("1".to_string(), set_state),
+        ],
     );
 
     // BuiltInSetActionState
-    let _set_action_state = add_function(
+    let set_action_state = add_function(
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
@@ -826,15 +857,18 @@ fn build_state_shapes(shapes: &mut ShapeRegistry) {
         false,
     );
 
-    // BuiltInUseActionState
+    // BuiltInUseActionState: [0] = Poly, [1] = setActionState function
     add_object(
         shapes,
         Some(BUILT_IN_USE_ACTION_STATE_ID),
-        vec![("*".to_string(), Type::Poly)],
+        vec![
+            ("0".to_string(), Type::Poly),
+            ("1".to_string(), set_action_state),
+        ],
     );
 
     // BuiltInDispatch
-    add_function(
+    let dispatch = add_function(
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
@@ -847,19 +881,22 @@ fn build_state_shapes(shapes: &mut ShapeRegistry) {
         false,
     );
 
-    // BuiltInUseReducer
+    // BuiltInUseReducer: [0] = Poly, [1] = dispatch function
     add_object(
         shapes,
         Some(BUILT_IN_USE_REDUCER_ID),
-        vec![("*".to_string(), Type::Poly)],
+        vec![
+            ("0".to_string(), Type::Poly),
+            ("1".to_string(), dispatch),
+        ],
     );
 
     // BuiltInStartTransition
-    add_function(
+    let start_transition = add_function(
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            rest_param: Some(Effect::Freeze),
+            // Note: TS uses restParam: null for startTransition
             return_type: Type::Primitive,
             return_value_kind: ValueKind::Primitive,
             ..Default::default()
@@ -868,15 +905,18 @@ fn build_state_shapes(shapes: &mut ShapeRegistry) {
         false,
     );
 
-    // BuiltInUseTransition
+    // BuiltInUseTransition: [0] = Primitive (isPending), [1] = startTransition function
     add_object(
         shapes,
         Some(BUILT_IN_USE_TRANSITION_ID),
-        vec![("*".to_string(), Type::Poly)],
+        vec![
+            ("0".to_string(), Type::Primitive),
+            ("1".to_string(), start_transition),
+        ],
     );
 
     // BuiltInSetOptimistic
-    add_function(
+    let set_optimistic = add_function(
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
@@ -889,14 +929,15 @@ fn build_state_shapes(shapes: &mut ShapeRegistry) {
         false,
     );
 
-    // BuiltInUseOptimistic
+    // BuiltInUseOptimistic: [0] = Poly, [1] = setOptimistic function
     add_object(
         shapes,
         Some(BUILT_IN_USE_OPTIMISTIC_ID),
-        vec![("*".to_string(), Type::Poly)],
+        vec![
+            ("0".to_string(), Type::Poly),
+            ("1".to_string(), set_optimistic),
+        ],
     );
-
-    let _ = set_state;
 }
 
 fn build_hook_shapes(shapes: &mut ShapeRegistry) {
@@ -916,12 +957,91 @@ fn build_hook_shapes(shapes: &mut ShapeRegistry) {
 }
 
 fn build_misc_shapes(shapes: &mut ShapeRegistry) {
-    // ReanimatedSharedValue
+    // ReanimatedSharedValue: empty properties (matching TS)
     add_object(
         shapes,
         Some(REANIMATED_SHARED_VALUE_ID),
-        vec![("value".to_string(), Type::Poly)],
+        Vec::new(),
     );
+}
+
+/// Build the reanimated module type. Ported from TS `getReanimatedModuleType`.
+pub fn get_reanimated_module_type(shapes: &mut ShapeRegistry) -> Type {
+    let mut reanimated_type: Vec<(String, Type)> = Vec::new();
+
+    // hooks that freeze args and return frozen value
+    let frozen_hooks = [
+        "useFrameCallback",
+        "useAnimatedStyle",
+        "useAnimatedProps",
+        "useAnimatedScrollHandler",
+        "useAnimatedReaction",
+        "useWorkletCallback",
+    ];
+    for hook in &frozen_hooks {
+        let hook_type = add_hook(
+            shapes,
+            HookSignatureBuilder {
+                rest_param: Some(Effect::Freeze),
+                return_type: Type::Poly,
+                return_value_kind: ValueKind::Frozen,
+                no_alias: true,
+                hook_kind: HookKind::Custom,
+                ..Default::default()
+            },
+            None,
+        );
+        reanimated_type.push((hook.to_string(), hook_type));
+    }
+
+    // hooks that return a mutable value (modelled as shared value)
+    let mutable_hooks = ["useSharedValue", "useDerivedValue"];
+    for hook in &mutable_hooks {
+        let hook_type = add_hook(
+            shapes,
+            HookSignatureBuilder {
+                rest_param: Some(Effect::Freeze),
+                return_type: Type::Object {
+                    shape_id: Some(REANIMATED_SHARED_VALUE_ID.to_string()),
+                },
+                return_value_kind: ValueKind::Mutable,
+                no_alias: true,
+                hook_kind: HookKind::Custom,
+                ..Default::default()
+            },
+            None,
+        );
+        reanimated_type.push((hook.to_string(), hook_type));
+    }
+
+    // functions that return mutable value
+    let funcs = [
+        "withTiming",
+        "withSpring",
+        "createAnimatedPropAdapter",
+        "withDecay",
+        "withRepeat",
+        "runOnUI",
+        "executeOnUIRuntimeSync",
+    ];
+    for func_name in &funcs {
+        let func_type = add_function(
+            shapes,
+            Vec::new(),
+            FunctionSignatureBuilder {
+                rest_param: Some(Effect::Read),
+                return_type: Type::Poly,
+                return_value_kind: ValueKind::Mutable,
+                no_alias: true,
+                ..Default::default()
+            },
+            None,
+            false,
+        );
+        reanimated_type.push((func_name.to_string(), func_type));
+    }
+
+    add_object(shapes, None, reanimated_type)
 }
 
 // =============================================================================
@@ -935,36 +1055,29 @@ fn build_misc_shapes(shapes: &mut ShapeRegistry) {
 pub fn build_default_globals(shapes: &mut ShapeRegistry) -> GlobalRegistry {
     let mut globals = GlobalRegistry::new();
 
-    // React APIs
-    build_react_apis(shapes, &mut globals);
+    // React APIs — returns the list so we can reuse them for the React namespace
+    let react_apis = build_react_apis(shapes, &mut globals);
 
-    // Typed JS globals
-    build_typed_globals(shapes, &mut globals);
-
-    // Untyped globals (treated as Poly)
+    // Untyped globals (treated as Poly) — must come before typed globals
+    // so typed definitions take priority (matching TS ordering)
     for name in UNTYPED_GLOBALS {
         globals.insert(name.to_string(), Type::Poly);
     }
 
-    // globalThis and global
-    // Note: TS builds these recursively with all typed globals. We register
-    // them as Poly objects since the recursive definition isn't critical for
-    // the passes currently ported.
+    // Typed JS globals (overwrites Poly entries from UNTYPED_GLOBALS).
+    // Returns the list of typed globals for use as globalThis/global properties.
+    let typed_globals = build_typed_globals(shapes, &mut globals, react_apis);
+
+    // globalThis and global — populated with all typed globals as properties
+    // (matching TS: `addObject(DEFAULT_SHAPES, 'globalThis', TYPED_GLOBALS)`)
     globals.insert(
         "globalThis".to_string(),
-        Type::Object {
-            shape_id: Some("globalThis".to_string()),
-        },
+        add_object(shapes, Some("globalThis"), typed_globals.clone()),
     );
     globals.insert(
         "global".to_string(),
-        Type::Object {
-            shape_id: Some("global".to_string()),
-        },
+        add_object(shapes, Some("global"), typed_globals),
     );
-    // Register simple globalThis/global shapes
-    add_object(shapes, Some("globalThis"), Vec::new());
-    add_object(shapes, Some("global"), Vec::new());
 
     globals
 }
@@ -998,7 +1111,12 @@ const UNTYPED_GLOBALS: &[&str] = &[
     "eval",
 ];
 
-fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
+/// Build the React API types (REACT_APIS from TS). Returns the list of (name, type) pairs
+/// so they can be reused as properties of the React namespace object (matching TS behavior
+/// where the SAME type objects are used in both DEFAULT_GLOBALS and the React namespace).
+fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) -> Vec<(String, Type)> {
+    let mut react_apis: Vec<(String, Type)> = Vec::new();
+
     // useContext
     let use_context = add_hook(
         shapes,
@@ -1012,7 +1130,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         Some(BUILT_IN_USE_CONTEXT_HOOK_ID),
     );
-    globals.insert("useContext".to_string(), use_context);
+    react_apis.push(("useContext".to_string(), use_context));
 
     // useState
     let use_state = add_hook(
@@ -1029,7 +1147,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useState".to_string(), use_state);
+    react_apis.push(("useState".to_string(), use_state));
 
     // useActionState
     let use_action_state = add_hook(
@@ -1046,7 +1164,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useActionState".to_string(), use_action_state);
+    react_apis.push(("useActionState".to_string(), use_action_state));
 
     // useReducer
     let use_reducer = add_hook(
@@ -1063,7 +1181,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useReducer".to_string(), use_reducer);
+    react_apis.push(("useReducer".to_string(), use_reducer));
 
     // useRef
     let use_ref = add_hook(
@@ -1079,7 +1197,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useRef".to_string(), use_ref);
+    react_apis.push(("useRef".to_string(), use_ref));
 
     // useImperativeHandle
     let use_imperative_handle = add_hook(
@@ -1093,7 +1211,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useImperativeHandle".to_string(), use_imperative_handle);
+    react_apis.push(("useImperativeHandle".to_string(), use_imperative_handle));
 
     // useMemo
     let use_memo = add_hook(
@@ -1107,7 +1225,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useMemo".to_string(), use_memo);
+    react_apis.push(("useMemo".to_string(), use_memo));
 
     // useCallback
     let use_callback = add_hook(
@@ -1121,7 +1239,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useCallback".to_string(), use_callback);
+    react_apis.push(("useCallback".to_string(), use_callback));
 
     // useEffect (with aliasing signature)
     let use_effect = add_hook(
@@ -1162,7 +1280,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         Some(BUILT_IN_USE_EFFECT_HOOK_ID),
     );
-    globals.insert("useEffect".to_string(), use_effect);
+    react_apis.push(("useEffect".to_string(), use_effect));
 
     // useLayoutEffect
     let use_layout_effect = add_hook(
@@ -1176,7 +1294,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         Some(BUILT_IN_USE_LAYOUT_EFFECT_HOOK_ID),
     );
-    globals.insert("useLayoutEffect".to_string(), use_layout_effect);
+    react_apis.push(("useLayoutEffect".to_string(), use_layout_effect));
 
     // useInsertionEffect
     let use_insertion_effect = add_hook(
@@ -1190,7 +1308,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         Some(BUILT_IN_USE_INSERTION_EFFECT_HOOK_ID),
     );
-    globals.insert("useInsertionEffect".to_string(), use_insertion_effect);
+    react_apis.push(("useInsertionEffect".to_string(), use_insertion_effect));
 
     // useTransition
     let use_transition = add_hook(
@@ -1206,7 +1324,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useTransition".to_string(), use_transition);
+    react_apis.push(("useTransition".to_string(), use_transition));
 
     // useOptimistic
     let use_optimistic = add_hook(
@@ -1223,7 +1341,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         None,
     );
-    globals.insert("useOptimistic".to_string(), use_optimistic);
+    react_apis.push(("useOptimistic".to_string(), use_optimistic));
 
     // use (not a hook, it's a function)
     let use_fn = add_function(
@@ -1238,7 +1356,7 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         Some(BUILT_IN_USE_OPERATOR_ID),
         false,
     );
-    globals.insert("use".to_string(), use_fn);
+    react_apis.push(("use".to_string(), use_fn));
 
     // useEffectEvent
     let use_effect_event = add_hook(
@@ -1256,10 +1374,23 @@ fn build_react_apis(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
         },
         Some(BUILT_IN_USE_EFFECT_EVENT_ID),
     );
-    globals.insert("useEffectEvent".to_string(), use_effect_event);
+    react_apis.push(("useEffectEvent".to_string(), use_effect_event));
+
+    // Insert all React APIs as standalone globals
+    for (name, ty) in &react_apis {
+        globals.insert(name.clone(), ty.clone());
+    }
+
+    react_apis
 }
 
-fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry) {
+/// Build typed globals and return them as a list for use as globalThis/global properties.
+fn build_typed_globals(
+    shapes: &mut ShapeRegistry,
+    globals: &mut GlobalRegistry,
+    react_apis: Vec<(String, Type)>,
+) -> Vec<(String, Type)> {
+    let mut typed_globals: Vec<(String, Type)> = Vec::new();
     // Object
     let obj_keys = add_function(
         shapes,
@@ -1327,6 +1458,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
             ("values".to_string(), obj_values),
         ],
     );
+    typed_globals.push(("Object".to_string(), object_global.clone()));
     globals.insert("Object".to_string(), object_global);
 
     // Array
@@ -1384,6 +1516,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
             ("of".to_string(), array_of),
         ],
     );
+    typed_globals.push(("Array".to_string(), array_global.clone()));
     globals.insert("Array".to_string(), array_global);
 
     // Math
@@ -1412,6 +1545,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
     );
     math_props.push(("random".to_string(), math_random));
     let math_global = add_object(shapes, Some("Math"), math_props);
+    typed_globals.push(("Math".to_string(), math_global.clone()));
     globals.insert("Math".to_string(), math_global);
 
     // performance
@@ -1434,6 +1568,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         Some("performance"),
         vec![("now".to_string(), perf_now)],
     );
+    typed_globals.push(("performance".to_string(), perf_global.clone()));
     globals.insert("performance".to_string(), perf_global);
 
     // Date
@@ -1452,6 +1587,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         false,
     );
     let date_global = add_object(shapes, Some("Date"), vec![("now".to_string(), date_now)]);
+    typed_globals.push(("Date".to_string(), date_global.clone()));
     globals.insert("Date".to_string(), date_global);
 
     // console
@@ -1461,6 +1597,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
             .map(|name| (name.to_string(), pure_primitive_fn(shapes)))
             .collect();
     let console_global = add_object(shapes, Some("console"), console_methods);
+    typed_globals.push(("console".to_string(), console_global.clone()));
     globals.insert("console".to_string(), console_global);
 
     // Simple global functions returning Primitive
@@ -1478,11 +1615,14 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         "decodeURIComponent",
     ] {
         let f = pure_primitive_fn(shapes);
+        typed_globals.push((name.to_string(), f.clone()));
         globals.insert(name.to_string(), f);
     }
 
     // Primitive globals
+    typed_globals.push(("Infinity".to_string(), Type::Primitive));
     globals.insert("Infinity".to_string(), Type::Primitive);
+    typed_globals.push(("NaN".to_string(), Type::Primitive));
     globals.insert("NaN".to_string(), Type::Primitive);
 
     // Map, Set, WeakMap, WeakSet constructors
@@ -1500,6 +1640,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         None,
         true,
     );
+    typed_globals.push(("Map".to_string(), map_ctor.clone()));
     globals.insert("Map".to_string(), map_ctor);
 
     let set_ctor = add_function(
@@ -1516,6 +1657,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         None,
         true,
     );
+    typed_globals.push(("Set".to_string(), set_ctor.clone()));
     globals.insert("Set".to_string(), set_ctor);
 
     let weak_map_ctor = add_function(
@@ -1532,6 +1674,7 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         None,
         true,
     );
+    typed_globals.push(("WeakMap".to_string(), weak_map_ctor.clone()));
     globals.insert("WeakMap".to_string(), weak_map_ctor);
 
     let weak_set_ctor = add_function(
@@ -1548,10 +1691,11 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         None,
         true,
     );
+    typed_globals.push(("WeakSet".to_string(), weak_set_ctor.clone()));
     globals.insert("WeakSet".to_string(), weak_set_ctor);
 
-    // React global object
-    // Note: this duplicates the hook types into a React.* namespace
+    // React global object — reuses the same REACT_APIS types (matching TS behavior
+    // where the same type objects are used as both standalone globals and React.* properties)
     let react_create_element = add_function(
         shapes,
         Vec::new(),
@@ -1591,126 +1735,14 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         false,
     );
 
-    // We need to duplicate all React API types for React.* access. Rather than
-    // re-registering shapes, we re-add hooks with fresh shape IDs.
-    let mut react_props: Vec<(String, Type)> = Vec::new();
-
-    // Re-register React hooks for the React namespace object
-    let react_hooks: Vec<(&str, Type)> = vec![
-        (
-            "useContext",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Read),
-                    return_type: Type::Poly,
-                    return_value_kind: ValueKind::Frozen,
-                    return_value_reason: Some(ValueReason::Context),
-                    hook_kind: HookKind::UseContext,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-        (
-            "useState",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Freeze),
-                    return_type: Type::Object {
-                        shape_id: Some(BUILT_IN_USE_STATE_ID.to_string()),
-                    },
-                    return_value_kind: ValueKind::Frozen,
-                    return_value_reason: Some(ValueReason::State),
-                    hook_kind: HookKind::UseState,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-        (
-            "useRef",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Capture),
-                    return_type: Type::Object {
-                        shape_id: Some(BUILT_IN_USE_REF_ID.to_string()),
-                    },
-                    return_value_kind: ValueKind::Mutable,
-                    hook_kind: HookKind::UseRef,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-        (
-            "useMemo",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Freeze),
-                    return_type: Type::Poly,
-                    return_value_kind: ValueKind::Frozen,
-                    hook_kind: HookKind::UseMemo,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-        (
-            "useCallback",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Freeze),
-                    return_type: Type::Poly,
-                    return_value_kind: ValueKind::Frozen,
-                    hook_kind: HookKind::UseCallback,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-        (
-            "useEffect",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Freeze),
-                    return_type: Type::Primitive,
-                    return_value_kind: ValueKind::Frozen,
-                    hook_kind: HookKind::UseEffect,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-        (
-            "useLayoutEffect",
-            add_hook(
-                shapes,
-                HookSignatureBuilder {
-                    rest_param: Some(Effect::Freeze),
-                    return_type: Type::Poly,
-                    return_value_kind: ValueKind::Frozen,
-                    hook_kind: HookKind::UseLayoutEffect,
-                    ..Default::default()
-                },
-                None,
-            ),
-        ),
-    ];
-
-    for (name, ty) in react_hooks {
-        react_props.push((name.to_string(), ty));
-    }
+    // Build React namespace properties from react_apis + React-specific functions
+    let mut react_props: Vec<(String, Type)> = react_apis;
     react_props.push(("createElement".to_string(), react_create_element));
     react_props.push(("cloneElement".to_string(), react_clone_element));
     react_props.push(("createRef".to_string(), react_create_ref));
 
     let react_global = add_object(shapes, None, react_props);
+    typed_globals.push(("React".to_string(), react_global.clone()));
     globals.insert("React".to_string(), react_global);
 
     // _jsx (used by JSX transform)
@@ -1726,5 +1758,8 @@ fn build_typed_globals(shapes: &mut ShapeRegistry, globals: &mut GlobalRegistry)
         None,
         false,
     );
+    typed_globals.push(("_jsx".to_string(), jsx_fn.clone()));
     globals.insert("_jsx".to_string(), jsx_fn);
+
+    typed_globals
 }
