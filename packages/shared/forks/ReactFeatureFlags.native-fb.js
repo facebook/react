@@ -28,6 +28,7 @@ export const {
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsInstanceHandles,
   enableFragmentRefsTextNodes,
+  enableViewTransitionForPersistenceMode,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
