@@ -77,15 +77,11 @@ export function cancelViewTransitionName(
 }
 
 export function cancelRootViewTransitionName(rootContainer: Container): void {
-  if (__DEV__) {
-    console.warn('cancelRootViewTransitionName is not implemented');
-  }
+  // No-op
 }
 
 export function restoreRootViewTransitionName(rootContainer: Container): void {
-  if (__DEV__) {
-    console.warn('restoreRootViewTransitionName is not implemented');
-  }
+  // No-op
 }
 
 export function cloneRootViewTransitionContainer(
