@@ -693,6 +693,15 @@ function measureViewTransitionHostInstancesRecursive(
       while (child !== null) {
         if (child.tag === HostComponent) {
           const instance: Instance = child.stateNode;
+          if (
+            previousMeasurements == null ||
+            viewTransitionHostInstanceIdx >= previousMeasurements.length
+          ) {
+            // If there was an insertion of extra nodes, we have to assume they affected the parent.
+            // It should have already been marked as an Update due to the mutation.
+            parentViewTransition.flags |= AffectedParentLayout;
+          }
+          // TODO: check if instance is out of viewport
           if ((parentViewTransition.flags & Update) !== NoFlags) {
             applyViewTransitionName(
               instance,
@@ -702,6 +711,7 @@ function measureViewTransitionHostInstancesRecursive(
               className,
             );
           }
+          // TODO: cancel transition by pushing into viewTransitionCancelableChildren
           viewTransitionHostInstanceIdx++;
         } else if (
           child.tag === OffscreenComponent &&
@@ -712,6 +722,9 @@ function measureViewTransitionHostInstancesRecursive(
           child.tag === ViewTransitionComponent &&
           stopAtNestedViewTransitions
         ) {
+          // Skip any nested view transitions for updates since in that case the
+          // inner most one is the one that handles the update.
+          // If this inner boundary resized we need to bubble that information up.
           parentViewTransition.flags |= child.flags & AffectedParentLayout;
         } else {
           measureViewTransitionHostInstancesRecursive(
