@@ -388,7 +388,7 @@ fn evaluate_instruction(
             let previous = read(constants, value);
             if let Some(Constant::Primitive {
                 value: PrimitiveValue::Number(n),
-                ..
+                loc: prev_loc,
             }) = previous
             {
                 let prev_val = n.value();
@@ -405,10 +405,10 @@ fn evaluate_instruction(
                         loc: *loc,
                     },
                 );
-                // But return the value prior to the update
+                // But return the value prior to the update (preserving its original loc)
                 return Some(Constant::Primitive {
                     value: PrimitiveValue::Number(n),
-                    loc: *loc,
+                    loc: prev_loc,
                 });
             }
             None

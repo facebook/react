@@ -7,7 +7,7 @@ InlineImmediatelyInvokedFunctionExpressions: complete (1652/1652)
 MergeConsecutiveBlocks: complete (1652/1652)
 SSA: complete (1651/1651)
 EliminateRedundantPhi: complete (1651/1651)
-ConstantPropagation: partial (1650/1651)
+ConstantPropagation: complete (1651/1651)
 InferTypes: partial (942/1650)
 OptimizePropsMethodCalls: complete (916/916)
 AnalyseFunctions: todo
@@ -84,3 +84,9 @@ Fixed 39 failures (1 MergeConsecutiveBlocks + 38 SSA):
 - Fixed identifier formatting in SSA error descriptions to match TS printIdentifier() output.
 - Added name$N normalization to test harness.
 MergeConsecutiveBlocks 1652/1652, SSA 1651/1651, frontier moved to ConstantPropagation.
+
+## 20260318-224340 Fix ConstantPropagation source location
+
+Fixed PostfixUpdate constant propagation using the instruction loc instead of the
+previous constant's loc. Now uses prev_loc from the matched constant.
+ConstantPropagation 1651/1651, frontier moved to InferTypes (708 failures).
