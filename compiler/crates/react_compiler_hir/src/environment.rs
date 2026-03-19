@@ -177,6 +177,12 @@ impl Environment {
                 start: EvaluationOrder(0),
                 end: EvaluationOrder(0),
             },
+            dependencies: Vec::new(),
+            declarations: Vec::new(),
+            reassignments: Vec::new(),
+            early_return_value: None,
+            merged: Vec::new(),
+            loc: None,
         });
         id
     }

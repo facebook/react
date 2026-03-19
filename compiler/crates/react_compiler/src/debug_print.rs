@@ -393,10 +393,83 @@ impl<'a> DebugPrinter<'a> {
             if let Some(scope) = self.env.scopes.iter().find(|s| s.id == scope_id) {
                 let range_start = scope.range.start.0;
                 let range_end = scope.range.end.0;
+                let dependencies = scope.dependencies.clone();
+                let declarations = scope.declarations.clone();
+                let reassignments = scope.reassignments.clone();
+                let early_return_value = scope.early_return_value.clone();
+                let merged = scope.merged.clone();
+                let loc = scope.loc;
+
                 self.line(&format!("{}: Scope {{", field_name));
                 self.indent();
                 self.line(&format!("id: {}", scope_id.0));
                 self.line(&format!("range: [{}:{}]", range_start, range_end));
+
+                // dependencies
+                self.line("dependencies:");
+                self.indent();
+                for (i, dep) in dependencies.iter().enumerate() {
+                    let path_str: String = dep
+                        .path
+                        .iter()
+                        .map(|p| {
+                            let prop = match &p.property {
+                                react_compiler_hir::PropertyLiteral::String(s) => s.clone(),
+                                react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n.value()),
+                            };
+                            format!(
+                                "{}{}",
+                                if p.optional { "?." } else { "." },
+                                prop
+                            )
+                        })
+                        .collect();
+                    self.line(&format!(
+                        "[{}] {{ identifier: {}, reactive: {}, path: \"{}\" }}",
+                        i, dep.identifier.0, dep.reactive, path_str
+                    ));
+                }
+                self.dedent();
+
+                // declarations
+                self.line("declarations:");
+                self.indent();
+                for (ident_id, decl) in &declarations {
+                    self.line(&format!(
+                        "{}: {{ identifier: {}, scope: {} }}",
+                        ident_id.0, decl.identifier.0, decl.scope.0
+                    ));
+                }
+                self.dedent();
+
+                // reassignments
+                self.line("reassignments:");
+                self.indent();
+                for ident_id in &reassignments {
+                    self.line(&format!("{}", ident_id.0));
+                }
+                self.dedent();
+
+                // earlyReturnValue
+                if let Some(early_return) = &early_return_value {
+                    self.line("earlyReturnValue:");
+                    self.indent();
+                    self.line(&format!("value: {}", early_return.value.0));
+                    self.line(&format!("loc: {}", format_loc(&early_return.loc)));
+                    self.line(&format!("label: bb{}", early_return.label.0));
+                    self.dedent();
+                } else {
+                    self.line("earlyReturnValue: null");
+                }
+
+                // merged
+                let merged_str: Vec<String> =
+                    merged.iter().map(|s| s.0.to_string()).collect();
+                self.line(&format!("merged: [{}]", merged_str.join(", ")));
+
+                // loc
+                self.line(&format!("loc: {}", format_loc(&loc)));
+
                 self.dedent();
                 self.line("}");
             } else {

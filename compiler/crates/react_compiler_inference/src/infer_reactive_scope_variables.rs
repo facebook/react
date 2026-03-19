@@ -17,6 +17,7 @@
 
 use std::collections::HashMap;
 
+use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     ArrayElement, ArrayPatternElement, DeclarationId, EvaluationOrder, HirFunction, IdentifierId,
@@ -34,13 +35,14 @@ use react_compiler_hir::{
 /// Uses IdentifierId (Copy) as the key instead of reference identity.
 pub(crate) struct DisjointSet {
     /// Maps each item to its parent. A root points to itself.
-    pub(crate) entries: HashMap<IdentifierId, IdentifierId>,
+    /// Uses IndexMap to preserve insertion order (matching TS Map behavior).
+    pub(crate) entries: IndexMap<IdentifierId, IdentifierId>,
 }
 
 impl DisjointSet {
     pub(crate) fn new() -> Self {
         DisjointSet {
-            entries: HashMap::new(),
+            entries: IndexMap::new(),
         }
     }
 
@@ -143,6 +145,11 @@ pub fn infer_reactive_scope_variables(func: &mut HirFunction, env: &mut Environm
         let scope_id = state.scope_id;
         env.identifiers[identifier_id.0 as usize].scope = Some(scope_id);
     });
+
+    // Set loc on each scope
+    for (_group_id, state) in &scopes {
+        env.scopes[state.scope_id.0 as usize].loc = state.loc;
+    }
 
     // Update each identifier's mutable_range to match its scope's range
     for (&_identifier_id, state) in &scopes {

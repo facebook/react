@@ -1217,6 +1217,48 @@ pub enum PropertyNameKind {
 pub struct ReactiveScope {
     pub id: ScopeId,
     pub range: MutableRange,
+
+    /// The inputs to this reactive scope (populated by later passes)
+    pub dependencies: Vec<ReactiveScopeDependency>,
+
+    /// The set of values produced by this scope (populated by later passes)
+    pub declarations: Vec<(IdentifierId, ReactiveScopeDeclaration)>,
+
+    /// Identifiers which are reassigned by this scope (populated by later passes)
+    pub reassignments: Vec<IdentifierId>,
+
+    /// If the scope contains an early return, this stores info about it (populated by later passes)
+    pub early_return_value: Option<ReactiveScopeEarlyReturn>,
+
+    /// Scopes that were merged into this one (populated by later passes)
+    pub merged: Vec<ScopeId>,
+
+    /// Source location spanning the scope
+    pub loc: Option<SourceLocation>,
+}
+
+/// A dependency of a reactive scope.
+#[derive(Debug, Clone)]
+pub struct ReactiveScopeDependency {
+    pub identifier: IdentifierId,
+    pub reactive: bool,
+    pub path: Vec<DependencyPathEntry>,
+    pub loc: Option<SourceLocation>,
+}
+
+/// A declaration produced by a reactive scope.
+#[derive(Debug, Clone)]
+pub struct ReactiveScopeDeclaration {
+    pub identifier: IdentifierId,
+    pub scope: ScopeId,
+}
+
+/// Early return value info for a reactive scope.
+#[derive(Debug, Clone)]
+pub struct ReactiveScopeEarlyReturn {
+    pub value: IdentifierId,
+    pub loc: Option<SourceLocation>,
+    pub label: BlockId,
 }
 
 // =============================================================================

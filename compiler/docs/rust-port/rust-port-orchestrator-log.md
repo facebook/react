@@ -10,15 +10,15 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1234/1240)
-InferMutationAliasingEffects: partial (1219/1234)
+AnalyseFunctions: partial (1610/1616)
+InferMutationAliasingEffects: partial (1502/1610)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1219/1219)
-PruneMaybeThrows (2nd): complete (1929/1929)
-InferMutationAliasingRanges: partial (1169/1219)
-InferReactivePlaces: partial (951/1169)
-RewriteInstructionKindsBasedOnReassignment: partial (943/951)
-InferReactiveScopeVariables: partial (112/943)
+DeadCodeElimination: complete (1502/1502)
+PruneMaybeThrows (2nd): complete (2122/2122)
+InferMutationAliasingRanges: partial (1445/1502)
+InferReactivePlaces: partial (1048/1445)
+RewriteInstructionKindsBasedOnReassignment: partial (1033/1048)
+InferReactiveScopeVariables: complete (1033/1033)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -148,3 +148,11 @@ Ported three passes in parallel:
 - RewriteInstructionKindsBasedOnReassignment (#18): 943/951 (98.7%)
 - InferReactiveScopeVariables (#19): 112/943 (11.9%) — major issues with scope assignment
 Overall 179/1717. InferReactiveScopeVariables needs significant fixing.
+
+## 20260319-093515 Fix InferReactiveScopeVariables scope output
+
+Added missing ReactiveScope fields (dependencies, declarations, reassignments, etc.).
+Fixed debug printer to output all scope fields matching TS format.
+Fixed DisjointSet ordering (HashMap→IndexMap) and scope loc computation.
+InferReactiveScopeVariables: 1033/1033 (100%). Overall 1099/1717.
+Remaining 618 failures in upstream passes, mainly InferReactivePlaces (397).
