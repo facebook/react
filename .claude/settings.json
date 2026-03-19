@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx block-no-verify@1.1.2"
+          }
+        ]
+      }
     ]
   },
   "permissions": {
@@ -24,7 +35,7 @@
       "Bash(yarn test-www:*)",
       "Bash(yarn test-classic:*)",
       "Bash(yarn test-stable:*)",
-      "Bash(yarn linc:*)",
+      "Bash(yarl linc:*)",
       "Bash(yarn lint:*)",
       "Bash(yarn flow:*)",
       "Bash(yarn prettier:*)",
