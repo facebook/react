@@ -11,14 +11,14 @@ ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
 AnalyseFunctions: partial (1610/1616)
-InferMutationAliasingEffects: partial (1502/1610)
+InferMutationAliasingEffects: partial (1500/1610)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1502/1502)
-PruneMaybeThrows (2nd): complete (2122/2122)
-InferMutationAliasingRanges: partial (1445/1502)
-InferReactivePlaces: partial (1048/1445)
-RewriteInstructionKindsBasedOnReassignment: partial (1033/1048)
-InferReactiveScopeVariables: complete (1033/1033)
+DeadCodeElimination: complete (1500/1500)
+PruneMaybeThrows (2nd): complete (1903/1903)
+InferMutationAliasingRanges: partial (1443/1500)
+InferReactivePlaces: partial (1270/1443)
+RewriteInstructionKindsBasedOnReassignment: partial (1250/1270)
+InferReactiveScopeVariables: complete (1250/1250)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -156,3 +156,11 @@ Fixed debug printer to output all scope fields matching TS format.
 Fixed DisjointSet ordering (HashMap→IndexMap) and scope loc computation.
 InferReactiveScopeVariables: 1033/1033 (100%). Overall 1099/1717.
 Remaining 618 failures in upstream passes, mainly InferReactivePlaces (397).
+
+## 20260319-103726 Fix InferReactivePlaces — 397→173 failures
+
+Fixed three bugs in InferReactivePlaces:
+- Added FunctionExpression/ObjectMethod context variables as operands for reactivity propagation.
+- Fixed useRef stable type detection (Object type, not just Function).
+- Separated value operand vs lvalue flag setting to avoid over-marking.
+InferReactivePlaces 1270/1443 (173 failures). Overall 1316/1717 (+217).
