@@ -404,10 +404,21 @@ function normalizeIds(text: string): string {
   let nextIdId = 0;
   const declMap = new Map<string, number>();
   let nextDeclId = 0;
+  const generatedMap = new Map<string, number>();
+  let nextGeneratedId = 0;
 
   return (
     text
       .replace(/\(generated\)/g, '(none)')
+      // Normalize <generated_N> shape IDs — these are auto-incrementing counters
+      // that may differ between TS and Rust due to allocation ordering.
+      .replace(/<generated_(\d+)>/g, (_match, num) => {
+        const key = `generated:${num}`;
+        if (!generatedMap.has(key)) {
+          generatedMap.set(key, nextGeneratedId++);
+        }
+        return `<generated_${generatedMap.get(key)}>`;
+      })
       .replace(/Type\(\d+\)/g, match => {
         if (!typeMap.has(match)) {
           typeMap.set(match, nextTypeId++);
