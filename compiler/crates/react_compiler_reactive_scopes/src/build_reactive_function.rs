@@ -532,9 +532,11 @@ impl<'a, 'b> Driver<'a, 'b> {
                 } else {
                     None
                 };
+                // Continue block is update (if present) or test
+                let continue_block = update.unwrap_or(*test);
                 schedule_ids.push(self.cx.schedule_loop(
                     *fallthrough,
-                    *test,
+                    continue_block,
                     Some(*loop_block),
                 ));
 
