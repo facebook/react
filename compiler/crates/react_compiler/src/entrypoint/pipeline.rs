@@ -374,6 +374,11 @@ pub fn compile_fn(
     // TODO: port assertValidBlockNesting
     context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
 
+    react_compiler_inference::flatten_reactive_loops_hir(&mut hir);
+
+    let debug_flatten_loops = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("FlattenReactiveLoopsHIR", debug_flatten_loops));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
