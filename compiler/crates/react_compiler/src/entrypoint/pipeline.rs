@@ -318,6 +318,11 @@ pub fn compile_fn(
     let debug_align_obj = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("AlignObjectMethodScopes", debug_align_obj));
 
+    react_compiler_optimization::prune_unused_labels_hir(&mut hir);
+
+    let debug_prune_labels = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("PruneUnusedLabelsHIR", debug_prune_labels));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
