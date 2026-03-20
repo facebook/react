@@ -678,7 +678,18 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
 }
 
 fn build_set_shape(shapes: &mut ShapeRegistry) {
-    let has = pure_primitive_fn(shapes);
+    let has = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let add = add_function(
         shapes,
         Vec::new(),
@@ -717,6 +728,18 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
+    let clear = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            callee_effect: Effect::Store,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let delete = add_function(
         shapes,
         Vec::new(),
@@ -731,14 +754,86 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
         false,
     );
     let size = Type::Primitive;
+    let difference = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Capture],
+            callee_effect: Effect::Capture,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_SET_ID.to_string()),
+            },
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let union = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Capture],
+            callee_effect: Effect::Capture,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_SET_ID.to_string()),
+            },
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let symmetrical_difference = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Capture],
+            callee_effect: Effect::Capture,
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_SET_ID.to_string()),
+            },
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let is_subset_of = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            callee_effect: Effect::Read,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let is_superset_of = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            callee_effect: Effect::Read,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let for_each = add_function(
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Primitive,
             return_value_kind: ValueKind::Primitive,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -786,10 +881,16 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Some(BUILT_IN_SET_ID),
         vec![
-            ("has".to_string(), has),
             ("add".to_string(), add),
+            ("clear".to_string(), clear),
             ("delete".to_string(), delete),
+            ("has".to_string(), has),
             ("size".to_string(), size),
+            ("difference".to_string(), difference),
+            ("union".to_string(), union),
+            ("symmetricalDifference".to_string(), symmetrical_difference),
+            ("isSubsetOf".to_string(), is_subset_of),
+            ("isSupersetOf".to_string(), is_superset_of),
             ("forEach".to_string(), for_each),
             ("values".to_string(), values),
             ("keys".to_string(), keys),
@@ -799,7 +900,18 @@ fn build_set_shape(shapes: &mut ShapeRegistry) {
 }
 
 fn build_map_shape(shapes: &mut ShapeRegistry) {
-    let has = pure_primitive_fn(shapes);
+    let has = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let get = add_function(
         shapes,
         Vec::new(),
@@ -858,10 +970,11 @@ fn build_map_shape(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            positional_params: vec![Effect::ConditionallyMutate],
+            rest_param: Some(Effect::ConditionallyMutate),
             callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Primitive,
             return_value_kind: ValueKind::Primitive,
+            no_alias: true,
             mutable_only_if_operands_are_mutable: true,
             ..Default::default()
         },
@@ -967,12 +1080,18 @@ fn build_weak_set_shape(shapes: &mut ShapeRegistry) {
 
 fn build_weak_map_shape(shapes: &mut ShapeRegistry) {
     let has = pure_primitive_fn(shapes);
-    let get = simple_function(
+    let get = add_function(
         shapes,
-        vec![Effect::Read],
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            callee_effect: Effect::Capture,
+            return_type: Type::Poly,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
         None,
-        Type::Poly,
-        ValueKind::Mutable,
+        false,
     );
     let set = add_function(
         shapes,

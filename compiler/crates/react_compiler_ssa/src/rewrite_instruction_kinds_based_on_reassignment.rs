@@ -17,6 +17,9 @@
 
 use std::collections::HashMap;
 
+use react_compiler_diagnostics::{
+    CompilerError, CompilerErrorDetail, ErrorCategory,
+};
 use react_compiler_hir::{
     BlockKind, DeclarationId, HirFunction, InstructionKind, InstructionValue, ParamPattern,
     Pattern, Place,
@@ -24,6 +27,17 @@ use react_compiler_hir::{
 };
 
 use react_compiler_hir::environment::Environment;
+
+/// Create an invariant CompilerError (matches TS CompilerError.invariant).
+fn invariant_error(reason: &str, description: Option<String>) -> CompilerError {
+    let mut err = CompilerError::new();
+    let mut detail = CompilerErrorDetail::new(ErrorCategory::Invariant, reason);
+    if let Some(desc) = description {
+        detail = detail.with_description(desc);
+    }
+    err.push_error_detail(detail);
+    err
+}
 
 /// Index into a collected list of declaration mutations to apply.
 ///
@@ -44,7 +58,7 @@ enum DeclarationLoc {
 pub fn rewrite_instruction_kinds_based_on_reassignment(
     func: &mut HirFunction,
     env: &Environment,
-) {
+) -> Result<(), CompilerError> {
     // Phase 1: Collect all information about which declarations need updates.
     //
     // Track: for each DeclarationId, the location of its first declaration,
@@ -89,12 +103,12 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
             match &instr.value {
                 InstructionValue::DeclareLocal { lvalue, .. } => {
                     let decl_id = env.identifiers[lvalue.place.identifier.0 as usize].declaration_id;
-                    // Invariant: variable should not be defined prior to declaration
-                    // (using debug_assert to avoid aborting in NAPI context)
-                    debug_assert!(
-                        !declarations.contains_key(&decl_id),
-                        "Expected variable not to be defined prior to declaration"
-                    );
+                    if declarations.contains_key(&decl_id) {
+                        return Err(invariant_error(
+                            "Expected variable not to be defined prior to declaration",
+                            None,
+                        ));
+                    }
                     declarations.insert(
                         decl_id,
                         DeclarationLoc::Instruction {
@@ -140,10 +154,13 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                         let ident = &env.identifiers[place.identifier.0 as usize];
                         if ident.name.is_none() {
                             if !(kind.is_none() || kind == Some(InstructionKind::Const)) {
-                                eprintln!(
-                                    "[RewriteInstructionKinds] Inconsistent destructure: unnamed place {:?} has kind {:?}",
-                                    place.identifier, kind
-                                );
+                                return Err(invariant_error(
+                                    "Expected consistent kind for destructuring",
+                                    Some(format!(
+                                        "other places were `{:?}` but place is const",
+                                        kind
+                                    )),
+                                ));
                             }
                             kind = Some(InstructionKind::Const);
                         } else {
@@ -151,10 +168,13 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                             if let Some(existing) = declarations.get(&decl_id) {
                                 // Reassignment
                                 if !(kind.is_none() || kind == Some(InstructionKind::Reassign)) {
-                                    eprintln!(
-                                        "[RewriteInstructionKinds] Inconsistent destructure: named reassigned place {:?} (name={:?}, decl={:?}) has kind {:?}",
-                                        place.identifier, ident.name, decl_id, kind
-                                    );
+                                    return Err(invariant_error(
+                                        "Expected consistent kind for destructuring",
+                                        Some(format!(
+                                            "Other places were `{:?}` but place is reassigned",
+                                            kind
+                                        )),
+                                    ));
                                 }
                                 kind = Some(InstructionKind::Reassign);
                                 match existing {
@@ -171,10 +191,10 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                             } else {
                                 // New declaration
                                 if block_kind == BlockKind::Value {
-                                    eprintln!(
-                                        "[RewriteInstructionKinds] TODO: Handle reassignment in value block for {:?}",
-                                        place.identifier
-                                    );
+                                    return Err(invariant_error(
+                                        "TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)",
+                                        None,
+                                    ));
                                 }
                                 declarations.insert(
                                     decl_id,
@@ -184,16 +204,22 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                                     },
                                 );
                                 if !(kind.is_none() || kind == Some(InstructionKind::Const)) {
-                                    eprintln!(
-                                        "[RewriteInstructionKinds] Inconsistent destructure: new decl place {:?} (name={:?}, decl={:?}) has kind {:?}",
-                                        place.identifier, ident.name, decl_id, kind
-                                    );
+                                    return Err(invariant_error(
+                                        "Expected consistent kind for destructuring",
+                                        Some(format!(
+                                            "Other places were `{:?}` but place is const",
+                                            kind
+                                        )),
+                                    ));
                                 }
                                 kind = Some(InstructionKind::Const);
                             }
                         }
                     }
-                    let kind = kind.unwrap_or(InstructionKind::Const);
+                    let kind = kind.ok_or_else(|| invariant_error(
+                        "Expected at least one operand",
+                        None,
+                    ))?;
                     destructure_kind_locs.push((block_index, local_idx, kind));
                 }
                 InstructionValue::PostfixUpdate { lvalue, .. }
@@ -201,8 +227,10 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                     let ident = &env.identifiers[lvalue.identifier.0 as usize];
                     let decl_id = ident.declaration_id;
                     let Some(existing) = declarations.get(&decl_id) else {
-                        // Variable should have been defined — skip if not found
-                        continue;
+                        return Err(invariant_error(
+                            "Expected variable to have been defined",
+                            None,
+                        ));
                     };
                     match existing {
                         DeclarationLoc::Instruction {
@@ -249,6 +277,24 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
         }
     }
 
+    // Apply destructure_kind_locs BEFORE let_locs: a Destructure that first
+    // declares a variable gets kind=Const here, but if a later instruction
+    // reassigns that variable the Destructure must become Let.  Applying
+    // let_locs afterwards allows it to override the Const set here, matching
+    // the TS behaviour where `declaration.kind = Let` mutates the original
+    // lvalue reference after the Destructure's own `lvalue.kind = kind`.
+    for (bi, ili, kind) in destructure_kind_locs {
+        let block_id = &block_keys[bi];
+        let instr_id = func.body.blocks[block_id].instructions[ili];
+        let instr = &mut func.instructions[instr_id.0 as usize];
+        match &mut instr.value {
+            InstructionValue::Destructure { lvalue, .. } => {
+                lvalue.kind = kind;
+            }
+            _ => {}
+        }
+    }
+
     for (bi, ili) in let_locs {
         let block_id = &block_keys[bi];
         let instr_id = func.body.blocks[block_id].instructions[ili];
@@ -265,17 +311,7 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
         }
     }
 
-    for (bi, ili, kind) in destructure_kind_locs {
-        let block_id = &block_keys[bi];
-        let instr_id = func.body.blocks[block_id].instructions[ili];
-        let instr = &mut func.instructions[instr_id.0 as usize];
-        match &mut instr.value {
-            InstructionValue::Destructure { lvalue, .. } => {
-                lvalue.kind = kind;
-            }
-            _ => {}
-        }
-    }
+    Ok(())
 }
 
 /// Collect all operand places from a pattern (array or object destructuring).

@@ -377,7 +377,6 @@ fn generate_for_function_id(
     identifiers: &[Identifier],
     types: &mut Vec<Type>,
     functions: &mut Vec<HirFunction>,
-    names: &mut HashMap<IdentifierId, String>,
     global_types: &HashMap<(u32, InstructionId), Type>,
     shapes: &ShapeRegistry,
     unifier: &mut Unifier,
@@ -414,6 +413,9 @@ fn generate_for_function_id(
         }
     }
 
+    // TS creates a fresh `names` Map per recursive `generate` call, so inner
+    // functions don't inherit or pollute the outer function's name mappings.
+    let mut inner_names: HashMap<IdentifierId, String> = HashMap::new();
     let mut inner_return_types: Vec<Type> = Vec::new();
 
     for (_block_id, block) in &inner.body.blocks {
@@ -429,7 +431,7 @@ fn generate_for_function_id(
 
         for &instr_id in &block.instructions {
             let instr = &inner.instructions[instr_id.0 as usize];
-            generate_instruction_types(instr, instr_id, func_id.0, identifiers, types, functions, names, global_types, shapes, unifier);
+            generate_instruction_types(instr, instr_id, func_id.0, identifiers, types, functions, &mut inner_names, global_types, shapes, unifier);
         }
 
         if let Terminal::Return { ref value, .. } = block.terminal {
@@ -730,7 +732,7 @@ fn generate_instruction_types(
             ..
         } => {
             // Recurse into inner function first
-            generate_for_function_id(*func_id, identifiers, types, functions, names, global_types, shapes, unifier);
+            generate_for_function_id(*func_id, identifiers, types, functions, global_types, shapes, unifier);
             // Get the inner function's return type
             let inner_func = &functions[func_id.0 as usize];
             let inner_return_type = get_type(inner_func.returns.identifier, identifiers);
@@ -752,7 +754,7 @@ fn generate_instruction_types(
             lowered_func: LoweredFunction { func: func_id },
             ..
         } => {
-            generate_for_function_id(*func_id, identifiers, types, functions, names, global_types, shapes, unifier);
+            generate_for_function_id(*func_id, identifiers, types, functions, global_types, shapes, unifier);
             unifier.unify(left, Type::ObjectMethod);
         }
 

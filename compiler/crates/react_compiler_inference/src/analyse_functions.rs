@@ -119,7 +119,10 @@ where
     );
 
     // rewriteInstructionKindsBasedOnReassignment
-    react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(func, env);
+    if let Err(err) = react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(func, env) {
+        env.errors.merge(err);
+        return;
+    }
 
     // inferReactiveScopeVariables on the inner function
     crate::infer_reactive_scope_variables::infer_reactive_scope_variables(func, env);

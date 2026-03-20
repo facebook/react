@@ -325,7 +325,7 @@ pub fn compile_fn(
         }
     }
 
-    react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(&mut hir, &env);
+    react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(&mut hir, &env)?;
 
     let debug_rewrite = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("RewriteInstructionKindsBasedOnReassignment", debug_rewrite));
