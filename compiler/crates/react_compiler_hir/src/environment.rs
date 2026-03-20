@@ -62,6 +62,20 @@ pub struct Environment {
     // Cached default hook types (lazily initialized)
     default_nonmutating_hook: Option<Global>,
     default_mutating_hook: Option<Global>,
+
+    // Outlined functions: functions extracted from the component during outlining passes
+    outlined_functions: Vec<OutlinedFunctionEntry>,
+
+    // Counter for generating globally unique identifier names
+    uid_counter: u32,
+}
+
+/// An outlined function entry, stored on Environment during compilation.
+/// Corresponds to TS `{ fn: HIRFunction, type: ReactFunctionType | null }`.
+#[derive(Debug, Clone)]
+pub struct OutlinedFunctionEntry {
+    pub func: HirFunction,
+    pub fn_type: Option<ReactFunctionType>,
 }
 
 impl Environment {
@@ -137,6 +151,8 @@ impl Environment {
             module_types,
             default_nonmutating_hook: None,
             default_mutating_hook: None,
+            outlined_functions: Vec::new(),
+            uid_counter: 0,
             config,
         }
     }
@@ -637,6 +653,32 @@ impl Environment {
     /// Get a reference to the globals registry.
     pub fn globals(&self) -> &GlobalRegistry {
         &self.globals
+    }
+
+    /// Generate a globally unique identifier name, analogous to TS
+    /// `generateGloballyUniqueIdentifierName` which delegates to Babel's
+    /// `scope.generateUidIdentifier`. We use a simple counter-based approach.
+    pub fn generate_globally_unique_identifier_name(&mut self, name: Option<&str>) -> String {
+        let base = name.unwrap_or("temp");
+        let uid = self.uid_counter;
+        self.uid_counter += 1;
+        format!("_{}${}", base, uid)
+    }
+
+    /// Record an outlined function (extracted during outlineFunctions or outlineJSX).
+    /// Corresponds to TS `env.outlineFunction(fn, type)`.
+    pub fn outline_function(&mut self, func: HirFunction, fn_type: Option<ReactFunctionType>) {
+        self.outlined_functions.push(OutlinedFunctionEntry { func, fn_type });
+    }
+
+    /// Get the outlined functions accumulated during compilation.
+    pub fn get_outlined_functions(&self) -> &[OutlinedFunctionEntry] {
+        &self.outlined_functions
+    }
+
+    /// Take the outlined functions, leaving the vec empty.
+    pub fn take_outlined_functions(&mut self) -> Vec<OutlinedFunctionEntry> {
+        std::mem::take(&mut self.outlined_functions)
     }
 
     /// Whether memoization is enabled for this compilation.

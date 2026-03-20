@@ -284,7 +284,7 @@ pub fn compile_fn(
         context.log_debug(DebugLogEntry::new("InferReactiveScopeVariables", debug_infer_scopes));
     }
 
-    let _fbt_operands =
+    let fbt_operands =
         react_compiler_inference::memoize_fbt_and_macro_operands_in_same_scope(&hir, &mut env);
 
     let debug_fbt = debug_print::debug_hir(&hir, &env);
@@ -299,6 +299,13 @@ pub fn compile_fn(
 
         let debug_name_anon = debug_print::debug_hir(&hir, &env);
         context.log_debug(DebugLogEntry::new("NameAnonymousFunctions", debug_name_anon));
+    }
+
+    if env.config.enable_function_outlining {
+        react_compiler_optimization::outline_functions(&mut hir, &mut env, &fbt_operands);
+
+        let debug_outline = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("OutlineFunctions", debug_outline));
     }
 
     // Check for accumulated errors at the end of the pipeline
