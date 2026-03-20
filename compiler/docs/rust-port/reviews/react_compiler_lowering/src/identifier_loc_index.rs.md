@@ -1,10 +1,10 @@
-# Review: compiler/crates/react_compiler_lowering/src/identifier_loc_index.rs
+# Review: react_compiler_lowering/src/identifier_loc_index.rs
 
-## Corresponding TypeScript file(s)
-- No direct TS equivalent. This is a Rust-specific replacement for Babel's scope traversal (`path.node.loc`) and the serialized `referenceLocs`/`jsxReferencePositions` data. In TS, source locations are obtained on-the-fly via Babel's `NodePath` API. In Rust, the AST is walked upfront to build this index.
+## Corresponding TypeScript source
+- No direct equivalent. This replaces functionality that was previously serialized from JavaScript (`referenceLocs` and `jsxReferencePositions` fields)
 
 ## Summary
-This file builds an index mapping byte offsets to source locations for all `Identifier` and `JSXIdentifier` nodes in a function's AST. It serves as the Rust-side replacement for Babel's ability to query `path.node.loc` on any node during traversal. The implementation is clean and well-documented.
+Builds an index mapping identifier byte offsets to source locations by walking the function's AST. This replaces data that was previously computed on the JavaScript side and passed to Rust via serialization.
 
 ## Major Issues
 None.
@@ -13,16 +13,46 @@ None.
 None.
 
 ## Minor Issues
-1. **`IdentifierLocEntry.is_declaration_name` is Rust-specific**: At `identifier_loc_index.rs:31`, the `is_declaration_name` field is used to filter out function/class declaration names in `gather_captured_context`. In TS, this filtering happens naturally because Babel's `Expression` visitor doesn't visit declaration name positions. This field is a workaround for the Rust port not using a Babel-style visitor pattern.
 
-2. **`opening_element_loc` is Rust-specific**: At `identifier_loc_index.rs:26`, this field captures the JSXOpeningElement's loc for use when gathering captured context. In TS, `handleMaybeDependency` receives the `JSXOpeningElement` path directly and accesses `path.node.loc`. This is a necessary Rust-side adaptation.
-
-3. **Top-level function name visited manually**: At `identifier_loc_index.rs:141-152`, the walker visits the top-level function's own name identifier manually since the walker only walks params + body. In TS, Babel's `path.traverse()` handles this automatically. This manual handling is correct but is a structural difference.
+### 1. Comment refers to old architecture (file:3-5)
+The comment mentions "This replaces the `referenceLocs` and `jsxReferencePositions` fields that were previously serialized from JS." This is accurate but could be expanded to explain why this approach is better (compute on Rust side vs serialize from JS).
 
 ## Architectural Differences
-1. **Entire file is an architectural difference**: This file exists because Rust cannot use Babel's `NodePath` API. The JS->Rust boundary only sends the serialized AST, so all source location lookups must be pre-computed by walking the AST. This is documented in `rust-port-architecture.md` under "JS->Rust Boundary".
 
-2. **`HashMap<u32, IdentifierLocEntry>` keyed by byte offset**: Uses byte offsets as keys (matching Babel's `node.start` property), which is the Rust port's standard way of cross-referencing AST nodes.
+### 1. Computed on Rust side vs serialized from JS (file:1-6)
+**Old approach**: JavaScript computed `referenceLocs` and `jsxReferencePositions` and serialized them to Rust.
+**New approach**: Rust walks the AST directly using the visitor pattern to build the index.
 
-## Missing TypeScript Features
-None. This file implements equivalent functionality to what Babel provides natively.
+This aligns with rust-port-architecture.md: "Any derived analysis — identifier source locations, JSX classification, captured variables, etc. — should be computed on the Rust side by walking the AST."
+
+### 2. IdentifierLocEntry structure (file:19-32)
+The entry contains:
+- `loc: SourceLocation` - standard location info
+- `is_jsx: bool` - distinguishes JSXIdentifier from regular Identifier
+- `opening_element_loc: Option<SourceLocation>` - for JSX tag names, stores the full tag's loc
+- `is_declaration_name: bool` - marks function/class declaration names
+
+This is richer than what was previously serialized, providing more context for downstream passes.
+
+### 3. Visitor pattern for AST walking (file:38-114)
+Uses the `Visitor` trait and `AstWalker` to traverse the function's AST, matching the pattern used in `find_context_identifiers.rs`.
+
+### 4. Tracking JSXOpeningElement context (file:41-42, 92-98)
+The visitor maintains `current_opening_element_loc` while walking JSX opening elements, allowing JSXIdentifier entries to reference their containing tag's location. This matches TypeScript behavior where `handleMaybeDependency` receives the JSXOpeningElement path.
+
+## Missing from Rust Port
+None.
+
+## Additional in Rust Port
+
+### 1. `is_declaration_name` field (file:31-32)
+Marks identifiers that are declaration names (function/class names) rather than expression references. Used by `gather_captured_context` to skip non-expression positions. The TypeScript equivalent implicitly handled this via the Expression visitor not visiting declaration names.
+
+### 2. `opening_element_loc` field (file:25-28)
+For JSX identifiers that are tag names, stores the full JSXOpeningElement's location. This matches TS behavior where `handleMaybeDependency` uses `path.node.loc` from the JSXOpeningElement.
+
+### 3. Explicit declaration name handling (file:103-113)
+The visitor has special cases for `FunctionDeclaration` and `FunctionExpression` to mark their name identifiers with `is_declaration_name: true`. TypeScript handled this implicitly via separate visitor paths.
+
+### 4. Walking function name identifiers (file:139-143, 150-153)
+The main function explicitly visits the top-level function's own name identifier if present, since the walker only walks params + body. TypeScript's traverse() handled this automatically.

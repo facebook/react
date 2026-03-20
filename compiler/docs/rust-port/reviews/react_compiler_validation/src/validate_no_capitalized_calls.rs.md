@@ -1,65 +1,110 @@
-# Review: compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs
+# Review: react_compiler_validation/src/validate_no_capitalized_calls.rs
 
-## Corresponding TypeScript file(s)
+## Corresponding TypeScript source
 - `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`
 
 ## Summary
-The Rust port is a close and accurate translation of the TypeScript original. The logic for detecting capitalized function calls and method calls is faithfully preserved. There are only minor differences.
+The Rust port accurately implements validation that capitalized functions are not called directly. Logic is nearly identical to TypeScript with only minor structural differences.
 
 ## Major Issues
 None.
 
 ## Moderate Issues
-
-1. **PropertyLoad only checks string properties; TS also checks `typeof value.property === 'string'`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 55-62
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 62-67
-   - The TS checks `typeof value.property === 'string'` because `property` can be a string or number. The Rust version uses `if let PropertyLiteral::String(prop_name) = property` which is the correct Rust equivalent -- `PropertyLiteral` is an enum with `String` and `Number` variants. Functionally equivalent.
-
-2. **All-uppercase check uses different approach**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 36
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 35
-   - TS: `value.binding.name.toUpperCase() === value.binding.name`. Rust: `name != name.to_uppercase()`. Both correctly exclude all-uppercase identifiers like `CONSTANTS`. The negation is just inverted (TS uses `!(...) ` in the condition, Rust uses `!=`). Functionally equivalent but note that `to_uppercase()` in Rust handles Unicode uppercasing, while JS `toUpperCase()` also handles Unicode. Both should behave the same for ASCII identifiers.
+None.
 
 ## Minor Issues
 
-1. **`allow_list` built from `env.globals().keys()` vs. TS `DEFAULT_GLOBALS.keys()`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 12
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 15-16
-   - TS imports `DEFAULT_GLOBALS` directly. Rust calls `env.globals()`. These should return the same set of keys, assuming `env.globals()` returns the global registry. If `env.globals()` includes user-configured globals beyond `DEFAULT_GLOBALS`, this could be a behavioral difference (Rust would be more permissive).
+### 1. Different allow list construction (lines 12-17)
+**Location:** `validate_no_capitalized_calls.rs:12-17` vs `ValidateNoCapitalizedCalls.ts:14-21`
 
-2. **`isAllowed` helper not used in Rust**
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 19-21
-   - The TS defines an `isAllowed` closure. The Rust version inlines `allow_list.contains(name)` directly at line 37. Functionally identical.
+**Rust:**
+```rust
+let mut allow_list: HashSet<String> = env.globals().keys().cloned().collect();
+if let Some(config_entries) = &env.config.validate_no_capitalized_calls {
+    for entry in config_entries {
+        allow_list.insert(entry.clone());
+    }
+}
+```
 
-3. **Config field name casing**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 13
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 17
-   - TS: `envConfig.validateNoCapitalizedCalls`. Rust: `env.config.validate_no_capitalized_calls`. Standard casing convention difference.
+**TypeScript:**
+```typescript
+const ALLOW_LIST = new Set([
+  ...DEFAULT_GLOBALS.keys(),
+  ...(envConfig.validateNoCapitalizedCalls ?? []),
+]);
+const isAllowed = (name: string): boolean => {
+  return ALLOW_LIST.has(name);
+};
+```
 
-4. **`continue` vs. `break` after recording CallExpression error**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 53
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 57
-   - Both use `continue` to skip to the next instruction after recording the error. Functionally equivalent.
+**Note:** Rust builds the set imperatively, TypeScript uses spread operators. Functionally equivalent. TypeScript also defines an `isAllowed()` helper which Rust inlines.
 
-5. **`PropertyLoad` does not check all-uppercase for property names**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 57
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 63-65
-   - Neither TS nor Rust checks for all-uppercase property names (only `LoadGlobal` checks for this). Both only check `starts_with uppercase`. Consistent.
+### 2. Regex vs starts_with for capitalization check (lines 33-34)
+**Location:** `validate_no_capitalized_calls.rs:33-34` vs `ValidateNoCapitalizedCalls.ts:32-35`
 
-6. **Error `loc` field: Rust uses `*loc` (dereferenced), TS uses `value.loc`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 49
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateNoCapitalizedCalls.ts`, line 54
-   - The Rust `loc` is extracted from the `CallExpression` variant's `loc` field. The TS uses `value.loc`. Both refer to the instruction value's source location. Functionally equivalent.
+**Rust:**
+```rust
+&& name.starts_with(|c: char| c.is_ascii_uppercase())
+// We don't want to flag CONSTANTS()
+&& name != name.to_uppercase()
+```
+
+**TypeScript:**
+```typescript
+/^[A-Z]/.test(value.binding.name) &&
+// We don't want to flag CONSTANTS()
+!(value.binding.name.toUpperCase() === value.binding.name) &&
+```
+
+**Note:** Rust uses `starts_with` + predicate, TypeScript uses regex. Both check for uppercase start and exclude all-caps names. Functionally equivalent.
+
+### 3. PropertyLiteral matching (lines 56-61)
+**Location:** `validate_no_capitalized_calls.rs:56-61` vs `ValidateNoCapitalizedCalls.ts:62-67`
+
+**Rust:**
+```rust
+if let PropertyLiteral::String(prop_name) = property {
+    if prop_name.starts_with(|c: char| c.is_ascii_uppercase()) {
+        capitalized_properties.insert(lvalue_id, prop_name.clone());
+    }
+}
+```
+
+**TypeScript:**
+```typescript
+if (
+  typeof value.property === 'string' &&
+  /^[A-Z]/.test(value.property)
+) {
+  capitalizedProperties.set(lvalue.identifier.id, value.property);
+}
+```
+
+**Note:** Rust matches on the `PropertyLiteral` enum, TypeScript uses `typeof`. The Rust version doesn't check for Number properties, but that's correct since we only care about capitalized strings.
 
 ## Architectural Differences
 
-1. **Arena-based instruction access**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_capitalized_calls.rs`, line 26
-   - Instructions accessed via `func.instructions[instr_id.0 as usize]` rather than direct iteration.
+### 1. Global registry access (line 12)
+**Rust:** `env.globals().keys()`
+**TypeScript:** `DEFAULT_GLOBALS.keys()`
 
-2. **No inner function recursion**
-   - Both TS and Rust only validate the top-level function, not inner function expressions. This is consistent.
+**Reason:** Rust accesses globals through the Environment's method, TypeScript imports the constant directly.
 
-## Missing TypeScript Features
-None.
+### 2. Config access (line 13)
+**Rust:** `env.config.validate_no_capitalized_calls`
+**TypeScript:** `envConfig.validateNoCapitalizedCalls`
+
+**Reason:** Rust naming convention uses snake_case, TypeScript uses camelCase.
+
+### 3. PropertyLiteral enum (line 56)
+**Rust:** Pattern matches on `PropertyLiteral::String` vs `PropertyLiteral::Number`
+**TypeScript:** Uses `typeof value.property === 'string'`
+
+**Reason:** Rust's HIR uses an enum for property literals, TypeScript uses a union type.
+
+## Missing from Rust Port
+None - all TypeScript logic is present.
+
+## Additional in Rust Port
+None - the Rust version is a faithful port with no additional logic.

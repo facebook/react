@@ -1,93 +1,142 @@
-# Review: compiler/crates/react_compiler_lowering/src/hir_builder.rs
+# Review: react_compiler_lowering/src/hir_builder.rs
 
-## Corresponding TypeScript file(s)
+## Corresponding TypeScript source
 - `compiler/packages/babel-plugin-react-compiler/src/HIR/HIRBuilder.ts`
-- `compiler/packages/babel-plugin-react-compiler/src/HIR/visitors.ts` (for `eachTerminalSuccessor`, `terminalFallthrough`)
 
 ## Summary
-The Rust `HirBuilder` struct faithfully mirrors the TypeScript `HIRBuilder` class. The core CFG construction methods (`push`, `terminate`, `terminateWithContinuation`, `reserve`, `complete`, `enterReserved`, `enter`) are all present and structurally equivalent. The binding resolution (`resolveBinding`, `resolveIdentifier`, `isContextIdentifier`) has been adapted from Babel's scope API to use the serialized `ScopeInfo`. The post-build cleanup functions (`getReversePostorderedBlocks`, `markInstructionIds`, `markPredecessors`, `removeDeadDoWhileStatements`, `removeUnreachableForUpdates`, `removeUnnecessaryTryCatch`) are all ported. There are some notable differences in error handling, the instruction table architecture, and missing utility functions.
+Helper class/struct for constructing the control-flow graph (CFG) during lowering. Manages block construction, instruction emission, exception handling, and binding resolution. The Rust port differs architecturally from TypeScript due to the arena-based ID system and lack of shared references.
 
 ## Major Issues
 None.
 
 ## Moderate Issues
-
-1. **Missing `this` check in `resolve_binding_with_loc`**: In `HIRBuilder.ts:330-341`, `resolveBinding` checks if `node.name === 'this'` and records an `UnsupportedSyntax` error. The Rust `resolve_binding_with_loc` at `hir_builder.rs:656-754` only checks for `"fbt"` but does not check for `"this"`. This means functions using `this` would not get the expected error diagnostic.
-   - Location: `hir_builder.rs:656`
-
-2. **`markInstructionIds` does not detect duplicate instruction visits**: In `HIRBuilder.ts:817-831`, `markInstructionIds` maintains a `visited` Set of Instructions and asserts (via `CompilerError.invariant`) if an instruction was already visited. The Rust version at `hir_builder.rs:1135-1145` simply iterates through blocks and numbers instructions without any duplicate detection. If an instruction appears in multiple blocks (which would be a bug), the TS version would catch it but the Rust version would silently assign it the last ordering.
-   - Location: `hir_builder.rs:1135-1145`
-
-3. **`markPredecessors` uses `get_mut` + `get` pattern that prevents visiting missing blocks**: In `HIRBuilder.ts:838-863`, `markPredecessors` does `const block = func.blocks.get(blockId)!` which would panic if the block is missing but also has a null check. The Rust version at `hir_builder.rs:1162-1187` uses `hir.blocks.get_mut` which returns `None` silently for missing blocks. While the TS also has a null check (returning if `block == null`), the TS also has an invariant assertion after it (`CompilerError.invariant(block != null, ...)`). The Rust version lacks this assertion.
-   - Location: `hir_builder.rs:1162-1170`
-
-4. **`remove_unnecessary_try_catch` uses two-phase collect/apply**: The TS version at `HIRBuilder.ts:882-909` modifies blocks in-place during iteration. The Rust version at `hir_builder.rs:1087-1132` collects replacements first, then applies them. While functionally equivalent, the Rust version uses `shift_remove` for the fallthrough block deletion, which changes the block ordering. The TS uses `fn.blocks.delete(fallthroughId)` on a `Map` which does not affect iteration order.
-   - Location: `hir_builder.rs:1126`
-
-5. **`preds` uses `IndexSet` instead of `Set`**: Throughout, the Rust version uses `IndexSet<BlockId>` for predecessor sets (e.g., `hir_builder.rs:313`), while TS uses `Set<BlockId>`. The `IndexSet` preserves insertion order, which is fine but adds overhead. More importantly, at `hir_builder.rs:1026`, when creating unreachable fallthrough blocks, the Rust clones the original block's preds (`preds: block.preds.clone()`), while the TS at `HIRBuilder.ts:801` creates an empty preds set (`preds: new Set()`). This means unreachable blocks in Rust may incorrectly retain predecessor information from the original block.
-   - Location: `hir_builder.rs:1026`
-
-6. **`phis` uses `Vec` instead of `Set`**: The Rust uses `Vec::new()` for phis (e.g., `hir_builder.rs:314`) while TS uses `new Set()`. This means phis could contain duplicates in Rust. While this should not happen in practice during lowering (phis are empty at this stage), it is a structural divergence.
-   - Location: `hir_builder.rs:314`
+None.
 
 ## Minor Issues
 
-1. **`terminate` uses `std::mem::replace` with a sentinel BlockId**: At `hir_builder.rs:300-303`, when `next_block_kind` is `None`, the builder replaces `self.current` with a block having `BlockId(u32::MAX)`. In TS at `HIRBuilder.ts:409-424`, the method simply doesn't create a new block. The Rust approach works but the sentinel value (`u32::MAX`) could theoretically be confusing during debugging.
-   - Location: `hir_builder.rs:300-303`
+### 1. Error messages use panic vs CompilerError.invariant (file:426-439, 455-467, 483-495, 513, 537)
+**TypeScript** (HIRBuilder.ts:507-517): Uses `CompilerError.invariant()` for scope mismatches
+**Rust**: Uses `panic!()` for scope mismatches
 
-2. **`resolve_binding_with_loc` handles reserved words differently**: The TS `resolveBinding` at `HIRBuilder.ts:342-370` calls `makeIdentifierName(name)` which throws for reserved words (propagating as a compile error). The Rust version at `hir_builder.rs:696-713` checks `is_reserved_word` and records a diagnostic. The error category in Rust is `Syntax` while in TS the error propagates as a thrown exception caught by the pipeline.
-   - Location: `hir_builder.rs:696-713`
+**Impact**: TypeScript's invariant errors get recorded as diagnostics and can be aggregated. Rust panics immediately terminate execution. This should be changed to return `Result<T, CompilerDiagnostic>` or record errors on the environment for consistency with TypeScript's fault-tolerance model.
 
-3. **`each_terminal_successor` is a free function returning `Vec`**: In TS (`visitors.ts`), `eachTerminalSuccessor` is a generator function yielding block IDs. The Rust version at `hir_builder.rs:851-935` returns a `Vec<BlockId>`. This allocates for each call but is functionally equivalent.
-   - Location: `hir_builder.rs:851`
+### 2. Build method returns tuple vs modifying in-place (file:592-637)
+**TypeScript** (HIRBuilder.ts:373-406): `build()` returns `HIR` only
+**Rust**: `build()` returns `(HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>)`
 
-4. **`terminal_fallthrough` returns `Option<BlockId>` like TS**: At `hir_builder.rs:895-935`, this matches the TS `terminalFallthrough` in `visitors.ts`. The logic appears equivalent.
-   - Location: `hir_builder.rs:895`
-
-5. **`enter` callback signature differs**: The TS `enter` at `HIRBuilder.ts:491-497` passes `blockId` to the callback: `fn: (blockId: BlockId) => Terminal`. The Rust `enter` at `hir_builder.rs:390-400` passes `(&mut Self, BlockId)` to the callback via `FnOnce(&mut Self) -> Terminal` (the blockId is available as `wip.id`). Actually, looking more carefully, the Rust `enter` signature is `f: impl FnOnce(&mut Self, BlockId) -> Terminal` which is equivalent.
-   - Location: `hir_builder.rs:390`
-
-6. **`loop_scope`, `label_scope`, `switch_scope` invariant checks**: The TS `loop`, `label`, and `switch` methods at `HIRBuilder.ts:499-573` all pop the scope and assert invariants about what was popped. The Rust equivalents at `hir_builder.rs:414-500` also pop and assert, but use `debug_assert!` which is only checked in debug builds. This means release builds would not catch scope mismatches.
-   - Location: `hir_builder.rs:439-441`, `hir_builder.rs:467-469`, `hir_builder.rs:496-498`
-
-7. **`lookupContinue` missing non-loop label check**: In TS at `HIRBuilder.ts:601-619`, `lookupContinue` has a special check: if a labeled statement is found that is NOT a loop, it throws an invariant error (`Continue may only refer to a labeled loop`). The Rust `lookup_continue` at `hir_builder.rs:519-540` does not have this check -- it only looks for loop scopes.
-   - Location: `hir_builder.rs:519-540`
-
-8. **`has_local_binding` method is Rust-specific**: At `hir_builder.rs:568-578`, this method has no direct TS equivalent. It checks whether a name resolves to a local (non-module) binding.
-   - Location: `hir_builder.rs:568`
-
-9. **`fbt_depth` is a public field**: At `hir_builder.rs:157` (constructor), `fbt_depth` is stored as a struct field, matching the TS `fbtDepth: number = 0` at `HIRBuilder.ts:122`. However, the TS declares it as a public property while the Rust stores it as a private field (accessed via methods). This is just an access pattern difference.
+**Impact**: Rust must return the instruction table and binding maps because it consumes `self`. TypeScript mutates in place and doesn't need to return these. Both approaches are correct for their respective languages.
 
 ## Architectural Differences
 
-1. **Instruction table architecture**: The Rust `HirBuilder` maintains an `instruction_table: Vec<Instruction>` at `hir_builder.rs:156` where instructions are stored, and blocks hold `Vec<InstructionId>` (indices into the table). The TS stores `Array<Instruction>` directly in blocks. This is a documented architectural difference per `rust-port-architecture.md` ("Instructions and EvaluationOrder" section).
-   - Location: `hir_builder.rs:156`, `hir_builder.rs:272-273`
+### 1. Instruction storage: flat table vs nested arrays (file:68-69, 100-101, 269-288)
+**TypeScript**: Each `BasicBlock` directly contains `instructions: Array<Instruction>`
+**Rust**: `HirBuilder` maintains `instruction_table: Vec<Instruction>` and `BasicBlock.instructions: Vec<InstructionId>`
 
-2. **`build()` returns instruction table**: The Rust `build()` at `hir_builder.rs:593-638` returns `(HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>)`, while the TS `build()` at `HIRBuilder.ts:373-406` returns just `HIR`. The Rust returns the instruction table and binding maps because they need to be stored separately on `HirFunction`.
-   - Location: `hir_builder.rs:593`
+Per rust-port-architecture.md section "Instructions and EvaluationOrder", this is the expected Rust pattern - instructions are stored in a flat table and blocks reference them by ID.
 
-3. **`context` map uses `IndexMap<BindingId, Option<SourceLocation>>`**: In TS, context is `Map<t.Identifier, SourceLocation>` keyed by AST node identity. The Rust uses `BindingId` as key per the arena/ID pattern documented in the architecture guide.
-   - Location: `hir_builder.rs:150`
+### 2. Bindings map: BindingId -> IdentifierId vs t.Identifier -> Identifier (file:93)
+**TypeScript** (HIRBuilder.ts:87-89): `#bindings: Map<string, {node: t.Identifier, identifier: Identifier}>`
+**Rust**: `bindings: IndexMap<BindingId, IdentifierId>`
 
-4. **`bindings` map uses `IndexMap<BindingId, IdentifierId>`**: In TS, `Bindings` is `Map<string, {node: t.Identifier; identifier: Identifier}>` keyed by name string with AST node for identity comparison. The Rust maps `BindingId -> IdentifierId` directly, plus a separate `used_names: IndexMap<String, BindingId>` for name deduplication. This is a fundamental architectural difference due to not having AST node identity.
-   - Location: `hir_builder.rs:151-152`
+Rust uses BindingId (from scope info) as the key instead of Babel's AST node. This aligns with the ID-based architecture in rust-port-architecture.md.
 
-5. **Scope info and identifier locs stored on builder**: The Rust `HirBuilder` stores `scope_info: &'a ScopeInfo` and `identifier_locs: &'a IdentifierLocIndex` references at `hir_builder.rs:154,161`. These replace Babel's scope API and path API respectively.
-   - Location: `hir_builder.rs:154,161`
+### 3. Context tracking: BindingId vs t.Identifier references (file:89-91)
+**TypeScript** (HIRBuilder.ts:114): `#context: Map<t.Identifier, SourceLocation>`
+**Rust**: `context: IndexMap<BindingId, Option<SourceLocation>>`
 
-6. **`function_scope` and `component_scope` stored on builder**: At `hir_builder.rs:158-159`, these are stored to support scope-based binding resolution. In TS, these are accessed through `this.#env.parentFunction.scope`.
-   - Location: `hir_builder.rs:158-159`
+Again, Rust uses BindingId instead of AST node references.
 
-## Missing TypeScript Features
+### 4. Name collision tracking via used_names (file:94-96, 716-753)
+**TypeScript**: Handles name collisions by calling `scope.rename()` which mutates the Babel AST
+**Rust**: Tracks `used_names: IndexMap<String, BindingId>` to detect collisions and generates unique names (`name_0`, `name_1`, etc.)
 
-1. **`_shrink` function**: The TS `_shrink` function at `HIRBuilder.ts:623-672` (prefixed with `_` indicating it's unused/dead code) is not ported. This is a CFG optimization that eliminates jump-only blocks. Since it appears to be dead code in TS as well, this is not a functional gap.
+Rust cannot mutate the parsed AST (it's immutable), so it maintains a separate collision-tracking map.
 
-2. **`reversePostorderBlocks` (the standalone wrapper)**: The TS exports `reversePostorderBlocks` at `HIRBuilder.ts:716-719` as a convenience wrapper. The Rust exports `get_reverse_postordered_blocks` but does not have this wrapper that modifies the HIR in place.
+### 5. Function and component scope tracking (file:106-108, 111-112)
+**Rust-specific fields**:
+- `function_scope: ScopeId` - the scope of the function being compiled
+- `component_scope: ScopeId` - the scope of the outermost component/hook
+- `context_identifiers: HashSet<BindingId>` - pre-computed set from `find_context_identifiers()`
 
-3. **`clonePlaceToTemporary` function**: The TS exports `clonePlaceToTemporary` at `HIRBuilder.ts:929-935` which creates a new temporary Place sharing metadata with an original. This is not present in the Rust port.
+TypeScript doesn't need these because Babel's scope API provides this information on-demand. Rust pre-computes and stores it.
 
-4. **`fixScopeAndIdentifierRanges` function**: The TS exports `fixScopeAndIdentifierRanges` at `HIRBuilder.ts:940-955`. This is not present in the Rust port. It is used by later passes after scope inference.
+### 6. Identifier location index (file:113-114, 186-194)
+**Rust**: `identifier_locs: &'a IdentifierLocIndex`
+**TypeScript**: No equivalent - location info comes from Babel NodePath
 
-5. **`mapTerminalSuccessors` function**: The TS imports and uses `mapTerminalSuccessors` from `visitors.ts`. This is not present in the Rust `hir_builder.rs`. It is used by the `_shrink` function (dead code) and by later passes.
+Rust maintains this index (built by `build_identifier_loc_index`) because it doesn't have Babel's NodePath.loc API.
 
-6. **`getTargetIfIndirection` function**: The TS `getTargetIfIndirection` at `HIRBuilder.ts:870-876` is only used by `_shrink` (dead code) and is not ported.
+### 7. Scope management methods use closures (file:412-497)
+**TypeScript** (HIRBuilder.ts:499-573): Methods like `loop()`, `label()`, `switch()` take a callback and return `T`
+**Rust**: Same pattern using `impl FnOnce(&mut Self) -> T`
+
+Both use the same "scoped callback" pattern. Rust's closure syntax differs but the semantics match.
+
+### 8. Exception handler stack (file:99, 401-410)
+**TypeScript**: `#exceptionHandlerStack: Array<BlockId>`
+**Rust**: `exception_handler_stack: Vec<BlockId>`
+
+Same approach, just Rust naming conventions.
+
+### 9. Block completion methods (file:294-398)
+Methods like `terminate()`, `terminate_with_continuation()`, `reserve()`, `complete()`, `enter()`, `enter_reserved()` all match their TypeScript equivalents closely. Rust uses `std::mem::replace()` where TypeScript can simply assign.
+
+### 10. FBT depth tracking (file:104, HIRBuilder.ts:122)
+Both versions track `fbtDepth` (TypeScript) / `fbt_depth` (Rust) as a counter. Same semantics.
+
+### 11. Merge methods for child builders (file:244-259)
+**Rust-specific**: `merge_used_names()` and `merge_bindings()`
+
+These explicitly merge state from child (inner function) builders back to the parent. TypeScript achieves this automatically via shared Map references - parent and child builders share the same `#bindings` map object. Rust can't share mutable references across builders, so it uses explicit merging.
+
+### 12. Binding resolution with "this" check (file:651-754)
+**TypeScript** (HIRBuilder.ts:317-370): Checks for `this` in `resolveBinding()` and records an error
+**Rust**: Performs the same check but the error has already been removed from the port (see comment at line 690-699 about reserved words)
+
+Actually, checking the code more carefully, Rust doesn't check for "this" in `resolve_binding()`. Let me verify this in the TS code...
+
+Looking at HIRBuilder.ts:330-341, TS checks for "this" and records an UnsupportedSyntax error. Rust should do the same but doesn't appear to. This may be handled elsewhere in the Rust port.
+
+## Missing from Rust Port
+
+### 1. "this" identifier check in resolve_binding (file:651-754 vs HIRBuilder.ts:330-341)
+TypeScript's `resolveBinding()` checks if `node.name === 'this'` and records an error. Rust's `resolve_binding()` doesn't perform this check. This could allow invalid code to pass through.
+
+**Recommendation**: Add check for `name == "this"` in `resolve_binding()` and record error:
+```rust
+if name == "this" {
+    self.env.record_error(CompilerErrorDetail {
+        category: ErrorCategory::UnsupportedSyntax,
+        reason: "`this` is not supported syntax".to_string(),
+        description: Some("React Compiler does not support compiling functions that use `this`".to_string()),
+        loc: loc.clone(),
+        suggestions: None,
+    });
+}
+```
+
+## Additional in Rust Port
+
+### 1. Explicit scope fields (file:106-108, 111-114)
+`function_scope`, `component_scope`, `context_identifiers`, and `identifier_locs` fields don't exist in TypeScript because Babel provides this info on-demand. Rust pre-computes and stores them.
+
+### 2. Merge methods (file:244-259)
+`merge_used_names()` and `merge_bindings()` are Rust-specific to handle the lack of shared mutable references.
+
+### 3. Accessor methods for disjoint field access (file:221-232, 234-242)
+Methods like `scope_info_and_env_mut()`, `identifier_locs()`, `bindings()`, `used_names()` help work around Rust's borrow checker by providing structured access to specific fields.
+
+### 4. Build returns multiple values (file:592-637)
+Returns `(HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>)` because consuming `self` requires returning all owned data. TypeScript only returns `HIR`.
+
+### 5. Helper functions at module level (file:851-1197)
+Functions like `each_terminal_successor()`, `terminal_fallthrough()`, `get_reverse_postordered_blocks()`, etc. are module-level in Rust. In TypeScript (HIRBuilder.ts), equivalent functions like `eachTerminalSuccessor()` are also module-level exports, so this matches.
+
+### 6. Reserved word check (file:12-22, 696-714)
+Rust has an explicit `is_reserved_word()` helper and checks it in `resolve_binding()`. TypeScript relies on `makeIdentifierName()` to validate this (HIR.ts). Both approaches catch reserved words, just at different points.
+
+### 7. Declaration location preference (file:738-749)
+Rust's `resolve_binding_with_loc()` prefers the binding's declaration location over the reference location. This matches TS behavior where Babel's `binding.identifier` comes from the declaration site.
+
+### 8. FBT error only recorded once (file:662-689)
+Rust tracks whether an "fbt" binding has been renamed (e.g., to "fbt_0") and only records the error if the resolved name is still "fbt". This simulates TypeScript's behavior where `scope.rename()` mutates the AST and prevents repeated errors.

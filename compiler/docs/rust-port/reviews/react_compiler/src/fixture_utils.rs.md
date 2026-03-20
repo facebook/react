@@ -1,23 +1,53 @@
-# Review: compiler/crates/react_compiler/src/fixture_utils.rs
+# Review: react_compiler/src/fixture_utils.rs
 
-## Corresponding TypeScript file(s)
-- No direct TypeScript equivalent. This is a Rust-only utility for test fixtures. The TS test infrastructure uses Babel's AST traversal directly to find and extract functions.
+## Corresponding TypeScript source
+- No direct TypeScript equivalent
+- Functionality distributed in test harness (packages/babel-plugin-react-compiler/src/__tests__/fixtures/runner.ts)
 
 ## Summary
-This file provides utilities for fixture testing: counting top-level functions in an AST and extracting the nth function. It is Rust-specific infrastructure that replaces the Babel traversal-based function discovery used in the TS test harness. There is no TS file to compare against.
+Utility module for extracting functions from AST files in fixture tests. Not present in TypeScript as this logic is in the test runner.
 
 ## Major Issues
-None (no TS counterpart to diverge from).
+None.
 
 ## Moderate Issues
 None.
 
 ## Minor Issues
-None.
+
+### 1. Limited expression statement support (fixture_utils.rs:71-80)
+Only handles function expressions in expression statements. May miss edge cases like:
+```js
+(function foo() {})();  // IIFE
+```
+
+This is acceptable for current fixture tests but could be expanded.
 
 ## Architectural Differences
-- This file exists because the Rust compiler cannot use Babel's traverse to walk AST nodes. Instead, it manually walks the program body to find top-level functions. This is structurally similar to `find_functions_to_compile` in `program.rs` but simpler (no type detection, just extraction).
-  `/compiler/crates/react_compiler/src/fixture_utils.rs:1:1`
 
-## Missing TypeScript Features
-N/A - this file has no TS counterpart.
+### 1. Standalone utility module
+**Intentional**: Rust port needs to extract functions from parsed AST without Babel traversal API. TypeScript test runner does this via Babel's traverse.
+
+**Purpose**: Enables testing compilation pipeline before full traversal is implemented.
+
+## Missing from Rust Port
+N/A - no TypeScript equivalent
+
+## Additional in Rust Port
+
+### 1. count_top_level_functions (fixture_utils.rs:17-23)
+Counts all top-level function declarations and expressions. Used by test harness.
+
+### 2. extract_function (fixture_utils.rs:90-239)
+Extracts the nth function from a file along with its inferred name. Returns:
+- `FunctionNode` enum (FunctionDeclaration | FunctionExpression | ArrowFunctionExpression)
+- Optional name string
+
+Handles:
+- Direct function declarations
+- Variable declarators with function expressions
+- Export named declarations
+- Export default declarations
+- Expression statements
+
+This replaces Babel's path-based extraction in TS test infrastructure.

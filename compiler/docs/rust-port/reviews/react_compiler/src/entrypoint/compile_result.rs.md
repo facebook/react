@@ -1,57 +1,81 @@
-# Review: compiler/crates/react_compiler/src/entrypoint/compile_result.rs
+# Review: react_compiler/src/entrypoint/compile_result.rs
 
-## Corresponding TypeScript file(s)
-- `compiler/packages/babel-plugin-react-compiler/src/Entrypoint/Options.ts` (LoggerEvent types, CompilerOutputMode)
-- `compiler/packages/babel-plugin-react-compiler/src/Entrypoint/Program.ts` (CompileResult type, CodegenFunction usage)
-- `compiler/packages/babel-plugin-react-compiler/src/ReactiveScopes/CodegenFunction.ts` (CodegenFunction shape)
+## Corresponding TypeScript source
+- No single corresponding file; types are distributed across:
+  - Return types in `Program.ts` (CompileResult)
+  - Logger event types in `Options.ts` (LoggerEvent types)
+  - CodegenFunction in `ReactiveScopes/CodegenReactiveFunction.ts`
 
 ## Summary
-This file defines the serializable result types returned from the Rust compiler to the JS shim. It combines types that are spread across several TS files. The `CompileResult` enum, `LoggerEvent` enum, `CodegenFunction`, and `DebugLogEntry` types are all novel Rust-side constructs for the JS-Rust bridge. The `LoggerEvent` variants correspond to the TS `LoggerEvent` union type, and `CompileResult` is a Rust-specific envelope for returning results via JSON serialization.
+Centralized result types for the compiler pipeline, matching TypeScript's distributed type definitions.
 
 ## Major Issues
 None.
 
 ## Moderate Issues
-
-1. **Missing `TimingEvent` variant**: The TS `LoggerEvent` union includes a `TimingEvent` variant with `kind: 'Timing'` and a `PerformanceMeasure` field. The Rust `LoggerEvent` enum does not include this variant.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:120:1`
-
-2. **Missing `CompileDiagnosticEvent` variant**: The TS `LoggerEvent` union includes `CompileDiagnosticEvent` with `kind: 'CompileDiagnostic'`. The Rust `LoggerEvent` does not have this variant.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:120:1`
-
-3. **`CompileResult` structure differs from TS**: In TS, `CompileResult` is `{ kind: 'original' | 'outlined'; originalFn: BabelFn; compiledFn: CodegenFunction }`. The Rust `CompileResult` is an enum of `Success { ast, events, ... }` or `Error { error, events, ... }`. These serve different purposes -- the Rust version is the top-level return type for the entire program compilation (like what `compileProgram` returns to JS), while the TS `CompileResult` is per-function. This is an architectural difference, not a bug.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:9:1`
-
-4. **`NonLocalImportSpecifier` missing `kind` field**: The TS `NonLocalImportSpecifier` type (in `HIR/Environment.ts`) has a `kind: 'ImportSpecifier'` field. The Rust `NonLocalImportSpecifier` in `imports.rs` omits this field. This could cause issues if the kind is checked downstream.
-   `/compiler/crates/react_compiler/src/entrypoint/imports.rs:27:1`
+None.
 
 ## Minor Issues
 
-1. **`CodegenFunction` is a placeholder**: The Rust `CodegenFunction` has only stub fields (`memo_slots_used: u32`, etc.) with no `id`, `params`, `body`, `async`, `generator` fields that the TS `CodegenFunction` has. This is expected since codegen is not yet implemented.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:98:1`
+### 1. Missing event types (compile_result.rs:117-159)
+TypeScript has additional event types not yet in Rust:
+- `CompileDiagnosticEvent` (Options.ts:265-268)
+- `TimingEvent` (Options.ts:295-298)
 
-2. **`OutlinedFunction` differs**: In TS, the outlined function type from `CodegenFunction.outlined` is `{ fn: CodegenFunction; type: ReactFunctionType | null }`. The Rust version uses `fn_type: Option<ReactFunctionType>` which matches the semantics.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:111:1`
-
-3. **`LoggerEvent::CompileSkip` uses `String` for reason**: The TS `CompileSkipEvent` has `reason: string` which matches, but the `loc` field in TS is `t.SourceLocation | null` while Rust uses `Option<SourceLocation>`. Both represent the same thing.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:142:1`
-
-4. **`DebugLogEntry.kind` is a static `&'static str`**: Always `"debug"`. In the TS, `CompilerPipelineValue` has multiple kinds: `'ast'`, `'hir'`, `'reactive'`, `'debug'`. The Rust version only supports the `'debug'` kind since it serializes HIR as strings rather than structured data.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:81:1`
-
-5. **`CompilerErrorInfo` / `CompilerErrorDetailInfo` are Rust-specific serialization types**: These don't have direct TS counterparts. They are used to serialize `CompilerError` / `CompilerErrorDetail` into JSON for the JS shim. The serialization format appears consistent with how the TS logger receives error details.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:43:1`
+These are not critical for core functionality but may be needed for full logger support.
 
 ## Architectural Differences
 
-1. **Serialization boundary**: The entire `CompileResult` is `#[derive(Serialize)]` for JSON serialization to the JS shim. This is a Rust-specific concern. The TS version directly manipulates Babel AST nodes.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:7:1`
+### 1. Unified result type (compile_result.rs:7-31)
+**Rust** uses a single `CompileResult` enum with Success/Error variants, each containing events/debug_logs/ordered_log.
 
-2. **`OrderedLogItem` is Rust-specific**: The TS version doesn't need an ordered log since events are dispatched via callbacks. The Rust version collects all events and returns them as a batch.
-   `/compiler/crates/react_compiler/src/entrypoint/compile_result.rs:34:1`
+**TypeScript** doesn't have a unified result type; success/error handling is distributed across the pipeline with Result<T, E> pattern.
 
-## Missing TypeScript Features
+**Intentional**: Centralizes all output in one serializable type for the JS shim.
 
-1. **`TimingEvent` / `PerformanceMeasure` support** is not implemented. This is a minor feature used for performance tracking.
-2. **`CompileDiagnosticEvent`** is not implemented.
-3. **Full `CodegenFunction`** fields (id, params, body, async, generator, etc.) are not present -- codegen is not yet implemented.
+### 2. OrderedLogItem enum (compile_result.rs:34-39)
+**Rust** introduces `OrderedLogItem` to interleave events and debug entries in chronological order.
+
+**TypeScript** manages these separately via the logger callback.
+
+**Intentional**: Better for serialization to JS, allows replay of exact compilation sequence.
+
+### 3. CodegenFunction structure (compile_result.rs:98-114)
+**Rust** version is simplified with all memo fields defaulting to 0 (no codegen yet).
+
+**TypeScript** (ReactiveScopes/CodegenReactiveFunction.ts) has full implementation with calculated memo statistics.
+
+**Expected**: Will be populated when codegen is ported.
+
+## Missing from Rust Port
+
+### 1. CompileDiagnosticEvent (Options.ts:265-268)
+```typescript
+export type CompileDiagnosticEvent = {
+  kind: 'CompileDiagnostic';
+  fnLoc: t.SourceLocation | null;
+  detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
+};
+```
+
+Not present in Rust. May be needed for non-error diagnostics logging.
+
+### 2. TimingEvent (Options.ts:295-298)
+```typescript
+export type TimingEvent = {
+  kind: 'Timing';
+  measurement: PerformanceMeasure;
+};
+```
+
+Not present in Rust. Performance measurement infrastructure not yet ported.
+
+## Additional in Rust Port
+
+### 1. DebugLogEntry struct (compile_result.rs:78-94)
+Explicit struct with `kind: "debug"` field. TypeScript uses inline object literals.
+
+### 2. ordered_log field (compile_result.rs:18-20, 28-29)
+New field to track chronological order of all log events. Not present in TypeScript.
+
+**Purpose**: Better debugging experience - can replay exact sequence of compilation events.

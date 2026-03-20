@@ -1,94 +1,78 @@
-# Review: compiler/crates/react_compiler_validation/src/validate_use_memo.rs
+# Review: react_compiler_validation/src/validate_use_memo.rs
 
-## Corresponding TypeScript file(s)
+## Corresponding TypeScript source
 - `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`
 
 ## Summary
-The Rust port closely follows the TypeScript logic for validating useMemo() usage patterns. The core checks -- no parameters on callback, no async/generator callbacks, no context variable reassignment, void return detection, and unused result tracking -- are all faithfully ported. The main divergence is in the return type: the Rust version returns the `CompilerError` (void memo errors) directly, while the TS version calls `fn.env.logErrors(voidMemoErrors.asResult())` at the end. There are several other differences worth noting.
+The Rust port accurately implements useMemo validation with comprehensive operand tracking for void/unused memo detection. Logic is structurally very close to TypeScript.
 
 ## Major Issues
 None.
 
 ## Moderate Issues
 
-1. **Return value vs. `logErrors` call for void memo errors**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 16-17
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 178
-   - The TS version calls `fn.env.logErrors(voidMemoErrors.asResult())` at the end, which logs the errors via the environment's error logger (for telemetry/reporting) but does NOT add them to the compilation errors. The Rust version returns the `CompilerError` to the caller. The caller must handle these errors appropriately (e.g., log them). If the caller doesn't handle them, these errors could be silently dropped or incorrectly treated as compilation errors.
+### 1. Return type and error handling differ (line 16)
+**Location:** `validate_use_memo.rs:16` vs `ValidateUseMemo.ts:25, 178`
 
-2. **`FunctionExpression` tracking: Rust only tracks `FunctionExpression`, TS also only tracks `FunctionExpression`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 71-79
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 59-61
-   - Both only track `FunctionExpression` (not `ObjectMethod`). Consistent.
-   - However, the TS stores the entire `FunctionExpression` value (`functions.set(lvalue.identifier.id, value)`), while the Rust version stores a `FuncExprInfo` with just `func_id` and `loc`. The TS later accesses `body.loweredFunc.func.params`, `body.loweredFunc.func.async`, `body.loweredFunc.func.generator`, `body.loc`. The Rust accesses these through the function arena. Functionally equivalent.
+**Rust:** `pub fn validate_use_memo(...) -> CompilerError`
+**TypeScript:** `export function validateUseMemo(fn: HIRFunction): void` (calls `fn.env.logErrors()` at end)
 
-3. **`validate_no_context_variable_assignment` does not recurse into inner functions**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_no_context_variable_lvalues.rs`, line 244-275
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 181-212
-   - Neither the TS nor Rust version recurses into inner function expressions within the useMemo callback. Both only check the immediate function body. Consistent.
-   - Note: the Rust version has an unused `_functions` parameter (line 247), suggesting recursion was considered but not implemented. The TS version similarly only checks the immediate function.
+**Issue:** The Rust version returns `CompilerError` containing VoidUseMemo errors, while TypeScript logs them directly via `fn.env.logErrors()`. The caller must know to handle the returned errors appropriately.
 
-4. **`validate_no_void_use_memo` config check placement**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 222-241
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 127-144
-   - Both check `validate_no_void_use_memo` before performing the void return check and unused memo tracking. Consistent.
+**Recommendation:** Document this difference or match TypeScript's approach of logging errors internally if that fits the Rust architecture better.
 
 ## Minor Issues
 
-1. **`each_instruction_value_operand_ids` vs. `eachInstructionValueOperand`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 289-469
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 39
-   - The TS uses `eachInstructionValueOperand(value)` which is a generator yielding `Place` objects. The Rust version has a local `each_instruction_value_operand_ids` function that returns `Vec<IdentifierId>`. Both are used to check if useMemo results are referenced. The Rust version only collects IDs (not full places) since only the identifier ID is needed for the `unused_use_memos.remove()` check.
+### 1. Parameter name differs (line 176)
+**Location:** `validate_use_memo.rs:176` vs `ValidateUseMemo.ts:86`
 
-2. **`each_terminal_operand_ids` vs. `eachTerminalOperand`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 481-525
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 150
-   - Same pattern as above -- local implementation collecting IDs.
+**Rust:** `body_func` 
+**TypeScript:** `body`
 
-3. **`has_non_void_return` checks `ReturnVariant::Explicit | ReturnVariant::Implicit`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 277-286
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 214-226
-   - TS checks `block.terminal.kind === 'return'` and then `block.terminal.returnVariant === 'Explicit' || block.terminal.returnVariant === 'Implicit'`. The Rust uses `if let Terminal::Return { return_variant, .. }` and `matches!(return_variant, ReturnVariant::Explicit | ReturnVariant::Implicit)`. Functionally equivalent.
+**Note:** Minor naming difference, not functionally significant.
 
-4. **Error recording: Rust uses `errors.push_diagnostic(...)`, TS uses `fn.env.recordError(...)`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 185, 203, 257
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 93, 109, 193
-   - The Rust version writes to the passed-in `errors` (which is `&mut env.errors`), while the TS calls `fn.env.recordError`. Functionally equivalent when called through `validate_use_memo()`.
+### 2. Different struct for function info (lines 21-24)
+**Rust:** Uses custom `FuncExprInfo` struct
+**TypeScript:** Stores `FunctionExpression` value directly in the map
 
-5. **`FuncExprInfo` struct vs. inline `FunctionExpression` storage**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 21-24
-   - The TS stores the full `FunctionExpression` instruction value. The Rust stores just the `FunctionId` and `loc`. This is an architectural difference due to the function arena pattern.
+**Note:** The Rust version extracts only the needed fields (`func_id`, `loc`) to avoid ownership issues. This is an appropriate architectural difference.
 
-6. **`PlaceOrSpread` first arg check**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 166-168
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 79
-   - TS: `arg.kind !== 'Identifier'` (checks if spread). Rust: matches against `PlaceOrSpread::Spread(_)` and returns. Functionally equivalent.
+### 3. Operand iteration is explicit and comprehensive (lines 289-525)
+**Rust:** Hand-coded `each_instruction_value_operand_ids()` and `each_terminal_operand_ids()` 
+**TypeScript:** Uses visitor helpers `eachInstructionValueOperand()` and `eachTerminalOperand()`
 
-7. **Unused `_func` parameter in `handle_possible_use_memo_call`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 149
-   - The first parameter `_func` is unused (prefixed with underscore). This parameter has no TS equivalent and appears to be leftover.
-
-8. **Error diagnostic construction pattern**
-   - Rust file: throughout
-   - TS file: throughout
-   - TS uses `CompilerDiagnostic.create({...}).withDetails({kind: 'error', ...})`. Rust uses `CompilerDiagnostic::new(...).with_detail(CompilerDiagnosticDetail::Error{...})`. Structurally equivalent.
+**Note:** The Rust version manually implements the visitor logic inline. Both approaches are equivalent in functionality. The Rust version is more explicit about which instruction variants have operands.
 
 ## Architectural Differences
 
-1. **Function arena access for inner function bodies**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 176
-   - Inner function bodies accessed via `functions[body_info.func_id.0 as usize]` instead of direct object reference.
+### 1. Arena access for functions (lines 107, 176)
+**Rust:** `&functions[func_id.0 as usize]`
+**TypeScript:** Direct access via `body.loweredFunc.func`
 
-2. **Separate `functions` parameter instead of `env`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 26-31
-   - The `validate_use_memo_impl` function takes `functions: &[HirFunction]` and `errors: &mut CompilerError` separately rather than `env: &mut Environment`. This allows borrow splitting.
+**Reason:** Standard function arena pattern per `rust-port-architecture.md`.
 
-3. **`each_instruction_value_operand_ids` and `each_terminal_operand_ids` are local**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_use_memo.rs`, line 289-525
-   - These are large local functions that enumerate all instruction/terminal variants. The TS uses shared visitor utilities from `HIR/visitors`. Having these locally means they must be updated whenever new instruction/terminal variants are added.
+### 2. Separate error accumulation (line 32)
+**Rust:** Creates local `void_memo_errors` and returns it
+**TypeScript:** Accumulates in local `voidMemoErrors` then calls `fn.env.logErrors()`
 
-## Missing TypeScript Features
+**Reason:** Allows caller to decide how to handle VoidUseMemo errors (log vs. aggregate vs. discard).
 
-1. **`fn.env.logErrors(voidMemoErrors.asResult())` not called**
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateUseMemo.ts`, line 178
-   - The TS version logs void memo errors via `env.logErrors()`. The Rust version returns them to the caller. The caller is responsible for handling them appropriately. If `logErrors` has side effects (e.g., telemetry reporting), those would be missing unless the caller replicates them.
+### 3. Explicit operand ID collection (lines 289-525)
+**Rust:** Two dedicated functions that exhaustively match all instruction/terminal variants
+**TypeScript:** Uses generic visitor pattern from `HIR/visitors.ts`
+
+**Reason:** Rust doesn't have the visitor infrastructure yet, so passes implement traversal directly. This is more verbose but equally correct.
+
+## Missing from Rust Port
+None - all TypeScript validation logic is present.
+
+## Additional in Rust Port
+
+### 1. `FuncExprInfo` struct (lines 21-24)
+A lightweight struct holding only the function ID and location, rather than storing the entire `FunctionExpression` value.
+
+### 2. Comprehensive operand visitor implementations (lines 289-525)
+The Rust version implements full `each_instruction_value_operand_ids()` and `each_terminal_operand_ids()` functions that exhaustively handle all HIR variants. These replace the TypeScript visitor helpers and are more explicit about coverage.
+
+### 3. Helper `collect_place_or_spread_ids()` (lines 471-478)
+A small helper to extract IDs from argument lists. Not needed in TypeScript due to the visitor pattern.

@@ -1,35 +1,39 @@
-# Review: compiler/crates/react_compiler_ssa/src/lib.rs
+# Review: react_compiler_ssa/src/lib.rs
 
-## Corresponding TypeScript file(s)
-- compiler/packages/babel-plugin-react-compiler/src/SSA/index.ts
+## Corresponding TypeScript source
+- `compiler/packages/babel-plugin-react-compiler/src/SSA/index.ts`
 
 ## Summary
-The Rust `lib.rs` is a minimal module file that declares submodules and re-exports public functions. It closely mirrors the TS `index.ts` but is missing one export.
+The lib.rs file is a minimal module file that exports the three SSA-related passes. It correctly matches the TypeScript structure and exports all three passes that exist in the TypeScript SSA module.
 
 ## Major Issues
-
-None identified.
+None.
 
 ## Moderate Issues
-
-None identified.
+None.
 
 ## Minor Issues
 
-1. **`enter_ssa` module is `pub`, `eliminate_redundant_phi` is not**: In lib.rs:1-2, `enter_ssa` is declared as `pub mod` while `eliminate_redundant_phi` is just `mod`. The `eliminate_redundant_phi` function is still publicly re-exported (line 5), but the module internals (like `rewrite_place`, `rewrite_instruction_lvalues`, etc.) are not accessible from outside the crate. The `enter_ssa` module being `pub` exposes its internals (like `placeholder_function` which is `pub` and used by `eliminate_redundant_phi.rs` via `crate::enter_ssa::placeholder_function`). This is a Rust-specific design choice; making `enter_ssa` pub is needed so `eliminate_redundant_phi` can access `placeholder_function`.
-   - Location: lib.rs:1-2
+1. **`enter_ssa` module is `pub mod` while others are private `mod`**: lib.rs:1
+   - The `enter_ssa` module is declared as `pub mod` while `eliminate_redundant_phi` and `rewrite_instruction_kinds_based_on_reassignment` are private `mod`.
+   - This is intentional: `enter_ssa` is `pub` so that `eliminate_redundant_phi.rs` can access `enter_ssa::placeholder_function()` (used at eliminate_redundant_phi.rs:6).
+   - The functions themselves are still publicly re-exported via `pub use` (lines 5-7), so external crates can call all three passes.
 
-2. **Copyright header missing**: The Rust file lacks the Meta copyright header present in the TS file.
-   - Location: lib.rs:1
+2. **Copyright header missing**: lib.rs:1
+   - The Rust file lacks the Meta copyright header present in the TypeScript file.
 
 ## Architectural Differences
 
-1. **Crate structure vs directory-based module**: The TS `index.ts` re-exports from a directory-based module system. The Rust `lib.rs` uses Rust's module system with `mod` declarations and `pub use` re-exports. Functionally equivalent.
-   - TS location: compiler/packages/babel-plugin-react-compiler/src/SSA/index.ts
-   - Rust location: compiler/crates/react_compiler_ssa/src/lib.rs
+1. **Rust crate structure vs TypeScript directory-based modules**:
+   - The TS `index.ts` re-exports from separate files in the same directory.
+   - The Rust `lib.rs` uses Rust's module system with `mod` declarations and `pub use` re-exports.
+   - This is the standard pattern for each language and is functionally equivalent.
 
-## Missing TypeScript Features
+## Missing from Rust Port
+None. All three passes from the TypeScript version are present:
+- `enterSSA` → `enter_ssa`
+- `eliminateRedundantPhi` → `eliminate_redundant_phi`
+- `rewriteInstructionKindsBasedOnReassignment` → `rewrite_instruction_kinds_based_on_reassignment`
 
-1. **`rewriteInstructionKindsBasedOnReassignment` not ported**: The TS index.ts (line 10) exports `rewriteInstructionKindsBasedOnReassignment` from `RewriteInstructionKindsBasedOnReassignment.ts`. This pass has no equivalent in the Rust crate. It may not yet be needed in the Rust pipeline or may be planned for later porting.
-   - TS location: compiler/packages/babel-plugin-react-compiler/src/SSA/index.ts:10
-   - TS implementation: compiler/packages/babel-plugin-react-compiler/src/SSA/RewriteInstructionKindsBasedOnReassignment.ts
+## Additional in Rust Port
+None.

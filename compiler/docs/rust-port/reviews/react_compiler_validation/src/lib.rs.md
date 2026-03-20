@@ -1,10 +1,10 @@
-# Review: compiler/crates/react_compiler_validation/src/lib.rs
+# Review: react_compiler_validation/src/lib.rs
 
-## Corresponding TypeScript file(s)
-- No direct TS equivalent; this is the Rust crate module root.
+## Corresponding TypeScript source
+- `compiler/packages/babel-plugin-react-compiler/src/Validation/index.ts`
 
 ## Summary
-The lib.rs file declares the four validation submodules and re-exports their public functions. It additionally exports `validate_context_variable_lvalues_with_errors`, which has no TS counterpart (it is a Rust-specific API for callers that want to provide their own error sink).
+The Rust lib.rs correctly exports the four ported validation passes with appropriate public APIs.
 
 ## Major Issues
 None.
@@ -13,13 +13,28 @@ None.
 None.
 
 ## Minor Issues
-
-1. **Extra public export `validate_context_variable_lvalues_with_errors`**
-   - File: `compiler/crates/react_compiler_validation/src/lib.rs`, line 6, col 1
-   - The TS version only has a single export `validateContextVariableLValues`. The Rust version additionally exports `validate_context_variable_lvalues_with_errors`. This is an API surface difference, though it may be intentional for use during lowering.
+None.
 
 ## Architectural Differences
-None beyond the standard Rust module/crate pattern.
+None - this is a straightforward module definition.
 
-## Missing TypeScript Features
-None.
+## Missing from Rust Port
+
+The following validation passes exist in TypeScript but are NOT yet ported to Rust:
+
+1. **ValidateExhaustiveDependencies.ts** - Validates that effects/memoization have exhaustive dependency arrays
+2. **ValidateLocalsNotReassignedAfterRender.ts** - Validates that local variables aren't reassigned after being rendered
+3. **ValidateNoDerivedComputationsInEffects_exp.ts** - Experimental validation for derived computations in effects
+4. **ValidateNoDerivedComputationsInEffects.ts** - Validates no derived computations in effects
+5. **ValidateNoFreezingKnownMutableFunctions.ts** - Validates that known mutable functions aren't frozen
+6. **ValidateNoImpureFunctionsInRender.ts** - Validates no impure functions are called during render
+7. **ValidateNoJSXInTryStatement.ts** - Validates JSX doesn't appear in try blocks
+8. **ValidateNoRefAccessInRender.ts** - Validates that refs aren't accessed during render
+9. **ValidateNoSetStateInEffects.ts** - Validates setState isn't called in effects
+10. **ValidateNoSetStateInRender.ts** - Validates setState isn't called during render
+11. **ValidatePreservedManualMemoization.ts** - Validates manual memoization is preserved
+12. **ValidateSourceLocations.ts** - Validates source locations are correct
+13. **ValidateStaticComponents.ts** - Validates component static constraints
+
+## Additional in Rust Port
+None - all Rust exports have TypeScript equivalents.

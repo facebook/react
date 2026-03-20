@@ -1,98 +1,115 @@
-# Review: compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs
+# Review: react_compiler_validation/src/validate_hooks_usage.rs
 
-## Corresponding TypeScript file(s)
+## Corresponding TypeScript source
 - `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`
 
 ## Summary
-The Rust port faithfully implements the hooks usage validation logic. The core algorithm -- tracking value kinds through a lattice (Error > KnownHook > PotentialHook > Global > Local), detecting conditional/dynamic/invalid hook usage, and checking hooks in nested function expressions -- is correctly ported. The main structural difference is that the Rust version manually enumerates instruction operands in `visit_all_operands` rather than using a generic `eachInstructionOperand` visitor, and handles function expression visiting with a two-phase collect/apply pattern. There are several divergences to note.
+The Rust port accurately implements hooks usage validation including conditional hook detection, invalid hook usage tracking, and function expression validation. The logic closely mirrors TypeScript with appropriate architectural adaptations.
 
 ## Major Issues
 None.
 
 ## Moderate Issues
 
-1. **`recordConditionalHookError` duplicate-check logic differs**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 107-130
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 102-127
-   - The TS version checks `previousError === undefined || previousError.reason !== reason` before inserting/replacing the error. The Rust version at line 109 does `if previous.is_none() || previous.unwrap().reason != reason` which is equivalent. However, the TS version uses `trackError` which sets (overwrites) the entry in the map via `errorsByPlace.set(loc, errorDetail)`. The Rust version uses `errors_by_loc.insert(loc, ...)` which also overwrites. This is functionally equivalent.
+### 1. Different ordering for function expression validation (lines 419-479)
+**Location:** `validate_hooks_usage.rs:419-479` vs `ValidateHooksUsage.ts:423-456`
 
-2. **Default case: Rust visits operands then sets lvalue kind; TS visits operands AND sets lvalue kinds for ALL lvalues**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 389-401
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 397-410
-   - The TS default case iterates `eachInstructionOperand(instr)` (which includes ALL operands) and then iterates `eachInstructionLValue(instr)` to set kinds for ALL lvalues. The Rust version calls `visit_all_operands` (which visits operands) and then only sets the kind for `instr.lvalue` (the single instruction lvalue). For instructions that have additional lvalues (e.g., Destructure, StoreLocal lvalue.place), the Rust version would miss setting their kinds. However, since Destructure and StoreLocal are handled explicitly above the default case, this should not be an issue in practice. The conceptual difference is that `eachInstructionLValue` in TS can return multiple lvalues for some instruction kinds, while the Rust default only handles `instr.lvalue`.
+**Rust:** Collects all items (calls + nested functions) in instruction order, then processes sequentially
+**TypeScript:** Directly iterates blocks/instructions and recursively visits nested functions
 
-3. **`visit_all_operands` does not visit `PropertyLoad.object`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 531 (the match in `visit_all_operands`)
-   - The `PropertyLoad` case is listed under "handled in the main match" (line 693), so `visit_all_operands` skips it. But in the main match for `PropertyLoad` (line 262-297), the Rust code does NOT call `visit_place(object)` -- it only reads the kind. The TS version handles PropertyLoad specially too (line 253-309) and also does not call `visitPlace(object)` for PropertyLoad, so this is actually consistent.
+**Issue:** The Rust version uses a two-phase approach (collect, then process) which appears to be trying to match TypeScript's error ordering. The comment at lines 449-450 says "matching TS which visits nested functions immediately before processing subsequent calls" but the actual implementation visits them in a separate phase after collection.
 
-4. **`visit_function_expression` uses `getHookKind` differently**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 417-468
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 423-456
-   - The TS version calls `getHookKind(fn.env, callee.identifier)` which looks up the hook kind from the **inner function's** environment. The Rust version calls `env.get_hook_kind_for_type(ty)` using the outer function's environment and looking up the type from the identifier's `type_` field. This should be functionally equivalent since hook kind resolution depends on global type information, but it's a subtle difference in how the lookup is routed.
-
-5. **`visit_function_expression` error description format**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 448-454
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 446
-   - The TS version uses `hookKind === 'Custom' ? 'hook' : hookKind` where hookKind is a string like `'useState'`, `'Custom'`, etc. The Rust version uses `if hook_kind == HookKind::Custom { "hook" } else { hook_kind_display(&hook_kind) }`. The `hook_kind_display` function (line 471-489) maps enum variants to strings like `"useState"`, `"useContext"`, etc. This is functionally equivalent.
+**Recommendation:** Verify that the error ordering actually matches TypeScript's output in practice. The two-phase approach may still produce the correct order if the items Vec preserves instruction order.
 
 ## Minor Issues
 
-1. **`unconditionalBlocks` is a `HashSet` in Rust vs. `Set` in TS**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 194
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 87
-   - The Rust version passes `env.next_block_id_counter` to `compute_unconditional_blocks`. The TS version just passes `fn`. This is an architectural difference in how the dominator computation is invoked.
+### 1. Error deduplication uses IndexMap (line 195)
+**Location:** `validate_hooks_usage.rs:195` vs `ValidateHooksUsage.ts:89`
 
-2. **`errors_by_loc` uses `IndexMap` for insertion-order iteration**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 195
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 89
-   - The TS uses `Map<t.SourceLocation, CompilerErrorDetail>` which preserves insertion order in JS. The Rust uses `IndexMap<SourceLocation, CompilerErrorDetail>` which preserves insertion order. This is correct.
+**Rust:** `IndexMap<SourceLocation, CompilerErrorDetail>`
+**TypeScript:** `Map<t.SourceLocation, CompilerErrorDetail>`
 
-3. **`trackError` abstraction not used in Rust**
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 91-100
-   - The TS has a `trackError` helper that checks `typeof loc === 'symbol'` (for generated/synthetic locations) and routes to either `env.recordError` or the `errorsByPlace` map. The Rust version handles this in each `record_*_error` function by checking `if let Some(loc) = place.loc` (since Rust uses `Option<SourceLocation>` instead of `symbol | SourceLocation`). Functionally equivalent.
+**Note:** Using `IndexMap` preserves insertion order, matching TypeScript's `Map` iteration order. This is correct and intentional per `rust-port-architecture.md`.
 
-4. **`CallExpression` operand visiting approach**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 314-320
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 324-329
-   - The TS uses `eachInstructionOperand(instr)` and skips `callee` via identity comparison (`operand === instr.value.callee`). The Rust version directly iterates `args` only (skipping callee implicitly). This is functionally equivalent since `eachInstructionOperand` for `CallExpression` yields callee + args.
+### 2. Different error recording pattern (lines 99-190)
+**TypeScript (lines 94-100):** Single helper function `trackError()` that either adds to map or calls `fn.env.recordError()`
+**Rust (lines 99-190):** Three separate error recording functions, each with inlined map-or-record logic
 
-5. **`MethodCall` operand visiting: Rust visits `receiver` explicitly**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 347
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 344-349
-   - The TS iterates all operands via `eachInstructionOperand(instr)` and skips `property`. The Rust version explicitly visits `receiver` and iterates `args`. Both approaches should visit the same set of places (receiver + args, excluding property).
+**Note:** Rust inlines the tracking logic into each error type's function. This is more verbose but equally correct. Could be DRYed with a helper function.
 
-6. **No `setKind` helper in Rust**
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 183-185
-   - The TS has a `setKind(place, kind)` helper that does `valueKinds.set(place.identifier.id, kind)`. The Rust version inlines `value_kinds.insert(...)` directly. Functionally identical.
+### 3. Missing iteration over multiple lvalues (line 399)
+**Location:** `validate_hooks_usage.rs:399` vs `ValidateHooksUsage.ts:406-409`
 
-7. **Comment from TS about phi operands and fixpoint iteration not present in Rust**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 217-221
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 200-207
-   - The TS has a detailed comment about skipping unknown phi operands and the need for fixpoint iteration. The Rust version does the same logic but without the comment.
+**Rust:** 
+```rust
+let kind = get_kind_for_place(&instr.lvalue, &value_kinds, &env.identifiers);
+value_kinds.insert(lvalue_id, kind);
+```
 
-8. **`hook_kind_display` is a standalone function rather than a method**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 471-489
-   - No direct TS equivalent; TS uses the string value of the `hookKind` enum directly.
+**TypeScript:**
+```typescript
+for (const lvalue of eachInstructionLValue(instr)) {
+  const kind = getKindForPlace(lvalue);
+  setKind(lvalue, kind);
+}
+```
+
+**Note:** TypeScript iterates all lvalues (though most instructions have only one). Rust assumes `instr.lvalue` is the only lvalue. This is likely correct given current HIR structure, but worth verifying.
+
+### 4. hook_kind_display is exhaustive (lines 482-500)
+**Location:** `validate_hooks_usage.rs:482-500` vs `ValidateHooksUsage.ts:446`
+
+**Rust:** Implements display for all 14 hook kinds with dedicated match arms
+**TypeScript:** Uses ternary `hookKind === 'Custom' ? 'hook' : hookKind`
+
+**Note:** The Rust version is more explicit and type-safe. Both are correct, but the Rust version will fail to compile if new hook kinds are added without updating the display function.
 
 ## Architectural Differences
 
-1. **Two-phase collect/apply in `visit_function_expression`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 417-468
-   - The Rust version collects call sites and nested function IDs into vectors, then processes them after releasing the borrow on `env.functions`. The TS version accesses everything directly since JS has no borrow checker.
+### 1. Error collection with IndexMap (line 195)
+**Rust:** `IndexMap<SourceLocation, CompilerErrorDetail>`
+**TypeScript:** `Map<t.SourceLocation, CompilerErrorDetail>`
 
-2. **Arena-based identifier/type/function access**
-   - Throughout the file, identifiers are accessed via `env.identifiers[id.0 as usize]`, types via `env.types[id.0 as usize]`, functions via `env.functions[func_id.0 as usize]`.
+**Reason:** Preserves insertion order for deterministic error reporting, per `rust-port-architecture.md`.
 
-3. **`visit_all_operands` manual enumeration vs. `eachInstructionOperand` visitor**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 521-698
-   - The Rust version manually enumerates every `InstructionValue` variant and visits their operands. The TS uses a generic `eachInstructionOperand` visitor generator. The Rust approach is more verbose but exhaustive via `match`.
+### 2. Separate identifiers/types arenas (lines 58-59, 68-73, 76-85, 232, 456)
+**Rust:** Accesses `env.identifiers[id]` and `env.types[type_id]`
+**TypeScript:** Direct property access on `identifier`/`place` objects
 
-4. **`each_terminal_operand_places` manual enumeration vs. `eachTerminalOperand`**
-   - Rust file: `compiler/crates/react_compiler_validation/src/validate_hooks_usage.rs`, line 701-726
-   - Same pattern as above -- manual enumeration instead of a shared visitor.
+**Reason:** Standard arena-based architecture per `rust-port-architecture.md`.
 
-## Missing TypeScript Features
+### 3. Two-phase function expression processing (lines 420-479)
+**Rust:** Collects items into a Vec, then processes in order
+**TypeScript:** Direct nested recursion during iteration
 
-1. **`assertExhaustive` calls in PropertyLoad/Destructure switch cases**
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/Validation/ValidateHooksUsage.ts`, line 306, 385
-   - The TS uses `assertExhaustive(objectKind, ...)` in the `default` case of the Kind switch. The Rust version uses exhaustive `match` which achieves the same compile-time guarantee without a runtime assertion.
+**Reason:** Likely to avoid borrow checker conflicts when recursively calling validation while iterating. The Vec approach ensures all items are collected before any mutation of `env` occurs.
+
+### 4. Explicit operand visiting (lines 532-709)
+**Rust:** Hand-coded `visit_all_operands()` with exhaustive match
+**TypeScript:** Uses `eachInstructionOperand()` visitor helper from `HIR/visitors.ts`
+
+**Reason:** Rust doesn't have visitor infrastructure yet, so implements traversal directly.
+
+### 5. Terminal operand collection (lines 712-737)
+**Rust:** `each_terminal_operand_places()` returns `Vec<&Place>`
+**TypeScript:** `eachTerminalOperand()` yields Places via iterator
+
+**Reason:** Same as above - direct implementation instead of visitor pattern.
+
+## Missing from Rust Port
+
+### 1. trackError helper (TypeScript lines 94-100)
+TypeScript has a single `trackError()` helper that decides whether to add to the map or record directly. Rust inlines this logic into each error recording function (lines 99-190).
+
+**Note:** Not actually missing - the logic is duplicated across three error functions. Consider extracting a shared helper for DRYness.
+
+## Additional in Rust Port
+
+### 1. Explicit HookKind display function (lines 482-500)
+The `hook_kind_display()` function provides string representations for all hook kinds. TypeScript relies on the fact that HookKind values are already strings (or uses ternary for Custom).
+
+### 2. Pattern collection helpers (lines 503-529)
+The `each_pattern_places()` and `collect_pattern_places()` functions extract places from destructuring patterns. TypeScript uses the generic `eachInstructionLValue()` visitor.
+
+### 3. Item enum for function expression processing (lines 421-425)
+The `Item` enum clarifies that we're collecting either calls to check or nested functions to visit. This makes the two-phase processing more explicit than TypeScript's direct recursion.

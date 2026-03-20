@@ -1,155 +1,194 @@
 # Rust Port Review Analysis
 
-Cross-cutting analysis of all 55 review documents across 9 crates.
+Cross-cutting analysis of all review files across 10 crates (~65 Rust files).
 
-## Reclassifications: Items That Are Architectural Differences
+## Top 10 Correctness Risks
 
-Several items flagged as "major" or "moderate" issues in individual reviews are actually expected consequences of the Rust port architecture as documented in `rust-port-architecture.md`. These should be in the "architectural differences" sections:
+Ordered by estimated likelihood and severity of producing incorrect compiler output.
 
-### Error handling via Result instead of throw
-- `environment.rs`: `recordError` doesn't throw on Invariant errors — **partially architectural**. Using `Result` instead of `throw` is documented, but the TS `recordError` specifically re-throws Invariant errors to halt compilation. The Rust version accumulates them, requiring callers to manually check `has_invariant_errors()`. The `pipeline.rs` does check after lowering, but other callers may not. This is a **real behavioral gap disguised as an architectural difference**.
-- `validate_use_memo.rs`: Returns error to caller instead of calling `env.logErrors()` — architectural (Result-based error flow).
-- `program.rs`: `handle_error` returns `Option` instead of throwing — architectural.
-- `program.rs`: No `catch_unwind` in `try_compile_function` — acceptable Rust pattern (panics are truly unexpected).
+### 1. `globals.rs`: Array `push` has wrong callee effect and missing aliasing signature
 
-### Arena-based access and borrow checker workarounds
-- `infer_types.rs`: `generate_for_function_id` duplicates `generate` logic — **architectural** (borrow checker requires `std::mem::replace` pattern for inner function processing, leading to code duplication).
-- `infer_types.rs`: `unify` vs `unify_with_shapes` split — **architectural** (avoids storing `&Environment` reference that would conflict with mutable borrows).
-- `infer_types.rs`: Pre-resolved global types — **architectural** (avoids `&mut env` during instruction iteration).
-- `hir_builder.rs`: Two-phase collect/apply in `remove_unnecessary_try_catch` — **architectural**.
-- `constant_propagation.rs`: Block IDs collected into Vec before iteration — **architectural**.
-- `enter_ssa.rs`: Pending phis pattern — **architectural**.
+**File**: `compiler/crates/react_compiler_hir/src/globals.rs:439-445`
+**TS ref**: `ObjectShape.ts:458-488`
 
-### JS-to-Rust boundary differences
-- `build_hir.rs`: `UnsupportedNode` stores type name string instead of AST node — **architectural** (Rust doesn't have Babel AST objects; only serialized data crosses the boundary).
-- `build_hir.rs`: Type annotations as `serde_json::Value` or `Option<String>` — **architectural** (full TS/Flow type AST not serialized to Rust).
-- `build_hir.rs`: `gatherCapturedContext` uses flat reference map instead of tree traversal — **architectural** (no Babel `traverse` in Rust; uses serialized scope info).
-- `program.rs`: Manual AST traversal instead of Babel `traverse` — **architectural**.
-- `program.rs`: `ScopeInfo` instead of Babel's live scope API — **architectural**.
-- `hir_builder.rs`: No `Scope.rename` call — **architectural** (Rust doesn't modify the input AST).
+`push` uses `Effect::Read` callee effect (default from `simple_function`). TS uses `Effect::Store` and has a detailed aliasing signature: `Mutate @receiver`, `Capture @rest -> @receiver`, `Create @returns`. Without this, the compiler won't track that (a) `push` mutates the array, and (b) pushed values are captured into the array.
 
-### Data model differences
-- `lib.rs`: `Place.identifier` is `IdentifierId` — **architectural** (arena pattern).
-- `lib.rs`: `Identifier.scope` is `Option<ScopeId>` — **architectural**.
-- `lib.rs`: `BasicBlock.phis` is `Vec<Phi>` instead of `Set<Phi>` — **architectural** (Rust `Vec` is the standard collection; dedup handled by construction).
-- `lib.rs`: `Phi.operands` is `IndexMap<BlockId, Place>` — **architectural** (ordered map for determinism).
-- `hir_builder.rs`: `preds` uses `IndexSet<BlockId>` — **architectural**.
-- `diagnostics`: `Option<SourceLocation>` instead of `GeneratedSource` sentinel — **architectural**.
+**Impact**: Incorrect memoization — an array modified by `.push()` could be treated as unchanged, and values pushed into an array won't be tracked as flowing through it. This affects any component that builds arrays incrementally.
 
-### Not-yet-ported features (known incomplete)
-- `pipeline.rs`: ~30 passes not yet implemented — **known WIP**, not a bug.
-- `program.rs`: AST rewriting is a stub — **known WIP**.
-- `lib.rs`: `aliasing_effects` and `effects` use `Option<Vec<()>>` placeholder — **known WIP** (aliasing inference passes not yet ported).
-- `lib.rs`: `ReactiveScope` missing most fields — **known WIP** (reactive scope passes not yet ported).
+**Severity**: **HIGH** — extremely common pattern in React code.
 
----
+### 2. `globals.rs`: Systematic wrong callee effects on Array/Set/Map methods
 
-## Top 10 Correctness Bug Risks
+**File**: `compiler/crates/react_compiler_hir/src/globals.rs:214-445`
+**TS ref**: `ObjectShape.ts:425-641`
 
-Ranked by likelihood of producing incorrect compiler output (wrong memoization, invalid JS, or missed errors) when the remaining passes are ported and the pipeline is complete.
+Multiple methods have incorrect callee effects:
+- `pop`, `shift`, `splice`, `sort`, `reverse`, `fill`, `copyWithin` — should be `Effect::Store` (mutates), uses `Effect::Read`
+- `at` — should be `Effect::Capture` (returns element reference), uses `Effect::Read`
+- Set `add`, `delete`, `clear` — should be `Effect::Store`, uses `Effect::Read`
+- Map `set`, `delete`, `clear` — should be `Effect::Store`, uses `Effect::Read`
+- Map `get` — should be `Effect::Capture`, uses `Effect::Read`
+- Array callback methods (`map`, `filter`, `find`, etc.) use `positionalParams` instead of `restParam`, missing `noAlias: true`
 
-### 1. globals.rs: Array `push` has wrong callee effect and missing aliasing signature
-- **File**: `/compiler/crates/react_compiler_hir/src/globals.rs:439-445`
-- **TS reference**: `ObjectShape.ts:458-488`
-- **Issue**: `push` uses `Effect::Read` callee effect (default from `simple_function`). TS uses `Effect::Store` and has a detailed aliasing signature: `Mutate @receiver`, `Capture @rest -> @receiver`, `Create @returns`. Without this, the compiler won't track that (a) `push` mutates the array, and (b) pushed values are captured into the array.
-- **Impact**: Incorrect memoization — an array modified by `.push()` could be treated as unchanged, and values pushed into an array won't be tracked as flowing through it. This affects any component that builds arrays incrementally.
+**Impact**: Mutations to arrays, sets, and maps won't be tracked. Components using these data structures could produce stale memoized values.
 
-### 2. globals.rs: Array `pop` / `at` / iterator methods have wrong callee effects
-- **File**: `/compiler/crates/react_compiler_hir/src/globals.rs:214-221`
-- **TS reference**: `ObjectShape.ts:425-439`
-- **Issue**: `pop` should be `Effect::Store` (it mutates the array by removing the last element), `at` should be `Effect::Capture` (it returns a reference to an array element). Both use `Effect::Read`. Set/Map iterator methods (`keys`, `values`, `entries`) similarly use `Read` instead of `Capture`.
-- **Impact**: `pop` mutations won't be tracked — arrays popped in render could be incorrectly memoized. `at` return values won't be tracked as captured from the array.
+**Severity**: **HIGH** — affects all mutable collection usage.
 
-### 3. globals.rs: Array callback methods use positionalParams instead of restParam
-- **File**: `/compiler/crates/react_compiler_hir/src/globals.rs:276-391`
-- **TS reference**: `ObjectShape.ts:505-641`
-- **Issue**: `map`, `filter`, `find`, `forEach`, `every`, `some`, `flatMap`, `reduce`, `findIndex` all put `ConditionallyMutate` in `positionalParams` instead of `restParam`. This means only the first argument (the callback) gets the effect. The optional `thisArg` parameter gets the default `Read` effect instead of `ConditionallyMutate`. Additionally, all of these are missing `noAlias: true`.
-- **Impact**: Incorrect effect inference when `thisArg` is passed to array methods. Missing `noAlias` could cause over-memoization.
+### 3. `infer_types.rs`: Missing context variable type resolution for inner functions
 
-### 4. constant_propagation.rs: `is_valid_identifier` doesn't reject JS reserved words
-- **File**: `/compiler/crates/react_compiler_optimization/src/constant_propagation.rs:756-780`
-- **TS reference**: Babel's `isValidIdentifier` from `@babel/types`
-- **Issue**: The Rust `is_valid_identifier` checks character validity but does not reject JS reserved words (`class`, `return`, `if`, `for`, `while`, `switch`, etc.). When constant propagation converts a `ComputedLoad` with string key to `PropertyLoad`, it would convert `obj["class"]` to the property name `class`, producing `obj.class` which is valid JS but a different semantic operation if there's a downstream issue.
-- **Impact**: Could produce syntactically invalid or semantically different JS output. In practice, reserved word property names are uncommon but not rare (e.g., `obj.class`, `style.float`). Actually `obj.class` IS valid JS in property access position since ES5, so this is lower risk than initially assessed — but `is_valid_identifier` is used in other contexts too where reserved words matter.
+**File**: `compiler/crates/react_compiler_typeinference/src/infer_types.rs:1136-1138`
+**TS ref**: `compiler/packages/babel-plugin-react-compiler/src/HIR/visitors.ts:221-225`
 
-### 5. infer_types.rs: Context variable places on inner functions never type-resolved
-- **File**: `/compiler/crates/react_compiler_typeinference/src/infer_types.rs:1013-1015`
-- **TS reference**: `visitors.ts:221-225` (`eachInstructionValueOperand` yields `func.context` for FunctionExpression/ObjectMethod)
-- **Issue**: In the `apply` phase, the TS resolves types for captured context variable places via `eachInstructionOperand`. The Rust skips these, so context variables on inner `FunctionExpression`/`ObjectMethod` nodes retain unresolved type variables.
-- **Impact**: Downstream passes that depend on resolved types for captured variables could make incorrect decisions about memoization boundaries or effect inference.
+In TS, `eachInstructionOperand` yields `func.context` places for FunctionExpression/ObjectMethod, so captured context variables get their types resolved during the `apply` phase. Rust's `apply_function` recursion processes blocks/phis/instructions/returns but **never processes the `HirFunction.context` array**. Captured variables' types remain unresolved.
 
-### 6. merge_consecutive_blocks.rs: Phi replacement instruction missing Alias effect
-- **File**: `/compiler/crates/react_compiler_optimization/src/merge_consecutive_blocks.rs:97-109`
-- **TS reference**: `MergeConsecutiveBlocks.ts:87-96`
-- **Issue**: When a phi node is replaced with a `LoadLocal` instruction during block merging, the TS version includes an `Alias` effect: `{kind: 'Alias', from: operandPlace, into: lvaluePlace}`. The Rust version uses `effects: None`.
-- **Impact**: Downstream aliasing analysis won't know that the lvalue aliases the operand. This could cause the compiler to miss mutations flowing through phi replacements, potentially producing incorrect memoization.
+**Impact**: Incorrect types for any identifier captured by a closure. Affects every component using closures referencing outer-scope variables — virtually all React code.
 
-### 7. merge_consecutive_blocks.rs: Missing recursive merge into inner functions
-- **File**: `/compiler/crates/react_compiler_optimization/src/merge_consecutive_blocks.rs` (absent)
-- **TS reference**: `MergeConsecutiveBlocks.ts:39-46`
-- **Issue**: The TS recursively calls `mergeConsecutiveBlocks` on inner `FunctionExpression`/`ObjectMethod` bodies. The Rust does not.
-- **Impact**: Inner functions' CFGs will have unmerged consecutive blocks. Later passes may produce suboptimal or incorrect results on the un-simplified CFG.
+**Severity**: **HIGH**.
 
-### 8. environment.rs: Invariant errors silently accumulated instead of halting
-- **File**: `/compiler/crates/react_compiler_hir/src/environment.rs:193-195`
-- **TS reference**: `Environment.ts:722-731`
-- **Issue**: The TS `recordError` immediately throws on `Invariant` category errors, halting compilation. The Rust version pushes all errors (including invariants) to the accumulator. While `pipeline.rs` checks `has_invariant_errors()` after lowering, intermediate passes could continue executing past invariant violations, producing corrupt state.
-- **Impact**: Compilation continues past invalid states. If an invariant error is recorded mid-pass, subsequent code in that pass operates on corrupt data. The `pipeline.rs` check after lowering partially mitigates this, but passes that record invariant errors internally (e.g., `enter_ssa`) may not benefit.
+### 4. `infer_types.rs`: Shared names map between outer and inner functions
 
-### 9. globals.rs: React namespace missing hooks and aliasing signatures
-- **File**: `/compiler/crates/react_compiler_hir/src/globals.rs:1599-1704`
-- **TS reference**: `Globals.ts:869-904` (spreads `...REACT_APIS`)
-- **Issue**: The Rust React namespace object is missing: `useActionState`, `useReducer`, `useImperativeHandle`, `useInsertionEffect`, `useTransition`, `useOptimistic`, `use`, `useEffectEvent`. Additionally, the hooks that ARE registered (like `useEffect`) lack the aliasing signatures that the top-level versions have.
-- **Impact**: Code using `React.useEffect(...)` instead of directly imported `useEffect(...)` will get incorrect effect inference (missing aliasing info). Code using missing hooks via `React.*` will be treated as unknown function calls.
+**File**: `compiler/crates/react_compiler_typeinference/src/infer_types.rs:326`
+**TS ref**: `compiler/packages/babel-plugin-react-compiler/src/TypeInference/InferTypes.ts:130`
 
-### 10. constant_propagation.rs: `js_abstract_equal` String-to-Number coercion diverges from JS
-- **File**: `/compiler/crates/react_compiler_optimization/src/constant_propagation.rs:966-980`
-- **Issue**: Uses `s.parse::<f64>()` which doesn't match JS `ToNumber` semantics. In JS: `"" == 0` is `true` (empty string coerces to 0), `" 42 " == 42` is `true` (whitespace trimmed). Rust's `parse::<f64>()` fails for both.
-- **Impact**: Constant propagation could make incorrect decisions about branch pruning when `==` comparisons involve strings and numbers. A branch that should be pruned (or kept) based on JS coercion rules could be handled incorrectly.
+TS creates a fresh `names` Map per recursive `generate` call. Rust creates it once and passes through to all nested `generate_for_function_id` calls. Name lookups for identifiers in inner functions could match names from outer functions, causing:
+- Incorrect `is_ref_like_name` detection (treating a variable as a ref when it isn't, or vice versa)
+- Incorrect property type inference from shapes
 
----
+**Impact**: Incorrect ref classification affects mutable range inference and reactive scope computation in nested function scenarios.
 
-## Honorable Mentions (Lower Risk)
+**Severity**: **HIGH** — ref detection is foundational for memoization decisions.
 
-These are real divergences but less likely to cause user-facing bugs:
+### 5. Weakened invariant checking across multiple passes
 
-- **infer_types.rs**: `enableTreatSetIdentifiersAsStateSetters` entirely skipped — affects `set*`-named callee type inference
-- **infer_types.rs**: `StartMemoize` dep operand places never type-resolved
-- **infer_types.rs**: Inner function `LoadGlobal` types may be missed (pre-resolved from outer function only)
-- **infer_types.rs**: Shared `names` map between outer and inner functions (TS creates fresh per function)
-- **hir_builder.rs**: Missing `this` check in `resolve_binding_with_loc` — functions using `this` won't get UnsupportedSyntax error
-- **hir_builder.rs**: Unreachable blocks retain stale preds (clone vs empty set)
-- **diagnostics**: `EffectDependencies` severity is `Warning` instead of `Error`
-- **globals.rs**: `globalThis`/`global` registered as empty objects instead of containing typed globals
-- **globals.rs**: Set `add` missing aliasing signature and wrong callee effect (`Read` vs `Store`)
-- **globals.rs**: Map `get` wrong callee effect (`Read` vs `Capture`)
-- **object_shape.rs**: `add_shape` doesn't check for duplicate shape IDs (silent overwrite vs invariant)
-- **object_shape.rs**: `parseAliasingSignatureConfig` not ported — aliasing signatures stored as config, never validated
-- **build_hir.rs**: Suggestions always `None` — compiler output lacks actionable fix suggestions
+Multiple passes replace TS's `CompilerError.invariant()` (throws and aborts) with weaker alternatives:
+
+| File | Location | TS behavior | Rust behavior |
+|------|----------|-------------|---------------|
+| `rewrite_instruction_kinds_based_on_reassignment.rs` | :142-192 | throws | `eprintln!` + continue |
+| `rewrite_instruction_kinds_based_on_reassignment.rs` | :94-97 | always checks | `debug_assert!` (skipped in release) |
+| `hir_builder.rs` | :426-537 | throws diagnostic | `panic!()` (crashes) |
+| `enter_ssa.rs` | :487-488 | non-null assertion | `unwrap_or(0)` silently defaults |
+| `infer_types.rs` | :1324-1329, :1359-1369 | throws on empty phis/cycles | silently returns |
+| `environment.rs` | :193-195 | `recordError` re-throws invariants | accumulates all errors |
+
+The `eprintln!` + continue pattern is most dangerous: it logs to stderr (may not be monitored) and continues with potentially corrupted state. The `debug_assert!` issue means release builds skip validation entirely.
+
+**Impact**: Any single invariant violation that continues silently could cascade into incorrect output.
+
+**Severity**: **HIGH** collectively.
+
+### 6. `merge_consecutive_blocks.rs`: Missing recursion into inner functions
+
+**File**: `compiler/crates/react_compiler_optimization/src/merge_consecutive_blocks.rs` (absent logic)
+**TS ref**: `MergeConsecutiveBlocks.ts:39-46`
+
+TS recursively calls `mergeConsecutiveBlocks` on inner FunctionExpression/ObjectMethod bodies. Rust does not.
+
+**Impact**: Inner functions' CFGs retain unmerged consecutive blocks. Later passes may produce suboptimal or incorrect results on the unsimplified CFG.
+
+**Severity**: **MEDIUM** — may cause downstream issues but blocks are still valid, just not optimized.
+
+### 7. `merge_consecutive_blocks.rs`: Phi replacement instruction missing Alias effect
+
+**File**: `compiler/crates/react_compiler_optimization/src/merge_consecutive_blocks.rs:97-109`
+**TS ref**: `MergeConsecutiveBlocks.ts:87-96`
+
+When a phi node is replaced with a `LoadLocal` instruction during block merging, TS includes an `Alias` effect: `{kind: 'Alias', from: operandPlace, into: lvaluePlace}`. Rust uses `effects: None`.
+
+**Impact**: Downstream aliasing analysis won't know that the lvalue aliases the operand. Could cause missed mutations flowing through phi replacements, producing incorrect memoization.
+
+**Severity**: **MEDIUM** — only affects the specific case where phis are replaced during block merging.
+
+### 8. `globals.rs`: React namespace missing hooks and aliasing signatures
+
+**File**: `compiler/crates/react_compiler_hir/src/globals.rs:1599-1704`
+**TS ref**: `Globals.ts:869-904` (spreads `...REACT_APIS`)
+
+The Rust React namespace is missing: `useActionState`, `useReducer`, `useImperativeHandle`, `useInsertionEffect`, `useTransition`, `useOptimistic`, `use`, `useEffectEvent`. Additionally, hooks that ARE registered (like `React.useEffect`) lack the aliasing signatures that the top-level versions have.
+
+**Impact**: `React.useEffect(...)` gets incorrect effect inference. Missing hooks via `React.*` are treated as unknown function calls.
+
+**Severity**: **MEDIUM** — affects code using `React.*` hook syntax instead of direct imports.
+
+### 9. `drop_manual_memoization.rs`: Hook detection via name matching instead of type system
+
+**File**: `compiler/crates/react_compiler_optimization/src/drop_manual_memoization.rs:276-304`
+**TS ref**: `compiler/packages/babel-plugin-react-compiler/src/Inference/DropManualMemoization.ts:141-151`
+
+TS resolves hooks through `getGlobalDeclaration` + `getHookKindForType`. Rust matches raw binding names. Re-exports (`import { useMemo as memo }`) and module aliases won't be detected.
+
+**Impact**: Manual memoization won't be dropped for aliased hooks, producing redundant memo wrappers.
+
+**Severity**: **MEDIUM** — functional but suboptimal output. Has documented TODO.
+
+### 10. `infer_mutation_aliasing_effects.rs`: Insufficiently verified (~2900 lines)
+
+**File**: `compiler/crates/react_compiler_inference/src/infer_mutation_aliasing_effects.rs`
+**TS ref**: `InferMutationAliasingEffects.ts` (~2900 lines)
+
+The review was unable to fully verify this pass due to extreme complexity. It performs abstract interpretation with fixpoint iteration. Key unverified areas:
+- All 50+ instruction kind signatures in `computeSignatureForInstruction`
+- `applyEffect` function (600+ lines of abstract interpretation)
+- `InferenceState::merge()` for fixpoint correctness
+- Function signature expansion via `Apply` effects
+- Frozen mutation detection and error generation
+
+**Impact**: Any bug could produce incorrect aliasing/mutation analysis, leading to wrong memoization boundaries, missed mutations, or false "mutating frozen value" errors.
+
+**Severity**: **UNKNOWN** — this pass is foundational for compiler correctness. Needs dedicated deep review.
 
 ---
 
 ## Systemic Patterns
 
 ### 1. Effect/aliasing signatures systematically incomplete in globals.rs
-The `globals.rs` file has a pattern of using `simple_function` (which defaults `callee_effect` to `Read`) for methods that should have `Store` or `Capture` effects. This affects Array, Set, and Map methods consistently. The root cause is that the `FunctionSignatureBuilder` defaults are too permissive.
 
-**Recommendation**: Audit every method in `globals.rs` against `ObjectShape.ts` for callee effect, and against `Globals.ts` for aliasing signatures. Consider adding a test that compares the Rust and TS shape registries.
+`globals.rs` uses `simple_function` (defaulting `callee_effect` to `Read`) for methods that should have `Store` or `Capture` effects. Affects Array, Set, and Map methods consistently.
+
+**Recommendation**: Audit every method in `globals.rs` against `ObjectShape.ts` for callee effects, and against `Globals.ts` for aliasing signatures. Consider adding a test that compares the Rust and TS shape registries.
 
 ### 2. Inner function processing gaps
+
 Multiple passes have incomplete inner function handling:
 - `merge_consecutive_blocks`: No recursion into inner functions
-- `infer_types`: Context variables not resolved, `LoadGlobal` types missed, `names` map shared
-- `validate_context_variable_lvalues`: Default case is silent no-op
+- `infer_types`: Context variables not resolved, `names` map shared across scopes
+- `validate_context_variable_lvalues`: Default case is silent no-op for unhandled variants
 
 **Recommendation**: Create a checklist of passes that must recurse into inner functions, cross-referenced with the TS pipeline.
 
-### 3. Missing debug assertions
-Several passes skip `assertConsistentIdentifiers` and `assertTerminalSuccessorsExist` calls that the TS pipeline uses between passes. While not correctness bugs themselves, they remove safety nets that catch bugs early.
+### 3. Weakened invariant checking pattern
 
-**Recommendation**: Port these assertion functions and add them to `pipeline.rs` between passes, gated on `cfg!(debug_assertions)`.
+Multiple passes use `eprintln!`, `debug_assert!`, or silent `unwrap_or` defaults where TS throws fatal invariant errors. This creates a pattern where invariant violations are silently swallowed.
+
+**Recommendation**: Replace all `eprintln!`-based invariant checks with proper `return Err(CompilerDiagnostic)` or `panic!()`. Replace `debug_assert!` with always-on assertions for invariants that would throw in TS.
 
 ### 4. Duplicated visitor logic
-`validate_hooks_usage.rs`, `validate_use_memo.rs`, and `inline_iifes.rs` each contain local reimplementations of operand/terminal visitor functions instead of sharing from a common HIR visitor module.
+
+`validate_hooks_usage.rs`, `validate_use_memo.rs`, `infer_reactive_scope_variables.rs`, `inline_iifes.rs`, and `eliminate_redundant_phi.rs` each reimplement operand/terminal visitor functions locally instead of sharing from a common module.
 
 **Recommendation**: Extract shared visitor functions into the HIR crate to avoid divergence when new instruction/terminal variants are added.
+
+### 5. Missing debug assertions between passes
+
+TS pipeline uses `assertConsistentIdentifiers` and `assertTerminalSuccessorsExist` between passes. These safety nets are absent in the Rust port.
+
+**Recommendation**: Port these assertion functions, add them to `pipeline.rs` between passes, gated on `cfg!(debug_assertions)`.
+
+---
+
+## Summary Table
+
+| # | Issue | File(s) | Severity |
+|---|-------|---------|----------|
+| 1 | Array `push` wrong callee effect + missing aliasing | `globals.rs` | HIGH |
+| 2 | Systematic wrong callee effects on collection methods | `globals.rs` | HIGH |
+| 3 | Missing context var type resolution in closures | `infer_types.rs` | HIGH |
+| 4 | Shared names map across function boundaries | `infer_types.rs` | HIGH |
+| 5 | Weakened invariant checking (eprintln/debug_assert) | Multiple | HIGH |
+| 6 | Missing recursion into inner functions | `merge_consecutive_blocks.rs` | MEDIUM |
+| 7 | Phi replacement missing Alias effect | `merge_consecutive_blocks.rs` | MEDIUM |
+| 8 | React namespace missing hooks + aliasing sigs | `globals.rs` | MEDIUM |
+| 9 | Hook detection via name matching | `drop_manual_memoization.rs` | MEDIUM |
+| 10 | Unverified abstract interpretation pass | `infer_mutation_aliasing_effects.rs` | UNKNOWN |
+
+**Highest priority**: Issues 1-2 (`globals.rs` callee effects) and 3-4 (`infer_types.rs` inner function handling) are most likely to produce incorrect memoization in production React code. Issue 5 (weakened invariants) could mask any of the above.

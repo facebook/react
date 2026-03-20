@@ -14,7 +14,7 @@ None.
 
 2. **`ScopeInfo.node_to_scope` uses `HashMap` instead of preserving order**: At `/compiler/crates/react_compiler_ast/src/scope.rs:105:5`, `node_to_scope: HashMap<u32, ScopeId>`. In the TypeScript, this is `Record<number, number>`. The ordering difference has the same implications as above.
 
-3. **`ScopeInfo.reference_to_binding` uses `IndexMap`**: At `/compiler/crates/react_compiler_ast/src/scope.rs:110:5`. This correctly preserves insertion order, matching the TypeScript `Record<number, number>` behavior. The comment says "preserves insertion order (source order from serialization)". The inconsistency between using `IndexMap` here but `HashMap` for `node_to_scope` and `ScopeData.bindings` is notable.
+3. **`ScopeInfo.reference_to_binding` uses `IndexMap`**: At `/compiler/crates/react_compiler_ast/src/scope.rs:109:5`. This correctly preserves insertion order, matching the TypeScript `Record<number, number>` behavior. The comment says "preserves insertion order (source order from serialization)". The inconsistency between using `IndexMap` here but `HashMap` for `node_to_scope` and `ScopeData.bindings` is notable.
 
 ## Minor Issues
 1. **`ScopeKind` uses `#[serde(rename_all = "lowercase")]` with `#[serde(rename = "for")]` override**: At `/compiler/crates/react_compiler_ast/src/scope.rs:25:1`. The `For` variant needs special handling because `for` is a Rust reserved word. The `rename = "for"` attribute correctly handles this. In the TypeScript `scope.ts`, `getScopeKind` returns plain strings.
@@ -23,9 +23,13 @@ None.
 
 3. **`BindingData.declaration_type` is `String`**: At `/compiler/crates/react_compiler_ast/src/scope.rs:48:5`. In the TypeScript, this is also a string (`babelBinding.path.node.type`). Using a string is correct for pass-through.
 
-4. **`ScopeId` and `BindingId` are newtype wrappers**: At `/compiler/crates/react_compiler_ast/src/scope.rs:7:1` and `:11:1`. These use `u32` internally. The TypeScript uses plain `number`. The newtype pattern provides type safety in Rust.
+4. **`BindingData.declaration_start` field**: At `/compiler/crates/react_compiler_ast/src/scope.rs:52:5`, this field stores the start offset of the binding's declaration identifier. This is used to distinguish declaration sites from references in `reference_to_binding`. The TypeScript counterpart in `scope.ts` computes this from `babelBinding.path.node.start`. Making it optional allows the field to be omitted in serialization if not needed, which is appropriate.
 
-5. **`ImportBindingKind` enum**: At `/compiler/crates/react_compiler_ast/src/scope.rs:87:1`. In the TypeScript `scope.ts`, `ImportBindingData.kind` is a plain string (`'default'`, `'named'`, `'namespace'`). The Rust enum provides stricter typing.
+5. **`ScopeId` and `BindingId` are newtype wrappers**: At `/compiler/crates/react_compiler_ast/src/scope.rs:7:1` and `:11:1`. These use `u32` internally. The TypeScript uses plain `number`. The newtype pattern provides type safety in Rust.
+
+6. **`ImportBindingKind` enum**: At `/compiler/crates/react_compiler_ast/src/scope.rs:87:1`. In the TypeScript `scope.ts`, `ImportBindingData.kind` is a plain string (`'default'`, `'named'`, `'namespace'`). The Rust enum provides stricter typing.
+
+7. **`#[serde(rename_all = "camelCase")]` on all structs**: At `/compiler/crates/react_compiler_ast/src/scope.rs:14:1`, `:38:1`, and `:97:1`, all data structs use `rename_all = "camelCase"`. This ensures JSON serialization uses JavaScript naming conventions (e.g., `programScope` instead of `program_scope`), matching the TypeScript output.
 
 ## Architectural Differences
 1. **Convenience methods on `ScopeInfo`**: At `/compiler/crates/react_compiler_ast/src/scope.rs:116:1`, `ScopeInfo` has `get_binding`, `resolve_reference`, and `scope_bindings` methods. These have no TypeScript counterpart -- the TypeScript side only serializes the data and sends it to Rust. These methods are Rust-side utilities for the compiler.
