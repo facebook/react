@@ -1256,11 +1256,7 @@ pub fn debug_reactive_function_with_formatter(
     printer.hir_formatter = hir_formatter;
     printer.format_reactive_function(func);
 
-    // Print outlined functions
-    for _outlined in env.get_outlined_functions() {
-        printer.line("");
-        // TODO: print outlined functions properly
-    }
+    // TODO: Print outlined functions when they've been converted to reactive form
 
     printer.line("");
     printer.line("Environment:");
