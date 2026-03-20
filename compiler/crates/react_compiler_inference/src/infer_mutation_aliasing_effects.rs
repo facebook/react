@@ -130,6 +130,7 @@ pub fn infer_mutation_aliasing_effects(
         effect_value_id_cache: HashMap::new(),
         function_values: HashMap::new(),
         function_signature_cache: HashMap::new(),
+        aliasing_config_temp_cache: HashMap::new(),
     };
 
     let mut iteration_count = 0;
@@ -549,6 +550,10 @@ struct Context {
     function_values: HashMap<ValueId, FunctionId>,
     /// Cache of function expression signatures, keyed by FunctionId
     function_signature_cache: HashMap<FunctionId, AliasingSignature>,
+    /// Cache of temporary places created for aliasing signature config temporaries.
+    /// Keyed by (lvalue_identifier_id, temp_name) to ensure stable allocation
+    /// across fixpoint iterations.
+    aliasing_config_temp_cache: HashMap<(IdentifierId, String), Place>,
 }
 
 impl Context {
@@ -1105,7 +1110,7 @@ fn apply_effect(
             state.define(into.identifier, value_id);
             match from_value.kind {
                 ValueKind::Primitive | ValueKind::Global => {
-                    let first_reason = from_value.reason.iter().next().copied().unwrap_or(ValueReason::Other);
+                    let first_reason = primary_reason(&from_value.reason);
                     effects.push(AliasingEffect::Create {
                         value: from_value.kind,
                         into: into.clone(),
@@ -1113,7 +1118,7 @@ fn apply_effect(
                     });
                 }
                 ValueKind::Frozen => {
-                    let first_reason = from_value.reason.iter().next().copied().unwrap_or(ValueReason::Other);
+                    let first_reason = primary_reason(&from_value.reason);
                     effects.push(AliasingEffect::Create {
                         value: from_value.kind,
                         into: into.clone(),
@@ -1305,6 +1310,7 @@ fn apply_effect(
                 if let Some(ref aliasing) = sig.aliasing {
                     let sig_effects = compute_effects_for_aliasing_signature_config(
                         env, aliasing, into, receiver, args, &[], loc.as_ref(),
+                        &mut context.aliasing_config_temp_cache,
                     );
                     if let Some(sig_effs) = sig_effects {
                         for se in sig_effs {
@@ -2243,22 +2249,33 @@ fn compute_effects_for_aliasing_signature_config(
     args: &[PlaceOrSpreadOrHole],
     context: &[Place],
     _loc: Option<&SourceLocation>,
+    temp_cache: &mut HashMap<(IdentifierId, String), Place>,
 ) -> Option<Vec<AliasingEffect>> {
     // Build substitutions from config strings to places
     let mut substitutions: HashMap<String, Vec<Place>> = HashMap::new();
     substitutions.insert(config.receiver.clone(), vec![receiver.clone()]);
     substitutions.insert(config.returns.clone(), vec![lvalue.clone()]);
 
+    let mut mutable_spreads: HashSet<IdentifierId> = HashSet::new();
+
     for (i, arg) in args.iter().enumerate() {
         match arg {
             PlaceOrSpreadOrHole::Hole => continue,
             PlaceOrSpreadOrHole::Place(place) | PlaceOrSpreadOrHole::Spread(react_compiler_hir::SpreadPattern { place }) => {
-                if i < config.params.len() {
+                if i < config.params.len() && !matches!(arg, PlaceOrSpreadOrHole::Spread(_)) {
                     substitutions.insert(config.params[i].clone(), vec![place.clone()]);
                 } else if let Some(ref rest) = config.rest {
                     substitutions.entry(rest.clone()).or_default().push(place.clone());
                 } else {
                     return None;
+                }
+
+                if matches!(arg, PlaceOrSpreadOrHole::Spread(_)) {
+                    let ty = &env.types[env.identifiers[place.identifier.0 as usize].type_.0 as usize];
+                    let mutate_iterator = conditionally_mutate_iterator(place, ty);
+                    if mutate_iterator.is_some() {
+                        mutable_spreads.insert(place.identifier);
+                    }
                 }
             }
         }
@@ -2271,9 +2288,10 @@ fn compute_effects_for_aliasing_signature_config(
         }
     }
 
-    // Create temporaries
+    // Create temporaries (cached by lvalue + temp_name to be stable across fixpoint iterations)
     for temp_name in &config.temporaries {
-        let temp_place = create_temp_place(env, receiver.loc);
+        let cache_key = (lvalue.identifier, temp_name.clone());
+        let temp_place = temp_cache.entry(cache_key).or_insert_with(|| create_temp_place(env, receiver.loc)).clone();
         substitutions.insert(temp_name.clone(), vec![temp_place]);
     }
 
@@ -2284,6 +2302,16 @@ fn compute_effects_for_aliasing_signature_config(
             react_compiler_hir::type_config::AliasingEffectConfig::Freeze { value, reason } => {
                 let values = substitutions.get(value).cloned().unwrap_or_default();
                 for v in values {
+                    if mutable_spreads.contains(&v.identifier) {
+                        env.record_error(react_compiler_diagnostics::CompilerErrorDetail {
+                            reason: "Support spread syntax for hook arguments".to_string(),
+                            description: None,
+                            category: ErrorCategory::Todo,
+                            loc: v.loc,
+                            suggestions: None,
+                        });
+                        return Some(effects);
+                    }
                     effects.push(AliasingEffect::Freeze { value: v, reason: *reason });
                 }
             }
@@ -2460,6 +2488,7 @@ fn compute_effects_for_aliasing_signature(
         return None;
     }
 
+    let mut mutable_spreads: HashSet<IdentifierId> = HashSet::new();
     let mut substitutions: HashMap<IdentifierId, Vec<Place>> = HashMap::new();
     substitutions.insert(signature.receiver, vec![receiver.clone()]);
     substitutions.insert(signature.returns, vec![lvalue.clone()]);
@@ -2476,6 +2505,14 @@ fn compute_effects_for_aliasing_signature(
                     substitutions.entry(rest_id).or_default().push(place.clone());
                 } else {
                     return None;
+                }
+
+                if is_spread {
+                    let ty = &env.types[env.identifiers[place.identifier.0 as usize].type_.0 as usize];
+                    let mutate_iterator = conditionally_mutate_iterator(place, ty);
+                    if mutate_iterator.is_some() {
+                        mutable_spreads.insert(place.identifier);
+                    }
                 }
             }
         }
@@ -2569,6 +2606,16 @@ fn compute_effects_for_aliasing_signature(
             AliasingEffect::Freeze { value, reason } => {
                 let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
                 for v in values {
+                    if mutable_spreads.contains(&v.identifier) {
+                        env.record_error(react_compiler_diagnostics::CompilerErrorDetail {
+                            reason: "Support spread syntax for hook arguments".to_string(),
+                            description: None,
+                            category: ErrorCategory::Todo,
+                            loc: v.loc,
+                            suggestions: None,
+                        });
+                        return Some(effects);
+                    }
                     effects.push(AliasingEffect::Freeze { value: v, reason: *reason });
                 }
             }
@@ -2629,6 +2676,20 @@ fn compute_effects_for_aliasing_signature(
 // =============================================================================
 // Helpers
 // =============================================================================
+
+/// Select the primary (most specific) reason from a set of reasons.
+/// TS uses `[...set][0]` which returns the first-inserted element;
+/// since the primary reason is always inserted first, this effectively
+/// picks the most specific non-Other reason. We replicate this by
+/// preferring any non-Other reason over Other.
+fn primary_reason(reasons: &HashSet<ValueReason>) -> ValueReason {
+    for &r in reasons {
+        if r != ValueReason::Other {
+            return r;
+        }
+    }
+    ValueReason::Other
+}
 
 fn get_write_error_reason(abstract_value: &AbstractValue) -> String {
     if abstract_value.reason.contains(&ValueReason::Global) {
@@ -2939,9 +3000,13 @@ fn each_instruction_value_operands(value: &InstructionValue, env: &Environment) 
         InstructionValue::FinishMemoize { decl, .. } => {
             result.push(decl.clone());
         }
-        InstructionValue::FunctionExpression { .. } |
-        InstructionValue::ObjectMethod { .. } => {
-            // Context variables are handled separately
+        InstructionValue::FunctionExpression { lowered_func, .. } |
+        InstructionValue::ObjectMethod { lowered_func, .. } => {
+            // Yield context variables (matches TS eachInstructionValueOperand)
+            let inner_func = &env.functions[lowered_func.func.0 as usize];
+            for ctx in &inner_func.context {
+                result.push(ctx.clone());
+            }
         }
         _ => {}
     }
