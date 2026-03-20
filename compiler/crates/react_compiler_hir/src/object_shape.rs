@@ -72,6 +72,28 @@ pub enum HookKind {
     Custom,
 }
 
+impl std::fmt::Display for HookKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HookKind::UseContext => write!(f, "useContext"),
+            HookKind::UseState => write!(f, "useState"),
+            HookKind::UseActionState => write!(f, "useActionState"),
+            HookKind::UseReducer => write!(f, "useReducer"),
+            HookKind::UseRef => write!(f, "useRef"),
+            HookKind::UseEffect => write!(f, "useEffect"),
+            HookKind::UseLayoutEffect => write!(f, "useLayoutEffect"),
+            HookKind::UseInsertionEffect => write!(f, "useInsertionEffect"),
+            HookKind::UseMemo => write!(f, "useMemo"),
+            HookKind::UseCallback => write!(f, "useCallback"),
+            HookKind::UseTransition => write!(f, "useTransition"),
+            HookKind::UseImperativeHandle => write!(f, "useImperativeHandle"),
+            HookKind::UseEffectEvent => write!(f, "useEffectEvent"),
+            HookKind::UseOptimistic => write!(f, "useOptimistic"),
+            HookKind::Custom => write!(f, "Custom"),
+        }
+    }
+}
+
 /// Call signature of a function, used for type and effect inference.
 /// Ported from TS `FunctionSignature`.
 #[derive(Debug, Clone)]

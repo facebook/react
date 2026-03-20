@@ -290,6 +290,17 @@ pub fn compile_fn(
     let debug_fbt = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("MemoizeFbtAndMacroOperandsInSameScope", debug_fbt));
 
+    if env.config.enable_jsx_outlining {
+        react_compiler_optimization::outline_jsx(&mut hir, &mut env);
+    }
+
+    if env.config.enable_name_anonymous_functions {
+        react_compiler_optimization::name_anonymous_functions(&mut hir, &mut env);
+
+        let debug_name_anon = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("NameAnonymousFunctions", debug_name_anon));
+    }
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

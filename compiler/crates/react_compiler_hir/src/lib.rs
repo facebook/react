@@ -1058,6 +1058,15 @@ pub enum PropertyLiteral {
     Number(FloatValue),
 }
 
+impl std::fmt::Display for PropertyLiteral {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PropertyLiteral::String(s) => write!(f, "{}", s),
+            PropertyLiteral::Number(n) => write!(f, "{}", n),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum PlaceOrSpread {
     Place(Place),
