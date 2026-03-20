@@ -247,7 +247,8 @@ pub fn compile_fn(
         if env.config.validate_no_derived_computations_in_effects_exp
             && env.output_mode == OutputMode::Lint
         {
-            // TODO: port validateNoDerivedComputationsInEffects_exp (uses env.logErrors)
+            let errors = react_compiler_validation::validate_no_derived_computations_in_effects_exp(&hir, &env);
+            log_errors_as_events(&errors, context);
             context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
         } else if env.config.validate_no_derived_computations_in_effects {
             // TODO: port validateNoDerivedComputationsInEffects

@@ -1451,6 +1451,11 @@ pub fn is_ref_or_ref_value(ty: &Type) -> bool {
     is_use_ref_type(ty) || is_ref_value_type(ty)
 }
 
+/// Returns true if the type is a useState result (BuiltInUseState).
+pub fn is_use_state_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == object_shape::BUILT_IN_USE_STATE_ID)
+}
+
 /// Returns true if the type is a setState function (BuiltInSetState).
 pub fn is_set_state_type(ty: &Type) -> bool {
     matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_SET_STATE_ID)
