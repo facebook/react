@@ -308,6 +308,11 @@ pub fn compile_fn(
         context.log_debug(DebugLogEntry::new("OutlineFunctions", debug_outline));
     }
 
+    react_compiler_inference::align_method_call_scopes(&mut hir, &mut env);
+
+    let debug_align = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("AlignMethodCallScopes", debug_align));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
