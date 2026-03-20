@@ -379,6 +379,11 @@ pub fn compile_fn(
     let debug_flatten_loops = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("FlattenReactiveLoopsHIR", debug_flatten_loops));
 
+    react_compiler_inference::flatten_scopes_with_hooks_or_use_hir(&mut hir, &env);
+
+    let debug_flatten_hooks = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("FlattenScopesWithHooksOrUseHIR", debug_flatten_hooks));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
