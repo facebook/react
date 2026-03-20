@@ -13,10 +13,10 @@ use react_compiler_hir::{
 
 struct DebugPrinter<'a> {
     env: &'a Environment,
-    seen_identifiers: HashSet<IdentifierId>,
-    seen_scopes: HashSet<ScopeId>,
-    output: Vec<String>,
-    indent_level: usize,
+    pub(crate) seen_identifiers: HashSet<IdentifierId>,
+    pub(crate) seen_scopes: HashSet<ScopeId>,
+    pub(crate) output: Vec<String>,
+    pub(crate) indent_level: usize,
 }
 
 impl<'a> DebugPrinter<'a> {
@@ -2067,4 +2067,28 @@ pub fn format_errors(error: &CompilerError) -> String {
     let mut printer = DebugPrinter::new(&env);
     printer.format_errors(error);
     printer.to_string_output()
+}
+
+/// Format an HIR function into a reactive DebugPrinter.
+/// This bridges the two debug printers so inner functions in FunctionExpression/ObjectMethod
+/// can be printed within the reactive function output.
+pub fn format_hir_function_into(
+    reactive_printer: &mut react_compiler_reactive_scopes::print_reactive_function::DebugPrinter,
+    func: &HirFunction,
+) {
+    // Create a temporary debug printer that shares the same environment
+    let mut printer = DebugPrinter::new(reactive_printer.env());
+    // Copy seen identifiers/scopes to maintain deduplication
+    printer.seen_identifiers = reactive_printer.seen_identifiers().clone();
+    printer.seen_scopes = reactive_printer.seen_scopes().clone();
+    printer.indent_level = reactive_printer.indent_level();
+    printer.format_function(func);
+
+    // Write the output lines into the reactive printer
+    for line in &printer.output {
+        reactive_printer.line_raw(line);
+    }
+    // Copy back the seen state
+    *reactive_printer.seen_identifiers_mut() = printer.seen_identifiers;
+    *reactive_printer.seen_scopes_mut() = printer.seen_scopes;
 }

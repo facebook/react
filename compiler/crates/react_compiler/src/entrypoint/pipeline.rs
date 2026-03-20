@@ -390,7 +390,12 @@ pub fn compile_fn(
 
     let reactive_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env);
-        react_compiler_reactive_scopes::debug_reactive_function(&reactive_fn, &env)
+        let hir_formatter = |printer: &mut react_compiler_reactive_scopes::print_reactive_function::DebugPrinter, func: &react_compiler_hir::HirFunction| {
+            debug_print::format_hir_function_into(printer, func);
+        };
+        react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        )
     }));
     match reactive_result {
         Ok(debug_reactive) => {

@@ -28,6 +28,8 @@ pub struct DebugPrinter<'a> {
     seen_scopes: HashSet<ScopeId>,
     output: Vec<String>,
     indent_level: usize,
+    /// Optional formatter for HIR functions (used for inner functions in FunctionExpression/ObjectMethod)
+    pub hir_formatter: Option<&'a HirFunctionFormatter>,
 }
 
 impl<'a> DebugPrinter<'a> {
@@ -38,6 +40,7 @@ impl<'a> DebugPrinter<'a> {
             seen_scopes: HashSet::new(),
             output: Vec::new(),
             indent_level: 0,
+            hir_formatter: None,
         }
     }
 
@@ -56,6 +59,35 @@ impl<'a> DebugPrinter<'a> {
 
     pub fn to_string_output(&self) -> String {
         self.output.join("\n")
+    }
+
+    /// Write a line without adding indentation (used when copying pre-formatted output)
+    pub fn line_raw(&mut self, text: &str) {
+        self.output.push(text.to_string());
+    }
+
+    pub fn env(&self) -> &'a Environment {
+        self.env
+    }
+
+    pub fn indent_level(&self) -> usize {
+        self.indent_level
+    }
+
+    pub fn seen_identifiers(&self) -> &HashSet<IdentifierId> {
+        &self.seen_identifiers
+    }
+
+    pub fn seen_identifiers_mut(&mut self) -> &mut HashSet<IdentifierId> {
+        &mut self.seen_identifiers
+    }
+
+    pub fn seen_scopes(&self) -> &HashSet<ScopeId> {
+        &self.seen_scopes
+    }
+
+    pub fn seen_scopes_mut(&mut self) -> &mut HashSet<ScopeId> {
+        &mut self.seen_scopes
     }
 
     // =========================================================================
@@ -1207,8 +1239,21 @@ impl<'a> DebugPrinter<'a> {
 // Entry point
 // =============================================================================
 
+/// Type alias for a function formatter callback that can print HIR functions.
+/// Used to format inner functions in FunctionExpression/ObjectMethod values.
+pub type HirFunctionFormatter = dyn Fn(&mut DebugPrinter, &react_compiler_hir::HirFunction);
+
 pub fn debug_reactive_function(func: &ReactiveFunction, env: &Environment) -> String {
+    debug_reactive_function_with_formatter(func, env, None)
+}
+
+pub fn debug_reactive_function_with_formatter(
+    func: &ReactiveFunction,
+    env: &Environment,
+    hir_formatter: Option<&HirFunctionFormatter>,
+) -> String {
     let mut printer = DebugPrinter::new(env);
+    printer.hir_formatter = hir_formatter;
     printer.format_reactive_function(func);
 
     // Print outlined functions
@@ -1729,9 +1774,12 @@ fn format_instruction_value_impl(printer: &mut DebugPrinter, value: &Instruction
             printer.line(&format!("nameHint: {}", match name_hint { Some(h) => format!("\"{}\"", h), None => "null".to_string() }));
             printer.line(&format!("type: \"{:?}\"", expr_type));
             printer.line("loweredFunc:");
-            let _inner_func = &printer.env.functions[lowered_func.func.0 as usize];
-            // TODO: format inner HIR function (would need debug_print from react_compiler)
-            printer.line(&format!("  <function {}>", lowered_func.func.0));
+            let inner_func = &printer.env.functions[lowered_func.func.0 as usize];
+            if let Some(formatter) = printer.hir_formatter {
+                formatter(printer, inner_func);
+            } else {
+                printer.line(&format!("  <function {}>", lowered_func.func.0));
+            }
             printer.line(&format!("loc: {}", format_loc(loc)));
             printer.dedent();
             printer.line("}");
@@ -1740,8 +1788,12 @@ fn format_instruction_value_impl(printer: &mut DebugPrinter, value: &Instruction
             printer.line("ObjectMethod {");
             printer.indent();
             printer.line("loweredFunc:");
-            let _inner_func = &printer.env.functions[lowered_func.func.0 as usize];
-            printer.line(&format!("  <function {}>", lowered_func.func.0));
+            let inner_func = &printer.env.functions[lowered_func.func.0 as usize];
+            if let Some(formatter) = printer.hir_formatter {
+                formatter(printer, inner_func);
+            } else {
+                printer.line(&format!("  <function {}>", lowered_func.func.0));
+            }
             printer.line(&format!("loc: {}", format_loc(loc)));
             printer.dedent();
             printer.line("}");
