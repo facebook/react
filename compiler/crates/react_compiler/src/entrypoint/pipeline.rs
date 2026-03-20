@@ -358,6 +358,11 @@ pub fn compile_fn(
     let debug_align_block_scopes = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("AlignReactiveScopesToBlockScopesHIR", debug_align_block_scopes));
 
+    react_compiler_inference::merge_overlapping_reactive_scopes_hir(&mut hir, &mut env);
+
+    let debug_merge_overlapping = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("MergeOverlappingReactiveScopesHIR", debug_merge_overlapping));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

@@ -7,6 +7,7 @@ pub mod infer_mutation_aliasing_ranges;
 pub mod infer_reactive_places;
 pub mod infer_reactive_scope_variables;
 pub mod memoize_fbt_and_macro_operands_in_same_scope;
+pub mod merge_overlapping_reactive_scopes_hir;
 
 pub use align_method_call_scopes::align_method_call_scopes;
 pub use align_object_method_scopes::align_object_method_scopes;
@@ -17,3 +18,4 @@ pub use infer_mutation_aliasing_ranges::infer_mutation_aliasing_ranges;
 pub use infer_reactive_places::infer_reactive_places;
 pub use infer_reactive_scope_variables::infer_reactive_scope_variables;
 pub use memoize_fbt_and_macro_operands_in_same_scope::memoize_fbt_and_macro_operands_in_same_scope;
+pub use merge_overlapping_reactive_scopes_hir::merge_overlapping_reactive_scopes_hir;

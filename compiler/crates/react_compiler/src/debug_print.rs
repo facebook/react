@@ -366,16 +366,18 @@ impl<'a> DebugPrinter<'a> {
             }
             None => self.line("name: null"),
         }
-        // After InferReactiveScopeVariables, the effective mutable range
-        // is the scope's range (when a scope is assigned). This mirrors TS
-        // where scope.range and identifier.mutableRange are the same object.
-        let effective_range = match ident.scope {
-            Some(scope_id) => &self.env.scopes[scope_id.0 as usize].range,
-            None => &ident.mutable_range,
-        };
+        // Print the identifier's mutable_range directly, matching the TS
+        // DebugPrintHIR which prints `identifier.mutableRange`. In TS,
+        // InferReactiveScopeVariables sets identifier.mutableRange = scope.range
+        // (shared reference), and AlignReactiveScopesToBlockScopesHIR syncs them.
+        // After MergeOverlappingReactiveScopesHIR repoints scopes, the TS
+        // identifier.mutableRange still references the OLD scope's range (stale),
+        // so we match by using ident.mutable_range directly (which is synced
+        // at the AlignReactiveScopesToBlockScopesHIR step but not re-synced
+        // after scope repointing in merge passes).
         self.line(&format!(
             "mutableRange: [{}:{}]",
-            effective_range.start.0, effective_range.end.0
+            ident.mutable_range.start.0, ident.mutable_range.end.0
         ));
         match ident.scope {
             Some(scope_id) => self.format_scope_field("scope", scope_id),
