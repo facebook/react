@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1637/1717 passing (95.3%), 80 failures remaining.
+Overall: 1650/1717 passing (96.1%), 67 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -19,22 +19,22 @@ InferMutationAliasingEffects: complete (1644/1644)
 OptimizeForSSR: todo (conditional, outputMode === 'ssr')
 DeadCodeElimination: complete (1644/1644)
 InferMutationAliasingRanges: complete (1644/1644)
-InferReactivePlaces: partial (1623/1630, 7 failures)
-RewriteInstructionKindsBasedOnReassignment: partial (1599/1622, 23 failures from VED cascade)
-InferReactiveScopeVariables: complete (1599/1599)
-MemoizeFbtAndMacroOperandsInSameScope: complete (1599/1599)
+InferReactivePlaces: partial (1636/1643, 7 failures)
+RewriteInstructionKindsBasedOnReassignment: partial (1612/1635, 23 failures from VED cascade)
+InferReactiveScopeVariables: complete (1612/1612)
+MemoizeFbtAndMacroOperandsInSameScope: complete (1612/1612)
 outlineJSX: stub (conditional on enableJsxOutlining)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: partial (1590/1599, 9 failures)
-AlignMethodCallScopes: complete (1590/1590)
-AlignObjectMethodScopes: partial (1589/1590, 1 failure)
-PruneUnusedLabelsHIR: complete (1589/1589)
-AlignReactiveScopesToBlockScopesHIR: complete (1589/1589)
-MergeOverlappingReactiveScopesHIR: partial (1586/1589, 3 failures)
-BuildReactiveScopeTerminalsHIR: complete (1586/1586)
-FlattenReactiveLoopsHIR: complete (1586/1586)
-FlattenScopesWithHooksOrUseHIR: complete (1586/1586)
-PropagateScopeDependenciesHIR: partial (1566/1586, 20 failures)
+OutlineFunctions: partial (1603/1612, 9 failures)
+AlignMethodCallScopes: complete (1603/1603)
+AlignObjectMethodScopes: partial (1602/1603, 1 failure)
+PruneUnusedLabelsHIR: complete (1602/1602)
+AlignReactiveScopesToBlockScopesHIR: complete (1602/1602)
+MergeOverlappingReactiveScopesHIR: partial (1599/1602, 3 failures)
+BuildReactiveScopeTerminalsHIR: complete (1599/1599)
+FlattenReactiveLoopsHIR: complete (1599/1599)
+FlattenScopesWithHooksOrUseHIR: complete (1599/1599)
+PropagateScopeDependenciesHIR: partial (1579/1599, 20 failures)
 
 ## Validation passes
 
@@ -44,19 +44,18 @@ ValidateHooksUsage: complete (1651/1651)
 ValidateNoCapitalizedCalls: complete (3/3)
 ValidateLocalsNotReassignedAfterRender: complete (1644/1644)
 ValidateNoRefAccessInRender: complete (1642/1642)
-ValidateNoSetStateInRender: partial (1629/1642, 13 failures)
-ValidateNoDerivedComputationsInEffects: complete (9/9, stub for _exp variant)
+ValidateNoSetStateInRender: complete (1642/1642)
+ValidateNoDerivedComputationsInEffects: complete (22/22)
 ValidateNoSetStateInEffects: partial (11/12, 1 failure)
 ValidateNoJSXInTryStatement: complete (4/4)
-ValidateNoFreezingKnownMutableFunctions: complete (1630/1630)
-ValidateExhaustiveDependencies: partial (1622/1623, 1 failure; errors stripped to prevent cascade)
-ValidatePreservedManualMemoization: complete (1564/1564)
+ValidateNoFreezingKnownMutableFunctions: complete (1643/1643)
+ValidateExhaustiveDependencies: partial (1635/1636, 1 failure; errors stripped to prevent cascade)
+ValidatePreservedManualMemoization: complete (1577/1577)
 
-## Remaining failure breakdown (80 total)
+## Remaining failure breakdown (67 total)
 
 RIKBR: 23 (all from VED false positive error cascade)
 PropagateScopeDependenciesHIR: 20 (missing reduceMaybeOptionalChains, propagation algo)
-ValidateNoSetStateInRender: 13 (validation edge cases)
 OutlineFunctions: 9 (8 outline_jsx stub + 1 edge case)
 InferReactivePlaces: 7 (missing upstream validation passes)
 MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
@@ -297,3 +296,11 @@ Remaining 80 failures: RIKBR (23, VED false positive cascade), PSDH (20),
 ValidateNoSetStateInRender (13), OutlineFunctions (9), InferReactivePlaces (7),
 MergeOverlapping (3), others (5).
 Overall: 1637/1717 passing (95.3%).
+
+## 20260320-141021 Port validateNoDerivedComputationsInEffects_exp
+
+Ported the experimental validateNoDerivedComputationsInEffects_exp validation pass
+from TypeScript to Rust. The 13 "ValidateNoSetStateInRender" failures were actually
+caused by this unported pass — the test harness misattributed them to the preceding pass.
+Created validate_no_derived_computations_in_effects.rs (1269 lines) in react_compiler_validation.
+Overall: 1650/1717 passing (96.1%), 67 failures remaining.
