@@ -43,11 +43,11 @@ function useHandler(t0) {
   const $ = _c(2);
   const { item } = t0;
   let t1;
-  if ($[0] !== item.id) {
+  if ($[0] !== item) {
     t1 = () => {
       console.log(item.id);
     };
-    $[0] = item.id;
+    $[0] = item;
     $[1] = t1;
   } else {
     t1 = $[1];

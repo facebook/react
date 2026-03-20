@@ -44,11 +44,11 @@ function Component(t0) {
   const $ = _c(5);
   const { data } = t0;
   let t1;
-  if ($[0] !== data.id) {
+  if ($[0] !== data) {
     t1 = () => {
       console.log(data.id);
     };
-    $[0] = data.id;
+    $[0] = data;
     $[1] = t1;
   } else {
     t1 = $[1];

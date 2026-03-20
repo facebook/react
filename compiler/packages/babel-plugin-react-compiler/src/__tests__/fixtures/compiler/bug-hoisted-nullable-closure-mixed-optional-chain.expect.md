@@ -46,12 +46,12 @@ function Component(t0) {
   const $ = _c(2);
   const { user } = t0;
   let t1;
-  if ($[0] !== user?.company.name) {
+  if ($[0] !== user?.company) {
     const handleClick = () => {
       console.log(user?.company.name);
     };
     t1 = <Stringify onClick={handleClick}>Click</Stringify>;
-    $[0] = user?.company.name;
+    $[0] = user?.company;
     $[1] = t1;
   } else {
     t1 = $[1];

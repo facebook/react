@@ -60,13 +60,13 @@ function Component(t0) {
   const $ = _c(2);
   const { planPeriod } = t0;
   let t1;
-  if ($[0] !== planPeriod.id) {
+  if ($[0] !== planPeriod) {
     const callback = () => {
       assertIsNotEmpty(planPeriod?.id);
       console.log(planPeriod.id);
     };
     t1 = <Stringify onClick={callback} />;
-    $[0] = planPeriod.id;
+    $[0] = planPeriod;
     $[1] = t1;
   } else {
     t1 = $[1];

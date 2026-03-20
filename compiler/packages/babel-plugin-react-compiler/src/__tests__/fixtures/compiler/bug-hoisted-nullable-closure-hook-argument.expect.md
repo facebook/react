@@ -45,9 +45,9 @@ function Component(t0) {
   const $ = _c(4);
   const { item } = t0;
   let t1;
-  if ($[0] !== item.id) {
+  if ($[0] !== item) {
     t1 = () => item.id;
-    $[0] = item.id;
+    $[0] = item;
     $[1] = t1;
   } else {
     t1 = $[1];
