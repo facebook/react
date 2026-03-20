@@ -22,17 +22,17 @@ function Component() {
 
 The goal of mutability and aliasing inference is to understand the set of instructions that create/modify a, b, and c.
 
-In code, the mutability and aliasing model is compromised of the following phases:
+In code, the mutability and aliasing model is comprised of the following phases:
 
-* `InferMutationAliasingEffects`. Infers a set of mutation and aliasing effects for each instruction. The approach is to generate a set of candidate effects based purely on the semantics of each instruction and the types of the operands, then use abstract interpretation to determine the actual effects (or errros) that would apply. For example, an instruction that by default has a Capture effect might downgrade to an ImmutableCapture effect if the value is known to be frozen.
-* `InferMutationAliasingRanges`. Infers a mutable range (start:end instruction ids) for each value in the program, and annotates each Place with its effect type for usage in later passes. This builds a graph of data flow through the program over time in order to understand which mutations effect which values.
+* `InferMutationAliasingEffects`. Infers a set of mutation and aliasing effects for each instruction. The approach is to generate a set of candidate effects based purely on the semantics of each instruction and the types of the operands, then use abstract interpretation to determine the actual effects (or errors) that would apply. For example, an instruction that by default has a Capture effect might downgrade to an ImmutableCapture effect if the value is known to be frozen.
+* `InferMutationAliasingRanges`. Infers a mutable range (start:end instruction ids) for each value in the program, and annotates each Place with its effect type for usage in later passes. This builds a graph of data flow through the program over time in order to understand which mutations affect which values.
 * `InferReactiveScopeVariables`. Given the per-Place effects, determines disjoint sets of values that mutate together and assigns all identifiers in each set to a unique scope, and updates the range to include the ranges of all constituent values.
 
 Finally, `AnalyzeFunctions` needs to understand the mutation and aliasing semantics of nested FunctionExpression and ObjectMethod values. `AnalyzeFunctions` calls `InferFunctionExpressionAliasingEffectsSignature` to determine the publicly observable set of mutation/aliasing effects for nested functions.
 
 ## Mutation and Aliasing Effects
 
-The inference model is based on a set of "effects" that describe subtle aspects of mutation, aliasing, and other changes to the state of values over time
+The inference model is based on a set of "effects" that describe subtle aspects of mutation, aliasing, and other changes to the state of values over time.
 
 ### Creation Effects
 
@@ -69,7 +69,7 @@ Describes the creation of new function value, capturing the given set of mutable
     kind: 'Apply';
     receiver: Place;
     function: Place; // same as receiver for function calls
-    mutatesFunction: boolean; // indicates if this is a type that we consdier to mutate the function itself by default
+    mutatesFunction: boolean; // indicates if this is a type that we consider to mutate the function itself by default
     args: Array<Place | SpreadPattern | Hole>;
     into: Place; // where result is stored
     signature: FunctionSignature | null;
@@ -314,7 +314,7 @@ Mutate b
 Mutate a
 ```
 
-A derived value changes when it's source value is mutated.
+A derived value changes when its source value is mutated.
 
 Example:
 
@@ -526,7 +526,7 @@ Capture c <- a
 
 Intuition: these effects are inverses of each other (capturing into an object, extracting from an object). The result is based on the order of operations:
 
-Capture then CreatFrom is equivalent to Alias: we have to assume that the result _is_ the original value and that a local mutation of the result could mutate the original.
+Capture then CreateFrom is equivalent to Alias: we have to assume that the result _is_ the original value and that a local mutation of the result could mutate the original.
 
 ```js
 const b = [a]; // capture

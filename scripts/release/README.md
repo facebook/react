@@ -45,7 +45,7 @@ If your code lands in the main branch, it will be automatically published to the
 This will grab the specified revision on the main branch and publish it to the Next and Experimental channels.
 ## Publishing Without Tags
 
-The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` argument is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
 
 ## Publishing Next
 

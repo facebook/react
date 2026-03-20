@@ -17,7 +17,7 @@ yarn snap:build
 yarn snap --watch
 ```
 
-`snap` is our custom test runner, which creates "golden" test files that have the expected output for each input fixture, as well as the results of executing a specific input (or sequence of inputs) in both the uncompiled and compiler versions of the input.
+`snap` is our custom test runner, which creates "golden" test files that have the expected output for each input fixture, as well as the results of executing a specific input (or sequence of inputs) in both the uncompiled and compiled versions of the input.
 
 ### Compiling Arbitrary Files
 
