@@ -1,6 +1,6 @@
 # Rust Port: ReactiveFunction and Reactive Passes
 
-Current status: **Planning** — All 31 HIR passes ported. BuildReactiveFunction (#32) is the next frontier.
+Current status: **Phase 2 In Progress** — Reactive types, crate skeleton, TS/Rust debug printers, and BuildReactiveFunction are implemented. 1458/1717 fixtures pass (85%). Remaining failures are mostly earlier-pass error propagation differences and a few loop scheduling edge cases.
 
 ## Overview
 
