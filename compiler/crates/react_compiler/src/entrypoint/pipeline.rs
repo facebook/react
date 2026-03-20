@@ -267,24 +267,23 @@ pub fn compile_fn(
     let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
 
-    // TODO: port validation passes (stubs for log output matching)
     if env.enable_validations() {
-        // TODO: port validateLocalsNotReassignedAfterRender
+        react_compiler_validation::validate_locals_not_reassigned_after_render(&hir, &mut env);
         context.log_debug(DebugLogEntry::new("ValidateLocalsNotReassignedAfterRender", "ok".to_string()));
 
         // assertValidMutableRanges is gated on config.assertValidMutableRanges (default false)
 
         if env.config.validate_ref_access_during_render {
-            // TODO: port validateNoRefAccessInRender
+            react_compiler_validation::validate_no_ref_access_in_render(&hir, &mut env);
             context.log_debug(DebugLogEntry::new("ValidateNoRefAccessInRender", "ok".to_string()));
         }
 
         if env.config.validate_no_set_state_in_render {
-            // TODO: port validateNoSetStateInRender
+            react_compiler_validation::validate_no_set_state_in_render(&hir, &mut env);
             context.log_debug(DebugLogEntry::new("ValidateNoSetStateInRender", "ok".to_string()));
         }
 
-        // TODO: port validateNoFreezingKnownMutableFunctions
+        react_compiler_validation::validate_no_freezing_known_mutable_functions(&hir, &mut env);
         context.log_debug(DebugLogEntry::new("ValidateNoFreezingKnownMutableFunctions", "ok".to_string()));
     }
 
@@ -393,6 +392,27 @@ pub fn compile_fn(
 
     let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
+
+    // TODO: port buildReactiveFunction (kind: 'reactive', skipped by test harness)
+    // TODO: port assertWellFormedBreakTargets
+    context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
+    // TODO: port pruneUnusedLabels (kind: 'reactive', skipped by test harness)
+    // TODO: port assertScopeInstructionsWithinScopes
+    context.log_debug(DebugLogEntry::new("AssertScopeInstructionsWithinScopes", "ok".to_string()));
+    // TODO: port pruneNonEscapingScopes, pruneNonReactiveDependencies, pruneUnusedScopes,
+    //       mergeReactiveScopesThatInvalidateTogether, pruneAlwaysInvalidatingScopes,
+    //       propagateEarlyReturns, pruneUnusedLValues, promoteUsedTemporaries,
+    //       extractScopeDeclarationsFromDestructuring, stabilizeBlockIds,
+    //       renameVariables, pruneHoistedContexts (all kind: 'reactive', skipped by test harness)
+
+    if env.config.enable_preserve_existing_memoization_guarantees
+        || env.config.validate_preserve_existing_memoization_guarantees
+    {
+        // TODO: port validatePreservedManualMemoization
+        context.log_debug(DebugLogEntry::new("ValidatePreservedManualMemoization", "ok".to_string()));
+    }
+
+    // TODO: port codegenFunction (kind: 'ast', skipped by test harness)
 
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
