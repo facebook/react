@@ -48,7 +48,7 @@ export function printDebugHIR(fn: HIRFunction): string {
   return printer.toString();
 }
 
-class DebugPrinter {
+export class DebugPrinter {
   seenIdentifiers: Set<IdentifierId> = new Set();
   seenScopes: Set<ScopeId> = new Set();
   output: Array<string> = [];

@@ -27,6 +27,7 @@ import path from 'path';
 
 import {parseConfigPragmaForTests} from '../packages/babel-plugin-react-compiler/src/Utils/TestUtils';
 import {printDebugHIR} from '../packages/babel-plugin-react-compiler/src/HIR/DebugPrintHIR';
+import {printDebugReactiveFunction} from '../packages/babel-plugin-react-compiler/src/HIR/DebugPrintReactiveFunction';
 import type {CompilerPipelineValue} from '../packages/babel-plugin-react-compiler/src/Entrypoint/Pipeline';
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -294,8 +295,14 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
           name: entry.name,
           value: entry.value,
         });
+      } else if (entry.kind === 'reactive') {
+        log.push({
+          kind: 'entry',
+          name: entry.name,
+          value: printDebugReactiveFunction(entry.value),
+        });
       } else if (
-        (entry.kind === 'reactive' || entry.kind === 'ast') &&
+        entry.kind === 'ast' &&
         entry.name === passArg
       ) {
         throw new Error(
