@@ -1535,14 +1535,14 @@ fn apply_operand_effects(
                 {
                     env.identifiers[ctx_id.0 as usize].mutable_range.start = eval_order;
                 }
-                // Apply effect
-                if let Some(&effect) = operand_effects.get(ctx_id) {
-                    // Update the context Place's effect in the inner function
-                    let inner_func = &mut env.functions[func_id.0 as usize];
-                    for ctx_place in &mut inner_func.context {
-                        if ctx_place.identifier == *ctx_id {
-                            ctx_place.effect = effect;
-                        }
+                // Apply effect: use operand_effects if present, else default to Read
+                // (matches TS where context vars are yielded by eachInstructionValueOperand
+                // and get the default Read effect when not in operandEffects)
+                let effect = operand_effects.get(ctx_id).copied().unwrap_or(Effect::Read);
+                let inner_func = &mut env.functions[func_id.0 as usize];
+                for ctx_place in &mut inner_func.context {
+                    if ctx_place.identifier == *ctx_id {
+                        ctx_place.effect = effect;
                     }
                 }
             }

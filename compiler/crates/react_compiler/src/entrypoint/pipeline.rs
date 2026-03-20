@@ -74,7 +74,6 @@ pub fn compile_fn(
         err.push_diagnostic(diag);
         return Err(err);
     }
-
     let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
     // Log VoidUseMemo errors as CompileError events (matching TS env.logErrors behavior).
     // In TS these are logged via env.logErrors() for telemetry, not accumulated as compile errors.
@@ -118,7 +117,6 @@ pub fn compile_fn(
             },
         });
     }
-
     // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
     // output modes, so we run it unconditionally.
     react_compiler_optimization::drop_manual_memoization(&mut hir, &mut env).map_err(|diag| {
@@ -203,6 +201,15 @@ pub fn compile_fn(
     react_compiler_inference::analyse_functions(&mut hir, &mut env, &mut |inner_func, inner_env| {
         inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
     });
+    // Check for invariant errors recorded during AnalyseFunctions (e.g., uninitialized
+    // identifiers in InferMutationAliasingEffects for inner functions).
+    if env.has_invariant_errors() {
+        // Emit any inner function logs that were captured before the error
+        for inner_log in &inner_logs {
+            context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log.clone()));
+        }
+        return Err(env.take_invariant_errors());
+    }
     for inner_log in inner_logs {
         context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log));
     }

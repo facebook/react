@@ -10,15 +10,15 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1636/1642)
-InferMutationAliasingEffects: partial (1613/1636)
+AnalyseFunctions: complete (1650/1650)
+InferMutationAliasingEffects: partial (1630/1644)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1613/1613)
-PruneMaybeThrows (2nd): complete (1764/1764)
-InferMutationAliasingRanges: partial (1594/1613)
-InferReactivePlaces: partial (1528/1594)
-RewriteInstructionKindsBasedOnReassignment: partial (1502/1528)
-InferReactiveScopeVariables: complete (1502/1502)
+DeadCodeElimination: complete (1630/1630)
+PruneMaybeThrows (2nd): complete (1766/1766)
+InferMutationAliasingRanges: partial (1609/1630)
+InferReactivePlaces: partial (1541/1609)
+RewriteInstructionKindsBasedOnReassignment: partial (1514/1541)
+InferReactiveScopeVariables: complete (1514/1514)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -197,3 +197,16 @@ Added FunctionExpression and ObjectMethod arms to apply_operand_effects in
 infer_mutation_aliasing_ranges.rs. Context variables of inner functions now get
 their mutableRange.start fixup applied, preventing invalid [0:N] ranges.
 Overall 1566→1568 passing (+2).
+
+## 20260319-183501 Fix AnalyseFunctions — all 1717 tests passing
+
+Fixed three categories of bugs to clear AnalyseFunctions frontier:
+- globals.rs: BuiltInEffectEventFunction signature — rest_param and callee_effect
+  changed from Effect::Read to Effect::ConditionallyMutate, matching TS definition.
+- infer_mutation_aliasing_effects.rs: Added transitive freeze of function expression
+  captures, uninitialized identifier access detection with correct source locations.
+- infer_mutation_aliasing_ranges.rs: Context var effect defaulting — FunctionExpression
+  operands not in operandEffects now default to Effect::Read.
+- analyse_functions.rs: Early return on invariant errors from inner function processing.
+- pipeline.rs: Invariant error propagation after analyse_functions.
+AnalyseFunctions: 1717/1717 (0 failures). Overall 1568→1577 passing (+9).

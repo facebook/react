@@ -62,6 +62,12 @@ where
 
         lower_with_mutation_aliasing(&mut inner_func, env, debug_logger);
 
+        // If an invariant error was recorded, put the function back and stop processing
+        if env.has_invariant_errors() {
+            env.functions[func_id.0 as usize] = inner_func;
+            return;
+        }
+
         // Reset mutable range for outer inferMutationAliasingEffects.
         //
         // NOTE: inferReactiveScopeVariables makes identifiers in the scope
@@ -96,6 +102,13 @@ where
     crate::infer_mutation_aliasing_effects::infer_mutation_aliasing_effects(
         func, env, true,
     );
+
+    // Check for invariant errors (e.g., uninitialized value kind)
+    // In TS, these throw from within inferMutationAliasingEffects, aborting
+    // the rest of the function processing.
+    if env.has_invariant_errors() {
+        return;
+    }
 
     // deadCodeElimination for inner functions
     react_compiler_optimization::dead_code_elimination(func, env);

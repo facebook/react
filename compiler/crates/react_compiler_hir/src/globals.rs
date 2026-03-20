@@ -1181,7 +1181,8 @@ fn build_hook_shapes(shapes: &mut ShapeRegistry) {
         shapes,
         Vec::new(),
         FunctionSignatureBuilder {
-            rest_param: Some(Effect::Read),
+            rest_param: Some(Effect::ConditionallyMutate),
+            callee_effect: Effect::ConditionallyMutate,
             return_type: Type::Poly,
             return_value_kind: ValueKind::Mutable,
             ..Default::default()

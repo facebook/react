@@ -13,7 +13,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
+use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::{
     FunctionSignature, HookKind, BUILT_IN_ARRAY_ID, BUILT_IN_MAP_ID, BUILT_IN_SET_ID,
@@ -156,6 +156,32 @@ pub fn infer_mutation_aliasing_effects(
 
             infer_block(&mut context, &mut state, block_id, func, env);
 
+            // Check for uninitialized identifier access (matches TS invariant:
+            // "Expected value kind to be initialized")
+            if let Some((uninitialized_id, usage_loc)) = state.uninitialized_access.get() {
+                let ident_info = env.identifiers.get(uninitialized_id.0 as usize);
+                let name = ident_info
+                    .and_then(|ident| ident.name.as_ref())
+                    .map(|n| n.value().to_string())
+                    .unwrap_or_else(|| "<unknown>".to_string());
+                let decl_id = ident_info
+                    .map(|ident| ident.declaration_id.0)
+                    .unwrap_or(0);
+                // Use usage_loc if available, otherwise fall back to identifier's own loc
+                let error_loc = usage_loc.or_else(|| ident_info.and_then(|i| i.loc));
+                let description = format!("<unknown> {}${}", name, decl_id);
+                let diag = CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "[InferMutationAliasingEffects] Expected value kind to be initialized",
+                    Some(description),
+                ).with_detail(CompilerDiagnosticDetail::Error {
+                    loc: error_loc,
+                    message: Some("this is uninitialized".to_string()),
+                });
+                env.record_diagnostic(diag);
+                return;
+            }
+
             // Queue successors
             let successors = terminal_successors(&func.body.blocks[&block_id].terminal);
             for next_block_id in successors {
@@ -212,6 +238,11 @@ struct InferenceState {
     values: HashMap<ValueId, AbstractValue>,
     /// The set of values pointed to by each identifier
     variables: HashMap<IdentifierId, HashSet<ValueId>>,
+    /// Tracks uninitialized identifier access errors (matches TS invariant).
+    /// Uses Cell so it can be set from `&self` methods like `kind()`.
+    /// Stores (IdentifierId, usage_loc) where usage_loc is the source location
+    /// of the Place that triggered the uninitialized access.
+    uninitialized_access: std::cell::Cell<Option<(IdentifierId, Option<SourceLocation>)>>,
 }
 
 impl InferenceState {
@@ -220,7 +251,39 @@ impl InferenceState {
             is_function_expression,
             values: HashMap::new(),
             variables: HashMap::new(),
+            uninitialized_access: std::cell::Cell::new(None),
         }
+    }
+
+    /// Check the kind of a place, recording the usage location for error reporting.
+    fn kind_with_loc(&self, place_id: IdentifierId, usage_loc: Option<SourceLocation>) -> AbstractValue {
+        let values = match self.variables.get(&place_id) {
+            Some(v) => v,
+            None => {
+                if self.uninitialized_access.get().is_none() {
+                    self.uninitialized_access.set(Some((place_id, usage_loc)));
+                }
+                return AbstractValue {
+                    kind: ValueKind::Mutable,
+                    reason: hashset_of(ValueReason::Other),
+                };
+            }
+        };
+        let mut merged_kind: Option<AbstractValue> = None;
+        for value_id in values {
+            let kind = match self.values.get(value_id) {
+                Some(k) => k,
+                None => continue,
+            };
+            merged_kind = Some(match merged_kind {
+                Some(prev) => merge_abstract_values(&prev, kind),
+                None => kind.clone(),
+            });
+        }
+        merged_kind.unwrap_or_else(|| AbstractValue {
+            kind: ValueKind::Mutable,
+            reason: hashset_of(ValueReason::Other),
+        })
     }
 
     fn initialize(&mut self, value_id: ValueId, kind: AbstractValue) {
@@ -292,35 +355,19 @@ impl InferenceState {
     }
 
     fn kind(&self, place_id: IdentifierId) -> AbstractValue {
-        let values = match self.variables.get(&place_id) {
-            Some(v) => v,
-            None => {
-                // Gracefully handle uninitialized identifiers - return a default
-                // This can happen for identifiers from outer scopes or backedges
-                return AbstractValue {
-                    kind: ValueKind::Mutable,
-                    reason: hashset_of(ValueReason::Other),
-                };
-            }
-        };
-        let mut merged_kind: Option<AbstractValue> = None;
-        for value_id in values {
-            let kind = match self.values.get(value_id) {
-                Some(k) => k,
-                None => continue,
-            };
-            merged_kind = Some(match merged_kind {
-                Some(prev) => merge_abstract_values(&prev, kind),
-                None => kind.clone(),
-            });
-        }
-        merged_kind.unwrap_or(AbstractValue {
-            kind: ValueKind::Mutable,
-            reason: hashset_of(ValueReason::Other),
-        })
+        self.kind_with_loc(place_id, None)
     }
 
+
+
     fn freeze(&mut self, place_id: IdentifierId, reason: ValueReason) -> bool {
+        // Check if defined first to avoid recording uninitialized access error.
+        // Freeze on undefined identifiers is a no-op — this matches the TS
+        // behavior where freeze() is never called on undefined identifiers
+        // (the invariant in kind() catches this before freeze is reached).
+        if !self.variables.contains_key(&place_id) {
+            return false;
+        }
         let value = self.kind(place_id);
         match value.kind {
             ValueKind::Context | ValueKind::Mutable | ValueKind::MaybeFrozen => {
@@ -350,11 +397,21 @@ impl InferenceState {
         place_id: IdentifierId,
         env: &Environment,
     ) -> MutationResult {
+        self.mutate_with_loc(variant, place_id, env, None)
+    }
+
+    fn mutate_with_loc(
+        &self,
+        variant: MutateVariant,
+        place_id: IdentifierId,
+        env: &Environment,
+        usage_loc: Option<SourceLocation>,
+    ) -> MutationResult {
         let ty = &env.types[env.identifiers[place_id.0 as usize].type_.0 as usize];
         if react_compiler_hir::is_ref_or_ref_value(ty) {
             return MutationResult::MutateRef;
         }
-        let kind = self.kind(place_id).kind;
+        let kind = self.kind_with_loc(place_id, usage_loc).kind;
         match variant {
             MutateVariant::MutateConditionally | MutateVariant::MutateTransitiveConditionally => {
                 match kind {
@@ -427,6 +484,7 @@ impl InferenceState {
                 is_function_expression: self.is_function_expression,
                 values: next_values.unwrap_or_else(|| self.values.clone()),
                 variables: next_variables.unwrap_or_else(|| self.variables.clone()),
+                uninitialized_access: std::cell::Cell::new(None),
             })
         }
     }
@@ -988,6 +1046,27 @@ fn apply_effect(
             let did_freeze = state.freeze(value.identifier, reason);
             if did_freeze {
                 effects.push(effect.clone());
+                // Transitively freeze FunctionExpression captures if enabled
+                // (matches TS freezeValue which recurses into func.context)
+                let enable_transitive =
+                    env.config.enable_preserve_existing_memoization_guarantees
+                    || env.config.enable_transitively_freeze_function_expressions;
+                if enable_transitive {
+                    // Check if the frozen value is a function expression
+                    let value_ids: Vec<ValueId> = state.values_for(value.identifier);
+                    for vid in &value_ids {
+                        if let Some(&func_id) = context.function_values.get(vid) {
+                            let ctx_ids: Vec<IdentifierId> = env.functions[func_id.0 as usize]
+                                .context
+                                .iter()
+                                .map(|p| p.identifier)
+                                .collect();
+                            for ctx_id in ctx_ids {
+                                state.freeze(ctx_id, reason);
+                            }
+                        }
+                    }
+                }
             }
         }
         AliasingEffect::Create { ref into, value: kind, reason } => {
@@ -1118,14 +1197,14 @@ fn apply_effect(
             let is_maybe_alias = matches!(effect, AliasingEffect::MaybeAlias { .. });
 
             // Check destination kind
-            let into_kind = state.kind(into.identifier).kind;
+            let into_kind = state.kind_with_loc(into.identifier, into.loc).kind;
             let destination_type = match into_kind {
                 ValueKind::Context => Some("context"),
                 ValueKind::Mutable | ValueKind::MaybeFrozen => Some("mutable"),
                 _ => None,
             };
 
-            let from_kind = state.kind(from.identifier).kind;
+            let from_kind = state.kind_with_loc(from.identifier, from.loc).kind;
             let source_type = match from_kind {
                 ValueKind::Context => Some("context"),
                 ValueKind::Global | ValueKind::Primitive => None,
@@ -1153,7 +1232,7 @@ fn apply_effect(
         }
         AliasingEffect::Assign { ref from, ref into } => {
             initialized.insert(into.identifier);
-            let from_value = state.kind(from.identifier);
+            let from_value = state.kind_with_loc(from.identifier, from.loc);
             match from_value.kind {
                 ValueKind::Frozen => {
                     apply_effect(context, state, AliasingEffect::ImmutableCapture {
@@ -1301,7 +1380,7 @@ fn apply_effect(
                 _ => unreachable!(),
             };
             let value = mutate_place;
-            let mutation_kind = state.mutate(variant, value.identifier, env);
+            let mutation_kind = state.mutate_with_loc(variant, value.identifier, env, value.loc);
             if mutation_kind == MutationResult::Mutate {
                 effects.push(effect.clone());
             } else if mutation_kind == MutationResult::MutateRef {
