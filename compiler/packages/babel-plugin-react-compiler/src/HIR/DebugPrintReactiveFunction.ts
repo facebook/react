@@ -25,8 +25,13 @@ export function printDebugReactiveFunction(fn: ReactiveFunction): string {
 
   const outlined = fn.env.getOutlinedFunctions();
   for (let i = 0; i < outlined.length; i++) {
-    printer.line('');
-    printer.formatReactiveFunction(outlined[i].fn);
+    const outlinedFn = outlined[i].fn;
+    // Only print outlined functions that have been converted to reactive form
+    // (have an array body, not a HIR body with blocks)
+    if (Array.isArray(outlinedFn.body)) {
+      printer.line('');
+      printer.formatReactiveFunction(outlinedFn);
+    }
   }
 
   printer.line('');
