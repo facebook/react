@@ -18,9 +18,10 @@ use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     BasicBlock, BlockId, DeclarationId, DependencyPathEntry, EvaluationOrder,
-    GotoVariant, HirFunction, IdentifierId, Instruction, InstructionId, InstructionKind,
-    InstructionValue, MutableRange, ParamPattern, Place, PlaceOrSpread, PropertyLiteral,
-    ReactFunctionType, ReactiveScopeDependency, ScopeId, Terminal, Type,
+    FunctionId, GotoVariant, HirFunction, IdentifierId, Instruction, InstructionId,
+    InstructionKind, InstructionValue, MutableRange, ParamPattern,
+    Place, PlaceOrSpread, PropertyLiteral, ReactFunctionType, ReactiveScopeDependency,
+    ScopeId, Terminal, Type,
 };
 
 // =============================================================================
@@ -970,11 +971,13 @@ fn collect_hoistable_property_loads(
         HashSet::new()
     };
 
+    let assumed_invoked_fns = get_assumed_invoked_functions(func, env);
     let ctx = CollectHoistableContext {
         temporaries,
         known_immutable_identifiers: &known_immutable_identifiers,
         hoistable_from_optionals,
         nested_fn_immutable_context: None,
+        assumed_invoked_fns: &assumed_invoked_fns,
     };
 
     collect_hoistable_property_loads_impl(func, env, &ctx, &mut registry)
@@ -985,6 +988,7 @@ struct CollectHoistableContext<'a> {
     known_immutable_identifiers: &'a HashSet<IdentifierId>,
     hoistable_from_optionals: &'a HashMap<BlockId, ReactiveScopeDependency>,
     nested_fn_immutable_context: Option<&'a HashSet<IdentifierId>>,
+    assumed_invoked_fns: &'a HashSet<FunctionId>,
 }
 
 fn is_immutable_at_instr(
@@ -1045,8 +1049,146 @@ fn collect_hoistable_property_loads_impl(
     registry: &mut PropertyPathRegistry,
 ) -> HashMap<BlockId, BlockInfo> {
     let nodes = collect_non_nulls_in_blocks(func, env, ctx, registry);
-    propagate_non_null(func, &nodes, registry);
+    let _working = propagate_non_null(func, &nodes, registry);
     nodes
+}
+
+/// Corresponds to TS `getAssumedInvokedFunctions`.
+/// Returns the set of LoweredFunction FunctionIds that are assumed to be invoked.
+fn get_assumed_invoked_functions(
+    func: &HirFunction,
+    env: &Environment,
+) -> HashSet<FunctionId> {
+    // Map of identifier id -> (function_id, set of functions it may invoke)
+    let mut temporaries: HashMap<IdentifierId, (FunctionId, HashSet<FunctionId>)> = HashMap::new();
+    let mut hoistable: HashSet<FunctionId> = HashSet::new();
+
+    // Step 1: Collect identifier to function expression mappings
+    for (_block_id, block) in &func.body.blocks {
+        for &instr_id in &block.instructions {
+            let instr = &func.instructions[instr_id.0 as usize];
+            match &instr.value {
+                InstructionValue::FunctionExpression { lowered_func, .. } => {
+                    temporaries.insert(
+                        instr.lvalue.identifier,
+                        (lowered_func.func, HashSet::new()),
+                    );
+                }
+                InstructionValue::StoreLocal { value: val, lvalue, .. } => {
+                    if let Some(entry) = temporaries.get(&val.identifier).cloned() {
+                        temporaries.insert(lvalue.place.identifier, entry);
+                    }
+                }
+                InstructionValue::LoadLocal { place, .. } => {
+                    if let Some(entry) = temporaries.get(&place.identifier).cloned() {
+                        temporaries.insert(instr.lvalue.identifier, entry);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Step 2: Forward pass to analyze assumed function calls
+    for (_block_id, block) in &func.body.blocks {
+        for &instr_id in &block.instructions {
+            let instr = &func.instructions[instr_id.0 as usize];
+            match &instr.value {
+                InstructionValue::CallExpression { callee, args, .. } => {
+                    let callee_ty = &env.types[env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
+                    let maybe_hook = env.get_hook_kind_for_type(callee_ty);
+                    if let Some(entry) = temporaries.get(&callee.identifier) {
+                        // Direct calls
+                        hoistable.insert(entry.0);
+                    } else if maybe_hook.is_some() {
+                        // Assume arguments to all hooks are safe to invoke
+                        for arg in args {
+                            if let PlaceOrSpread::Place(p) = arg {
+                                if let Some(entry) = temporaries.get(&p.identifier) {
+                                    hoistable.insert(entry.0);
+                                }
+                            }
+                        }
+                    }
+                }
+                InstructionValue::JsxExpression { props, children, .. } => {
+                    // Assume JSX attributes and children are safe to invoke
+                    for prop in props {
+                        if let react_compiler_hir::JsxAttribute::Attribute { place, .. } = prop {
+                            if let Some(entry) = temporaries.get(&place.identifier) {
+                                hoistable.insert(entry.0);
+                            }
+                        }
+                    }
+                    if let Some(children) = children {
+                        for child in children {
+                            if let Some(entry) = temporaries.get(&child.identifier) {
+                                hoistable.insert(entry.0);
+                            }
+                        }
+                    }
+                }
+                InstructionValue::JsxFragment { children, .. } => {
+                    for child in children {
+                        if let Some(entry) = temporaries.get(&child.identifier) {
+                            hoistable.insert(entry.0);
+                        }
+                    }
+                }
+                InstructionValue::FunctionExpression { lowered_func, .. } => {
+                    // Recursively traverse into other function expressions
+                    let inner_func = &env.functions[lowered_func.func.0 as usize];
+                    let lambdas_called = get_assumed_invoked_functions(inner_func, env);
+                    if let Some(entry) = temporaries.get_mut(&instr.lvalue.identifier) {
+                        for called in lambdas_called {
+                            entry.1.insert(called);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Assume directly returned functions are safe to call
+        if let Terminal::Return { value, .. } = &block.terminal {
+            if let Some(entry) = temporaries.get(&value.identifier) {
+                hoistable.insert(entry.0);
+            }
+        }
+    }
+
+    // Step 3: Propagate assumed-invoked status through mayInvoke chains
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for (_, (func_id, may_invoke)) in &temporaries {
+            if hoistable.contains(func_id) {
+                for &called in may_invoke {
+                    if !hoistable.contains(&called) {
+                        // We'll collect and insert after to avoid borrow conflict
+                    }
+                }
+            }
+        }
+        // Two-phase: collect then insert
+        let mut to_add = Vec::new();
+        for (_, (func_id, may_invoke)) in &temporaries {
+            if hoistable.contains(func_id) {
+                for &called in may_invoke {
+                    if !hoistable.contains(&called) {
+                        to_add.push(called);
+                    }
+                }
+            }
+        }
+        for id in to_add {
+            changed = true;
+            hoistable.insert(id);
+        }
+        if !changed { break; }
+    }
+
+    hoistable
 }
 
 fn collect_non_nulls_in_blocks(
@@ -1117,8 +1259,42 @@ fn collect_non_nulls_in_blocks(
                 }
             }
 
-            // Handle assumed-invoked inner functions (simplified: skip for now as this is complex
-            // and the basic pass should still work)
+            // Handle assumed-invoked inner functions
+            if let InstructionValue::FunctionExpression { lowered_func, .. } = &instr.value {
+                if ctx.assumed_invoked_fns.contains(&lowered_func.func) {
+                    let inner_func = &env.functions[lowered_func.func.0 as usize];
+                    // Build nested fn immutable context
+                    let nested_fn_immutable_context: HashSet<IdentifierId> = if ctx.nested_fn_immutable_context.is_some() {
+                        // Already in a nested fn context, use existing
+                        ctx.nested_fn_immutable_context.unwrap().clone()
+                    } else {
+                        inner_func
+                            .context
+                            .iter()
+                            .filter(|place| is_immutable_at_instr(place.identifier, instr.id, env, ctx))
+                            .map(|place| place.identifier)
+                            .collect()
+                    };
+                    let inner_assumed = get_assumed_invoked_functions(inner_func, env);
+                    let inner_ctx = CollectHoistableContext {
+                        temporaries: ctx.temporaries,
+                        known_immutable_identifiers: &HashSet::new(),
+                        hoistable_from_optionals: ctx.hoistable_from_optionals,
+                        nested_fn_immutable_context: Some(&nested_fn_immutable_context),
+                        assumed_invoked_fns: &inner_assumed,
+                    };
+                    let inner_nodes = collect_non_nulls_in_blocks(inner_func, env, &inner_ctx, registry);
+                    // Propagate non-null from inner function
+                    let inner_working = propagate_non_null(inner_func, &inner_nodes, registry);
+                    // Get hoistables from inner function's entry block (after propagation)
+                    let inner_entry = inner_func.body.entry;
+                    if let Some(inner_set) = inner_working.get(&inner_entry) {
+                        for &node_idx in inner_set {
+                            assumed.insert(node_idx);
+                        }
+                    }
+                }
+            }
         }
 
         nodes.insert(
@@ -1136,7 +1312,7 @@ fn propagate_non_null(
     func: &HirFunction,
     nodes: &HashMap<BlockId, BlockInfo>,
     _registry: &mut PropertyPathRegistry,
-) {
+) -> HashMap<BlockId, HashSet<usize>> {
     // Build successor map
     let mut block_successors: HashMap<BlockId, HashSet<BlockId>> = HashMap::new();
     for (block_id, block) in &func.body.blocks {
@@ -1222,13 +1398,7 @@ fn propagate_non_null(
         }
     }
 
-    // Note: We don't update `nodes` in place because we use `working` directly when keying by scope.
-    // The caller should use the result. Actually we need to update the nodes reference.
-    // But nodes is a shared reference... Let's handle this differently.
-    // We'll just return the working set via interior mutability or re-architecture.
-    // For now, the caller constructs and uses this map as-is.
-    // Actually, we received &HashMap but we need to mutate it. Let's restructure.
-    // The function signature prevents mutation. Let's make the main function handle this differently.
+    working
 }
 
 fn collect_hoistable_and_propagate(
@@ -1238,6 +1408,7 @@ fn collect_hoistable_and_propagate(
     hoistable_from_optionals: &HashMap<BlockId, ReactiveScopeDependency>,
 ) -> (HashMap<BlockId, HashSet<usize>>, PropertyPathRegistry) {
     let mut registry = PropertyPathRegistry::new();
+    let assumed_invoked_fns = get_assumed_invoked_functions(func, env);
     let known_immutable_identifiers: HashSet<IdentifierId> = if func.fn_type == ReactFunctionType::Component
         || func.fn_type == ReactFunctionType::Hook
     {
@@ -1257,6 +1428,7 @@ fn collect_hoistable_and_propagate(
         known_immutable_identifiers: &known_immutable_identifiers,
         hoistable_from_optionals,
         nested_fn_immutable_context: None,
+        assumed_invoked_fns: &assumed_invoked_fns,
     };
 
     let nodes = collect_non_nulls_in_blocks(func, env, &ctx, &mut registry);
