@@ -17,11 +17,13 @@ use std::collections::{HashMap, HashSet};
 use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, ErrorCategory,
 };
+use react_compiler_hir::dominator::{compute_post_dominator_tree, PostDominator};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     is_ref_value_type, is_set_state_type, is_use_effect_event_type, is_use_effect_hook_type,
     is_use_insertion_effect_hook_type, is_use_layout_effect_hook_type, is_use_ref_type,
-    HirFunction, Identifier, IdentifierId, InstructionValue, PlaceOrSpread, PropertyLiteral, SourceLocation, Type,
+    BlockId, HirFunction, Identifier, IdentifierId, InstructionValue, PlaceOrSpread,
+    PropertyLiteral, SourceLocation, Terminal, Type,
 };
 
 pub fn validate_no_set_state_in_effects(
@@ -71,6 +73,7 @@ pub fn validate_no_set_state_in_effects(
                             types,
                             functions,
                             enable_allow_set_state_from_refs,
+                            env.next_block_id_counter,
                         );
                         if let Some(info) = callee {
                             set_state_functions.insert(instr.lvalue.identifier, info);
@@ -320,6 +323,135 @@ fn collect_operands(value: &InstructionValue, func: &HirFunction) -> Vec<Identif
     operands
 }
 
+// =============================================================================
+// Control dominator analysis (port of ControlDominators.ts)
+// =============================================================================
+
+/// Computes the post-dominator frontier of `target_id`. These are immediate
+/// predecessors of nodes that post-dominate `target_id` from which execution may
+/// not reach `target_id`. Intuitively, these are the earliest blocks from which
+/// execution branches such that it may or may not reach the target block.
+fn post_dominator_frontier(
+    func: &HirFunction,
+    post_dominators: &PostDominator,
+    target_id: BlockId,
+) -> HashSet<BlockId> {
+    let target_post_dominators = post_dominators_of(func, post_dominators, target_id);
+    let mut visited = HashSet::new();
+    let mut frontier = HashSet::new();
+
+    // Iterate over the target's post-dominators plus itself
+    let mut check_blocks: Vec<BlockId> = target_post_dominators.iter().copied().collect();
+    check_blocks.push(target_id);
+
+    for block_id in check_blocks {
+        if !visited.insert(block_id) {
+            continue;
+        }
+        let block = &func.body.blocks[&block_id];
+        for &pred in &block.preds {
+            if !target_post_dominators.contains(&pred) {
+                frontier.insert(pred);
+            }
+        }
+    }
+    frontier
+}
+
+/// Walks up the post-dominator tree to collect all blocks that post-dominate `target_id`.
+fn post_dominators_of(
+    func: &HirFunction,
+    post_dominators: &PostDominator,
+    target_id: BlockId,
+) -> HashSet<BlockId> {
+    let mut result = HashSet::new();
+    let mut visited = HashSet::new();
+    let mut queue = vec![target_id];
+
+    while let Some(current_id) = queue.pop() {
+        if !visited.insert(current_id) {
+            continue;
+        }
+        let block = &func.body.blocks[&current_id];
+        for &pred in &block.preds {
+            let pred_post_dom = post_dominators.get(pred).unwrap_or(pred);
+            if pred_post_dom == target_id || result.contains(&pred_post_dom) {
+                result.insert(pred);
+            }
+            queue.push(pred);
+        }
+    }
+    result
+}
+
+/// Creates a function that checks whether a block is "control-dominated" by
+/// a ref-derived condition. A block is ref-controlled if its post-dominator
+/// frontier contains a block whose terminal tests a ref-derived value.
+fn create_ref_controlled_block_checker(
+    func: &HirFunction,
+    next_block_id_counter: u32,
+    ref_derived_values: &HashSet<IdentifierId>,
+    identifiers: &[Identifier],
+    types: &[Type],
+) -> HashMap<BlockId, bool> {
+    let post_dominators = compute_post_dominator_tree(func, next_block_id_counter, false);
+    let mut cache: HashMap<BlockId, bool> = HashMap::new();
+
+    for (block_id, _block) in &func.body.blocks {
+        let frontier = post_dominator_frontier(func, &post_dominators, *block_id);
+        let mut is_controlled = false;
+
+        for frontier_block_id in &frontier {
+            let control_block = &func.body.blocks[frontier_block_id];
+            match &control_block.terminal {
+                Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
+                    if is_derived_from_ref(
+                        test.identifier,
+                        ref_derived_values,
+                        identifiers,
+                        types,
+                    ) {
+                        is_controlled = true;
+                        break;
+                    }
+                }
+                Terminal::Switch { test, cases, .. } => {
+                    if is_derived_from_ref(
+                        test.identifier,
+                        ref_derived_values,
+                        identifiers,
+                        types,
+                    ) {
+                        is_controlled = true;
+                        break;
+                    }
+                    for case in cases {
+                        if let Some(case_test) = &case.test {
+                            if is_derived_from_ref(
+                                case_test.identifier,
+                                ref_derived_values,
+                                identifiers,
+                                types,
+                            ) {
+                                is_controlled = true;
+                                break;
+                            }
+                        }
+                    }
+                    if is_controlled {
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        cache.insert(*block_id, is_controlled);
+    }
+
+    cache
+}
+
 /// Checks inner function body for direct setState calls. Returns the callee Place info
 /// if a setState call is found in the function body.
 /// Tracks ref-derived values to allow setState when the value being set comes from a ref.
@@ -330,12 +462,14 @@ fn get_set_state_call(
     types: &[Type],
     _functions: &[HirFunction],
     enable_allow_set_state_from_refs: bool,
+    next_block_id_counter: u32,
 ) -> Option<SetStateInfo> {
     let mut ref_derived_values: HashSet<IdentifierId> = HashSet::new();
 
-    for (_block_id, block) in &func.body.blocks {
-        // Track ref-derived values through phis
-        if enable_allow_set_state_from_refs {
+    // First pass: collect ref-derived values (needed before building control dominator checker)
+    // We do a pre-pass to seed ref_derived_values so the control dominator checker has them.
+    if enable_allow_set_state_from_refs {
+        for (_block_id, block) in &func.body.blocks {
             for phi in &block.phis {
                 let is_phi_derived = phi.operands.values().any(|operand| {
                     is_derived_from_ref(
@@ -347,6 +481,98 @@ fn get_set_state_call(
                 });
                 if is_phi_derived {
                     ref_derived_values.insert(phi.place.identifier);
+                }
+            }
+
+            for &instr_id in &block.instructions {
+                let instr = &func.instructions[instr_id.0 as usize];
+
+                let operands = collect_operands(&instr.value, func);
+                let has_ref_operand = operands.iter().any(|op_id| {
+                    is_derived_from_ref(*op_id, &ref_derived_values, identifiers, types)
+                });
+
+                if has_ref_operand {
+                    ref_derived_values.insert(instr.lvalue.identifier);
+                    if let InstructionValue::Destructure { lvalue, .. } = &instr.value {
+                        collect_destructure_places(&lvalue.pattern, &mut ref_derived_values);
+                    }
+                    if let InstructionValue::StoreLocal { lvalue, .. } = &instr.value {
+                        ref_derived_values.insert(lvalue.place.identifier);
+                    }
+                }
+
+                if let InstructionValue::PropertyLoad {
+                    object, property, ..
+                } = &instr.value
+                {
+                    if *property == PropertyLiteral::String("current".to_string()) {
+                        let obj_ident = &identifiers[object.identifier.0 as usize];
+                        let obj_ty = &types[obj_ident.type_.0 as usize];
+                        if is_use_ref_type(obj_ty) || is_ref_value_type(obj_ty) {
+                            ref_derived_values.insert(instr.lvalue.identifier);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Build control dominator checker after collecting ref-derived values
+    let ref_controlled_blocks = if enable_allow_set_state_from_refs {
+        create_ref_controlled_block_checker(
+            func,
+            next_block_id_counter,
+            &ref_derived_values,
+            identifiers,
+            types,
+        )
+    } else {
+        HashMap::new()
+    };
+
+    let is_ref_controlled_block = |block_id: BlockId| -> bool {
+        ref_controlled_blocks.get(&block_id).copied().unwrap_or(false)
+    };
+
+    // Reset and redo: second pass with control dominator info available
+    ref_derived_values.clear();
+
+    for (_block_id, block) in &func.body.blocks {
+        // Track ref-derived values through phis
+        if enable_allow_set_state_from_refs {
+            for phi in &block.phis {
+                if is_derived_from_ref(
+                    phi.place.identifier,
+                    &ref_derived_values,
+                    identifiers,
+                    types,
+                ) {
+                    continue;
+                }
+                let is_phi_derived = phi.operands.values().any(|operand| {
+                    is_derived_from_ref(
+                        operand.identifier,
+                        &ref_derived_values,
+                        identifiers,
+                        types,
+                    )
+                });
+                if is_phi_derived {
+                    ref_derived_values.insert(phi.place.identifier);
+                } else {
+                    // Fallback: check if any predecessor block is ref-controlled
+                    let mut found = false;
+                    for pred in phi.operands.keys() {
+                        if is_ref_controlled_block(*pred) {
+                            ref_derived_values.insert(phi.place.identifier);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if found {
+                        continue;
+                    }
                 }
             }
         }
@@ -420,6 +646,10 @@ fn get_set_state_call(
                                         return None;
                                     }
                                 }
+                            }
+                            // Check if the current block is controlled by a ref-derived condition
+                            if is_ref_controlled_block(block.id) {
+                                continue;
                             }
                         }
                         return Some(SetStateInfo { loc: callee.loc });

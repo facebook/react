@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1650/1717 passing (96.1%), 67 failures remaining.
+Overall: 1651/1717 passing (96.2%), 66 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -46,13 +46,13 @@ ValidateLocalsNotReassignedAfterRender: complete (1644/1644)
 ValidateNoRefAccessInRender: complete (1642/1642)
 ValidateNoSetStateInRender: complete (1642/1642)
 ValidateNoDerivedComputationsInEffects: complete (22/22)
-ValidateNoSetStateInEffects: partial (11/12, 1 failure)
+ValidateNoSetStateInEffects: complete (12/12)
 ValidateNoJSXInTryStatement: complete (4/4)
 ValidateNoFreezingKnownMutableFunctions: complete (1643/1643)
 ValidateExhaustiveDependencies: partial (1635/1636, 1 failure; errors stripped to prevent cascade)
 ValidatePreservedManualMemoization: complete (1577/1577)
 
-## Remaining failure breakdown (67 total)
+## Remaining failure breakdown (66 total)
 
 RIKBR: 23 (all from VED false positive error cascade)
 PropagateScopeDependenciesHIR: 20 (missing reduceMaybeOptionalChains, propagation algo)
@@ -61,7 +61,6 @@ InferReactivePlaces: 7 (missing upstream validation passes)
 MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
 AssertScopeInstructionsWithinScopes: 2
 ValidateExhaustiveDependencies: 1
-ValidateNoSetStateInEffects: 1
 AlignObjectMethodScopes: 1
 
 # Logs
@@ -304,3 +303,10 @@ from TypeScript to Rust. The 13 "ValidateNoSetStateInRender" failures were actua
 caused by this unported pass — the test harness misattributed them to the preceding pass.
 Created validate_no_derived_computations_in_effects.rs (1269 lines) in react_compiler_validation.
 Overall: 1650/1717 passing (96.1%), 67 failures remaining.
+
+## 20260320-161141 Fix ValidateNoSetStateInEffects — port createControlDominators
+
+Ported createControlDominators / isRefControlledBlock logic from ControlDominators.ts
+into validate_no_set_state_in_effects.rs. Added post-dominator frontier computation
+and phi-node predecessor block fallback. Fixes 1 failure (valid-setState-in-useEffect-controlled-by-ref-value.js).
+Overall: 1651/1717 passing (96.2%), 66 failures remaining.
