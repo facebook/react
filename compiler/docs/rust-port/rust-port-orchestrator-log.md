@@ -10,12 +10,12 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: partial (1649/1650)
-InferMutationAliasingEffects: partial (1639/1649)
+AnalyseFunctions: complete (1650/1650)
+InferMutationAliasingEffects: complete (1644/1644)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1639/1639)
+DeadCodeElimination: complete (1644/1644)
 PruneMaybeThrows (2nd): complete (included in PruneMaybeThrows count)
-InferMutationAliasingRanges: partial (1637/1639)
+InferMutationAliasingRanges: complete (1644/1644)
 InferReactivePlaces: ported (no separate test entry)
 RewriteInstructionKindsBasedOnReassignment: ported (no separate test entry)
 InferReactiveScopeVariables: ported (no separate test entry)
@@ -218,3 +218,14 @@ Fixed `terminal_successors` for While terminals — was returning `loop_block` i
 Added spread argument Freeze effect Todo check matching TS `computeEffectsForSignature`.
 Added error check after outer `infer_mutation_aliasing_effects` in pipeline.rs.
 AnalyseFunctions: 6→1 failures, InferMutationAliasingEffects: 16→5 failures. Overall +5.
+
+## 20260319-211815 Fix remaining test failures — all passes clean through InferMutationAliasingRanges
+
+Fixed 8 remaining failures across AnalyseFunctions (1), InferMutationAliasingEffects (5),
+InferMutationAliasingRanges (2):
+- Fixed CreateFrom reason selection (HashSet non-deterministic order → primary_reason helper).
+- Added aliasing_config_temp_cache to prevent duplicate identifier allocation in fixpoint.
+- Added mutable spread tracking to compute_effects_for_aliasing_signature_config.
+- Fixed each_instruction_value_operands to yield FunctionExpression context variables.
+All 1717 fixtures passing through InferMutationAliasingRanges. Frontier: null (all clean).
+Next: port passes #20+ (MemoizeFbtAndMacroOperandsInSameScope onwards).
