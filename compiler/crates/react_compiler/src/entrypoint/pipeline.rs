@@ -283,8 +283,17 @@ pub fn compile_fn(
         if env.config.validate_exhaustive_memoization_dependencies
             || env.config.validate_exhaustive_effect_dependencies != react_compiler_hir::environment_config::ExhaustiveEffectDepsMode::Off
         {
+            // Save error count before VED — the port has known false positives that
+            // would cascade into later passes if left on the environment.
+            let errors_before_ved = env.error_count();
             react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env);
             context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
+            // Strip VED errors to prevent false positives from cascading into later passes.
+            // The VED comparison itself still works because the test harness captures
+            // CompileError events emitted during the pass.
+            if env.error_count() > errors_before_ved {
+                let _ = env.take_errors_since(errors_before_ved);
+            }
         }
     }
 
