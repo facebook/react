@@ -26,12 +26,19 @@ pub fn outline_functions(
     env: &mut Environment,
     fbt_operands: &HashSet<IdentifierId>,
 ) {
-    // Collect the changes we need to make, to avoid borrow conflicts.
-    // Each entry: (instruction index in func.instructions, generated global name, FunctionId to outline)
-    let mut replacements: Vec<(usize, String, FunctionId)> = Vec::new();
+    // Collect per-instruction actions to maintain depth-first name allocation order.
+    // Each entry: (instr index, function_id to recurse into, should_outline)
+    enum Action {
+        /// Recurse into an inner function (FunctionExpression or ObjectMethod)
+        Recurse(FunctionId),
+        /// Recurse then outline a FunctionExpression
+        RecurseAndOutline {
+            instr_idx: usize,
+            function_id: FunctionId,
+        },
+    }
 
-    // Also collect inner function IDs that need recursion
-    let mut inner_function_ids: Vec<FunctionId> = Vec::new();
+    let mut actions: Vec<Action> = Vec::new();
 
     for block in func.body.blocks.values() {
         for &instr_id in &block.instructions {
@@ -40,71 +47,78 @@ pub fn outline_functions(
 
             match &instr.value {
                 InstructionValue::FunctionExpression {
-                    lowered_func,
-                    name,
-                    ..
+                    lowered_func, ..
                 } => {
-                    // Always recurse into inner functions
-                    inner_function_ids.push(lowered_func.func);
-
                     let inner_func = &env.functions[lowered_func.func.0 as usize];
 
-                    // Check outlining conditions:
+                    // Check outlining conditions (TS only checks func.id === null, not name):
                     // 1. No captured context variables
-                    // 2. Anonymous (no explicit name / id on the inner function)
+                    // 2. Anonymous (no explicit id on the inner function)
                     // 3. Not an fbt operand
                     if inner_func.context.is_empty()
                         && inner_func.id.is_none()
-                        && name.is_none()
                         && !fbt_operands.contains(&lvalue_id)
                     {
-                        // Clone the hint string before calling mutable env method
-                        let hint: Option<String> = inner_func
-                            .id
-                            .clone()
-                            .or_else(|| inner_func.name_hint.clone());
-                        let generated_name =
-                            env.generate_globally_unique_identifier_name(hint.as_deref());
-
-                        replacements.push((
-                            instr_id.0 as usize,
-                            generated_name,
-                            lowered_func.func,
-                        ));
+                        actions.push(Action::RecurseAndOutline {
+                            instr_idx: instr_id.0 as usize,
+                            function_id: lowered_func.func,
+                        });
+                    } else {
+                        actions.push(Action::Recurse(lowered_func.func));
                     }
                 }
                 InstructionValue::ObjectMethod { lowered_func, .. } => {
                     // Recurse into object methods (but don't outline them)
-                    inner_function_ids.push(lowered_func.func);
+                    actions.push(Action::Recurse(lowered_func.func));
                 }
                 _ => {}
             }
         }
     }
 
-    // Recurse into inner functions (clone out, recurse, put back)
-    for function_id in inner_function_ids {
-        let mut inner_func = env.functions[function_id.0 as usize].clone();
-        outline_functions(&mut inner_func, env, fbt_operands);
-        env.functions[function_id.0 as usize] = inner_func;
-    }
+    // Process actions sequentially: for each instruction, recurse first (depth-first),
+    // then generate name and outline. This matches TS ordering where inner functions
+    // get names allocated before outer ones.
+    for action in actions {
+        match action {
+            Action::Recurse(function_id) => {
+                let mut inner_func = env.functions[function_id.0 as usize].clone();
+                outline_functions(&mut inner_func, env, fbt_operands);
+                env.functions[function_id.0 as usize] = inner_func;
+            }
+            Action::RecurseAndOutline {
+                instr_idx,
+                function_id,
+            } => {
+                // First recurse into the inner function (depth-first)
+                let mut inner_func = env.functions[function_id.0 as usize].clone();
+                outline_functions(&mut inner_func, env, fbt_operands);
+                env.functions[function_id.0 as usize] = inner_func;
 
-    // Apply replacements: set function id, outline, and replace instruction value
-    for (instr_idx, generated_name, function_id) in replacements {
-        // Set the id on the inner function
-        env.functions[function_id.0 as usize].id = Some(generated_name.clone());
+                // Then generate the name and outline (after recursion, matching TS order)
+                let hint: Option<String> = env.functions[function_id.0 as usize]
+                    .id
+                    .clone()
+                    .or_else(|| env.functions[function_id.0 as usize].name_hint.clone());
+                let generated_name =
+                    env.generate_globally_unique_identifier_name(hint.as_deref());
 
-        // Take the function out of the arena for outlining
-        let outlined_func = env.functions[function_id.0 as usize].clone();
-        env.outline_function(outlined_func, None);
+                // Set the id on the inner function
+                env.functions[function_id.0 as usize].id = Some(generated_name.clone());
 
-        // Replace the instruction value with LoadGlobal
-        let loc = func.instructions[instr_idx].value.loc().cloned();
-        func.instructions[instr_idx].value = InstructionValue::LoadGlobal {
-            binding: NonLocalBinding::Global {
-                name: generated_name,
-            },
-            loc,
-        };
+                // Outline the function
+                let outlined_func = env.functions[function_id.0 as usize].clone();
+                env.outline_function(outlined_func, None);
+
+                // Replace the instruction value with LoadGlobal
+                let loc = func.instructions[instr_idx].value.loc().cloned();
+                func.instructions[instr_idx].value = InstructionValue::LoadGlobal {
+                    binding: NonLocalBinding::Global {
+                        name: generated_name,
+                    },
+                    loc,
+                };
+            }
+        }
     }
 }

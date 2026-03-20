@@ -12,7 +12,7 @@
 //! - `src/HIR/CollectHoistablePropertyLoads.ts`
 //! - `src/HIR/DeriveMinimalDependenciesHIR.ts`
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use indexmap::IndexMap;
 
 use react_compiler_hir::environment::Environment;
@@ -947,7 +947,7 @@ impl PropertyPathRegistry {
 
 #[derive(Debug, Clone)]
 struct BlockInfo {
-    assumed_non_null_objects: HashSet<usize>, // indices into PropertyPathRegistry
+    assumed_non_null_objects: BTreeSet<usize>, // indices into PropertyPathRegistry
 }
 
 fn collect_hoistable_property_loads(
@@ -1049,8 +1049,12 @@ fn collect_hoistable_property_loads_impl(
     registry: &mut PropertyPathRegistry,
 ) -> HashMap<BlockId, BlockInfo> {
     let nodes = collect_non_nulls_in_blocks(func, env, ctx, registry);
-    let _working = propagate_non_null(func, &nodes, registry);
-    nodes
+    let working = propagate_non_null(func, &nodes, registry);
+    // Return the propagated results, converting HashSet<usize> back to BlockInfo
+    working
+        .into_iter()
+        .map(|(k, v)| (k, BlockInfo { assumed_non_null_objects: v }))
+        .collect()
 }
 
 /// Corresponds to TS `getAssumedInvokedFunctions`.
@@ -1198,7 +1202,7 @@ fn collect_non_nulls_in_blocks(
     registry: &mut PropertyPathRegistry,
 ) -> HashMap<BlockId, BlockInfo> {
     // Known non-null identifiers (e.g. component props)
-    let mut known_non_null: HashSet<usize> = HashSet::new();
+    let mut known_non_null: BTreeSet<usize> = BTreeSet::new();
     if func.fn_type == ReactFunctionType::Component
         && !func.params.is_empty()
     {
@@ -1312,7 +1316,7 @@ fn propagate_non_null(
     func: &HirFunction,
     nodes: &HashMap<BlockId, BlockInfo>,
     _registry: &mut PropertyPathRegistry,
-) -> HashMap<BlockId, HashSet<usize>> {
+) -> HashMap<BlockId, BTreeSet<usize>> {
     // Build successor map
     let mut block_successors: HashMap<BlockId, HashSet<BlockId>> = HashMap::new();
     for (block_id, block) in &func.body.blocks {
@@ -1325,7 +1329,7 @@ fn propagate_non_null(
     }
 
     // Clone nodes into mutable working set
-    let mut working: HashMap<BlockId, HashSet<usize>> = nodes
+    let mut working: HashMap<BlockId, BTreeSet<usize>> = nodes
         .iter()
         .map(|(k, v)| (*k, v.assumed_non_null_objects.clone()))
         .collect();
@@ -1345,7 +1349,7 @@ fn propagate_non_null(
 
             if !preds.is_empty() {
                 // Intersection of predecessor sets
-                let mut intersection: Option<HashSet<usize>> = None;
+                let mut intersection: Option<BTreeSet<usize>> = None;
                 for &pred in &preds {
                     if let Some(pred_set) = working.get(&pred) {
                         intersection = Some(match intersection {
@@ -1356,7 +1360,7 @@ fn propagate_non_null(
                 }
                 if let Some(neighbor_set) = intersection {
                     let current = working.get(&block_id).cloned().unwrap_or_default();
-                    let merged: HashSet<usize> = current.union(&neighbor_set).copied().collect();
+                    let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
                     if merged != current {
                         changed = true;
                         working.insert(block_id, merged);
@@ -1370,7 +1374,7 @@ fn propagate_non_null(
             let successors = block_successors.get(&block_id);
             if let Some(succs) = successors {
                 if !succs.is_empty() {
-                    let mut intersection: Option<HashSet<usize>> = None;
+                    let mut intersection: Option<BTreeSet<usize>> = None;
                     for succ in succs {
                         if let Some(succ_set) = working.get(succ) {
                             intersection = Some(match intersection {
@@ -1383,7 +1387,7 @@ fn propagate_non_null(
                     }
                     if let Some(neighbor_set) = intersection {
                         let current = working.get(&block_id).cloned().unwrap_or_default();
-                        let merged: HashSet<usize> = current.union(&neighbor_set).copied().collect();
+                        let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
                         if merged != current {
                             changed = true;
                             working.insert(block_id, merged);
@@ -1406,7 +1410,7 @@ fn collect_hoistable_and_propagate(
     env: &Environment,
     temporaries: &HashMap<IdentifierId, ReactiveScopeDependency>,
     hoistable_from_optionals: &HashMap<BlockId, ReactiveScopeDependency>,
-) -> (HashMap<BlockId, HashSet<usize>>, PropertyPathRegistry) {
+) -> (HashMap<BlockId, BTreeSet<usize>>, PropertyPathRegistry) {
     let mut registry = PropertyPathRegistry::new();
     let assumed_invoked_fns = get_assumed_invoked_functions(func, env);
     let known_immutable_identifiers: HashSet<IdentifierId> = if func.fn_type == ReactFunctionType::Component
@@ -1444,7 +1448,7 @@ fn collect_hoistable_and_propagate(
         }
     }
 
-    let mut working: HashMap<BlockId, HashSet<usize>> = nodes
+    let mut working: HashMap<BlockId, BTreeSet<usize>> = nodes
         .iter()
         .map(|(k, v)| (*k, v.assumed_non_null_objects.clone()))
         .collect();
@@ -1460,7 +1464,7 @@ fn collect_hoistable_and_propagate(
             let block = func.body.blocks.get(&block_id).unwrap();
             let preds: Vec<BlockId> = block.preds.iter().copied().collect();
             if !preds.is_empty() {
-                let mut intersection: Option<HashSet<usize>> = None;
+                let mut intersection: Option<BTreeSet<usize>> = None;
                 for &pred in &preds {
                     if let Some(pred_set) = working.get(&pred) {
                         intersection = Some(match intersection {
@@ -1471,7 +1475,7 @@ fn collect_hoistable_and_propagate(
                 }
                 if let Some(neighbor_set) = intersection {
                     let current = working.get(&block_id).cloned().unwrap_or_default();
-                    let merged: HashSet<usize> = current.union(&neighbor_set).copied().collect();
+                    let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
                     if merged != current {
                         changed = true;
                         working.insert(block_id, merged);
@@ -1483,7 +1487,7 @@ fn collect_hoistable_and_propagate(
         for &block_id in &reversed_block_ids {
             if let Some(succs) = block_successors.get(&block_id) {
                 if !succs.is_empty() {
-                    let mut intersection: Option<HashSet<usize>> = None;
+                    let mut intersection: Option<BTreeSet<usize>> = None;
                     for succ in succs {
                         if let Some(succ_set) = working.get(succ) {
                             intersection = Some(match intersection {
@@ -1496,7 +1500,7 @@ fn collect_hoistable_and_propagate(
                     }
                     if let Some(neighbor_set) = intersection {
                         let current = working.get(&block_id).cloned().unwrap_or_default();
-                        let merged: HashSet<usize> = current.union(&neighbor_set).copied().collect();
+                        let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
                         if merged != current {
                             changed = true;
                             working.insert(block_id, merged);
@@ -1789,7 +1793,7 @@ struct DependencyCollectionContext<'a> {
     reassignments: HashMap<IdentifierId, Decl>,
     scope_stack: Vec<ScopeId>,
     dep_stack: Vec<Vec<ReactiveScopeDependency>>,
-    deps: HashMap<ScopeId, Vec<ReactiveScopeDependency>>,
+    deps: IndexMap<ScopeId, Vec<ReactiveScopeDependency>>,
     temporaries: &'a HashMap<IdentifierId, ReactiveScopeDependency>,
     temporaries_used_outside_scope: &'a HashSet<DeclarationId>,
     processed_instrs_in_optional: &'a HashSet<ProcessedInstr>,
@@ -1807,7 +1811,7 @@ impl<'a> DependencyCollectionContext<'a> {
             reassignments: HashMap::new(),
             scope_stack: Vec::new(),
             dep_stack: Vec::new(),
-            deps: HashMap::new(),
+            deps: IndexMap::new(),
             temporaries,
             temporaries_used_outside_scope,
             processed_instrs_in_optional,
@@ -2127,7 +2131,7 @@ fn collect_dependencies(
     used_outside_declaring_scope: &HashSet<DeclarationId>,
     temporaries: &HashMap<IdentifierId, ReactiveScopeDependency>,
     processed_instrs_in_optional: &HashSet<ProcessedInstr>,
-) -> HashMap<ScopeId, Vec<ReactiveScopeDependency>> {
+) -> IndexMap<ScopeId, Vec<ReactiveScopeDependency>> {
     let mut ctx = DependencyCollectionContext::new(
         used_outside_declaring_scope,
         temporaries,
@@ -2245,7 +2249,7 @@ fn handle_function_deps(
                             })
                             .collect();
 
-                    for (_inner_bid, inner_instr_ids, inner_phis, inner_terminal) in &inner_blocks {
+                    for (inner_bid, inner_instr_ids, inner_phis, inner_terminal) in &inner_blocks {
                         for &(_pred_id, op_id) in inner_phis {
                             if let Some(maybe_optional) = ctx.temporaries.get(&op_id) {
                                 ctx.visit_dependency(maybe_optional.clone(), env);
@@ -2268,9 +2272,11 @@ fn handle_function_deps(
                             }
                         }
 
-                        let terminal_ops = each_terminal_operand_places(inner_terminal);
-                        for op in &terminal_ops {
-                            ctx.visit_operand(op, env);
+                        if !ctx.is_deferred_dependency_terminal(*inner_bid) {
+                            let terminal_ops = each_terminal_operand_places(inner_terminal);
+                            for op in &terminal_ops {
+                                ctx.visit_operand(op, env);
+                            }
                         }
                     }
 
