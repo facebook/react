@@ -1642,4 +1642,59 @@ describe('ReactFabric', () => {
 
     expect(publicInstanceAfterUnmount).toBe(null);
   });
+
+  it('should call completeRoot on suspend', async () => {
+    const RCTText = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+
+    const promise = new Promise(r => {});
+
+    let setState;
+    class Suspending extends React.Component {
+      state = {text: 1};
+
+      componentDidMount() {
+        setState = this.setState.bind(this);
+      }
+
+      render() {
+        if (this.state.text >= 2) {
+          // We need to render once to actually be able to capture the setState function
+          throw promise;
+        }
+        return <RCTText>Step: {this.state.text}</RCTText>;
+      }
+    }
+
+    const ref = React.createRef();
+    await act(() => {
+      ReactFabric.render(
+        <React.Suspense>
+          <Suspending ref={ref} />
+        </React.Suspense>,
+        /* containerId */ 1,
+        /* callback */ null,
+        /* concurrentRoot */ true,
+      );
+    });
+
+    expect(nativeFabricUIManager.completeRoot).toHaveBeenCalledTimes(1);
+
+    // Cause the component to suspend
+    await act(() => {
+      setState({text: 2});
+    });
+
+    expect(nativeFabricUIManager.completeRoot).toHaveBeenCalledTimes(3); // note: suspending seems to induce two calls
+
+    // Triggering a state update for a suspended component that has the same fallback,
+    // and otherwise no changes to the tree are happening shouldn't call completeRoot again!
+    await act(() => {
+      setState({text: 3});
+    });
+
+    expect(nativeFabricUIManager.completeRoot).toHaveBeenCalledTimes(3);
+  });
 });
