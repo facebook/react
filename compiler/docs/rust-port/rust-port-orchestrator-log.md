@@ -1,7 +1,11 @@
 # Status
 
+Overall: 1637/1717 passing (95.3%), 80 failures remaining.
+
+## Transformation passes (all ported)
+
 HIR: complete (1653/1653)
-PruneMaybeThrows: complete (1793/1793)
+PruneMaybeThrows: complete (1733/1733, includes 2nd call)
 DropManualMemoization: complete (1652/1652)
 InlineImmediatelyInvokedFunctionExpressions: complete (1652/1652)
 MergeConsecutiveBlocks: complete (1652/1652)
@@ -12,26 +16,54 @@ InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
 AnalyseFunctions: complete (1650/1650)
 InferMutationAliasingEffects: complete (1644/1644)
-OptimizeForSSR: todo
+OptimizeForSSR: todo (conditional, outputMode === 'ssr')
 DeadCodeElimination: complete (1644/1644)
-PruneMaybeThrows (2nd): complete (included in PruneMaybeThrows count)
 InferMutationAliasingRanges: complete (1644/1644)
-InferReactivePlaces: ported (no separate test entry)
-RewriteInstructionKindsBasedOnReassignment: ported (no separate test entry)
-InferReactiveScopeVariables: ported (no separate test entry)
-MemoizeFbtAndMacroOperandsInSameScope: complete
-outlineJSX: complete (stub, conditional on enableJsxOutlining)
-NameAnonymousFunctions: complete (conditional)
-OutlineFunctions: complete (conditional)
-AlignMethodCallScopes: complete
-AlignObjectMethodScopes: complete
-PruneUnusedLabelsHIR: complete
-AlignReactiveScopesToBlockScopesHIR: complete
-MergeOverlappingReactiveScopesHIR: complete
-BuildReactiveScopeTerminalsHIR: complete
-FlattenReactiveLoopsHIR: complete
-FlattenScopesWithHooksOrUseHIR: complete
-PropagateScopeDependenciesHIR: complete (1342/1717 overall, 375 pre-existing upstream diffs)
+InferReactivePlaces: partial (1623/1630, 7 failures)
+RewriteInstructionKindsBasedOnReassignment: partial (1599/1622, 23 failures from VED cascade)
+InferReactiveScopeVariables: complete (1599/1599)
+MemoizeFbtAndMacroOperandsInSameScope: complete (1599/1599)
+outlineJSX: stub (conditional on enableJsxOutlining)
+NameAnonymousFunctions: complete (2/2, conditional)
+OutlineFunctions: partial (1590/1599, 9 failures)
+AlignMethodCallScopes: complete (1590/1590)
+AlignObjectMethodScopes: partial (1589/1590, 1 failure)
+PruneUnusedLabelsHIR: complete (1589/1589)
+AlignReactiveScopesToBlockScopesHIR: complete (1589/1589)
+MergeOverlappingReactiveScopesHIR: partial (1586/1589, 3 failures)
+BuildReactiveScopeTerminalsHIR: complete (1586/1586)
+FlattenReactiveLoopsHIR: complete (1586/1586)
+FlattenScopesWithHooksOrUseHIR: complete (1586/1586)
+PropagateScopeDependenciesHIR: partial (1566/1586, 20 failures)
+
+## Validation passes
+
+ValidateContextVariableLValues: complete (1652/1652)
+ValidateUseMemo: complete (1652/1652)
+ValidateHooksUsage: complete (1651/1651)
+ValidateNoCapitalizedCalls: complete (3/3)
+ValidateLocalsNotReassignedAfterRender: complete (1644/1644)
+ValidateNoRefAccessInRender: complete (1642/1642)
+ValidateNoSetStateInRender: partial (1629/1642, 13 failures)
+ValidateNoDerivedComputationsInEffects: complete (9/9, stub for _exp variant)
+ValidateNoSetStateInEffects: partial (11/12, 1 failure)
+ValidateNoJSXInTryStatement: complete (4/4)
+ValidateNoFreezingKnownMutableFunctions: complete (1630/1630)
+ValidateExhaustiveDependencies: partial (1622/1623, 1 failure; errors stripped to prevent cascade)
+ValidatePreservedManualMemoization: complete (1564/1564)
+
+## Remaining failure breakdown (80 total)
+
+RIKBR: 23 (all from VED false positive error cascade)
+PropagateScopeDependenciesHIR: 20 (missing reduceMaybeOptionalChains, propagation algo)
+ValidateNoSetStateInRender: 13 (validation edge cases)
+OutlineFunctions: 9 (8 outline_jsx stub + 1 edge case)
+InferReactivePlaces: 7 (missing upstream validation passes)
+MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
+AssertScopeInstructionsWithinScopes: 2
+ValidateExhaustiveDependencies: 1
+ValidateNoSetStateInEffects: 1
+AlignObjectMethodScopes: 1
 
 # Logs
 
