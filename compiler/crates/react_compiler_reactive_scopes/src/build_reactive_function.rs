@@ -338,11 +338,21 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                // TS: reachable(fallthrough) && !isScheduled(fallthrough)
+                let fallthrough_id = if self.cx.reachable(*fallthrough)
+                    && !self.cx.is_scheduled(*fallthrough)
+                {
                     Some(*fallthrough)
                 } else {
                     None
                 };
+                // TS: alternate !== fallthrough ? alternate : null
+                let alternate_id = if *alternate != *fallthrough {
+                    Some(*alternate)
+                } else {
+                    None
+                };
+
                 if let Some(ft) = fallthrough_id {
                     schedule_ids.push(self.cx.schedule(ft, "if"));
                 }
@@ -353,10 +363,14 @@ impl<'a, 'b> Driver<'a, 'b> {
                     self.traverse_block(*consequent)
                 };
 
-                let alternate_block = if self.cx.is_scheduled(*alternate) {
-                    None
+                let alternate_block = if let Some(alt) = alternate_id {
+                    if self.cx.is_scheduled(alt) {
+                        None
+                    } else {
+                        Some(self.traverse_block(alt))
+                    }
                 } else {
-                    Some(self.traverse_block(*alternate))
+                    None
                 };
 
                 self.cx.unschedule_all(&schedule_ids);
@@ -386,7 +400,10 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                // TS: reachable(fallthrough) && !isScheduled(fallthrough)
+                let fallthrough_id = if self.cx.reachable(*fallthrough)
+                    && !self.cx.is_scheduled(*fallthrough)
+                {
                     Some(*fallthrough)
                 } else {
                     None
@@ -395,25 +412,32 @@ impl<'a, 'b> Driver<'a, 'b> {
                     schedule_ids.push(self.cx.schedule(ft, "switch"));
                 }
 
+                // TS processes cases in reverse order, then reverses the result.
+                // This ensures that later cases are scheduled when earlier cases
+                // are traversed, matching fallthrough semantics.
                 let mut reactive_cases = Vec::new();
-                for case in cases {
+                for case in cases.iter().rev() {
                     let case_block_id = case.block;
-                    let was_already_scheduled = self.cx.is_scheduled(case_block_id);
-                    if !was_already_scheduled {
-                        schedule_ids.push(self.cx.schedule(case_block_id, "case"));
+
+                    if self.cx.is_scheduled(case_block_id) {
+                        // TS: asserts case.block === fallthrough, then skips (return)
+                        assert_eq!(
+                            case_block_id, *fallthrough,
+                            "Unexpected 'switch' where a case is already scheduled and block is not the fallthrough"
+                        );
+                        continue;
                     }
 
-                    let case_block = if was_already_scheduled {
-                        None
-                    } else {
-                        Some(self.traverse_block(case_block_id))
-                    };
+                    let consequent = self.traverse_block(case_block_id);
+                    let case_schedule_id = self.cx.schedule(case_block_id, "case");
+                    schedule_ids.push(case_schedule_id);
 
                     reactive_cases.push(ReactiveSwitchCase {
                         test: case.test.clone(),
-                        block: case_block,
+                        block: Some(consequent),
                     });
                 }
+                reactive_cases.reverse();
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
@@ -446,13 +470,25 @@ impl<'a, 'b> Driver<'a, 'b> {
                 } else {
                     None
                 };
+                let loop_id = if !self.cx.is_scheduled(*loop_block)
+                    && *loop_block != *fallthrough
+                {
+                    Some(*loop_block)
+                } else {
+                    None
+                };
+
                 schedule_ids.push(self.cx.schedule_loop(
                     *fallthrough,
                     *test,
                     Some(*loop_block),
                 ));
 
-                let loop_body = self.traverse_block(*loop_block);
+                let loop_body = if let Some(lid) = loop_id {
+                    self.traverse_block(lid)
+                } else {
+                    panic!("Unexpected 'do-while' where the loop is already scheduled");
+                };
                 let test_result = self.visit_value_block(*test, *loc, None);
 
                 self.cx.unschedule_all(&schedule_ids);
@@ -483,11 +519,22 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                // TS: reachable(fallthrough) && !isScheduled(fallthrough)
+                let fallthrough_id = if self.cx.reachable(*fallthrough)
+                    && !self.cx.is_scheduled(*fallthrough)
+                {
                     Some(*fallthrough)
                 } else {
                     None
                 };
+                let loop_id = if !self.cx.is_scheduled(*loop_block)
+                    && *loop_block != *fallthrough
+                {
+                    Some(*loop_block)
+                } else {
+                    None
+                };
+
                 schedule_ids.push(self.cx.schedule_loop(
                     *fallthrough,
                     *test,
@@ -495,7 +542,12 @@ impl<'a, 'b> Driver<'a, 'b> {
                 ));
 
                 let test_result = self.visit_value_block(*test, *loc, None);
-                let loop_body = self.traverse_block(*loop_block);
+
+                let loop_body = if let Some(lid) = loop_id {
+                    self.traverse_block(lid)
+                } else {
+                    panic!("Unexpected 'while' where the loop is already scheduled");
+                };
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
@@ -527,11 +579,20 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
+                let loop_id = if !self.cx.is_scheduled(*loop_block)
+                    && *loop_block != *fallthrough
+                {
+                    Some(*loop_block)
+                } else {
+                    None
+                };
+
                 let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
                     Some(*fallthrough)
                 } else {
                     None
                 };
+
                 // Continue block is update (if present) or test
                 let continue_block = update.unwrap_or(*test);
                 schedule_ids.push(self.cx.schedule_loop(
@@ -541,14 +602,22 @@ impl<'a, 'b> Driver<'a, 'b> {
                 ));
 
                 let init_result = self.visit_value_block(*init, *loc, None);
+                let init_value = self.value_block_result_to_sequence(init_result, *loc);
+
                 let test_result = self.visit_value_block(*test, *loc, None);
+
                 let update_result = update.map(|u| self.visit_value_block(u, *loc, None));
-                let loop_body = self.traverse_block(*loop_block);
+
+                let loop_body = if let Some(lid) = loop_id {
+                    self.traverse_block(lid)
+                } else {
+                    panic!("Unexpected 'for' where the loop is already scheduled");
+                };
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
                     terminal: ReactiveTerminal::For {
-                        init: init_result.value,
+                        init: init_value,
                         test: test_result.value,
                         update: update_result.map(|r| r.value),
                         loop_block: loop_body,
@@ -576,26 +645,44 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
+                let loop_id = if !self.cx.is_scheduled(*loop_block)
+                    && *loop_block != *fallthrough
+                {
+                    Some(*loop_block)
+                } else {
+                    None
+                };
+
                 let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
                     Some(*fallthrough)
                 } else {
                     None
                 };
+
+                // TS: scheduleLoop(fallthrough, init, loop)
                 schedule_ids.push(self.cx.schedule_loop(
                     *fallthrough,
-                    *test,
+                    *init,
                     Some(*loop_block),
                 ));
 
                 let init_result = self.visit_value_block(*init, *loc, None);
+                let init_value = self.value_block_result_to_sequence(init_result, *loc);
+
                 let test_result = self.visit_value_block(*test, *loc, None);
-                let loop_body = self.traverse_block(*loop_block);
+                let test_value = self.value_block_result_to_sequence(test_result, *loc);
+
+                let loop_body = if let Some(lid) = loop_id {
+                    self.traverse_block(lid)
+                } else {
+                    panic!("Unexpected 'for-of' where the loop is already scheduled");
+                };
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
                     terminal: ReactiveTerminal::ForOf {
-                        init: init_result.value,
-                        test: test_result.value,
+                        init: init_value,
+                        test: test_value,
                         loop_block: loop_body,
                         id: *id,
                         loc: *loc,
@@ -620,11 +707,20 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
+                let loop_id = if !self.cx.is_scheduled(*loop_block)
+                    && *loop_block != *fallthrough
+                {
+                    Some(*loop_block)
+                } else {
+                    None
+                };
+
                 let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
                     Some(*fallthrough)
                 } else {
                     None
                 };
+
                 schedule_ids.push(self.cx.schedule_loop(
                     *fallthrough,
                     *init,
@@ -632,12 +728,18 @@ impl<'a, 'b> Driver<'a, 'b> {
                 ));
 
                 let init_result = self.visit_value_block(*init, *loc, None);
-                let loop_body = self.traverse_block(*loop_block);
+                let init_value = self.value_block_result_to_sequence(init_result, *loc);
+
+                let loop_body = if let Some(lid) = loop_id {
+                    self.traverse_block(lid)
+                } else {
+                    panic!("Unexpected 'for-in' where the loop is already scheduled");
+                };
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
                     terminal: ReactiveTerminal::ForIn {
-                        init: init_result.value,
+                        init: init_value,
                         loop_block: loop_body,
                         id: *id,
                         loc: *loc,
@@ -661,7 +763,10 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                // TS: reachable(fallthrough) && !isScheduled(fallthrough)
+                let fallthrough_id = if self.cx.reachable(*fallthrough)
+                    && !self.cx.is_scheduled(*fallthrough)
+                {
                     Some(*fallthrough)
                 } else {
                     None
@@ -978,7 +1083,9 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }
             }
             _ => {
-                // Value block ended in a value terminal
+                // Value block ended in a value terminal, recurse to get the value
+                // of that terminal and stitch them together in a sequence.
+                // TS: visitValueBlock(init.fallthrough, loc) — does NOT propagate fallthrough
                 let init = self.visit_value_block_terminal(&terminal);
                 let init_fallthrough = init.fallthrough;
                 let init_instr = ReactiveInstruction {
@@ -988,30 +1095,23 @@ impl<'a, 'b> Driver<'a, 'b> {
                     effects: None,
                     loc,
                 };
-                let final_result = self.visit_value_block(init_fallthrough, loc, fallthrough);
+                let final_result = self.visit_value_block(init_fallthrough, loc, None);
 
-                // Combine block instructions + init instruction
-                let mut combined: Vec<_> = instructions.clone();
-                combined.push(react_compiler_hir::InstructionId(init_instr.id.0)); // Placeholder: we use the instr directly
-                // Actually we need to create instructions list differently here
-                // Let me reconstruct this properly using wrap_with_sequence
-                let all_instrs: Vec<ReactiveInstruction> = {
-                    let mut v: Vec<ReactiveInstruction> = instructions
-                        .iter()
-                        .map(|iid| {
-                            let instr = &self.hir.instructions[iid.0 as usize];
-                            ReactiveInstruction {
-                                id: instr.id,
-                                lvalue: Some(instr.lvalue.clone()),
-                                value: ReactiveValue::Instruction(instr.value.clone()),
-                                effects: instr.effects.clone(),
-                                loc: instr.loc,
-                            }
-                        })
-                        .collect();
-                    v.push(init_instr);
-                    v
-                };
+                // Combine block instructions + init instruction, then wrap
+                let mut all_instrs: Vec<ReactiveInstruction> = instructions
+                    .iter()
+                    .map(|iid| {
+                        let instr = &self.hir.instructions[iid.0 as usize];
+                        ReactiveInstruction {
+                            id: instr.id,
+                            lvalue: Some(instr.lvalue.clone()),
+                            value: ReactiveValue::Instruction(instr.value.clone()),
+                            effects: instr.effects.clone(),
+                            loc: instr.loc,
+                        }
+                    })
+                    .collect();
+                all_instrs.push(init_instr);
 
                 if all_instrs.is_empty() {
                     final_result
@@ -1306,6 +1406,68 @@ impl<'a, 'b> Driver<'a, 'b> {
                 loc,
             },
             id: continuation.id,
+        }
+    }
+
+    /// Converts the result of visit_value_block into a SequenceExpression that includes
+    /// the instruction with its lvalue. This is needed for for/for-of/for-in init/test
+    /// blocks where the instruction's lvalue assignment must be preserved.
+    ///
+    /// This also flattens nested SequenceExpressions that can occur from MaybeThrow
+    /// handling in try-catch blocks.
+    ///
+    /// TS: valueBlockResultToSequence()
+    fn value_block_result_to_sequence(
+        &self,
+        result: ValueBlockResult,
+        loc: Option<SourceLocation>,
+    ) -> ReactiveValue {
+        // Collect all instructions from potentially nested SequenceExpressions
+        let mut instructions: Vec<ReactiveInstruction> = Vec::new();
+        let mut inner_value = result.value;
+
+        // Flatten nested SequenceExpressions
+        loop {
+            match inner_value {
+                ReactiveValue::SequenceExpression {
+                    instructions: seq_instrs,
+                    value,
+                    ..
+                } => {
+                    instructions.extend(seq_instrs);
+                    inner_value = *value;
+                }
+                _ => break,
+            }
+        }
+
+        // Only add the final instruction if the innermost value is not just a LoadLocal
+        // of the same place we're storing to (which would be a no-op).
+        let is_load_of_same_place = match &inner_value {
+            ReactiveValue::Instruction(InstructionValue::LoadLocal { place, .. }) => {
+                place.identifier == result.place.identifier
+            }
+            _ => false,
+        };
+
+        if !is_load_of_same_place {
+            instructions.push(ReactiveInstruction {
+                id: result.id,
+                lvalue: Some(result.place),
+                value: inner_value,
+                effects: None,
+                loc,
+            });
+        }
+
+        ReactiveValue::SequenceExpression {
+            instructions,
+            id: result.id,
+            value: Box::new(ReactiveValue::Instruction(InstructionValue::Primitive {
+                value: react_compiler_hir::PrimitiveValue::Undefined,
+                loc,
+            })),
+            loc,
         }
     }
 
