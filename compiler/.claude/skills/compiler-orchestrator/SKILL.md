@@ -48,9 +48,24 @@ These are the passes in Pipeline.ts order, with their exact log names:
 | 29 | FlattenReactiveLoopsHIR | hir | |
 | 30 | FlattenScopesWithHooksOrUseHIR | hir | |
 | 31 | PropagateScopeDependenciesHIR | hir | |
-| 32 | BuildReactiveFunction | reactive | KIND TRANSITION — stop, needs test infra extension |
-| 33-45 | (reactive passes) | reactive | Blocked on #32 |
-| 46 | Codegen | ast | Blocked on reactive passes |
+| 32 | BuildReactiveFunction | reactive | |
+| 33 | AssertWellFormedBreakTargets | debug | Validation |
+| 34 | PruneUnusedLabels | reactive | |
+| 35 | AssertScopeInstructionsWithinScopes | debug | Validation |
+| 36 | PruneNonEscapingScopes | reactive | |
+| 37 | PruneNonReactiveDependencies | reactive | |
+| 38 | PruneUnusedScopes | reactive | |
+| 39 | MergeReactiveScopesThatInvalidateTogether | reactive | |
+| 40 | PruneAlwaysInvalidatingScopes | reactive | |
+| 41 | PropagateEarlyReturns | reactive | |
+| 42 | PruneUnusedLValues | reactive | |
+| 43 | PromoteUsedTemporaries | reactive | |
+| 44 | ExtractScopeDeclarationsFromDestructuring | reactive | |
+| 45 | StabilizeBlockIds | reactive | |
+| 46 | RenameVariables | reactive | |
+| 47 | PruneHoistedContexts | reactive | |
+| 48 | ValidatePreservedManualMemoization | debug | Conditional |
+| 49 | Codegen | ast | |
 
 Validation passes (no log entries, tested via CompileError/CompileSkip events):
 - After PruneMaybeThrows (#2): validateContextVariableLValues, validateUseMemo
@@ -93,7 +108,7 @@ All 1717 tests now passing through OptimizePropsMethodCalls.
 
 ### Status section
 
-The `# Status` section lists every pass from #1 to #31 (all hir passes) with one of:
+The `# Status` section lists every pass from #1 to #49 with one of:
 - `complete (N/N)` — all tests passing through this pass
 - `partial (passed/total)` — some test failures remain
 - `todo` — not yet ported
@@ -139,7 +154,6 @@ Parse the JSON to extract:
 If frontier is `null`, determine the next action:
 - The `pass` field shows the last ported pass (auto-detected from pipeline.rs)
 - Look up the next pass in the Pass Order Reference table
-- If the next pass is `BuildReactiveFunction` (#32) or later, the frontier is **BLOCKED**
 - Otherwise, the mode is **PORT** for that next pass
 
 If frontier is a pass name, the mode is **FIX** for that pass. Use `--failures` to get the full list of failing fixture paths:
@@ -161,9 +175,9 @@ Update the orchestrator log Status section, then proceed to Step 2.
 Print a status report:
 ```
 ## Orchestrator Status
-- Ported passes: <count> / 31 (hir passes)
+- Ported passes: <count> / 49
 - Test results: <passed> passed, <failed> failed (<total> total)
-- Frontier: #<num> <PassName> (<FIX|PORT> mode) — or "none (all clean)" or "BLOCKED"
+- Frontier: #<num> <PassName> (<FIX|PORT> mode) — or "none (all clean)"
 - Action: <what will happen next>
 ```
 
@@ -245,8 +259,7 @@ After committing:
 ### Step 5: Loop
 
 Go back to Step 1. The loop continues until:
-- All hir passes are ported and clean (up to #31)
-- The next pass is `BuildReactiveFunction` (#32), which requires test infra extension
+- All passes are ported and clean (up to #49)
 - An unrecoverable error occurs
 
 ## Key Principles

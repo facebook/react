@@ -43,6 +43,7 @@ You will receive:
 Key conventions:
 - **Place is Clone**: `Place` stores `IdentifierId`, making it cheap to clone
 - **env separate from func**: Pass `env: &mut Environment` separately from `func: &mut HirFunction`
+- **Reactive passes**: Reactive passes take `&mut ReactiveFunction` + `&Environment` or `&mut Environment` (not `&mut HirFunction`)
 - **Flat environment fields**: Access env fields directly for sliced borrows
 - **Two-phase collect/apply**: When you can't mutate through stored references, collect IDs first, then apply mutations
 - **Ordered maps**: Use `IndexMap`/`IndexSet` where TS uses `Map`/`Set` and iteration order matters

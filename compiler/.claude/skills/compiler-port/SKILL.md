@@ -16,8 +16,8 @@ Arguments:
 2. Search for `name: '$ARGUMENTS'` in log entries
 3. If not found, list all available pass names from the `log({...name: '...'})` calls and stop
 4. Check the `kind` field of the matching log entry:
-   - If `kind: 'reactive'` or `kind: 'ast'`, report that test-rust-port only supports `hir` kind passes currently and stop
-   - If `kind: 'hir'`, proceed
+   - If `kind: 'ast'`, report that test-rust-port only supports `hir` and `reactive` kind passes currently and stop
+   - If `kind: 'hir'` or `kind: 'reactive'`, proceed
 
 ## Step 1: Determine TS source files and Rust crate
 
@@ -30,6 +30,7 @@ Arguments:
 | `src/HIR/BuildHIR.ts`, `src/HIR/HIRBuilder.ts` | `react_compiler_lowering` |
 | `src/Babel/`, `src/Entrypoint/` | `react_compiler` |
 | `src/CompilerError.ts` | `react_compiler_diagnostics` |
+| `src/ReactiveScopes/` | `react_compiler_reactive_scopes` |
 | `src/<Name>/` | `react_compiler_<name>` (1:1, e.g., `src/Optimization/` -> `react_compiler_optimization`) |
 
 3. Check if the pass is already ported:
@@ -46,7 +47,8 @@ Read the following files (all reads happen in main context):
 3. **TypeScript source**: All TypeScript source files for the pass + any helpers imported from the same folder
 4. **Rust pipeline**: `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
 5. **Rust HIR types**: Key type files in `compiler/crates/react_compiler_hir/src/` (especially `hir.rs`, `environment.rs`)
-6. **Target crate**: If the target crate already exists, read its `Cargo.toml`, `src/lib.rs`, and existing files to understand the current structure
+6. **Rust reactive types**: For reactive passes, also read `compiler/crates/react_compiler_hir/src/reactive_function.rs`
+7. **Target crate**: If the target crate already exists, read its `Cargo.toml`, `src/lib.rs`, and existing files to understand the current structure
 
 ## Step 3: Create implementation plan
 
