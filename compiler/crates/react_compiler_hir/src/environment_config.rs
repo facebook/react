@@ -63,7 +63,10 @@ pub struct EnvironmentConfig {
     // TODO: moduleTypeProvider — requires JS function callback.
     // The Rust port always uses defaultModuleTypeProvider (hardcoded).
 
-    // TODO: customMacros — only used by Babel plugin codegen.
+    /// Custom macro-like function names that should have their operands
+    /// memoized in the same scope (similar to fbt).
+    #[serde(default)]
+    pub custom_macros: Option<Vec<String>>,
 
     // TODO: enableResetCacheOnSourceFileChanges — only used in codegen.
 
@@ -184,6 +187,7 @@ impl Default for EnvironmentConfig {
             enable_allow_set_state_from_refs_in_effects: true,
             enable_verbose_no_set_state_in_effect: false,
             enable_forest: false,
+            custom_macros: None,
         }
     }
 }

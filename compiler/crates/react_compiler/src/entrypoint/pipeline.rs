@@ -284,6 +284,12 @@ pub fn compile_fn(
         context.log_debug(DebugLogEntry::new("InferReactiveScopeVariables", debug_infer_scopes));
     }
 
+    let _fbt_operands =
+        react_compiler_inference::memoize_fbt_and_macro_operands_in_same_scope(&hir, &mut env);
+
+    let debug_fbt = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("MemoizeFbtAndMacroOperandsInSameScope", debug_fbt));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
