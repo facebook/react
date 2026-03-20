@@ -101,6 +101,7 @@ pub struct EnvironmentConfig {
     #[serde(alias = "validateNoDerivedComputationsInEffects_exp")]
     pub validate_no_derived_computations_in_effects_exp: bool,
     #[serde(default)]
+    #[serde(alias = "validateNoJSXInTryStatements")]
     pub validate_no_jsx_in_try_statements: bool,
     #[serde(default)]
     pub validate_static_components: bool,

@@ -1456,6 +1456,26 @@ pub fn is_set_state_type(ty: &Type) -> bool {
     matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_SET_STATE_ID)
 }
 
+/// Returns true if the type is a useEffect hook.
+pub fn is_use_effect_hook_type(ty: &Type) -> bool {
+    matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_USE_EFFECT_HOOK_ID)
+}
+
+/// Returns true if the type is a useLayoutEffect hook.
+pub fn is_use_layout_effect_hook_type(ty: &Type) -> bool {
+    matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_USE_LAYOUT_EFFECT_HOOK_ID)
+}
+
+/// Returns true if the type is a useInsertionEffect hook.
+pub fn is_use_insertion_effect_hook_type(ty: &Type) -> bool {
+    matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_USE_INSERTION_EFFECT_HOOK_ID)
+}
+
+/// Returns true if the type is a useEffectEvent function.
+pub fn is_use_effect_event_type(ty: &Type) -> bool {
+    matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_USE_EFFECT_EVENT_ID)
+}
+
 /// Returns true if the type is a ref or ref-like mutable type (e.g. Reanimated shared values).
 pub fn is_ref_or_ref_like_mutable_type(ty: &Type) -> bool {
     matches!(ty, Type::Object { shape_id: Some(id) }

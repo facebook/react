@@ -79,46 +79,7 @@ pub fn compile_fn(
     let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
     // Log VoidUseMemo errors as CompileError events (matching TS env.logErrors behavior).
     // In TS these are logged via env.logErrors() for telemetry, not accumulated as compile errors.
-    for detail in &void_memo_errors.details {
-        let (category, reason, description, severity, details) = match detail {
-            react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                let items: Option<Vec<CompilerErrorItemInfo>> = {
-                    let v: Vec<CompilerErrorItemInfo> = d.details.iter().map(|item| match item {
-                        react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message } => {
-                            CompilerErrorItemInfo {
-                                kind: "error".to_string(),
-                                loc: *loc,
-                                message: message.clone(),
-                            }
-                        }
-                        react_compiler_diagnostics::CompilerDiagnosticDetail::Hint { message } => {
-                            CompilerErrorItemInfo {
-                                kind: "hint".to_string(),
-                                loc: None,
-                                message: Some(message.clone()),
-                            }
-                        }
-                    }).collect();
-                    if v.is_empty() { None } else { Some(v) }
-                };
-                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()), items)
-            }
-            react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {
-                (format!("{:?}", d.category), d.reason.clone(), d.description.clone(), format!("{:?}", d.severity()), None)
-            }
-        };
-        context.log_event(super::compile_result::LoggerEvent::CompileError {
-            fn_loc: None,
-            detail: CompilerErrorDetailInfo {
-                category,
-                reason,
-                description,
-                severity: Some(severity),
-                details,
-                loc: None,
-            },
-        });
-    }
+    log_errors_as_events(&void_memo_errors, context);
     context.log_debug(DebugLogEntry::new("ValidateUseMemo", "ok".to_string()));
 
     // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
@@ -296,14 +257,16 @@ pub fn compile_fn(
         if env.config.validate_no_set_state_in_effects
             && env.output_mode == OutputMode::Lint
         {
-            // TODO: port validateNoSetStateInEffects (uses env.logErrors)
+            let errors = react_compiler_validation::validate_no_set_state_in_effects(&hir, &env);
+            log_errors_as_events(&errors, context);
             context.log_debug(DebugLogEntry::new("ValidateNoSetStateInEffects", "ok".to_string()));
         }
 
         if env.config.validate_no_jsx_in_try_statements
             && env.output_mode == OutputMode::Lint
         {
-            // TODO: port validateNoJSXInTryStatement (uses env.logErrors)
+            let errors = react_compiler_validation::validate_no_jsx_in_try_statement(&hir);
+            log_errors_as_events(&errors, context);
             context.log_debug(DebugLogEntry::new("ValidateNoJSXInTryStatement", "ok".to_string()));
         }
 
@@ -320,7 +283,7 @@ pub fn compile_fn(
         if env.config.validate_exhaustive_memoization_dependencies
             || env.config.validate_exhaustive_effect_dependencies != react_compiler_hir::environment_config::ExhaustiveEffectDepsMode::Off
         {
-            // TODO: port validateExhaustiveDependencies
+            react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env);
             context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
         }
     }
@@ -453,4 +416,71 @@ pub fn compile_fn(
         pruned_memo_values: 0,
         outlined: Vec::new(),
     })
+}
+
+/// Log CompilerError diagnostics as CompileError events, matching TS `env.logErrors()` behavior.
+/// These are logged for telemetry/lint output but not accumulated as compile errors.
+fn log_errors_as_events(
+    errors: &CompilerError,
+    context: &mut ProgramContext,
+) {
+    for detail in &errors.details {
+        let (category, reason, description, severity, details) = match detail {
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
+                let items: Option<Vec<CompilerErrorItemInfo>> = {
+                    let v: Vec<CompilerErrorItemInfo> = d
+                        .details
+                        .iter()
+                        .map(|item| match item {
+                            react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
+                                loc,
+                                message,
+                            } => CompilerErrorItemInfo {
+                                kind: "error".to_string(),
+                                loc: *loc,
+                                message: message.clone(),
+                            },
+                            react_compiler_diagnostics::CompilerDiagnosticDetail::Hint {
+                                message,
+                            } => CompilerErrorItemInfo {
+                                kind: "hint".to_string(),
+                                loc: None,
+                                message: Some(message.clone()),
+                            },
+                        })
+                        .collect();
+                    if v.is_empty() {
+                        None
+                    } else {
+                        Some(v)
+                    }
+                };
+                (
+                    format!("{:?}", d.category),
+                    d.reason.clone(),
+                    d.description.clone(),
+                    format!("{:?}", d.severity()),
+                    items,
+                )
+            }
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => (
+                format!("{:?}", d.category),
+                d.reason.clone(),
+                d.description.clone(),
+                format!("{:?}", d.severity()),
+                None,
+            ),
+        };
+        context.log_event(super::compile_result::LoggerEvent::CompileError {
+            fn_loc: None,
+            detail: CompilerErrorDetailInfo {
+                category,
+                reason,
+                description,
+                severity: Some(severity),
+                details,
+                loc: None,
+            },
+        });
+    }
 }

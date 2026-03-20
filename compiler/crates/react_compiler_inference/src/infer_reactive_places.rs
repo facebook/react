@@ -839,6 +839,13 @@ fn set_reactive_on_terminal(terminal: &mut Terminal, reactive_ids: &HashSet<Iden
         Terminal::Return { value, .. } | Terminal::Throw { value, .. } => {
             set_reactive_on_place(value, reactive_ids);
         }
+        Terminal::Try {
+            handler_binding, ..
+        } => {
+            if let Some(binding) = handler_binding {
+                set_reactive_on_place(binding, reactive_ids);
+            }
+        }
         _ => {}
     }
 }
@@ -1456,6 +1463,15 @@ fn each_terminal_operand_ids(terminal: &Terminal) -> Vec<IdentifierId> {
                 }
             }
             ids
+        }
+        Terminal::Try {
+            handler_binding, ..
+        } => {
+            if let Some(binding) = handler_binding {
+                vec![binding.identifier]
+            } else {
+                vec![]
+            }
         }
         _ => vec![],
     }
