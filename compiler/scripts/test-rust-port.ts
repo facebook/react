@@ -53,60 +53,25 @@ const BOLD = useColor ? '\x1b[1m' : '';
 const DIM = useColor ? '\x1b[2m' : '';
 const RESET = useColor ? '\x1b[0m' : '';
 
-// --- Ordered pass list (HIR passes from Pipeline.ts) ---
-const PASS_ORDER: string[] = [
-  'HIR',
-  'PruneMaybeThrows',
-  'DropManualMemoization',
-  'InlineImmediatelyInvokedFunctionExpressions',
-  'MergeConsecutiveBlocks',
-  'SSA',
-  'EliminateRedundantPhi',
-  'ConstantPropagation',
-  'InferTypes',
-  'OptimizePropsMethodCalls',
-  'AnalyseFunctions',
-  'InferMutationAliasingEffects',
-  'OptimizeForSSR',
-  'DeadCodeElimination',
-  'InferMutationAliasingRanges',
-  'InferReactivePlaces',
-  'RewriteInstructionKindsBasedOnReassignment',
-  'InferReactiveScopeVariables',
-  'MemoizeFbtAndMacroOperandsInSameScope',
-  'NameAnonymousFunctions',
-  'OutlineFunctions',
-  'AlignMethodCallScopes',
-  'AlignObjectMethodScopes',
-  'PruneUnusedLabelsHIR',
-  'AlignReactiveScopesToBlockScopesHIR',
-  'MergeOverlappingReactiveScopesHIR',
-  'BuildReactiveScopeTerminalsHIR',
-  'FlattenReactiveLoopsHIR',
-  'FlattenScopesWithHooksOrUseHIR',
-  'PropagateScopeDependenciesHIR',
-];
-
-// --- Detect last ported pass from pipeline.rs ---
-function detectLastPortedPass(): string {
+// --- Ordered pass list (derived from pipeline.rs DebugLogEntry calls) ---
+function derivePassOrder(): string[] {
   const pipelinePath = path.join(
     REPO_ROOT,
     'compiler/crates/react_compiler/src/entrypoint/pipeline.rs',
   );
   const content = fs.readFileSync(pipelinePath, 'utf8');
   const matches = [...content.matchAll(/DebugLogEntry::new\("([^"]+)"/g)];
-  const portedNames = new Set(matches.map(m => m[1]));
+  return matches.map(m => m[1]);
+}
 
-  let lastPorted: string | null = null;
-  for (const pass of PASS_ORDER) {
-    if (portedNames.has(pass)) {
-      lastPorted = pass;
-    }
-  }
-  if (!lastPorted) {
+const PASS_ORDER = derivePassOrder();
+
+// --- Detect last ported pass from pipeline.rs ---
+function detectLastPortedPass(): string {
+  if (PASS_ORDER.length === 0) {
     throw new Error('No ported passes found in pipeline.rs');
   }
-  return lastPorted;
+  return PASS_ORDER[PASS_ORDER.length - 1];
 }
 
 // --- Parse args ---

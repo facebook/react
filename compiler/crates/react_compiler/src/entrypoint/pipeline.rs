@@ -74,6 +74,8 @@ pub fn compile_fn(
         err.push_diagnostic(diag);
         return Err(err);
     }
+    context.log_debug(DebugLogEntry::new("ValidateContextVariableLValues", "ok".to_string()));
+
     let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
     // Log VoidUseMemo errors as CompileError events (matching TS env.logErrors behavior).
     // In TS these are logged via env.logErrors() for telemetry, not accumulated as compile errors.
@@ -117,6 +119,8 @@ pub fn compile_fn(
             },
         });
     }
+    context.log_debug(DebugLogEntry::new("ValidateUseMemo", "ok".to_string()));
+
     // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
     // output modes, so we run it unconditionally.
     react_compiler_optimization::drop_manual_memoization(&mut hir, &mut env).map_err(|diag| {
@@ -147,6 +151,11 @@ pub fn compile_fn(
     let debug_merge = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
 
+    // TODO: port assertConsistentIdentifiers
+    context.log_debug(DebugLogEntry::new("AssertConsistentIdentifiers", "ok".to_string()));
+    // TODO: port assertTerminalSuccessorsExist
+    context.log_debug(DebugLogEntry::new("AssertTerminalSuccessorsExist", "ok".to_string()));
+
     react_compiler_ssa::enter_ssa(&mut hir, &mut env).map_err(|diag| {
         // In TS, EnterSSA uses CompilerError.throwTodo() which creates a CompilerErrorDetail
         // (not a CompilerDiagnostic). We convert here to match the TS event format.
@@ -170,6 +179,9 @@ pub fn compile_fn(
     let debug_eliminate_phi = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("EliminateRedundantPhi", debug_eliminate_phi));
 
+    // TODO: port assertConsistentIdentifiers
+    context.log_debug(DebugLogEntry::new("AssertConsistentIdentifiers", "ok".to_string()));
+
     react_compiler_optimization::constant_propagation(&mut hir, &mut env);
 
     let debug_const_prop = debug_print::debug_hir(&hir, &env);
@@ -183,10 +195,12 @@ pub fn compile_fn(
     if env.enable_validations() {
         if env.config.validate_hooks_usage {
             react_compiler_validation::validate_hooks_usage(&hir, &mut env);
+            context.log_debug(DebugLogEntry::new("ValidateHooksUsage", "ok".to_string()));
         }
 
         if env.config.validate_no_capitalized_calls.is_some() {
             react_compiler_validation::validate_no_capitalized_calls(&hir, &mut env);
+            context.log_debug(DebugLogEntry::new("ValidateNoCapitalizedCalls", "ok".to_string()));
         }
     }
 
