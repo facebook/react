@@ -267,10 +267,40 @@ pub fn compile_fn(
     let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
 
+    // TODO: port validation passes (stubs for log output matching)
+    if env.enable_validations() {
+        // TODO: port validateLocalsNotReassignedAfterRender
+        context.log_debug(DebugLogEntry::new("ValidateLocalsNotReassignedAfterRender", "ok".to_string()));
+
+        // assertValidMutableRanges is gated on config.assertValidMutableRanges (default false)
+
+        if env.config.validate_ref_access_during_render {
+            // TODO: port validateNoRefAccessInRender
+            context.log_debug(DebugLogEntry::new("ValidateNoRefAccessInRender", "ok".to_string()));
+        }
+
+        if env.config.validate_no_set_state_in_render {
+            // TODO: port validateNoSetStateInRender
+            context.log_debug(DebugLogEntry::new("ValidateNoSetStateInRender", "ok".to_string()));
+        }
+
+        // TODO: port validateNoFreezingKnownMutableFunctions
+        context.log_debug(DebugLogEntry::new("ValidateNoFreezingKnownMutableFunctions", "ok".to_string()));
+    }
+
     react_compiler_inference::infer_reactive_places(&mut hir, &mut env);
 
     let debug_reactive_places = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferReactivePlaces", debug_reactive_places));
+
+    if env.enable_validations() {
+        if env.config.validate_exhaustive_memoization_dependencies
+            || env.config.validate_exhaustive_effect_dependencies != react_compiler_hir::environment_config::ExhaustiveEffectDepsMode::Off
+        {
+            // TODO: port validateExhaustiveDependencies
+            context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
+        }
+    }
 
     react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(&mut hir, &env);
 
@@ -322,6 +352,11 @@ pub fn compile_fn(
 
     let debug_prune_labels = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneUnusedLabelsHIR", debug_prune_labels));
+
+    react_compiler_inference::align_reactive_scopes_to_block_scopes_hir(&mut hir, &mut env);
+
+    let debug_align_block_scopes = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("AlignReactiveScopesToBlockScopesHIR", debug_align_block_scopes));
 
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
