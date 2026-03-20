@@ -121,29 +121,25 @@ impl<'a> DebugPrinter<'a> {
     // =========================================================================
 
     fn format_reactive_block(&mut self, block: &ReactiveBlock) {
-        for (i, stmt) in block.iter().enumerate() {
-            self.format_reactive_statement(stmt, i);
+        for stmt in block.iter() {
+            self.format_reactive_statement(stmt);
         }
     }
 
-    fn format_reactive_statement(&mut self, stmt: &ReactiveStatement, index: usize) {
+    fn format_reactive_statement(&mut self, stmt: &ReactiveStatement) {
         match stmt {
             ReactiveStatement::Instruction(instr) => {
-                self.line(&format!("[{}] Instruction {{", index));
-                self.indent();
-                self.format_reactive_instruction(instr);
-                self.dedent();
-                self.line("}");
+                self.format_reactive_instruction_block(instr);
             }
             ReactiveStatement::Terminal(term) => {
-                self.line(&format!("[{}] Terminal {{", index));
+                self.line("ReactiveTerminalStatement {");
                 self.indent();
                 self.format_terminal_statement(term);
                 self.dedent();
                 self.line("}");
             }
             ReactiveStatement::Scope(scope) => {
-                self.line(&format!("[{}] Scope {{", index));
+                self.line("ReactiveScopeBlock {");
                 self.indent();
                 self.format_scope_field("scope", scope.scope);
                 self.line("instructions:");
@@ -154,7 +150,7 @@ impl<'a> DebugPrinter<'a> {
                 self.line("}");
             }
             ReactiveStatement::PrunedScope(scope) => {
-                self.line(&format!("[{}] PrunedScope {{", index));
+                self.line("PrunedReactiveScopeBlock {");
                 self.indent();
                 self.format_scope_field("scope", scope.scope);
                 self.line("instructions:");
@@ -170,6 +166,14 @@ impl<'a> DebugPrinter<'a> {
     // =========================================================================
     // ReactiveInstruction
     // =========================================================================
+
+    fn format_reactive_instruction_block(&mut self, instr: &ReactiveInstruction) {
+        self.line("ReactiveInstruction {");
+        self.indent();
+        self.format_reactive_instruction(instr);
+        self.dedent();
+        self.line("}");
+    }
 
     fn format_reactive_instruction(&mut self, instr: &ReactiveInstruction) {
         self.line(&format!("id: {}", instr.id.0));
@@ -260,11 +264,10 @@ impl<'a> DebugPrinter<'a> {
                 self.line("instructions:");
                 self.indent();
                 for (i, instr) in instructions.iter().enumerate() {
-                    self.line(&format!("[{}] Instruction {{", i));
+                    self.line(&format!("[{}]:", i));
                     self.indent();
-                    self.format_reactive_instruction(instr);
+                    self.format_reactive_instruction_block(instr);
                     self.dedent();
-                    self.line("}");
                 }
                 self.dedent();
                 self.line(&format!("id: {}", id.0));
@@ -328,9 +331,9 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("Break {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line(&format!("target: bb{}", target.0));
-                self.line(&format!("targetKind: {}", target_kind));
+                self.line(&format!("id: {}", id.0));
+                self.line(&format!("targetKind: \"{}\"", target_kind));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -343,9 +346,9 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("Continue {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line(&format!("target: bb{}", target.0));
-                self.line(&format!("targetKind: {}", target_kind));
+                self.line(&format!("id: {}", id.0));
+                self.line(&format!("targetKind: \"{}\"", target_kind));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -353,8 +356,8 @@ impl<'a> DebugPrinter<'a> {
             ReactiveTerminal::Return { value, id, loc } => {
                 self.line("Return {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.format_place_field("value", value);
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -362,8 +365,8 @@ impl<'a> DebugPrinter<'a> {
             ReactiveTerminal::Throw { value, id, loc } => {
                 self.line("Throw {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.format_place_field("value", value);
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -376,46 +379,34 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("Switch {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.format_place_field("test", test);
                 self.line("cases:");
                 self.indent();
                 for (i, case) in cases.iter().enumerate() {
+                    self.line(&format!("[{}] {{", i));
+                    self.indent();
                     match &case.test {
                         Some(p) => {
-                            self.line(&format!("[{}] Case {{", i));
-                            self.indent();
                             self.format_place_field("test", p);
-                            match &case.block {
-                                Some(block) => {
-                                    self.line("block:");
-                                    self.indent();
-                                    self.format_reactive_block(block);
-                                    self.dedent();
-                                }
-                                None => self.line("block: null"),
-                            }
-                            self.dedent();
-                            self.line("}");
                         }
                         None => {
-                            self.line(&format!("[{}] Default {{", i));
-                            self.indent();
-                            match &case.block {
-                                Some(block) => {
-                                    self.line("block:");
-                                    self.indent();
-                                    self.format_reactive_block(block);
-                                    self.dedent();
-                                }
-                                None => self.line("block: null"),
-                            }
-                            self.dedent();
-                            self.line("}");
+                            self.line("test: null");
                         }
                     }
+                    match &case.block {
+                        Some(block) => {
+                            self.line("block:");
+                            self.indent();
+                            self.format_reactive_block(block);
+                            self.dedent();
+                        }
+                        None => self.line("block: undefined"),
+                    }
+                    self.dedent();
+                    self.line("}");
                 }
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -428,7 +419,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("DoWhile {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("loop:");
                 self.indent();
                 self.format_reactive_block(loop_block);
@@ -437,6 +427,7 @@ impl<'a> DebugPrinter<'a> {
                 self.indent();
                 self.format_reactive_value(test);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -449,7 +440,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("While {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("test:");
                 self.indent();
                 self.format_reactive_value(test);
@@ -458,6 +448,7 @@ impl<'a> DebugPrinter<'a> {
                 self.indent();
                 self.format_reactive_block(loop_block);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -472,7 +463,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("For {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("init:");
                 self.indent();
                 self.format_reactive_value(init);
@@ -494,6 +484,7 @@ impl<'a> DebugPrinter<'a> {
                 self.indent();
                 self.format_reactive_block(loop_block);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -507,7 +498,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("ForOf {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("init:");
                 self.indent();
                 self.format_reactive_value(init);
@@ -520,6 +510,7 @@ impl<'a> DebugPrinter<'a> {
                 self.indent();
                 self.format_reactive_block(loop_block);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -532,7 +523,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("ForIn {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("init:");
                 self.indent();
                 self.format_reactive_value(init);
@@ -541,6 +531,7 @@ impl<'a> DebugPrinter<'a> {
                 self.indent();
                 self.format_reactive_block(loop_block);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -554,7 +545,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("If {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.format_place_field("test", test);
                 self.line("consequent:");
                 self.indent();
@@ -569,6 +559,7 @@ impl<'a> DebugPrinter<'a> {
                     }
                     None => self.line("alternate: null"),
                 }
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -576,11 +567,11 @@ impl<'a> DebugPrinter<'a> {
             ReactiveTerminal::Label { block, id, loc } => {
                 self.line("Label {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("block:");
                 self.indent();
                 self.format_reactive_block(block);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
@@ -594,7 +585,6 @@ impl<'a> DebugPrinter<'a> {
             } => {
                 self.line("Try {");
                 self.indent();
-                self.line(&format!("id: {}", id.0));
                 self.line("block:");
                 self.indent();
                 self.format_reactive_block(block);
@@ -607,6 +597,7 @@ impl<'a> DebugPrinter<'a> {
                 self.indent();
                 self.format_reactive_block(handler);
                 self.dedent();
+                self.line(&format!("id: {}", id.0));
                 self.line(&format!("loc: {}", format_loc(loc)));
                 self.dedent();
                 self.line("}");
