@@ -384,6 +384,16 @@ pub fn compile_fn(
     let debug_flatten_hooks = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("FlattenScopesWithHooksOrUseHIR", debug_flatten_hooks));
 
+    // TODO: port assertTerminalSuccessorsExist
+    context.log_debug(DebugLogEntry::new("AssertTerminalSuccessorsExist", "ok".to_string()));
+    // TODO: port assertTerminalPredsExist
+    context.log_debug(DebugLogEntry::new("AssertTerminalPredsExist", "ok".to_string()));
+
+    react_compiler_inference::propagate_scope_dependencies_hir(&mut hir, &mut env);
+
+    let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

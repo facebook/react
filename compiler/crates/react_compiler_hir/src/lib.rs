@@ -902,7 +902,7 @@ pub enum ManualMemoDependencyRoot {
     Global { identifier_name: String },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DependencyPathEntry {
     pub property: PropertyLiteral,
     pub optional: bool,
@@ -1052,7 +1052,7 @@ impl std::fmt::Display for ObjectPropertyType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PropertyLiteral {
     String(String),
     Number(FloatValue),
