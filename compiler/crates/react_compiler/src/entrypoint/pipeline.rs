@@ -313,6 +313,11 @@ pub fn compile_fn(
     let debug_align = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("AlignMethodCallScopes", debug_align));
 
+    react_compiler_inference::align_object_method_scopes(&mut hir, &mut env);
+
+    let debug_align_obj = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("AlignObjectMethodScopes", debug_align_obj));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
