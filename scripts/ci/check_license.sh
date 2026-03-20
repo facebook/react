@@ -1,13 +1,30 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-# Make sure we don't introduce accidental references to PATENTS.
-EXPECTED='scripts/ci/check_license.sh'
-ACTUAL=$(git grep -l PATENTS)
+# File that is allowed to contain the string "PATENTS"
+EXPECTED_FILE="scripts/ci/check_license.sh"
 
-if [ "$EXPECTED" != "$ACTUAL" ]; then
-  echo "PATENTS crept into some new files?"
-  diff -u <(echo "$EXPECTED") <(echo "$ACTUAL") || true
-  exit 1
+# Get all files that contain "PATENTS" (ignore binary files, handle no matches safely)
+mapfile -t ACTUAL_FILES < <(git grep -l --no-color -- "PATENTS" || true)
+
+# If exactly one file and it matches expected → OK
+if [[ "${#ACTUAL_FILES[@]}" -eq 1 && "${ACTUAL_FILES[0]}" == "$EXPECTED_FILE" ]]; then
+  exit 0
 fi
+
+echo "Error: Unexpected references to 'PATENTS' found."
+
+echo "Expected:"
+echo "  $EXPECTED_FILE"
+
+echo "Actual:"
+for file in "${ACTUAL_FILES[@]:-<none>}"; do
+  echo "  $file"
+done
+
+echo
+echo "Diff:"
+diff -u <(printf "%s\n" "$EXPECTED_FILE") <(printf "%s\n" "${ACTUAL_FILES[@]}") || true
+
+exit 1
