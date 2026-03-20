@@ -217,6 +217,10 @@ impl Environment {
         self.errors.has_any_errors()
     }
 
+    pub fn error_count(&self) -> usize {
+        self.errors.details.len()
+    }
+
     /// Check if any recorded errors have Invariant category.
     /// In TS, Invariant errors throw immediately from recordError(),
     /// which aborts the current operation.
@@ -230,6 +234,16 @@ impl Environment {
 
     pub fn take_errors(&mut self) -> CompilerError {
         std::mem::take(&mut self.errors)
+    }
+
+    /// Take errors added after position `since_count`, leaving earlier errors in place.
+    /// Used to detect new errors added by a specific pass.
+    pub fn take_errors_since(&mut self, since_count: usize) -> CompilerError {
+        let mut taken = CompilerError::new();
+        if self.errors.details.len() > since_count {
+            taken.details = self.errors.details.split_off(since_count);
+        }
+        taken
     }
 
     /// Take only the Invariant errors, leaving non-Invariant errors in place.
@@ -252,6 +266,42 @@ impl Environment {
         }
         self.errors = remaining;
         invariant
+    }
+
+    /// Check if any recorded errors have Todo category.
+    /// In TS, Todo errors throw immediately via CompilerError.throwTodo().
+    pub fn has_todo_errors(&self) -> bool {
+        self.errors.details.iter().any(|d| match d {
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => d.category == react_compiler_diagnostics::ErrorCategory::Todo,
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category == react_compiler_diagnostics::ErrorCategory::Todo,
+        })
+    }
+
+    /// Take errors that would have been thrown in TS (Invariant and Todo),
+    /// leaving other accumulated errors in place.
+    pub fn take_thrown_errors(&mut self) -> CompilerError {
+        let mut thrown = CompilerError::new();
+        let mut remaining = CompilerError::new();
+        let old = std::mem::take(&mut self.errors);
+        for detail in old.details {
+            let is_thrown = match &detail {
+                react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
+                    d.category == react_compiler_diagnostics::ErrorCategory::Invariant
+                        || d.category == react_compiler_diagnostics::ErrorCategory::Todo
+                }
+                react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                    d.category == react_compiler_diagnostics::ErrorCategory::Invariant
+                        || d.category == react_compiler_diagnostics::ErrorCategory::Todo
+                }
+            };
+            if is_thrown {
+                thrown.details.push(detail);
+            } else {
+                remaining.details.push(detail);
+            }
+        }
+        self.errors = remaining;
+        thrown
     }
 
     /// Check if a binding has been hoisted (via DeclareContext) already.

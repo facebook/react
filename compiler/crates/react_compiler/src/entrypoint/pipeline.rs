@@ -231,7 +231,16 @@ pub fn compile_fn(
     let debug_analyse_functions = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("AnalyseFunctions", debug_analyse_functions));
 
+    let errors_before = env.error_count();
     react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false);
+
+    // Check for errors recorded during InferMutationAliasingEffects
+    // (e.g., uninitialized value kind, Todo for unsupported patterns).
+    // In TS, these throw from within the pass, aborting before the log entry.
+    // We detect new errors by comparing error counts before and after the pass.
+    if env.error_count() > errors_before {
+        return Err(env.take_errors_since(errors_before));
+    }
 
     let debug_infer_effects = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferMutationAliasingEffects", debug_infer_effects));

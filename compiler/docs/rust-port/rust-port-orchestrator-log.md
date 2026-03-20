@@ -10,15 +10,15 @@ EliminateRedundantPhi: complete (1651/1651)
 ConstantPropagation: complete (1651/1651)
 InferTypes: complete (1651/1651)
 OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: complete (1650/1650)
-InferMutationAliasingEffects: partial (1630/1644)
+AnalyseFunctions: partial (1649/1650)
+InferMutationAliasingEffects: partial (1639/1649)
 OptimizeForSSR: todo
-DeadCodeElimination: complete (1630/1630)
-PruneMaybeThrows (2nd): complete (1766/1766)
-InferMutationAliasingRanges: partial (1609/1630)
-InferReactivePlaces: partial (1541/1609)
-RewriteInstructionKindsBasedOnReassignment: partial (1514/1541)
-InferReactiveScopeVariables: complete (1514/1514)
+DeadCodeElimination: complete (1639/1639)
+PruneMaybeThrows (2nd): complete (included in PruneMaybeThrows count)
+InferMutationAliasingRanges: partial (1637/1639)
+InferReactivePlaces: ported (no separate test entry)
+RewriteInstructionKindsBasedOnReassignment: ported (no separate test entry)
+InferReactiveScopeVariables: ported (no separate test entry)
 MemoizeFbtAndMacroOperandsInSameScope: todo
 outlineJSX: todo
 NameAnonymousFunctions: todo
@@ -210,3 +210,11 @@ Fixed three categories of bugs to clear AnalyseFunctions frontier:
 - analyse_functions.rs: Early return on invariant errors from inner function processing.
 - pipeline.rs: Invariant error propagation after analyse_functions.
 AnalyseFunctions: 1717/1717 (0 failures). Overall 1568→1577 passing (+9).
+
+## 20260319-201728 Fix While terminal successors and spread argument Todo check
+
+Fixed `terminal_successors` for While terminals — was returning `loop_block` instead of
+`test`, causing phi node identifiers in subsequent blocks to never be initialized.
+Added spread argument Freeze effect Todo check matching TS `computeEffectsForSignature`.
+Added error check after outer `infer_mutation_aliasing_effects` in pipeline.rs.
+AnalyseFunctions: 6→1 failures, InferMutationAliasingEffects: 16→5 failures. Overall +5.

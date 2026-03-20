@@ -163,13 +163,17 @@ pub fn infer_mutation_aliasing_effects(
                 let name = ident_info
                     .and_then(|ident| ident.name.as_ref())
                     .map(|n| n.value().to_string())
-                    .unwrap_or_else(|| "<unknown>".to_string());
-                let decl_id = ident_info
-                    .map(|ident| ident.declaration_id.0)
-                    .unwrap_or(0);
+                    .unwrap_or_else(|| "".to_string());
                 // Use usage_loc if available, otherwise fall back to identifier's own loc
                 let error_loc = usage_loc.or_else(|| ident_info.and_then(|i| i.loc));
-                let description = format!("<unknown> {}${}", name, decl_id);
+                // Match TS printPlace format: "<unknown> name$id:type"
+                let type_str = ident_info
+                    .map(|ident| {
+                        let ty = &env.types[ident.type_.0 as usize];
+                        format_type_for_print(ty)
+                    })
+                    .unwrap_or_default();
+                let description = format!("<unknown> {}${}{}", name, uninitialized_id.0, type_str);
                 let diag = CompilerDiagnostic::new(
                     ErrorCategory::Invariant,
                     "[InferMutationAliasingEffects] Expected value kind to be initialized",
@@ -1310,9 +1314,13 @@ fn apply_effect(
                     }
                 }
                 // Legacy signature
+                let mut todo_errors: Vec<react_compiler_diagnostics::CompilerErrorDetail> = Vec::new();
                 let legacy_effects = compute_effects_for_legacy_signature(
-                    state, sig, into, receiver, args, loc.as_ref(), env,
+                    state, sig, into, receiver, args, loc.as_ref(), env, &mut todo_errors,
                 );
+                for err_detail in todo_errors {
+                    env.record_error(err_detail);
+                }
                 for le in legacy_effects {
                     apply_effect(context, state, le, initialized, effects, env, func);
                 }
@@ -1992,6 +2000,7 @@ fn compute_effects_for_legacy_signature(
     args: &[PlaceOrSpreadOrHole],
     _loc: Option<&SourceLocation>,
     env: &Environment,
+    todo_errors: &mut Vec<react_compiler_diagnostics::CompilerErrorDetail>,
 ) -> Vec<AliasingEffect> {
     let return_value_reason = signature.return_value_reason.unwrap_or(ValueReason::Other);
     let mut effects: Vec<AliasingEffect> = Vec::new();
@@ -2115,7 +2124,10 @@ fn compute_effects_for_legacy_signature(
                 } else {
                     signature.rest_param.unwrap_or(Effect::ConditionallyMutate)
                 };
-                let effect = get_argument_effect(sig_effect, is_spread);
+                let (effect, err_detail) = get_argument_effect(sig_effect, is_spread, place.loc);
+                if let Some(d) = err_detail {
+                    todo_errors.push(d);
+                }
                 visit(place, effect, &mut effects);
             }
         }
@@ -2144,13 +2156,26 @@ fn compute_effects_for_legacy_signature(
     effects
 }
 
-fn get_argument_effect(sig_effect: Effect, is_spread: bool) -> Effect {
+fn get_argument_effect(sig_effect: Effect, is_spread: bool, spread_loc: Option<SourceLocation>) -> (Effect, Option<react_compiler_diagnostics::CompilerErrorDetail>) {
     if !is_spread {
-        sig_effect
+        (sig_effect, None)
     } else if sig_effect == Effect::Mutate || sig_effect == Effect::ConditionallyMutate {
-        sig_effect
+        (sig_effect, None)
     } else {
-        Effect::ConditionallyMutateIterator
+        // Spread with Freeze effect is unsupported for hook arguments
+        // (matches TS CompilerError.throwTodo)
+        let detail = if sig_effect == Effect::Freeze {
+            Some(react_compiler_diagnostics::CompilerErrorDetail {
+                reason: "Support spread syntax for hook arguments".to_string(),
+                description: None,
+                category: ErrorCategory::Todo,
+                loc: spread_loc,
+                suggestions: None,
+            })
+        } else {
+            None
+        };
+        (Effect::ConditionallyMutateIterator, detail)
     }
 }
 
@@ -2661,6 +2686,37 @@ fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Option<&'a Hoo
     env.get_hook_kind_for_type(ty)
 }
 
+/// Format a Type for printPlace-style output, matching TS's `printType()`.
+fn format_type_for_print(ty: &Type) -> String {
+    match ty {
+        Type::Primitive => String::new(),
+        Type::Function { shape_id, return_type, .. } => {
+            if let Some(sid) = shape_id {
+                let ret = format_type_for_print(return_type);
+                if ret.is_empty() {
+                    format!(":TFunction<{}>()", sid)
+                } else {
+                    format!(":TFunction<{}>():  {}", sid, ret)
+                }
+            } else {
+                ":TFunction".to_string()
+            }
+        }
+        Type::Object { shape_id } => {
+            if let Some(sid) = shape_id {
+                format!(":TObject<{}>", sid)
+            } else {
+                ":TObject".to_string()
+            }
+        }
+        Type::Poly => ":TPoly".to_string(),
+        Type::Phi { .. } => ":TPhi".to_string(),
+        Type::Property { .. } => ":TProperty".to_string(),
+        Type::TypeVar { .. } => String::new(),
+        Type::ObjectMethod => ":TObjectMethod".to_string(),
+    }
+}
+
 fn is_phi_with_jsx(ty: &Type) -> bool {
     if let Type::Phi { operands } = ty {
         operands.iter().any(|op| react_compiler_hir::is_jsx_type(op))
@@ -2721,7 +2777,8 @@ fn terminal_successors(terminal: &react_compiler_hir::Terminal) -> Vec<BlockId> 
         Terminal::Switch { cases, .. } => cases.iter().map(|c| c.block).collect(),
         Terminal::For { init, .. } => vec![*init],
         Terminal::ForOf { init, .. } | Terminal::ForIn { init, .. } => vec![*init],
-        Terminal::DoWhile { loop_block, .. } | Terminal::While { loop_block, .. } => vec![*loop_block],
+        Terminal::DoWhile { loop_block, .. } => vec![*loop_block],
+        Terminal::While { test, .. } => vec![*test],
         Terminal::Return { .. } | Terminal::Throw { .. } | Terminal::Unreachable { .. } | Terminal::Unsupported { .. } => vec![],
         Terminal::Try { block, handler, .. } => vec![*block, *handler],
         Terminal::MaybeThrow { continuation, handler, .. } => {
