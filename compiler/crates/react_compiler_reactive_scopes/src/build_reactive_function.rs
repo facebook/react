@@ -1221,8 +1221,31 @@ impl<'a, 'b> Driver<'a, 'b> {
             })
             .collect();
 
-        let value = ReactiveValue::Instruction(last_instr.value.clone());
-        let place = last_instr.lvalue.clone();
+        // If the last instruction is a StoreLocal to a temporary (unnamed identifier),
+        // convert it to a LoadLocal of the value being stored, matching the TS behavior.
+        let (value, place) = match &last_instr.value {
+            InstructionValue::StoreLocal { lvalue, value: store_value, .. } => {
+                let ident = &self.env.identifiers[lvalue.place.identifier.0 as usize];
+                if ident.name.is_none() {
+                    (
+                        ReactiveValue::Instruction(InstructionValue::LoadLocal {
+                            place: store_value.clone(),
+                            loc: store_value.loc,
+                        }),
+                        lvalue.place.clone(),
+                    )
+                } else {
+                    (
+                        ReactiveValue::Instruction(last_instr.value.clone()),
+                        last_instr.lvalue.clone(),
+                    )
+                }
+            }
+            _ => (
+                ReactiveValue::Instruction(last_instr.value.clone()),
+                last_instr.lvalue.clone(),
+            ),
+        };
         let id = last_instr.id;
 
         if remaining.is_empty() {
