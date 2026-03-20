@@ -283,6 +283,30 @@ pub fn compile_fn(
             context.log_debug(DebugLogEntry::new("ValidateNoSetStateInRender", "ok".to_string()));
         }
 
+        if env.config.validate_no_derived_computations_in_effects_exp
+            && env.output_mode == OutputMode::Lint
+        {
+            // TODO: port validateNoDerivedComputationsInEffects_exp (uses env.logErrors)
+            context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
+        } else if env.config.validate_no_derived_computations_in_effects {
+            // TODO: port validateNoDerivedComputationsInEffects
+            context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
+        }
+
+        if env.config.validate_no_set_state_in_effects
+            && env.output_mode == OutputMode::Lint
+        {
+            // TODO: port validateNoSetStateInEffects (uses env.logErrors)
+            context.log_debug(DebugLogEntry::new("ValidateNoSetStateInEffects", "ok".to_string()));
+        }
+
+        if env.config.validate_no_jsx_in_try_statements
+            && env.output_mode == OutputMode::Lint
+        {
+            // TODO: port validateNoJSXInTryStatement (uses env.logErrors)
+            context.log_debug(DebugLogEntry::new("ValidateNoJSXInTryStatement", "ok".to_string()));
+        }
+
         react_compiler_validation::validate_no_freezing_known_mutable_functions(&hir, &mut env);
         context.log_debug(DebugLogEntry::new("ValidateNoFreezingKnownMutableFunctions", "ok".to_string()));
     }

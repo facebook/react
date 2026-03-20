@@ -657,12 +657,56 @@ impl Environment {
 
     /// Generate a globally unique identifier name, analogous to TS
     /// `generateGloballyUniqueIdentifierName` which delegates to Babel's
-    /// `scope.generateUidIdentifier`. We use a simple counter-based approach.
+    /// `scope.generateUidIdentifier`. Matches Babel's naming convention:
+    /// first name is `_<name>`, subsequent are `_<name>2`, `_<name>3`, etc.
+    /// Also applies Babel's `toIdentifier` sanitization on the input name.
     pub fn generate_globally_unique_identifier_name(&mut self, name: Option<&str>) -> String {
         let base = name.unwrap_or("temp");
-        let uid = self.uid_counter;
+        // Apply Babel's toIdentifier sanitization:
+        // 1. Replace non-identifier chars with '-'
+        // 2. Strip leading '-' and digits
+        // 3. CamelCase: replace '-' sequences + optional following char with uppercase of that char
+        let mut dashed = String::new();
+        for c in base.chars() {
+            if c.is_ascii_alphanumeric() || c == '_' || c == '$' {
+                dashed.push(c);
+            } else {
+                dashed.push('-');
+            }
+        }
+        // Strip leading dashes and digits
+        let trimmed = dashed.trim_start_matches(|c: char| c == '-' || c.is_ascii_digit());
+        // CamelCase conversion: replace sequences of '-' followed by optional char with uppercase
+        let mut camel = String::new();
+        let mut chars = trimmed.chars().peekable();
+        while let Some(c) = chars.next() {
+            if c == '-' {
+                while chars.peek() == Some(&'-') {
+                    chars.next();
+                }
+                if let Some(next) = chars.next() {
+                    for uc in next.to_uppercase() {
+                        camel.push(uc);
+                    }
+                }
+            } else {
+                camel.push(c);
+            }
+        }
+        if camel.is_empty() {
+            camel = "temp".to_string();
+        }
+        // Strip leading '_' and trailing digits (Babel's generateUid behavior)
+        let stripped = camel.trim_start_matches('_');
+        let stripped = stripped.trim_end_matches(|c: char| c.is_ascii_digit());
+        let uid_base = if stripped.is_empty() { "temp" } else { stripped };
+
         self.uid_counter += 1;
-        format!("_{}${}", base, uid)
+        if self.uid_counter <= 1 {
+            format!("_{}", uid_base)
+        } else {
+            format!("_{}{}", uid_base, self.uid_counter)
+        }
     }
 
     /// Record an outlined function (extracted during outlineFunctions or outlineJSX).

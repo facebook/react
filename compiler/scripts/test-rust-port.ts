@@ -363,84 +363,111 @@ function formatLog(log: LogItem[]): string {
 // differ between TS and Rust due to differences in allocation order.
 // We normalize by remapping each unique ID to a sequential index.
 function normalizeIds(text: string): string {
-  const typeMap = new Map<string, number>();
+  // ID maps are reset at function boundaries (## HIR) because TS uses a global
+  // type counter while Rust creates a fresh Environment per function, so raw IDs
+  // from different functions may collide in Rust but never in TS.
+  let typeMap = new Map<string, number>();
   let nextTypeId = 0;
-  const idMap = new Map<string, number>();
+  let idMap = new Map<string, number>();
   let nextIdId = 0;
-  const declMap = new Map<string, number>();
+  let declMap = new Map<string, number>();
   let nextDeclId = 0;
-  const generatedMap = new Map<string, number>();
+  let generatedMap = new Map<string, number>();
   let nextGeneratedId = 0;
-  const blockMap = new Map<string, number>();
+  let blockMap = new Map<string, number>();
   let nextBlockId = 0;
+  let isFirstHIR = true;
 
-  return (
-    text
-      .replace(/\(generated\)/g, '(none)')
-      // Normalize block IDs (bb0, bb1, ...) — these are auto-incrementing counters
-      // that may differ between TS and Rust due to different block allocation counts
-      // in earlier passes (lowering, IIFE inlining, etc.).
-      .replace(/\bbb(\d+)\b/g, (_match, num) => {
-        const key = `bb:${num}`;
-        if (!blockMap.has(key)) {
-          blockMap.set(key, nextBlockId++);
-        }
-        return `bb${blockMap.get(key)}`;
-      })
-      // Normalize <generated_N> shape IDs — these are auto-incrementing counters
-      // that may differ between TS and Rust due to allocation ordering.
-      .replace(/<generated_(\d+)>/g, (_match, num) => {
-        const key = `generated:${num}`;
-        if (!generatedMap.has(key)) {
-          generatedMap.set(key, nextGeneratedId++);
-        }
-        return `<generated_${generatedMap.get(key)}>`;
-      })
-      .replace(/Type\(\d+\)/g, match => {
-        if (!typeMap.has(match)) {
-          typeMap.set(match, nextTypeId++);
-        }
-        return `Type(${typeMap.get(match)})`;
-      })
-      .replace(/((?:id|declarationId): )(\d+)/g, (_match, prefix, num) => {
-        if (prefix === 'id: ') {
+  // Process line-by-line so we can reset maps at function boundaries
+  const lines = text.split('\n');
+  const result = lines.map(line => {
+    // Reset all maps when a new function's compilation starts (## HIR header).
+    // The first HIR entry doesn't need a reset since maps are already empty.
+    if (line === '## HIR') {
+      if (!isFirstHIR) {
+        typeMap = new Map();
+        nextTypeId = 0;
+        idMap = new Map();
+        nextIdId = 0;
+        declMap = new Map();
+        nextDeclId = 0;
+        generatedMap = new Map();
+        nextGeneratedId = 0;
+        blockMap = new Map();
+        nextBlockId = 0;
+      }
+      isFirstHIR = false;
+    }
+
+    return (
+      line
+        .replace(/\(generated\)/g, '(none)')
+        // Normalize block IDs (bb0, bb1, ...) — these are auto-incrementing counters
+        // that may differ between TS and Rust due to different block allocation counts
+        // in earlier passes (lowering, IIFE inlining, etc.).
+        .replace(/\bbb(\d+)\b/g, (_match, num) => {
+          const key = `bb:${num}`;
+          if (!blockMap.has(key)) {
+            blockMap.set(key, nextBlockId++);
+          }
+          return `bb${blockMap.get(key)}`;
+        })
+        // Normalize <generated_N> shape IDs — these are auto-incrementing counters
+        // that may differ between TS and Rust due to allocation ordering.
+        .replace(/<generated_(\d+)>/g, (_match, num) => {
+          const key = `generated:${num}`;
+          if (!generatedMap.has(key)) {
+            generatedMap.set(key, nextGeneratedId++);
+          }
+          return `<generated_${generatedMap.get(key)}>`;
+        })
+        .replace(/Type\(\d+\)/g, match => {
+          if (!typeMap.has(match)) {
+            typeMap.set(match, nextTypeId++);
+          }
+          return `Type(${typeMap.get(match)})`;
+        })
+        .replace(/((?:id|declarationId): )(\d+)/g, (_match, prefix, num) => {
+          if (prefix === 'id: ') {
+            const key = `id:${num}`;
+            if (!idMap.has(key)) {
+              idMap.set(key, nextIdId++);
+            }
+            return `${prefix}${idMap.get(key)}`;
+          } else {
+            const key = `decl:${num}`;
+            if (!declMap.has(key)) {
+              declMap.set(key, nextDeclId++);
+            }
+            return `${prefix}${declMap.get(key)}`;
+          }
+        })
+        .replace(/Identifier\((\d+)\)/g, (_match, num) => {
           const key = `id:${num}`;
           if (!idMap.has(key)) {
             idMap.set(key, nextIdId++);
           }
-          return `${prefix}${idMap.get(key)}`;
-        } else {
-          const key = `decl:${num}`;
-          if (!declMap.has(key)) {
-            declMap.set(key, nextDeclId++);
+          return `Identifier(${idMap.get(key)})`;
+        })
+        // Normalize printed identifiers like "x$5" in error descriptions.
+        // The $N suffix is an opaque IdentifierId that may differ between TS and Rust.
+        .replace(/(\w+)\$(\d+)/g, (_match, name, num) => {
+          const key = `id:${num}`;
+          if (!idMap.has(key)) {
+            idMap.set(key, nextIdId++);
           }
-          return `${prefix}${declMap.get(key)}`;
-        }
-      })
-      .replace(/Identifier\((\d+)\)/g, (_match, num) => {
-        const key = `id:${num}`;
-        if (!idMap.has(key)) {
-          idMap.set(key, nextIdId++);
-        }
-        return `Identifier(${idMap.get(key)})`;
-      })
-      // Normalize printed identifiers like "x$5" in error descriptions.
-      // The $N suffix is an opaque IdentifierId that may differ between TS and Rust.
-      .replace(/(\w+)\$(\d+)/g, (_match, name, num) => {
-        const key = `id:${num}`;
-        if (!idMap.has(key)) {
-          idMap.set(key, nextIdId++);
-        }
-        return `${name}\$${idMap.get(key)}`;
-      })
-      // Normalize mutableRange: [N:M] values by stripping them entirely.
-      // In TS, identifier.mutableRange shares a reference with scope.range,
-      // so modifications to scope.range automatically propagate. In Rust,
-      // mutableRange is a copy and diverges from scope.range after certain
-      // passes. Since scope.range is separately displayed and validated,
-      // mutableRange comparison adds noise without catching real bugs.
-      .replace(/mutableRange: \[\d+:\d+\]/g, 'mutableRange: [_:_]')
-  );
+          return `${name}\$${idMap.get(key)}`;
+        })
+        // Normalize mutableRange: [N:M] values by stripping them entirely.
+        // In TS, identifier.mutableRange shares a reference with scope.range,
+        // so modifications to scope.range automatically propagate. In Rust,
+        // mutableRange is a copy and diverges from scope.range after certain
+        // passes. Since scope.range is separately displayed and validated,
+        // mutableRange comparison adds noise without catching real bugs.
+        .replace(/mutableRange: \[\d+:\d+\]/g, 'mutableRange: [_:_]')
+    );
+  });
+  return result.join('\n');
 }
 
 // --- Simple unified diff ---

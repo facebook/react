@@ -221,6 +221,7 @@ dependencies = [
  "indexmap",
  "react_compiler_diagnostics",
  "react_compiler_hir",
+ "react_compiler_lowering",
  "react_compiler_optimization",
  "react_compiler_ssa",
 ]

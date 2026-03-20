@@ -1887,6 +1887,12 @@ pub fn debug_hir(hir: &HirFunction, env: &Environment) -> String {
     let mut printer = DebugPrinter::new(env);
     printer.format_function(hir);
 
+    // Print outlined functions (matches TS DebugPrintHIR.ts: printDebugHIR)
+    for outlined in env.get_outlined_functions() {
+        printer.line("");
+        printer.format_function(&outlined.func);
+    }
+
     printer.line("");
     printer.line("Environment:");
     printer.indent();
