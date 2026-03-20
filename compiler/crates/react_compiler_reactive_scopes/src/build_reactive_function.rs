@@ -196,15 +196,14 @@ impl<'a> Context<'a> {
         match &last {
             ControlFlowTarget::Loop {
                 block,
-                owns_block,
                 continue_block,
                 loop_block,
                 owns_loop,
                 ..
             } => {
-                if *owns_block {
-                    self.scheduled.remove(block);
-                }
+                // TS: always removes block from scheduled for loops
+                // (ownsBlock is boolean, so `!== null` is always true)
+                self.scheduled.remove(block);
                 self.scheduled.remove(continue_block);
                 if *owns_loop {
                     if let Some(lb) = loop_block {
@@ -399,13 +398,12 @@ impl<'a, 'b> Driver<'a, 'b> {
                 let mut reactive_cases = Vec::new();
                 for case in cases {
                     let case_block_id = case.block;
-                    if !self.cx.is_scheduled(case_block_id) {
+                    let was_already_scheduled = self.cx.is_scheduled(case_block_id);
+                    if !was_already_scheduled {
                         schedule_ids.push(self.cx.schedule(case_block_id, "case"));
                     }
 
-                    let case_block = if self.cx.is_scheduled(case_block_id) {
-                        // After scheduling above, it's scheduled, so check if it was
-                        // already scheduled before we did it
+                    let case_block = if was_already_scheduled {
                         None
                     } else {
                         Some(self.traverse_block(case_block_id))
@@ -1321,7 +1319,20 @@ impl<'a, 'b> Driver<'a, 'b> {
         let (target_block, target_kind) = self
             .cx
             .get_continue_target(block)
-            .unwrap_or_else(|| panic!("Expected continue target to be scheduled for bb{}", block.0));
+            .unwrap_or_else(|| {
+                eprintln!("DEBUG: control_flow_stack has {} entries:", self.cx.control_flow_stack.len());
+                for (i, target) in self.cx.control_flow_stack.iter().enumerate() {
+                    match target {
+                        ControlFlowTarget::Loop { block, continue_block, .. } => {
+                            eprintln!("  [{}] Loop {{ block: bb{}, continue_block: bb{} }}", i, block.0, continue_block.0);
+                        }
+                        _ => {
+                            eprintln!("  [{}] {:?} {{ block: bb{} }}", i, std::mem::discriminant(target), target.block().0);
+                        }
+                    }
+                }
+                panic!("Expected continue target to be scheduled for bb{}", block.0)
+            });
 
         ReactiveStatement::Terminal(ReactiveTerminalStatement {
             terminal: ReactiveTerminal::Continue {

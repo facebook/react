@@ -388,9 +388,33 @@ pub fn compile_fn(
     let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
 
-    let reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env);
-    let debug_reactive = react_compiler_reactive_scopes::debug_reactive_function(&reactive_fn, &env);
-    context.log_debug(DebugLogEntry::new("BuildReactiveFunction", debug_reactive));
+    let reactive_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env);
+        react_compiler_reactive_scopes::debug_reactive_function(&reactive_fn, &env)
+    }));
+    match reactive_result {
+        Ok(debug_reactive) => {
+            context.log_debug(DebugLogEntry::new("BuildReactiveFunction", debug_reactive));
+        }
+        Err(e) => {
+            let msg = if let Some(s) = e.downcast_ref::<String>() {
+                s.clone()
+            } else if let Some(s) = e.downcast_ref::<&str>() {
+                s.to_string()
+            } else {
+                "unknown panic".to_string()
+            };
+            let mut err = CompilerError::new();
+            err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
+                category: react_compiler_diagnostics::ErrorCategory::Invariant,
+                reason: msg,
+                description: None,
+                loc: None,
+                suggestions: None,
+            });
+            return Err(err);
+        }
+    }
 
     // TODO: port assertWellFormedBreakTargets
     context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
