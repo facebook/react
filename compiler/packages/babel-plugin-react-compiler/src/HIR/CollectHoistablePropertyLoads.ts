@@ -167,9 +167,21 @@ type CollectHoistablePropertyLoadsContext = {
   nestedFnImmutableContext: ReadonlySet<IdentifierId> | null;
   /**
    * Functions which are assumed to be eventually called (as opposed to ones which might
-   * not be called, e.g. the 0th argument of Array.map)
+   * not be called, e.g. the 0th argument of Array.map).
+   *
+   * Split into two categories:
+   * - syncInvoked: Functions called synchronously during render (direct calls).
+   *   Property accesses from these can safely prove non-nullness at the outer scope.
+   * - deferredInvoked: Functions invoked later (JSX event handlers, hook callbacks,
+   *   returned functions). Property accesses from these should NOT prove non-nullness
+   *   at the outer scope because they don't execute during render.
    */
-  assumedInvokedFns: ReadonlySet<LoweredFunction>;
+  assumedInvokedFns: AssumedInvokedFunctions;
+};
+
+type AssumedInvokedFunctions = {
+  syncInvoked: ReadonlySet<LoweredFunction>;
+  deferredInvoked: ReadonlySet<LoweredFunction>;
 };
 function collectHoistablePropertyLoadsImpl(
   fn: HIRFunction,
@@ -429,7 +441,11 @@ function collectNonNullsInBlocks(
       }
       if (instr.value.kind === 'FunctionExpression') {
         const innerFn = instr.value.loweredFunc;
-        if (context.assumedInvokedFns.has(innerFn)) {
+        const isSyncInvoked =
+          context.assumedInvokedFns.syncInvoked.has(innerFn);
+        const isDeferredInvoked =
+          context.assumedInvokedFns.deferredInvoked.has(innerFn);
+        if (isSyncInvoked || isDeferredInvoked) {
           const innerHoistableMap = collectHoistablePropertyLoadsImpl(
             innerFn.func,
             {
@@ -445,11 +461,23 @@ function collectNonNullsInBlocks(
                 ),
             },
           );
-          const innerHoistables = assertNonNull(
-            innerHoistableMap.get(innerFn.func.body.entry),
-          );
-          for (const entry of innerHoistables.assumedNonNullObjects) {
-            assumedNonNullObjects.add(entry);
+          /**
+           * Only propagate assumedNonNullObjects from synchronously-invoked
+           * inner functions (direct calls during render). Deferred functions
+           * (JSX event handlers, hook callbacks, returned functions) don't
+           * execute during render, so their property accesses cannot prove
+           * non-nullness at render time.
+           *
+           * See: https://github.com/facebook/react/issues/34752
+           *      https://github.com/facebook/react/issues/35762
+           */
+          if (isSyncInvoked) {
+            const innerHoistables = assertNonNull(
+              innerHoistableMap.get(innerFn.func.body.entry),
+            );
+            for (const entry of innerHoistables.assumedNonNullObjects) {
+              assumedNonNullObjects.add(entry);
+            }
           }
         }
       } else if (
@@ -700,8 +728,9 @@ function getAssumedInvokedFunctions(
     IdentifierId,
     {fn: LoweredFunction; mayInvoke: Set<LoweredFunction>}
   > = new Map(),
-): ReadonlySet<LoweredFunction> {
-  const hoistableFunctions = new Set<LoweredFunction>();
+): AssumedInvokedFunctions {
+  const syncInvoked = new Set<LoweredFunction>();
+  const deferredInvoked = new Set<LoweredFunction>();
   /**
    * Step 1: Conservatively collect identifier to function expression mappings
    */
@@ -734,6 +763,13 @@ function getAssumedInvokedFunctions(
    * Step 2: Forward pass to do analysis of assumed function calls. Note that
    * this is conservative and does not count indirect references through
    * containers (e.g. `return {cb: () => {...}})`).
+   *
+   * Functions are classified into two categories:
+   * - syncInvoked: Called synchronously during render (direct function calls).
+   *   Their property accesses can safely prove non-nullness at the call site.
+   * - deferredInvoked: Called later, not during render (JSX event handlers,
+   *   hook callbacks, returned functions). Their property accesses should NOT
+   *   be used to prove non-nullness during render.
    */
   for (const block of fn.body.blocks.values()) {
     for (const {lvalue, value} of block.instructions) {
@@ -742,24 +778,29 @@ function getAssumedInvokedFunctions(
         const maybeHook = getHookKind(fn.env, callee.identifier);
         const maybeLoweredFunc = temporaries.get(callee.identifier.id);
         if (maybeLoweredFunc != null) {
-          // Direct calls
-          hoistableFunctions.add(maybeLoweredFunc.fn);
+          // Direct calls execute synchronously during render
+          syncInvoked.add(maybeLoweredFunc.fn);
         } else if (maybeHook != null) {
           /**
-           * Assume arguments to all hooks are safe to invoke
+           * Hook arguments are classified as deferred — they may or may not
+           * be invoked during render. Note: useMemo/useCallback are already
+           * lowered to StartMemoize/FinishMemoize before this pass runs
+           * (dropManualMemoization is always enabled), so they won't appear
+           * as hook CallExpressions here.
            */
           for (const arg of value.args) {
             if (arg.kind === 'Identifier') {
               const maybeLoweredFunc = temporaries.get(arg.identifier.id);
               if (maybeLoweredFunc != null) {
-                hoistableFunctions.add(maybeLoweredFunc.fn);
+                deferredInvoked.add(maybeLoweredFunc.fn);
               }
             }
           }
         }
       } else if (value.kind === 'JsxExpression') {
         /**
-         * Assume JSX attributes and children are safe to invoke
+         * JSX attributes and children are deferred — event handlers like
+         * onClick don't execute during render.
          */
         for (const attr of value.props) {
           if (attr.kind === 'JsxSpreadAttribute') {
@@ -767,13 +808,13 @@ function getAssumedInvokedFunctions(
           }
           const maybeLoweredFunc = temporaries.get(attr.place.identifier.id);
           if (maybeLoweredFunc != null) {
-            hoistableFunctions.add(maybeLoweredFunc.fn);
+            deferredInvoked.add(maybeLoweredFunc.fn);
           }
         }
         for (const child of value.children ?? []) {
           const maybeLoweredFunc = temporaries.get(child.identifier.id);
           if (maybeLoweredFunc != null) {
-            hoistableFunctions.add(maybeLoweredFunc.fn);
+            deferredInvoked.add(maybeLoweredFunc.fn);
           }
         }
       } else if (value.kind === 'FunctionExpression') {
@@ -792,7 +833,10 @@ function getAssumedInvokedFunctions(
         );
         const maybeLoweredFunc = temporaries.get(lvalue.identifier.id);
         if (maybeLoweredFunc != null) {
-          for (const called of lambdasCalled) {
+          for (const called of lambdasCalled.syncInvoked) {
+            maybeLoweredFunc.mayInvoke.add(called);
+          }
+          for (const called of lambdasCalled.deferredInvoked) {
             maybeLoweredFunc.mayInvoke.add(called);
           }
         }
@@ -800,23 +844,39 @@ function getAssumedInvokedFunctions(
     }
     if (block.terminal.kind === 'return') {
       /**
-       * Assume directly returned functions are safe to call
+       * Returned functions are deferred — they execute in the caller's
+       * context, not during this render.
        */
       const maybeLoweredFunc = temporaries.get(
         block.terminal.value.identifier.id,
       );
       if (maybeLoweredFunc != null) {
-        hoistableFunctions.add(maybeLoweredFunc.fn);
+        deferredInvoked.add(maybeLoweredFunc.fn);
       }
     }
   }
 
+  /**
+   * Step 3: Transitive closure. If a function is assumed invoked, then all
+   * functions it may invoke are also assumed invoked. The category (sync vs
+   * deferred) propagates from the parent: if a sync function calls another
+   * function, that function is also sync. If a deferred function calls
+   * another function, that function is also deferred. If a function appears
+   * in both sets, sync wins (it IS called synchronously via at least one path).
+   */
   for (const [_, {fn, mayInvoke}] of temporaries) {
-    if (hoistableFunctions.has(fn)) {
+    if (syncInvoked.has(fn)) {
       for (const called of mayInvoke) {
-        hoistableFunctions.add(called);
+        syncInvoked.add(called);
+      }
+    }
+    if (deferredInvoked.has(fn)) {
+      for (const called of mayInvoke) {
+        if (!syncInvoked.has(called)) {
+          deferredInvoked.add(called);
+        }
       }
     }
   }
-  return hoistableFunctions;
+  return {syncInvoked, deferredInvoked};
 }
