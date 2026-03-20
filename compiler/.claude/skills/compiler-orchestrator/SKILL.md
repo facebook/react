@@ -175,17 +175,30 @@ If `$ARGUMENTS` is `status`, stop here.
 
 #### 3a. FIX mode (frontier is a ported pass with failures)
 
-Launch a single `general-purpose` subagent to fix the failures. The subagent prompt MUST include:
+Launch two subagents **in parallel** to diagnose the failures:
+
+1. **Review subagent**: Run `/compiler-review` on the failing pass to identify obvious issues — missing features, incorrect porting of logic, divergences from the TypeScript source.
+
+2. **Analysis subagent**: A `general-purpose` subagent that investigates the actual test failures. Its prompt MUST include:
+   - **The pass name** and its position number
+   - **The full test failure output** (copy it verbatim)
+   - **Instructions**: Run failing fixtures individually with `bash compiler/scripts/test-rust-port.sh <PassName> <fixture-path> --no-color` to get diffs. Analyze the diffs to determine what the Rust port is doing wrong. Read the corresponding TypeScript source to understand expected behavior. Report findings but do NOT make fixes yet.
+   - **Architecture guide path**: `compiler/docs/rust-port/rust-port-architecture.md`
+   - **Pipeline path**: `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
+
+After both subagents complete, **synthesize their results** to determine a plan of action. The review may surface porting gaps that explain the test failures, and the failure analysis may reveal issues the review missed. Use both inputs to form a complete picture.
+
+Then launch a single `general-purpose` subagent to fix the failures. The subagent prompt MUST include:
 
 1. **The pass name** and its position number
-2. **The full test failure output** from the discovery subagent (copy it verbatim)
-3. **Instructions**: Fix the test failures in the Rust port. Do NOT re-port from scratch. Read the corresponding TypeScript source to understand expected behavior, then fix the Rust implementation to match. After fixing, run `bash compiler/scripts/test-rust-port.sh <PassName>` to verify. Repeat until 0 failures or you've made 3 fix attempts without progress.
+2. **The synthesized diagnosis** — both the review findings and the failure analysis
+3. **Instructions**: Fix the test failures in the Rust port. Do NOT re-port from scratch. Use the diagnosis to guide fixes. After fixing, run `bash compiler/scripts/test-rust-port.sh <PassName>` to verify. Repeat until 0 failures or you've made 3 fix attempts without progress.
 4. **Architecture guide path**: `compiler/docs/rust-port/rust-port-architecture.md`
 5. **Pipeline path**: `compiler/crates/react_compiler/src/entrypoint/pipeline.rs`
 
-After the subagent completes:
+After the fix subagent completes:
 1. Re-run `bash compiler/scripts/test-rust-port.sh --json 2>/dev/null` to get updated counts and frontier
-2. If still failing, launch the subagent again with the updated failure list (max 3 rounds total)
+2. If still failing, repeat the parallel diagnosis + fix cycle (max 3 rounds total)
 3. Once clean (or after 3 rounds), update the orchestrator log Status section and add a log entry
 4. Go to Step 4 (Review and Commit)
 
