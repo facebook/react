@@ -429,7 +429,32 @@ function collectNonNullsInBlocks(
       }
       if (instr.value.kind === 'FunctionExpression') {
         const innerFn = instr.value.loweredFunc;
-        if (context.assumedInvokedFns.has(innerFn)) {
+        /**
+         * Only propagate non-null assumptions from inner functions when we are
+         * at the top-level function scope (nestedFnImmutableContext === null).
+         *
+         * When already inside a nested function (e.g. a useEffect callback),
+         * we must NOT further recurse into its inner functions. Otherwise,
+         * property accesses inside a conditionally-called inner function (e.g.
+         * `if (x) inner()`) incorrectly mark `x` as non-null in the parent
+         * function's entry block, causing optional chains (`x?.foo`) to be
+         * unsafely removed.
+         *
+         * Example of the bug this prevents:
+         *   useEffect(() => {
+         *     async function log() { console.log(x.os) }  // non-optional
+         *     if (x) log();  // conditional call
+         *   }, [x]);
+         *   // Compiler must NOT infer x is non-null from log()'s body
+         *
+         * Functions defined directly in the component scope (depth 0) are
+         * still processed correctly, since nestedFnImmutableContext is null
+         * at that level.
+         */
+        if (
+          context.nestedFnImmutableContext === null &&
+          context.assumedInvokedFns.has(innerFn)
+        ) {
           const innerHoistableMap = collectHoistablePropertyLoadsImpl(
             innerFn.func,
             {
