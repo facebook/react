@@ -247,3 +247,21 @@ Ported 12 passes in a single session, completing all 31 HIR passes:
 - #31 PropagateScopeDependenciesHIR (2382 lines) — the final HIR pass
 Overall: 1342/1717 passing (78%). 375 failures from pre-existing upstream diffs.
 Next pass is #32 BuildReactiveFunction — BLOCKED, needs test infra extension.
+
+## 20260320-133636 Fix remaining failures: 375→80
+
+Fixed 295 of 375 failures across multiple passes:
+- VED pipeline guard: always run VED (TS 'off' is truthy). Fixed 58 failures.
+- OutlineFunctions: debug printer includes outlined function bodies, UID naming
+  convention matches Babel, depth-first name allocation ordering. Fixed ~125.
+- Validation passes ported: ValidateNoSetStateInRender, ValidateExhaustiveDependencies,
+  ValidateNoJSXInTryStatement, ValidateNoSetStateInEffects. Fixed ~40.
+- PropagateScopeDependenciesHIR: BTreeSet determinism, inner function hoistable
+  property loads, propagation result fix, deferred dependency check. Fixed ~30.
+- ANALYSIS.md issues: globals.rs callee effects, infer_types fresh names map,
+  RewriteInstructionKinds Phase 2 ordering + invariant restoration. Fixed ~10.
+- Test harness: normalizeIds reset at function boundaries. Fixed ~15.
+Remaining 80 failures: RIKBR (23, VED false positive cascade), PSDH (20),
+ValidateNoSetStateInRender (13), OutlineFunctions (9), InferReactivePlaces (7),
+MergeOverlapping (3), others (5).
+Overall: 1637/1717 passing (95.3%).
