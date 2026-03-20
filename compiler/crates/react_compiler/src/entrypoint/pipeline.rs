@@ -388,17 +388,20 @@ pub fn compile_fn(
     let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
 
-    // TODO: port buildReactiveFunction (kind: 'reactive', skipped by test harness)
+    let reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env);
+    let debug_reactive = react_compiler_reactive_scopes::debug_reactive_function(&reactive_fn, &env);
+    context.log_debug(DebugLogEntry::new("BuildReactiveFunction", debug_reactive));
+
     // TODO: port assertWellFormedBreakTargets
     context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
-    // TODO: port pruneUnusedLabels (kind: 'reactive', skipped by test harness)
+    // TODO: port pruneUnusedLabels (kind: 'reactive')
     // TODO: port assertScopeInstructionsWithinScopes
     context.log_debug(DebugLogEntry::new("AssertScopeInstructionsWithinScopes", "ok".to_string()));
     // TODO: port pruneNonEscapingScopes, pruneNonReactiveDependencies, pruneUnusedScopes,
     //       mergeReactiveScopesThatInvalidateTogether, pruneAlwaysInvalidatingScopes,
     //       propagateEarlyReturns, pruneUnusedLValues, promoteUsedTemporaries,
     //       extractScopeDeclarationsFromDestructuring, stabilizeBlockIds,
-    //       renameVariables, pruneHoistedContexts (all kind: 'reactive', skipped by test harness)
+    //       renameVariables, pruneHoistedContexts (all kind: 'reactive')
 
     if env.config.enable_preserve_existing_memoization_guarantees
         || env.config.validate_preserve_existing_memoization_guarantees

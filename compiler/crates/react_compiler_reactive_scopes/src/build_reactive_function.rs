@@ -1,0 +1,1389 @@
+// Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
+
+//! Converts the HIR CFG into a tree-structured ReactiveFunction.
+//!
+//! Corresponds to `src/ReactiveScopes/BuildReactiveFunction.ts`.
+
+use std::collections::HashSet;
+
+use react_compiler_diagnostics::SourceLocation;
+use react_compiler_hir::environment::Environment;
+use react_compiler_hir::{
+    BasicBlock, BlockId, EvaluationOrder, GotoVariant, HirFunction, InstructionValue, Place,
+    ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveLabel, ReactiveStatement,
+    ReactiveTerminal, ReactiveTerminalStatement, ReactiveTerminalTargetKind, ReactiveScopeBlock,
+    PrunedReactiveScopeBlock, ReactiveSwitchCase, ReactiveValue, Terminal,
+};
+
+/// Convert the HIR CFG into a tree-structured ReactiveFunction.
+pub fn build_reactive_function(hir: &HirFunction, env: &Environment) -> ReactiveFunction {
+    let mut ctx = Context::new(hir);
+    let mut driver = Driver { cx: &mut ctx, hir, env };
+
+    let entry_block_id = hir.body.entry;
+    let mut body = Vec::new();
+    driver.visit_block(entry_block_id, &mut body);
+
+    ReactiveFunction {
+        loc: hir.loc,
+        id: hir.id.clone(),
+        name_hint: hir.name_hint.clone(),
+        params: hir.params.clone(),
+        generator: hir.generator,
+        is_async: hir.is_async,
+        body,
+        directives: hir.directives.clone(),
+    }
+}
+
+// =============================================================================
+// ControlFlowTarget
+// =============================================================================
+
+#[derive(Debug)]
+enum ControlFlowTarget {
+    If {
+        block: BlockId,
+        id: u32,
+    },
+    Switch {
+        block: BlockId,
+        id: u32,
+    },
+    Case {
+        block: BlockId,
+        id: u32,
+    },
+    Loop {
+        block: BlockId,
+        owns_block: bool,
+        continue_block: BlockId,
+        loop_block: Option<BlockId>,
+        owns_loop: bool,
+        id: u32,
+    },
+}
+
+impl ControlFlowTarget {
+    fn block(&self) -> BlockId {
+        match self {
+            ControlFlowTarget::If { block, .. }
+            | ControlFlowTarget::Switch { block, .. }
+            | ControlFlowTarget::Case { block, .. }
+            | ControlFlowTarget::Loop { block, .. } => *block,
+        }
+    }
+
+    fn id(&self) -> u32 {
+        match self {
+            ControlFlowTarget::If { id, .. }
+            | ControlFlowTarget::Switch { id, .. }
+            | ControlFlowTarget::Case { id, .. }
+            | ControlFlowTarget::Loop { id, .. } => *id,
+        }
+    }
+
+    fn is_loop(&self) -> bool {
+        matches!(self, ControlFlowTarget::Loop { .. })
+    }
+}
+
+// =============================================================================
+// Context
+// =============================================================================
+
+struct Context<'a> {
+    ir: &'a HirFunction,
+    next_schedule_id: u32,
+    emitted: HashSet<BlockId>,
+    scope_fallthroughs: HashSet<BlockId>,
+    scheduled: HashSet<BlockId>,
+    catch_handlers: HashSet<BlockId>,
+    control_flow_stack: Vec<ControlFlowTarget>,
+}
+
+impl<'a> Context<'a> {
+    fn new(ir: &'a HirFunction) -> Self {
+        Self {
+            ir,
+            next_schedule_id: 0,
+            emitted: HashSet::new(),
+            scope_fallthroughs: HashSet::new(),
+            scheduled: HashSet::new(),
+            catch_handlers: HashSet::new(),
+            control_flow_stack: Vec::new(),
+        }
+    }
+
+    fn block(&self, id: BlockId) -> &BasicBlock {
+        &self.ir.body.blocks[&id]
+    }
+
+    fn schedule_catch_handler(&mut self, block: BlockId) {
+        self.catch_handlers.insert(block);
+    }
+
+    fn reachable(&self, id: BlockId) -> bool {
+        let block = self.block(id);
+        !matches!(block.terminal, Terminal::Unreachable { .. })
+    }
+
+    fn schedule(&mut self, block: BlockId, target_type: &str) -> u32 {
+        let id = self.next_schedule_id;
+        self.next_schedule_id += 1;
+        assert!(
+            !self.scheduled.contains(&block),
+            "Break block is already scheduled: bb{}",
+            block.0
+        );
+        self.scheduled.insert(block);
+        let target = match target_type {
+            "if" => ControlFlowTarget::If { block, id },
+            "switch" => ControlFlowTarget::Switch { block, id },
+            "case" => ControlFlowTarget::Case { block, id },
+            _ => panic!("Unknown target type: {}", target_type),
+        };
+        self.control_flow_stack.push(target);
+        id
+    }
+
+    fn schedule_loop(
+        &mut self,
+        fallthrough_block: BlockId,
+        continue_block: BlockId,
+        loop_block: Option<BlockId>,
+    ) -> u32 {
+        let id = self.next_schedule_id;
+        self.next_schedule_id += 1;
+        let owns_block = !self.scheduled.contains(&fallthrough_block);
+        self.scheduled.insert(fallthrough_block);
+        assert!(
+            !self.scheduled.contains(&continue_block),
+            "Continue block is already scheduled: bb{}",
+            continue_block.0
+        );
+        self.scheduled.insert(continue_block);
+        let mut owns_loop = false;
+        if let Some(lb) = loop_block {
+            owns_loop = !self.scheduled.contains(&lb);
+            self.scheduled.insert(lb);
+        }
+
+        self.control_flow_stack.push(ControlFlowTarget::Loop {
+            block: fallthrough_block,
+            owns_block,
+            continue_block,
+            loop_block,
+            owns_loop,
+            id,
+        });
+        id
+    }
+
+    fn unschedule(&mut self, schedule_id: u32) {
+        let last = self
+            .control_flow_stack
+            .pop()
+            .expect("Can only unschedule the last target");
+        assert_eq!(
+            last.id(),
+            schedule_id,
+            "Can only unschedule the last target"
+        );
+        match &last {
+            ControlFlowTarget::Loop {
+                block,
+                owns_block,
+                continue_block,
+                loop_block,
+                owns_loop,
+                ..
+            } => {
+                if *owns_block {
+                    self.scheduled.remove(block);
+                }
+                self.scheduled.remove(continue_block);
+                if *owns_loop {
+                    if let Some(lb) = loop_block {
+                        self.scheduled.remove(lb);
+                    }
+                }
+            }
+            _ => {
+                self.scheduled.remove(&last.block());
+            }
+        }
+    }
+
+    fn unschedule_all(&mut self, schedule_ids: &[u32]) {
+        for &id in schedule_ids.iter().rev() {
+            self.unschedule(id);
+        }
+    }
+
+    fn is_scheduled(&self, block: BlockId) -> bool {
+        self.scheduled.contains(&block) || self.catch_handlers.contains(&block)
+    }
+
+    fn get_break_target(
+        &self,
+        block: BlockId,
+    ) -> (BlockId, ReactiveTerminalTargetKind) {
+        let mut has_preceding_loop = false;
+        for i in (0..self.control_flow_stack.len()).rev() {
+            let target = &self.control_flow_stack[i];
+            if target.block() == block {
+                let kind = if target.is_loop() {
+                    if has_preceding_loop {
+                        ReactiveTerminalTargetKind::Labeled
+                    } else {
+                        ReactiveTerminalTargetKind::Unlabeled
+                    }
+                } else if i == self.control_flow_stack.len() - 1 {
+                    ReactiveTerminalTargetKind::Implicit
+                } else {
+                    ReactiveTerminalTargetKind::Labeled
+                };
+                return (target.block(), kind);
+            }
+            has_preceding_loop = has_preceding_loop || target.is_loop();
+        }
+        panic!("Expected a break target for bb{}", block.0);
+    }
+
+    fn get_continue_target(
+        &self,
+        block: BlockId,
+    ) -> Option<(BlockId, ReactiveTerminalTargetKind)> {
+        let mut has_preceding_loop = false;
+        for i in (0..self.control_flow_stack.len()).rev() {
+            let target = &self.control_flow_stack[i];
+            if let ControlFlowTarget::Loop {
+                block: fallthrough_block,
+                continue_block,
+                ..
+            } = target
+            {
+                if *continue_block == block {
+                    let kind = if has_preceding_loop {
+                        ReactiveTerminalTargetKind::Labeled
+                    } else if i == self.control_flow_stack.len() - 1 {
+                        ReactiveTerminalTargetKind::Implicit
+                    } else {
+                        ReactiveTerminalTargetKind::Unlabeled
+                    };
+                    return Some((*fallthrough_block, kind));
+                }
+            }
+            has_preceding_loop = has_preceding_loop || target.is_loop();
+        }
+        None
+    }
+}
+
+// =============================================================================
+// Driver
+// =============================================================================
+
+struct Driver<'a, 'b> {
+    cx: &'b mut Context<'a>,
+    hir: &'a HirFunction,
+    #[allow(dead_code)]
+    env: &'a Environment,
+}
+
+impl<'a, 'b> Driver<'a, 'b> {
+    fn traverse_block(&mut self, block_id: BlockId) -> ReactiveBlock {
+        let mut block_value = Vec::new();
+        self.visit_block(block_id, &mut block_value);
+        block_value
+    }
+
+    fn visit_block(&mut self, block_id: BlockId, block_value: &mut ReactiveBlock) {
+        // Extract data from block before any mutable operations
+        let block = &self.hir.body.blocks[&block_id];
+        let block_id_val = block.id;
+        let instructions: Vec<_> = block.instructions.clone();
+        let terminal = block.terminal.clone();
+
+        assert!(
+            self.cx.emitted.insert(block_id_val),
+            "Block bb{} was already emitted",
+            block_id_val.0
+        );
+
+        // Emit instructions
+        for instr_id in &instructions {
+            let instr = &self.hir.instructions[instr_id.0 as usize];
+            block_value.push(ReactiveStatement::Instruction(ReactiveInstruction {
+                id: instr.id,
+                lvalue: Some(instr.lvalue.clone()),
+                value: ReactiveValue::Instruction(instr.value.clone()),
+                effects: instr.effects.clone(),
+                loc: instr.loc,
+            }));
+        }
+
+        // Process terminal
+        let mut schedule_ids: Vec<u32> = Vec::new();
+
+        match &terminal {
+            Terminal::If {
+                test,
+                consequent,
+                alternate,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                }
+
+                let consequent_block = if self.cx.is_scheduled(*consequent) {
+                    Vec::new()
+                } else {
+                    self.traverse_block(*consequent)
+                };
+
+                let alternate_block = if self.cx.is_scheduled(*alternate) {
+                    None
+                } else {
+                    Some(self.traverse_block(*alternate))
+                };
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::If {
+                        test: test.clone(),
+                        consequent: consequent_block,
+                        alternate: alternate_block,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::Switch {
+                test,
+                cases,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "switch"));
+                }
+
+                let mut reactive_cases = Vec::new();
+                for case in cases {
+                    let case_block_id = case.block;
+                    if !self.cx.is_scheduled(case_block_id) {
+                        schedule_ids.push(self.cx.schedule(case_block_id, "case"));
+                    }
+
+                    let case_block = if self.cx.is_scheduled(case_block_id) {
+                        // After scheduling above, it's scheduled, so check if it was
+                        // already scheduled before we did it
+                        None
+                    } else {
+                        Some(self.traverse_block(case_block_id))
+                    };
+
+                    reactive_cases.push(ReactiveSwitchCase {
+                        test: case.test.clone(),
+                        block: case_block,
+                    });
+                }
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::Switch {
+                        test: test.clone(),
+                        cases: reactive_cases,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::DoWhile {
+                loop_block,
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                schedule_ids.push(self.cx.schedule_loop(
+                    *fallthrough,
+                    *test,
+                    Some(*loop_block),
+                ));
+
+                let loop_body = self.traverse_block(*loop_block);
+                let test_result = self.visit_value_block(*test, *loc, None);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::DoWhile {
+                        loop_block: loop_body,
+                        test: test_result.value,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    if !self.cx.emitted.contains(&ft) {
+                        self.visit_block(ft, block_value);
+                    }
+                }
+            }
+
+            Terminal::While {
+                test,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                schedule_ids.push(self.cx.schedule_loop(
+                    *fallthrough,
+                    *test,
+                    Some(*loop_block),
+                ));
+
+                let test_result = self.visit_value_block(*test, *loc, None);
+                let loop_body = self.traverse_block(*loop_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::While {
+                        test: test_result.value,
+                        loop_block: loop_body,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    if !self.cx.emitted.contains(&ft) {
+                        self.visit_block(ft, block_value);
+                    }
+                }
+            }
+
+            Terminal::For {
+                init,
+                test,
+                update,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                schedule_ids.push(self.cx.schedule_loop(
+                    *fallthrough,
+                    *test,
+                    Some(*loop_block),
+                ));
+
+                let init_result = self.visit_value_block(*init, *loc, None);
+                let test_result = self.visit_value_block(*test, *loc, None);
+                let update_result = update.map(|u| self.visit_value_block(u, *loc, None));
+                let loop_body = self.traverse_block(*loop_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::For {
+                        init: init_result.value,
+                        test: test_result.value,
+                        update: update_result.map(|r| r.value),
+                        loop_block: loop_body,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    if !self.cx.emitted.contains(&ft) {
+                        self.visit_block(ft, block_value);
+                    }
+                }
+            }
+
+            Terminal::ForOf {
+                init,
+                test,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                schedule_ids.push(self.cx.schedule_loop(
+                    *fallthrough,
+                    *test,
+                    Some(*loop_block),
+                ));
+
+                let init_result = self.visit_value_block(*init, *loc, None);
+                let test_result = self.visit_value_block(*test, *loc, None);
+                let loop_body = self.traverse_block(*loop_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::ForOf {
+                        init: init_result.value,
+                        test: test_result.value,
+                        loop_block: loop_body,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    if !self.cx.emitted.contains(&ft) {
+                        self.visit_block(ft, block_value);
+                    }
+                }
+            }
+
+            Terminal::ForIn {
+                init,
+                loop_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                schedule_ids.push(self.cx.schedule_loop(
+                    *fallthrough,
+                    *init,
+                    Some(*loop_block),
+                ));
+
+                let init_result = self.visit_value_block(*init, *loc, None);
+                let loop_body = self.traverse_block(*loop_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::ForIn {
+                        init: init_result.value,
+                        loop_block: loop_body,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    if !self.cx.emitted.contains(&ft) {
+                        self.visit_block(ft, block_value);
+                    }
+                }
+            }
+
+            Terminal::Label {
+                block: label_block,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                }
+
+                assert!(
+                    !self.cx.is_scheduled(*label_block),
+                    "Unexpected 'label' where the block is already scheduled"
+                );
+                let label_body = self.traverse_block(*label_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::Label {
+                        block: label_body,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::Sequence { .. }
+            | Terminal::Optional { .. }
+            | Terminal::Ternary { .. }
+            | Terminal::Logical { .. } => {
+                let fallthrough = match &terminal {
+                    Terminal::Sequence { fallthrough, .. }
+                    | Terminal::Optional { fallthrough, .. }
+                    | Terminal::Ternary { fallthrough, .. }
+                    | Terminal::Logical { fallthrough, .. } => *fallthrough,
+                    _ => unreachable!(),
+                };
+                let fallthrough_id = if !self.cx.is_scheduled(fallthrough) {
+                    Some(fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                }
+
+                let result = self.visit_value_block_terminal(&terminal);
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Instruction(ReactiveInstruction {
+                    id: result.id,
+                    lvalue: Some(result.place),
+                    value: result.value,
+                    effects: None,
+                    loc: *terminal_loc(&terminal),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::Goto {
+                block: goto_block,
+                variant,
+                id,
+                loc,
+            } => {
+                match variant {
+                    GotoVariant::Break => {
+                        if let Some(stmt) = self.visit_break(*goto_block, *id, *loc) {
+                            block_value.push(stmt);
+                        }
+                    }
+                    GotoVariant::Continue => {
+                        let stmt = self.visit_continue(*goto_block, *id, *loc);
+                        block_value.push(stmt);
+                    }
+                    GotoVariant::Try => {
+                        // noop
+                    }
+                }
+            }
+
+            Terminal::MaybeThrow {
+                continuation, ..
+            } => {
+                if !self.cx.is_scheduled(*continuation) {
+                    self.visit_block(*continuation, block_value);
+                }
+            }
+
+            Terminal::Try {
+                block: try_block,
+                handler_binding,
+                handler,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let fallthrough_id = if self.cx.reachable(*fallthrough)
+                    && !self.cx.is_scheduled(*fallthrough)
+                {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                }
+                self.cx.schedule_catch_handler(*handler);
+
+                let try_body = self.traverse_block(*try_block);
+                let handler_body = self.traverse_block(*handler);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::Try {
+                        block: try_body,
+                        handler_binding: handler_binding.clone(),
+                        handler: handler_body,
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: fallthrough_id.map(|ft| ReactiveLabel {
+                        id: ft,
+                        implicit: false,
+                    }),
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::Scope {
+                fallthrough,
+                block: scope_block,
+                scope,
+                ..
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    self.cx.scope_fallthroughs.insert(ft);
+                }
+
+                assert!(
+                    !self.cx.is_scheduled(*scope_block),
+                    "Unexpected 'scope' where the block is already scheduled"
+                );
+                let scope_body = self.traverse_block(*scope_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::Scope(ReactiveScopeBlock {
+                    scope: *scope,
+                    instructions: scope_body,
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::PrunedScope {
+                fallthrough,
+                block: scope_block,
+                scope,
+                ..
+            } => {
+                let fallthrough_id = if !self.cx.is_scheduled(*fallthrough) {
+                    Some(*fallthrough)
+                } else {
+                    None
+                };
+                if let Some(ft) = fallthrough_id {
+                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    self.cx.scope_fallthroughs.insert(ft);
+                }
+
+                assert!(
+                    !self.cx.is_scheduled(*scope_block),
+                    "Unexpected 'scope' where the block is already scheduled"
+                );
+                let scope_body = self.traverse_block(*scope_block);
+
+                self.cx.unschedule_all(&schedule_ids);
+                block_value.push(ReactiveStatement::PrunedScope(PrunedReactiveScopeBlock {
+                    scope: *scope,
+                    instructions: scope_body,
+                }));
+
+                if let Some(ft) = fallthrough_id {
+                    self.visit_block(ft, block_value);
+                }
+            }
+
+            Terminal::Return { value, id, loc, .. } => {
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::Return {
+                        value: value.clone(),
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: None,
+                }));
+            }
+
+            Terminal::Throw { value, id, loc } => {
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::Throw {
+                        value: value.clone(),
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: None,
+                }));
+            }
+
+            Terminal::Unreachable { .. } => {
+                // noop
+            }
+
+            Terminal::Unsupported { .. } => {
+                panic!("Unexpected unsupported terminal");
+            }
+
+            Terminal::Branch { .. } => {
+                panic!("Unexpected branch terminal in visit_block");
+            }
+        }
+    }
+
+    // =========================================================================
+    // Value block processing
+    // =========================================================================
+
+    fn visit_value_block(
+        &mut self,
+        block_id: BlockId,
+        loc: Option<SourceLocation>,
+        fallthrough: Option<BlockId>,
+    ) -> ValueBlockResult {
+        let block = &self.hir.body.blocks[&block_id];
+        let block_id_val = block.id;
+        let terminal = block.terminal.clone();
+        let instructions: Vec<_> = block.instructions.clone();
+
+        // If we've reached the fallthrough, stop
+        if let Some(ft) = fallthrough {
+            if block_id == ft {
+                panic!(
+                    "Did not expect to reach the fallthrough of a value block (bb{})",
+                    block_id.0
+                );
+            }
+        }
+
+        match &terminal {
+            Terminal::Branch {
+                test,
+                id: term_id,
+                ..
+            } => {
+                if instructions.is_empty() {
+                    ValueBlockResult {
+                        block: block_id_val,
+                        place: test.clone(),
+                        value: ReactiveValue::Instruction(InstructionValue::LoadLocal {
+                            place: test.clone(),
+                            loc: test.loc,
+                        }),
+                        id: *term_id,
+                    }
+                } else {
+                    self.extract_value_block_result(&instructions, block_id_val, loc)
+                }
+            }
+            Terminal::Goto { .. } => {
+                assert!(
+                    !instructions.is_empty(),
+                    "Unexpected empty block with `goto` terminal (bb{})",
+                    block_id.0
+                );
+                self.extract_value_block_result(&instructions, block_id_val, loc)
+            }
+            Terminal::MaybeThrow {
+                continuation, ..
+            } => {
+                let continuation_id = *continuation;
+                let continuation_block = self.cx.block(continuation_id);
+                let cont_instructions_empty = continuation_block.instructions.is_empty();
+                let cont_is_goto = matches!(continuation_block.terminal, Terminal::Goto { .. });
+                let cont_block_id = continuation_block.id;
+
+                if cont_instructions_empty && cont_is_goto {
+                    self.extract_value_block_result(&instructions, cont_block_id, loc)
+                } else {
+                    let continuation = self.visit_value_block(
+                        continuation_id,
+                        loc,
+                        fallthrough,
+                    );
+                    self.wrap_with_sequence(&instructions, continuation, loc)
+                }
+            }
+            _ => {
+                // Value block ended in a value terminal
+                let init = self.visit_value_block_terminal(&terminal);
+                let init_fallthrough = init.fallthrough;
+                let init_instr = ReactiveInstruction {
+                    id: init.id,
+                    lvalue: Some(init.place),
+                    value: init.value,
+                    effects: None,
+                    loc,
+                };
+                let final_result = self.visit_value_block(init_fallthrough, loc, fallthrough);
+
+                // Combine block instructions + init instruction
+                let mut combined: Vec<_> = instructions.clone();
+                combined.push(react_compiler_hir::InstructionId(init_instr.id.0)); // Placeholder: we use the instr directly
+                // Actually we need to create instructions list differently here
+                // Let me reconstruct this properly using wrap_with_sequence
+                let all_instrs: Vec<ReactiveInstruction> = {
+                    let mut v: Vec<ReactiveInstruction> = instructions
+                        .iter()
+                        .map(|iid| {
+                            let instr = &self.hir.instructions[iid.0 as usize];
+                            ReactiveInstruction {
+                                id: instr.id,
+                                lvalue: Some(instr.lvalue.clone()),
+                                value: ReactiveValue::Instruction(instr.value.clone()),
+                                effects: instr.effects.clone(),
+                                loc: instr.loc,
+                            }
+                        })
+                        .collect();
+                    v.push(init_instr);
+                    v
+                };
+
+                if all_instrs.is_empty() {
+                    final_result
+                } else {
+                    ValueBlockResult {
+                        block: final_result.block,
+                        place: final_result.place.clone(),
+                        value: ReactiveValue::SequenceExpression {
+                            instructions: all_instrs,
+                            id: final_result.id,
+                            value: Box::new(final_result.value),
+                            loc,
+                        },
+                        id: final_result.id,
+                    }
+                }
+            }
+        }
+    }
+
+    fn visit_test_block(
+        &mut self,
+        test_block_id: BlockId,
+        loc: Option<SourceLocation>,
+        terminal_kind: &str,
+    ) -> TestBlockResult {
+        let test = self.visit_value_block(test_block_id, loc, None);
+        let test_block = &self.hir.body.blocks[&test.block];
+        match &test_block.terminal {
+            Terminal::Branch {
+                consequent,
+                alternate,
+                loc: branch_loc,
+                ..
+            } => TestBlockResult {
+                test,
+                consequent: *consequent,
+                alternate: *alternate,
+                branch_loc: *branch_loc,
+            },
+            other => {
+                panic!(
+                    "Expected a branch terminal for {} test block, got {:?}",
+                    terminal_kind,
+                    std::mem::discriminant(other)
+                );
+            }
+        }
+    }
+
+    fn visit_value_block_terminal(&mut self, terminal: &Terminal) -> ValueTerminalResult {
+        match terminal {
+            Terminal::Sequence {
+                block,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let block_result = self.visit_value_block(*block, *loc, Some(*fallthrough));
+                ValueTerminalResult {
+                    value: block_result.value,
+                    place: block_result.place,
+                    fallthrough: *fallthrough,
+                    id: *id,
+                }
+            }
+            Terminal::Optional {
+                optional,
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let test_result = self.visit_test_block(*test, *loc, "optional");
+                let consequent = self.visit_value_block(
+                    test_result.consequent,
+                    *loc,
+                    Some(*fallthrough),
+                );
+                let call = ReactiveValue::SequenceExpression {
+                    instructions: vec![ReactiveInstruction {
+                        id: test_result.test.id,
+                        lvalue: Some(test_result.test.place.clone()),
+                        value: test_result.test.value,
+                        effects: None,
+                        loc: test_result.branch_loc,
+                    }],
+                    id: consequent.id,
+                    value: Box::new(consequent.value),
+                    loc: *loc,
+                };
+                ValueTerminalResult {
+                    place: consequent.place,
+                    value: ReactiveValue::OptionalExpression {
+                        optional: *optional,
+                        value: Box::new(call),
+                        id: *id,
+                        loc: *loc,
+                    },
+                    fallthrough: *fallthrough,
+                    id: *id,
+                }
+            }
+            Terminal::Logical {
+                operator,
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let test_result = self.visit_test_block(*test, *loc, "logical");
+                let left_final = self.visit_value_block(
+                    test_result.consequent,
+                    *loc,
+                    Some(*fallthrough),
+                );
+                let left = ReactiveValue::SequenceExpression {
+                    instructions: vec![ReactiveInstruction {
+                        id: test_result.test.id,
+                        lvalue: Some(test_result.test.place.clone()),
+                        value: test_result.test.value,
+                        effects: None,
+                        loc: *loc,
+                    }],
+                    id: left_final.id,
+                    value: Box::new(left_final.value),
+                    loc: *loc,
+                };
+                let right = self.visit_value_block(
+                    test_result.alternate,
+                    *loc,
+                    Some(*fallthrough),
+                );
+                ValueTerminalResult {
+                    place: left_final.place,
+                    value: ReactiveValue::LogicalExpression {
+                        operator: *operator,
+                        left: Box::new(left),
+                        right: Box::new(right.value),
+                        loc: *loc,
+                    },
+                    fallthrough: *fallthrough,
+                    id: *id,
+                }
+            }
+            Terminal::Ternary {
+                test,
+                fallthrough,
+                id,
+                loc,
+            } => {
+                let test_result = self.visit_test_block(*test, *loc, "ternary");
+                let consequent = self.visit_value_block(
+                    test_result.consequent,
+                    *loc,
+                    Some(*fallthrough),
+                );
+                let alternate = self.visit_value_block(
+                    test_result.alternate,
+                    *loc,
+                    Some(*fallthrough),
+                );
+                ValueTerminalResult {
+                    place: consequent.place,
+                    value: ReactiveValue::ConditionalExpression {
+                        test: Box::new(test_result.test.value),
+                        consequent: Box::new(consequent.value),
+                        alternate: Box::new(alternate.value),
+                        loc: *loc,
+                    },
+                    fallthrough: *fallthrough,
+                    id: *id,
+                }
+            }
+            Terminal::MaybeThrow { .. } => {
+                panic!("Unexpected maybe-throw in visit_value_block_terminal");
+            }
+            Terminal::Label { .. } => {
+                panic!("Support labeled statements combined with value blocks is not yet implemented");
+            }
+            _ => {
+                panic!(
+                    "Unsupported terminal kind in value block"
+                );
+            }
+        }
+    }
+
+    fn extract_value_block_result(
+        &self,
+        instructions: &[react_compiler_hir::InstructionId],
+        block_id: BlockId,
+        loc: Option<SourceLocation>,
+    ) -> ValueBlockResult {
+        let last_id = instructions.last().expect("Expected non-empty instructions");
+        let last_instr = &self.hir.instructions[last_id.0 as usize];
+
+        let remaining: Vec<ReactiveInstruction> = instructions[..instructions.len() - 1]
+            .iter()
+            .map(|iid| {
+                let instr = &self.hir.instructions[iid.0 as usize];
+                ReactiveInstruction {
+                    id: instr.id,
+                    lvalue: Some(instr.lvalue.clone()),
+                    value: ReactiveValue::Instruction(instr.value.clone()),
+                    effects: instr.effects.clone(),
+                    loc: instr.loc,
+                }
+            })
+            .collect();
+
+        let value = ReactiveValue::Instruction(last_instr.value.clone());
+        let place = last_instr.lvalue.clone();
+        let id = last_instr.id;
+
+        if remaining.is_empty() {
+            ValueBlockResult {
+                block: block_id,
+                place,
+                value,
+                id,
+            }
+        } else {
+            ValueBlockResult {
+                block: block_id,
+                place: place.clone(),
+                value: ReactiveValue::SequenceExpression {
+                    instructions: remaining,
+                    id,
+                    value: Box::new(value),
+                    loc,
+                },
+                id,
+            }
+        }
+    }
+
+    fn wrap_with_sequence(
+        &self,
+        instructions: &[react_compiler_hir::InstructionId],
+        continuation: ValueBlockResult,
+        loc: Option<SourceLocation>,
+    ) -> ValueBlockResult {
+        if instructions.is_empty() {
+            return continuation;
+        }
+
+        let reactive_instrs: Vec<ReactiveInstruction> = instructions
+            .iter()
+            .map(|iid| {
+                let instr = &self.hir.instructions[iid.0 as usize];
+                ReactiveInstruction {
+                    id: instr.id,
+                    lvalue: Some(instr.lvalue.clone()),
+                    value: ReactiveValue::Instruction(instr.value.clone()),
+                    effects: instr.effects.clone(),
+                    loc: instr.loc,
+                }
+            })
+            .collect();
+
+        ValueBlockResult {
+            block: continuation.block,
+            place: continuation.place.clone(),
+            value: ReactiveValue::SequenceExpression {
+                instructions: reactive_instrs,
+                id: continuation.id,
+                value: Box::new(continuation.value),
+                loc,
+            },
+            id: continuation.id,
+        }
+    }
+
+    fn visit_break(
+        &self,
+        block: BlockId,
+        id: EvaluationOrder,
+        loc: Option<SourceLocation>,
+    ) -> Option<ReactiveStatement> {
+        let (target_block, target_kind) = self.cx.get_break_target(block);
+        if self.cx.scope_fallthroughs.contains(&target_block) {
+            assert_eq!(
+                target_kind,
+                ReactiveTerminalTargetKind::Implicit,
+                "Expected reactive scope to implicitly break to fallthrough"
+            );
+            return None;
+        }
+        Some(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+            terminal: ReactiveTerminal::Break {
+                target: target_block,
+                id,
+                target_kind,
+                loc,
+            },
+            label: None,
+        }))
+    }
+
+    fn visit_continue(
+        &self,
+        block: BlockId,
+        id: EvaluationOrder,
+        loc: Option<SourceLocation>,
+    ) -> ReactiveStatement {
+        let (target_block, target_kind) = self
+            .cx
+            .get_continue_target(block)
+            .unwrap_or_else(|| panic!("Expected continue target to be scheduled for bb{}", block.0));
+
+        ReactiveStatement::Terminal(ReactiveTerminalStatement {
+            terminal: ReactiveTerminal::Continue {
+                target: target_block,
+                id,
+                target_kind,
+                loc,
+            },
+            label: None,
+        })
+    }
+}
+
+// =============================================================================
+// Helper types
+// =============================================================================
+
+struct ValueBlockResult {
+    block: BlockId,
+    place: Place,
+    value: ReactiveValue,
+    id: EvaluationOrder,
+}
+
+struct TestBlockResult {
+    test: ValueBlockResult,
+    consequent: BlockId,
+    alternate: BlockId,
+    branch_loc: Option<SourceLocation>,
+}
+
+struct ValueTerminalResult {
+    value: ReactiveValue,
+    place: Place,
+    fallthrough: BlockId,
+    id: EvaluationOrder,
+}
+
+/// Helper to get loc from a terminal
+fn terminal_loc(terminal: &Terminal) -> &Option<SourceLocation> {
+    match terminal {
+        Terminal::If { loc, .. }
+        | Terminal::Branch { loc, .. }
+        | Terminal::Logical { loc, .. }
+        | Terminal::Ternary { loc, .. }
+        | Terminal::Optional { loc, .. }
+        | Terminal::Throw { loc, .. }
+        | Terminal::Return { loc, .. }
+        | Terminal::Goto { loc, .. }
+        | Terminal::Switch { loc, .. }
+        | Terminal::DoWhile { loc, .. }
+        | Terminal::While { loc, .. }
+        | Terminal::For { loc, .. }
+        | Terminal::ForOf { loc, .. }
+        | Terminal::ForIn { loc, .. }
+        | Terminal::Label { loc, .. }
+        | Terminal::Sequence { loc, .. }
+        | Terminal::Unreachable { loc, .. }
+        | Terminal::Unsupported { loc, .. }
+        | Terminal::MaybeThrow { loc, .. }
+        | Terminal::Scope { loc, .. }
+        | Terminal::PrunedScope { loc, .. }
+        | Terminal::Try { loc, .. } => loc,
+    }
+}

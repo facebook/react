@@ -4,7 +4,10 @@ pub mod environment;
 pub mod environment_config;
 pub mod globals;
 pub mod object_shape;
+pub mod reactive;
 pub mod type_config;
+
+pub use reactive::*;
 
 pub use react_compiler_diagnostics::{SourceLocation, Position, GENERATED_SOURCE, CompilerDiagnostic, ErrorCategory};
 

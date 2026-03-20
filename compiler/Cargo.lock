@@ -179,6 +179,7 @@ dependencies = [
  "react_compiler_inference",
  "react_compiler_lowering",
  "react_compiler_optimization",
+ "react_compiler_reactive_scopes",
  "react_compiler_ssa",
  "react_compiler_typeinference",
  "react_compiler_validation",
@@ -258,6 +259,15 @@ dependencies = [
  "react_compiler_hir",
  "react_compiler_lowering",
  "react_compiler_ssa",
+]
+
+[[package]]
+name = "react_compiler_reactive_scopes"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "react_compiler_diagnostics",
+ "react_compiler_hir",
 ]
 
 [[package]]
