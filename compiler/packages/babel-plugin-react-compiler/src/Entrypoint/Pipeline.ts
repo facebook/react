@@ -237,7 +237,11 @@ function runWithEnvironment(
   log({kind: 'hir', name: 'InferMutationAliasingRanges', value: hir});
   if (env.enableValidations) {
     validateLocalsNotReassignedAfterRender(hir);
-    log({kind: 'debug', name: 'ValidateLocalsNotReassignedAfterRender', value: 'ok'});
+    log({
+      kind: 'debug',
+      name: 'ValidateLocalsNotReassignedAfterRender',
+      value: 'ok',
+    });
 
     if (env.config.assertValidMutableRanges) {
       assertValidMutableRanges(hir);
@@ -259,10 +263,18 @@ function runWithEnvironment(
       env.outputMode === 'lint'
     ) {
       env.logErrors(validateNoDerivedComputationsInEffects_exp(hir));
-      log({kind: 'debug', name: 'ValidateNoDerivedComputationsInEffects', value: 'ok'});
+      log({
+        kind: 'debug',
+        name: 'ValidateNoDerivedComputationsInEffects',
+        value: 'ok',
+      });
     } else if (env.config.validateNoDerivedComputationsInEffects) {
       validateNoDerivedComputationsInEffects(hir);
-      log({kind: 'debug', name: 'ValidateNoDerivedComputationsInEffects', value: 'ok'});
+      log({
+        kind: 'debug',
+        name: 'ValidateNoDerivedComputationsInEffects',
+        value: 'ok',
+      });
     }
 
     if (env.config.validateNoSetStateInEffects && env.outputMode === 'lint') {
@@ -276,7 +288,11 @@ function runWithEnvironment(
     }
 
     validateNoFreezingKnownMutableFunctions(hir);
-    log({kind: 'debug', name: 'ValidateNoFreezingKnownMutableFunctions', value: 'ok'});
+    log({
+      kind: 'debug',
+      name: 'ValidateNoFreezingKnownMutableFunctions',
+      value: 'ok',
+    });
   }
 
   inferReactivePlaces(hir);
@@ -433,7 +449,11 @@ function runWithEnvironment(
     value: reactiveFunction,
   });
   assertScopeInstructionsWithinScopes(reactiveFunction);
-  log({kind: 'debug', name: 'AssertScopeInstructionsWithinScopes', value: 'ok'});
+  log({
+    kind: 'debug',
+    name: 'AssertScopeInstructionsWithinScopes',
+    value: 'ok',
+  });
 
   pruneNonEscapingScopes(reactiveFunction);
   log({
@@ -524,7 +544,11 @@ function runWithEnvironment(
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
     validatePreservedManualMemoization(reactiveFunction);
-    log({kind: 'debug', name: 'ValidatePreservedManualMemoization', value: 'ok'});
+    log({
+      kind: 'debug',
+      name: 'ValidatePreservedManualMemoization',
+      value: 'ok',
+    });
   }
 
   const ast = codegenFunction(reactiveFunction, {
