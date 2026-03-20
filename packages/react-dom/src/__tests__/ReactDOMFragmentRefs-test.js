@@ -2762,47 +2762,42 @@ describe('FragmentRefs', () => {
     });
 
     // @gate enableFragmentRefs
-    it('does not deduplicate listeners with mismatched passive option', async () => {
-      const fragmentRef = React.createRef();
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-      const root = ReactDOMClient.createRoot(container);
+    it(
+      'treats passive:true and passive:false as same listener per DOM spec',
+      async () => {
+        const fragmentRef = React.createRef();
+        const root = ReactDOMClient.createRoot(container);
 
-      await act(() => {
-        root.render(
-          <Fragment ref={fragmentRef}>
-            <div id="child" />
-          </Fragment>,
-        );
-      });
+        await act(() => {
+          root.render(
+            <Fragment ref={fragmentRef}>
+              <div id="child" />
+            </Fragment>,
+          );
+        });
 
-      const logs = [];
-      const handler = () => logs.push('fired');
+        const logs = [];
+        const handler = () => logs.push('fired');
 
-      // Register with passive: false
-      fragmentRef.current.addEventListener('click', handler, {passive: false});
-      // Register with passive: true - DOM spec: these are DIFFERENT listeners
-      fragmentRef.current.addEventListener('click', handler, {passive: true});
+        // Per DOM spec, listener identity is (type, callback, capture).
+        // passive is NOT part of the key, so these are the SAME listener.
+        fragmentRef.current.addEventListener('click', handler, {passive: false});
+        // Second add is a no-op (same listener already registered)
+        fragmentRef.current.addEventListener('click', handler, {passive: true});
 
-      document.querySelector('#child').click();
-      // Both should fire because passive:false and passive:true are distinct
-      expect(logs).toEqual(['fired', 'fired']);
+        document.querySelector('#child').click();
+        // Only one invocation because it is the same listener
+        expect(logs).toEqual(['fired']);
 
-      // Remove with passive: false only removes the passive:false registration
-      fragmentRef.current.removeEventListener('click', handler, {passive: false});
+        // removeEventListener also ignores passive when matching
+        fragmentRef.current.removeEventListener('click', handler, {
+          passive: true,
+        });
 
-      logs.length = 0;
-      document.querySelector('#child').click();
-      // passive:true listener should still fire
-      expect(logs).toEqual(['fired']);
-
-      fragmentRef.current.removeEventListener('click', handler, {passive: true});
-
-      logs.length = 0;
-      document.querySelector('#child').click();
-      expect(logs).toEqual([]);
-
-      document.body.removeChild(container);
-    });
+        logs.length = 0;
+        document.querySelector('#child').click();
+        expect(logs).toEqual([]);
+      },
+    );
   });
 });
