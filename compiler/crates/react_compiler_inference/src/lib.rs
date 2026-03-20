@@ -1,6 +1,7 @@
 pub mod align_method_call_scopes;
 pub mod align_object_method_scopes;
 pub mod align_reactive_scopes_to_block_scopes_hir;
+pub mod build_reactive_scope_terminals_hir;
 pub mod analyse_functions;
 pub mod infer_mutation_aliasing_effects;
 pub mod infer_mutation_aliasing_ranges;
@@ -12,6 +13,7 @@ pub mod merge_overlapping_reactive_scopes_hir;
 pub use align_method_call_scopes::align_method_call_scopes;
 pub use align_object_method_scopes::align_object_method_scopes;
 pub use align_reactive_scopes_to_block_scopes_hir::align_reactive_scopes_to_block_scopes_hir;
+pub use build_reactive_scope_terminals_hir::build_reactive_scope_terminals_hir;
 pub use analyse_functions::analyse_functions;
 pub use infer_mutation_aliasing_effects::infer_mutation_aliasing_effects;
 pub use infer_mutation_aliasing_ranges::infer_mutation_aliasing_ranges;

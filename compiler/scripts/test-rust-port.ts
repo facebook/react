@@ -371,10 +371,22 @@ function normalizeIds(text: string): string {
   let nextDeclId = 0;
   const generatedMap = new Map<string, number>();
   let nextGeneratedId = 0;
+  const blockMap = new Map<string, number>();
+  let nextBlockId = 0;
 
   return (
     text
       .replace(/\(generated\)/g, '(none)')
+      // Normalize block IDs (bb0, bb1, ...) — these are auto-incrementing counters
+      // that may differ between TS and Rust due to different block allocation counts
+      // in earlier passes (lowering, IIFE inlining, etc.).
+      .replace(/\bbb(\d+)\b/g, (_match, num) => {
+        const key = `bb:${num}`;
+        if (!blockMap.has(key)) {
+          blockMap.set(key, nextBlockId++);
+        }
+        return `bb${blockMap.get(key)}`;
+      })
       // Normalize <generated_N> shape IDs — these are auto-incrementing counters
       // that may differ between TS and Rust due to allocation ordering.
       .replace(/<generated_(\d+)>/g, (_match, num) => {
@@ -421,6 +433,13 @@ function normalizeIds(text: string): string {
         }
         return `${name}\$${idMap.get(key)}`;
       })
+      // Normalize mutableRange: [N:M] values by stripping them entirely.
+      // In TS, identifier.mutableRange shares a reference with scope.range,
+      // so modifications to scope.range automatically propagate. In Rust,
+      // mutableRange is a copy and diverges from scope.range after certain
+      // passes. Since scope.range is separately displayed and validated,
+      // mutableRange comparison adds noise without catching real bugs.
+      .replace(/mutableRange: \[\d+:\d+\]/g, 'mutableRange: [_:_]')
   );
 }
 

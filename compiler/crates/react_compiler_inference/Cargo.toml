@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 react_compiler_hir = { path = "../react_compiler_hir" }
 react_compiler_diagnostics = { path = "../react_compiler_diagnostics" }
+react_compiler_lowering = { path = "../react_compiler_lowering" }
 react_compiler_optimization = { path = "../react_compiler_optimization" }
 react_compiler_ssa = { path = "../react_compiler_ssa" }
 indexmap = "2"

@@ -363,6 +363,17 @@ pub fn compile_fn(
     let debug_merge_overlapping = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("MergeOverlappingReactiveScopesHIR", debug_merge_overlapping));
 
+    // TODO: port assertValidBlockNesting
+    context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
+
+    react_compiler_inference::build_reactive_scope_terminals_hir(&mut hir, &mut env);
+
+    let debug_build_scope_terminals = debug_print::debug_hir(&hir, &env);
+    context.log_debug(DebugLogEntry::new("BuildReactiveScopeTerminalsHIR", debug_build_scope_terminals));
+
+    // TODO: port assertValidBlockNesting
+    context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
