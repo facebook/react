@@ -141,6 +141,19 @@ This option accepts a regex to match the names of custom Hooks that have depende
 }
 ```
 
+**Warning**: The regex matches the hook name anywhere in the identifier. To avoid unintended matches (e.g., `useMyCustomHook2`), use word boundaries:
+
+```js
+{
+  rules: {
+    // ...
+    "react-hooks/exhaustive-deps": ["warn", {
+      additionalHooks: "\\b(useMyCustomHook|useMyOtherCustomHook)\\b"
+    }]
+  }
+}
+```
+
 We suggest to use this option **very sparingly, if at all**. Generally saying, we recommend most custom Hooks to not use the dependencies argument, and instead provide a higher-level API that is more focused around a specific use case.
 
 ## Valid and Invalid Examples
