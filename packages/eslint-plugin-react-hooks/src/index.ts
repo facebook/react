@@ -6,6 +6,8 @@
  */
 import type {Linter, Rule} from 'eslint';
 
+import {createRequire} from 'module';
+
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import {
   allRules,
@@ -14,6 +16,11 @@ import {
   recommendedLatestRules,
 } from './shared/ReactCompiler';
 import RulesOfHooks from './rules/RulesOfHooks';
+
+// Use createRequire to load package.json version at runtime
+// This ensures the version is always in sync with package.json
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json');
 
 const rules = {
   'exhaustive-deps': ExhaustiveDeps,
@@ -80,7 +87,7 @@ const configs = {
 const plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
-    version: '7.0.0',
+    version: pkg.version,
   },
   rules,
   configs,
