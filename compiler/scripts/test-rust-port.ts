@@ -301,10 +301,7 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
           name: entry.name,
           value: printDebugReactiveFunction(entry.value),
         });
-      } else if (
-        entry.kind === 'ast' &&
-        entry.name === passArg
-      ) {
+      } else if (entry.kind === 'ast' && entry.name === passArg) {
         throw new Error(
           `TODO: test-rust-port does not yet support '${entry.kind}' log entries ` +
             `(pass "${entry.name}"). Extend the debugLogIRs handler to support this kind.`,
@@ -408,7 +405,6 @@ function normalizeIds(text: string): string {
 
     return (
       line
-        .replace(/\(generated\)/g, '(none)')
         // Normalize block IDs (bb0, bb1, ...) — these are auto-incrementing counters
         // that may differ between TS and Rust due to different block allocation counts
         // in earlier passes (lowering, IIFE inlining, etc.).
