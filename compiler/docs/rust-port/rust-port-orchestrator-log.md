@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1709/1717 passing (99.5%), 8 failures remaining.
+Overall: 1713/1717 passing (99.8%), 4 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -34,7 +34,7 @@ MergeOverlappingReactiveScopesHIR: complete (1643/1643)
 BuildReactiveScopeTerminalsHIR: complete (1643/1643)
 FlattenReactiveLoopsHIR: complete (1643/1643)
 FlattenScopesWithHooksOrUseHIR: complete (1643/1643)
-PropagateScopeDependenciesHIR: partial (1638/1643, 5 failures)
+PropagateScopeDependenciesHIR: partial (1642/1643, 1 failure)
 
 ## Validation passes
 
@@ -53,12 +53,12 @@ ValidateStaticComponents: complete (5/5)
 ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
 ValidatePreservedManualMemoization: complete (1636/1636)
 
-## Remaining failure breakdown (8 total)
+## Remaining failure breakdown (4 total — all blocked)
 
-PropagateScopeDependenciesHIR: 5 (scope declarations, hoistable property loads in loops)
-Error reporting: 3 (require unported reactive passes: PruneHoistedContexts, etc.)
-- AssertScopeInstructionsWithinScopes: 2 (cascade from PSDH)
-- ValidateExhaustiveDependencies: 1 (cascade)
+error.bug-invariant-expected-consistent-destructuring.js: RIKBR invariant error handling
+error.todo-functiondecl-hoisting.tsx: requires PruneHoistedContexts (reactive pass)
+error.todo-valid-functiondecl-hoisting.tsx: requires PruneHoistedContexts (reactive pass)
+rules-of-hooks/error.invalid-hook-for.js: pipeline error handling difference
 
 # Logs
 
@@ -354,3 +354,13 @@ insertion order instead of sorting by ScopeId. All OutlineFunctions and MergeOve
 passes now clean. Remaining 8 failures: PSDH scope declarations (5), error reporting from
 unported reactive passes (3).
 Overall: 1709/1717 passing (99.5%), 8 failures remaining.
+
+## 20260321-010000 Fix PropagateScopeDependenciesHIR — 1709→1713 (+4)
+
+Fixed two bugs in PSDH:
+- ProcessedInstr key collision: used IdentifierId instead of EvaluationOrder (not unique
+  across functions), fixing 3 scope declaration failures + 2 ASIWS cascades.
+- Iterative non-null propagation fails on loops: replaced with recursive DFS using
+  active/done state tracking (matching TS recursivelyPropagateNonNull).
+All 4 remaining failures are blocked on unported reactive passes or error handling.
+Overall: 1713/1717 passing (99.8%), 4 failures remaining.
