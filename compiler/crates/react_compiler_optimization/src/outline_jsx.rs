@@ -68,6 +68,8 @@ fn outline_jsx_impl(
         let mut rewrite_instr: HashMap<EvaluationOrder, Vec<Instruction>> = HashMap::new();
         let mut jsx_group: Vec<JsxInstrInfo> = Vec::new();
         let mut children_ids: HashSet<IdentifierId> = HashSet::new();
+        // Track ALL JSX eval_orders that should be skipped (from all groups in this block)
+        let mut all_jsx_eval_orders: HashSet<EvaluationOrder> = HashSet::new();
 
         // First pass: collect all instruction info without borrowing func mutably
         enum InstrAction {
@@ -128,6 +130,12 @@ fn outline_jsx_impl(
                 }
                 InstrAction::JsxExpr { lvalue_id, instr_idx, eval_order, child_ids } => {
                     if !children_ids.contains(&lvalue_id) {
+                        // Record all JSX eval_orders before processing (for skip logic)
+                        if jsx_group.len() > 1 {
+                            for info in &jsx_group {
+                                all_jsx_eval_orders.insert(info.eval_order);
+                            }
+                        }
                         process_and_outline_jsx(
                             func,
                             env,
@@ -153,6 +161,11 @@ fn outline_jsx_impl(
             }
         }
         // Process remaining JSX group after the loop
+        if jsx_group.len() > 1 {
+            for info in &jsx_group {
+                all_jsx_eval_orders.insert(info.eval_order);
+            }
+        }
         process_and_outline_jsx(
             func,
             env,
@@ -161,8 +174,6 @@ fn outline_jsx_impl(
             &mut rewrite_instr,
             outlined_fns,
         );
-
-        // Apply instruction rewrites
         if !rewrite_instr.is_empty() {
             let block = func.body.blocks.get_mut(block_id).unwrap();
             let old_instr_ids = block.instructions.clone();
@@ -176,6 +187,9 @@ fn outline_jsx_impl(
                         func.instructions.push(new_instr.clone());
                         new_instr_ids.push(InstructionId(new_idx as u32));
                     }
+                } else if all_jsx_eval_orders.contains(&eval_order) {
+                    // Skip other JSX instructions in the group (they're replaced by the outlined version)
+                    continue;
                 } else {
                     new_instr_ids.push(iid);
                 }
@@ -464,7 +478,7 @@ fn emit_outlined_fn(
         generator: false,
         is_async: false,
         directives: Vec::new(),
-        aliasing_effects: None,
+        aliasing_effects: Some(vec![]),
         loc: None,
     };
 
@@ -492,7 +506,7 @@ fn emit_load_globals(
 fn emit_updated_jsx(
     func: &HirFunction,
     jsx_group: &[JsxInstrInfo],
-    old_to_new_props: &HashMap<IdentifierId, OutlinedJsxAttribute>,
+    old_to_new_props: &IndexMap<IdentifierId, OutlinedJsxAttribute>,
 ) -> Vec<Instruction> {
     let jsx_ids: HashSet<IdentifierId> = jsx_group.iter().map(|j| j.lvalue_id).collect();
     let mut new_instrs = Vec::new();
@@ -560,8 +574,8 @@ fn emit_updated_jsx(
 fn create_old_to_new_props_mapping(
     env: &mut Environment,
     old_props: &[OutlinedJsxAttribute],
-) -> HashMap<IdentifierId, OutlinedJsxAttribute> {
-    let mut old_to_new = HashMap::new();
+) -> IndexMap<IdentifierId, OutlinedJsxAttribute> {
+    let mut old_to_new = IndexMap::new();
 
     for old_prop in old_props {
         if old_prop.original_name == "key" {
@@ -595,7 +609,7 @@ fn create_old_to_new_props_mapping(
 fn emit_destructure_props(
     env: &mut Environment,
     props_obj: &Place,
-    old_to_new_props: &HashMap<IdentifierId, OutlinedJsxAttribute>,
+    old_to_new_props: &IndexMap<IdentifierId, OutlinedJsxAttribute>,
 ) -> Instruction {
     let mut properties = Vec::new();
     for prop in old_to_new_props.values() {

@@ -1126,12 +1126,21 @@ fn collect_hoistable_property_loads_impl(
 
 /// Corresponds to TS `getAssumedInvokedFunctions`.
 /// Returns the set of LoweredFunction FunctionIds that are assumed to be invoked.
+/// The `temporaries` map is shared across recursive calls (matching TS behavior where
+/// the same Map is passed to recursive invocations for inner functions).
 fn get_assumed_invoked_functions(
     func: &HirFunction,
     env: &Environment,
 ) -> HashSet<FunctionId> {
-    // Map of identifier id -> (function_id, set of functions it may invoke)
     let mut temporaries: HashMap<IdentifierId, (FunctionId, HashSet<FunctionId>)> = HashMap::new();
+    get_assumed_invoked_functions_impl(func, env, &mut temporaries)
+}
+
+fn get_assumed_invoked_functions_impl(
+    func: &HirFunction,
+    env: &Environment,
+    temporaries: &mut HashMap<IdentifierId, (FunctionId, HashSet<FunctionId>)>,
+) -> HashSet<FunctionId> {
     let mut hoistable: HashSet<FunctionId> = HashSet::new();
 
     // Step 1: Collect identifier to function expression mappings
@@ -1208,8 +1217,9 @@ fn get_assumed_invoked_functions(
                 }
                 InstructionValue::FunctionExpression { lowered_func, .. } => {
                     // Recursively traverse into other function expressions
+                    // TS passes the shared temporaries map to the recursive call
                     let inner_func = &env.functions[lowered_func.func.0 as usize];
-                    let lambdas_called = get_assumed_invoked_functions(inner_func, env);
+                    let lambdas_called = get_assumed_invoked_functions_impl(inner_func, env, temporaries);
                     if let Some(entry) = temporaries.get_mut(&instr.lvalue.identifier) {
                         for called in lambdas_called {
                             entry.1.insert(called);
@@ -1232,18 +1242,9 @@ fn get_assumed_invoked_functions(
     let mut changed = true;
     while changed {
         changed = false;
-        for (_, (func_id, may_invoke)) in &temporaries {
-            if hoistable.contains(func_id) {
-                for &called in may_invoke {
-                    if !hoistable.contains(&called) {
-                        // We'll collect and insert after to avoid borrow conflict
-                    }
-                }
-            }
-        }
         // Two-phase: collect then insert
         let mut to_add = Vec::new();
-        for (_, (func_id, may_invoke)) in &temporaries {
+        for (_, (func_id, may_invoke)) in temporaries.iter() {
             if hoistable.contains(func_id) {
                 for &called in may_invoke {
                     if !hoistable.contains(&called) {
