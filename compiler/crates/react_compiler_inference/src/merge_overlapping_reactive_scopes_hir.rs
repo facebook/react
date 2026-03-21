@@ -197,14 +197,19 @@ fn collect_scope_info(func: &HirFunction, env: &Environment) -> ScopeInfo {
         }
     }
 
-    // Deduplicate scope IDs in each entry
+    // Deduplicate scope IDs in each entry, preserving insertion order.
+    // The TS uses Set<ReactiveScope> which preserves insertion order and deduplicates.
+    // We must NOT sort by ScopeId here — the insertion order determines which scope
+    // becomes the root in the disjoint set union.
+    fn dedup_preserve_order(scopes: &mut Vec<ScopeId>) {
+        let mut seen = std::collections::HashSet::new();
+        scopes.retain(|s| seen.insert(*s));
+    }
     for scopes in scope_starts_map.values_mut() {
-        scopes.sort();
-        scopes.dedup();
+        dedup_preserve_order(scopes);
     }
     for scopes in scope_ends_map.values_mut() {
-        scopes.sort();
-        scopes.dedup();
+        dedup_preserve_order(scopes);
     }
 
     // Convert to sorted vecs (descending by id for pop-from-end)

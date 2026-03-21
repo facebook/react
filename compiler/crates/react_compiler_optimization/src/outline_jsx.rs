@@ -68,8 +68,6 @@ fn outline_jsx_impl(
         let mut rewrite_instr: HashMap<EvaluationOrder, Vec<Instruction>> = HashMap::new();
         let mut jsx_group: Vec<JsxInstrInfo> = Vec::new();
         let mut children_ids: HashSet<IdentifierId> = HashSet::new();
-        // Track ALL JSX eval_orders that should be skipped (from all groups in this block)
-        let mut all_jsx_eval_orders: HashSet<EvaluationOrder> = HashSet::new();
 
         // First pass: collect all instruction info without borrowing func mutably
         enum InstrAction {
@@ -130,12 +128,6 @@ fn outline_jsx_impl(
                 }
                 InstrAction::JsxExpr { lvalue_id, instr_idx, eval_order, child_ids } => {
                     if !children_ids.contains(&lvalue_id) {
-                        // Record all JSX eval_orders before processing (for skip logic)
-                        if jsx_group.len() > 1 {
-                            for info in &jsx_group {
-                                all_jsx_eval_orders.insert(info.eval_order);
-                            }
-                        }
                         process_and_outline_jsx(
                             func,
                             env,
@@ -161,11 +153,6 @@ fn outline_jsx_impl(
             }
         }
         // Process remaining JSX group after the loop
-        if jsx_group.len() > 1 {
-            for info in &jsx_group {
-                all_jsx_eval_orders.insert(info.eval_order);
-            }
-        }
         process_and_outline_jsx(
             func,
             env,
@@ -187,9 +174,6 @@ fn outline_jsx_impl(
                         func.instructions.push(new_instr.clone());
                         new_instr_ids.push(InstructionId(new_idx as u32));
                     }
-                } else if all_jsx_eval_orders.contains(&eval_order) {
-                    // Skip other JSX instructions in the group (they're replaced by the outlined version)
-                    continue;
                 } else {
                     new_instr_ids.push(iid);
                 }
@@ -220,9 +204,12 @@ fn process_and_outline_jsx(
     let result = process_jsx_group(func, env, jsx_group, globals);
     if let Some(result) = result {
         outlined_fns.push(result.func);
-        // Map from the first JSX instruction's eval order to the replacement instructions
-        let first_eval_order = jsx_group[0].eval_order;
-        rewrite_instr.insert(first_eval_order, result.instrs);
+        // Map from the LAST JSX instruction's eval order to the replacement instructions
+        // In the TS code, `state.jsx.at(0)` is the first element pushed during reverse iteration,
+        // which is the last JSX in forward block order (highest eval order).
+        // After sorting by eval_order ascending, that's jsx_group.last().
+        let last_eval_order = jsx_group.last().unwrap().eval_order;
+        rewrite_instr.insert(last_eval_order, result.instrs);
     }
 }
 
