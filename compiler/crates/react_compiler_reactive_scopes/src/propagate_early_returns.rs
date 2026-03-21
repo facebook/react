@@ -282,10 +282,10 @@ fn apply_early_return_to_scope(
         }));
 
     // Create temporary places for the sentinel initialization
+    let sentinel_temp = create_temporary_place_id(env, loc);
     let symbol_temp = create_temporary_place_id(env, loc);
     let for_temp = create_temporary_place_id(env, loc);
     let arg_temp = create_temporary_place_id(env, loc);
-    let sentinel_temp = create_temporary_place_id(env, loc);
 
     let original_instructions = std::mem::take(&mut scope_block.instructions);
 
