@@ -221,6 +221,13 @@ export function keyByScopeId<T>(
 export type BlockInfo = {
   block: BasicBlock;
   assumedNonNullObjects: ReadonlySet<PropertyPathNode>;
+  /**
+   * Property paths from deferred closures (JSX event handlers, hook callbacks,
+   * returned functions). These cannot prove non-nullness during render, but are
+   * tracked separately so that downstream cache key generation can use optional
+   * access (e.g. `user?.name`) instead of truncating to just the base object.
+   */
+  deferredNonNullObjects: ReadonlySet<PropertyPathNode>;
 };
 
 /**
@@ -418,12 +425,14 @@ function collectNonNullsInBlocks(
     {
       block: BasicBlock;
       assumedNonNullObjects: Set<PropertyPathNode>;
+      deferredNonNullObjects: Set<PropertyPathNode>;
     }
   >();
   for (const [_, block] of fn.body.blocks) {
     const assumedNonNullObjects = new Set<PropertyPathNode>(
       knownNonNullIdentifiers,
     );
+    const deferredNonNullObjects = new Set<PropertyPathNode>();
 
     const maybeOptionalChain = context.hoistableFromOptionals.get(block.id);
     if (maybeOptionalChain != null) {
@@ -471,12 +480,16 @@ function collectNonNullsInBlocks(
            * See: https://github.com/facebook/react/issues/34752
            *      https://github.com/facebook/react/issues/35762
            */
+          const innerHoistables = assertNonNull(
+            innerHoistableMap.get(innerFn.func.body.entry),
+          );
           if (isSyncInvoked) {
-            const innerHoistables = assertNonNull(
-              innerHoistableMap.get(innerFn.func.body.entry),
-            );
             for (const entry of innerHoistables.assumedNonNullObjects) {
               assumedNonNullObjects.add(entry);
+            }
+          } else if (isDeferredInvoked) {
+            for (const entry of innerHoistables.assumedNonNullObjects) {
+              deferredNonNullObjects.add(entry);
             }
           }
         }
@@ -513,6 +526,7 @@ function collectNonNullsInBlocks(
     nodes.set(block.id, {
       block,
       assumedNonNullObjects,
+      deferredNonNullObjects,
     });
   }
   return nodes;
@@ -599,10 +613,11 @@ function propagateNonNull(
      * it's not safe to assume they can be filtered out (e.g. not included in
      * the intersection)
      */
+    const doneNeighbors = Array.from(neighbors).filter(
+      n => traversalState.get(n) === 'done',
+    );
     const neighborAccesses = Set_intersect(
-      Array.from(neighbors)
-        .filter(n => traversalState.get(n) === 'done')
-        .map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects),
+      doneNeighbors.map(n => assertNonNull(nodes.get(n)).assumedNonNullObjects),
     );
 
     const prevObjects = assertNonNull(nodes.get(nodeId)).assumedNonNullObjects;
@@ -610,6 +625,18 @@ function propagateNonNull(
     reduceMaybeOptionalChains(mergedObjects, registry);
 
     assertNonNull(nodes.get(nodeId)).assumedNonNullObjects = mergedObjects;
+
+    // Also propagate deferred non-null objects
+    const neighborDeferred = Set_intersect(
+      doneNeighbors.map(
+        n => assertNonNull(nodes.get(n)).deferredNonNullObjects,
+      ),
+    );
+    const prevDeferred =
+      assertNonNull(nodes.get(nodeId)).deferredNonNullObjects;
+    const mergedDeferred = Set_union(prevDeferred, neighborDeferred);
+    assertNonNull(nodes.get(nodeId)).deferredNonNullObjects = mergedDeferred;
+
     traversalState.set(nodeId, 'done');
     /**
      * Note that it's not sufficient to compare set sizes since
@@ -617,7 +644,9 @@ function propagateNonNull(
      * unconditional loads. This could in turn change `assumedNonNullObjects` of
      * downstream blocks and backedges.
      */
-    changed ||= !Set_equal(prevObjects, mergedObjects);
+    changed ||=
+      !Set_equal(prevObjects, mergedObjects) ||
+      !Set_equal(prevDeferred, mergedDeferred);
     return changed;
   }
   const traversalState = new Map<BlockId, 'done' | 'active'>();
