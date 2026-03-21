@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1695/1717 passing (98.7%), 22 failures remaining.
+Overall: 1700/1717 passing (99.0%), 17 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -23,9 +23,9 @@ InferReactivePlaces: complete (1644/1644)
 RewriteInstructionKindsBasedOnReassignment: complete (1643/1643)
 InferReactiveScopeVariables: complete (1643/1643)
 MemoizeFbtAndMacroOperandsInSameScope: complete (1643/1643)
-outlineJSX: stub (conditional on enableJsxOutlining)
+outlineJSX: partial (conditional on enableJsxOutlining, 6 failures)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: partial (1634/1643, 9 failures)
+OutlineFunctions: partial (1637/1643, 6 failures)
 AlignMethodCallScopes: complete (1634/1634)
 AlignObjectMethodScopes: complete (1634/1634)
 PruneUnusedLabelsHIR: complete (1634/1634)
@@ -34,7 +34,7 @@ MergeOverlappingReactiveScopesHIR: partial (1631/1634, 3 failures)
 BuildReactiveScopeTerminalsHIR: complete (1631/1631)
 FlattenReactiveLoopsHIR: complete (1631/1631)
 FlattenScopesWithHooksOrUseHIR: complete (1631/1631)
-PropagateScopeDependenciesHIR: partial (1624/1631, 7 failures)
+PropagateScopeDependenciesHIR: partial (1629/1634, 5 failures)
 
 ## Validation passes
 
@@ -53,12 +53,13 @@ ValidateStaticComponents: complete (5/5)
 ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
 ValidatePreservedManualMemoization: complete (1622/1622)
 
-## Remaining failure breakdown (22 total)
+## Remaining failure breakdown (17 total)
 
-OutlineFunctions: 9 (outline_jsx stub)
-PropagateScopeDependenciesHIR: 7 (hoistable property loads, scope terminal structure)
+OutlineFunctions/outlineJSX: 6 (instruction ordering in outlined callbacks)
+PropagateScopeDependenciesHIR: 5 (hoistable property loads, scope declarations)
 MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
-AssertScopeInstructionsWithinScopes: 2 (cascade from PSDH)
+Error reporting: 3 (require unported reactive passes: PruneHoistedContexts, etc.)
+AssertScopeInstructionsWithinScopes: 2 (cascade)
 ValidateExhaustiveDependencies: 1
 
 # Logs
@@ -339,3 +340,10 @@ positives via correct StartMemoize/FinishMemoize scoping of dependency collectio
 Fixed PSDH inner function traversal for nested FunctionExpressions. Fixed
 AlignObjectMethodScopes scope range accumulation (HashMap for min/max).
 Overall: 1695/1717 passing (98.7%), 22 failures remaining.
+
+## 20260321-000048 Fix PSDH assumed-invoked functions and outline_jsx — 1695→1700 (+5)
+
+Fixed PSDH get_assumed_invoked_functions to share temporaries map across inner function
+recursion. Fixed outline_jsx: aliasingEffects Some(vec![]) instead of None, IndexMap for
+prop ordering, skip all JSX instructions in outlined groups.
+Overall: 1700/1717 passing (99.0%), 17 failures remaining.
