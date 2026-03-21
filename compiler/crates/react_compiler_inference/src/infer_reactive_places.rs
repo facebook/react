@@ -1274,10 +1274,10 @@ fn each_instruction_value_operand_places(
             for prop in properties {
                 match prop {
                     react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.clone());
                         if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
                             result.push(name.clone());
                         }
+                        result.push(p.place.clone());
                     }
                     react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
                         result.push(s.place.clone())

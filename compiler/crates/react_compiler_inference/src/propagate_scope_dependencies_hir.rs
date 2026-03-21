@@ -945,6 +945,73 @@ impl PropertyPathRegistry {
     }
 }
 
+/// Reduces optional chains in a set of property path nodes.
+///
+/// Any two optional chains with different operations (`.` vs `?.`) but the same set
+/// of property string paths de-duplicates. If unconditional reads from `<base>` are
+/// hoistable (i.e., `<base>` is in the set), we replace `<base>?.PROPERTY` with
+/// `<base>.PROPERTY`.
+///
+/// Port of `reduceMaybeOptionalChains` from CollectHoistablePropertyLoads.ts.
+fn reduce_maybe_optional_chains(
+    nodes: &mut BTreeSet<usize>,
+    registry: &mut PropertyPathRegistry,
+) {
+    // Collect indices of nodes that have optional in their path
+    let mut optional_chain_nodes: BTreeSet<usize> = nodes
+        .iter()
+        .copied()
+        .filter(|&idx| registry.nodes[idx].has_optional)
+        .collect();
+
+    if optional_chain_nodes.is_empty() {
+        return;
+    }
+
+    loop {
+        let mut changed = false;
+
+        // Collect the indices to process (snapshot to avoid borrow issues)
+        let to_process: Vec<usize> = optional_chain_nodes.iter().copied().collect();
+
+        for original_idx in to_process {
+            let full_path = registry.nodes[original_idx].full_path.clone();
+
+            let mut curr_node = registry.get_or_create_identifier(
+                full_path.identifier,
+                full_path.reactive,
+                full_path.loc,
+            );
+
+            for entry in &full_path.path {
+                // If the base is known to be non-null (in the set), replace optional with non-optional
+                let next_entry = if entry.optional && nodes.contains(&curr_node) {
+                    DependencyPathEntry {
+                        property: entry.property.clone(),
+                        optional: false,
+                        loc: entry.loc,
+                    }
+                } else {
+                    entry.clone()
+                };
+                curr_node = registry.get_or_create_property_entry(curr_node, &next_entry);
+            }
+
+            if curr_node != original_idx {
+                changed = true;
+                optional_chain_nodes.remove(&original_idx);
+                optional_chain_nodes.insert(curr_node);
+                nodes.remove(&original_idx);
+                nodes.insert(curr_node);
+            }
+        }
+
+        if !changed {
+            break;
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct BlockInfo {
     assumed_non_null_objects: BTreeSet<usize>, // indices into PropertyPathRegistry
@@ -1475,7 +1542,8 @@ fn collect_hoistable_and_propagate(
                 }
                 if let Some(neighbor_set) = intersection {
                     let current = working.get(&block_id).cloned().unwrap_or_default();
-                    let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
+                    let mut merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
+                    reduce_maybe_optional_chains(&mut merged, &mut registry);
                     if merged != current {
                         changed = true;
                         working.insert(block_id, merged);
@@ -1500,7 +1568,8 @@ fn collect_hoistable_and_propagate(
                     }
                     if let Some(neighbor_set) = intersection {
                         let current = working.get(&block_id).cloned().unwrap_or_default();
-                        let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
+                        let mut merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
+                        reduce_maybe_optional_chains(&mut merged, &mut registry);
                         if merged != current {
                             changed = true;
                             working.insert(block_id, merged);
@@ -2391,10 +2460,10 @@ fn each_instruction_value_operand_places(
             for prop in properties {
                 match prop {
                     react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.clone());
                         if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
                             result.push(name.clone());
                         }
+                        result.push(p.place.clone());
                     }
                     react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
                         result.push(s.place.clone());

@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1658/1717 passing (96.6%), 59 failures remaining.
+Overall: 1673/1717 passing (97.4%), 44 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -20,21 +20,21 @@ OptimizeForSSR: todo (conditional, outputMode === 'ssr')
 DeadCodeElimination: complete (1644/1644)
 InferMutationAliasingRanges: complete (1644/1644)
 InferReactivePlaces: complete (1644/1644)
-RewriteInstructionKindsBasedOnReassignment: partial (1620/1643, 23 failures from VED cascade)
-InferReactiveScopeVariables: complete (1620/1620)
-MemoizeFbtAndMacroOperandsInSameScope: complete (1620/1620)
+RewriteInstructionKindsBasedOnReassignment: partial (1625/1643, 18 failures from VED cascade)
+InferReactiveScopeVariables: complete (1625/1625)
+MemoizeFbtAndMacroOperandsInSameScope: complete (1625/1625)
 outlineJSX: stub (conditional on enableJsxOutlining)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: partial (1611/1620, 9 failures)
-AlignMethodCallScopes: complete (1611/1611)
-AlignObjectMethodScopes: partial (1610/1611, 1 failure)
-PruneUnusedLabelsHIR: complete (1610/1610)
-AlignReactiveScopesToBlockScopesHIR: complete (1610/1610)
-MergeOverlappingReactiveScopesHIR: partial (1607/1610, 3 failures)
-BuildReactiveScopeTerminalsHIR: complete (1607/1607)
-FlattenReactiveLoopsHIR: complete (1607/1607)
-FlattenScopesWithHooksOrUseHIR: complete (1607/1607)
-PropagateScopeDependenciesHIR: partial (1587/1607, 20 failures)
+OutlineFunctions: partial (1616/1625, 9 failures)
+AlignMethodCallScopes: complete (1616/1616)
+AlignObjectMethodScopes: partial (1615/1616, 1 failure)
+PruneUnusedLabelsHIR: complete (1615/1615)
+AlignReactiveScopesToBlockScopesHIR: complete (1615/1615)
+MergeOverlappingReactiveScopesHIR: partial (1612/1615, 3 failures)
+BuildReactiveScopeTerminalsHIR: complete (1612/1612)
+FlattenReactiveLoopsHIR: complete (1612/1612)
+FlattenScopesWithHooksOrUseHIR: complete (1612/1612)
+PropagateScopeDependenciesHIR: partial (1602/1612, 10 failures)
 
 ## Validation passes
 
@@ -49,13 +49,14 @@ ValidateNoDerivedComputationsInEffects: complete (22/22)
 ValidateNoSetStateInEffects: complete (12/12)
 ValidateNoJSXInTryStatement: complete (4/4)
 ValidateNoFreezingKnownMutableFunctions: complete (1644/1644)
+ValidateStaticComponents: complete (5/5)
 ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
-ValidatePreservedManualMemoization: complete (1585/1585)
+ValidatePreservedManualMemoization: complete (1600/1600)
 
-## Remaining failure breakdown (59 total)
+## Remaining failure breakdown (44 total)
 
-RIKBR: 23 (all from VED false positive error cascade)
-PropagateScopeDependenciesHIR: 20 (missing reduceMaybeOptionalChains, propagation algo)
+RIKBR: 18 (VED false positive error cascade)
+PropagateScopeDependenciesHIR: 10 (dependency path, hoistable property loads)
 OutlineFunctions: 9 (8 outline_jsx stub + 1 edge case)
 MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
 AssertScopeInstructionsWithinScopes: 2
@@ -319,3 +320,16 @@ Fixed 3 validation passes causing 7 failures misattributed to InferReactivePlace
   Array callback methods to eliminate false positives.
 - Ported non-experimental ValidateNoDerivedComputationsInEffects (replacing TODO stub).
 Overall: 1658/1717 passing (96.6%), 59 failures remaining.
+
+## 20260320-201055 Fix multiple passes — 1658→1673 (+15 tests)
+
+Three categories of fixes:
+- ObjectExpression computed key operand ordering: fixed in 4 files (infer_reactive_places,
+  infer_mutation_aliasing_effects, merge_overlapping_reactive_scopes, propagate_scope_deps).
+  TS yields computed key before value; Rust had them reversed. Fixed 10 PSDH + 5 RIKBR.
+- Port ValidateStaticComponents: new validation pass detecting dynamically-created components.
+  Fixed 5 static-components/invalid-* fixtures.
+- Port reduceMaybeOptionalChains in PropagateScopeDependenciesHIR: reduces optional chains
+  when base is known non-null. Fixed 3 fixtures.
+- RIKBR error format: fixed Some(Reassign) → Reassign, added place detail string.
+Overall: 1673/1717 passing (97.4%), 44 failures remaining.

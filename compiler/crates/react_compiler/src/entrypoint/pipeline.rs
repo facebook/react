@@ -299,6 +299,15 @@ pub fn compile_fn(
     let debug_rewrite = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("RewriteInstructionKindsBasedOnReassignment", debug_rewrite));
 
+    if env.enable_validations()
+        && env.config.validate_static_components
+        && env.output_mode == OutputMode::Lint
+    {
+        let errors = react_compiler_validation::validate_static_components(&hir);
+        log_errors_as_events(&errors, context);
+        context.log_debug(DebugLogEntry::new("ValidateStaticComponents", "ok".to_string()));
+    }
+
     if env.enable_memoization() {
         react_compiler_inference::infer_reactive_scope_variables(&mut hir, &mut env);
 

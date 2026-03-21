@@ -39,6 +39,44 @@ fn invariant_error(reason: &str, description: Option<String>) -> CompilerError {
     err
 }
 
+/// Format an InstructionKind variant name (matches TS `${kind}` interpolation).
+fn format_kind(kind: Option<InstructionKind>) -> String {
+    match kind {
+        Some(InstructionKind::Const) => "Const".to_string(),
+        Some(InstructionKind::Let) => "Let".to_string(),
+        Some(InstructionKind::Reassign) => "Reassign".to_string(),
+        Some(InstructionKind::Catch) => "Catch".to_string(),
+        Some(InstructionKind::HoistedConst) => "HoistedConst".to_string(),
+        Some(InstructionKind::HoistedLet) => "HoistedLet".to_string(),
+        Some(InstructionKind::HoistedFunction) => "HoistedFunction".to_string(),
+        Some(InstructionKind::Function) => "Function".to_string(),
+        None => "null".to_string(),
+    }
+}
+
+/// Format a Place like TS `printPlace()`: `<effect> <name>$<id>[<range>]{reactive}`
+fn format_place(place: &Place, env: &Environment) -> String {
+    let ident = &env.identifiers[place.identifier.0 as usize];
+    let name = match &ident.name {
+        Some(n) => n.value().to_string(),
+        None => String::new(),
+    };
+    let scope = match ident.scope {
+        Some(scope_id) => format!("_@{}", scope_id.0),
+        None => String::new(),
+    };
+    let mutable_range = if ident.mutable_range.end.0 > ident.mutable_range.start.0 + 1 {
+        format!("[{}:{}]", ident.mutable_range.start.0, ident.mutable_range.end.0)
+    } else {
+        String::new()
+    };
+    let reactive = if place.reactive { "{reactive}" } else { "" };
+    format!(
+        "{} {}${}{}{}{}",
+        place.effect, name, place.identifier.0, scope, mutable_range, reactive
+    )
+}
+
 /// Index into a collected list of declaration mutations to apply.
 ///
 /// We use a two-phase approach: first collect which declarations exist,
@@ -157,8 +195,9 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                                 return Err(invariant_error(
                                     "Expected consistent kind for destructuring",
                                     Some(format!(
-                                        "other places were `{:?}` but place is const",
-                                        kind
+                                        "other places were `{}` but '{}' is const",
+                                        format_kind(kind),
+                                        format_place(&place, env),
                                     )),
                                 ));
                             }
@@ -171,8 +210,9 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                                     return Err(invariant_error(
                                         "Expected consistent kind for destructuring",
                                         Some(format!(
-                                            "Other places were `{:?}` but place is reassigned",
-                                            kind
+                                            "Other places were `{}` but '{}' is reassigned",
+                                            format_kind(kind),
+                                            format_place(&place, env),
                                         )),
                                     ));
                                 }
@@ -207,8 +247,9 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                                     return Err(invariant_error(
                                         "Expected consistent kind for destructuring",
                                         Some(format!(
-                                            "Other places were `{:?}` but place is const",
-                                            kind
+                                            "Other places were `{}` but '{}' is const",
+                                            format_kind(kind),
+                                            format_place(&place, env),
                                         )),
                                     ));
                                 }
