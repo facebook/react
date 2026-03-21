@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1673/1717 passing (97.4%), 44 failures remaining.
+Overall: 1695/1717 passing (98.7%), 22 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -20,21 +20,21 @@ OptimizeForSSR: todo (conditional, outputMode === 'ssr')
 DeadCodeElimination: complete (1644/1644)
 InferMutationAliasingRanges: complete (1644/1644)
 InferReactivePlaces: complete (1644/1644)
-RewriteInstructionKindsBasedOnReassignment: partial (1625/1643, 18 failures from VED cascade)
-InferReactiveScopeVariables: complete (1625/1625)
-MemoizeFbtAndMacroOperandsInSameScope: complete (1625/1625)
+RewriteInstructionKindsBasedOnReassignment: complete (1643/1643)
+InferReactiveScopeVariables: complete (1643/1643)
+MemoizeFbtAndMacroOperandsInSameScope: complete (1643/1643)
 outlineJSX: stub (conditional on enableJsxOutlining)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: partial (1616/1625, 9 failures)
-AlignMethodCallScopes: complete (1616/1616)
-AlignObjectMethodScopes: partial (1615/1616, 1 failure)
-PruneUnusedLabelsHIR: complete (1615/1615)
-AlignReactiveScopesToBlockScopesHIR: complete (1615/1615)
-MergeOverlappingReactiveScopesHIR: partial (1612/1615, 3 failures)
-BuildReactiveScopeTerminalsHIR: complete (1612/1612)
-FlattenReactiveLoopsHIR: complete (1612/1612)
-FlattenScopesWithHooksOrUseHIR: complete (1612/1612)
-PropagateScopeDependenciesHIR: partial (1602/1612, 10 failures)
+OutlineFunctions: partial (1634/1643, 9 failures)
+AlignMethodCallScopes: complete (1634/1634)
+AlignObjectMethodScopes: complete (1634/1634)
+PruneUnusedLabelsHIR: complete (1634/1634)
+AlignReactiveScopesToBlockScopesHIR: complete (1634/1634)
+MergeOverlappingReactiveScopesHIR: partial (1631/1634, 3 failures)
+BuildReactiveScopeTerminalsHIR: complete (1631/1631)
+FlattenReactiveLoopsHIR: complete (1631/1631)
+FlattenScopesWithHooksOrUseHIR: complete (1631/1631)
+PropagateScopeDependenciesHIR: partial (1624/1631, 7 failures)
 
 ## Validation passes
 
@@ -51,17 +51,15 @@ ValidateNoJSXInTryStatement: complete (4/4)
 ValidateNoFreezingKnownMutableFunctions: complete (1644/1644)
 ValidateStaticComponents: complete (5/5)
 ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
-ValidatePreservedManualMemoization: complete (1600/1600)
+ValidatePreservedManualMemoization: complete (1622/1622)
 
-## Remaining failure breakdown (44 total)
+## Remaining failure breakdown (22 total)
 
-RIKBR: 18 (VED false positive error cascade)
-PropagateScopeDependenciesHIR: 10 (dependency path, hoistable property loads)
-OutlineFunctions: 9 (8 outline_jsx stub + 1 edge case)
+OutlineFunctions: 9 (outline_jsx stub)
+PropagateScopeDependenciesHIR: 7 (hoistable property loads, scope terminal structure)
 MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
-AssertScopeInstructionsWithinScopes: 2
+AssertScopeInstructionsWithinScopes: 2 (cascade from PSDH)
 ValidateExhaustiveDependencies: 1
-AlignObjectMethodScopes: 1
 
 # Logs
 
@@ -333,3 +331,11 @@ Three categories of fixes:
   when base is known non-null. Fixed 3 fixtures.
 - RIKBR error format: fixed Some(Reassign) → Reassign, added place detail string.
 Overall: 1673/1717 passing (97.4%), 44 failures remaining.
+
+## 20260320-213855 Fix VED, PSDH, AlignObjectMethod — 1673→1695 (+22)
+
+Removed VED error stripping (was hiding 18 legitimate errors) after fixing VED false
+positives via correct StartMemoize/FinishMemoize scoping of dependency collection.
+Fixed PSDH inner function traversal for nested FunctionExpressions. Fixed
+AlignObjectMethodScopes scope range accumulation (HashMap for min/max).
+Overall: 1695/1717 passing (98.7%), 22 failures remaining.
