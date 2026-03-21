@@ -1125,7 +1125,12 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // Fix for Firefox event loop bug where alert/debugger don't block MessageChannel events
+    // Schedule the work to run on the next event loop iteration instead of throwing
+    Scheduler_scheduleCallback(NormalSchedulerPriority, () => {
+      performWorkOnRoot(root, lanes, forceSync);
+    });
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3517,7 +3522,12 @@ function completeRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // Fix for Firefox event loop bug where alert/debugger don't block MessageChannel events
+    // Schedule the work to run on the next event loop iteration instead of throwing
+    Scheduler_scheduleCallback(NormalSchedulerPriority, () => {
+      performWorkOnRoot(root, lanes, forceSync);
+    });
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
