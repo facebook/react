@@ -475,12 +475,14 @@ struct OptionalChainSidemap {
     hoistable_objects: HashMap<BlockId, ReactiveScopeDependency>,
 }
 
-/// We track processed instructions/terminals by their evaluation order + block id.
+/// We track processed instructions/terminals by their lvalue IdentifierId + block id.
 /// In TS this uses reference identity (Set<Instruction | Terminal>).
-/// We use (block_id, index_in_block_or_terminal_marker) as a stable key.
+/// We use IdentifierId for instructions (globally unique across functions) and
+/// BlockId for terminals. Note: EvaluationOrder (instruction id) is NOT unique
+/// across functions, so we cannot use it here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum ProcessedInstr {
-    Instruction(EvaluationOrder),
+    Instruction(IdentifierId),
     Terminal(BlockId),
 }
 
@@ -540,7 +542,7 @@ struct MatchConsequentResult {
     consequent_id: IdentifierId,
     property: PropertyLiteral,
     property_id: IdentifierId,
-    store_local_instr_id: EvaluationOrder,
+    store_local_lvalue_id: IdentifierId,
     consequent_goto: BlockId,
     property_load_loc: Option<react_compiler_hir::SourceLocation>,
 }
@@ -616,7 +618,7 @@ fn match_optional_test_block(
                 consequent_id: store_local_value.identifier,
                 property: property.clone(),
                 property_id: instr0.lvalue.identifier,
-                store_local_instr_id: instr1.id,
+                store_local_lvalue_id: instr1.lvalue.identifier,
                 consequent_goto: *goto_block,
                 property_load_loc: *property_load_loc,
             })
@@ -786,7 +788,7 @@ fn traverse_optional_block(
     };
 
     ctx.processed_instrs_in_optional
-        .insert(ProcessedInstr::Instruction(match_result.store_local_instr_id));
+        .insert(ProcessedInstr::Instruction(match_result.store_local_lvalue_id));
     ctx.processed_instrs_in_optional
         .insert(ProcessedInstr::Terminal(match &test_terminal {
             Terminal::Branch { .. } => {
@@ -1380,10 +1382,17 @@ fn collect_non_nulls_in_blocks(
     nodes
 }
 
+/// Recursive DFS propagation of non-null information through the CFG.
+/// Uses 'active'/'done' state tracking to correctly handle cycles (backedges in loops).
+///
+/// Port of TS `propagateNonNull` which uses `recursivelyPropagateNonNull`.
+/// Key insight: when computing the intersection of neighbor sets, only include
+/// neighbors that are 'done' (not 'active'). Active neighbors are part of a cycle
+/// and should be filtered out, allowing non-null info to propagate through non-cyclic paths.
 fn propagate_non_null(
     func: &HirFunction,
     nodes: &HashMap<BlockId, BlockInfo>,
-    _registry: &mut PropertyPathRegistry,
+    registry: &mut PropertyPathRegistry,
 ) -> HashMap<BlockId, BTreeSet<usize>> {
     // Build successor map
     let mut block_successors: HashMap<BlockId, HashSet<BlockId>> = HashMap::new();
@@ -1402,7 +1411,6 @@ fn propagate_non_null(
         .map(|(k, v)| (*k, v.assumed_non_null_objects.clone()))
         .collect();
 
-    // Fixed-point iteration with forward and backward propagation
     let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
     let mut reversed_block_ids = block_ids.clone();
     reversed_block_ids.reverse();
@@ -1410,59 +1418,34 @@ fn propagate_non_null(
     for _ in 0..100 {
         let mut changed = false;
 
-        // Forward pass
+        // Forward pass (using predecessors)
+        let mut traversal_state: HashMap<BlockId, TraversalState> = HashMap::new();
         for &block_id in &block_ids {
-            let block = func.body.blocks.get(&block_id).unwrap();
-            let preds: Vec<BlockId> = block.preds.iter().copied().collect();
-
-            if !preds.is_empty() {
-                // Intersection of predecessor sets
-                let mut intersection: Option<BTreeSet<usize>> = None;
-                for &pred in &preds {
-                    if let Some(pred_set) = working.get(&pred) {
-                        intersection = Some(match intersection {
-                            None => pred_set.clone(),
-                            Some(existing) => existing.intersection(pred_set).copied().collect(),
-                        });
-                    }
-                }
-                if let Some(neighbor_set) = intersection {
-                    let current = working.get(&block_id).cloned().unwrap_or_default();
-                    let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
-                    if merged != current {
-                        changed = true;
-                        working.insert(block_id, merged);
-                    }
-                }
-            }
+            let block_changed = recursively_propagate_non_null(
+                block_id,
+                PropagationDirection::Forward,
+                &mut traversal_state,
+                &mut working,
+                func,
+                &block_successors,
+                registry,
+            );
+            changed |= block_changed;
         }
 
-        // Backward pass
+        // Backward pass (using successors)
+        traversal_state.clear();
         for &block_id in &reversed_block_ids {
-            let successors = block_successors.get(&block_id);
-            if let Some(succs) = successors {
-                if !succs.is_empty() {
-                    let mut intersection: Option<BTreeSet<usize>> = None;
-                    for succ in succs {
-                        if let Some(succ_set) = working.get(succ) {
-                            intersection = Some(match intersection {
-                                None => succ_set.clone(),
-                                Some(existing) => {
-                                    existing.intersection(succ_set).copied().collect()
-                                }
-                            });
-                        }
-                    }
-                    if let Some(neighbor_set) = intersection {
-                        let current = working.get(&block_id).cloned().unwrap_or_default();
-                        let merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
-                        if merged != current {
-                            changed = true;
-                            working.insert(block_id, merged);
-                        }
-                    }
-                }
-            }
+            let block_changed = recursively_propagate_non_null(
+                block_id,
+                PropagationDirection::Backward,
+                &mut traversal_state,
+                &mut working,
+                func,
+                &block_successors,
+                registry,
+            );
+            changed |= block_changed;
         }
 
         if !changed {
@@ -1471,6 +1454,92 @@ fn propagate_non_null(
     }
 
     working
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TraversalState {
+    Active,
+    Done,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PropagationDirection {
+    Forward,
+    Backward,
+}
+
+fn recursively_propagate_non_null(
+    node_id: BlockId,
+    direction: PropagationDirection,
+    traversal_state: &mut HashMap<BlockId, TraversalState>,
+    working: &mut HashMap<BlockId, BTreeSet<usize>>,
+    func: &HirFunction,
+    block_successors: &HashMap<BlockId, HashSet<BlockId>>,
+    registry: &mut PropertyPathRegistry,
+) -> bool {
+    // Avoid re-visiting computed or currently active nodes
+    if traversal_state.contains_key(&node_id) {
+        return false;
+    }
+    traversal_state.insert(node_id, TraversalState::Active);
+
+    let neighbors: Vec<BlockId> = match direction {
+        PropagationDirection::Backward => {
+            block_successors
+                .get(&node_id)
+                .map(|s| s.iter().copied().collect())
+                .unwrap_or_default()
+        }
+        PropagationDirection::Forward => {
+            func.body
+                .blocks
+                .get(&node_id)
+                .map(|b| b.preds.iter().copied().collect())
+                .unwrap_or_default()
+        }
+    };
+
+    let mut changed = false;
+    for &neighbor in &neighbors {
+        if !traversal_state.contains_key(&neighbor) {
+            let neighbor_changed = recursively_propagate_non_null(
+                neighbor,
+                direction,
+                traversal_state,
+                working,
+                func,
+                block_successors,
+                registry,
+            );
+            changed |= neighbor_changed;
+        }
+    }
+
+    // Compute intersection of 'done' neighbors only (filter out 'active' = cycle nodes)
+    let done_neighbor_sets: Vec<BTreeSet<usize>> = neighbors
+        .iter()
+        .filter(|n| traversal_state.get(n) == Some(&TraversalState::Done))
+        .filter_map(|n| working.get(n).cloned())
+        .collect();
+
+    let neighbor_intersection = if done_neighbor_sets.is_empty() {
+        BTreeSet::new()
+    } else {
+        let mut iter = done_neighbor_sets.into_iter();
+        let first = iter.next().unwrap();
+        iter.fold(first, |acc, s| acc.intersection(&s).copied().collect())
+    };
+
+    let prev_objects = working.get(&node_id).cloned().unwrap_or_default();
+    let mut merged: BTreeSet<usize> = prev_objects.union(&neighbor_intersection).copied().collect();
+    reduce_maybe_optional_chains(&mut merged, registry);
+
+    working.insert(node_id, merged.clone());
+    traversal_state.insert(node_id, TraversalState::Done);
+
+    // Compare with previous value — can't just check size due to reduce_maybe_optional_chains
+    changed |= prev_objects != merged;
+    changed
 }
 
 fn collect_hoistable_and_propagate(
@@ -1504,86 +1573,7 @@ fn collect_hoistable_and_propagate(
     };
 
     let nodes = collect_non_nulls_in_blocks(func, env, &ctx, &mut registry);
-
-    // Build successor map
-    let mut block_successors: HashMap<BlockId, HashSet<BlockId>> = HashMap::new();
-    for (block_id, block) in &func.body.blocks {
-        for pred in &block.preds {
-            block_successors
-                .entry(*pred)
-                .or_default()
-                .insert(*block_id);
-        }
-    }
-
-    let mut working: HashMap<BlockId, BTreeSet<usize>> = nodes
-        .iter()
-        .map(|(k, v)| (*k, v.assumed_non_null_objects.clone()))
-        .collect();
-
-    let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
-    let mut reversed_block_ids = block_ids.clone();
-    reversed_block_ids.reverse();
-
-    for _ in 0..100 {
-        let mut changed = false;
-
-        for &block_id in &block_ids {
-            let block = func.body.blocks.get(&block_id).unwrap();
-            let preds: Vec<BlockId> = block.preds.iter().copied().collect();
-            if !preds.is_empty() {
-                let mut intersection: Option<BTreeSet<usize>> = None;
-                for &pred in &preds {
-                    if let Some(pred_set) = working.get(&pred) {
-                        intersection = Some(match intersection {
-                            None => pred_set.clone(),
-                            Some(existing) => existing.intersection(pred_set).copied().collect(),
-                        });
-                    }
-                }
-                if let Some(neighbor_set) = intersection {
-                    let current = working.get(&block_id).cloned().unwrap_or_default();
-                    let mut merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
-                    reduce_maybe_optional_chains(&mut merged, &mut registry);
-                    if merged != current {
-                        changed = true;
-                        working.insert(block_id, merged);
-                    }
-                }
-            }
-        }
-
-        for &block_id in &reversed_block_ids {
-            if let Some(succs) = block_successors.get(&block_id) {
-                if !succs.is_empty() {
-                    let mut intersection: Option<BTreeSet<usize>> = None;
-                    for succ in succs {
-                        if let Some(succ_set) = working.get(succ) {
-                            intersection = Some(match intersection {
-                                None => succ_set.clone(),
-                                Some(existing) => {
-                                    existing.intersection(succ_set).copied().collect()
-                                }
-                            });
-                        }
-                    }
-                    if let Some(neighbor_set) = intersection {
-                        let current = working.get(&block_id).cloned().unwrap_or_default();
-                        let mut merged: BTreeSet<usize> = current.union(&neighbor_set).copied().collect();
-                        reduce_maybe_optional_chains(&mut merged, &mut registry);
-                        if merged != current {
-                            changed = true;
-                            working.insert(block_id, merged);
-                        }
-                    }
-                }
-            }
-        }
-
-        if !changed {
-            break;
-        }
-    }
+    let working = propagate_non_null(func, &nodes, &mut registry);
 
     (working, registry)
 }
@@ -2069,7 +2059,7 @@ impl<'a> DependencyCollectionContext<'a> {
 
     fn is_deferred_dependency_instr(&self, instr: &Instruction) -> bool {
         self.processed_instrs_in_optional
-            .contains(&ProcessedInstr::Instruction(instr.id))
+            .contains(&ProcessedInstr::Instruction(instr.lvalue.identifier))
             || self.temporaries.contains_key(&instr.lvalue.identifier)
     }
 
