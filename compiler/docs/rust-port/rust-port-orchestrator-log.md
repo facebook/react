@@ -1,8 +1,8 @@
 # Status
 
-Overall: 1713/1717 passing (99.8%), 4 failures remaining.
+Overall: needs retest after rebase. All reactive passes ported through PruneHoistedContexts.
 
-## Transformation passes (all ported)
+## Transformation passes (all ported through reactive)
 
 HIR: complete (1653/1653)
 PruneMaybeThrows: complete (1720/1720, includes 2nd call)
@@ -35,6 +35,23 @@ BuildReactiveScopeTerminalsHIR: complete (1643/1643)
 FlattenReactiveLoopsHIR: complete (1643/1643)
 FlattenScopesWithHooksOrUseHIR: complete (1643/1643)
 PropagateScopeDependenciesHIR: partial (1642/1643, 1 failure)
+BuildReactiveFunction: complete
+AssertWellFormedBreakTargets: complete
+PruneUnusedLabels: complete
+AssertScopeInstructionsWithinScopes: complete
+PruneNonEscapingScopes: partial (1 failure)
+PruneNonReactiveDependencies: partial
+PruneUnusedScopes: complete
+MergeReactiveScopesThatInvalidateTogether: partial (6 failures)
+PruneAlwaysInvalidatingScopes: complete
+PropagateEarlyReturns: complete
+PruneUnusedLValues: complete
+PromoteUsedTemporaries: complete
+ExtractScopeDeclarationsFromDestructuring: partial (8 failures)
+StabilizeBlockIds: complete
+RenameVariables: partial
+PruneHoistedContexts: complete
+ValidatePreservedManualMemoization: complete
 
 ## Validation passes
 
@@ -364,3 +381,15 @@ Fixed two bugs in PSDH:
   active/done state tracking (matching TS recursivelyPropagateNonNull).
 All 4 remaining failures are blocked on unported reactive passes or error handling.
 Overall: 1713/1717 passing (99.8%), 4 failures remaining.
+
+## 20260320-213806 Port all reactive passes after BuildReactiveFunction
+
+Ported 15 reactive passes + visitor infrastructure from TypeScript to Rust:
+- Visitor/transform traits (visitors.rs) with closure-based traversal
+- assertWellFormedBreakTargets, pruneUnusedLabels, assertScopeInstructionsWithinScopes
+- pruneNonEscapingScopes (1123 lines), pruneNonReactiveDependencies, pruneUnusedScopes
+- mergeReactiveScopesThatInvalidateTogether, pruneAlwaysInvalidatingScopes, propagateEarlyReturns
+- pruneUnusedLValues, promoteUsedTemporaries, extractScopeDeclarationsFromDestructuring
+- stabilizeBlockIds, renameVariables, pruneHoistedContexts
+Fixed RenameVariables value-level lvalue visiting and inner function traversal (154 failures fixed).
+Fixed PruneNonReactiveDependencies inner function context visiting (23 failures fixed).
