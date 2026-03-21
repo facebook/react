@@ -14,6 +14,7 @@ import React, {
   unstable_ViewTransition as ViewTransition,
   unstable_addTransitionType as addTransitionType,
   startTransition,
+  Activity,
 } from 'react';
 import {Resizable} from 're-resizable';
 import {useStore, useStoreDispatch} from '../StoreContext';
@@ -33,14 +34,9 @@ export default function ConfigEditor({
 }): React.ReactElement {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // TODO: Add back <Activity> after upgrading next.js
   return (
     <>
-      <div
-        style={{
-          display: isExpanded ? 'block' : 'none',
-        }}>
-        {/* <Activity mode={isExpanded ? 'visible' : 'hidden'}> */}
+      <Activity mode={isExpanded ? 'visible' : 'hidden'}>
         <ExpandedEditor
           onToggle={() => {
             startTransition(() => {
@@ -50,13 +46,8 @@ export default function ConfigEditor({
           }}
           formattedAppliedConfig={formattedAppliedConfig}
         />
-      </div>
-      <div
-        style={{
-          display: !isExpanded ? 'block' : 'none',
-        }}>
-        {/* </Activity>
-        <Activity mode={isExpanded ? 'hidden' : 'visible'}></Activity> */}
+      </Activity>
+      <Activity mode={isExpanded ? 'hidden' : 'visible'}>
         <CollapsedEditor
           onToggle={() => {
             startTransition(() => {
@@ -65,8 +56,7 @@ export default function ConfigEditor({
             });
           }}
         />
-      </div>
-      {/* </Activity> */}
+      </Activity>
     </>
   );
 }
