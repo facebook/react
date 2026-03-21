@@ -1,35 +1,43 @@
 # Review: compiler/crates/react_compiler_optimization/src/lib.rs
 
-## Corresponding TypeScript file(s)
-- No direct TS equivalent. This is the Rust crate module root.
+## Corresponding TypeScript Source
+No direct equivalent - this is a Rust module organization file
 
 ## Summary
-The lib.rs file declares and re-exports the public modules of the `react_compiler_optimization` crate. It correctly maps to the set of optimization passes. The `merge_consecutive_blocks` module is declared but not re-exported (it is used internally by other passes). This is a clean and minimal module root.
+Standard Rust library root file that declares and re-exports all optimization pass modules. Follows idiomatic Rust patterns for crate organization.
 
-## Major Issues
-None.
+## Issues
 
-## Moderate Issues
-None.
+### Major Issues
+None found
 
-## Minor Issues
+### Moderate Issues
+None found
 
-1. **`merge_consecutive_blocks` is declared as `pub mod` but not re-exported**
-   - Rust file: `compiler/crates/react_compiler_optimization/src/lib.rs:5`
-   - The module is `pub mod merge_consecutive_blocks` which makes it accessible from outside the crate, but it is not re-exported via `pub use`. The function is used by `constant_propagation` and `inline_iifes` internally via `crate::merge_consecutive_blocks::merge_consecutive_blocks`. This is intentional -- it's a utility used by other passes in the same crate.
+### Minor/Stylistic Issues
+None found
 
 ## Architectural Differences
 
-1. **Crate boundary: The TS `MergeConsecutiveBlocks` is in `src/HIR/`, not `src/Optimization/`**
-   - Rust file: `compiler/crates/react_compiler_optimization/src/lib.rs:5`
-   - TS file: `compiler/packages/babel-plugin-react-compiler/src/HIR/MergeConsecutiveBlocks.ts`
-   - In TS, `mergeConsecutiveBlocks` is part of the HIR module. In Rust, it's part of the `react_compiler_optimization` crate. This is a deliberate organizational choice for the Rust port since it's primarily used by optimization passes.
+This file exists due to Rust's module system requirements. TypeScript organizes exports differently:
+- TS uses individual files in `src/Optimization/` directory with exports
+- Rust uses `lib.rs` to declare modules via `pub mod` and re-export via `pub use`
 
-2. **`DropManualMemoization` and `InlineIIFEs` are in `src/Inference/` in TS, but in `react_compiler_optimization` in Rust**
-   - TS: `compiler/packages/babel-plugin-react-compiler/src/Inference/DropManualMemoization.ts`
-   - TS: `compiler/packages/babel-plugin-react-compiler/src/Inference/InlineImmediatelyInvokedFunctionExpressions.ts`
-   - Rust: `compiler/crates/react_compiler_optimization/src/`
-   - These passes are categorized differently between TS and Rust.
+This is standard practice and matches the Rust port architecture where `src/Optimization/` maps to the `react_compiler_optimization` crate.
 
-## Missing TypeScript Features
-None.
+## Completeness
+
+All optimization passes from the Rust implementation are correctly declared and exported:
+- constant_propagation
+- dead_code_elimination
+- drop_manual_memoization
+- inline_iifes
+- merge_consecutive_blocks
+- name_anonymous_functions
+- optimize_props_method_calls
+- outline_functions
+- outline_jsx
+- prune_maybe_throws
+- prune_unused_labels_hir
+
+The module structure is clean and complete.

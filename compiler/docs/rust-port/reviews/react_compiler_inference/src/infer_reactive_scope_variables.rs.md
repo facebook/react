@@ -1,36 +1,29 @@
-# Review: react_compiler_inference/src/infer_reactive_scope_variables.rs
+# Review: compiler/crates/react_compiler_inference/src/infer_reactive_scope_variables.rs
 
-## Corresponding TypeScript source
+## Corresponding TypeScript Source
 - `compiler/packages/babel-plugin-react-compiler/src/ReactiveScopes/InferReactiveScopeVariables.ts`
 
 ## Summary
-The Rust port is structurally accurate with all core logic preserved. DisjointSet implementation and scope assignment logic match the TypeScript version. Minor differences exist in location merging logic.
+This pass (713 lines Rust vs ~620 lines TS) determines which mutable variables belong to which reactive scopes by finding disjoint sets of co-mutating identifiers. The Rust port accurately implements the DisjointSet data structure, scope assignment logic, and mutable range validation. The additional lines are from helper functions for pattern/operand iteration that are imported from visitors in TypeScript.
 
-## Major Issues
-None.
+## Issues
 
-## Moderate Issues
+### Major Issues
+None found.
 
-### 1. Location merging uses GeneratedSource check instead of None
-**Location:** `infer_reactive_scope_variables.rs:208-228`
-**TypeScript:** `InferReactiveScopeVariables.ts:174-195`
-**Issue:** The TypeScript version checks `if (l === GeneratedSource)` and `if (r === GeneratedSource)` to handle missing locations, while the Rust version uses `match (l, r)` with `None` patterns. The Rust version should check if the location equals a generated/placeholder value rather than just None, to match TS semantics. However, this may be correct if Rust uses `None` where TS uses `GeneratedSource`.
+### Moderate Issues
 
-### 2. Missing logger debug call on validation error
-**Location:** `infer_reactive_scope_variables.rs:191-200`
-**TypeScript:** `InferReactiveScopeVariables.ts:157-169`
-**Issue:** The TypeScript version calls `fn.env.logger?.debugLogIRs?.(...)` before throwing the error (lines 158-162) to aid debugging. The Rust version panics immediately without logging. This could make debugging harder.
+1. **compiler/crates/react_compiler_inference/src/infer_reactive_scope_variables.rs:192-200** - Missing debug logger call before panic
+   - **TS behavior**: TypeScript calls `fn.env.logger?.debugLogIRs?.(...)` (TS:158-162) before throwing the invariant error to aid debugging.
+   - **Rust behavior**: Rust panics immediately without debug logging (line 192).
+   - **Impact**: Makes debugging scope validation errors harder. The Rust version should ideally log the HIR state before panicking, though this requires access to a logger which may not be available in the current architecture.
 
-## Minor Issues
+### Minor/Stylistic Issues
 
-### 1. Index field missing from mergeLocation
-**Location:** `infer_reactive_scope_variables.rs:217-227`
-**TypeScript:** `InferReactiveScopeVariables.ts:180-193`
-**Issue:** The TypeScript `SourceLocation` has an `index` field (line 182, 186) that is merged. The Rust `SourceLocation` appears to only have `line` and `column` fields in `Position`. This may be an architectural difference in how locations are represented, but should be verified.
-
-### 3. Additional range validation check
-**Location:** `infer_reactive_scope_variables.rs:165-173`
-**Addition:** The Rust version has an additional loop after scope assignment (lines 165-173) that updates each identifier's `mutable_range` to match its scope's range. This is not present in TypeScript where `identifier.mutableRange = scope.range` on line 132 directly shares the reference. This is required in Rust since ranges are cloned, not shared.
+1. **compiler/crates/react_compiler_inference/src/infer_reactive_scope_variables.rs:208-228** - Location merging logic
+   - The Rust `merge_location()` function handles `None` locations (lines 208-228).
+   - TypeScript checks `if (l === GeneratedSource)` and `if (r === GeneratedSource)` (TS:175-177).
+   - **Impact**: This is an architectural difference. If Rust uses `Option<SourceLocation>` where TS uses `GeneratedSource` as a sentinel value, the logic is equivalent. The Rust version also handles `index` field merging (lines 213, 222), matching TS (line 182, 186).
 
 ## Architectural Differences
 
@@ -52,30 +45,33 @@ None.
 **Location:** `infer_reactive_scope_variables.rs:203-206`
 **Addition:** Rust uses a `ScopeState` struct to track `scope_id` and `loc` during iteration. TypeScript directly manipulates the `ReactiveScope` object.
 
-## Missing from Rust Port
+## Completeness
 
-### 1. Additional ReactiveScope fields
-**TypeScript:** `InferReactiveScopeVariables.ts:106-116`
-**Issue:** The TypeScript `ReactiveScope` includes these fields initialized when creating a scope:
-- `dependencies: new Set()`
-- `declarations: new Map()`
-- `reassignments: new Set()`
-- `earlyReturnValue: null`
-- `merged: new Set()`
+The Rust port is functionally complete. All major components are present:
 
-The Rust version may initialize these elsewhere or they may be part of the `ReactiveScope` type definition. Should verify these are initialized properly in the Rust `ReactiveScope` struct.
+✅ **DisjointSet implementation**: Complete union-find data structure (lines 36-101)
+  - `new()`, `find()`, `find_opt()`, `union()`, `for_each()`
+  - Uses `IndexMap` to preserve insertion order matching TS Map behavior
+  - Path compression in `find()` method
+✅ **Entry point**: `infer_reactive_scope_variables()` function (lines 113-200)
+✅ **Scope assignment logic**: Two-phase algorithm (lines 119-161)
+  - Phase 1: Find disjoint sets via `find_disjoint_mutable_values()` (line 115)
+  - Phase 2: Assign scope IDs and merge ranges (lines 121-161)
+✅ **Range synchronization**: Additional loop to ensure all identifiers in a scope have matching ranges (lines 165-173)
+  - Required in Rust since ranges are cloned, not shared references
+✅ **Scope validation**: Validates mutable ranges are within valid instruction bounds (lines 176-200)
+✅ **Location merging**: `merge_location()` function (lines 208-228)
+  - Handles None locations
+  - Merges start/end positions taking min/max
+  - Preserves filename and identifierName
+  - Merges index field
+✅ **Helper functions** (lines 236-713):
+  - `is_mutable()` - exported as `pub` (line 236)
+  - `find_disjoint_mutable_values()` - exported as `pub(crate)` (line 244)
+  - `each_pattern_operand()` - inline implementation (lines 331-443)
+  - `each_instruction_value_operand()` - inline implementation (lines 445-onwards)
+  - Various pattern/array/object iteration helpers
 
-## Additional in Rust Port
+**ReactiveScope field initialization**: The TypeScript version initializes additional fields when creating a scope (TS:106-116): `dependencies`, `declarations`, `reassignments`, `earlyReturnValue`, `merged`. In Rust, these fields are part of the `ReactiveScope` type definition in the HIR crate and are initialized when `env.next_scope_id()` creates a new scope (line 127). This is an architectural difference - the Rust version separates scope creation from scope assignment.
 
-### 1. Public exports of helper functions
-**Location:** `infer_reactive_scope_variables.rs:236-244, 578`
-**Addition:** The Rust version exports `is_mutable` and `find_disjoint_mutable_values` as `pub(crate)` (module-visible). TypeScript exports these as named exports. The Rust visibility is appropriate for cross-module use within the crate.
-
-### 2. Explicit validation loop with max_instruction calculation
-**Location:** `infer_reactive_scope_variables.rs:176-200`
-**TypeScript:** `InferReactiveScopeVariables.ts:135-171`
-**Difference:** Both versions have this logic, but the Rust version has slightly different structure with explicit max_instruction calculation in a separate loop before validation.
-
-### 3. `each_pattern_operand` and `each_instruction_value_operand` helpers
-**Location:** `infer_reactive_scope_variables.rs:331-569`
-**Addition:** These are implemented inline in the Rust module. In TypeScript they are imported from `../HIR/visitors` (line 24-25). The Rust implementation should verify it matches the visitor implementations.
+No missing functionality detected.

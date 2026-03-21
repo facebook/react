@@ -1,62 +1,62 @@
-# Review: react_compiler_inference/src/analyse_functions.rs
+# Review: compiler/crates/react_compiler_inference/src/analyse_functions.rs
 
-## Corresponding TypeScript source
+## Corresponding TypeScript Source
 - `compiler/packages/babel-plugin-react-compiler/src/Inference/AnalyseFunctions.ts`
 
 ## Summary
-The Rust port is structurally accurate and complete. All core logic is preserved with appropriate architectural adaptations for arenas and the function callback pattern.
+This Rust port accurately translates the TypeScript implementation of recursive function analysis for nested function expressions and object methods. The port correctly handles the function arena pattern, error checking, and context variable mutable range resetting. The implementation is complete and follows the architectural patterns established for the Rust port.
 
-## Major Issues
-None.
+## Issues
 
-## Moderate Issues
-None.
+### Major Issues
+None found.
 
-## Minor Issues
+### Moderate Issues
 
-### 1. Missing logger call for invariant error case
-**Location:** `analyse_functions.rs:66-69`
-**TypeScript:** `AnalyseFunctions.ts` does not have an early return on invariant errors
-**Issue:** The Rust version has early-return logic when `env.has_invariant_errors()` is true (lines 66-69), which differs from the TS version that doesn't explicitly check for errors during the loop. This is likely a Rust-specific addition to handle Result propagation, but should be verified as intentional.
+1. **compiler/crates/react_compiler_inference/src/analyse_functions.rs:66-69** - Early return on invariant errors differs from TS behavior
+   - **TS behavior**: In TypeScript (line 23), `lowerWithMutationAliasing` is called without try-catch. If `inferMutationAliasingEffects` throws a `CompilerError.invariant()`, it propagates up immediately and terminates the entire compilation.
+   - **Rust behavior**: The Rust code checks `env.has_invariant_errors()` after each inner function and returns early if found. This means subsequent inner functions in the same parent are not processed.
+   - **Impact**: In TypeScript, an invariant error in one inner function would throw and abort the entire compilation pipeline. In Rust, it stops processing remaining inner functions in the current scope but doesn't immediately propagate the error. This could lead to different error reporting behavior if there are multiple inner functions and an early one has an invariant error.
+   - **Recommendation**: This is consistent with the Rust port's error handling architecture but represents a behavioral difference from TypeScript worth documenting.
 
-### 2. Typo in panic message
-**Location:** `analyse_functions.rs:158`
-**TypeScript:** `AnalyseFunctions.ts:79`
-**Issue:** Typo in panic message: `"[AnalyzeFunctions]"` should be `"[AnalyseFunctions]"` (note the 's' at the end) to match TS.
+2. **compiler/crates/react_compiler_inference/src/analyse_functions.rs:122-125** - Error handling for `rewriteInstructionKindsBasedOnReassignment` differs from TS
+   - **TS behavior**: TypeScript (line 58) calls `rewriteInstructionKindsBasedOnReassignment(fn)` without try-catch. Errors thrown from this function propagate up.
+   - **Rust behavior**: Returns a `Result` and merges errors into `env.errors`, then returns early.
+   - **Impact**: Non-fatal errors are accumulated rather than aborting. This matches Rust error handling architecture but changes control flow compared to TS.
+   - **Note**: This is consistent with the Rust port's fault-tolerant error handling design described in the architecture document.
 
-### 3. Debug logger signature difference
-**Location:** `analyse_functions.rs:35-38, 174`
-**TypeScript:** `AnalyseFunctions.ts:122-126`
-**Issue:** The Rust version takes a `debug_logger: &mut F where F: FnMut(&HirFunction, &Environment)` callback parameter, while the TS version directly calls `fn.env.logger?.debugLogIRs?.(...)`. This is an architectural difference - the Rust version doesn't have `env.logger` available on functions, so it requires the callback to be passed in. This is intentional but worth documenting.
+### Minor/Stylistic Issues
+
+1. **compiler/crates/react_compiler_inference/src/analyse_functions.rs:161** - Panic vs invariant for Apply effects
+   - Rust uses `panic!(...)` for unexpected Apply effects (line 161).
+   - TS uses `CompilerError.invariant(false, {...})` (lines 79-82).
+   - **Impact**: Rust panic will abort immediately, TS invariant throws. Both prevent further execution. Consider using `CompilerError::invariant()` for consistency with TS if a diagnostic error type is available.
+
+2. **compiler/crates/react_compiler_inference/src/analyse_functions.rs:161** - Message typo in panic
+   - The panic message says `"[AnalyzeFunctions]"` (line 161).
+   - TS says `"[AnalyzeFunctions]"` (line 79).
+   - **Impact**: Minor inconsistency in error message prefix. Both spellings appear in the codebase - "Analyze" in the message, "Analyse" in the filename.
 
 ## Architectural Differences
 
-### 1. Function arena and placeholder pattern
-**Location:** `analyse_functions.rs:58-61, 87, 177-206`
-**Reason:** Rust requires using `std::mem::replace` to temporarily move a function out of the arena to avoid simultaneous mutable borrows. The `placeholder_function()` helper creates a temporary dummy function that is never read. In TypeScript, the function objects are directly accessible via references without this complication.
+1. **Function Arena Pattern**: The Rust implementation uses `std::mem::replace` to temporarily extract functions from `env.functions` (lines 58-60, 87) to avoid borrow conflicts. TypeScript can directly access `instr.value.loweredFunc.func` since there's no borrow checker. This is a necessary and correct adaptation for Rust.
 
-### 2. Debug logger as callback parameter
-**Location:** `analyse_functions.rs:35-38, 64, 94-96, 174`
-**Reason:** TypeScript accesses `fn.env.logger?.debugLogIRs` directly. Rust separates `Environment` from `HirFunction` (per architecture doc), and doesn't store logger on env, so the caller must pass in a debug callback.
+2. **Debug Logger as Callback**: The Rust version takes `debug_logger: &mut F` as a generic callback parameter (line 35), while TypeScript accesses `fn.env.logger?.debugLogIRs` directly (line 122). This is required because Rust separates `env` from `HirFunction` and the logger lives on `env` but needs to be called after function processing when the caller has access to both.
 
-### 3. Manual scope field management
-**Location:** `analyse_functions.rs:78-84`
-**TypeScript:** `AnalyseFunctions.ts:28-39`
-**Reason:** In TypeScript, `operand.identifier.scope = null` directly nulls the reference. In Rust, identifiers are accessed via arena index: `env.identifiers[operand.identifier.0 as usize].scope = None`. Additionally, the Rust version explicitly clears the scope field (line 83), while TypeScript relies on the range reset to effectively detach from the scope.
+3. **Error Accumulation**: The Rust implementation accumulates errors in `env.errors` and checks `env.has_invariant_errors()`, while TypeScript relies on exceptions. This follows the Rust port's fault-tolerant error handling architecture where passes accumulate errors and check at the end rather than aborting on first error.
 
-## Missing from Rust Port
-None. All functions, logic paths, and error handling are present.
+4. **Placeholder Function**: The `placeholder_function()` helper (lines 184-209) is Rust-specific, needed for the `mem::replace` pattern. TypeScript doesn't need this since it can keep references to functions being processed.
 
-## Additional in Rust Port
+## Completeness
 
-### 1. Invariant error check and early return
-**Location:** `analyse_functions.rs:66-69`
-**Addition:** The Rust version checks `if env.has_invariant_errors()` and returns early from processing further inner functions. This is not present in TypeScript but aligns with Rust's error propagation model.
+The Rust port is functionally complete compared to the TypeScript source:
 
-### 2. Placeholder function helper
-**Location:** `analyse_functions.rs:177-206`
-**Addition:** A helper function `placeholder_function()` is added to support the arena swap pattern. Not needed in TypeScript.
+✅ Recursive analysis of nested function expressions and object methods
+✅ Correct pass ordering: `analyse_functions`, `inferMutationAliasingEffects`, `deadCodeElimination`, `inferMutationAliasingRanges`, `rewriteInstructionKindsBasedOnReassignment`, `inferReactiveScopeVariables`
+✅ Context variable mutable range resetting (lines 77-84)
+✅ Phase 2: Populate context variable effects based on function effects (lines 134-174)
+✅ Debug logging callback (line 177)
+✅ Aliasing effects assignment to `func.aliasing_effects` (line 130)
+✅ All effect kinds handled in Phase 2 match (lines 136-163)
 
-### 3. Explicit `use` statements
-**Location:** `analyse_functions.rs:15-22`
-**Addition:** Rust requires explicit imports. TypeScript equivalent is at `AnalyseFunctions.ts:8-15`.
+No missing functionality detected.
