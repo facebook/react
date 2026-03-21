@@ -50,11 +50,11 @@ function Component(t0) {
   const $ = _c(5);
   const { user } = t0;
   let t1;
-  if ($[0] !== user) {
+  if ($[0] !== user?.email) {
     t1 = () => {
       console.log(user.email);
     };
-    $[0] = user;
+    $[0] = user?.email;
     $[1] = t1;
   } else {
     t1 = $[1];

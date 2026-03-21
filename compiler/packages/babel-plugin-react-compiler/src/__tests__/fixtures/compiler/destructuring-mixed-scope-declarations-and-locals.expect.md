@@ -55,14 +55,14 @@ function Component(props) {
     const allUrls = [];
     const { media, comments, urls } = post;
     let t1;
-    if ($[2] !== comments) {
+    if ($[2] !== comments?.length) {
       t1 = (e) => {
         if (!comments.length) {
           return;
         }
         console.log(comments.length);
       };
-      $[2] = comments;
+      $[2] = comments?.length;
       $[3] = t1;
     } else {
       t1 = $[3];

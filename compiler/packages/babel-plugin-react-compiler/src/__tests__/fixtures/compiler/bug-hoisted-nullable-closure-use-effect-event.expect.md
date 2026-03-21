@@ -41,11 +41,11 @@ function Component(t0) {
   const $ = _c(5);
   const { data } = t0;
   let t1;
-  if ($[0] !== data) {
+  if ($[0] !== data?.value) {
     t1 = () => {
       console.log(data.value);
     };
-    $[0] = data;
+    $[0] = data?.value;
     $[1] = t1;
   } else {
     t1 = $[1];

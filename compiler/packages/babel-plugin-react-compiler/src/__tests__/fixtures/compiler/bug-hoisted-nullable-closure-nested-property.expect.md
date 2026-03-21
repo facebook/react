@@ -53,11 +53,11 @@ function Component(t0) {
   const $ = _c(5);
   const { post } = t0;
   let t1;
-  if ($[0] !== post) {
+  if ($[0] !== post?.author?.profile?.avatar) {
     t1 = () => {
       console.log(post.author.profile.avatar);
     };
-    $[0] = post;
+    $[0] = post?.author?.profile?.avatar;
     $[1] = t1;
   } else {
     t1 = $[1];

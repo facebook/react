@@ -59,22 +59,22 @@ function Component(t0) {
   const $ = _c(9);
   const { user, post } = t0;
   let t1;
-  if ($[0] !== user) {
+  if ($[0] !== user?.name) {
     t1 = () => {
       console.log(user.name);
     };
-    $[0] = user;
+    $[0] = user?.name;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
   const handleUser = t1;
   let t2;
-  if ($[2] !== post) {
+  if ($[2] !== post?.title) {
     t2 = () => {
       console.log(post.title);
     };
-    $[2] = post;
+    $[2] = post?.title;
     $[3] = t2;
   } else {
     t2 = $[3];

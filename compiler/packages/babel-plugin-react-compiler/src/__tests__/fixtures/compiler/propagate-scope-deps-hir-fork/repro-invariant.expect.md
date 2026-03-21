@@ -29,9 +29,9 @@ function Foo(t0) {
   const $ = _c(5);
   const { data } = t0;
   let t1;
-  if ($[0] !== data.a) {
+  if ($[0] !== data.a?.d) {
     t1 = () => data.a.d;
-    $[0] = data.a;
+    $[0] = data.a?.d;
     $[1] = t1;
   } else {
     t1 = $[1];
