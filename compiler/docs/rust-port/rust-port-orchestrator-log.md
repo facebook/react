@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1700/1717 passing (99.0%), 17 failures remaining.
+Overall: 1709/1717 passing (99.5%), 8 failures remaining.
 
 ## Transformation passes (all ported)
 
@@ -23,18 +23,18 @@ InferReactivePlaces: complete (1644/1644)
 RewriteInstructionKindsBasedOnReassignment: complete (1643/1643)
 InferReactiveScopeVariables: complete (1643/1643)
 MemoizeFbtAndMacroOperandsInSameScope: complete (1643/1643)
-outlineJSX: partial (conditional on enableJsxOutlining, 6 failures)
+outlineJSX: complete (conditional on enableJsxOutlining)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: partial (1637/1643, 6 failures)
-AlignMethodCallScopes: complete (1634/1634)
-AlignObjectMethodScopes: complete (1634/1634)
-PruneUnusedLabelsHIR: complete (1634/1634)
-AlignReactiveScopesToBlockScopesHIR: complete (1634/1634)
-MergeOverlappingReactiveScopesHIR: partial (1631/1634, 3 failures)
-BuildReactiveScopeTerminalsHIR: complete (1631/1631)
-FlattenReactiveLoopsHIR: complete (1631/1631)
-FlattenScopesWithHooksOrUseHIR: complete (1631/1631)
-PropagateScopeDependenciesHIR: partial (1629/1634, 5 failures)
+OutlineFunctions: complete (1643/1643)
+AlignMethodCallScopes: complete (1643/1643)
+AlignObjectMethodScopes: complete (1643/1643)
+PruneUnusedLabelsHIR: complete (1643/1643)
+AlignReactiveScopesToBlockScopesHIR: complete (1643/1643)
+MergeOverlappingReactiveScopesHIR: complete (1643/1643)
+BuildReactiveScopeTerminalsHIR: complete (1643/1643)
+FlattenReactiveLoopsHIR: complete (1643/1643)
+FlattenScopesWithHooksOrUseHIR: complete (1643/1643)
+PropagateScopeDependenciesHIR: partial (1638/1643, 5 failures)
 
 ## Validation passes
 
@@ -51,16 +51,14 @@ ValidateNoJSXInTryStatement: complete (4/4)
 ValidateNoFreezingKnownMutableFunctions: complete (1644/1644)
 ValidateStaticComponents: complete (5/5)
 ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
-ValidatePreservedManualMemoization: complete (1622/1622)
+ValidatePreservedManualMemoization: complete (1636/1636)
 
-## Remaining failure breakdown (17 total)
+## Remaining failure breakdown (8 total)
 
-OutlineFunctions/outlineJSX: 6 (instruction ordering in outlined callbacks)
-PropagateScopeDependenciesHIR: 5 (hoistable property loads, scope declarations)
-MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
+PropagateScopeDependenciesHIR: 5 (scope declarations, hoistable property loads in loops)
 Error reporting: 3 (require unported reactive passes: PruneHoistedContexts, etc.)
-AssertScopeInstructionsWithinScopes: 2 (cascade)
-ValidateExhaustiveDependencies: 1
+- AssertScopeInstructionsWithinScopes: 2 (cascade from PSDH)
+- ValidateExhaustiveDependencies: 1 (cascade)
 
 # Logs
 
@@ -347,3 +345,12 @@ Fixed PSDH get_assumed_invoked_functions to share temporaries map across inner f
 recursion. Fixed outline_jsx: aliasingEffects Some(vec![]) instead of None, IndexMap for
 prop ordering, skip all JSX instructions in outlined groups.
 Overall: 1700/1717 passing (99.0%), 17 failures remaining.
+
+## 20260321-000048 Fix OutlineFunctions and MergeOverlappingReactiveScopesHIR — 1700→1709 (+9)
+
+Fixed outline_jsx block rewrite to place replacement at LAST JSX position (matching TS
+reverse iteration). Fixed MergeOverlappingReactiveScopesHIR scope deduplication to preserve
+insertion order instead of sorting by ScopeId. All OutlineFunctions and MergeOverlapping
+passes now clean. Remaining 8 failures: PSDH scope declarations (5), error reporting from
+unported reactive passes (3).
+Overall: 1709/1717 passing (99.5%), 8 failures remaining.
