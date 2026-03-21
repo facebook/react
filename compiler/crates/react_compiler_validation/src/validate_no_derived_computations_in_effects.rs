@@ -18,9 +18,9 @@ use react_compiler_diagnostics::{
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     is_set_state_type, is_use_effect_hook_type, is_use_ref_type, is_use_state_type,
-    ArrayElement, BlockId, Effect, EvaluationOrder, FunctionId, HirFunction,
-    IdentifierId, IdentifierName, InstructionValue, ParamPattern,
-    ReactFunctionType, ReturnVariant, SourceLocation,
+    ArrayElement, BlockId, Effect, EvaluationOrder, FunctionId, HirFunction, Identifier,
+    IdentifierId, IdentifierName, InstructionValue, ParamPattern, PlaceOrSpread,
+    ReactFunctionType, ReturnVariant, SourceLocation, Type,
 };
 
 const MAX_FIXPOINT_ITERATIONS: usize = 100;
@@ -1267,3 +1267,299 @@ fn validate_effect(
     }
 }
 
+// =============================================================================
+// Non-exp version: ValidateNoDerivedComputationsInEffects
+// Port of ValidateNoDerivedComputationsInEffects.ts
+// =============================================================================
+
+/// Non-experimental version of the derived-computations-in-effects validation.
+/// Records errors directly on the Environment (matching TS `env.recordError()` behavior).
+pub fn validate_no_derived_computations_in_effects(
+    func: &HirFunction,
+    env: &mut Environment,
+) {
+    // Phase 1: Collect effect call sites (func_id + resolved deps).
+    // Done with only immutable borrows of env fields.
+    let effects_to_validate: Vec<(FunctionId, Vec<IdentifierId>)> = {
+        let ids = &env.identifiers;
+        let tys = &env.types;
+        let mut candidate_deps: HashMap<IdentifierId, Vec<IdentifierId>> = HashMap::new();
+        let mut functions_map: HashMap<IdentifierId, FunctionId> = HashMap::new();
+        let mut locals_map: HashMap<IdentifierId, IdentifierId> = HashMap::new();
+        let mut result = Vec::new();
+
+        for (_, block) in &func.body.blocks {
+            for &iid in &block.instructions {
+                let instr = &func.instructions[iid.0 as usize];
+                match &instr.value {
+                    InstructionValue::LoadLocal { place, .. } => {
+                        locals_map.insert(instr.lvalue.identifier, place.identifier);
+                    }
+                    InstructionValue::ArrayExpression { elements, .. } => {
+                        let elem_ids: Vec<IdentifierId> = elements
+                            .iter()
+                            .filter_map(|e| match e {
+                                ArrayElement::Place(p) => Some(p.identifier),
+                                _ => None,
+                            })
+                            .collect();
+                        if elem_ids.len() == elements.len() {
+                            candidate_deps.insert(instr.lvalue.identifier, elem_ids);
+                        }
+                    }
+                    InstructionValue::FunctionExpression { lowered_func, .. } => {
+                        functions_map.insert(instr.lvalue.identifier, lowered_func.func);
+                    }
+                    InstructionValue::CallExpression { callee, args, .. } => {
+                        let callee_ty = &tys[ids[callee.identifier.0 as usize].type_.0 as usize];
+                        if is_use_effect_hook_type(callee_ty) && args.len() == 2 {
+                            if let (PlaceOrSpread::Place(arg0), PlaceOrSpread::Place(arg1)) =
+                                (&args[0], &args[1])
+                            {
+                                if let (Some(&func_id), Some(dep_elements)) =
+                                    (functions_map.get(&arg0.identifier), candidate_deps.get(&arg1.identifier))
+                                {
+                                    if !dep_elements.is_empty() {
+                                        let resolved: Vec<IdentifierId> = dep_elements
+                                            .iter()
+                                            .map(|d| locals_map.get(d).copied().unwrap_or(*d))
+                                            .collect();
+                                        result.push((func_id, resolved));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    InstructionValue::MethodCall { property, args, .. } => {
+                        let callee_ty = &tys[ids[property.identifier.0 as usize].type_.0 as usize];
+                        if is_use_effect_hook_type(callee_ty) && args.len() == 2 {
+                            if let (PlaceOrSpread::Place(arg0), PlaceOrSpread::Place(arg1)) =
+                                (&args[0], &args[1])
+                            {
+                                if let (Some(&func_id), Some(dep_elements)) =
+                                    (functions_map.get(&arg0.identifier), candidate_deps.get(&arg1.identifier))
+                                {
+                                    if !dep_elements.is_empty() {
+                                        let resolved: Vec<IdentifierId> = dep_elements
+                                            .iter()
+                                            .map(|d| locals_map.get(d).copied().unwrap_or(*d))
+                                            .collect();
+                                        result.push((func_id, resolved));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        result
+    };
+
+    // Phase 2: Validate each collected effect and record diagnostics
+    for (func_id, resolved_deps) in effects_to_validate {
+        let diagnostics = validate_effect_non_exp(
+            &env.functions[func_id.0 as usize],
+            &resolved_deps,
+            &env.identifiers,
+            &env.types,
+        );
+        for diag in diagnostics {
+            env.record_diagnostic(diag);
+        }
+    }
+}
+
+fn validate_effect_non_exp(
+    effect_func: &HirFunction,
+    effect_deps: &[IdentifierId],
+    ids: &[Identifier],
+    tys: &[Type],
+) -> Vec<CompilerDiagnostic> {
+    // Check that the effect function only captures effect deps and setState
+    for ctx in &effect_func.context {
+        let ctx_ty = &tys[ids[ctx.identifier.0 as usize].type_.0 as usize];
+        if is_set_state_type(ctx_ty) {
+            continue;
+        } else if effect_deps.iter().any(|d| *d == ctx.identifier) {
+            continue;
+        } else {
+            return Vec::new();
+        }
+    }
+
+    // Check that all effect deps are actually used in the function
+    for dep in effect_deps {
+        if !effect_func.context.iter().any(|c| c.identifier == *dep) {
+            return Vec::new();
+        }
+    }
+
+    let mut seen_blocks: HashSet<BlockId> = HashSet::new();
+    let mut dep_values: HashMap<IdentifierId, Vec<IdentifierId>> = HashMap::new();
+    for dep in effect_deps {
+        dep_values.insert(*dep, vec![*dep]);
+    }
+
+    let mut set_state_locs: Vec<SourceLocation> = Vec::new();
+
+    for (_, block) in &effect_func.body.blocks {
+        for &pred in &block.preds {
+            if !seen_blocks.contains(&pred) {
+                return Vec::new();
+            }
+        }
+
+        for phi in &block.phis {
+            let mut aggregate: HashSet<IdentifierId> = HashSet::new();
+            for operand in phi.operands.values() {
+                if let Some(deps) = dep_values.get(&operand.identifier) {
+                    for d in deps {
+                        aggregate.insert(*d);
+                    }
+                }
+            }
+            if !aggregate.is_empty() {
+                dep_values.insert(phi.place.identifier, aggregate.into_iter().collect());
+            }
+        }
+
+        for &iid in &block.instructions {
+            let instr = &effect_func.instructions[iid.0 as usize];
+            match &instr.value {
+                InstructionValue::Primitive { .. }
+                | InstructionValue::JSXText { .. }
+                | InstructionValue::LoadGlobal { .. } => {}
+                InstructionValue::LoadLocal { place, .. } => {
+                    if let Some(deps) = dep_values.get(&place.identifier) {
+                        dep_values.insert(instr.lvalue.identifier, deps.clone());
+                    }
+                }
+                InstructionValue::ComputedLoad { .. }
+                | InstructionValue::PropertyLoad { .. }
+                | InstructionValue::BinaryExpression { .. }
+                | InstructionValue::TemplateLiteral { .. }
+                | InstructionValue::CallExpression { .. }
+                | InstructionValue::MethodCall { .. } => {
+                    let mut aggregate: HashSet<IdentifierId> = HashSet::new();
+                    for operand in non_exp_value_operands(&instr.value) {
+                        if let Some(deps) = dep_values.get(&operand) {
+                            for d in deps {
+                                aggregate.insert(*d);
+                            }
+                        }
+                    }
+                    if !aggregate.is_empty() {
+                        dep_values.insert(
+                            instr.lvalue.identifier,
+                            aggregate.into_iter().collect(),
+                        );
+                    }
+
+                    if let InstructionValue::CallExpression { callee, args, .. } = &instr.value {
+                        let callee_ty = &tys[ids[callee.identifier.0 as usize].type_.0 as usize];
+                        if is_set_state_type(callee_ty) && args.len() == 1 {
+                            if let PlaceOrSpread::Place(arg) = &args[0] {
+                                if let Some(deps) = dep_values.get(&arg.identifier) {
+                                    let dep_set: HashSet<_> = deps.iter().collect();
+                                    if dep_set.len() == effect_deps.len() {
+                                        if let Some(loc) = callee.loc {
+                                            set_state_locs.push(loc);
+                                        }
+                                    } else {
+                                        return Vec::new();
+                                    }
+                                } else {
+                                    return Vec::new();
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    return Vec::new();
+                }
+            }
+        }
+
+        match &block.terminal {
+            react_compiler_hir::Terminal::Return { value, .. }
+            | react_compiler_hir::Terminal::Throw { value, .. } => {
+                if dep_values.contains_key(&value.identifier) {
+                    return Vec::new();
+                }
+            }
+            react_compiler_hir::Terminal::If { test, .. }
+            | react_compiler_hir::Terminal::Branch { test, .. } => {
+                if dep_values.contains_key(&test.identifier) {
+                    return Vec::new();
+                }
+            }
+            react_compiler_hir::Terminal::Switch { test, .. } => {
+                if dep_values.contains_key(&test.identifier) {
+                    return Vec::new();
+                }
+            }
+            _ => {}
+        }
+
+        seen_blocks.insert(block.id);
+    }
+
+    set_state_locs
+        .into_iter()
+        .map(|loc| {
+            CompilerDiagnostic::new(
+                ErrorCategory::EffectDerivationsOfState,
+                "Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)",
+                None,
+            )
+            .with_detail(CompilerDiagnosticDetail::Error {
+                loc: Some(loc),
+                message: None,
+            })
+        })
+        .collect()
+}
+
+fn non_exp_value_operands(value: &InstructionValue) -> Vec<IdentifierId> {
+    match value {
+        InstructionValue::ComputedLoad { object, property, .. } => {
+            vec![object.identifier, property.identifier]
+        }
+        InstructionValue::PropertyLoad { object, .. } => vec![object.identifier],
+        InstructionValue::BinaryExpression { left, right, .. } => {
+            vec![left.identifier, right.identifier]
+        }
+        InstructionValue::TemplateLiteral { subexprs, .. } => {
+            subexprs.iter().map(|s| s.identifier).collect()
+        }
+        InstructionValue::CallExpression { callee, args, .. } => {
+            let mut op_ids = vec![callee.identifier];
+            for a in args {
+                match a {
+                    PlaceOrSpread::Place(p) => op_ids.push(p.identifier),
+                    PlaceOrSpread::Spread(s) => op_ids.push(s.place.identifier),
+                }
+            }
+            op_ids
+        }
+        InstructionValue::MethodCall {
+            receiver,
+            property,
+            args,
+            ..
+        } => {
+            let mut op_ids = vec![receiver.identifier, property.identifier];
+            for a in args {
+                match a {
+                    PlaceOrSpread::Place(p) => op_ids.push(p.identifier),
+                    PlaceOrSpread::Spread(s) => op_ids.push(s.place.identifier),
+                }
+            }
+            op_ids
+        }
+        _ => Vec::new(),
+    }
+}

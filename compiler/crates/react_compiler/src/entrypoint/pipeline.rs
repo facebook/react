@@ -251,7 +251,7 @@ pub fn compile_fn(
             log_errors_as_events(&errors, context);
             context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
         } else if env.config.validate_no_derived_computations_in_effects {
-            // TODO: port validateNoDerivedComputationsInEffects
+            react_compiler_validation::validate_no_derived_computations_in_effects(&hir, &mut env);
             context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
         }
 

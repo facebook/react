@@ -6,7 +6,7 @@ use react_compiler_hir::{Effect, HirFunction, Identifier, IdentifierId, Identifi
 pub fn validate_locals_not_reassigned_after_render(func: &HirFunction, env: &mut Environment) {
     let mut ctx: HashSet<IdentifierId> = HashSet::new();
     let mut errs: Vec<CompilerDiagnostic> = Vec::new();
-    let r = check(func, &env.identifiers, &env.types, &env.functions, &mut ctx, false, false, &mut errs);
+    let r = check(func, &env.identifiers, &env.types, &env.functions, &*env, &mut ctx, false, false, &mut errs);
     for d in errs { env.record_diagnostic(d); }
     if let Some(r) = r {
         let v = vname(&r, &env.identifiers);
@@ -16,13 +16,17 @@ pub fn validate_locals_not_reassigned_after_render(func: &HirFunction, env: &mut
     }
 }
 fn vname(p: &Place, ids: &[Identifier]) -> String { let i = &ids[p.identifier.0 as usize]; match &i.name { Some(IdentifierName::Named(n)) => format!("`{}`", n), _ => "variable".to_string() } }
-fn check(func: &HirFunction, ids: &[Identifier], tys: &[Type], fns: &[HirFunction], ctx: &mut HashSet<IdentifierId>, is_fe: bool, is_async: bool, errs: &mut Vec<CompilerDiagnostic>) -> Option<Place> {
+fn get_no_alias(env: &Environment, id: IdentifierId, ids: &[Identifier], tys: &[Type]) -> bool {
+    let ty = &tys[ids[id.0 as usize].type_.0 as usize];
+    env.get_function_signature(ty).map_or(false, |sig| sig.no_alias)
+}
+fn check(func: &HirFunction, ids: &[Identifier], tys: &[Type], fns: &[HirFunction], env: &Environment, ctx: &mut HashSet<IdentifierId>, is_fe: bool, is_async: bool, errs: &mut Vec<CompilerDiagnostic>) -> Option<Place> {
     let mut rf: HashMap<IdentifierId, Place> = HashMap::new();
     for (_, block) in &func.body.blocks {
         for &iid in &block.instructions { let instr = &func.instructions[iid.0 as usize]; match &instr.value {
             InstructionValue::FunctionExpression { lowered_func, .. } | InstructionValue::ObjectMethod { lowered_func, .. } => {
                 let inner = &fns[lowered_func.func.0 as usize]; let ia = is_async || inner.is_async;
-                let mut re = check(inner, ids, tys, fns, ctx, true, ia, errs);
+                let mut re = check(inner, ids, tys, fns, env, ctx, true, ia, errs);
                 if re.is_none() { for c in &inner.context { if let Some(r) = rf.get(&c.identifier) { re = Some(r.clone()); break; } } }
                 if let Some(ref r) = re { if ia { let v = vname(r, ids);
                     errs.push(CompilerDiagnostic::new(ErrorCategory::Immutability, "Cannot reassign variable in async function", Some("Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead".to_string()))
@@ -30,14 +34,42 @@ fn check(func: &HirFunction, ids: &[Identifier], tys: &[Type], fns: &[HirFunctio
                 } else { rf.insert(instr.lvalue.identifier, r.clone()); } }
             }
             InstructionValue::StoreLocal { lvalue, value, .. } => { if let Some(r) = rf.get(&value.identifier) { let r = r.clone(); rf.insert(lvalue.place.identifier, r.clone()); rf.insert(instr.lvalue.identifier, r); } }
-            InstructionValue::LoadLocal { place, .. } => { if let Some(r) = rf.get(&place.identifier) { rf.insert(instr.lvalue.identifier, r.clone()); } }
+            InstructionValue::LoadLocal { place, .. } | InstructionValue::LoadContext { place, .. } => { if let Some(r) = rf.get(&place.identifier) { rf.insert(instr.lvalue.identifier, r.clone()); } }
             InstructionValue::DeclareContext { lvalue, .. } => { if !is_fe { ctx.insert(lvalue.place.identifier); } }
             InstructionValue::StoreContext { lvalue, value, .. } => {
                 if is_fe && ctx.contains(&lvalue.place.identifier) { return Some(lvalue.place.clone()); }
                 if !is_fe { ctx.insert(lvalue.place.identifier); }
                 if let Some(r) = rf.get(&value.identifier) { let r = r.clone(); rf.insert(lvalue.place.identifier, r.clone()); rf.insert(instr.lvalue.identifier, r); }
             }
-            _ => { for o in ops(&instr.value) { if let Some(r) = rf.get(&o.identifier) { if o.effect == Effect::Freeze { return Some(r.clone()); } rf.insert(instr.lvalue.identifier, r.clone()); } } }
+            _ => {
+                // For calls with noAlias signatures, only check the callee (not args)
+                // to avoid false positives from callbacks that reassign context variables.
+                let operands: Vec<&Place> = match &instr.value {
+                    InstructionValue::CallExpression { callee, .. } => {
+                        if get_no_alias(env, callee.identifier, ids, tys) {
+                            vec![callee]
+                        } else {
+                            ops(&instr.value)
+                        }
+                    }
+                    InstructionValue::MethodCall { receiver, property, .. } => {
+                        if get_no_alias(env, property.identifier, ids, tys) {
+                            vec![receiver, property]
+                        } else {
+                            ops(&instr.value)
+                        }
+                    }
+                    InstructionValue::TaggedTemplateExpression { tag, .. } => {
+                        if get_no_alias(env, tag.identifier, ids, tys) {
+                            vec![tag]
+                        } else {
+                            ops(&instr.value)
+                        }
+                    }
+                    _ => ops(&instr.value),
+                };
+                for o in operands { if let Some(r) = rf.get(&o.identifier) { if o.effect == Effect::Freeze { return Some(r.clone()); } rf.insert(instr.lvalue.identifier, r.clone()); } }
+            }
         }}
         for o in tops(&block.terminal) { if let Some(r) = rf.get(&o.identifier) { return Some(r.clone()); } }
     }

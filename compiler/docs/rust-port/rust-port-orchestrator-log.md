@@ -1,11 +1,11 @@
 # Status
 
-Overall: 1651/1717 passing (96.2%), 66 failures remaining.
+Overall: 1658/1717 passing (96.6%), 59 failures remaining.
 
 ## Transformation passes (all ported)
 
 HIR: complete (1653/1653)
-PruneMaybeThrows: complete (1733/1733, includes 2nd call)
+PruneMaybeThrows: complete (1720/1720, includes 2nd call)
 DropManualMemoization: complete (1652/1652)
 InlineImmediatelyInvokedFunctionExpressions: complete (1652/1652)
 MergeConsecutiveBlocks: complete (1652/1652)
@@ -19,22 +19,22 @@ InferMutationAliasingEffects: complete (1644/1644)
 OptimizeForSSR: todo (conditional, outputMode === 'ssr')
 DeadCodeElimination: complete (1644/1644)
 InferMutationAliasingRanges: complete (1644/1644)
-InferReactivePlaces: partial (1636/1643, 7 failures)
-RewriteInstructionKindsBasedOnReassignment: partial (1612/1635, 23 failures from VED cascade)
-InferReactiveScopeVariables: complete (1612/1612)
-MemoizeFbtAndMacroOperandsInSameScope: complete (1612/1612)
+InferReactivePlaces: complete (1644/1644)
+RewriteInstructionKindsBasedOnReassignment: partial (1620/1643, 23 failures from VED cascade)
+InferReactiveScopeVariables: complete (1620/1620)
+MemoizeFbtAndMacroOperandsInSameScope: complete (1620/1620)
 outlineJSX: stub (conditional on enableJsxOutlining)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: partial (1603/1612, 9 failures)
-AlignMethodCallScopes: complete (1603/1603)
-AlignObjectMethodScopes: partial (1602/1603, 1 failure)
-PruneUnusedLabelsHIR: complete (1602/1602)
-AlignReactiveScopesToBlockScopesHIR: complete (1602/1602)
-MergeOverlappingReactiveScopesHIR: partial (1599/1602, 3 failures)
-BuildReactiveScopeTerminalsHIR: complete (1599/1599)
-FlattenReactiveLoopsHIR: complete (1599/1599)
-FlattenScopesWithHooksOrUseHIR: complete (1599/1599)
-PropagateScopeDependenciesHIR: partial (1579/1599, 20 failures)
+OutlineFunctions: partial (1611/1620, 9 failures)
+AlignMethodCallScopes: complete (1611/1611)
+AlignObjectMethodScopes: partial (1610/1611, 1 failure)
+PruneUnusedLabelsHIR: complete (1610/1610)
+AlignReactiveScopesToBlockScopesHIR: complete (1610/1610)
+MergeOverlappingReactiveScopesHIR: partial (1607/1610, 3 failures)
+BuildReactiveScopeTerminalsHIR: complete (1607/1607)
+FlattenReactiveLoopsHIR: complete (1607/1607)
+FlattenScopesWithHooksOrUseHIR: complete (1607/1607)
+PropagateScopeDependenciesHIR: partial (1587/1607, 20 failures)
 
 ## Validation passes
 
@@ -43,21 +43,20 @@ ValidateUseMemo: complete (1652/1652)
 ValidateHooksUsage: complete (1651/1651)
 ValidateNoCapitalizedCalls: complete (3/3)
 ValidateLocalsNotReassignedAfterRender: complete (1644/1644)
-ValidateNoRefAccessInRender: complete (1642/1642)
-ValidateNoSetStateInRender: complete (1642/1642)
+ValidateNoRefAccessInRender: complete (1644/1644)
+ValidateNoSetStateInRender: complete (1644/1644)
 ValidateNoDerivedComputationsInEffects: complete (22/22)
 ValidateNoSetStateInEffects: complete (12/12)
 ValidateNoJSXInTryStatement: complete (4/4)
-ValidateNoFreezingKnownMutableFunctions: complete (1643/1643)
-ValidateExhaustiveDependencies: partial (1635/1636, 1 failure; errors stripped to prevent cascade)
-ValidatePreservedManualMemoization: complete (1577/1577)
+ValidateNoFreezingKnownMutableFunctions: complete (1644/1644)
+ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
+ValidatePreservedManualMemoization: complete (1585/1585)
 
-## Remaining failure breakdown (66 total)
+## Remaining failure breakdown (59 total)
 
 RIKBR: 23 (all from VED false positive error cascade)
 PropagateScopeDependenciesHIR: 20 (missing reduceMaybeOptionalChains, propagation algo)
 OutlineFunctions: 9 (8 outline_jsx stub + 1 edge case)
-InferReactivePlaces: 7 (missing upstream validation passes)
 MergeOverlappingReactiveScopesHIR: 3 (scope range edge cases)
 AssertScopeInstructionsWithinScopes: 2
 ValidateExhaustiveDependencies: 1
@@ -310,3 +309,13 @@ Ported createControlDominators / isRefControlledBlock logic from ControlDominato
 into validate_no_set_state_in_effects.rs. Added post-dominator frontier computation
 and phi-node predecessor block fallback. Fixes 1 failure (valid-setState-in-useEffect-controlled-by-ref-value.js).
 Overall: 1651/1717 passing (96.2%), 66 failures remaining.
+
+## 20260320-171654 Fix upstream validation passes — 7 InferReactivePlaces failures resolved
+
+Fixed 3 validation passes causing 7 failures misattributed to InferReactivePlaces:
+- ValidateNoRefAccessInRender: hook kind detection via env lookup instead of shape_id matching,
+  added missing else branch for useState/useReducer, fixed joinRefAccessRefTypes semantics.
+- ValidateLocalsNotReassignedAfterRender: added LoadContext propagation, noAlias check for
+  Array callback methods to eliminate false positives.
+- Ported non-experimental ValidateNoDerivedComputationsInEffects (replacing TODO stub).
+Overall: 1658/1717 passing (96.6%), 59 failures remaining.
