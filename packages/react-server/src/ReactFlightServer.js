@@ -526,8 +526,9 @@ type Task = {
   id: number,
   status: 0 | 1 | 3 | 4 | 5,
   model: ReactClientValue,
+  continuationSource: null | Array<ReactClientValue>,
+  continuationIndex: number,
   ping: () => void,
-  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
   keyPath: ReactKey, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   formatContext: FormatContext, // an approximate parent context from host components
@@ -2712,10 +2713,11 @@ function createTask(
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
   debugTask: null | ConsoleTask, // DEV-only
+  registerModelReference: boolean = true,
 ): Task {
   request.pendingChunks++;
   const id = request.nextChunkId++;
-  if (typeof model === 'object' && model !== null) {
+  if (registerModelReference && typeof model === 'object' && model !== null) {
     // If we're about to write this into a new task we can assign it an ID early so that
     // any other references can refer to the value we're about to write.
     if (keyPath !== null || implicitSlot) {
@@ -2729,59 +2731,12 @@ function createTask(
     id,
     status: PENDING,
     model,
+    continuationSource: null,
+    continuationIndex: 0,
     keyPath,
     implicitSlot,
     formatContext: formatContext,
     ping: () => pingTask(request, task),
-    toJSON: function (
-      this:
-        | {+[key: string | number]: ReactClientValue}
-        | $ReadOnlyArray<ReactClientValue>,
-      parentPropertyName: string,
-      value: ReactClientValue,
-    ): ReactJSONValue {
-      const parent = this;
-      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
-      if (__DEV__) {
-        // $FlowFixMe[incompatible-use]
-        const originalValue = parent[parentPropertyName];
-        if (
-          typeof originalValue === 'object' &&
-          originalValue !== value &&
-          !(originalValue instanceof Date)
-        ) {
-          // Call with the server component as the currently rendering component
-          // for context.
-          callWithDebugContextInDEV(request, task, () => {
-            if (objectName(originalValue) !== 'Object') {
-              const jsxParentType = jsxChildrenParents.get(parent);
-              if (typeof jsxParentType === 'string') {
-                console.error(
-                  '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
-                  objectName(originalValue),
-                  describeObjectForErrorMessage(parent, parentPropertyName),
-                );
-              } else {
-                console.error(
-                  'Only plain objects can be passed to Client Components from Server Components. ' +
-                    '%s objects are not supported.%s',
-                  objectName(originalValue),
-                  describeObjectForErrorMessage(parent, parentPropertyName),
-                );
-              }
-            } else {
-              console.error(
-                'Only plain objects can be passed to Client Components from Server Components. ' +
-                  'Objects with toJSON methods are not supported. Convert it manually ' +
-                  'to a simple value before passing it to props.%s',
-                describeObjectForErrorMessage(parent, parentPropertyName),
-              );
-            }
-          });
-        }
-      }
-      return renderModel(request, task, parent, parentPropertyName, value);
-    },
     thenableState: null,
   }: Omit<
     Task,
@@ -3460,6 +3415,256 @@ function renderModel(
   }
 }
 
+function createArrayContinuationTask(
+  request: Request,
+  task: Task,
+  continuationSource: Array<ReactClientValue>,
+  continuationIndex: number,
+): Task {
+  // Continuation tasks resume the same source array from a later index.
+  // This task resumes an existing array instead of outlining a new one.
+  const newTask = createTask(
+    request,
+    continuationSource,
+    task.keyPath,
+    task.implicitSlot,
+    task.formatContext,
+    request.abortableTasks,
+    enableProfilerTimer &&
+      (enableComponentPerformanceTrack || enableAsyncDebugInfo)
+      ? task.time
+      : 0,
+    __DEV__ ? task.debugOwner : null,
+    __DEV__ ? task.debugStack : null,
+    __DEV__ ? task.debugTask : null,
+    false,
+  );
+  newTask.continuationSource = continuationSource;
+  newTask.continuationIndex = continuationIndex;
+  return newTask;
+}
+
+function looksLikeRenderableChildrenArray(
+  sourceArray: Array<ReactJSONValue>,
+): boolean {
+  // Only arrays that look like rendered children should use the row-packing
+  // continuation path. Plain data arrays (Map entries, tuple props, etc.) stay
+  // on the normal serialization path.
+  if (sourceArray.length === 0) {
+    return false;
+  }
+  const firstItem = sourceArray[0];
+  if (firstItem === '$' || firstItem === REACT_ELEMENT_TYPE) {
+    return false;
+  }
+  if (typeof firstItem === 'string') {
+    return firstItem[0] === '$';
+  }
+  if (typeof firstItem === 'object' && firstItem !== null) {
+    if (isArray(firstItem)) {
+      return firstItem[0] === '$' || firstItem[0] === REACT_ELEMENT_TYPE;
+    }
+    return (
+      firstItem.$$typeof === REACT_ELEMENT_TYPE ||
+      firstItem.$$typeof === REACT_LAZY_TYPE ||
+      typeof firstItem.then === 'function'
+    );
+  }
+  return false;
+}
+
+function resolveModelArray(
+  request: Request,
+  task: Task,
+  sourceArray: Array<ReactJSONValue>,
+  startIndex: number,
+  mayBeChildrenArray: boolean,
+): Array<ReactJSONValue> {
+  const totalLength = sourceArray.length - startIndex;
+  const resolvedArray = new Array<ReactJSONValue>(totalLength);
+  // Continuation tasks are only created for rendered children arrays.
+  let isChildrenArray = startIndex > 0;
+  let didCheckChildrenArray = startIndex > 0 || !mayBeChildrenArray;
+  for (let i = startIndex; i < sourceArray.length; i++) {
+    const targetIndex = i - startIndex;
+    const item = sourceArray[i];
+    const resolvedItem = resolveModelNode(
+      request,
+      task,
+      sourceArray,
+      '' + i,
+      item,
+    );
+    resolvedArray[targetIndex] = resolvedItem;
+
+    if (serializedSize > MAX_ROW_SIZE && i + 1 < sourceArray.length) {
+      // Most arrays never cross the split threshold, so defer the children-array
+      // heuristic until we actually need to decide whether this array should be
+      // packed into continuation rows.
+      if (!didCheckChildrenArray) {
+        isChildrenArray = looksLikeRenderableChildrenArray(sourceArray);
+        didCheckChildrenArray = true;
+      }
+      if (!isChildrenArray) {
+        continue;
+      }
+      const continuationTask = createArrayContinuationTask(
+        request,
+        task,
+        ((sourceArray: any): Array<ReactClientValue>),
+        i + 1,
+      );
+      pingTask(request, continuationTask);
+
+      resolvedArray.length = targetIndex + 2;
+      resolvedArray[targetIndex + 1] = serializeLazyID(continuationTask.id);
+      break;
+    }
+  }
+  return resolvedArray;
+}
+
+function getReferenceInParent(
+  request: Request,
+  task: Task,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+): void | string {
+  let parentReference;
+  let propertyName = parentPropertyName;
+  if (
+    task.continuationSource !== null &&
+    parent === task.continuationSource &&
+    isArray(parent)
+  ) {
+    parentReference = serializeByValueID(task.id);
+    propertyName = (+parentPropertyName - task.continuationIndex).toString(10);
+  } else {
+    parentReference = request.writtenObjects.get(parent);
+    if (parentReference === undefined) {
+      return undefined;
+    }
+  }
+
+  if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
+    switch (propertyName) {
+      case '1':
+        propertyName = 'type';
+        break;
+      case '2':
+        propertyName = 'key';
+        break;
+      case '3':
+        propertyName = 'props';
+        break;
+      case '4':
+        propertyName = '_owner';
+        break;
+    }
+  }
+
+  return parentReference + ':' + propertyName;
+}
+
+function resolveModelNode(
+  request: Request,
+  task: Task,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+  value: ReactClientValue,
+): ReactJSONValue {
+  // Mirror JSON.stringify replacer semantics so custom toJSON methods still run
+  // before we recurse, but do the traversal explicitly so we can row-pack arrays
+  // and avoid mutating frozen inputs in place.
+  let jsonValue: ReactClientValue = value;
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    // $FlowFixMe[method-unbinding]
+    typeof value.toJSON === 'function'
+  ) {
+    // $FlowFixMe[incompatible-use]
+    jsonValue = value.toJSON(parentPropertyName);
+  }
+
+  if (__DEV__) {
+    // $FlowFixMe[incompatible-use]
+    const originalValue = parent[parentPropertyName];
+    if (
+      typeof originalValue === 'object' &&
+      originalValue !== jsonValue &&
+      !(originalValue instanceof Date)
+    ) {
+      callWithDebugContextInDEV(request, task, () => {
+        if (objectName(originalValue) !== 'Object') {
+          const jsxParentType = jsxChildrenParents.get(parent);
+          if (typeof jsxParentType === 'string') {
+            console.error(
+              '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+              objectName(originalValue),
+              describeObjectForErrorMessage(parent, parentPropertyName),
+            );
+          } else {
+            console.error(
+              'Only plain objects can be passed to Client Components from Server Components. ' +
+                '%s objects are not supported.%s',
+              objectName(originalValue),
+              describeObjectForErrorMessage(parent, parentPropertyName),
+            );
+          }
+        } else {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              'Objects with toJSON methods are not supported. Convert it manually ' +
+              'to a simple value before passing it to props.%s',
+            describeObjectForErrorMessage(parent, parentPropertyName),
+          );
+        }
+      });
+    }
+  }
+  const rendered = renderModel(
+    request,
+    task,
+    parent,
+    parentPropertyName,
+    jsonValue,
+  );
+  if (rendered === null || typeof rendered !== 'object') {
+    return rendered;
+  }
+  if (isArray(rendered)) {
+    // Arrays need special handling so we can split large renderable child lists
+    // into lazy continuation rows.
+    return resolveModelArray(
+      request,
+      task,
+      ((rendered: any): Array<ReactJSONValue>),
+      0,
+      parentPropertyName === '' || parentPropertyName === 'children',
+    );
+  }
+  const resolvedObject: {[key: string]: ReactJSONValue} = (Object.create(
+    null,
+  ): any);
+  for (const propertyName in rendered) {
+    if (hasOwnProperty.call(rendered, propertyName)) {
+      resolvedObject[propertyName] = resolveModelNode(
+        request,
+        task,
+        rendered,
+        propertyName,
+        rendered[propertyName],
+      );
+    }
+  }
+  return resolvedObject;
+}
+
 function renderModelDestructive(
   request: Request,
   task: Task,
@@ -3520,11 +3725,16 @@ function renderModelDestructive(
             }
           } else if (parentPropertyName.indexOf(':') === -1) {
             // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
-            const parentReference = writtenObjects.get(parent);
-            if (parentReference !== undefined) {
+            const reference = getReferenceInParent(
+              request,
+              task,
+              parent,
+              parentPropertyName,
+            );
+            if (reference !== undefined) {
               // If the parent has a reference, we can refer to this object indirectly
               // through the property name inside that parent.
-              elementReference = parentReference + ':' + parentPropertyName;
+              elementReference = reference;
               writtenObjects.set(value, elementReference);
             }
           }
@@ -3745,31 +3955,16 @@ function renderModelDestructive(
       }
     } else if (parentPropertyName.indexOf(':') === -1) {
       // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
-      const parentReference = writtenObjects.get(parent);
-      if (parentReference !== undefined) {
+      const reference = getReferenceInParent(
+        request,
+        task,
+        parent,
+        parentPropertyName,
+      );
+      if (reference !== undefined) {
         // If the parent has a reference, we can refer to this object indirectly
         // through the property name inside that parent.
-        let propertyName = parentPropertyName;
-        if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
-          // For elements, we've converted it to an array but we'll have converted
-          // it back to an element before we read the references so the property
-          // needs to be aliased.
-          switch (parentPropertyName) {
-            case '1':
-              propertyName = 'type';
-              break;
-            case '2':
-              propertyName = 'key';
-              break;
-            case '3':
-              propertyName = 'props';
-              break;
-            case '4':
-              propertyName = '_owner';
-              break;
-          }
-        }
-        writtenObjects.set(value, parentReference + ':' + propertyName);
+        writtenObjects.set(value, reference);
       }
     }
 
@@ -5712,8 +5907,9 @@ function emitChunk(
     return;
   }
   // For anything else we need to try to serialize it using JSON.
+  const resolvedModel = resolveModelNode(request, task, {'': value}, '', value);
   // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-  const json: string = stringify(value, task.toJSON);
+  const json: string = stringify(resolvedModel);
   emitModelChunk(request, task.id, json);
 }
 
@@ -5759,7 +5955,7 @@ function retryTask(request: Request, task: Task): void {
   try {
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
-    // in the same toJSON if it is cyclic.
+    // in the same serialization pass if it is cyclic.
     modelRoot = task.model;
 
     if (__DEV__) {
@@ -5767,15 +5963,21 @@ function retryTask(request: Request, task: Task): void {
       canEmitDebugInfo = true;
     }
 
+    const isContinuationRow =
+      task.continuationSource !== null &&
+      task.model === task.continuationSource;
+
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
-    const resolvedModel = renderModelDestructive(
-      request,
-      task,
-      emptyRoot,
-      '',
-      task.model,
-    );
+    const resolvedModel = isContinuationRow
+      ? resolveModelArray(
+          request,
+          task,
+          ((task.continuationSource: any): Array<ReactJSONValue>),
+          task.continuationIndex,
+          true,
+        )
+      : renderModelDestructive(request, task, emptyRoot, '', task.model);
 
     if (__DEV__) {
       // We're now past rendering this task and future renders will spawn new tasks for their
@@ -5816,10 +6018,17 @@ function retryTask(request: Request, task: Task): void {
 
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
-      emitChunk(request, task, resolvedModel);
+      if (isContinuationRow && isArray(resolvedModel)) {
+        // This continuation row is already resolved.
+        // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+        const json: string = stringify(resolvedModel);
+        emitModelChunk(request, task.id, json);
+      } else {
+        emitChunk(request, task, resolvedModel);
+      }
     } else {
       // If the value is a string, it means it's a terminal value and we already escaped it
-      // We don't need to escape it again so it's not passed the toJSON replacer.
+      // We don't need to escape it again.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
       const json: string = stringify(resolvedModel);
       emitModelChunk(request, task.id, json);
