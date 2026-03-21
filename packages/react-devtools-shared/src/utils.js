@@ -28,7 +28,6 @@ import {
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -293,12 +292,6 @@ export function printOperationsArray(operations: Array<number>) {
 
           logs.push(`Remove node ${id}`);
         }
-        break;
-      }
-      case TREE_OPERATION_REMOVE_ROOT: {
-        i += 1;
-
-        logs.push(`Remove root ${rootID}`);
         break;
       }
       case TREE_OPERATION_SET_SUBTREE_MODE: {

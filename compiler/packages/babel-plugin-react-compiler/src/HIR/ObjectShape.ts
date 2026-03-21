@@ -119,13 +119,7 @@ function parseAliasingSignatureConfig(
     CompilerError.invariant(!lifetimes.has(temp), {
       reason: `Invalid type configuration for module`,
       description: `Expected aliasing signature to have unique names for receiver, params, rest, returns, and temporaries in module '${moduleName}'`,
-      details: [
-        {
-          kind: 'error',
-          loc,
-          message: null,
-        },
-      ],
+      loc,
     });
     const place = signatureArgument(lifetimes.size);
     lifetimes.set(temp, place);
@@ -136,13 +130,7 @@ function parseAliasingSignatureConfig(
     CompilerError.invariant(place != null, {
       reason: `Invalid type configuration for module`,
       description: `Expected aliasing signature effects to reference known names from receiver/params/rest/returns/temporaries, but '${temp}' is not a known name in '${moduleName}'`,
-      details: [
-        {
-          kind: 'error',
-          loc,
-          message: null,
-        },
-      ],
+      loc,
     });
     return place;
   }
@@ -276,15 +264,7 @@ function addShape(
 
   CompilerError.invariant(!registry.has(id), {
     reason: `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
-    description: null,
-    details: [
-      {
-        kind: 'error',
-        loc: null,
-        message: null,
-      },
-    ],
-    suggestions: null,
+    loc: GeneratedSource,
   });
   registry.set(id, shape);
   return shape;
@@ -403,12 +383,8 @@ export const BuiltInUseTransitionId = 'BuiltInUseTransition';
 export const BuiltInUseOptimisticId = 'BuiltInUseOptimistic';
 export const BuiltInSetOptimisticId = 'BuiltInSetOptimistic';
 export const BuiltInStartTransitionId = 'BuiltInStartTransition';
-export const BuiltInFireId = 'BuiltInFire';
-export const BuiltInFireFunctionId = 'BuiltInFireFunction';
 export const BuiltInUseEffectEventId = 'BuiltInUseEffectEvent';
 export const BuiltInEffectEventId = 'BuiltInEffectEventFunction';
-export const BuiltInAutodepsId = 'BuiltInAutoDepsId';
-export const BuiltInEventHandlerId = 'BuiltInEventHandlerId';
 
 // See getReanimatedModuleType() in Globals.ts — this is part of supporting Reanimated's ref-like types
 export const ReanimatedSharedValueId = 'ReanimatedSharedValueId';
@@ -1267,19 +1243,6 @@ addFunction(
     returnValueKind: ValueKind.Mutable,
   },
   BuiltInEffectEventId,
-);
-
-addFunction(
-  BUILTIN_SHAPES,
-  [],
-  {
-    positionalParams: [],
-    restParam: Effect.ConditionallyMutate,
-    returnType: {kind: 'Poly'},
-    calleeEffect: Effect.ConditionallyMutate,
-    returnValueKind: ValueKind.Mutable,
-  },
-  BuiltInEventHandlerId,
 );
 
 /**

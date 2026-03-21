@@ -1063,13 +1063,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: no.',
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1084,13 +1081,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          "a function. Instead received: { foo: 'bar' }.",
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        "a function. Instead received: { foo: 'bar' }.",
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1136,13 +1130,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          'a function. Instead received: no.',
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        'a function. Instead received: no.',
+    ]);
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -1157,13 +1148,10 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    assertConsoleErrorDev(
-      [
-        'Expected the last optional `callback` argument to be ' +
-          "a function. Instead received: { foo: 'bar' }.",
-      ],
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Expected the last optional `callback` argument to be ' +
+        "a function. Instead received: { foo: 'bar' }.",
+    ]);
     // Make sure the warning is deduplicated and doesn't fire again
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
@@ -1804,8 +1792,8 @@ describe('ReactUpdates', () => {
     expect(subscribers.length).toBe(limit);
   });
 
-  it("does not infinite loop if there's a synchronous render phase update on another component", async () => {
-    if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+  it("warns about potential infinite loop if there's a synchronous render phase update on another component", async () => {
+    if (!__DEV__ || gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
     let setState;
@@ -1821,22 +1809,29 @@ describe('ReactUpdates', () => {
       return null;
     }
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => ReactDOM.flushSync(() => root.render(<App />)));
-    }).rejects.toThrow('Maximum update depth exceeded');
-    assertConsoleErrorDev([
-      'Cannot update a component (`App`) while rendering a different component (`Child`). ' +
-        'To locate the bad setState() call inside `Child`, ' +
-        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
-        '    in App (at **)',
-    ]);
+    const originalConsoleError = console.error;
+    console.error = e => {
+      if (
+        typeof e === 'string' &&
+        e.startsWith(
+          'Maximum update depth exceeded. This could be an infinite loop.',
+        )
+      ) {
+        Scheduler.log('stop');
+      }
+    };
+    try {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<App />);
+      await waitFor(['stop']);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
-  it("does not infinite loop if there's an async render phase update on another component", async () => {
-    if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+  it("warns about potential infinite loop if there's an async render phase update on another component", async () => {
+    if (!__DEV__ || gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
       return;
     }
     let setState;
@@ -1852,21 +1847,25 @@ describe('ReactUpdates', () => {
       return null;
     }
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-
-    await expect(async () => {
-      await act(() => {
-        React.startTransition(() => root.render(<App />));
-      });
-    }).rejects.toThrow('Maximum update depth exceeded');
-
-    assertConsoleErrorDev([
-      'Cannot update a component (`App`) while rendering a different component (`Child`). ' +
-        'To locate the bad setState() call inside `Child`, ' +
-        'follow the stack trace as described in https://react.dev/link/setstate-in-render\n' +
-        '    in App (at **)',
-    ]);
+    const originalConsoleError = console.error;
+    console.error = e => {
+      if (
+        typeof e === 'string' &&
+        e.startsWith(
+          'Maximum update depth exceeded. This could be an infinite loop.',
+        )
+      ) {
+        Scheduler.log('stop');
+      }
+    };
+    try {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      React.startTransition(() => root.render(<App />));
+      await waitFor(['stop']);
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
   // TODO: Replace this branch with @gate pragmas
