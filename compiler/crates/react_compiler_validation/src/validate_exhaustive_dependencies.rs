@@ -41,13 +41,11 @@ pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environmen
     }
 
     let mut start_memo: Option<StartMemoInfo> = None;
-    let mut memo_dependencies: HashSet<InferredDependencyKey> = HashSet::new();
     let mut memo_locals: HashSet<IdentifierId> = HashSet::new();
 
     // Callbacks struct holding the mutable state
     let mut callbacks = Callbacks {
         start_memo: &mut start_memo,
-        memo_dependencies: &mut memo_dependencies,
         memo_locals: &mut memo_locals,
         validate_memo,
         validate_effect: validate_effect.clone(),
@@ -159,7 +157,6 @@ fn path_to_string(path: &[DependencyPathEntry]) -> String {
 /// Callbacks for StartMemoize/FinishMemoize/Effect events
 struct Callbacks<'a> {
     start_memo: &'a mut Option<StartMemoInfo>,
-    memo_dependencies: &'a mut HashSet<InferredDependencyKey>,
     memo_locals: &'a mut HashSet<IdentifierId>,
     validate_memo: bool,
     validate_effect: ExhaustiveEffectDepsMode,
@@ -265,8 +262,17 @@ fn collect_reactive_identifiers(func: &HirFunction) -> HashSet<IdentifierId> {
     for (_block_id, block) in &func.body.blocks {
         for &instr_id in &block.instructions {
             let instr = &func.instructions[instr_id.0 as usize];
+            // Check instruction lvalue
             if instr.lvalue.reactive {
                 reactive.insert(instr.lvalue.identifier);
+            }
+            // Check inner lvalues (Destructure patterns, StoreLocal, DeclareLocal, etc.)
+            // Matches TS eachInstructionLValue which yields both instr.lvalue and
+            // eachInstructionValueLValue(instr.value)
+            for lvalue in each_instruction_value_lvalue_places(&instr.value) {
+                if lvalue.reactive {
+                    reactive.insert(lvalue.identifier);
+                }
             }
             for operand in each_instruction_value_operand_places(&instr.value) {
                 if operand.reactive {
@@ -484,6 +490,14 @@ fn collect_dependencies(
 
     let mut dependencies: Vec<InferredDependency> = Vec::new();
     let mut dep_keys: HashSet<InferredDependencyKey> = HashSet::new();
+
+    // Saved state for when we're inside a memo block (StartMemoize..FinishMemoize).
+    // In TS, `dependencies` and `locals` are shared by reference between the main
+    // collection loop and the callbacks — StartMemoize clears them, FinishMemoize
+    // reads and clears them. We simulate this by saving/restoring.
+    let mut saved_dependencies: Option<Vec<InferredDependency>> = None;
+    let mut saved_dep_keys: Option<HashSet<InferredDependencyKey>> = None;
+    let mut saved_locals: Option<HashSet<IdentifierId>> = None;
 
     for (_block_id, block) in &func.body.blocks {
         // Process phis
@@ -780,15 +794,18 @@ fn collect_dependencies(
                     loc,
                 } => {
                     if let Some(cb) = callbacks.as_mut() {
-                        // onStartMemoize
+                        // onStartMemoize — mirrors TS behavior of clearing dependencies and locals
                         *cb.start_memo = Some(StartMemoInfo {
                             manual_memo_id: *manual_memo_id,
                             deps: deps.clone(),
                             deps_loc: *deps_loc,
                             loc: *loc,
                         });
-                        cb.memo_dependencies.clear();
-                        cb.memo_locals.clear();
+                        // Save current state and clear, matching TS which clears the shared
+                        // dependencies/locals sets on StartMemoize
+                        saved_dependencies = Some(std::mem::take(&mut dependencies));
+                        saved_dep_keys = Some(std::mem::take(&mut dep_keys));
+                        saved_locals = Some(std::mem::take(&mut locals));
                     }
                 }
                 InstructionValue::FinishMemoize {
@@ -797,7 +814,7 @@ fn collect_dependencies(
                     ..
                 } => {
                     if let Some(cb) = callbacks.as_mut() {
-                        // onFinishMemoize
+                        // onFinishMemoize — mirrors TS behavior
                         let sm = cb.start_memo.take();
                         if let Some(sm) = sm {
                             assert_eq!(
@@ -807,36 +824,18 @@ fn collect_dependencies(
 
                             if cb.validate_memo {
                                 // Visit the decl to add it as a dependency candidate
-                                if let Some(dep) = temporaries.get(&decl.identifier) {
-                                    let mut finish_deps: Vec<InferredDependency> = Vec::new();
-                                    let mut finish_keys: HashSet<InferredDependencyKey> =
-                                        HashSet::new();
-                                    add_dependency(
-                                        dep,
-                                        &mut finish_deps,
-                                        &mut finish_keys,
-                                        &cb.memo_locals,
-                                    );
-                                    // Merge into memo_dependencies
-                                    for fd in &finish_deps {
-                                        cb.memo_dependencies.insert(dep_to_key(fd));
-                                    }
-                                    // Also add to the main dependencies list
-                                    for fd in finish_deps {
-                                        let key = dep_to_key(&fd);
-                                        if dep_keys.insert(key) {
-                                            dependencies.push(fd);
-                                        }
-                                    }
-                                }
+                                // (matches TS: visitCandidateDependency(value.decl, ...))
+                                visit_candidate_dependency(
+                                    decl,
+                                    temporaries,
+                                    &mut dependencies,
+                                    &mut dep_keys,
+                                    &locals,
+                                );
 
-                                // Collect the full set of inferred dependencies for this memo block
-                                // by filtering the main dependencies by the memo_dependencies keys
-                                let inferred: Vec<InferredDependency> = dependencies
-                                    .iter()
-                                    .filter(|d| cb.memo_dependencies.contains(&dep_to_key(d)))
-                                    .cloned()
-                                    .collect();
+                                // Use ALL dependencies collected since StartMemoize cleared the set.
+                                // This matches TS: `const inferred = Array.from(dependencies)`
+                                let inferred: Vec<InferredDependency> = dependencies.clone();
 
                                 let diagnostic = validate_dependencies(
                                     inferred,
@@ -853,8 +852,24 @@ fn collect_dependencies(
                                 }
                             }
 
-                            cb.memo_dependencies.clear();
-                            cb.memo_locals.clear();
+                            // Restore saved state (matching TS: dependencies.clear(), locals.clear())
+                            // We restore instead of just clearing because we need the outer deps back
+                            if let Some(saved) = saved_dependencies.take() {
+                                // Merge current memo-block deps into the restored outer deps
+                                let memo_deps = std::mem::replace(&mut dependencies, saved);
+                                let memo_keys = std::mem::replace(
+                                    &mut dep_keys,
+                                    saved_dep_keys.take().unwrap_or_default(),
+                                );
+                                locals = saved_locals.take().unwrap_or_default();
+                                // Add memo deps to outer deps (they're still valid outer deps)
+                                for d in memo_deps {
+                                    let key = dep_to_key(&d);
+                                    if dep_keys.insert(key) {
+                                        dependencies.push(d);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

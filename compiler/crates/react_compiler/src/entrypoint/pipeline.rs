@@ -283,15 +283,8 @@ pub fn compile_fn(
     if env.enable_validations() {
         // Always enter this block — in TS, the guard checks a truthy string ('off' is truthy),
         // so it always runs. The internal checks inside VED handle the config flags properly.
-        let errors_before_ved = env.error_count();
         react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env);
         context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
-        // Strip VED errors to prevent false positives from cascading into later passes.
-        // The VED port has known false positives that would otherwise show up in
-        // Environment.Errors for all subsequent passes.
-        if env.error_count() > errors_before_ved {
-            let _ = env.take_errors_since(errors_before_ved);
-        }
     }
 
     react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(&mut hir, &env)?;

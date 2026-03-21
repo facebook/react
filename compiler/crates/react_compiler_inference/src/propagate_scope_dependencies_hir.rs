@@ -2078,6 +2078,77 @@ impl<'a> DependencyCollectionContext<'a> {
     }
 }
 
+/// Recursively visit an inner function's blocks, processing all instructions
+/// including nested FunctionExpressions. This mirrors the TS pattern of
+/// `context.enterInnerFn(instr, () => handleFunction(innerFn))`.
+fn visit_inner_function_blocks(
+    func_id: FunctionId,
+    ctx: &mut DependencyCollectionContext,
+    env: &mut Environment,
+) {
+    // Clone inner function's instructions and block structure to avoid
+    // borrow conflicts when mutating env through handle_instruction.
+    let inner_instrs: Vec<Instruction> = env.functions[func_id.0 as usize]
+        .instructions
+        .clone();
+    let inner_blocks: Vec<(BlockId, Vec<InstructionId>, Vec<(BlockId, IdentifierId)>, Terminal)> =
+        env.functions[func_id.0 as usize]
+            .body
+            .blocks
+            .iter()
+            .map(|(bid, blk)| {
+                let phi_ops: Vec<(BlockId, IdentifierId)> = blk
+                    .phis
+                    .iter()
+                    .flat_map(|phi| {
+                        phi.operands
+                            .iter()
+                            .map(|(pred, place)| (*pred, place.identifier))
+                    })
+                    .collect();
+                (*bid, blk.instructions.clone(), phi_ops, blk.terminal.clone())
+            })
+            .collect();
+
+    for (inner_bid, inner_instr_ids, inner_phis, inner_terminal) in &inner_blocks {
+        for &(_pred_id, op_id) in inner_phis {
+            if let Some(maybe_optional) = ctx.temporaries.get(&op_id) {
+                ctx.visit_dependency(maybe_optional.clone(), env);
+            }
+        }
+
+        for &iid in inner_instr_ids {
+            let inner_instr = &inner_instrs[iid.0 as usize];
+            match &inner_instr.value {
+                InstructionValue::FunctionExpression { lowered_func, .. }
+                | InstructionValue::ObjectMethod { lowered_func, .. } => {
+                    // Recursively visit nested function expressions
+                    let scope_stack_copy = ctx.scope_stack.clone();
+                    ctx.declare(
+                        inner_instr.lvalue.identifier,
+                        Decl {
+                            id: inner_instr.id,
+                            scope_stack: scope_stack_copy,
+                        },
+                        env,
+                    );
+                    visit_inner_function_blocks(lowered_func.func, ctx, env);
+                }
+                _ => {
+                    handle_instruction(inner_instr, ctx, env);
+                }
+            }
+        }
+
+        if !ctx.is_deferred_dependency_terminal(*inner_bid) {
+            let terminal_ops = each_terminal_operand_places(inner_terminal);
+            for op in &terminal_ops {
+                ctx.visit_operand(op, env);
+            }
+        }
+    }
+}
+
 fn handle_instruction(
     instr: &Instruction,
     ctx: &mut DependencyCollectionContext,
@@ -2294,60 +2365,7 @@ fn handle_function_deps(
                         ctx.inner_fn_context = Some(instr.id);
                     }
 
-                    // Clone inner function's instructions and block structure to avoid
-                    // borrow conflicts when mutating env through handle_instruction.
-                    let inner_instrs: Vec<Instruction> = env.functions[inner_func_id.0 as usize]
-                        .instructions
-                        .clone();
-                    let inner_blocks: Vec<(BlockId, Vec<InstructionId>, Vec<(BlockId, IdentifierId)>, Terminal)> =
-                        env.functions[inner_func_id.0 as usize]
-                            .body
-                            .blocks
-                            .iter()
-                            .map(|(bid, blk)| {
-                                let phi_ops: Vec<(BlockId, IdentifierId)> = blk
-                                    .phis
-                                    .iter()
-                                    .flat_map(|phi| {
-                                        phi.operands
-                                            .iter()
-                                            .map(|(pred, place)| (*pred, place.identifier))
-                                    })
-                                    .collect();
-                                (*bid, blk.instructions.clone(), phi_ops, blk.terminal.clone())
-                            })
-                            .collect();
-
-                    for (inner_bid, inner_instr_ids, inner_phis, inner_terminal) in &inner_blocks {
-                        for &(_pred_id, op_id) in inner_phis {
-                            if let Some(maybe_optional) = ctx.temporaries.get(&op_id) {
-                                ctx.visit_dependency(maybe_optional.clone(), env);
-                            }
-                        }
-
-                        for &iid in inner_instr_ids {
-                            let inner_instr = &inner_instrs[iid.0 as usize];
-                            match &inner_instr.value {
-                                InstructionValue::FunctionExpression { .. }
-                                | InstructionValue::ObjectMethod { .. } => {
-                                    let operands = each_instruction_value_operand_places(&inner_instr.value, env);
-                                    for op in &operands {
-                                        ctx.visit_operand(op, env);
-                                    }
-                                }
-                                _ => {
-                                    handle_instruction(inner_instr, ctx, env);
-                                }
-                            }
-                        }
-
-                        if !ctx.is_deferred_dependency_terminal(*inner_bid) {
-                            let terminal_ops = each_terminal_operand_places(inner_terminal);
-                            for op in &terminal_ops {
-                                ctx.visit_operand(op, env);
-                            }
-                        }
-                    }
+                    visit_inner_function_blocks(inner_func_id, ctx, env);
 
                     ctx.inner_fn_context = prev_inner;
                 }

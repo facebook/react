@@ -154,8 +154,10 @@ pub fn align_object_method_scopes(func: &mut HirFunction, env: &mut Environment)
 
     let mut merged_scopes = find_scopes_to_merge(func, env);
 
-    // Step 1: Merge affected scopes to their canonical root
-    let mut range_updates: Vec<(ScopeId, EvaluationOrder, EvaluationOrder)> = Vec::new();
+    // Step 1: Merge affected scopes to their canonical root.
+    // Use a HashMap to accumulate min/max across all scopes mapping to the same root,
+    // matching TS behavior where root.range is updated in-place during iteration.
+    let mut range_updates: HashMap<ScopeId, (EvaluationOrder, EvaluationOrder)> = HashMap::new();
 
     merged_scopes.for_each(|scope_id, root_id| {
         if scope_id == root_id {
@@ -164,13 +166,14 @@ pub fn align_object_method_scopes(func: &mut HirFunction, env: &mut Environment)
         let scope_range = env.scopes[scope_id.0 as usize].range.clone();
         let root_range = env.scopes[root_id.0 as usize].range.clone();
 
-        let new_start = EvaluationOrder(cmp::min(scope_range.start.0, root_range.start.0));
-        let new_end = EvaluationOrder(cmp::max(scope_range.end.0, root_range.end.0));
-
-        range_updates.push((root_id, new_start, new_end));
+        let entry = range_updates.entry(root_id).or_insert_with(|| {
+            (root_range.start, root_range.end)
+        });
+        entry.0 = EvaluationOrder(cmp::min(entry.0.0, scope_range.start.0));
+        entry.1 = EvaluationOrder(cmp::max(entry.1.0, scope_range.end.0));
     });
 
-    for (root_id, new_start, new_end) in range_updates {
+    for (root_id, (new_start, new_end)) in range_updates {
         env.scopes[root_id.0 as usize].range.start = new_start;
         env.scopes[root_id.0 as usize].range.end = new_end;
     }
