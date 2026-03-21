@@ -58,7 +58,7 @@ function UnknownUnsupportedReason() {
         Click{' '}
         <a
           className={styles.Link}
-          href="https://fb.me/react-devtools-profiling"
+          href="https://react.dev/reference/profiler"
           rel="noopener noreferrer"
           target="_blank">
           here

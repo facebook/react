@@ -23,7 +23,7 @@ export default function NoProfilingData(): React.Node {
         Click{' '}
         <a
           className={styles.LearnMoreLink}
-          href="https://fb.me/react-devtools-profiling"
+          href="https://react.dev/reference/profiler"
           rel="noopener noreferrer"
           target="_blank">
           here
