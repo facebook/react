@@ -815,6 +815,8 @@ fn is_reserved_word(s: &str) -> bool {
             | "public"
             | "static"
             | "yield"
+            | "await"
+            | "delete"
             | "null"
             | "true"
             | "false"
@@ -1124,7 +1126,7 @@ fn js_number_to_string(n: f64) -> String {
         return "0".to_string();
     }
     // For integers that fit, use integer formatting (no decimal point)
-    if n.fract() == 0.0 && n.abs() < 1e20 {
+    if n.fract() == 0.0 && n.abs() < (i64::MAX as f64) {
         return format!("{}", n as i64);
     }
     // Default: use Rust's float formatting
