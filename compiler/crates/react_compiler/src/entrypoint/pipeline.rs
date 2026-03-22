@@ -148,7 +148,11 @@ pub fn compile_fn(
     let debug_const_prop = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("ConstantPropagation", debug_const_prop));
 
-    react_compiler_typeinference::infer_types(&mut hir, &mut env);
+    react_compiler_typeinference::infer_types(&mut hir, &mut env).map_err(|diag| {
+        let mut err = CompilerError::new();
+        err.push_diagnostic(diag);
+        err
+    })?;
 
     let debug_infer_types = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferTypes", debug_infer_types));

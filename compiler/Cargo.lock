@@ -284,6 +284,7 @@ dependencies = [
 name = "react_compiler_typeinference"
 version = "0.1.0"
 dependencies = [
+ "react_compiler_diagnostics",
  "react_compiler_hir",
  "react_compiler_ssa",
 ]
