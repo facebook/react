@@ -1,110 +1,1386 @@
 use std::collections::{HashMap, HashSet};
-use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory, SourceLocation};
+
+use react_compiler_diagnostics::{
+    CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory, SourceLocation,
+};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::HookKind;
-use react_compiler_hir::{AliasingEffect, ArrayElement, BlockId, Effect, HirFunction, Identifier, IdentifierId, InstructionValue, JsxAttribute, JsxTag, ObjectPropertyOrSpread, Place, PlaceOrSpread, PrimitiveValue, PropertyLiteral, Terminal, Type, UnaryOperator};
-const ED: &str = "React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef)";
-type RI = u32;
-static RC: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-fn nri() -> RI { RC.fetch_add(1, std::sync::atomic::Ordering::Relaxed) }
-#[derive(Debug, Clone, PartialEq)] enum Ty { N, Nl, G(RI), R(RI), RV(Option<SourceLocation>, Option<RI>), S(Option<Box<RT>>, Option<FT>) }
-#[derive(Debug, Clone, PartialEq)] enum RT { R(RI), RV(Option<SourceLocation>, Option<RI>), S(Option<Box<RT>>, Option<FT>) }
-#[derive(Debug, Clone, PartialEq)] struct FT { rr: bool, rt: Box<Ty> }
-impl Ty {
-    fn tr(&self) -> Option<RT> { match self { Ty::R(i) => Some(RT::R(*i)), Ty::RV(l,i) => Some(RT::RV(*l,*i)), Ty::S(v,f) => Some(RT::S(v.clone(),f.clone())), _ => None } }
-    fn fr(r: &RT) -> Self { match r { RT::R(i) => Ty::R(*i), RT::RV(l,i) => Ty::RV(*l,*i), RT::S(v,f) => Ty::S(v.clone(),f.clone()) } }
+use react_compiler_hir::{
+    AliasingEffect, ArrayElement, BlockId, Effect, HirFunction, Identifier, IdentifierId,
+    InstructionValue, JsxAttribute, JsxTag, ObjectPropertyOrSpread, Place, PlaceOrSpread,
+    PrimitiveValue, PropertyLiteral, Terminal, Type, UnaryOperator,
+};
+
+const ERROR_DESCRIPTION: &str = "React refs are values that are not needed for rendering. \
+    Refs should only be accessed outside of render, such as in event handlers or effects. \
+    Accessing a ref value (the `current` property) during render can cause your component \
+    not to update as expected (https://react.dev/reference/react/useRef)";
+
+// --- RefId ---
+
+type RefId = u32;
+
+static REF_ID_COUNTER: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+
+fn next_ref_id() -> RefId {
+    REF_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
-fn jr(a: &RT, b: &RT) -> RT { match (a,b) {
-    (RT::RV(_,ai), RT::RV(_,bi)) => if ai==bi { a.clone() } else { RT::RV(None,None) },
-    (RT::RV(..),_) => RT::RV(None,None), (_,RT::RV(..)) => RT::RV(None,None),
-    (RT::R(ai), RT::R(bi)) => if ai==bi { a.clone() } else { RT::R(nri()) },
-    (RT::R(..),_) | (_,RT::R(..)) => RT::R(nri()),
-    (RT::S(av,af), RT::S(bv,bf)) => { let f = match (af,bf) { (None,o)|(o,None) => o.clone(), (Some(a),Some(b)) => Some(FT{rr:a.rr||b.rr,rt:Box::new(j(&a.rt,&b.rt))}) }; let v = match (av,bv) { (None,o)|(o,None) => o.clone(), (Some(a),Some(b)) => Some(Box::new(jr(a,b))) }; RT::S(v,f) }
-}}
-fn j(a: &Ty, b: &Ty) -> Ty { match (a,b) {
-    (Ty::N,o)|(o,Ty::N) => o.clone(), (Ty::G(ai),Ty::G(bi)) => if ai==bi { a.clone() } else { Ty::N },
-    (Ty::G(..),Ty::Nl)|(Ty::Nl,Ty::G(..)) => Ty::N, (Ty::G(..),o)|(o,Ty::G(..)) => o.clone(),
-    (Ty::Nl,o)|(o,Ty::Nl) => o.clone(),
-    _ => match (a.tr(),b.tr()) { (Some(ar),Some(br)) => Ty::fr(&jr(&ar,&br)), (Some(r),None)|(None,Some(r)) => Ty::fr(&r), _ => Ty::N }
-}}
-fn jm(ts: &[Ty]) -> Ty { ts.iter().fold(Ty::N, |a,t| j(&a,t)) }
-struct E { ch: bool, d: HashMap<IdentifierId, Ty>, t: HashMap<IdentifierId, Place> }
-impl E {
-    fn new() -> Self { Self{ch:false,d:HashMap::new(),t:HashMap::new()} }
-    fn def(&mut self, k: IdentifierId, v: Place) { self.t.insert(k,v); }
-    fn rst(&mut self) { self.ch=false; } fn chg(&self) -> bool { self.ch }
-    fn g(&self, k: IdentifierId) -> Option<&Ty> { let k=self.t.get(&k).map(|p|p.identifier).unwrap_or(k); self.d.get(&k) }
-    fn s(&mut self, k: IdentifierId, v: Ty) { let k=self.t.get(&k).map(|p|p.identifier).unwrap_or(k); let c=self.d.get(&k); let w=match c{Some(c)=>j(&v,c),None=>v}; if c.is_none()&&w==Ty::N{}else if c.map_or(true,|c|c!=&w){self.ch=true;} self.d.insert(k,w); }
+
+// --- RefAccessType / RefAccessRefType / RefFnType ---
+
+/// Corresponds to TS `RefAccessType`
+#[derive(Debug, Clone, PartialEq)]
+enum RefAccessType {
+    None,
+    Nullable,
+    Guard {
+        ref_id: RefId,
+    },
+    Ref {
+        ref_id: RefId,
+    },
+    RefValue {
+        loc: Option<SourceLocation>,
+        ref_id: Option<RefId>,
+    },
+    Structure {
+        value: Option<Box<RefAccessRefType>>,
+        fn_type: Option<RefFnType>,
+    },
 }
-fn rt(id: IdentifierId, ids: &[Identifier], ts: &[Type]) -> Ty { let i=&ids[id.0 as usize]; let t=&ts[i.type_.0 as usize]; if react_compiler_hir::is_ref_value_type(t){Ty::RV(None,None)} else if react_compiler_hir::is_use_ref_type(t){Ty::R(nri())} else {Ty::N} }
-fn isr(id: IdentifierId, ids: &[Identifier], ts: &[Type]) -> bool { let i=&ids[id.0 as usize]; react_compiler_hir::is_use_ref_type(&ts[i.type_.0 as usize]) }
-fn isrv(id: IdentifierId, ids: &[Identifier], ts: &[Type]) -> bool { let i=&ids[id.0 as usize]; react_compiler_hir::is_ref_value_type(&ts[i.type_.0 as usize]) }
-fn ds(t: &Ty) -> Ty { match t { Ty::S(Some(i),_) => ds(&Ty::fr(i)), o => o.clone() } }
-fn ed(es: &mut Vec<CompilerDiagnostic>, p: &Place, e: &E) { if let Some(t)=e.g(p.identifier){let t=ds(t);if let Ty::RV(l,_)=&t{es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:l.or(p.loc),message:Some("Cannot access ref value during render".to_string())}));}}}
-fn ev(es: &mut Vec<CompilerDiagnostic>, e: &E, p: &Place) { if let Some(t)=e.g(p.identifier){let t=ds(t);match&t{Ty::RV(l,_)=>{es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:l.or(p.loc),message:Some("Cannot access ref value during render".to_string())}));}Ty::S(_,Some(f)) if f.rr=>{es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:p.loc,message:Some("Cannot access ref value during render".to_string())}));}_ =>{}}}}
-fn ep(es: &mut Vec<CompilerDiagnostic>, e: &E, p: &Place, l: Option<SourceLocation>) { if let Some(t)=e.g(p.identifier){let t=ds(t);match&t{Ty::R(..)|Ty::RV(..)=>{let el=if let Ty::RV(rl,_)=&t{rl.or(l)}else{l};es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:el,message:Some("Passing a ref to a function may read its value during render".to_string())}));}Ty::S(_,Some(f)) if f.rr=>{es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:l,message:Some("Passing a ref to a function may read its value during render".to_string())}));}_ =>{}}}}
-fn eu(es: &mut Vec<CompilerDiagnostic>, e: &E, p: &Place, l: Option<SourceLocation>) { if let Some(t)=e.g(p.identifier){let t=ds(t);match&t{Ty::R(..)|Ty::RV(..)=>{let el=if let Ty::RV(rl,_)=&t{rl.or(l)}else{l};es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:el,message:Some("Cannot update ref during render".to_string())}));}_ =>{}}}}
-fn gc(es: &mut Vec<CompilerDiagnostic>, p: &Place, e: &E) { if matches!(e.g(p.identifier),Some(Ty::G(..))){es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:p.loc,message:Some("Cannot access ref value during render".to_string())}));}}
-pub fn validate_no_ref_access_in_render(func: &HirFunction, env: &mut Environment) { let mut re=E::new(); ct(func,&mut re,&env.identifiers,&env.types); let mut es:Vec<CompilerDiagnostic>=Vec::new(); run(func,&env.identifiers,&env.types,&env.functions,&*env,&mut re,&mut es); for d in es{env.record_diagnostic(d);} }
-fn ct(func: &HirFunction, e: &mut E, ids: &[Identifier], ts: &[Type]) { for(_,block)in&func.body.blocks{for&iid in&block.instructions{let instr=&func.instructions[iid.0 as usize];match&instr.value{InstructionValue::LoadLocal{place,..}=>{let t=e.t.get(&place.identifier).cloned().unwrap_or_else(||place.clone());e.def(instr.lvalue.identifier,t);}InstructionValue::StoreLocal{lvalue,value,..}=>{let t=e.t.get(&value.identifier).cloned().unwrap_or_else(||value.clone());e.def(instr.lvalue.identifier,t.clone());e.def(lvalue.place.identifier,t);}InstructionValue::PropertyLoad{object,property,..}=>{if isr(object.identifier,ids,ts)&&*property==PropertyLiteral::String("current".to_string()){continue;}let t=e.t.get(&object.identifier).cloned().unwrap_or_else(||object.clone());e.def(instr.lvalue.identifier,t);}_ =>{}}}} }
-fn run(func: &HirFunction, ids: &[Identifier], ts: &[Type], fns: &[HirFunction], env: &Environment, re: &mut E, es: &mut Vec<CompilerDiagnostic>) -> Ty {
-    let mut rvs: Vec<Ty>=Vec::new();
-    for p in&func.params{let pl=match p{react_compiler_hir::ParamPattern::Place(p)=>p,react_compiler_hir::ParamPattern::Spread(s)=>&s.place};re.s(pl.identifier,rt(pl.identifier,ids,ts));}
-    let mut jc:HashSet<IdentifierId>=HashSet::new();
-    for(_,block)in&func.body.blocks{for&iid in&block.instructions{let instr=&func.instructions[iid.0 as usize];match&instr.value{InstructionValue::JsxExpression{children:Some(ch),..}=>{for c in ch{jc.insert(c.identifier);}}InstructionValue::JsxFragment{children,..}=>{for c in children{jc.insert(c.identifier);}}_ =>{}}}}
-    for it in 0..10{if it>0&&!re.chg(){break;}re.rst();rvs.clear();let mut safe:Vec<(BlockId,RI)>=Vec::new();
-    for(_,block)in&func.body.blocks{safe.retain(|(b,_)|*b!=block.id);
-    for phi in&block.phis{let pt:Vec<Ty>=phi.operands.values().map(|o|re.g(o.identifier).cloned().unwrap_or(Ty::N)).collect();re.s(phi.place.identifier,jm(&pt));}
-    for&iid in&block.instructions{let instr=&func.instructions[iid.0 as usize];match&instr.value{
-        InstructionValue::JsxExpression{..}|InstructionValue::JsxFragment{..}=>{for o in vo(&instr.value){ed(es,o,re);}}
-        InstructionValue::ComputedLoad{object,property,..}=>{ed(es,property,re);let ot=re.g(object.identifier).cloned();let lt=match&ot{Some(Ty::S(Some(v),_))=>Some(Ty::fr(v)),Some(Ty::R(rid))=>Some(Ty::RV(instr.loc,Some(*rid))),_ =>None};re.s(instr.lvalue.identifier,lt.unwrap_or_else(||rt(instr.lvalue.identifier,ids,ts)));}
-        InstructionValue::PropertyLoad{object,..}=>{let ot=re.g(object.identifier).cloned();let lt=match&ot{Some(Ty::S(Some(v),_))=>Some(Ty::fr(v)),Some(Ty::R(rid))=>Some(Ty::RV(instr.loc,Some(*rid))),_ =>None};re.s(instr.lvalue.identifier,lt.unwrap_or_else(||rt(instr.lvalue.identifier,ids,ts)));}
-        InstructionValue::TypeCastExpression{value:v,..}=>{re.s(instr.lvalue.identifier,re.g(v.identifier).cloned().unwrap_or_else(||rt(instr.lvalue.identifier,ids,ts)));}
-        InstructionValue::LoadContext{place,..}|InstructionValue::LoadLocal{place,..}=>{re.s(instr.lvalue.identifier,re.g(place.identifier).cloned().unwrap_or_else(||rt(instr.lvalue.identifier,ids,ts)));}
-        InstructionValue::StoreContext{lvalue,value,..}|InstructionValue::StoreLocal{lvalue,value,..}=>{re.s(lvalue.place.identifier,re.g(value.identifier).cloned().unwrap_or_else(||rt(lvalue.place.identifier,ids,ts)));re.s(instr.lvalue.identifier,re.g(value.identifier).cloned().unwrap_or_else(||rt(instr.lvalue.identifier,ids,ts)));}
-        InstructionValue::Destructure{value:v,lvalue,..}=>{let ot=re.g(v.identifier).cloned();let lt=match&ot{Some(Ty::S(Some(vv),_))=>Some(Ty::fr(vv)),_ =>None};re.s(instr.lvalue.identifier,lt.clone().unwrap_or_else(||rt(instr.lvalue.identifier,ids,ts)));for pp in po(&lvalue.pattern){re.s(pp.identifier,lt.clone().unwrap_or_else(||rt(pp.identifier,ids,ts)));}}
-        InstructionValue::ObjectMethod{lowered_func,..}|InstructionValue::FunctionExpression{lowered_func,..}=>{let inner=&fns[lowered_func.func.0 as usize];let mut ie:Vec<CompilerDiagnostic>=Vec::new();let result=run(inner,ids,ts,fns,env,re,&mut ie);let(rty,rr)=if ie.is_empty(){(result,false)}else{(Ty::N,true)};re.s(instr.lvalue.identifier,Ty::S(None,Some(FT{rr,rt:Box::new(rty)})));}
-        InstructionValue::MethodCall{property,..}|InstructionValue::CallExpression{callee:property,..}=>{let callee=property;let mut rty=Ty::N;let ft=re.g(callee.identifier).cloned();let mut de=false;
-            if let Some(Ty::S(_,Some(f)))=&ft{rty=*f.rt.clone();if f.rr{de=true;es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:callee.loc,message:Some("This function accesses a ref value".to_string())}));}}
-            if!de{let irl=isr(instr.lvalue.identifier,ids,ts);let ci=&ids[callee.identifier.0 as usize];let cty=&ts[ci.type_.0 as usize];
-                let hk=env.get_hook_kind_for_type(cty);
-                if irl||(hk.is_some()&&!matches!(hk,Some(&HookKind::UseState))&&!matches!(hk,Some(&HookKind::UseReducer))){for o in vo(&instr.value){ed(es,o,re);}}
-                else if jc.contains(&instr.lvalue.identifier){for o in vo(&instr.value){ev(es,re,o);}}
-                else if hk.is_none(){if let Some(ref effs)=instr.effects{let mut vis:HashSet<String>=HashSet::new();for eff in effs{let(pl,vl)=match eff{AliasingEffect::Freeze{value,..}=>(Some(value),"d"),AliasingEffect::Mutate{value,..}|AliasingEffect::MutateTransitive{value,..}|AliasingEffect::MutateConditionally{value,..}|AliasingEffect::MutateTransitiveConditionally{value,..}=>(Some(value),"p"),AliasingEffect::Render{place,..}=>(Some(place),"p"),AliasingEffect::Capture{from,..}|AliasingEffect::Alias{from,..}|AliasingEffect::MaybeAlias{from,..}|AliasingEffect::Assign{from,..}|AliasingEffect::CreateFrom{from,..}=>(Some(from),"p"),AliasingEffect::ImmutableCapture{from,..}=>{let fz=effs.iter().any(|e|matches!(e,AliasingEffect::Freeze{value,..}if value.identifier==from.identifier));(Some(from),if fz{"d"}else{"p"})}_ =>(None,"n"),};if let Some(pl)=pl{if vl!="n"{let key=format!("{}:{}",pl.identifier.0,vl);if vis.insert(key){if vl=="d"{ed(es,pl,re);}else{ep(es,re,pl,pl.loc);}}}}}}else{for o in vo(&instr.value){ep(es,re,o,o.loc);}}}
-                else{for o in vo(&instr.value){ep(es,re,o,o.loc);}}}
-            re.s(instr.lvalue.identifier,rty);}
-        InstructionValue::ObjectExpression{..}|InstructionValue::ArrayExpression{..}=>{let ops=vo(&instr.value);let mut tv:Vec<Ty>=Vec::new();for o in&ops{ed(es,o,re);tv.push(re.g(o.identifier).cloned().unwrap_or(Ty::N));}let v=jm(&tv);match&v{Ty::N|Ty::G(..)|Ty::Nl=>{re.s(instr.lvalue.identifier,Ty::N);}_ =>{re.s(instr.lvalue.identifier,Ty::S(v.tr().map(Box::new),None));}}}
-        InstructionValue::PropertyDelete{object,..}|InstructionValue::PropertyStore{object,..}|InstructionValue::ComputedDelete{object,..}|InstructionValue::ComputedStore{object,..}=>{let target=re.g(object.identifier).cloned();let mut fs=false;if matches!(&instr.value,InstructionValue::PropertyStore{..}){if let Some(Ty::R(rid))=&target{if let Some(pos)=safe.iter().position(|(_,r)|r==rid){safe.remove(pos);fs=true;}}}if!fs{eu(es,re,object,instr.loc);}match&instr.value{InstructionValue::ComputedDelete{property,..}|InstructionValue::ComputedStore{property,..}=>{ev(es,re,property);}_ =>{}}match&instr.value{InstructionValue::ComputedStore{value:v,..}|InstructionValue::PropertyStore{value:v,..}=>{ed(es,v,re);let vt=re.g(v.identifier).cloned();if let Some(Ty::S(..))=&vt{let mut ot=vt.unwrap();if let Some(t)=&target{ot=j(&ot,t);}re.s(object.identifier,ot);}}_ =>{}}}
-        InstructionValue::StartMemoize{..}|InstructionValue::FinishMemoize{..}=>{}
-        InstructionValue::LoadGlobal{binding,..}=>{if binding.name()=="undefined"{re.s(instr.lvalue.identifier,Ty::Nl);}}
-        InstructionValue::Primitive{value,..}=>{if matches!(value,PrimitiveValue::Null|PrimitiveValue::Undefined){re.s(instr.lvalue.identifier,Ty::Nl);}}
-        InstructionValue::UnaryExpression{operator,value:v,..}=>{if*operator==UnaryOperator::Not{if let Some(Ty::RV(_,Some(rid)))=re.g(v.identifier).cloned().as_ref(){re.s(instr.lvalue.identifier,Ty::G(*rid));es.push(CompilerDiagnostic::new(ErrorCategory::Refs,"Cannot access refs during render",Some(ED.to_string())).with_detail(CompilerDiagnosticDetail::Error{loc:v.loc,message:Some("Cannot access ref value during render".to_string())}).with_detail(CompilerDiagnosticDetail::Hint{message:"To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`".to_string()}));}else{ev(es,re,v);}}else{ev(es,re,v);}}
-        InstructionValue::BinaryExpression{left,right,..}=>{let lt=re.g(left.identifier).cloned();let rtt=re.g(right.identifier).cloned();let mut nl=false;let mut fri:Option<RI>=None;if let Some(Ty::RV(_,Some(id)))=&lt{fri=Some(*id);}else if let Some(Ty::RV(_,Some(id)))=&rtt{fri=Some(*id);}if matches!(&lt,Some(Ty::Nl))||matches!(&rtt,Some(Ty::Nl)){nl=true;}if let Some(rid)=fri{if nl{re.s(instr.lvalue.identifier,Ty::G(rid));}else{ev(es,re,left);ev(es,re,right);}}else{ev(es,re,left);ev(es,re,right);}}
-        _ =>{for o in vo(&instr.value){ev(es,re,o);}}
-    }for o in vo(&instr.value){gc(es,o,re);}
-    if isr(instr.lvalue.identifier,ids,ts)&&!matches!(re.g(instr.lvalue.identifier),Some(Ty::R(..))){let ex=re.g(instr.lvalue.identifier).cloned().unwrap_or(Ty::N);re.s(instr.lvalue.identifier,j(&ex,&Ty::R(nri())));}
-    if isrv(instr.lvalue.identifier,ids,ts)&&!matches!(re.g(instr.lvalue.identifier),Some(Ty::RV(..))){let ex=re.g(instr.lvalue.identifier).cloned().unwrap_or(Ty::N);re.s(instr.lvalue.identifier,j(&ex,&Ty::RV(instr.loc,None)));}}
-    if let Terminal::If{test,fallthrough,..}=&block.terminal{if let Some(Ty::G(rid))=re.g(test.identifier){if!safe.iter().any(|(_,r)|r==rid){safe.push((*fallthrough,*rid));}}}
-    for o in to(&block.terminal){if!matches!(&block.terminal,Terminal::Return{..}){ev(es,re,o);if!matches!(&block.terminal,Terminal::If{..}){gc(es,o,re);}}else{ed(es,o,re);gc(es,o,re);if let Some(t)=re.g(o.identifier){rvs.push(t.clone());}}}
-    }if!es.is_empty(){return Ty::N;}}jm(&rvs)
+
+/// Corresponds to TS `RefAccessRefType` — the subset of `RefAccessType` that can appear
+/// inside `Structure.value` and be joined via `join_ref_access_ref_types`.
+#[derive(Debug, Clone, PartialEq)]
+enum RefAccessRefType {
+    Ref {
+        ref_id: RefId,
+    },
+    RefValue {
+        loc: Option<SourceLocation>,
+        ref_id: Option<RefId>,
+    },
+    Structure {
+        value: Option<Box<RefAccessRefType>>,
+        fn_type: Option<RefFnType>,
+    },
 }
-fn vo(v: &InstructionValue) -> Vec<&Place> { match v {
-    InstructionValue::CallExpression{callee,args,..}=>{let mut o=vec![callee];for a in args{match a{PlaceOrSpread::Place(p)=>o.push(p),PlaceOrSpread::Spread(s)=>o.push(&s.place)}}o}
-    InstructionValue::MethodCall{receiver,property,args,..}=>{let mut o=vec![receiver,property];for a in args{match a{PlaceOrSpread::Place(p)=>o.push(p),PlaceOrSpread::Spread(s)=>o.push(&s.place)}}o}
-    InstructionValue::BinaryExpression{left,right,..}=>vec![left,right], InstructionValue::UnaryExpression{value:v,..}=>vec![v],
-    InstructionValue::PropertyLoad{object,..}=>vec![object], InstructionValue::ComputedLoad{object,property,..}=>vec![object,property],
-    InstructionValue::PropertyStore{object,value:v,..}=>vec![object,v], InstructionValue::ComputedStore{object,property,value:v,..}=>vec![object,property,v],
-    InstructionValue::PropertyDelete{object,..}=>vec![object], InstructionValue::ComputedDelete{object,property,..}=>vec![object,property],
-    InstructionValue::TypeCastExpression{value:v,..}=>vec![v], InstructionValue::LoadLocal{place,..}|InstructionValue::LoadContext{place,..}=>vec![place],
-    InstructionValue::StoreLocal{value,..}|InstructionValue::StoreContext{value,..}=>vec![value], InstructionValue::Destructure{value:v,..}=>vec![v],
-    InstructionValue::NewExpression{callee,args,..}=>{let mut o=vec![callee];for a in args{match a{PlaceOrSpread::Place(p)=>o.push(p),PlaceOrSpread::Spread(s)=>o.push(&s.place)}}o}
-    InstructionValue::ObjectExpression{properties,..}=>{let mut o=Vec::new();for p in properties{match p{ObjectPropertyOrSpread::Property(p)=>o.push(&p.place),ObjectPropertyOrSpread::Spread(p)=>o.push(&p.place)}}o}
-    InstructionValue::ArrayExpression{elements,..}=>{let mut o=Vec::new();for e in elements{match e{ArrayElement::Place(p)=>o.push(p),ArrayElement::Spread(s)=>o.push(&s.place),ArrayElement::Hole=>{}}}o}
-    InstructionValue::JsxExpression{tag,props,children,..}=>{let mut o=Vec::new();if let JsxTag::Place(p)=tag{o.push(p);}for p in props{match p{JsxAttribute::Attribute{place,..}=>o.push(place),JsxAttribute::SpreadAttribute{argument}=>o.push(argument)}}if let Some(ch)=children{for c in ch{o.push(c);}}o}
-    InstructionValue::JsxFragment{children,..}=>children.iter().collect(), InstructionValue::TemplateLiteral{subexprs,..}=>subexprs.iter().collect(),
-    InstructionValue::TaggedTemplateExpression{tag,..}=>vec![tag], InstructionValue::IteratorNext{iterator,..}=>vec![iterator],
-    InstructionValue::NextPropertyOf{value:v,..}=>vec![v], InstructionValue::GetIterator{collection,..}=>vec![collection], InstructionValue::Await{value:v,..}=>vec![v],
-    _ =>Vec::new(),
-}}
-fn to(t: &Terminal) -> Vec<&Place> { match t { Terminal::Return{value,..}|Terminal::Throw{value,..}=>vec![value], Terminal::If{test,..}|Terminal::Branch{test,..}=>vec![test], Terminal::Switch{test,..}=>vec![test], _ =>Vec::new() } }
-fn po(p: &react_compiler_hir::Pattern) -> Vec<&Place> { let mut r=Vec::new(); match p { react_compiler_hir::Pattern::Array(a)=>{for i in&a.items{match i{react_compiler_hir::ArrayPatternElement::Place(p)=>r.push(p),react_compiler_hir::ArrayPatternElement::Spread(s)=>r.push(&s.place),react_compiler_hir::ArrayPatternElement::Hole=>{}}}} react_compiler_hir::Pattern::Object(o)=>{for p in&o.properties{match p{ObjectPropertyOrSpread::Property(p)=>r.push(&p.place),ObjectPropertyOrSpread::Spread(s)=>r.push(&s.place)}}} } r }
+
+#[derive(Debug, Clone, PartialEq)]
+struct RefFnType {
+    read_ref_effect: bool,
+    return_type: Box<RefAccessType>,
+}
+
+impl RefAccessType {
+    /// Try to convert a `RefAccessType` to a `RefAccessRefType` (the Ref/RefValue/Structure subset).
+    fn to_ref_type(&self) -> Option<RefAccessRefType> {
+        match self {
+            RefAccessType::Ref { ref_id } => Some(RefAccessRefType::Ref { ref_id: *ref_id }),
+            RefAccessType::RefValue { loc, ref_id } => Some(RefAccessRefType::RefValue {
+                loc: *loc,
+                ref_id: *ref_id,
+            }),
+            RefAccessType::Structure { value, fn_type } => Some(RefAccessRefType::Structure {
+                value: value.clone(),
+                fn_type: fn_type.clone(),
+            }),
+            _ => None,
+        }
+    }
+
+    /// Convert a `RefAccessRefType` back to a `RefAccessType`.
+    fn from_ref_type(ref_type: &RefAccessRefType) -> Self {
+        match ref_type {
+            RefAccessRefType::Ref { ref_id } => RefAccessType::Ref { ref_id: *ref_id },
+            RefAccessRefType::RefValue { loc, ref_id } => RefAccessType::RefValue {
+                loc: *loc,
+                ref_id: *ref_id,
+            },
+            RefAccessRefType::Structure { value, fn_type } => RefAccessType::Structure {
+                value: value.clone(),
+                fn_type: fn_type.clone(),
+            },
+        }
+    }
+}
+
+// --- Join operations ---
+
+fn join_ref_access_ref_types(a: &RefAccessRefType, b: &RefAccessRefType) -> RefAccessRefType {
+    match (a, b) {
+        (RefAccessRefType::RefValue { ref_id: a_id, .. }, RefAccessRefType::RefValue { ref_id: b_id, .. }) => {
+            if a_id == b_id {
+                a.clone()
+            } else {
+                RefAccessRefType::RefValue {
+                    loc: None,
+                    ref_id: None,
+                }
+            }
+        }
+        (RefAccessRefType::RefValue { .. }, _) => RefAccessRefType::RefValue {
+            loc: None,
+            ref_id: None,
+        },
+        (_, RefAccessRefType::RefValue { .. }) => RefAccessRefType::RefValue {
+            loc: None,
+            ref_id: None,
+        },
+        (RefAccessRefType::Ref { ref_id: a_id }, RefAccessRefType::Ref { ref_id: b_id }) => {
+            if a_id == b_id {
+                a.clone()
+            } else {
+                RefAccessRefType::Ref {
+                    ref_id: next_ref_id(),
+                }
+            }
+        }
+        (RefAccessRefType::Ref { .. }, _) | (_, RefAccessRefType::Ref { .. }) => {
+            RefAccessRefType::Ref {
+                ref_id: next_ref_id(),
+            }
+        }
+        (
+            RefAccessRefType::Structure {
+                value: a_value,
+                fn_type: a_fn,
+            },
+            RefAccessRefType::Structure {
+                value: b_value,
+                fn_type: b_fn,
+            },
+        ) => {
+            let fn_type = match (a_fn, b_fn) {
+                (None, other) | (other, None) => other.clone(),
+                (Some(a_fn), Some(b_fn)) => Some(RefFnType {
+                    read_ref_effect: a_fn.read_ref_effect || b_fn.read_ref_effect,
+                    return_type: Box::new(join_ref_access_types(
+                        &a_fn.return_type,
+                        &b_fn.return_type,
+                    )),
+                }),
+            };
+            let value = match (a_value, b_value) {
+                (None, other) | (other, None) => other.clone(),
+                (Some(a_val), Some(b_val)) => {
+                    Some(Box::new(join_ref_access_ref_types(a_val, b_val)))
+                }
+            };
+            RefAccessRefType::Structure { value, fn_type }
+        }
+    }
+}
+
+fn join_ref_access_types(a: &RefAccessType, b: &RefAccessType) -> RefAccessType {
+    match (a, b) {
+        (RefAccessType::None, other) | (other, RefAccessType::None) => other.clone(),
+        (RefAccessType::Guard { ref_id: a_id }, RefAccessType::Guard { ref_id: b_id }) => {
+            if a_id == b_id {
+                a.clone()
+            } else {
+                RefAccessType::None
+            }
+        }
+        (RefAccessType::Guard { .. }, RefAccessType::Nullable)
+        | (RefAccessType::Nullable, RefAccessType::Guard { .. }) => RefAccessType::None,
+        (RefAccessType::Guard { .. }, other) | (other, RefAccessType::Guard { .. }) => {
+            other.clone()
+        }
+        (RefAccessType::Nullable, other) | (other, RefAccessType::Nullable) => other.clone(),
+        _ => {
+            match (a.to_ref_type(), b.to_ref_type()) {
+                (Some(a_ref), Some(b_ref)) => {
+                    RefAccessType::from_ref_type(&join_ref_access_ref_types(&a_ref, &b_ref))
+                }
+                (Some(r), None) | (None, Some(r)) => RefAccessType::from_ref_type(&r),
+                _ => RefAccessType::None,
+            }
+        }
+    }
+}
+
+fn join_ref_access_types_many(types: &[RefAccessType]) -> RefAccessType {
+    types
+        .iter()
+        .fold(RefAccessType::None, |acc, t| join_ref_access_types(&acc, t))
+}
+
+// --- Env ---
+
+struct Env {
+    changed: bool,
+    data: HashMap<IdentifierId, RefAccessType>,
+    temporaries: HashMap<IdentifierId, Place>,
+}
+
+impl Env {
+    fn new() -> Self {
+        Self {
+            changed: false,
+            data: HashMap::new(),
+            temporaries: HashMap::new(),
+        }
+    }
+
+    fn define(&mut self, key: IdentifierId, value: Place) {
+        self.temporaries.insert(key, value);
+    }
+
+    fn reset_changed(&mut self) {
+        self.changed = false;
+    }
+
+    fn has_changed(&self) -> bool {
+        self.changed
+    }
+
+    fn get(&self, key: IdentifierId) -> Option<&RefAccessType> {
+        let operand_id = self
+            .temporaries
+            .get(&key)
+            .map(|p| p.identifier)
+            .unwrap_or(key);
+        self.data.get(&operand_id)
+    }
+
+    fn set(&mut self, key: IdentifierId, value: RefAccessType) {
+        let operand_id = self
+            .temporaries
+            .get(&key)
+            .map(|p| p.identifier)
+            .unwrap_or(key);
+        let current = self.data.get(&operand_id);
+        let widened_value = join_ref_access_types(
+            &value,
+            current.unwrap_or(&RefAccessType::None),
+        );
+        if current.is_none() && widened_value == RefAccessType::None {
+            // No change needed
+        } else if current.map_or(true, |c| c != &widened_value) {
+            self.changed = true;
+        }
+        self.data.insert(operand_id, widened_value);
+    }
+}
+
+// --- Helper functions ---
+
+fn ref_type_of_type(
+    id: IdentifierId,
+    identifiers: &[Identifier],
+    types: &[Type],
+) -> RefAccessType {
+    let identifier = &identifiers[id.0 as usize];
+    let ty = &types[identifier.type_.0 as usize];
+    if react_compiler_hir::is_ref_value_type(ty) {
+        RefAccessType::RefValue {
+            loc: None,
+            ref_id: None,
+        }
+    } else if react_compiler_hir::is_use_ref_type(ty) {
+        RefAccessType::Ref {
+            ref_id: next_ref_id(),
+        }
+    } else {
+        RefAccessType::None
+    }
+}
+
+fn is_ref_type(id: IdentifierId, identifiers: &[Identifier], types: &[Type]) -> bool {
+    let identifier = &identifiers[id.0 as usize];
+    react_compiler_hir::is_use_ref_type(&types[identifier.type_.0 as usize])
+}
+
+fn is_ref_value_type(id: IdentifierId, identifiers: &[Identifier], types: &[Type]) -> bool {
+    let identifier = &identifiers[id.0 as usize];
+    react_compiler_hir::is_ref_value_type(&types[identifier.type_.0 as usize])
+}
+
+fn destructure(ty: &RefAccessType) -> RefAccessType {
+    match ty {
+        RefAccessType::Structure {
+            value: Some(inner), ..
+        } => destructure(&RefAccessType::from_ref_type(inner)),
+        other => other.clone(),
+    }
+}
+
+// --- Validation helpers ---
+
+fn validate_no_direct_ref_value_access(
+    errors: &mut Vec<CompilerDiagnostic>,
+    operand: &Place,
+    env: &Env,
+) {
+    if let Some(ty) = env.get(operand.identifier) {
+        let ty = destructure(ty);
+        if let RefAccessType::RefValue { loc, .. } = &ty {
+            errors.push(
+                CompilerDiagnostic::new(
+                    ErrorCategory::Refs,
+                    "Cannot access refs during render",
+                    Some(ERROR_DESCRIPTION.to_string()),
+                )
+                .with_detail(CompilerDiagnosticDetail::Error {
+                    loc: loc.or(operand.loc),
+                    message: Some("Cannot access ref value during render".to_string()),
+                }),
+            );
+        }
+    }
+}
+
+fn validate_no_ref_value_access(
+    errors: &mut Vec<CompilerDiagnostic>,
+    env: &Env,
+    operand: &Place,
+) {
+    if let Some(ty) = env.get(operand.identifier) {
+        let ty = destructure(ty);
+        match &ty {
+            RefAccessType::RefValue { loc, .. } => {
+                errors.push(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Refs,
+                        "Cannot access refs during render",
+                        Some(ERROR_DESCRIPTION.to_string()),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: loc.or(operand.loc),
+                        message: Some(
+                            "Cannot access ref value during render".to_string(),
+                        ),
+                    }),
+                );
+            }
+            RefAccessType::Structure {
+                fn_type: Some(fn_type),
+                ..
+            } if fn_type.read_ref_effect => {
+                errors.push(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Refs,
+                        "Cannot access refs during render",
+                        Some(ERROR_DESCRIPTION.to_string()),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: operand.loc,
+                        message: Some(
+                            "Cannot access ref value during render".to_string(),
+                        ),
+                    }),
+                );
+            }
+            _ => {}
+        }
+    }
+}
+
+fn validate_no_ref_passed_to_function(
+    errors: &mut Vec<CompilerDiagnostic>,
+    env: &Env,
+    operand: &Place,
+    loc: Option<SourceLocation>,
+) {
+    if let Some(ty) = env.get(operand.identifier) {
+        let ty = destructure(ty);
+        match &ty {
+            RefAccessType::Ref { .. } | RefAccessType::RefValue { .. } => {
+                let error_loc = if let RefAccessType::RefValue {
+                    loc: ref_loc, ..
+                } = &ty
+                {
+                    ref_loc.or(loc)
+                } else {
+                    loc
+                };
+                errors.push(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Refs,
+                        "Cannot access refs during render",
+                        Some(ERROR_DESCRIPTION.to_string()),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: error_loc,
+                        message: Some(
+                            "Passing a ref to a function may read its value during render"
+                                .to_string(),
+                        ),
+                    }),
+                );
+            }
+            RefAccessType::Structure {
+                fn_type: Some(fn_type),
+                ..
+            } if fn_type.read_ref_effect => {
+                errors.push(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Refs,
+                        "Cannot access refs during render",
+                        Some(ERROR_DESCRIPTION.to_string()),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc,
+                        message: Some(
+                            "Passing a ref to a function may read its value during render"
+                                .to_string(),
+                        ),
+                    }),
+                );
+            }
+            _ => {}
+        }
+    }
+}
+
+fn validate_no_ref_update(
+    errors: &mut Vec<CompilerDiagnostic>,
+    env: &Env,
+    operand: &Place,
+    loc: Option<SourceLocation>,
+) {
+    if let Some(ty) = env.get(operand.identifier) {
+        let ty = destructure(ty);
+        match &ty {
+            RefAccessType::Ref { .. } | RefAccessType::RefValue { .. } => {
+                let error_loc = if let RefAccessType::RefValue {
+                    loc: ref_loc, ..
+                } = &ty
+                {
+                    ref_loc.or(loc)
+                } else {
+                    loc
+                };
+                errors.push(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Refs,
+                        "Cannot access refs during render",
+                        Some(ERROR_DESCRIPTION.to_string()),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: error_loc,
+                        message: Some("Cannot update ref during render".to_string()),
+                    }),
+                );
+            }
+            _ => {}
+        }
+    }
+}
+
+fn guard_check(errors: &mut Vec<CompilerDiagnostic>, operand: &Place, env: &Env) {
+    if matches!(env.get(operand.identifier), Some(RefAccessType::Guard { .. })) {
+        errors.push(
+            CompilerDiagnostic::new(
+                ErrorCategory::Refs,
+                "Cannot access refs during render",
+                Some(ERROR_DESCRIPTION.to_string()),
+            )
+            .with_detail(CompilerDiagnosticDetail::Error {
+                loc: operand.loc,
+                message: Some("Cannot access ref value during render".to_string()),
+            }),
+        );
+    }
+}
+
+// --- Operand extraction helpers ---
+
+fn each_instruction_value_operand(value: &InstructionValue) -> Vec<&Place> {
+    match value {
+        InstructionValue::CallExpression { callee, args, .. } => {
+            let mut operands = vec![callee];
+            for arg in args {
+                match arg {
+                    PlaceOrSpread::Place(p) => operands.push(p),
+                    PlaceOrSpread::Spread(s) => operands.push(&s.place),
+                }
+            }
+            operands
+        }
+        InstructionValue::MethodCall {
+            receiver,
+            property,
+            args,
+            ..
+        } => {
+            let mut operands = vec![receiver, property];
+            for arg in args {
+                match arg {
+                    PlaceOrSpread::Place(p) => operands.push(p),
+                    PlaceOrSpread::Spread(s) => operands.push(&s.place),
+                }
+            }
+            operands
+        }
+        InstructionValue::BinaryExpression { left, right, .. } => vec![left, right],
+        InstructionValue::UnaryExpression { value, .. } => vec![value],
+        InstructionValue::PropertyLoad { object, .. } => vec![object],
+        InstructionValue::ComputedLoad {
+            object, property, ..
+        } => vec![object, property],
+        InstructionValue::PropertyStore { object, value, .. } => vec![object, value],
+        InstructionValue::ComputedStore {
+            object,
+            property,
+            value,
+            ..
+        } => vec![object, property, value],
+        InstructionValue::PropertyDelete { object, .. } => vec![object],
+        InstructionValue::ComputedDelete {
+            object, property, ..
+        } => vec![object, property],
+        InstructionValue::TypeCastExpression { value, .. } => vec![value],
+        InstructionValue::LoadLocal { place, .. }
+        | InstructionValue::LoadContext { place, .. } => vec![place],
+        InstructionValue::StoreLocal { value, .. }
+        | InstructionValue::StoreContext { value, .. } => vec![value],
+        InstructionValue::Destructure { value, .. } => vec![value],
+        InstructionValue::NewExpression { callee, args, .. } => {
+            let mut operands = vec![callee];
+            for arg in args {
+                match arg {
+                    PlaceOrSpread::Place(p) => operands.push(p),
+                    PlaceOrSpread::Spread(s) => operands.push(&s.place),
+                }
+            }
+            operands
+        }
+        InstructionValue::ObjectExpression { properties, .. } => {
+            let mut operands = Vec::new();
+            for prop in properties {
+                match prop {
+                    ObjectPropertyOrSpread::Property(p) => operands.push(&p.place),
+                    ObjectPropertyOrSpread::Spread(p) => operands.push(&p.place),
+                }
+            }
+            operands
+        }
+        InstructionValue::ArrayExpression { elements, .. } => {
+            let mut operands = Vec::new();
+            for element in elements {
+                match element {
+                    ArrayElement::Place(p) => operands.push(p),
+                    ArrayElement::Spread(s) => operands.push(&s.place),
+                    ArrayElement::Hole => {}
+                }
+            }
+            operands
+        }
+        InstructionValue::JsxExpression {
+            tag,
+            props,
+            children,
+            ..
+        } => {
+            let mut operands = Vec::new();
+            if let JsxTag::Place(p) = tag {
+                operands.push(p);
+            }
+            for prop in props {
+                match prop {
+                    JsxAttribute::Attribute { place, .. } => operands.push(place),
+                    JsxAttribute::SpreadAttribute { argument } => operands.push(argument),
+                }
+            }
+            if let Some(children) = children {
+                for child in children {
+                    operands.push(child);
+                }
+            }
+            operands
+        }
+        InstructionValue::JsxFragment { children, .. } => children.iter().collect(),
+        InstructionValue::TemplateLiteral { subexprs, .. } => subexprs.iter().collect(),
+        InstructionValue::TaggedTemplateExpression { tag, .. } => vec![tag],
+        InstructionValue::IteratorNext { iterator, .. } => vec![iterator],
+        InstructionValue::NextPropertyOf { value, .. } => vec![value],
+        InstructionValue::GetIterator { collection, .. } => vec![collection],
+        InstructionValue::Await { value, .. } => vec![value],
+        _ => Vec::new(),
+    }
+}
+
+fn each_terminal_operand(terminal: &Terminal) -> Vec<&Place> {
+    match terminal {
+        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => vec![value],
+        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
+        Terminal::Switch { test, .. } => vec![test],
+        _ => Vec::new(),
+    }
+}
+
+fn each_pattern_operand(pattern: &react_compiler_hir::Pattern) -> Vec<&Place> {
+    let mut result = Vec::new();
+    match pattern {
+        react_compiler_hir::Pattern::Array(array) => {
+            for item in &array.items {
+                match item {
+                    react_compiler_hir::ArrayPatternElement::Place(p) => result.push(p),
+                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
+                        result.push(&s.place)
+                    }
+                    react_compiler_hir::ArrayPatternElement::Hole => {}
+                }
+            }
+        }
+        react_compiler_hir::Pattern::Object(object) => {
+            for prop in &object.properties {
+                match prop {
+                    ObjectPropertyOrSpread::Property(p) => result.push(&p.place),
+                    ObjectPropertyOrSpread::Spread(s) => result.push(&s.place),
+                }
+            }
+        }
+    }
+    result
+}
+
+// --- Main entry point ---
+
+pub fn validate_no_ref_access_in_render(func: &HirFunction, env: &mut Environment) {
+    let mut ref_env = Env::new();
+    collect_temporaries_sidemap(func, &mut ref_env, &env.identifiers, &env.types);
+    let mut errors: Vec<CompilerDiagnostic> = Vec::new();
+    validate_no_ref_access_in_render_impl(
+        func,
+        &env.identifiers,
+        &env.types,
+        &env.functions,
+        &*env,
+        &mut ref_env,
+        &mut errors,
+    );
+    for diagnostic in errors {
+        env.record_diagnostic(diagnostic);
+    }
+}
+
+fn collect_temporaries_sidemap(
+    func: &HirFunction,
+    env: &mut Env,
+    identifiers: &[Identifier],
+    types: &[Type],
+) {
+    for (_, block) in &func.body.blocks {
+        for &instr_id in &block.instructions {
+            let instr = &func.instructions[instr_id.0 as usize];
+            match &instr.value {
+                InstructionValue::LoadLocal { place, .. } => {
+                    let temp = env
+                        .temporaries
+                        .get(&place.identifier)
+                        .cloned()
+                        .unwrap_or_else(|| place.clone());
+                    env.define(instr.lvalue.identifier, temp);
+                }
+                InstructionValue::StoreLocal { lvalue, value, .. } => {
+                    let temp = env
+                        .temporaries
+                        .get(&value.identifier)
+                        .cloned()
+                        .unwrap_or_else(|| value.clone());
+                    env.define(instr.lvalue.identifier, temp.clone());
+                    env.define(lvalue.place.identifier, temp);
+                }
+                InstructionValue::PropertyLoad {
+                    object, property, ..
+                } => {
+                    if is_ref_type(object.identifier, identifiers, types)
+                        && *property == PropertyLiteral::String("current".to_string())
+                    {
+                        continue;
+                    }
+                    let temp = env
+                        .temporaries
+                        .get(&object.identifier)
+                        .cloned()
+                        .unwrap_or_else(|| object.clone());
+                    env.define(instr.lvalue.identifier, temp);
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+fn validate_no_ref_access_in_render_impl(
+    func: &HirFunction,
+    identifiers: &[Identifier],
+    types: &[Type],
+    functions: &[HirFunction],
+    env: &Environment,
+    ref_env: &mut Env,
+    errors: &mut Vec<CompilerDiagnostic>,
+) -> RefAccessType {
+    let mut return_values: Vec<RefAccessType> = Vec::new();
+
+    // Process params
+    for param in &func.params {
+        let place = match param {
+            react_compiler_hir::ParamPattern::Place(p) => p,
+            react_compiler_hir::ParamPattern::Spread(s) => &s.place,
+        };
+        ref_env.set(
+            place.identifier,
+            ref_type_of_type(place.identifier, identifiers, types),
+        );
+    }
+
+    // Collect identifiers that are interpolated as JSX children
+    let mut interpolated_as_jsx: HashSet<IdentifierId> = HashSet::new();
+    for (_, block) in &func.body.blocks {
+        for &instr_id in &block.instructions {
+            let instr = &func.instructions[instr_id.0 as usize];
+            match &instr.value {
+                InstructionValue::JsxExpression {
+                    children: Some(children),
+                    ..
+                } => {
+                    for child in children {
+                        interpolated_as_jsx.insert(child.identifier);
+                    }
+                }
+                InstructionValue::JsxFragment { children, .. } => {
+                    for child in children {
+                        interpolated_as_jsx.insert(child.identifier);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    // Fixed-point iteration (up to 10 iterations)
+    for iteration in 0..10 {
+        if iteration > 0 && !ref_env.has_changed() {
+            break;
+        }
+        ref_env.reset_changed();
+        return_values.clear();
+        let mut safe_blocks: Vec<(BlockId, RefId)> = Vec::new();
+
+        for (_, block) in &func.body.blocks {
+            safe_blocks.retain(|(block_id, _)| *block_id != block.id);
+
+            // Process phis
+            for phi in &block.phis {
+                let phi_types: Vec<RefAccessType> = phi
+                    .operands
+                    .values()
+                    .map(|operand| {
+                        ref_env
+                            .get(operand.identifier)
+                            .cloned()
+                            .unwrap_or(RefAccessType::None)
+                    })
+                    .collect();
+                ref_env.set(phi.place.identifier, join_ref_access_types_many(&phi_types));
+            }
+
+            // Process instructions
+            for &instr_id in &block.instructions {
+                let instr = &func.instructions[instr_id.0 as usize];
+                match &instr.value {
+                    InstructionValue::JsxExpression { .. }
+                    | InstructionValue::JsxFragment { .. } => {
+                        for operand in each_instruction_value_operand(&instr.value) {
+                            validate_no_direct_ref_value_access(errors, operand, ref_env);
+                        }
+                    }
+                    InstructionValue::ComputedLoad {
+                        object, property, ..
+                    } => {
+                        validate_no_direct_ref_value_access(errors, property, ref_env);
+                        let obj_type = ref_env.get(object.identifier).cloned();
+                        let lookup_type = match &obj_type {
+                            Some(RefAccessType::Structure {
+                                value: Some(value), ..
+                            }) => Some(RefAccessType::from_ref_type(value)),
+                            Some(RefAccessType::Ref { ref_id }) => {
+                                Some(RefAccessType::RefValue {
+                                    loc: instr.loc,
+                                    ref_id: Some(*ref_id),
+                                })
+                            }
+                            _ => None,
+                        };
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            lookup_type.unwrap_or_else(|| {
+                                ref_type_of_type(instr.lvalue.identifier, identifiers, types)
+                            }),
+                        );
+                    }
+                    InstructionValue::PropertyLoad { object, .. } => {
+                        let obj_type = ref_env.get(object.identifier).cloned();
+                        let lookup_type = match &obj_type {
+                            Some(RefAccessType::Structure {
+                                value: Some(value), ..
+                            }) => Some(RefAccessType::from_ref_type(value)),
+                            Some(RefAccessType::Ref { ref_id }) => {
+                                Some(RefAccessType::RefValue {
+                                    loc: instr.loc,
+                                    ref_id: Some(*ref_id),
+                                })
+                            }
+                            _ => None,
+                        };
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            lookup_type.unwrap_or_else(|| {
+                                ref_type_of_type(instr.lvalue.identifier, identifiers, types)
+                            }),
+                        );
+                    }
+                    InstructionValue::TypeCastExpression { value, .. } => {
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            ref_env
+                                .get(value.identifier)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    ref_type_of_type(instr.lvalue.identifier, identifiers, types)
+                                }),
+                        );
+                    }
+                    InstructionValue::LoadContext { place, .. }
+                    | InstructionValue::LoadLocal { place, .. } => {
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            ref_env
+                                .get(place.identifier)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    ref_type_of_type(instr.lvalue.identifier, identifiers, types)
+                                }),
+                        );
+                    }
+                    InstructionValue::StoreContext { lvalue, value, .. }
+                    | InstructionValue::StoreLocal { lvalue, value, .. } => {
+                        ref_env.set(
+                            lvalue.place.identifier,
+                            ref_env
+                                .get(value.identifier)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    ref_type_of_type(lvalue.place.identifier, identifiers, types)
+                                }),
+                        );
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            ref_env
+                                .get(value.identifier)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    ref_type_of_type(instr.lvalue.identifier, identifiers, types)
+                                }),
+                        );
+                    }
+                    InstructionValue::Destructure { value, lvalue, .. } => {
+                        let obj_type = ref_env.get(value.identifier).cloned();
+                        let lookup_type = match &obj_type {
+                            Some(RefAccessType::Structure {
+                                value: Some(value), ..
+                            }) => Some(RefAccessType::from_ref_type(value)),
+                            _ => None,
+                        };
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            lookup_type.clone().unwrap_or_else(|| {
+                                ref_type_of_type(instr.lvalue.identifier, identifiers, types)
+                            }),
+                        );
+                        for pattern_place in each_pattern_operand(&lvalue.pattern) {
+                            ref_env.set(
+                                pattern_place.identifier,
+                                lookup_type.clone().unwrap_or_else(|| {
+                                    ref_type_of_type(
+                                        pattern_place.identifier,
+                                        identifiers,
+                                        types,
+                                    )
+                                }),
+                            );
+                        }
+                    }
+                    InstructionValue::ObjectMethod { lowered_func, .. }
+                    | InstructionValue::FunctionExpression { lowered_func, .. } => {
+                        let inner = &functions[lowered_func.func.0 as usize];
+                        let mut inner_errors: Vec<CompilerDiagnostic> = Vec::new();
+                        let result = validate_no_ref_access_in_render_impl(
+                            inner,
+                            identifiers,
+                            types,
+                            functions,
+                            env,
+                            ref_env,
+                            &mut inner_errors,
+                        );
+                        let (return_type, read_ref_effect) = if inner_errors.is_empty() {
+                            (result, false)
+                        } else {
+                            (RefAccessType::None, true)
+                        };
+                        ref_env.set(
+                            instr.lvalue.identifier,
+                            RefAccessType::Structure {
+                                value: None,
+                                fn_type: Some(RefFnType {
+                                    read_ref_effect,
+                                    return_type: Box::new(return_type),
+                                }),
+                            },
+                        );
+                    }
+                    InstructionValue::MethodCall { property, .. }
+                    | InstructionValue::CallExpression {
+                        callee: property, ..
+                    } => {
+                        let callee = property;
+                        let mut return_type = RefAccessType::None;
+                        let fn_type = ref_env.get(callee.identifier).cloned();
+                        let mut did_error = false;
+
+                        if let Some(RefAccessType::Structure {
+                            fn_type: Some(fn_ty),
+                            ..
+                        }) = &fn_type
+                        {
+                            return_type = *fn_ty.return_type.clone();
+                            if fn_ty.read_ref_effect {
+                                did_error = true;
+                                errors.push(
+                                    CompilerDiagnostic::new(
+                                        ErrorCategory::Refs,
+                                        "Cannot access refs during render",
+                                        Some(ERROR_DESCRIPTION.to_string()),
+                                    )
+                                    .with_detail(CompilerDiagnosticDetail::Error {
+                                        loc: callee.loc,
+                                        message: Some(
+                                            "This function accesses a ref value".to_string(),
+                                        ),
+                                    }),
+                                );
+                            }
+                        }
+
+                        /*
+                         * If we already reported an error on this instruction, don't report
+                         * duplicate errors
+                         */
+                        if !did_error {
+                            let is_ref_lvalue =
+                                is_ref_type(instr.lvalue.identifier, identifiers, types);
+                            let callee_identifier =
+                                &identifiers[callee.identifier.0 as usize];
+                            let callee_type =
+                                &types[callee_identifier.type_.0 as usize];
+                            let hook_kind = env.get_hook_kind_for_type(callee_type);
+
+                            if is_ref_lvalue
+                                || (hook_kind.is_some()
+                                    && !matches!(hook_kind, Some(&HookKind::UseState))
+                                    && !matches!(hook_kind, Some(&HookKind::UseReducer)))
+                            {
+                                for operand in each_instruction_value_operand(&instr.value)
+                                {
+                                    /*
+                                     * Allow passing refs or ref-accessing functions when:
+                                     * 1. lvalue is a ref (mergeRefs pattern)
+                                     * 2. calling hooks (independently validated)
+                                     */
+                                    validate_no_direct_ref_value_access(
+                                        errors, operand, ref_env,
+                                    );
+                                }
+                            } else if interpolated_as_jsx
+                                .contains(&instr.lvalue.identifier)
+                            {
+                                for operand in each_instruction_value_operand(&instr.value)
+                                {
+                                    /*
+                                     * Special case: the lvalue is passed as a jsx child
+                                     */
+                                    validate_no_ref_value_access(errors, ref_env, operand);
+                                }
+                            } else if hook_kind.is_none() {
+                                if let Some(ref effects) = instr.effects {
+                                    /*
+                                     * For non-hook functions with known aliasing effects,
+                                     * use the effects to determine what validation to apply.
+                                     * Track visited id:kind pairs to avoid duplicate errors.
+                                     */
+                                    let mut visited_effects: HashSet<String> =
+                                        HashSet::new();
+                                    for effect in effects {
+                                        let (place, validation) = match effect {
+                                            AliasingEffect::Freeze { value, .. } => {
+                                                (Some(value), "direct-ref")
+                                            }
+                                            AliasingEffect::Mutate { value, .. }
+                                            | AliasingEffect::MutateTransitive {
+                                                value, ..
+                                            }
+                                            | AliasingEffect::MutateConditionally {
+                                                value, ..
+                                            }
+                                            | AliasingEffect::MutateTransitiveConditionally {
+                                                value,
+                                                ..
+                                            } => (Some(value), "ref-passed"),
+                                            AliasingEffect::Render { place, .. } => {
+                                                (Some(place), "ref-passed")
+                                            }
+                                            AliasingEffect::Capture { from, .. }
+                                            | AliasingEffect::Alias { from, .. }
+                                            | AliasingEffect::MaybeAlias { from, .. }
+                                            | AliasingEffect::Assign { from, .. }
+                                            | AliasingEffect::CreateFrom { from, .. } => {
+                                                (Some(from), "ref-passed")
+                                            }
+                                            AliasingEffect::ImmutableCapture {
+                                                from, ..
+                                            } => {
+                                                /*
+                                                 * ImmutableCapture: check whether the same
+                                                 * operand also has a Freeze effect to
+                                                 * distinguish known signatures from
+                                                 * downgraded defaults.
+                                                 */
+                                                let is_frozen = effects.iter().any(|e| {
+                                                    matches!(
+                                                        e,
+                                                        AliasingEffect::Freeze { value, .. }
+                                                            if value.identifier == from.identifier
+                                                    )
+                                                });
+                                                (
+                                                    Some(from),
+                                                    if is_frozen {
+                                                        "direct-ref"
+                                                    } else {
+                                                        "ref-passed"
+                                                    },
+                                                )
+                                            }
+                                            _ => (None, "none"),
+                                        };
+                                        if let Some(place) = place {
+                                            if validation != "none" {
+                                                let key = format!(
+                                                    "{}:{}",
+                                                    place.identifier.0, validation
+                                                );
+                                                if visited_effects.insert(key) {
+                                                    if validation == "direct-ref" {
+                                                        validate_no_direct_ref_value_access(
+                                                            errors, place, ref_env,
+                                                        );
+                                                    } else {
+                                                        validate_no_ref_passed_to_function(
+                                                            errors, ref_env, place, place.loc,
+                                                        );
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    for operand in
+                                        each_instruction_value_operand(&instr.value)
+                                    {
+                                        validate_no_ref_passed_to_function(
+                                            errors,
+                                            ref_env,
+                                            operand,
+                                            operand.loc,
+                                        );
+                                    }
+                                }
+                            } else {
+                                for operand in
+                                    each_instruction_value_operand(&instr.value)
+                                {
+                                    validate_no_ref_passed_to_function(
+                                        errors,
+                                        ref_env,
+                                        operand,
+                                        operand.loc,
+                                    );
+                                }
+                            }
+                        }
+                        ref_env.set(instr.lvalue.identifier, return_type);
+                    }
+                    InstructionValue::ObjectExpression { .. }
+                    | InstructionValue::ArrayExpression { .. } => {
+                        let operands = each_instruction_value_operand(&instr.value);
+                        let mut types_vec: Vec<RefAccessType> = Vec::new();
+                        for operand in &operands {
+                            validate_no_direct_ref_value_access(errors, operand, ref_env);
+                            types_vec.push(
+                                ref_env
+                                    .get(operand.identifier)
+                                    .cloned()
+                                    .unwrap_or(RefAccessType::None),
+                            );
+                        }
+                        let value = join_ref_access_types_many(&types_vec);
+                        match &value {
+                            RefAccessType::None
+                            | RefAccessType::Guard { .. }
+                            | RefAccessType::Nullable => {
+                                ref_env.set(instr.lvalue.identifier, RefAccessType::None);
+                            }
+                            _ => {
+                                ref_env.set(
+                                    instr.lvalue.identifier,
+                                    RefAccessType::Structure {
+                                        value: value.to_ref_type().map(Box::new),
+                                        fn_type: None,
+                                    },
+                                );
+                            }
+                        }
+                    }
+                    InstructionValue::PropertyDelete { object, .. }
+                    | InstructionValue::PropertyStore { object, .. }
+                    | InstructionValue::ComputedDelete { object, .. }
+                    | InstructionValue::ComputedStore { object, .. } => {
+                        let target = ref_env.get(object.identifier).cloned();
+                        let mut found_safe = false;
+                        if matches!(&instr.value, InstructionValue::PropertyStore { .. }) {
+                            if let Some(RefAccessType::Ref { ref_id }) = &target {
+                                if let Some(pos) = safe_blocks
+                                    .iter()
+                                    .position(|(_, r)| r == ref_id)
+                                {
+                                    safe_blocks.remove(pos);
+                                    found_safe = true;
+                                }
+                            }
+                        }
+                        if !found_safe {
+                            validate_no_ref_update(errors, ref_env, object, instr.loc);
+                        }
+                        match &instr.value {
+                            InstructionValue::ComputedDelete { property, .. }
+                            | InstructionValue::ComputedStore { property, .. } => {
+                                validate_no_ref_value_access(errors, ref_env, property);
+                            }
+                            _ => {}
+                        }
+                        match &instr.value {
+                            InstructionValue::ComputedStore { value, .. }
+                            | InstructionValue::PropertyStore { value, .. } => {
+                                validate_no_direct_ref_value_access(errors, value, ref_env);
+                                let value_type = ref_env.get(value.identifier).cloned();
+                                if let Some(RefAccessType::Structure { .. }) = &value_type {
+                                    let mut object_type = value_type.unwrap();
+                                    if let Some(t) = &target {
+                                        object_type =
+                                            join_ref_access_types(&object_type, t);
+                                    }
+                                    ref_env.set(object.identifier, object_type);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    InstructionValue::StartMemoize { .. }
+                    | InstructionValue::FinishMemoize { .. } => {}
+                    InstructionValue::LoadGlobal { binding, .. } => {
+                        if binding.name() == "undefined" {
+                            ref_env
+                                .set(instr.lvalue.identifier, RefAccessType::Nullable);
+                        }
+                    }
+                    InstructionValue::Primitive { value, .. } => {
+                        if matches!(
+                            value,
+                            PrimitiveValue::Null | PrimitiveValue::Undefined
+                        ) {
+                            ref_env
+                                .set(instr.lvalue.identifier, RefAccessType::Nullable);
+                        }
+                    }
+                    InstructionValue::UnaryExpression {
+                        operator, value, ..
+                    } => {
+                        if *operator == UnaryOperator::Not {
+                            if let Some(RefAccessType::RefValue {
+                                ref_id: Some(ref_id),
+                                ..
+                            }) = ref_env.get(value.identifier).cloned().as_ref()
+                            {
+                                /*
+                                 * Record an error suggesting the `if (ref.current == null)` pattern,
+                                 * but also record the lvalue as a guard so that we don't emit a
+                                 * second error for the write to the ref
+                                 */
+                                ref_env.set(
+                                    instr.lvalue.identifier,
+                                    RefAccessType::Guard { ref_id: *ref_id },
+                                );
+                                errors.push(
+                                    CompilerDiagnostic::new(
+                                        ErrorCategory::Refs,
+                                        "Cannot access refs during render",
+                                        Some(ERROR_DESCRIPTION.to_string()),
+                                    )
+                                    .with_detail(CompilerDiagnosticDetail::Error {
+                                        loc: value.loc,
+                                        message: Some(
+                                            "Cannot access ref value during render"
+                                                .to_string(),
+                                        ),
+                                    })
+                                    .with_detail(CompilerDiagnosticDetail::Hint {
+                                        message: "To initialize a ref only once, check that the ref is null with the pattern `if (ref.current == null) { ref.current = ... }`".to_string(),
+                                    }),
+                                );
+                            } else {
+                                validate_no_ref_value_access(errors, ref_env, value);
+                            }
+                        } else {
+                            validate_no_ref_value_access(errors, ref_env, value);
+                        }
+                    }
+                    InstructionValue::BinaryExpression {
+                        left, right, ..
+                    } => {
+                        let left_type = ref_env.get(left.identifier).cloned();
+                        let right_type = ref_env.get(right.identifier).cloned();
+                        let mut nullish = false;
+                        let mut found_ref_id: Option<RefId> = None;
+
+                        if let Some(RefAccessType::RefValue {
+                            ref_id: Some(id), ..
+                        }) = &left_type
+                        {
+                            found_ref_id = Some(*id);
+                        } else if let Some(RefAccessType::RefValue {
+                            ref_id: Some(id), ..
+                        }) = &right_type
+                        {
+                            found_ref_id = Some(*id);
+                        }
+
+                        if matches!(&left_type, Some(RefAccessType::Nullable)) {
+                            nullish = true;
+                        } else if matches!(&right_type, Some(RefAccessType::Nullable)) {
+                            nullish = true;
+                        }
+
+                        if let Some(ref_id) = found_ref_id {
+                            if nullish {
+                                ref_env.set(
+                                    instr.lvalue.identifier,
+                                    RefAccessType::Guard { ref_id },
+                                );
+                            } else {
+                                validate_no_ref_value_access(errors, ref_env, left);
+                                validate_no_ref_value_access(errors, ref_env, right);
+                            }
+                        } else {
+                            validate_no_ref_value_access(errors, ref_env, left);
+                            validate_no_ref_value_access(errors, ref_env, right);
+                        }
+                    }
+                    _ => {
+                        for operand in each_instruction_value_operand(&instr.value) {
+                            validate_no_ref_value_access(errors, ref_env, operand);
+                        }
+                    }
+                }
+
+                // Guard values are derived from ref.current, so they can only be used
+                // in if statement targets
+                for operand in each_instruction_value_operand(&instr.value) {
+                    guard_check(errors, operand, ref_env);
+                }
+
+                if is_ref_type(instr.lvalue.identifier, identifiers, types)
+                    && !matches!(
+                        ref_env.get(instr.lvalue.identifier),
+                        Some(RefAccessType::Ref { .. })
+                    )
+                {
+                    let existing = ref_env
+                        .get(instr.lvalue.identifier)
+                        .cloned()
+                        .unwrap_or(RefAccessType::None);
+                    ref_env.set(
+                        instr.lvalue.identifier,
+                        join_ref_access_types(
+                            &existing,
+                            &RefAccessType::Ref {
+                                ref_id: next_ref_id(),
+                            },
+                        ),
+                    );
+                }
+                if is_ref_value_type(instr.lvalue.identifier, identifiers, types)
+                    && !matches!(
+                        ref_env.get(instr.lvalue.identifier),
+                        Some(RefAccessType::RefValue { .. })
+                    )
+                {
+                    let existing = ref_env
+                        .get(instr.lvalue.identifier)
+                        .cloned()
+                        .unwrap_or(RefAccessType::None);
+                    ref_env.set(
+                        instr.lvalue.identifier,
+                        join_ref_access_types(
+                            &existing,
+                            &RefAccessType::RefValue {
+                                loc: instr.loc,
+                                ref_id: None,
+                            },
+                        ),
+                    );
+                }
+            }
+
+            // Check if terminal is an `if` — push safe block for guard
+            if let Terminal::If {
+                test, fallthrough, ..
+            } = &block.terminal
+            {
+                if let Some(RefAccessType::Guard { ref_id }) = ref_env.get(test.identifier)
+                {
+                    if !safe_blocks.iter().any(|(_, r)| r == ref_id) {
+                        safe_blocks.push((*fallthrough, *ref_id));
+                    }
+                }
+            }
+
+            // Process terminal operands
+            for operand in each_terminal_operand(&block.terminal) {
+                if !matches!(&block.terminal, Terminal::Return { .. }) {
+                    validate_no_ref_value_access(errors, ref_env, operand);
+                    if !matches!(&block.terminal, Terminal::If { .. }) {
+                        guard_check(errors, operand, ref_env);
+                    }
+                } else {
+                    // Allow functions containing refs to be returned, but not direct ref values
+                    validate_no_direct_ref_value_access(errors, operand, ref_env);
+                    guard_check(errors, operand, ref_env);
+                    if let Some(ty) = ref_env.get(operand.identifier) {
+                        return_values.push(ty.clone());
+                    }
+                }
+            }
+        }
+
+        if !errors.is_empty() {
+            return RefAccessType::None;
+        }
+    }
+
+    join_ref_access_types_many(&return_values)
+}
