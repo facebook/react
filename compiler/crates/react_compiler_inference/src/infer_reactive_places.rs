@@ -53,7 +53,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
     let post_dominators =
         react_compiler_hir::dominator::compute_post_dominator_tree(
             func,
-            env.next_block_id_counter,
+            env.next_block_id().0,
             false,
         );
 

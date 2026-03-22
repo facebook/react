@@ -20,12 +20,13 @@ use react_compiler_hir::{
 
 pub fn validate_no_set_state_in_render(func: &HirFunction, env: &mut Environment) {
     let mut unconditional_set_state_functions: HashSet<IdentifierId> = HashSet::new();
+    let next_block_id = env.next_block_id().0;
     let diagnostics = validate_impl(
         func,
         &env.identifiers,
         &env.types,
         &env.functions,
-        env.next_block_id_counter,
+        next_block_id,
         env.config.enable_use_keyed_state,
         &mut unconditional_set_state_functions,
     );

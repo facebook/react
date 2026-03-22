@@ -191,7 +191,7 @@ fn record_dynamic_hook_usage_error(
 
 /// Validates hooks usage rules for a function.
 pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) {
-    let unconditional_blocks = compute_unconditional_blocks(func, env.next_block_id_counter);
+    let unconditional_blocks = compute_unconditional_blocks(func, env.next_block_id().0);
     let mut errors_by_loc: IndexMap<SourceLocation, CompilerErrorDetail> = IndexMap::new();
     let mut value_kinds: HashMap<IdentifierId, Kind> = HashMap::new();
 
