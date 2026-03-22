@@ -531,7 +531,7 @@ fn visit_block_for_merge(
             ),
         };
         index += 1;
-        while index <= entry.to.saturating_sub(1) {
+        while index < entry.to {
             let stmt = &all_stmts[index];
             index += 1;
             match stmt {
