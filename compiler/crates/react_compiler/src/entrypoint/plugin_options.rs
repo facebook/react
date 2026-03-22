@@ -42,10 +42,10 @@ pub struct PluginOptions {
     pub filename: Option<String>,
 
     // Pass-through options
-    #[serde(default)]
-    pub compilation_mode: CompilationMode,
-    #[serde(default)]
-    pub panic_threshold: PanicThreshold,
+    #[serde(default = "default_compilation_mode")]
+    pub compilation_mode: String,
+    #[serde(default = "default_panic_threshold")]
+    pub panic_threshold: String,
     #[serde(default = "default_target")]
     pub target: CompilerTarget,
     #[serde(default)]
@@ -68,36 +68,12 @@ pub struct PluginOptions {
     pub environment: EnvironmentConfig,
 }
 
-/// Compilation mode matching TS CompilationMode enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum CompilationMode {
-    Infer,
-    Annotation,
-    All,
+fn default_compilation_mode() -> String {
+    "infer".to_string()
 }
 
-impl Default for CompilationMode {
-    fn default() -> Self {
-        Self::Infer
-    }
-}
-
-/// Panic threshold matching TS PanicThresholdOptions enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum PanicThreshold {
-    #[serde(rename = "ALL_ERRORS")]
-    AllErrors,
-    #[serde(rename = "CRITICAL_ERRORS")]
-    CriticalErrors,
-    #[serde(rename = "none")]
-    None,
-}
-
-impl Default for PanicThreshold {
-    fn default() -> Self {
-        Self::None
-    }
+fn default_panic_threshold() -> String {
+    "none".to_string()
 }
 
 fn default_target() -> CompilerTarget {
