@@ -1314,25 +1314,14 @@ fn lower_expression(
             }
         }
         Expression::ArrowFunctionExpression(_) => {
-            // lower_function_to_value returns Result; unwrap since the expression type is already
-            // known to be a function expression at this point, so the invariant cannot fail.
-            // The Err path is only reachable if lower_function is called with a non-function node.
-            match lower_function_to_value(builder, expr, FunctionExpressionType::ArrowFunctionExpression) {
-                Ok(val) => val,
-                Err(diag) => {
-                    builder.record_error(CompilerErrorDetail::new(diag.category, diag.reason));
-                    InstructionValue::Primitive { value: PrimitiveValue::Undefined, loc: None }
-                }
-            }
+            // The expression type is already known to be ArrowFunctionExpression at this point,
+            // so lower_function's non-function invariant cannot fail. Safe to unwrap.
+            lower_function_to_value(builder, expr, FunctionExpressionType::ArrowFunctionExpression)
+                .expect("lower_function_to_value called with ArrowFunctionExpression")
         }
         Expression::FunctionExpression(_) => {
-            match lower_function_to_value(builder, expr, FunctionExpressionType::FunctionExpression) {
-                Ok(val) => val,
-                Err(diag) => {
-                    builder.record_error(CompilerErrorDetail::new(diag.category, diag.reason));
-                    InstructionValue::Primitive { value: PrimitiveValue::Undefined, loc: None }
-                }
-            }
+            lower_function_to_value(builder, expr, FunctionExpressionType::FunctionExpression)
+                .expect("lower_function_to_value called with FunctionExpression")
         }
         Expression::ObjectExpression(obj) => {
             let loc = convert_opt_loc(&obj.base.loc);

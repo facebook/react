@@ -54,7 +54,7 @@ pub fn flatten_scopes_with_hooks_or_use_hir(func: &mut HirFunction, env: &Enviro
                 InstructionValue::CallExpression { callee, .. } => {
                     let callee_ty = &env.types
                         [env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
-                    if is_hook_or_use(env, callee_ty) {
+                    if is_hook_or_use(env, callee_ty)? {
                         // All active scopes must be pruned
                         prune.extend(active_scopes.iter().map(|s| s.block));
                         active_scopes.clear();
@@ -63,7 +63,7 @@ pub fn flatten_scopes_with_hooks_or_use_hir(func: &mut HirFunction, env: &Enviro
                 InstructionValue::MethodCall { property, .. } => {
                     let property_ty = &env.types
                         [env.identifiers[property.identifier.0 as usize].type_.0 as usize];
-                    if is_hook_or_use(env, property_ty) {
+                    if is_hook_or_use(env, property_ty)? {
                         prune.extend(active_scopes.iter().map(|s| s.block));
                         active_scopes.clear();
                     }
@@ -141,8 +141,8 @@ struct ActiveScope {
     fallthrough: BlockId,
 }
 
-fn is_hook_or_use(env: &Environment, ty: &Type) -> bool {
-    env.get_hook_kind_for_type(ty).ok().flatten().is_some() || is_use_operator_type(ty)
+fn is_hook_or_use(env: &Environment, ty: &Type) -> Result<bool, CompilerDiagnostic> {
+    Ok(env.get_hook_kind_for_type(ty)?.is_some() || is_use_operator_type(ty))
 }
 
 fn is_use_operator_type(ty: &Type) -> bool {

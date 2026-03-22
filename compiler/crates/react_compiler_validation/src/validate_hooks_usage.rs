@@ -14,7 +14,7 @@ use std::collections::HashMap;
 
 use indexmap::IndexMap;
 use react_compiler_diagnostics::{
-    CompilerErrorDetail, ErrorCategory, SourceLocation,
+    CompilerDiagnostic, CompilerErrorDetail, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
     ArrayPatternElement, FunctionId, HirFunction, Identifier, IdentifierId,
@@ -78,10 +78,10 @@ fn get_hook_kind_for_id<'a>(
     identifiers: &[Identifier],
     types: &[Type],
     env: &'a Environment,
-) -> Option<&'a HookKind> {
+) -> Result<Option<&'a HookKind>, CompilerDiagnostic> {
     let identifier = &identifiers[identifier_id.0 as usize];
     let ty = &types[identifier.type_.0 as usize];
-    env.get_hook_kind_for_type(ty).ok().flatten()
+    env.get_hook_kind_for_type(ty)
 }
 
 fn visit_place(
@@ -229,7 +229,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
 
             match &instr.value {
                 InstructionValue::LoadGlobal { .. } => {
-                    if get_hook_kind_for_id(lvalue_id, &env.identifiers, &env.types, env).is_some()
+                    if get_hook_kind_for_id(lvalue_id, &env.identifiers, &env.types, env)?.is_some()
                     {
                         value_kinds.insert(lvalue_id, Kind::KnownHook);
                     } else {

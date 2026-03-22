@@ -138,7 +138,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
                     InstructionValue::CallExpression { callee, .. } => {
                         let callee_ty = &env.types
                             [env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
-                        if get_hook_kind_for_type(env, callee_ty).is_some()
+                        if get_hook_kind_for_type(env, callee_ty)?.is_some()
                             || is_use_operator_type(callee_ty)
                         {
                             has_reactive_input = true;
@@ -147,7 +147,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
                     InstructionValue::MethodCall { property, .. } => {
                         let property_ty = &env.types
                             [env.identifiers[property.identifier.0 as usize].type_.0 as usize];
-                        if get_hook_kind_for_type(env, property_ty).is_some()
+                        if get_hook_kind_for_type(env, property_ty)?.is_some()
                             || is_use_operator_type(property_ty)
                         {
                             has_reactive_input = true;
@@ -465,8 +465,8 @@ fn post_dominators_of(
 // Type helpers (ported from HIR.ts)
 // =============================================================================
 
-fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Option<&'a HookKind> {
-    env.get_hook_kind_for_type(ty).ok().flatten()
+fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Result<Option<&'a HookKind>, CompilerDiagnostic> {
+    env.get_hook_kind_for_type(ty)
 }
 
 fn is_use_operator_type(ty: &Type) -> bool {
@@ -513,7 +513,7 @@ fn is_stable_type_container(ty: &Type) -> bool {
 }
 
 fn evaluates_to_stable_type_or_container(env: &Environment, callee_ty: &Type) -> bool {
-    if let Some(hook_kind) = get_hook_kind_for_type(env, callee_ty) {
+    if let Some(hook_kind) = get_hook_kind_for_type(env, callee_ty).ok().flatten() {
         matches!(
             hook_kind,
             HookKind::UseState
@@ -680,7 +680,7 @@ fn apply_reactive_flags_replay(
                 InstructionValue::CallExpression { callee, .. } => {
                     let callee_ty = &env.types
                         [env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
-                    if get_hook_kind_for_type(env, callee_ty).is_some()
+                    if get_hook_kind_for_type(env, callee_ty).ok().flatten().is_some()
                         || is_use_operator_type(callee_ty)
                     {
                         has_reactive_input = true;
@@ -689,7 +689,7 @@ fn apply_reactive_flags_replay(
                 InstructionValue::MethodCall { property, .. } => {
                     let property_ty = &env.types
                         [env.identifiers[property.identifier.0 as usize].type_.0 as usize];
-                    if get_hook_kind_for_type(env, property_ty).is_some()
+                    if get_hook_kind_for_type(env, property_ty).ok().flatten().is_some()
                         || is_use_operator_type(property_ty)
                     {
                         has_reactive_input = true;

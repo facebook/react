@@ -780,7 +780,7 @@ fn find_non_mutated_destructure_spreads(
                 InstructionValue::CallExpression { callee, .. }
                 | InstructionValue::MethodCall { property: callee, .. } => {
                     let callee_ty = &env.types[env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
-                    if get_hook_kind_for_type(env, callee_ty).is_some() {
+                    if get_hook_kind_for_type(env, callee_ty).ok().flatten().is_some() {
                         if !is_ref_or_ref_value_for_id(env, lvalue_id) {
                             known_frozen.insert(lvalue_id);
                         }
@@ -1576,7 +1576,7 @@ fn compute_signature_for_instruction(
             });
         }
         InstructionValue::NewExpression { callee, args, loc } => {
-            let sig = get_function_call_signature(env, callee.identifier);
+            let sig = get_function_call_signature(env, callee.identifier).ok().flatten();
             effects.push(AliasingEffect::Apply {
                 receiver: callee.clone(),
                 function: callee.clone(),
@@ -1588,7 +1588,7 @@ fn compute_signature_for_instruction(
             });
         }
         InstructionValue::CallExpression { callee, args, loc } => {
-            let sig = get_function_call_signature(env, callee.identifier);
+            let sig = get_function_call_signature(env, callee.identifier).ok().flatten();
             effects.push(AliasingEffect::Apply {
                 receiver: callee.clone(),
                 function: callee.clone(),
@@ -1600,7 +1600,7 @@ fn compute_signature_for_instruction(
             });
         }
         InstructionValue::MethodCall { receiver, property, args, loc } => {
-            let sig = get_function_call_signature(env, property.identifier);
+            let sig = get_function_call_signature(env, property.identifier).ok().flatten();
             effects.push(AliasingEffect::Apply {
                 receiver: receiver.clone(),
                 function: property.clone(),
@@ -2737,9 +2737,9 @@ fn is_builtin_collection_type(ty: &Type) -> bool {
     )
 }
 
-fn get_function_call_signature(env: &Environment, callee_id: IdentifierId) -> Option<FunctionSignature> {
+fn get_function_call_signature(env: &Environment, callee_id: IdentifierId) -> Result<Option<FunctionSignature>, CompilerDiagnostic> {
     let ty = &env.types[env.identifiers[callee_id.0 as usize].type_.0 as usize];
-    env.get_function_signature(ty).ok().flatten().cloned()
+    Ok(env.get_function_signature(ty)?.cloned())
 }
 
 fn is_ref_or_ref_value_for_id(env: &Environment, id: IdentifierId) -> bool {
@@ -2747,8 +2747,8 @@ fn is_ref_or_ref_value_for_id(env: &Environment, id: IdentifierId) -> bool {
     react_compiler_hir::is_ref_or_ref_value(ty)
 }
 
-fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Option<&'a HookKind> {
-    env.get_hook_kind_for_type(ty).ok().flatten()
+fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Result<Option<&'a HookKind>, CompilerDiagnostic> {
+    env.get_hook_kind_for_type(ty)
 }
 
 /// Format a Type for printPlace-style output, matching TS's `printType()`.
