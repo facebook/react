@@ -484,7 +484,7 @@ impl SSABuilder {
             return old_place.identifier;
         }
 
-        let unsealed = self.unsealed_preds.get(&block_id).copied().unwrap_or(0);
+        let unsealed = self.unsealed_preds.get(&block_id).copied().expect("Expected block to be in unsealed_preds map");
         if unsealed > 0 {
             let new_id = self.make_id(old_place.identifier, env);
             let new_place = Place {
