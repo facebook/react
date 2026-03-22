@@ -81,7 +81,7 @@ pub fn drop_manual_memoization(
         || env.validate_no_set_state_in_render
         || env.enable_preserve_existing_memoization_guarantees;
 
-    let optionals = find_optional_places(func);
+    let optionals = find_optional_places(func)?;
     let mut sidemap = IdentifierSidemap {
         functions: HashSet::new(),
         manual_memos: HashMap::new(),
@@ -634,7 +634,7 @@ fn extract_manual_memoization_args(
 // findOptionalPlaces
 // =============================================================================
 
-fn find_optional_places(func: &HirFunction) -> HashSet<IdentifierId> {
+fn find_optional_places(func: &HirFunction) -> Result<HashSet<IdentifierId>, CompilerDiagnostic> {
     use react_compiler_hir::Terminal;
 
     let mut optionals = HashSet::new();
@@ -684,14 +684,18 @@ fn find_optional_places(func: &HirFunction) -> HashSet<IdentifierId> {
                     other => {
                         // Invariant: unexpected terminal in optional
                         // In TS this throws CompilerError.invariant
-                        panic!(
-                            "Unexpected terminal kind in optional: {:?}",
-                            std::mem::discriminant(other)
-                        );
+                        return Err(CompilerDiagnostic::new(
+                            ErrorCategory::Invariant,
+                            format!(
+                                "Unexpected terminal kind in optional: {:?}",
+                                std::mem::discriminant(other)
+                            ),
+                            None,
+                        ));
                     }
                 }
             }
         }
     }
-    optionals
+    Ok(optionals)
 }

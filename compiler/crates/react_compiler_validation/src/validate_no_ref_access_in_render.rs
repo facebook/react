@@ -978,7 +978,7 @@ fn validate_no_ref_access_in_render_impl(
                                 &identifiers[callee.identifier.0 as usize];
                             let callee_type =
                                 &types[callee_identifier.type_.0 as usize];
-                            let hook_kind = env.get_hook_kind_for_type(callee_type);
+                            let hook_kind = env.get_hook_kind_for_type(callee_type).ok().flatten();
 
                             if is_ref_lvalue
                                 || (hook_kind.is_some()

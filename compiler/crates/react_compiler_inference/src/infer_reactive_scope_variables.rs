@@ -18,6 +18,7 @@
 use std::collections::HashMap;
 
 use indexmap::IndexMap;
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     ArrayElement, ArrayPatternElement, DeclarationId, EvaluationOrder, HirFunction, IdentifierId,
@@ -110,7 +111,7 @@ impl DisjointSet {
 /// variable. Variables that co-mutate are assigned to the same reactive scope.
 ///
 /// Corresponds to TS `inferReactiveScopeVariables(fn: HIRFunction): void`.
-pub fn infer_reactive_scope_variables(func: &mut HirFunction, env: &mut Environment) {
+pub fn infer_reactive_scope_variables(func: &mut HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
     // Phase 1: find disjoint sets of co-mutating identifiers
     let mut scope_identifiers = find_disjoint_mutable_values(func, env);
 
@@ -189,15 +190,21 @@ pub fn infer_reactive_scope_variables(func: &mut HirFunction, env: &mut Environm
             || max_instruction == EvaluationOrder(0)
             || scope.range.end.0 > max_instruction.0 + 1
         {
-            panic!(
-                "Invalid mutable range for scope: Scope @{} has range [{}:{}] but the valid range is [1:{}]",
-                scope.id.0,
-                scope.range.start.0,
-                scope.range.end.0,
-                max_instruction.0 + 1,
-            );
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                &format!(
+                    "Invalid mutable range for scope: Scope @{} has range [{}:{}] but the valid range is [1:{}]",
+                    scope.id.0,
+                    scope.range.start.0,
+                    scope.range.end.0,
+                    max_instruction.0 + 1,
+                ),
+                None,
+            ));
         }
     }
+
+    Ok(())
 }
 
 struct ScopeState {

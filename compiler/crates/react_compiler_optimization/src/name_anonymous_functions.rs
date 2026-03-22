@@ -264,7 +264,7 @@ fn handle_call(
 ) {
     let callee_ident = &env.identifiers[callee_id.0 as usize];
     let callee_ty = &env.types[callee_ident.type_.0 as usize];
-    let hook_kind = env.get_hook_kind_for_type(callee_ty);
+    let hook_kind = env.get_hook_kind_for_type(callee_ty).ok().flatten();
 
     let callee_name: String = if let Some(hk) = hook_kind {
         if *hk != HookKind::Custom {

@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use react_compiler_diagnostics::SourceLocation;
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory, SourceLocation};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     BasicBlock, BlockId, EvaluationOrder, GotoVariant, HirFunction, InstructionValue, Place,
@@ -19,15 +19,15 @@ use react_compiler_hir::{
 };
 
 /// Convert the HIR CFG into a tree-structured ReactiveFunction.
-pub fn build_reactive_function(hir: &HirFunction, env: &Environment) -> ReactiveFunction {
+pub fn build_reactive_function(hir: &HirFunction, env: &Environment) -> Result<ReactiveFunction, CompilerDiagnostic> {
     let mut ctx = Context::new(hir);
     let mut driver = Driver { cx: &mut ctx, hir, env };
 
     let entry_block_id = hir.body.entry;
     let mut body = Vec::new();
-    driver.visit_block(entry_block_id, &mut body);
+    driver.visit_block(entry_block_id, &mut body)?;
 
-    ReactiveFunction {
+    Ok(ReactiveFunction {
         loc: hir.loc,
         id: hir.id.clone(),
         name_hint: hir.name_hint.clone(),
@@ -36,7 +36,7 @@ pub fn build_reactive_function(hir: &HirFunction, env: &Environment) -> Reactive
         is_async: hir.is_async,
         body,
         directives: hir.directives.clone(),
-    }
+    })
 }
 
 // =============================================================================
@@ -131,7 +131,7 @@ impl<'a> Context<'a> {
         !matches!(block.terminal, Terminal::Unreachable { .. })
     }
 
-    fn schedule(&mut self, block: BlockId, target_type: &str) -> u32 {
+    fn schedule(&mut self, block: BlockId, target_type: &str) -> Result<u32, CompilerDiagnostic> {
         let id = self.next_schedule_id;
         self.next_schedule_id += 1;
         assert!(
@@ -144,10 +144,14 @@ impl<'a> Context<'a> {
             "if" => ControlFlowTarget::If { block, id },
             "switch" => ControlFlowTarget::Switch { block, id },
             "case" => ControlFlowTarget::Case { block, id },
-            _ => panic!("Unknown target type: {}", target_type),
+            _ => return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                format!("Unknown target type: {}", target_type),
+                None,
+            )),
         };
         self.control_flow_stack.push(target);
-        id
+        Ok(id)
     }
 
     fn schedule_loop(
@@ -230,7 +234,7 @@ impl<'a> Context<'a> {
     fn get_break_target(
         &self,
         block: BlockId,
-    ) -> (BlockId, ReactiveTerminalTargetKind) {
+    ) -> Result<(BlockId, ReactiveTerminalTargetKind), CompilerDiagnostic> {
         let mut has_preceding_loop = false;
         for i in (0..self.control_flow_stack.len()).rev() {
             let target = &self.control_flow_stack[i];
@@ -246,11 +250,15 @@ impl<'a> Context<'a> {
                 } else {
                     ReactiveTerminalTargetKind::Labeled
                 };
-                return (target.block(), kind);
+                return Ok((target.block(), kind));
             }
             has_preceding_loop = has_preceding_loop || target.is_loop();
         }
-        panic!("Expected a break target for bb{}", block.0);
+        Err(CompilerDiagnostic::new(
+            ErrorCategory::Invariant,
+            format!("Expected a break target for bb{}", block.0),
+            None,
+        ))
     }
 
     fn get_continue_target(
@@ -295,13 +303,13 @@ struct Driver<'a, 'b> {
 }
 
 impl<'a, 'b> Driver<'a, 'b> {
-    fn traverse_block(&mut self, block_id: BlockId) -> ReactiveBlock {
+    fn traverse_block(&mut self, block_id: BlockId) -> Result<ReactiveBlock, CompilerDiagnostic> {
         let mut block_value = Vec::new();
-        self.visit_block(block_id, &mut block_value);
-        block_value
+        self.visit_block(block_id, &mut block_value)?;
+        Ok(block_value)
     }
 
-    fn visit_block(&mut self, block_id: BlockId, block_value: &mut ReactiveBlock) {
+    fn visit_block(&mut self, block_id: BlockId, block_value: &mut ReactiveBlock) -> Result<(), CompilerDiagnostic> {
         // Extract data from block before any mutable operations
         let block = &self.hir.body.blocks[&block_id];
         let block_id_val = block.id;
@@ -354,20 +362,24 @@ impl<'a, 'b> Driver<'a, 'b> {
                 };
 
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    schedule_ids.push(self.cx.schedule(ft, "if")?);
                 }
 
                 let consequent_block = if self.cx.is_scheduled(*consequent) {
-                    Vec::new()
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        format!("Unexpected 'if' where consequent is already scheduled (bb{})", consequent.0),
+                        None,
+                    ));
                 } else {
-                    self.traverse_block(*consequent)
+                    self.traverse_block(*consequent)?
                 };
 
                 let alternate_block = if let Some(alt) = alternate_id {
                     if self.cx.is_scheduled(alt) {
                         None
                     } else {
-                        Some(self.traverse_block(alt))
+                        Some(self.traverse_block(alt)?)
                     }
                 } else {
                     None
@@ -389,7 +401,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -409,7 +421,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     None
                 };
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "switch"));
+                    schedule_ids.push(self.cx.schedule(ft, "switch")?);
                 }
 
                 // TS processes cases in reverse order, then reverses the result.
@@ -428,8 +440,8 @@ impl<'a, 'b> Driver<'a, 'b> {
                         continue;
                     }
 
-                    let consequent = self.traverse_block(case_block_id);
-                    let case_schedule_id = self.cx.schedule(case_block_id, "case");
+                    let consequent = self.traverse_block(case_block_id)?;
+                    let case_schedule_id = self.cx.schedule(case_block_id, "case")?;
                     schedule_ids.push(case_schedule_id);
 
                     reactive_cases.push(ReactiveSwitchCase {
@@ -454,7 +466,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -485,11 +497,15 @@ impl<'a, 'b> Driver<'a, 'b> {
                 ));
 
                 let loop_body = if let Some(lid) = loop_id {
-                    self.traverse_block(lid)
+                    self.traverse_block(lid)?
                 } else {
-                    panic!("Unexpected 'do-while' where the loop is already scheduled");
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Unexpected 'do-while' where the loop is already scheduled",
+                        None,
+                    ));
                 };
-                let test_result = self.visit_value_block(*test, *loc, None);
+                let test_result = self.visit_value_block(*test, *loc, None)?;
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
@@ -507,7 +523,7 @@ impl<'a, 'b> Driver<'a, 'b> {
 
                 if let Some(ft) = fallthrough_id {
                     if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value);
+                        self.visit_block(ft, block_value)?;
                     }
                 }
             }
@@ -541,12 +557,16 @@ impl<'a, 'b> Driver<'a, 'b> {
                     Some(*loop_block),
                 ));
 
-                let test_result = self.visit_value_block(*test, *loc, None);
+                let test_result = self.visit_value_block(*test, *loc, None)?;
 
                 let loop_body = if let Some(lid) = loop_id {
-                    self.traverse_block(lid)
+                    self.traverse_block(lid)?
                 } else {
-                    panic!("Unexpected 'while' where the loop is already scheduled");
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Unexpected 'while' where the loop is already scheduled",
+                        None,
+                    ));
                 };
 
                 self.cx.unschedule_all(&schedule_ids);
@@ -565,7 +585,7 @@ impl<'a, 'b> Driver<'a, 'b> {
 
                 if let Some(ft) = fallthrough_id {
                     if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value);
+                        self.visit_block(ft, block_value)?;
                     }
                 }
             }
@@ -601,17 +621,24 @@ impl<'a, 'b> Driver<'a, 'b> {
                     Some(*loop_block),
                 ));
 
-                let init_result = self.visit_value_block(*init, *loc, None);
+                let init_result = self.visit_value_block(*init, *loc, None)?;
                 let init_value = self.value_block_result_to_sequence(init_result, *loc);
 
-                let test_result = self.visit_value_block(*test, *loc, None);
+                let test_result = self.visit_value_block(*test, *loc, None)?;
 
-                let update_result = update.map(|u| self.visit_value_block(u, *loc, None));
+                let update_result = match update {
+                    Some(u) => Some(self.visit_value_block(*u, *loc, None)?),
+                    None => None,
+                };
 
                 let loop_body = if let Some(lid) = loop_id {
-                    self.traverse_block(lid)
+                    self.traverse_block(lid)?
                 } else {
-                    panic!("Unexpected 'for' where the loop is already scheduled");
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Unexpected 'for' where the loop is already scheduled",
+                        None,
+                    ));
                 };
 
                 self.cx.unschedule_all(&schedule_ids);
@@ -632,7 +659,7 @@ impl<'a, 'b> Driver<'a, 'b> {
 
                 if let Some(ft) = fallthrough_id {
                     if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value);
+                        self.visit_block(ft, block_value)?;
                     }
                 }
             }
@@ -666,16 +693,20 @@ impl<'a, 'b> Driver<'a, 'b> {
                     Some(*loop_block),
                 ));
 
-                let init_result = self.visit_value_block(*init, *loc, None);
+                let init_result = self.visit_value_block(*init, *loc, None)?;
                 let init_value = self.value_block_result_to_sequence(init_result, *loc);
 
-                let test_result = self.visit_value_block(*test, *loc, None);
+                let test_result = self.visit_value_block(*test, *loc, None)?;
                 let test_value = self.value_block_result_to_sequence(test_result, *loc);
 
                 let loop_body = if let Some(lid) = loop_id {
-                    self.traverse_block(lid)
+                    self.traverse_block(lid)?
                 } else {
-                    panic!("Unexpected 'for-of' where the loop is already scheduled");
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Unexpected 'for-of' where the loop is already scheduled",
+                        None,
+                    ));
                 };
 
                 self.cx.unschedule_all(&schedule_ids);
@@ -695,7 +726,7 @@ impl<'a, 'b> Driver<'a, 'b> {
 
                 if let Some(ft) = fallthrough_id {
                     if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value);
+                        self.visit_block(ft, block_value)?;
                     }
                 }
             }
@@ -727,13 +758,17 @@ impl<'a, 'b> Driver<'a, 'b> {
                     Some(*loop_block),
                 ));
 
-                let init_result = self.visit_value_block(*init, *loc, None);
+                let init_result = self.visit_value_block(*init, *loc, None)?;
                 let init_value = self.value_block_result_to_sequence(init_result, *loc);
 
                 let loop_body = if let Some(lid) = loop_id {
-                    self.traverse_block(lid)
+                    self.traverse_block(lid)?
                 } else {
-                    panic!("Unexpected 'for-in' where the loop is already scheduled");
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Unexpected 'for-in' where the loop is already scheduled",
+                        None,
+                    ));
                 };
 
                 self.cx.unschedule_all(&schedule_ids);
@@ -752,7 +787,7 @@ impl<'a, 'b> Driver<'a, 'b> {
 
                 if let Some(ft) = fallthrough_id {
                     if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value);
+                        self.visit_block(ft, block_value)?;
                     }
                 }
             }
@@ -772,14 +807,14 @@ impl<'a, 'b> Driver<'a, 'b> {
                     None
                 };
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    schedule_ids.push(self.cx.schedule(ft, "if")?);
                 }
 
                 assert!(
                     !self.cx.is_scheduled(*label_block),
                     "Unexpected 'label' where the block is already scheduled"
                 );
-                let label_body = self.traverse_block(*label_block);
+                let label_body = self.traverse_block(*label_block)?;
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
@@ -795,7 +830,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -816,10 +851,10 @@ impl<'a, 'b> Driver<'a, 'b> {
                     None
                 };
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    schedule_ids.push(self.cx.schedule(ft, "if")?);
                 }
 
-                let result = self.visit_value_block_terminal(&terminal);
+                let result = self.visit_value_block_terminal(&terminal)?;
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Instruction(ReactiveInstruction {
                     id: result.id,
@@ -830,7 +865,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -842,12 +877,12 @@ impl<'a, 'b> Driver<'a, 'b> {
             } => {
                 match variant {
                     GotoVariant::Break => {
-                        if let Some(stmt) = self.visit_break(*goto_block, *id, *loc) {
+                        if let Some(stmt) = self.visit_break(*goto_block, *id, *loc)? {
                             block_value.push(stmt);
                         }
                     }
                     GotoVariant::Continue => {
-                        let stmt = self.visit_continue(*goto_block, *id, *loc);
+                        let stmt = self.visit_continue(*goto_block, *id, *loc)?;
                         block_value.push(stmt);
                     }
                     GotoVariant::Try => {
@@ -860,7 +895,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 continuation, ..
             } => {
                 if !self.cx.is_scheduled(*continuation) {
-                    self.visit_block(*continuation, block_value);
+                    self.visit_block(*continuation, block_value)?;
                 }
             }
 
@@ -880,12 +915,12 @@ impl<'a, 'b> Driver<'a, 'b> {
                     None
                 };
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    schedule_ids.push(self.cx.schedule(ft, "if")?);
                 }
                 self.cx.schedule_catch_handler(*handler);
 
-                let try_body = self.traverse_block(*try_block);
-                let handler_body = self.traverse_block(*handler);
+                let try_body = self.traverse_block(*try_block)?;
+                let handler_body = self.traverse_block(*handler)?;
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
@@ -903,7 +938,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -919,7 +954,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     None
                 };
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    schedule_ids.push(self.cx.schedule(ft, "if")?);
                     self.cx.scope_fallthroughs.insert(ft);
                 }
 
@@ -927,7 +962,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     !self.cx.is_scheduled(*scope_block),
                     "Unexpected 'scope' where the block is already scheduled"
                 );
-                let scope_body = self.traverse_block(*scope_block);
+                let scope_body = self.traverse_block(*scope_block)?;
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::Scope(ReactiveScopeBlock {
@@ -936,7 +971,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -952,7 +987,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     None
                 };
                 if let Some(ft) = fallthrough_id {
-                    schedule_ids.push(self.cx.schedule(ft, "if"));
+                    schedule_ids.push(self.cx.schedule(ft, "if")?);
                     self.cx.scope_fallthroughs.insert(ft);
                 }
 
@@ -960,7 +995,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     !self.cx.is_scheduled(*scope_block),
                     "Unexpected 'scope' where the block is already scheduled"
                 );
-                let scope_body = self.traverse_block(*scope_block);
+                let scope_body = self.traverse_block(*scope_block)?;
 
                 self.cx.unschedule_all(&schedule_ids);
                 block_value.push(ReactiveStatement::PrunedScope(PrunedReactiveScopeBlock {
@@ -969,7 +1004,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value);
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -1000,13 +1035,22 @@ impl<'a, 'b> Driver<'a, 'b> {
             }
 
             Terminal::Unsupported { .. } => {
-                panic!("Unexpected unsupported terminal");
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Unexpected unsupported terminal",
+                    None,
+                ));
             }
 
             Terminal::Branch { .. } => {
-                panic!("Unexpected branch terminal in visit_block");
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Unexpected branch terminal in visit_block",
+                    None,
+                ));
             }
         }
+        Ok(())
     }
 
     // =========================================================================
@@ -1018,7 +1062,7 @@ impl<'a, 'b> Driver<'a, 'b> {
         block_id: BlockId,
         loc: Option<SourceLocation>,
         fallthrough: Option<BlockId>,
-    ) -> ValueBlockResult {
+    ) -> Result<ValueBlockResult, CompilerDiagnostic> {
         let block = &self.hir.body.blocks[&block_id];
         let block_id_val = block.id;
         let terminal = block.terminal.clone();
@@ -1027,10 +1071,14 @@ impl<'a, 'b> Driver<'a, 'b> {
         // If we've reached the fallthrough, stop
         if let Some(ft) = fallthrough {
             if block_id == ft {
-                panic!(
-                    "Did not expect to reach the fallthrough of a value block (bb{})",
-                    block_id.0
-                );
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "Did not expect to reach the fallthrough of a value block (bb{})",
+                        block_id.0
+                    ),
+                    None,
+                ));
             }
         }
 
@@ -1041,7 +1089,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 ..
             } => {
                 if instructions.is_empty() {
-                    ValueBlockResult {
+                    Ok(ValueBlockResult {
                         block: block_id_val,
                         place: test.clone(),
                         value: ReactiveValue::Instruction(InstructionValue::LoadLocal {
@@ -1049,9 +1097,9 @@ impl<'a, 'b> Driver<'a, 'b> {
                             loc: test.loc,
                         }),
                         id: *term_id,
-                    }
+                    })
                 } else {
-                    self.extract_value_block_result(&instructions, block_id_val, loc)
+                    Ok(self.extract_value_block_result(&instructions, block_id_val, loc))
                 }
             }
             Terminal::Goto { .. } => {
@@ -1060,7 +1108,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     "Unexpected empty block with `goto` terminal (bb{})",
                     block_id.0
                 );
-                self.extract_value_block_result(&instructions, block_id_val, loc)
+                Ok(self.extract_value_block_result(&instructions, block_id_val, loc))
             }
             Terminal::MaybeThrow {
                 continuation, ..
@@ -1072,21 +1120,21 @@ impl<'a, 'b> Driver<'a, 'b> {
                 let cont_block_id = continuation_block.id;
 
                 if cont_instructions_empty && cont_is_goto {
-                    self.extract_value_block_result(&instructions, cont_block_id, loc)
+                    Ok(self.extract_value_block_result(&instructions, cont_block_id, loc))
                 } else {
                     let continuation = self.visit_value_block(
                         continuation_id,
                         loc,
                         fallthrough,
-                    );
-                    self.wrap_with_sequence(&instructions, continuation, loc)
+                    )?;
+                    Ok(self.wrap_with_sequence(&instructions, continuation, loc))
                 }
             }
             _ => {
                 // Value block ended in a value terminal, recurse to get the value
                 // of that terminal and stitch them together in a sequence.
                 // TS: visitValueBlock(init.fallthrough, loc) — does NOT propagate fallthrough
-                let init = self.visit_value_block_terminal(&terminal);
+                let init = self.visit_value_block_terminal(&terminal)?;
                 let init_fallthrough = init.fallthrough;
                 let init_instr = ReactiveInstruction {
                     id: init.id,
@@ -1095,7 +1143,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     effects: None,
                     loc,
                 };
-                let final_result = self.visit_value_block(init_fallthrough, loc, None);
+                let final_result = self.visit_value_block(init_fallthrough, loc, None)?;
 
                 // Combine block instructions + init instruction, then wrap
                 let mut all_instrs: Vec<ReactiveInstruction> = instructions
@@ -1114,9 +1162,9 @@ impl<'a, 'b> Driver<'a, 'b> {
                 all_instrs.push(init_instr);
 
                 if all_instrs.is_empty() {
-                    final_result
+                    Ok(final_result)
                 } else {
-                    ValueBlockResult {
+                    Ok(ValueBlockResult {
                         block: final_result.block,
                         place: final_result.place.clone(),
                         value: ReactiveValue::SequenceExpression {
@@ -1126,7 +1174,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                             loc,
                         },
                         id: final_result.id,
-                    }
+                    })
                 }
             }
         }
@@ -1137,8 +1185,8 @@ impl<'a, 'b> Driver<'a, 'b> {
         test_block_id: BlockId,
         loc: Option<SourceLocation>,
         terminal_kind: &str,
-    ) -> TestBlockResult {
-        let test = self.visit_value_block(test_block_id, loc, None);
+    ) -> Result<TestBlockResult, CompilerDiagnostic> {
+        let test = self.visit_value_block(test_block_id, loc, None)?;
         let test_block = &self.hir.body.blocks[&test.block];
         match &test_block.terminal {
             Terminal::Branch {
@@ -1146,23 +1194,27 @@ impl<'a, 'b> Driver<'a, 'b> {
                 alternate,
                 loc: branch_loc,
                 ..
-            } => TestBlockResult {
+            } => Ok(TestBlockResult {
                 test,
                 consequent: *consequent,
                 alternate: *alternate,
                 branch_loc: *branch_loc,
-            },
+            }),
             other => {
-                panic!(
-                    "Expected a branch terminal for {} test block, got {:?}",
-                    terminal_kind,
-                    std::mem::discriminant(other)
-                );
+                Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "Expected a branch terminal for {} test block, got {:?}",
+                        terminal_kind,
+                        std::mem::discriminant(other)
+                    ),
+                    None,
+                ))
             }
         }
     }
 
-    fn visit_value_block_terminal(&mut self, terminal: &Terminal) -> ValueTerminalResult {
+    fn visit_value_block_terminal(&mut self, terminal: &Terminal) -> Result<ValueTerminalResult, CompilerDiagnostic> {
         match terminal {
             Terminal::Sequence {
                 block,
@@ -1170,13 +1222,13 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let block_result = self.visit_value_block(*block, *loc, Some(*fallthrough));
-                ValueTerminalResult {
+                let block_result = self.visit_value_block(*block, *loc, Some(*fallthrough))?;
+                Ok(ValueTerminalResult {
                     value: block_result.value,
                     place: block_result.place,
                     fallthrough: *fallthrough,
                     id: *id,
-                }
+                })
             }
             Terminal::Optional {
                 optional,
@@ -1185,12 +1237,12 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let test_result = self.visit_test_block(*test, *loc, "optional");
+                let test_result = self.visit_test_block(*test, *loc, "optional")?;
                 let consequent = self.visit_value_block(
                     test_result.consequent,
                     *loc,
                     Some(*fallthrough),
-                );
+                )?;
                 let call = ReactiveValue::SequenceExpression {
                     instructions: vec![ReactiveInstruction {
                         id: test_result.test.id,
@@ -1203,7 +1255,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     value: Box::new(consequent.value),
                     loc: *loc,
                 };
-                ValueTerminalResult {
+                Ok(ValueTerminalResult {
                     place: consequent.place,
                     value: ReactiveValue::OptionalExpression {
                         optional: *optional,
@@ -1213,7 +1265,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     },
                     fallthrough: *fallthrough,
                     id: *id,
-                }
+                })
             }
             Terminal::Logical {
                 operator,
@@ -1222,12 +1274,12 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let test_result = self.visit_test_block(*test, *loc, "logical");
+                let test_result = self.visit_test_block(*test, *loc, "logical")?;
                 let left_final = self.visit_value_block(
                     test_result.consequent,
                     *loc,
                     Some(*fallthrough),
-                );
+                )?;
                 let left = ReactiveValue::SequenceExpression {
                     instructions: vec![ReactiveInstruction {
                         id: test_result.test.id,
@@ -1244,8 +1296,8 @@ impl<'a, 'b> Driver<'a, 'b> {
                     test_result.alternate,
                     *loc,
                     Some(*fallthrough),
-                );
-                ValueTerminalResult {
+                )?;
+                Ok(ValueTerminalResult {
                     place: left_final.place,
                     value: ReactiveValue::LogicalExpression {
                         operator: *operator,
@@ -1255,7 +1307,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     },
                     fallthrough: *fallthrough,
                     id: *id,
-                }
+                })
             }
             Terminal::Ternary {
                 test,
@@ -1263,18 +1315,18 @@ impl<'a, 'b> Driver<'a, 'b> {
                 id,
                 loc,
             } => {
-                let test_result = self.visit_test_block(*test, *loc, "ternary");
+                let test_result = self.visit_test_block(*test, *loc, "ternary")?;
                 let consequent = self.visit_value_block(
                     test_result.consequent,
                     *loc,
                     Some(*fallthrough),
-                );
+                )?;
                 let alternate = self.visit_value_block(
                     test_result.alternate,
                     *loc,
                     Some(*fallthrough),
-                );
-                ValueTerminalResult {
+                )?;
+                Ok(ValueTerminalResult {
                     place: consequent.place,
                     value: ReactiveValue::ConditionalExpression {
                         test: Box::new(test_result.test.value),
@@ -1284,18 +1336,28 @@ impl<'a, 'b> Driver<'a, 'b> {
                     },
                     fallthrough: *fallthrough,
                     id: *id,
-                }
+                })
             }
             Terminal::MaybeThrow { .. } => {
-                panic!("Unexpected maybe-throw in visit_value_block_terminal");
+                Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Unexpected maybe-throw in visit_value_block_terminal",
+                    None,
+                ))
             }
             Terminal::Label { .. } => {
-                panic!("Support labeled statements combined with value blocks is not yet implemented");
+                Err(CompilerDiagnostic::new(
+                    ErrorCategory::Todo,
+                    "Support labeled statements combined with value blocks is not yet implemented",
+                    None,
+                ))
             }
             _ => {
-                panic!(
-                    "Unsupported terminal kind in value block"
-                );
+                Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Unsupported terminal kind in value block",
+                    None,
+                ))
             }
         }
     }
@@ -1476,17 +1538,17 @@ impl<'a, 'b> Driver<'a, 'b> {
         block: BlockId,
         id: EvaluationOrder,
         loc: Option<SourceLocation>,
-    ) -> Option<ReactiveStatement> {
-        let (target_block, target_kind) = self.cx.get_break_target(block);
+    ) -> Result<Option<ReactiveStatement>, CompilerDiagnostic> {
+        let (target_block, target_kind) = self.cx.get_break_target(block)?;
         if self.cx.scope_fallthroughs.contains(&target_block) {
             assert_eq!(
                 target_kind,
                 ReactiveTerminalTargetKind::Implicit,
                 "Expected reactive scope to implicitly break to fallthrough"
             );
-            return None;
+            return Ok(None);
         }
-        Some(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+        Ok(Some(ReactiveStatement::Terminal(ReactiveTerminalStatement {
             terminal: ReactiveTerminal::Break {
                 target: target_block,
                 id,
@@ -1494,7 +1556,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 loc,
             },
             label: None,
-        }))
+        })))
     }
 
     fn visit_continue(
@@ -1502,26 +1564,19 @@ impl<'a, 'b> Driver<'a, 'b> {
         block: BlockId,
         id: EvaluationOrder,
         loc: Option<SourceLocation>,
-    ) -> ReactiveStatement {
-        let (target_block, target_kind) = self
-            .cx
-            .get_continue_target(block)
-            .unwrap_or_else(|| {
-                eprintln!("DEBUG: control_flow_stack has {} entries:", self.cx.control_flow_stack.len());
-                for (i, target) in self.cx.control_flow_stack.iter().enumerate() {
-                    match target {
-                        ControlFlowTarget::Loop { block, continue_block, .. } => {
-                            eprintln!("  [{}] Loop {{ block: bb{}, continue_block: bb{} }}", i, block.0, continue_block.0);
-                        }
-                        _ => {
-                            eprintln!("  [{}] {:?} {{ block: bb{} }}", i, std::mem::discriminant(target), target.block().0);
-                        }
-                    }
-                }
-                panic!("Expected continue target to be scheduled for bb{}", block.0)
-            });
+    ) -> Result<ReactiveStatement, CompilerDiagnostic> {
+        let (target_block, target_kind) = match self.cx.get_continue_target(block) {
+            Some(result) => result,
+            None => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!("Expected continue target to be scheduled for bb{}", block.0),
+                    None,
+                ));
+            }
+        };
 
-        ReactiveStatement::Terminal(ReactiveTerminalStatement {
+        Ok(ReactiveStatement::Terminal(ReactiveTerminalStatement {
             terminal: ReactiveTerminal::Continue {
                 target: target_block,
                 id,
@@ -1529,7 +1584,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 loc,
             },
             label: None,
-        })
+        }))
     }
 }
 

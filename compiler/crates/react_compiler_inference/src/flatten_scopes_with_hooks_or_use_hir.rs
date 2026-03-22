@@ -26,6 +26,7 @@
 //!
 //! Analogous to TS `ReactiveScopes/FlattenScopesWithHooksOrUseHIR.ts`.
 
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{BlockId, HirFunction, InstructionValue, Terminal, Type};
 
@@ -33,7 +34,7 @@ use react_compiler_hir::{BlockId, HirFunction, InstructionValue, Terminal, Type}
 ///
 /// Hooks and `use` must be called unconditionally, so any reactive scope containing
 /// such a call must be flattened to avoid making the call conditional.
-pub fn flatten_scopes_with_hooks_or_use_hir(func: &mut HirFunction, env: &Environment) {
+pub fn flatten_scopes_with_hooks_or_use_hir(func: &mut HirFunction, env: &Environment) -> Result<(), CompilerDiagnostic> {
     let mut active_scopes: Vec<ActiveScope> = Vec::new();
     let mut prune: Vec<BlockId> = Vec::new();
 
@@ -96,10 +97,13 @@ pub fn flatten_scopes_with_hooks_or_use_hir(func: &mut HirFunction, env: &Enviro
                 loc,
                 scope,
             } => (*block, *fallthrough, *id, *loc, *scope),
-            _ => panic!(
-                "Expected block bb{} to end in a scope terminal",
-                id.0
-            ),
+            _ => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!("Expected block bb{} to end in a scope terminal", id.0),
+                    None,
+                ));
+            }
         };
 
         // Check if the scope body is a single-instruction block that goes directly
@@ -129,6 +133,7 @@ pub fn flatten_scopes_with_hooks_or_use_hir(func: &mut HirFunction, env: &Enviro
         let block_mut = func.body.blocks.get_mut(&id).unwrap();
         block_mut.terminal = new_terminal;
     }
+    Ok(())
 }
 
 struct ActiveScope {
@@ -137,7 +142,7 @@ struct ActiveScope {
 }
 
 fn is_hook_or_use(env: &Environment, ty: &Type) -> bool {
-    env.get_hook_kind_for_type(ty).is_some() || is_use_operator_type(ty)
+    env.get_hook_kind_for_type(ty).ok().flatten().is_some() || is_use_operator_type(ty)
 }
 
 fn is_use_operator_type(ty: &Type) -> bool {

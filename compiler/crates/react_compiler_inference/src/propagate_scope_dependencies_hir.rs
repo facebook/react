@@ -1178,7 +1178,7 @@ fn get_assumed_invoked_functions_impl(
             match &instr.value {
                 InstructionValue::CallExpression { callee, args, .. } => {
                     let callee_ty = &env.types[env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
-                    let maybe_hook = env.get_hook_kind_for_type(callee_ty);
+                    let maybe_hook = env.get_hook_kind_for_type(callee_ty).ok().flatten();
                     if let Some(entry) = temporaries.get(&callee.identifier) {
                         // Direct calls
                         hoistable.insert(entry.0);

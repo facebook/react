@@ -13,6 +13,7 @@
 //! and inferReactiveScopeVariables on each inner function.
 
 use indexmap::IndexMap;
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use std::collections::HashSet;
 
@@ -32,7 +33,7 @@ use react_compiler_hir::{
 /// `lowerWithMutationAliasing`.
 ///
 /// Corresponds to TS `analyseFunctions(func: HIRFunction): void`.
-pub fn analyse_functions<F>(func: &mut HirFunction, env: &mut Environment, debug_logger: &mut F)
+pub fn analyse_functions<F>(func: &mut HirFunction, env: &mut Environment, debug_logger: &mut F) -> Result<(), CompilerDiagnostic>
 where
     F: FnMut(&HirFunction, &Environment),
 {
@@ -60,12 +61,12 @@ where
             placeholder_function(),
         );
 
-        lower_with_mutation_aliasing(&mut inner_func, env, debug_logger);
+        lower_with_mutation_aliasing(&mut inner_func, env, debug_logger)?;
 
         // If an invariant error was recorded, put the function back and stop processing
         if env.has_invariant_errors() {
             env.functions[func_id.0 as usize] = inner_func;
-            return;
+            return Ok(());
         }
 
         // Reset mutable range for outer inferMutationAliasingEffects.
@@ -86,28 +87,30 @@ where
         // Put the function back
         env.functions[func_id.0 as usize] = inner_func;
     }
+
+    Ok(())
 }
 
 /// Run mutation/aliasing inference on an inner function.
 ///
 /// Corresponds to TS `lowerWithMutationAliasing(fn: HIRFunction): void`.
-fn lower_with_mutation_aliasing<F>(func: &mut HirFunction, env: &mut Environment, debug_logger: &mut F)
+fn lower_with_mutation_aliasing<F>(func: &mut HirFunction, env: &mut Environment, debug_logger: &mut F) -> Result<(), CompilerDiagnostic>
 where
     F: FnMut(&HirFunction, &Environment),
 {
     // Phase 1: Recursively analyse nested functions first (depth-first)
-    analyse_functions(func, env, debug_logger);
+    analyse_functions(func, env, debug_logger)?;
 
     // inferMutationAliasingEffects on the inner function
     crate::infer_mutation_aliasing_effects::infer_mutation_aliasing_effects(
         func, env, true,
-    );
+    )?;
 
     // Check for invariant errors (e.g., uninitialized value kind)
     // In TS, these throw from within inferMutationAliasingEffects, aborting
     // the rest of the function processing.
     if env.has_invariant_errors() {
-        return;
+        return Ok(());
     }
 
     // deadCodeElimination for inner functions
@@ -116,16 +119,16 @@ where
     // inferMutationAliasingRanges — returns the externally-visible function effects
     let function_effects = crate::infer_mutation_aliasing_ranges::infer_mutation_aliasing_ranges(
         func, env, true,
-    );
+    )?;
 
     // rewriteInstructionKindsBasedOnReassignment
     if let Err(err) = react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(func, env) {
         env.errors.merge(err);
-        return;
+        return Ok(());
     }
 
     // inferReactiveScopeVariables on the inner function
-    crate::infer_reactive_scope_variables::infer_reactive_scope_variables(func, env);
+    crate::infer_reactive_scope_variables::infer_reactive_scope_variables(func, env)?;
 
     func.aliasing_effects = Some(function_effects.clone());
 
@@ -158,7 +161,11 @@ where
                 // no-op
             }
             AliasingEffect::Apply { .. } => {
-                panic!("[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects");
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects",
+                    None,
+                ));
             }
         }
     }
@@ -175,6 +182,8 @@ where
 
     // Log the inner function's state (mirrors TS: fn.env.logger?.debugLogIRs)
     debug_logger(func, env);
+
+    Ok(())
 }
 
 

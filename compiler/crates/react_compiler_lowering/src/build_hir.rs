@@ -1314,10 +1314,25 @@ fn lower_expression(
             }
         }
         Expression::ArrowFunctionExpression(_) => {
-            lower_function_to_value(builder, expr, FunctionExpressionType::ArrowFunctionExpression)
+            // lower_function_to_value returns Result; unwrap since the expression type is already
+            // known to be a function expression at this point, so the invariant cannot fail.
+            // The Err path is only reachable if lower_function is called with a non-function node.
+            match lower_function_to_value(builder, expr, FunctionExpressionType::ArrowFunctionExpression) {
+                Ok(val) => val,
+                Err(diag) => {
+                    builder.record_error(CompilerErrorDetail::new(diag.category, diag.reason));
+                    InstructionValue::Primitive { value: PrimitiveValue::Undefined, loc: None }
+                }
+            }
         }
         Expression::FunctionExpression(_) => {
-            lower_function_to_value(builder, expr, FunctionExpressionType::FunctionExpression)
+            match lower_function_to_value(builder, expr, FunctionExpressionType::FunctionExpression) {
+                Ok(val) => val,
+                Err(diag) => {
+                    builder.record_error(CompilerErrorDetail::new(diag.category, diag.reason));
+                    InstructionValue::Primitive { value: PrimitiveValue::Undefined, loc: None }
+                }
+            }
         }
         Expression::ObjectExpression(obj) => {
             let loc = convert_opt_loc(&obj.base.loc);
@@ -1993,7 +2008,9 @@ fn lower_block_statement(
     builder: &mut HirBuilder,
     block: &react_compiler_ast::statements::BlockStatement,
 ) {
-    lower_block_statement_inner(builder, block, None);
+    if let Err(diagnostic) = lower_block_statement_inner(builder, block, None) {
+        builder.record_diagnostic(diagnostic);
+    }
 }
 
 fn lower_block_statement_with_scope(
@@ -2001,14 +2018,16 @@ fn lower_block_statement_with_scope(
     block: &react_compiler_ast::statements::BlockStatement,
     scope_override: react_compiler_ast::scope::ScopeId,
 ) {
-    lower_block_statement_inner(builder, block, Some(scope_override));
+    if let Err(diagnostic) = lower_block_statement_inner(builder, block, Some(scope_override)) {
+        builder.record_diagnostic(diagnostic);
+    }
 }
 
 fn lower_block_statement_inner(
     builder: &mut HirBuilder,
     block: &react_compiler_ast::statements::BlockStatement,
     scope_override: Option<react_compiler_ast::scope::ScopeId>,
-) {
+) -> Result<(), CompilerDiagnostic> {
     use react_compiler_ast::scope::BindingKind as AstBindingKind;
     use react_compiler_ast::statements::Statement;
 
@@ -2023,9 +2042,9 @@ fn lower_block_statement_inner(
         None => {
             // No scope found for this block, just lower statements normally
             for body_stmt in &block.body {
-                lower_statement(builder, body_stmt, None);
+                lower_statement(builder, body_stmt, None)?;
             }
-            return;
+            return Ok(());
         }
     };
 
@@ -2052,9 +2071,9 @@ fn lower_block_statement_inner(
     if hoistable.is_empty() {
         // No hoistable bindings, just lower statements normally
         for body_stmt in &block.body {
-            lower_statement(builder, body_stmt, None);
+            lower_statement(builder, body_stmt, None)?;
         }
-        return;
+        return Ok(());
     }
 
     // Track which bindings have been "declared" (their declaration statement has been seen)
@@ -2211,8 +2230,9 @@ fn lower_block_statement_inner(
             }
         }
 
-        lower_statement(builder, body_stmt, None);
+        lower_statement(builder, body_stmt, None)?;
     }
+    Ok(())
 }
 
 // =============================================================================
@@ -2223,7 +2243,7 @@ fn lower_statement(
     builder: &mut HirBuilder,
     stmt: &react_compiler_ast::statements::Statement,
     label: Option<&str>,
-) {
+) -> Result<(), CompilerDiagnostic> {
     use react_compiler_ast::statements::Statement;
 
     match stmt {
@@ -2377,7 +2397,7 @@ fn lower_statement(
         Statement::BreakStatement(brk) => {
             let loc = convert_opt_loc(&brk.base.loc);
             let label_name = brk.label.as_ref().map(|l| l.name.as_str());
-            let target = builder.lookup_break(label_name);
+            let target = builder.lookup_break(label_name)?;
             let fallthrough = builder.reserve(BlockKind::Block);
             builder.terminate_with_continuation(
                 Terminal::Goto {
@@ -2392,7 +2412,7 @@ fn lower_statement(
         Statement::ContinueStatement(cont) => {
             let loc = convert_opt_loc(&cont.base.loc);
             let label_name = cont.label.as_ref().map(|l| l.name.as_str());
-            let target = builder.lookup_continue(label_name);
+            let target = builder.lookup_continue(label_name)?;
             let fallthrough = builder.reserve(BlockKind::Block);
             builder.terminate_with_continuation(
                 Terminal::Goto {
@@ -2412,28 +2432,28 @@ fn lower_statement(
 
             // Block for the consequent (if the test is truthy)
             let consequent_loc = statement_loc(&if_stmt.consequent);
-            let consequent_block = builder.enter(BlockKind::Block, |builder, _block_id| {
-                lower_statement(builder, &if_stmt.consequent, None);
-                Terminal::Goto {
+            let consequent_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
+                lower_statement(builder, &if_stmt.consequent, None)?;
+                Ok(Terminal::Goto {
                     block: continuation_id,
                     variant: GotoVariant::Break,
                     id: EvaluationOrder(0),
                     loc: consequent_loc,
-                }
-            });
+                })
+            })?;
 
             // Block for the alternate (if the test is not truthy)
             let alternate_block = if let Some(alternate) = &if_stmt.alternate {
                 let alternate_loc = statement_loc(alternate);
-                builder.enter(BlockKind::Block, |builder, _block_id| {
-                    lower_statement(builder, alternate, None);
-                    Terminal::Goto {
+                builder.try_enter(BlockKind::Block, |builder, _block_id| {
+                    lower_statement(builder, alternate, None)?;
+                    Ok(Terminal::Goto {
                         block: continuation_id,
                         variant: GotoVariant::Break,
                         id: EvaluationOrder(0),
                         loc: alternate_loc,
-                    }
-                })
+                    })
+                })?
             } else {
                 // If there is no else clause, use the continuation directly
                 continuation_id
@@ -2462,7 +2482,7 @@ fn lower_statement(
             let continuation_id = continuation_block.id;
 
             // Init block: lower init expression/declaration, then goto test
-            let init_block = builder.enter(BlockKind::Loop, |builder, _block_id| {
+            let init_block = builder.try_enter(BlockKind::Loop, |builder, _block_id| {
                 let init_loc = match &for_stmt.init {
                     None => {
                         // No init expression (e.g., `for (; ...)`), add a placeholder
@@ -2477,7 +2497,7 @@ fn lower_statement(
                         match init.as_ref() {
                             react_compiler_ast::statements::ForInit::VariableDeclaration(var_decl) => {
                                 let init_loc = convert_opt_loc(&var_decl.base.loc);
-                                lower_statement(builder, &Statement::VariableDeclaration(var_decl.clone()), None);
+                                lower_statement(builder, &Statement::VariableDeclaration(var_decl.clone()), None)?;
                                 init_loc
                             }
                             react_compiler_ast::statements::ForInit::Expression(expr) => {
@@ -2495,13 +2515,13 @@ fn lower_statement(
                         }
                     }
                 };
-                Terminal::Goto {
+                Ok(Terminal::Goto {
                     block: test_block_id,
                     variant: GotoVariant::Break,
                     id: EvaluationOrder(0),
                     loc: init_loc,
-                }
-            });
+                })
+            })?;
 
             // Update block (optional)
             let update_block_id = if let Some(update) = &for_stmt.update {
@@ -2522,22 +2542,22 @@ fn lower_statement(
             // Loop body block
             let continue_target = update_block_id.unwrap_or(test_block_id);
             let body_loc = statement_loc(&for_stmt.body);
-            let body_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+            let body_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.loop_scope(
                     label.map(|s| s.to_string()),
                     continue_target,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &for_stmt.body, None);
-                        Terminal::Goto {
+                        lower_statement(builder, &for_stmt.body, None)?;
+                        Ok(Terminal::Goto {
                             block: continue_target,
                             variant: GotoVariant::Continue,
                             id: EvaluationOrder(0),
                             loc: body_loc,
-                        }
+                        })
                     },
                 )
-            });
+            })?;
 
             // Emit For terminal, then fill in the test block
             builder.terminate_with_continuation(
@@ -2605,22 +2625,22 @@ fn lower_statement(
 
             // Loop body
             let body_loc = statement_loc(&while_stmt.body);
-            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+            let loop_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.loop_scope(
                     label.map(|s| s.to_string()),
                     conditional_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &while_stmt.body, None);
-                        Terminal::Goto {
+                        lower_statement(builder, &while_stmt.body, None)?;
+                        Ok(Terminal::Goto {
                             block: conditional_id,
                             variant: GotoVariant::Continue,
                             id: EvaluationOrder(0),
                             loc: body_loc,
-                        }
+                        })
                     },
                 )
-            });
+            })?;
 
             // Emit While terminal, jumping to the conditional block
             builder.terminate_with_continuation(
@@ -2659,22 +2679,22 @@ fn lower_statement(
 
             // Loop body, executed at least once unconditionally prior to exit
             let body_loc = statement_loc(&do_while_stmt.body);
-            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+            let loop_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.loop_scope(
                     label.map(|s| s.to_string()),
                     conditional_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &do_while_stmt.body, None);
-                        Terminal::Goto {
+                        lower_statement(builder, &do_while_stmt.body, None)?;
+                        Ok(Terminal::Goto {
                             block: conditional_id,
                             variant: GotoVariant::Continue,
                             id: EvaluationOrder(0),
                             loc: body_loc,
-                        }
+                        })
                     },
                 )
-            });
+            })?;
 
             // Jump to the conditional block
             builder.terminate_with_continuation(
@@ -2710,22 +2730,22 @@ fn lower_statement(
             let init_block_id = init_block.id;
 
             let body_loc = statement_loc(&for_in.body);
-            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+            let loop_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.loop_scope(
                     label.map(|s| s.to_string()),
                     init_block_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &for_in.body, None);
-                        Terminal::Goto {
+                        lower_statement(builder, &for_in.body, None)?;
+                        Ok(Terminal::Goto {
                             block: init_block_id,
                             variant: GotoVariant::Continue,
                             id: EvaluationOrder(0),
                             loc: body_loc,
-                        }
+                        })
                     },
                 )
-            });
+            })?;
 
             let value = lower_expression_to_temporary(builder, &for_in.right);
             builder.terminate_with_continuation(
@@ -2826,26 +2846,26 @@ fn lower_statement(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return;
+                return Ok(());
             }
 
             let body_loc = statement_loc(&for_of.body);
-            let loop_block = builder.enter(BlockKind::Block, |builder, _block_id| {
+            let loop_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.loop_scope(
                     label.map(|s| s.to_string()),
                     init_block_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &for_of.body, None);
-                        Terminal::Goto {
+                        lower_statement(builder, &for_of.body, None)?;
+                        Ok(Terminal::Goto {
                             block: init_block_id,
                             variant: GotoVariant::Continue,
                             id: EvaluationOrder(0),
                             loc: body_loc,
-                        }
+                        })
                     },
                 )
-            });
+            })?;
 
             let value = lower_expression_to_temporary(builder, &for_of.right);
             builder.terminate_with_continuation(
@@ -2976,23 +2996,23 @@ fn lower_statement(
                 }
 
                 let fallthrough_target = fallthrough;
-                let block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                let block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                     builder.switch_scope(
                         label.map(|s| s.to_string()),
                         continuation_id,
                         |builder| {
                             for consequent in &case.consequent {
-                                lower_statement(builder, consequent, None);
+                                lower_statement(builder, consequent, None)?;
                             }
-                            Terminal::Goto {
+                            Ok(Terminal::Goto {
                                 block: fallthrough_target,
                                 variant: GotoVariant::Break,
                                 id: EvaluationOrder(0),
                                 loc: case_loc.clone(),
-                            }
+                            })
                         },
                     )
-                });
+                })?;
 
                 let test = if let Some(test_expr) = &case.test {
                     Some(lower_reorderable_expression(builder, test_expr))
@@ -3039,7 +3059,7 @@ fn lower_statement(
                         loc: loc.clone(),
                         suggestions: None,
                     });
-                    return;
+                    return Ok(());
                 }
             };
 
@@ -3179,19 +3199,20 @@ fn lower_statement(
 
             // Create the try block
             let try_body_loc = convert_opt_loc(&try_stmt.block.base.loc);
-            let try_block = builder.enter(BlockKind::Block, |builder, _block_id| {
-                builder.enter_try_catch(handler_block, |builder| {
+            let try_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
+                builder.try_enter_try_catch(handler_block, |builder| {
                     for stmt in &try_stmt.block.body {
-                        lower_statement(builder, stmt, None);
+                        lower_statement(builder, stmt, None)?;
                     }
-                });
-                Terminal::Goto {
+                    Ok(())
+                })?;
+                Ok(Terminal::Goto {
                     block: continuation_id,
                     variant: GotoVariant::Try,
                     id: EvaluationOrder(0),
                     loc: try_body_loc.clone(),
-                }
-            });
+                })
+            })?;
 
             builder.terminate_with_continuation(
                 Terminal::Try {
@@ -3217,7 +3238,7 @@ fn lower_statement(
                 | Statement::ForInStatement(_)
                 | Statement::ForOfStatement(_) => {
                     // Labeled loops are special because of continue, push the label down
-                    lower_statement(builder, &labeled_stmt.body, Some(label_name));
+                    lower_statement(builder, &labeled_stmt.body, Some(label_name))?;
                 }
                 _ => {
                     // All other statements create a continuation block to allow `break`
@@ -3225,21 +3246,22 @@ fn lower_statement(
                     let continuation_id = continuation_block.id;
                     let body_loc = statement_loc(&labeled_stmt.body);
 
-                    let block = builder.enter(BlockKind::Block, |builder, _block_id| {
+                    let block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                         builder.label_scope(
                             label_name.clone(),
                             continuation_id,
                             |builder| {
-                                lower_statement(builder, &labeled_stmt.body, None);
+                                lower_statement(builder, &labeled_stmt.body, None)?;
+                                Ok(())
                             },
-                        );
-                        Terminal::Goto {
+                        )?;
+                        Ok(Terminal::Goto {
                             block: continuation_id,
                             variant: GotoVariant::Break,
                             id: EvaluationOrder(0),
                             loc: body_loc,
-                        }
-                    });
+                        })
+                    })?;
 
                     builder.terminate_with_continuation(
                         Terminal::Label {
@@ -3326,6 +3348,7 @@ fn lower_statement(
         | Statement::DeclareTypeAlias(_)
         | Statement::DeclareOpaqueType(_) => {}
     }
+    Ok(())
 }
 
 // =============================================================================
@@ -4371,7 +4394,7 @@ fn lower_function_to_value(
     builder: &mut HirBuilder,
     expr: &react_compiler_ast::expressions::Expression,
     expr_type: FunctionExpressionType,
-) -> InstructionValue {
+) -> Result<InstructionValue, CompilerDiagnostic> {
     use react_compiler_ast::expressions::Expression;
     let loc = match expr {
         Expression::ArrowFunctionExpression(arrow) => convert_opt_loc(&arrow.base.loc),
@@ -4382,20 +4405,20 @@ fn lower_function_to_value(
         Expression::FunctionExpression(func) => func.id.as_ref().map(|id| id.name.clone()),
         _ => None,
     };
-    let lowered_func = lower_function(builder, expr);
-    InstructionValue::FunctionExpression {
+    let lowered_func = lower_function(builder, expr)?;
+    Ok(InstructionValue::FunctionExpression {
         name,
         name_hint: None,
         lowered_func,
         expr_type,
         loc,
-    }
+    })
 }
 
 fn lower_function(
     builder: &mut HirBuilder,
     expr: &react_compiler_ast::expressions::Expression,
-) -> LoweredFunction {
+) -> Result<LoweredFunction, CompilerDiagnostic> {
     use react_compiler_ast::expressions::Expression;
 
     // Extract function parts from the AST node
@@ -4431,7 +4454,11 @@ fn lower_function(
             convert_opt_loc(&func.base.loc),
         ),
         _ => {
-            panic!("lower_function called with non-function expression");
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "lower_function called with non-function expression",
+                None,
+            ));
         }
     };
 
@@ -4503,7 +4530,7 @@ fn lower_function(
     builder.merge_bindings(child_bindings);
 
     let func_id = builder.environment_mut().add_function(hir_func);
-    LoweredFunction { func: func_id }
+    Ok(LoweredFunction { func: func_id })
 }
 
 /// Lower a function declaration statement to a FunctionExpression + StoreLocal.

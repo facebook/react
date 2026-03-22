@@ -12,6 +12,7 @@ use react_compiler_ast::common::BaseNode;
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
 use react_compiler_ast::statements::*;
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 
 use super::imports::ProgramContext;
 use super::plugin_options::GatingConfig;
@@ -50,7 +51,7 @@ pub fn apply_gating_rewrites(
     program: &mut react_compiler_ast::Program,
     mut rewrites: Vec<GatingRewrite>,
     context: &mut ProgramContext,
-) {
+) -> Result<(), CompilerDiagnostic> {
     // Sort rewrites in reverse order by original_index so that insertions
     // at higher indices don't invalidate lower indices.
     rewrites.sort_by(|a, b| b.original_index.cmp(&a.original_index));
@@ -74,16 +75,18 @@ pub fn apply_gating_rewrites(
                     compiled,
                     context,
                     &gating_imported_name,
-                );
+                )?;
             } else {
-                panic!(
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
                     "Expected compiled node type to match input type: \
-                     got non-FunctionDeclaration but expected FunctionDeclaration"
-                );
+                     got non-FunctionDeclaration but expected FunctionDeclaration",
+                    None,
+                ));
             }
         } else {
             let original_stmt = program.body[rewrite.original_index].clone();
-            let original_fn = extract_function_node_from_stmt(&original_stmt);
+            let original_fn = extract_function_node_from_stmt(&original_stmt)?;
 
             let gating_expression =
                 build_gating_expression(rewrite.compiled_fn, original_fn, &gating_imported_name);
@@ -162,6 +165,7 @@ pub fn apply_gating_rewrites(
             }
         }
     }
+    Ok(())
 }
 
 /// Gating rewrite for function declarations which are referenced before their
@@ -189,7 +193,7 @@ fn insert_additional_function_declaration(
     mut compiled: FunctionDeclaration,
     context: &mut ProgramContext,
     gating_function_identifier_name: &str,
-) {
+) -> Result<(), CompilerDiagnostic> {
     // Extract the original function declaration from body
     let original_fn = match &body[original_index] {
         Statement::FunctionDeclaration(fd) => fd.clone(),
@@ -200,13 +204,27 @@ fn insert_additional_function_declaration(
                 {
                     fd.clone()
                 } else {
-                    panic!("Expected function declaration in export");
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Expected function declaration in export",
+                        None,
+                    ));
                 }
             } else {
-                panic!("Expected declaration in export");
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Expected declaration in export",
+                    None,
+                ));
             }
         }
-        _ => panic!("Expected function declaration at original_index"),
+        _ => {
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "Expected function declaration at original_index",
+                None,
+            ));
+        }
     };
 
     let original_fn_name = original_fn
@@ -235,7 +253,7 @@ fn insert_additional_function_declaration(
     compiled.id = Some(make_identifier(&optimized_fn_name));
 
     // Rename the original function in-place to *_unoptimized
-    rename_fn_decl_at(body, original_index, &unoptimized_fn_name);
+    rename_fn_decl_at(body, original_index, &unoptimized_fn_name)?;
 
     // Step 2: build new params and args for the dispatcher function
     let mut new_params: Vec<PatternLike> = Vec::new();
@@ -367,6 +385,7 @@ fn insert_additional_function_declaration(
     // The original (now renamed) fn is now at original_index + 2
     // Insert dispatcher after it
     body.insert(original_index + 3, dispatcher_fn);
+    Ok(())
 }
 
 /// Build a gating conditional expression:
@@ -454,34 +473,46 @@ fn get_fn_decl_name_from_export_default(stmt: &Statement) -> Option<String> {
 
 /// Extract a CompiledFunctionNode from a statement (for building the
 /// "original" side of the gating expression).
-fn extract_function_node_from_stmt(stmt: &Statement) -> CompiledFunctionNode {
+fn extract_function_node_from_stmt(stmt: &Statement) -> Result<CompiledFunctionNode, CompilerDiagnostic> {
     match stmt {
-        Statement::FunctionDeclaration(fd) => CompiledFunctionNode::FunctionDeclaration(fd.clone()),
+        Statement::FunctionDeclaration(fd) => Ok(CompiledFunctionNode::FunctionDeclaration(fd.clone())),
         Statement::ExpressionStatement(es) => match es.expression.as_ref() {
             Expression::ArrowFunctionExpression(arrow) => {
-                CompiledFunctionNode::ArrowFunctionExpression(arrow.clone())
+                Ok(CompiledFunctionNode::ArrowFunctionExpression(arrow.clone()))
             }
             Expression::FunctionExpression(fe) => {
-                CompiledFunctionNode::FunctionExpression(fe.clone())
+                Ok(CompiledFunctionNode::FunctionExpression(fe.clone()))
             }
-            _ => panic!("Expected function expression in expression statement for gating"),
+            _ => Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "Expected function expression in expression statement for gating",
+                None,
+            )),
         },
         Statement::ExportDefaultDeclaration(ed) => match ed.declaration.as_ref() {
             react_compiler_ast::declarations::ExportDefaultDecl::FunctionDeclaration(fd) => {
-                CompiledFunctionNode::FunctionDeclaration(fd.clone())
+                Ok(CompiledFunctionNode::FunctionDeclaration(fd.clone()))
             }
             react_compiler_ast::declarations::ExportDefaultDecl::Expression(expr) => {
                 match expr.as_ref() {
                     Expression::ArrowFunctionExpression(arrow) => {
-                        CompiledFunctionNode::ArrowFunctionExpression(arrow.clone())
+                        Ok(CompiledFunctionNode::ArrowFunctionExpression(arrow.clone()))
                     }
                     Expression::FunctionExpression(fe) => {
-                        CompiledFunctionNode::FunctionExpression(fe.clone())
+                        Ok(CompiledFunctionNode::FunctionExpression(fe.clone()))
                     }
-                    _ => panic!("Expected function expression in export default for gating"),
+                    _ => Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Expected function expression in export default for gating",
+                        None,
+                    )),
                 }
             }
-            _ => panic!("Expected function in export default declaration for gating"),
+            _ => Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "Expected function in export default declaration for gating",
+                None,
+            )),
         },
         Statement::VariableDeclaration(vd) => {
             let init = vd.declarations[0]
@@ -490,21 +521,29 @@ fn extract_function_node_from_stmt(stmt: &Statement) -> CompiledFunctionNode {
                 .expect("Expected variable declarator to have an init for gating");
             match init.as_ref() {
                 Expression::ArrowFunctionExpression(arrow) => {
-                    CompiledFunctionNode::ArrowFunctionExpression(arrow.clone())
+                    Ok(CompiledFunctionNode::ArrowFunctionExpression(arrow.clone()))
                 }
                 Expression::FunctionExpression(fe) => {
-                    CompiledFunctionNode::FunctionExpression(fe.clone())
+                    Ok(CompiledFunctionNode::FunctionExpression(fe.clone()))
                 }
-                _ => panic!("Expected function expression in variable declaration for gating"),
+                _ => Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Expected function expression in variable declaration for gating",
+                    None,
+                )),
             }
         }
-        _ => panic!("Unexpected statement type for gating rewrite"),
+        _ => Err(CompilerDiagnostic::new(
+            ErrorCategory::Invariant,
+            "Unexpected statement type for gating rewrite",
+            None,
+        )),
     }
 }
 
 /// Rename the function declaration at `body[index]` in place.
 /// Handles both bare FunctionDeclaration and ExportNamedDeclaration wrapping one.
-fn rename_fn_decl_at(body: &mut [Statement], index: usize, new_name: &str) {
+fn rename_fn_decl_at(body: &mut [Statement], index: usize, new_name: &str) -> Result<(), CompilerDiagnostic> {
     match &mut body[index] {
         Statement::FunctionDeclaration(fd) => {
             fd.id = Some(make_identifier(new_name));
@@ -518,6 +557,13 @@ fn rename_fn_decl_at(body: &mut [Statement], index: usize, new_name: &str) {
                 }
             }
         }
-        _ => panic!("Expected function declaration to rename"),
+        _ => {
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "Expected function declaration to rename",
+                None,
+            ));
+        }
     }
+    Ok(())
 }

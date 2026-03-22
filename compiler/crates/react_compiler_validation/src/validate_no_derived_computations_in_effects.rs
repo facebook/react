@@ -358,7 +358,7 @@ fn is_mutable_at(env: &Environment, eval_order: EvaluationOrder, identifier_id: 
 pub fn validate_no_derived_computations_in_effects_exp(
     func: &HirFunction,
     env: &Environment,
-) -> CompilerError {
+) -> Result<CompilerError, CompilerDiagnostic> {
     let identifiers = &env.identifiers;
 
     let mut context = ValidationContext {
@@ -415,7 +415,7 @@ pub fn validate_no_derived_computations_in_effects_exp(
             record_phi_derivations(block, &mut context, env);
             for &instr_id in &block.instructions {
                 let instr = &func.instructions[instr_id.0 as usize];
-                record_instruction_derivations(instr, &mut context, is_first_pass, func, env);
+                record_instruction_derivations(instr, &mut context, is_first_pass, func, env)?;
             }
         }
 
@@ -451,7 +451,7 @@ pub fn validate_no_derived_computations_in_effects_exp(
         );
     }
 
-    errors
+    Ok(errors)
 }
 
 fn record_phi_derivations(
@@ -490,7 +490,7 @@ fn record_instruction_derivations(
     is_first_pass: bool,
     outer_func: &HirFunction,
     env: &Environment,
-) {
+) -> Result<(), CompilerDiagnostic> {
     let identifiers = &env.identifiers;
     let types = &env.types;
     let functions = &env.functions;
@@ -517,7 +517,7 @@ fn record_instruction_derivations(
                 record_phi_derivations(block, context, env);
                 for &inner_instr_id in &block.instructions {
                     let inner_instr = &inner_func.instructions[inner_instr_id.0 as usize];
-                    record_instruction_derivations(inner_instr, context, is_first_pass, inner_func, env);
+                    record_instruction_derivations(inner_instr, context, is_first_pass, inner_func, env)?;
                 }
             }
         }
@@ -556,7 +556,7 @@ fn record_instruction_derivations(
                     TypeOfValue::FromState,
                     true,
                 );
-                return;
+                return Ok(());
             }
         }
         InstructionValue::MethodCall { property, args, .. } => {
@@ -594,7 +594,7 @@ fn record_instruction_derivations(
                     TypeOfValue::FromState,
                     true,
                 );
-                return;
+                return Ok(());
             }
         }
         InstructionValue::ArrayExpression { elements, .. } => {
@@ -632,7 +632,7 @@ fn record_instruction_derivations(
     }
 
     if type_of_value == TypeOfValue::Ignored {
-        return;
+        return Ok(());
     }
 
     // Record derivation for ALL lvalue places (including destructured variables)
@@ -649,7 +649,7 @@ fn record_instruction_derivations(
 
     if matches!(&instr.value, InstructionValue::FunctionExpression { .. }) {
         // Don't record mutation effects for FunctionExpressions
-        return;
+        return Ok(());
     }
 
     // Handle mutable operands
@@ -678,10 +678,15 @@ fn record_instruction_derivations(
             }
             Effect::Freeze | Effect::Read => {}
             Effect::Unknown => {
-                panic!("Unexpected unknown effect");
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Unexpected unknown effect",
+                    None,
+                ));
             }
         }
     }
+    Ok(())
 }
 
 struct OperandWithEffect {

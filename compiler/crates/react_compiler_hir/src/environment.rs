@@ -387,7 +387,7 @@ impl Environment {
                     ) {
                         // Validate hook-name vs hook-type consistency
                         let expect_hook = is_hook_name(imported);
-                        let is_hook = self.get_hook_kind_for_type(&imported_type).is_some();
+                        let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
                         if expect_hook != is_hook {
                             self.record_error(
                             CompilerErrorDetail::new(
@@ -441,7 +441,7 @@ impl Environment {
                     if let Some(imported_type) = imported_type {
                         // Validate hook-name vs hook-type consistency
                         let expect_hook = is_hook_name(module);
-                        let is_hook = self.get_hook_kind_for_type(&imported_type).is_some();
+                        let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
                         if expect_hook != is_hook {
                             self.record_error(
                             CompilerErrorDetail::new(
@@ -498,100 +498,116 @@ impl Environment {
 
     /// Get the type of a named property on a receiver type.
     /// Ported from TS `getPropertyType`.
-    pub fn get_property_type(&mut self, receiver: &Type, property: &str) -> Option<Type> {
+    pub fn get_property_type(&mut self, receiver: &Type, property: &str) -> Result<Option<Type>, CompilerDiagnostic> {
         let shape_id = match receiver {
             Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => None,
         };
         if let Some(shape_id) = shape_id {
-            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
-                panic!(
-                    "[HIR] Forget internal error: cannot resolve shape {}",
-                    shape_id
+            let shape = self.shapes.get(shape_id).ok_or_else(|| {
+                CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "[HIR] Forget internal error: cannot resolve shape {}",
+                        shape_id
+                    ),
+                    None,
                 )
-            });
+            })?;
             if let Some(ty) = shape.properties.get(property) {
-                return Some(ty.clone());
+                return Ok(Some(ty.clone()));
             }
             // Fall through to wildcard
             if let Some(ty) = shape.properties.get("*") {
-                return Some(ty.clone());
+                return Ok(Some(ty.clone()));
             }
             // If property name looks like a hook, return custom hook type
             if is_hook_name(property) {
-                return Some(self.get_custom_hook_type());
+                return Ok(Some(self.get_custom_hook_type()));
             }
-            return None;
+            return Ok(None);
         }
         // No shape ID — if property looks like a hook, return custom hook type
         if is_hook_name(property) {
-            return Some(self.get_custom_hook_type());
+            return Ok(Some(self.get_custom_hook_type()));
         }
-        None
+        Ok(None)
     }
 
     /// Get the type of a numeric property on a receiver type.
     /// Ported from the numeric branch of TS `getPropertyType`.
-    pub fn get_property_type_numeric(&self, receiver: &Type) -> Option<Type> {
+    pub fn get_property_type_numeric(&self, receiver: &Type) -> Result<Option<Type>, CompilerDiagnostic> {
         let shape_id = match receiver {
             Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => None,
         };
         if let Some(shape_id) = shape_id {
-            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
-                panic!(
-                    "[HIR] Forget internal error: cannot resolve shape {}",
-                    shape_id
+            let shape = self.shapes.get(shape_id).ok_or_else(|| {
+                CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "[HIR] Forget internal error: cannot resolve shape {}",
+                        shape_id
+                    ),
+                    None,
                 )
-            });
-            return shape.properties.get("*").cloned();
+            })?;
+            return Ok(shape.properties.get("*").cloned());
         }
-        None
+        Ok(None)
     }
 
     /// Get the fallthrough (wildcard `*`) property type for computed property access.
     /// Ported from TS `getFallthroughPropertyType`.
-    pub fn get_fallthrough_property_type(&self, receiver: &Type) -> Option<Type> {
+    pub fn get_fallthrough_property_type(&self, receiver: &Type) -> Result<Option<Type>, CompilerDiagnostic> {
         let shape_id = match receiver {
             Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => None,
         };
         if let Some(shape_id) = shape_id {
-            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
-                panic!(
-                    "[HIR] Forget internal error: cannot resolve shape {}",
-                    shape_id
+            let shape = self.shapes.get(shape_id).ok_or_else(|| {
+                CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "[HIR] Forget internal error: cannot resolve shape {}",
+                        shape_id
+                    ),
+                    None,
                 )
-            });
-            return shape.properties.get("*").cloned();
+            })?;
+            return Ok(shape.properties.get("*").cloned());
         }
-        None
+        Ok(None)
     }
 
     /// Get the function signature for a function type.
     /// Ported from TS `getFunctionSignature`.
-    pub fn get_function_signature(&self, ty: &Type) -> Option<&FunctionSignature> {
+    pub fn get_function_signature(&self, ty: &Type) -> Result<Option<&FunctionSignature>, CompilerDiagnostic> {
         let shape_id = match ty {
             Type::Function { shape_id, .. } => shape_id.as_deref(),
-            _ => return None,
+            _ => return Ok(None),
         };
         if let Some(shape_id) = shape_id {
-            let shape = self.shapes.get(shape_id).unwrap_or_else(|| {
-                panic!(
-                    "[HIR] Forget internal error: cannot resolve shape {}",
-                    shape_id
+            let shape = self.shapes.get(shape_id).ok_or_else(|| {
+                CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "[HIR] Forget internal error: cannot resolve shape {}",
+                        shape_id
+                    ),
+                    None,
                 )
-            });
-            return shape.function_type.as_ref();
+            })?;
+            return Ok(shape.function_type.as_ref());
         }
-        None
+        Ok(None)
     }
 
     /// Get the hook kind for a type, if it represents a hook.
     /// Ported from TS `getHookKindForType` in HIR.ts.
-    pub fn get_hook_kind_for_type(&self, ty: &Type) -> Option<&HookKind> {
-        self.get_function_signature(ty)
-            .and_then(|sig| sig.hook_kind.as_ref())
+    pub fn get_hook_kind_for_type(&self, ty: &Type) -> Result<Option<&HookKind>, CompilerDiagnostic> {
+        Ok(self.get_function_signature(ty)?
+            .and_then(|sig| sig.hook_kind.as_ref()))
     }
 
     /// Resolve the module type provider for a given module name.
@@ -798,11 +814,11 @@ mod tests {
         let array_type = Type::Object {
             shape_id: Some("BuiltInArray".to_string()),
         };
-        let map_type = env.get_property_type(&array_type, "map");
+        let map_type = env.get_property_type(&array_type, "map").unwrap();
         assert!(map_type.is_some());
-        let push_type = env.get_property_type(&array_type, "push");
+        let push_type = env.get_property_type(&array_type, "push").unwrap();
         assert!(push_type.is_some());
-        let nonexistent = env.get_property_type(&array_type, "nonExistentMethod");
+        let nonexistent = env.get_property_type(&array_type, "nonExistentMethod").unwrap();
         assert!(nonexistent.is_none());
     }
 
@@ -810,7 +826,7 @@ mod tests {
     fn test_get_function_signature() {
         let env = Environment::new();
         let use_state_type = env.globals().get("useState").unwrap();
-        let sig = env.get_function_signature(use_state_type);
+        let sig = env.get_function_signature(use_state_type).unwrap();
         assert!(sig.is_some());
         let sig = sig.unwrap();
         assert!(sig.hook_kind.is_some());

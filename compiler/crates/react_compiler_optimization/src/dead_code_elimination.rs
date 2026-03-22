@@ -339,7 +339,7 @@ fn pruneable_value(
             if env.output_mode == OutputMode::Ssr {
                 let callee_ty =
                     &env.types[env.identifiers[callee.identifier.0 as usize].type_.0 as usize];
-                if let Some(hook_kind) = env.get_hook_kind_for_type(callee_ty) {
+                if let Some(hook_kind) = env.get_hook_kind_for_type(callee_ty).ok().flatten() {
                     match hook_kind {
                         HookKind::UseState | HookKind::UseReducer | HookKind::UseRef => {
                             return true;
@@ -354,7 +354,7 @@ fn pruneable_value(
             if env.output_mode == OutputMode::Ssr {
                 let callee_ty =
                     &env.types[env.identifiers[property.identifier.0 as usize].type_.0 as usize];
-                if let Some(hook_kind) = env.get_hook_kind_for_type(callee_ty) {
+                if let Some(hook_kind) = env.get_hook_kind_for_type(callee_ty).ok().flatten() {
                     match hook_kind {
                         HookKind::UseState | HookKind::UseReducer | HookKind::UseRef => {
                             return true;

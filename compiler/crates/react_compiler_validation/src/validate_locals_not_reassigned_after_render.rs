@@ -83,6 +83,8 @@ fn has_no_alias_signature(
 ) -> bool {
     let ty = &types[identifiers[identifier_id.0 as usize].type_.0 as usize];
     env.get_function_signature(ty)
+        .ok()
+        .flatten()
         .map_or(false, |sig| sig.no_alias)
 }
 

@@ -244,6 +244,8 @@ fn get_place_scope(
 fn get_function_call_signature_no_alias(env: &Environment, identifier_id: IdentifierId) -> bool {
     let ty = &env.types[env.identifiers[identifier_id.0 as usize].type_.0 as usize];
     env.get_function_signature(ty)
+        .ok()
+        .flatten()
         .map(|sig| sig.no_alias)
         .unwrap_or(false)
 }
@@ -254,7 +256,7 @@ fn get_function_call_signature_no_alias(env: &Environment, identifier_id: Identi
 
 fn is_hook_call(env: &Environment, identifier_id: IdentifierId) -> bool {
     let ty = &env.types[env.identifiers[identifier_id.0 as usize].type_.0 as usize];
-    env.get_hook_kind_for_type(ty).is_some()
+    env.get_hook_kind_for_type(ty).ok().flatten().is_some()
 }
 
 // =============================================================================

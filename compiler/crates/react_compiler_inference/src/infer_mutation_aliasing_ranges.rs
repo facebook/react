@@ -16,6 +16,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::type_config::{ValueKind, ValueReason};
 use react_compiler_hir::{
@@ -441,7 +442,7 @@ pub fn infer_mutation_aliasing_ranges(
     func: &mut HirFunction,
     env: &mut Environment,
     is_function_expression: bool,
-) -> Vec<AliasingEffect> {
+) -> Result<Vec<AliasingEffect>, CompilerDiagnostic> {
     let mut function_effects: Vec<AliasingEffect> = Vec::new();
 
     // =========================================================================
@@ -889,7 +890,11 @@ pub fn infer_mutation_aliasing_ranges(
                         operand_effects.insert(value.identifier, Effect::Store);
                     }
                     AliasingEffect::Apply { .. } => {
-                        panic!("[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects");
+                        return Err(CompilerDiagnostic::new(
+                            ErrorCategory::Invariant,
+                            "[AnalyzeFunctions] Expected Apply effects to be replaced with more precise effects",
+                            None,
+                        ));
                     }
                     AliasingEffect::MutateTransitive { value, .. }
                     | AliasingEffect::MutateConditionally { value }
@@ -1036,7 +1041,7 @@ pub fn infer_mutation_aliasing_ranges(
         }
     }
 
-    function_effects
+    Ok(function_effects)
 }
 
 // =============================================================================

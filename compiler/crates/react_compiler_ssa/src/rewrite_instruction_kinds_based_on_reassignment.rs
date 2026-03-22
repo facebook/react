@@ -144,7 +144,10 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                     if declarations.contains_key(&decl_id) {
                         return Err(invariant_error(
                             "Expected variable not to be defined prior to declaration",
-                            None,
+                            Some(format!(
+                                "{} was already defined",
+                                format_place(&lvalue.place, env),
+                            )),
                         ));
                     }
                     declarations.insert(
@@ -175,6 +178,16 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                             reassign_locs.push((block_index, local_idx));
                         } else {
                             // First store — mark as Const
+                            // Mirrors TS: CompilerError.invariant(!declarations.has(...))
+                            if declarations.contains_key(&decl_id) {
+                                return Err(invariant_error(
+                                    "Expected variable not to be defined prior to declaration",
+                                    Some(format!(
+                                        "{} was already defined",
+                                        format_place(&lvalue.place, env),
+                                    )),
+                                ));
+                            }
                             declarations.insert(
                                 decl_id,
                                 DeclarationLoc::Instruction {
@@ -270,7 +283,10 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                     let Some(existing) = declarations.get(&decl_id) else {
                         return Err(invariant_error(
                             "Expected variable to have been defined",
-                            None,
+                            Some(format!(
+                                "No declaration for {}",
+                                format_place(lvalue, env),
+                            )),
                         ));
                     };
                     match existing {

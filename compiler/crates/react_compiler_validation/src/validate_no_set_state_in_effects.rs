@@ -29,7 +29,7 @@ use react_compiler_hir::{
 pub fn validate_no_set_state_in_effects(
     func: &HirFunction,
     env: &Environment,
-) -> CompilerError {
+) -> Result<CompilerError, CompilerDiagnostic> {
     let identifiers = &env.identifiers;
     let types = &env.types;
     let functions = &env.functions;
@@ -74,7 +74,7 @@ pub fn validate_no_set_state_in_effects(
                             functions,
                             enable_allow_set_state_from_refs,
                             env.next_block_id_counter,
-                        );
+                        )?;
                         if let Some(info) = callee {
                             set_state_functions.insert(instr.lvalue.identifier, info);
                         }
@@ -139,7 +139,7 @@ pub fn validate_no_set_state_in_effects(
         }
     }
 
-    errors
+    Ok(errors)
 }
 
 #[derive(Debug, Clone)]
@@ -393,8 +393,8 @@ fn create_ref_controlled_block_checker(
     ref_derived_values: &HashSet<IdentifierId>,
     identifiers: &[Identifier],
     types: &[Type],
-) -> HashMap<BlockId, bool> {
-    let post_dominators = compute_post_dominator_tree(func, next_block_id_counter, false);
+) -> Result<HashMap<BlockId, bool>, CompilerDiagnostic> {
+    let post_dominators = compute_post_dominator_tree(func, next_block_id_counter, false)?;
     let mut cache: HashMap<BlockId, bool> = HashMap::new();
 
     for (block_id, _block) in &func.body.blocks {
@@ -449,7 +449,7 @@ fn create_ref_controlled_block_checker(
         cache.insert(*block_id, is_controlled);
     }
 
-    cache
+    Ok(cache)
 }
 
 /// Checks inner function body for direct setState calls. Returns the callee Place info
@@ -463,7 +463,7 @@ fn get_set_state_call(
     _functions: &[HirFunction],
     enable_allow_set_state_from_refs: bool,
     next_block_id_counter: u32,
-) -> Option<SetStateInfo> {
+) -> Result<Option<SetStateInfo>, CompilerDiagnostic> {
     let mut ref_derived_values: HashSet<IdentifierId> = HashSet::new();
 
     // First pass: collect ref-derived values (needed before building control dominator checker)
@@ -526,7 +526,7 @@ fn get_set_state_call(
             &ref_derived_values,
             identifiers,
             types,
-        )
+        )?
     } else {
         HashMap::new()
     };
@@ -643,7 +643,7 @@ fn get_set_state_call(
                                         types,
                                     ) {
                                         // Allow setState when value is derived from ref
-                                        return None;
+                                        return Ok(None);
                                     }
                                 }
                             }
@@ -652,12 +652,12 @@ fn get_set_state_call(
                                 continue;
                             }
                         }
-                        return Some(SetStateInfo { loc: callee.loc });
+                        return Ok(Some(SetStateInfo { loc: callee.loc }));
                     }
                 }
                 _ => {}
             }
         }
     }
-    None
+    Ok(None)
 }

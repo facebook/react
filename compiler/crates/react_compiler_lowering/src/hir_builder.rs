@@ -384,6 +384,25 @@ impl<'a> HirBuilder<'a> {
         );
     }
 
+    /// Like `enter_reserved`, but the closure returns a `Result<Terminal, CompilerDiagnostic>`.
+    pub fn try_enter_reserved(&mut self, wip: WipBlock, f: impl FnOnce(&mut Self) -> Result<Terminal, CompilerDiagnostic>) -> Result<(), CompilerDiagnostic> {
+        let prev = std::mem::replace(&mut self.current, wip);
+        let terminal = f(self)?;
+        let completed_wip = std::mem::replace(&mut self.current, prev);
+        self.completed.insert(
+            completed_wip.id,
+            BasicBlock {
+                kind: completed_wip.kind,
+                id: completed_wip.id,
+                instructions: completed_wip.instructions,
+                terminal,
+                preds: IndexSet::new(),
+                phis: Vec::new(),
+            },
+        );
+        Ok(())
+    }
+
     /// Create a new block, set it as current, run the closure to populate it
     /// and obtain its terminal, complete the block, and restore the previous
     /// current block. Returns the new block's BlockId.
@@ -398,11 +417,31 @@ impl<'a> HirBuilder<'a> {
         wip_id
     }
 
+    /// Like `enter`, but the closure returns a `Result<Terminal, CompilerDiagnostic>`.
+    pub fn try_enter(
+        &mut self,
+        kind: BlockKind,
+        f: impl FnOnce(&mut Self, BlockId) -> Result<Terminal, CompilerDiagnostic>,
+    ) -> Result<BlockId, CompilerDiagnostic> {
+        let wip = self.reserve(kind);
+        let wip_id = wip.id;
+        self.try_enter_reserved(wip, |this| f(this, wip_id))?;
+        Ok(wip_id)
+    }
+
     /// Push an exception handler, run the closure, then pop the handler.
     pub fn enter_try_catch(&mut self, handler: BlockId, f: impl FnOnce(&mut Self)) {
         self.exception_handler_stack.push(handler);
         f(self);
         self.exception_handler_stack.pop();
+    }
+
+    /// Like `enter_try_catch`, but the closure returns a `Result`.
+    pub fn try_enter_try_catch(&mut self, handler: BlockId, f: impl FnOnce(&mut Self) -> Result<(), CompilerDiagnostic>) -> Result<(), CompilerDiagnostic> {
+        self.exception_handler_stack.push(handler);
+        let result = f(self);
+        self.exception_handler_stack.pop();
+        result
     }
 
     /// Return the top of the exception handler stack, or None.
@@ -416,14 +455,14 @@ impl<'a> HirBuilder<'a> {
         label: Option<String>,
         continue_block: BlockId,
         break_block: BlockId,
-        f: impl FnOnce(&mut Self) -> T,
-    ) -> T {
+        f: impl FnOnce(&mut Self) -> Result<T, CompilerDiagnostic>,
+    ) -> Result<T, CompilerDiagnostic> {
         self.scopes.push(Scope::Loop {
             label: label.clone(),
             continue_block,
             break_block,
         });
-        let value = f(self);
+        let value = f(self)?;
         let last = self.scopes.pop().expect("Mismatched loop scope: stack empty");
         match &last {
             Scope::Loop {
@@ -436,9 +475,9 @@ impl<'a> HirBuilder<'a> {
                     "Mismatched loop scope"
                 );
             }
-            _ => panic!("Mismatched loop scope: expected Loop, got other"),
+            _ => return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Mismatched loop scope: expected Loop, got other", None)),
         }
-        value
+        Ok(value)
     }
 
     /// Push a Label scope, run the closure, pop and verify.
@@ -446,13 +485,13 @@ impl<'a> HirBuilder<'a> {
         &mut self,
         label: String,
         break_block: BlockId,
-        f: impl FnOnce(&mut Self) -> T,
-    ) -> T {
+        f: impl FnOnce(&mut Self) -> Result<T, CompilerDiagnostic>,
+    ) -> Result<T, CompilerDiagnostic> {
         self.scopes.push(Scope::Label {
             label: label.clone(),
             break_block,
         });
-        let value = f(self);
+        let value = f(self)?;
         let last = self
             .scopes
             .pop()
@@ -464,9 +503,9 @@ impl<'a> HirBuilder<'a> {
                     "Mismatched label scope"
                 );
             }
-            _ => panic!("Mismatched label scope: expected Label, got other"),
+            _ => return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Mismatched label scope: expected Label, got other", None)),
         }
-        value
+        Ok(value)
     }
 
     /// Push a Switch scope, run the closure, pop and verify.
@@ -474,13 +513,13 @@ impl<'a> HirBuilder<'a> {
         &mut self,
         label: Option<String>,
         break_block: BlockId,
-        f: impl FnOnce(&mut Self) -> T,
-    ) -> T {
+        f: impl FnOnce(&mut Self) -> Result<T, CompilerDiagnostic>,
+    ) -> Result<T, CompilerDiagnostic> {
         self.scopes.push(Scope::Switch {
             label: label.clone(),
             break_block,
         });
-        let value = f(self);
+        let value = f(self)?;
         let last = self
             .scopes
             .pop()
@@ -492,31 +531,31 @@ impl<'a> HirBuilder<'a> {
                     "Mismatched switch scope"
                 );
             }
-            _ => panic!("Mismatched switch scope: expected Switch, got other"),
+            _ => return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Mismatched switch scope: expected Switch, got other", None)),
         }
-        value
+        Ok(value)
     }
 
     /// Look up the break target for the given label (or the innermost
     /// loop/switch if label is None).
-    pub fn lookup_break(&self, label: Option<&str>) -> BlockId {
+    pub fn lookup_break(&self, label: Option<&str>) -> Result<BlockId, CompilerDiagnostic> {
         for scope in self.scopes.iter().rev() {
             match scope {
                 Scope::Loop { .. } | Scope::Switch { .. } if label.is_none() => {
-                    return scope.break_block();
+                    return Ok(scope.break_block());
                 }
                 _ if label.is_some() && scope.label() == label => {
-                    return scope.break_block();
+                    return Ok(scope.break_block());
                 }
                 _ => continue,
             }
         }
-        panic!("Expected a loop or switch to be in scope for break");
+        Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Expected a loop or switch to be in scope for break", None))
     }
 
     /// Look up the continue target for the given label (or the innermost
     /// loop if label is None). Only loops support continue.
-    pub fn lookup_continue(&self, label: Option<&str>) -> BlockId {
+    pub fn lookup_continue(&self, label: Option<&str>) -> Result<BlockId, CompilerDiagnostic> {
         for scope in self.scopes.iter().rev() {
             match scope {
                 Scope::Loop {
@@ -525,17 +564,17 @@ impl<'a> HirBuilder<'a> {
                     ..
                 } => {
                     if label.is_none() || label == scope_label.as_deref() {
-                        return *continue_block;
+                        return Ok(*continue_block);
                     }
                 }
                 _ => {
                     if label.is_some() && scope.label() == label {
-                        panic!("Continue may only refer to a labeled loop");
+                        return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Continue may only refer to a labeled loop", None));
                     }
                 }
             }
         }
-        panic!("Expected a loop to be in scope for continue");
+        Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Expected a loop to be in scope for continue", None))
     }
 
     /// Create a temporary identifier with a fresh id, returning its IdentifierId.

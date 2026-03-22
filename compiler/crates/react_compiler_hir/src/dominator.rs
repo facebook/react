@@ -11,6 +11,8 @@
 
 use std::collections::{HashMap, HashSet};
 
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
+
 use crate::{BlockId, HirFunction, Terminal};
 
 // =============================================================================
@@ -113,9 +115,9 @@ pub fn compute_post_dominator_tree(
     func: &HirFunction,
     next_block_id_counter: u32,
     include_throws_as_exit_node: bool,
-) -> PostDominator {
+) -> Result<PostDominator, CompilerDiagnostic> {
     let graph = build_reverse_graph(func, next_block_id_counter, include_throws_as_exit_node);
-    let mut nodes = compute_immediate_dominators(&graph);
+    let mut nodes = compute_immediate_dominators(&graph)?;
 
     // When include_throws_as_exit_node is false, nodes that flow into a throw
     // terminal and don't reach the exit won't be in the node map. Add them
@@ -126,10 +128,10 @@ pub fn compute_post_dominator_tree(
         }
     }
 
-    PostDominator {
+    Ok(PostDominator {
         exit: graph.entry,
         nodes,
-    }
+    })
 }
 
 /// Build the reverse graph from the HIR function.
@@ -220,7 +222,7 @@ fn dfs_postorder(
 // Dominator fixpoint (Cooper/Harvey/Kennedy)
 // =============================================================================
 
-fn compute_immediate_dominators(graph: &Graph) -> HashMap<BlockId, BlockId> {
+fn compute_immediate_dominators(graph: &Graph) -> Result<HashMap<BlockId, BlockId>, CompilerDiagnostic> {
     let mut doms: HashMap<BlockId, BlockId> = HashMap::new();
     doms.insert(graph.entry, graph.entry);
 
@@ -240,12 +242,19 @@ fn compute_immediate_dominators(graph: &Graph) -> HashMap<BlockId, BlockId> {
                     break;
                 }
             }
-            let mut new_idom = new_idom.unwrap_or_else(|| {
-                panic!(
-                    "At least one predecessor must have been visited for block {:?}",
-                    node.id
-                )
-            });
+            let mut new_idom = match new_idom {
+                Some(idom) => idom,
+                None => {
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        format!(
+                            "At least one predecessor must have been visited for block {:?}",
+                            node.id
+                        ),
+                        None,
+                    ));
+                }
+            };
 
             // Intersect with other processed predecessors
             for &pred in &node.preds {
@@ -263,7 +272,7 @@ fn compute_immediate_dominators(graph: &Graph) -> HashMap<BlockId, BlockId> {
             }
         }
     }
-    doms
+    Ok(doms)
 }
 
 fn intersect(
@@ -299,9 +308,9 @@ fn intersect(
 pub fn compute_unconditional_blocks(
     func: &HirFunction,
     next_block_id_counter: u32,
-) -> HashSet<BlockId> {
+) -> Result<HashSet<BlockId>, CompilerDiagnostic> {
     let mut unconditional = HashSet::new();
-    let dominators = compute_post_dominator_tree(func, next_block_id_counter, false);
+    let dominators = compute_post_dominator_tree(func, next_block_id_counter, false)?;
     let exit = dominators.exit;
     let mut current: Option<BlockId> = Some(func.body.entry);
 
@@ -317,5 +326,5 @@ pub fn compute_unconditional_blocks(
         current = dominators.get(block_id);
     }
 
-    unconditional
+    Ok(unconditional)
 }

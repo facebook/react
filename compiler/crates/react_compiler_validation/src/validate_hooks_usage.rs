@@ -81,7 +81,7 @@ fn get_hook_kind_for_id<'a>(
 ) -> Option<&'a HookKind> {
     let identifier = &identifiers[identifier_id.0 as usize];
     let ty = &types[identifier.type_.0 as usize];
-    env.get_hook_kind_for_type(ty)
+    env.get_hook_kind_for_type(ty).ok().flatten()
 }
 
 fn visit_place(
@@ -190,8 +190,8 @@ fn record_dynamic_hook_usage_error(
 }
 
 /// Validates hooks usage rules for a function.
-pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) {
-    let unconditional_blocks = compute_unconditional_blocks(func, env.next_block_id().0);
+pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result<(), react_compiler_diagnostics::CompilerDiagnostic> {
+    let unconditional_blocks = compute_unconditional_blocks(func, env.next_block_id().0)?;
     let mut errors_by_loc: IndexMap<SourceLocation, CompilerErrorDetail> = IndexMap::new();
     let mut value_kinds: HashMap<IdentifierId, Kind> = HashMap::new();
 
@@ -411,6 +411,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) {
     for (_, error_detail) in errors_by_loc {
         env.record_error(error_detail);
     }
+    Ok(())
 }
 
 /// Visit a function expression to check for hook calls inside it.
@@ -453,7 +454,7 @@ fn visit_function_expression(env: &mut Environment, func_id: FunctionId) {
             Item::Call(identifier_id, loc) => {
                 let identifier = &env.identifiers[identifier_id.0 as usize];
                 let ty = &env.types[identifier.type_.0 as usize];
-                let hook_kind = env.get_hook_kind_for_type(ty).cloned();
+                let hook_kind = env.get_hook_kind_for_type(ty).ok().flatten().cloned();
                 if let Some(hook_kind) = hook_kind {
                     let description = format!(
                         "Cannot call {} within a function expression",

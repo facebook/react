@@ -18,7 +18,7 @@ use react_compiler_hir::{
     BlockId, HirFunction, Identifier, IdentifierId, InstructionValue, PlaceOrSpread, Type,
 };
 
-pub fn validate_no_set_state_in_render(func: &HirFunction, env: &mut Environment) {
+pub fn validate_no_set_state_in_render(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
     let mut unconditional_set_state_functions: HashSet<IdentifierId> = HashSet::new();
     let next_block_id = env.next_block_id().0;
     let diagnostics = validate_impl(
@@ -29,10 +29,11 @@ pub fn validate_no_set_state_in_render(func: &HirFunction, env: &mut Environment
         next_block_id,
         env.config.enable_use_keyed_state,
         &mut unconditional_set_state_functions,
-    );
+    )?;
     for diag in diagnostics {
         env.record_diagnostic(diag);
     }
+    Ok(())
 }
 
 fn is_set_state_id(
@@ -53,9 +54,9 @@ fn validate_impl(
     next_block_id_counter: u32,
     enable_use_keyed_state: bool,
     unconditional_set_state_functions: &mut HashSet<IdentifierId>,
-) -> Vec<CompilerDiagnostic> {
+) -> Result<Vec<CompilerDiagnostic>, CompilerDiagnostic> {
     let unconditional_blocks: HashSet<BlockId> =
-        compute_unconditional_blocks(func, next_block_id_counter);
+        compute_unconditional_blocks(func, next_block_id_counter)?;
     let mut active_manual_memo_id: Option<u32> = None;
     let mut errors: Vec<CompilerDiagnostic> = Vec::new();
 
@@ -110,7 +111,7 @@ fn validate_impl(
                             next_block_id_counter,
                             enable_use_keyed_state,
                             unconditional_set_state_functions,
-                        );
+                        )?;
                         if !inner_errors.is_empty() {
                             unconditional_set_state_functions
                                 .insert(instr.lvalue.identifier);
@@ -189,5 +190,5 @@ fn validate_impl(
         }
     }
 
-    errors
+    Ok(errors)
 }

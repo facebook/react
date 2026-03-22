@@ -37,7 +37,7 @@ pub fn infer_mutation_aliasing_effects(
     func: &mut HirFunction,
     env: &mut Environment,
     is_function_expression: bool,
-) {
+) -> Result<(), CompilerDiagnostic> {
     let mut initial_state = InferenceState::empty(env, is_function_expression);
 
     // Map of blocks to the last (merged) incoming state that was processed
@@ -138,10 +138,12 @@ pub fn infer_mutation_aliasing_effects(
     while !queued_states.is_empty() {
         iteration_count += 1;
         if iteration_count > 100 {
-            panic!(
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
                 "[InferMutationAliasingEffects] Potential infinite loop: \
-                 A value, temporary place, or effect was not cached properly"
-            );
+                 A value, temporary place, or effect was not cached properly",
+                None,
+            ));
         }
 
         // Collect block IDs to process in order
@@ -184,7 +186,7 @@ pub fn infer_mutation_aliasing_effects(
                     message: Some("this is uninitialized".to_string()),
                 });
                 env.record_diagnostic(diag);
-                return;
+                return Ok(());
             }
 
             // Queue successors
@@ -194,6 +196,8 @@ pub fn infer_mutation_aliasing_effects(
             }
         }
     }
+
+    Ok(())
 }
 
 // =============================================================================
@@ -2204,7 +2208,7 @@ fn are_arguments_immutable_and_non_mutating(
                 if is_place {
                     let ty = &env.types[env.identifiers[place.identifier.0 as usize].type_.0 as usize];
                     if let Type::Function { .. } = ty {
-                        let fn_shape = env.get_function_signature(ty);
+                        let fn_shape = env.get_function_signature(ty).ok().flatten();
                         if let Some(fn_sig) = fn_shape {
                             let has_mutable_param = fn_sig.positional_params.iter()
                                 .any(|e| is_known_mutable_effect(*e));
@@ -2735,7 +2739,7 @@ fn is_builtin_collection_type(ty: &Type) -> bool {
 
 fn get_function_call_signature(env: &Environment, callee_id: IdentifierId) -> Option<FunctionSignature> {
     let ty = &env.types[env.identifiers[callee_id.0 as usize].type_.0 as usize];
-    env.get_function_signature(ty).cloned()
+    env.get_function_signature(ty).ok().flatten().cloned()
 }
 
 fn is_ref_or_ref_value_for_id(env: &Environment, id: IdentifierId) -> bool {
@@ -2744,7 +2748,7 @@ fn is_ref_or_ref_value_for_id(env: &Environment, id: IdentifierId) -> bool {
 }
 
 fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Option<&'a HookKind> {
-    env.get_hook_kind_for_type(ty)
+    env.get_hook_kind_for_type(ty).ok().flatten()
 }
 
 /// Format a Type for printPlace-style output, matching TS's `printType()`.

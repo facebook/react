@@ -55,13 +55,7 @@ pub fn compile_fn(
     let debug_hir = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("HIR", debug_hir));
 
-    react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions).map_err(
-        |diag| {
-            let mut err = CompilerError::new();
-            err.push_diagnostic(diag);
-            err
-        },
-    )?;
+    react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions)?;
 
     let debug_prune = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
@@ -69,11 +63,7 @@ pub fn compile_fn(
     // Validate context variable lvalues (matches TS Pipeline.ts: validateContextVariableLValues(hir))
     // In TS, this calls env.recordError() which accumulates on env.errors.
     // Invariant violations are propagated as Err.
-    if let Err(diag) = react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env) {
-        let mut err = CompilerError::new();
-        err.push_diagnostic(diag);
-        return Err(err);
-    }
+    react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env)?;
     context.log_debug(DebugLogEntry::new("ValidateContextVariableLValues", "ok".to_string()));
 
     let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
@@ -84,11 +74,7 @@ pub fn compile_fn(
 
     // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
     // output modes, so we run it unconditionally.
-    react_compiler_optimization::drop_manual_memoization(&mut hir, &mut env).map_err(|diag| {
-        let mut err = CompilerError::new();
-        err.push_diagnostic(diag);
-        err
-    })?;
+    react_compiler_optimization::drop_manual_memoization(&mut hir, &mut env)?;
 
     let debug_drop_memo = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("DropManualMemoization", debug_drop_memo));
@@ -148,18 +134,14 @@ pub fn compile_fn(
     let debug_const_prop = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("ConstantPropagation", debug_const_prop));
 
-    react_compiler_typeinference::infer_types(&mut hir, &mut env).map_err(|diag| {
-        let mut err = CompilerError::new();
-        err.push_diagnostic(diag);
-        err
-    })?;
+    react_compiler_typeinference::infer_types(&mut hir, &mut env)?;
 
     let debug_infer_types = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferTypes", debug_infer_types));
 
     if env.enable_validations() {
         if env.config.validate_hooks_usage {
-            react_compiler_validation::validate_hooks_usage(&hir, &mut env);
+            react_compiler_validation::validate_hooks_usage(&hir, &mut env)?;
             context.log_debug(DebugLogEntry::new("ValidateHooksUsage", "ok".to_string()));
         }
 
@@ -179,7 +161,7 @@ pub fn compile_fn(
     let mut inner_logs: Vec<String> = Vec::new();
     react_compiler_inference::analyse_functions(&mut hir, &mut env, &mut |inner_func, inner_env| {
         inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
-    });
+    })?;
     // Check for invariant errors recorded during AnalyseFunctions (e.g., uninitialized
     // identifiers in InferMutationAliasingEffects for inner functions).
     if env.has_invariant_errors() {
@@ -197,7 +179,7 @@ pub fn compile_fn(
     context.log_debug(DebugLogEntry::new("AnalyseFunctions", debug_analyse_functions));
 
     let errors_before = env.error_count();
-    react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false);
+    react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false)?;
 
     // Check for errors recorded during InferMutationAliasingEffects
     // (e.g., uninitialized value kind, Todo for unsupported patterns).
@@ -216,18 +198,12 @@ pub fn compile_fn(
     context.log_debug(DebugLogEntry::new("DeadCodeElimination", debug_dce));
 
     // Second PruneMaybeThrows call (matches TS Pipeline.ts position #15)
-    react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions).map_err(
-        |diag| {
-            let mut err = CompilerError::new();
-            err.push_diagnostic(diag);
-            err
-        },
-    )?;
+    react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions)?;
 
     let debug_prune2 = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune2));
 
-    react_compiler_inference::infer_mutation_aliasing_ranges(&mut hir, &mut env, false);
+    react_compiler_inference::infer_mutation_aliasing_ranges(&mut hir, &mut env, false)?;
 
     let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
@@ -244,14 +220,14 @@ pub fn compile_fn(
         }
 
         if env.config.validate_no_set_state_in_render {
-            react_compiler_validation::validate_no_set_state_in_render(&hir, &mut env);
+            react_compiler_validation::validate_no_set_state_in_render(&hir, &mut env)?;
             context.log_debug(DebugLogEntry::new("ValidateNoSetStateInRender", "ok".to_string()));
         }
 
         if env.config.validate_no_derived_computations_in_effects_exp
             && env.output_mode == OutputMode::Lint
         {
-            let errors = react_compiler_validation::validate_no_derived_computations_in_effects_exp(&hir, &env);
+            let errors = react_compiler_validation::validate_no_derived_computations_in_effects_exp(&hir, &env)?;
             log_errors_as_events(&errors, context);
             context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
         } else if env.config.validate_no_derived_computations_in_effects {
@@ -262,7 +238,7 @@ pub fn compile_fn(
         if env.config.validate_no_set_state_in_effects
             && env.output_mode == OutputMode::Lint
         {
-            let errors = react_compiler_validation::validate_no_set_state_in_effects(&hir, &env);
+            let errors = react_compiler_validation::validate_no_set_state_in_effects(&hir, &env)?;
             log_errors_as_events(&errors, context);
             context.log_debug(DebugLogEntry::new("ValidateNoSetStateInEffects", "ok".to_string()));
         }
@@ -279,7 +255,7 @@ pub fn compile_fn(
         context.log_debug(DebugLogEntry::new("ValidateNoFreezingKnownMutableFunctions", "ok".to_string()));
     }
 
-    react_compiler_inference::infer_reactive_places(&mut hir, &mut env);
+    react_compiler_inference::infer_reactive_places(&mut hir, &mut env)?;
 
     let debug_reactive_places = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("InferReactivePlaces", debug_reactive_places));
@@ -287,7 +263,7 @@ pub fn compile_fn(
     if env.enable_validations() {
         // Always enter this block — in TS, the guard checks a truthy string ('off' is truthy),
         // so it always runs. The internal checks inside VED handle the config flags properly.
-        react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env);
+        react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env)?;
         context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
     }
 
@@ -306,7 +282,7 @@ pub fn compile_fn(
     }
 
     if env.enable_memoization() {
-        react_compiler_inference::infer_reactive_scope_variables(&mut hir, &mut env);
+        react_compiler_inference::infer_reactive_scope_variables(&mut hir, &mut env)?;
 
         let debug_infer_scopes = debug_print::debug_hir(&hir, &env);
         context.log_debug(DebugLogEntry::new("InferReactiveScopeVariables", debug_infer_scopes));
@@ -377,7 +353,7 @@ pub fn compile_fn(
     let debug_flatten_loops = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("FlattenReactiveLoopsHIR", debug_flatten_loops));
 
-    react_compiler_inference::flatten_scopes_with_hooks_or_use_hir(&mut hir, &env);
+    react_compiler_inference::flatten_scopes_with_hooks_or_use_hir(&mut hir, &env)?;
 
     let debug_flatten_hooks = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("FlattenScopesWithHooksOrUseHIR", debug_flatten_hooks));
@@ -392,30 +368,7 @@ pub fn compile_fn(
     let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
     context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
 
-    let reactive_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        react_compiler_reactive_scopes::build_reactive_function(&hir, &env)
-    }));
-    let mut reactive_fn = match reactive_result {
-        Ok(reactive_fn) => reactive_fn,
-        Err(e) => {
-            let msg = if let Some(s) = e.downcast_ref::<String>() {
-                s.clone()
-            } else if let Some(s) = e.downcast_ref::<&str>() {
-                s.to_string()
-            } else {
-                "unknown panic".to_string()
-            };
-            let mut err = CompilerError::new();
-            err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
-                category: react_compiler_diagnostics::ErrorCategory::Invariant,
-                reason: msg,
-                description: None,
-                loc: None,
-                suggestions: None,
-            });
-            return Err(err);
-        }
-    };
+    let mut reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env)?;
 
     let hir_formatter = |printer: &mut react_compiler_reactive_scopes::print_reactive_function::DebugPrinter, func: &react_compiler_hir::HirFunction| {
         debug_print::format_hir_function_into(printer, func);
@@ -434,7 +387,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("PruneUnusedLabels", debug_prune_labels_reactive));
 
-    react_compiler_reactive_scopes::assert_scope_instructions_within_scopes(&reactive_fn, &env);
+    react_compiler_reactive_scopes::assert_scope_instructions_within_scopes(&reactive_fn, &env)?;
     context.log_debug(DebugLogEntry::new("AssertScopeInstructionsWithinScopes", "ok".to_string()));
 
     react_compiler_reactive_scopes::prune_non_escaping_scopes(&mut reactive_fn, &mut env);
@@ -455,7 +408,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("PruneUnusedScopes", debug_prune_unused_scopes));
 
-    react_compiler_reactive_scopes::merge_reactive_scopes_that_invalidate_together(&mut reactive_fn, &mut env);
+    react_compiler_reactive_scopes::merge_reactive_scopes_that_invalidate_together(&mut reactive_fn, &mut env)?;
     let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );

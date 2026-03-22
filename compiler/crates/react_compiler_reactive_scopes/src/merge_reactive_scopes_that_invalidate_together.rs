@@ -10,6 +10,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::{
     DeclarationId, DependencyPathEntry, EvaluationOrder, IdentifierId, InstructionKind,
     InstructionValue, ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveStatement,
@@ -28,14 +29,15 @@ use react_compiler_hir::{
 pub fn merge_reactive_scopes_that_invalidate_together(
     func: &mut ReactiveFunction,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerDiagnostic> {
     // Pass 1: find last usage of each declaration
     let mut last_usage: HashMap<DeclarationId, EvaluationOrder> = HashMap::new();
     find_last_usage(&func.body, &mut last_usage, env);
 
     // Pass 2+3: merge scopes
     let mut temporaries: HashMap<DeclarationId, DeclarationId> = HashMap::new();
-    visit_block_for_merge(&mut func.body, env, &last_usage, &mut temporaries, None);
+    visit_block_for_merge(&mut func.body, env, &last_usage, &mut temporaries, None)?;
+    Ok(())
 }
 
 // =============================================================================
@@ -256,7 +258,7 @@ fn visit_block_for_merge(
     last_usage: &HashMap<DeclarationId, EvaluationOrder>,
     temporaries: &mut HashMap<DeclarationId, DeclarationId>,
     parent_deps: Option<&Vec<ReactiveScopeDependency>>,
-) {
+) -> Result<(), CompilerDiagnostic> {
     // First, process nested scopes (may flatten inner scopes)
     let mut i = 0;
     while i < block.len() {
@@ -272,7 +274,7 @@ fn visit_block_for_merge(
                     last_usage,
                     temporaries,
                     Some(&scope_deps),
-                );
+                )?;
 
                 // Check if this scope should be flattened into its parent
                 if let Some(p_deps) = parent_deps {
@@ -287,7 +289,7 @@ fn visit_block_for_merge(
                 }
             }
             ReactiveStatement::Terminal(term) => {
-                visit_terminal_for_merge(term, env, last_usage, temporaries);
+                visit_terminal_for_merge(term, env, last_usage, temporaries)?;
             }
             ReactiveStatement::PrunedScope(pruned) => {
                 visit_block_for_merge(
@@ -296,7 +298,7 @@ fn visit_block_for_merge(
                     last_usage,
                     temporaries,
                     None,
-                );
+                )?;
             }
             ReactiveStatement::Instruction(_) => {}
         }
@@ -509,7 +511,7 @@ fn visit_block_for_merge(
 
     // Pass 3: apply merges
     if merged.is_empty() {
-        return;
+        return Ok(());
     }
 
     let mut next_instructions: Vec<ReactiveStatement> = Vec::new();
@@ -526,9 +528,13 @@ fn visit_block_for_merge(
         // The first item in the merge range must be a scope
         let mut merged_scope = match &all_stmts[entry.from] {
             ReactiveStatement::Scope(s) => s.clone(),
-            _ => panic!(
-                "MergeConsecutiveScopes: Expected scope at starting index"
-            ),
+            _ => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "MergeConsecutiveScopes: Expected scope at starting index",
+                    None,
+                ));
+            }
         };
         index += 1;
         while index < entry.to {
@@ -559,6 +565,7 @@ fn visit_block_for_merge(
     }
 
     *block = next_instructions;
+    Ok(())
 }
 
 fn visit_terminal_for_merge(
@@ -566,62 +573,63 @@ fn visit_terminal_for_merge(
     env: &mut Environment,
     last_usage: &HashMap<DeclarationId, EvaluationOrder>,
     temporaries: &mut HashMap<DeclarationId, DeclarationId>,
-) {
+) -> Result<(), CompilerDiagnostic> {
     match &mut stmt.terminal {
         ReactiveTerminal::Break { .. } | ReactiveTerminal::Continue { .. } => {}
         ReactiveTerminal::Return { .. } | ReactiveTerminal::Throw { .. } => {}
         ReactiveTerminal::For {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None);
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
         }
         ReactiveTerminal::ForOf {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None);
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
         }
         ReactiveTerminal::ForIn {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None);
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
         }
         ReactiveTerminal::DoWhile {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None);
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
         }
         ReactiveTerminal::While {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None);
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
         }
         ReactiveTerminal::If {
             consequent,
             alternate,
             ..
         } => {
-            visit_block_for_merge(consequent, env, last_usage, temporaries, None);
+            visit_block_for_merge(consequent, env, last_usage, temporaries, None)?;
             if let Some(alt) = alternate {
-                visit_block_for_merge(alt, env, last_usage, temporaries, None);
+                visit_block_for_merge(alt, env, last_usage, temporaries, None)?;
             }
         }
         ReactiveTerminal::Switch { cases, .. } => {
             for case in cases.iter_mut() {
                 if let Some(block) = &mut case.block {
-                    visit_block_for_merge(block, env, last_usage, temporaries, None);
+                    visit_block_for_merge(block, env, last_usage, temporaries, None)?;
                 }
             }
         }
         ReactiveTerminal::Label { block, .. } => {
-            visit_block_for_merge(block, env, last_usage, temporaries, None);
+            visit_block_for_merge(block, env, last_usage, temporaries, None)?;
         }
         ReactiveTerminal::Try {
             block, handler, ..
         } => {
-            visit_block_for_merge(block, env, last_usage, temporaries, None);
-            visit_block_for_merge(handler, env, last_usage, temporaries, None);
+            visit_block_for_merge(block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(handler, env, last_usage, temporaries, None)?;
         }
     }
+    Ok(())
 }
 
 // =============================================================================

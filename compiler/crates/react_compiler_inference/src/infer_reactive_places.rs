@@ -16,6 +16,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::HookKind;
 use react_compiler_hir::{
@@ -35,7 +36,7 @@ use crate::infer_reactive_scope_variables::{
 /// Infer which places in a function are reactive.
 ///
 /// Corresponds to TS `inferReactivePlaces(fn: HIRFunction): void`.
-pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
+pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
     let mut aliased_identifiers = find_disjoint_mutable_values(func, env);
     let mut reactive_map = ReactivityMap::new(&mut aliased_identifiers);
     let mut stable_sidemap = StableSidemap::new();
@@ -55,7 +56,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
             func,
             env.next_block_id().0,
             false,
-        );
+        )?;
 
     // Collect block IDs for iteration
     let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
@@ -188,10 +189,14 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
                                 // no-op
                             }
                             Effect::Unknown => {
-                                panic!(
-                                    "Unexpected unknown effect at {:?}",
-                                    op_place.loc
-                                );
+                                return Err(CompilerDiagnostic::new(
+                                    ErrorCategory::Invariant,
+                                    &format!(
+                                        "Unexpected unknown effect at {:?}",
+                                        op_place.loc
+                                    ),
+                                    None,
+                                ));
                             }
                         }
                     }
@@ -216,6 +221,8 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) {
     // Now apply reactive flags by replaying the traversal pattern.
     apply_reactive_flags_replay(func, env, &mut reactive_map, &mut stable_sidemap,
                                 &phi_operand_reactive);
+
+    Ok(())
 }
 
 // =============================================================================
@@ -459,7 +466,7 @@ fn post_dominators_of(
 // =============================================================================
 
 fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Option<&'a HookKind> {
-    env.get_hook_kind_for_type(ty)
+    env.get_hook_kind_for_type(ty).ok().flatten()
 }
 
 fn is_use_operator_type(ty: &Type) -> bool {

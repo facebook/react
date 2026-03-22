@@ -273,6 +273,14 @@ impl Default for CompilerError {
     }
 }
 
+impl From<CompilerDiagnostic> for CompilerError {
+    fn from(diagnostic: CompilerDiagnostic) -> Self {
+        let mut error = CompilerError::new();
+        error.push_diagnostic(diagnostic);
+        error
+    }
+}
+
 impl std::fmt::Display for CompilerError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for detail in &self.details {

@@ -18,7 +18,7 @@ use react_compiler_hir::{
 /// Validates that existing manual memoization is exhaustive and does not
 /// have extraneous dependencies. The goal is to ensure auto-memoization
 /// will not substantially change program behavior.
-pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environment) {
+pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
     let reactive = collect_reactive_identifiers(func);
     let validate_memo = env.config.validate_exhaustive_memoization_dependencies;
     let validate_effect = env.config.validate_exhaustive_effect_dependencies.clone();
@@ -61,12 +61,13 @@ pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environmen
         &mut temporaries,
         &mut Some(&mut callbacks),
         false,
-    );
+    )?;
 
     // Record all diagnostics on the environment
     for diagnostic in callbacks.diagnostics {
         env.record_diagnostic(diagnostic);
     }
+    Ok(())
 }
 
 // =============================================================================
@@ -474,7 +475,7 @@ fn collect_dependencies(
     temporaries: &mut HashMap<IdentifierId, Temporary>,
     callbacks: &mut Option<&mut Callbacks<'_>>,
     is_function_expression: bool,
-) -> Temporary {
+) -> Result<Temporary, CompilerDiagnostic> {
     let optionals = find_optional_places(func);
     let mut locals: HashSet<IdentifierId> = HashSet::new();
 
@@ -783,7 +784,7 @@ fn collect_dependencies(
                         temporaries,
                         &mut None,
                         true,
-                    );
+                    )?;
                     temporaries.insert(lvalue_id, function_deps.clone());
                     add_dependency(&function_deps, &mut dependencies, &mut dep_keys, &locals);
                 }
@@ -846,7 +847,7 @@ fn collect_dependencies(
                                     "all",
                                     identifiers,
                                     types,
-                                );
+                                )?;
                                 if let Some(diag) = diagnostic {
                                     cb.diagnostics.push(diag);
                                 }
@@ -998,7 +999,7 @@ fn collect_dependencies(
                                             effect_report_mode,
                                             identifiers,
                                             types,
-                                        );
+                                        )?;
                                         if let Some(diag) = diagnostic {
                                             cb.diagnostics.push(diag);
                                         }
@@ -1111,7 +1112,7 @@ fn collect_dependencies(
                                             effect_report_mode,
                                             identifiers,
                                             types,
-                                        );
+                                        )?;
                                         if let Some(diag) = diagnostic {
                                             cb.diagnostics.push(diag);
                                         }
@@ -1178,10 +1179,10 @@ fn collect_dependencies(
         }
     }
 
-    Temporary::Aggregate {
+    Ok(Temporary::Aggregate {
         dependencies,
         loc: None,
-    }
+    })
 }
 
 // =============================================================================
@@ -1197,7 +1198,7 @@ fn validate_dependencies(
     exhaustive_deps_report_mode: &str,
     identifiers: &[Identifier],
     types: &[Type],
-) -> Option<CompilerDiagnostic> {
+) -> Result<Option<CompilerDiagnostic>, CompilerDiagnostic> {
     // Sort dependencies by name and path
     inferred.sort_by(|a, b| {
         match (a, b) {
@@ -1399,7 +1400,7 @@ fn validate_dependencies(
         };
 
     if filtered_missing.is_empty() && filtered_extra.is_empty() {
-        return None;
+        return Ok(None);
     }
 
     // Build suggestion
@@ -1419,7 +1420,7 @@ fn validate_dependencies(
         &filtered_extra,
         suggestion,
         identifiers,
-    );
+    )?;
 
     // Add detail items for missing deps
     for dep in &filtered_missing {
@@ -1523,7 +1524,7 @@ fn validate_dependencies(
         }
     }
 
-    Some(diagnostic)
+    Ok(Some(diagnostic))
 }
 
 // =============================================================================
@@ -1641,7 +1642,7 @@ fn create_diagnostic(
     extra: &[&ManualMemoDependency],
     suggestion: Option<CompilerSuggestion>,
     _identifiers: &[Identifier],
-) -> CompilerDiagnostic {
+) -> Result<CompilerDiagnostic, CompilerDiagnostic> {
     let missing_str = if !missing.is_empty() {
         Some("missing")
     } else {
@@ -1705,17 +1706,21 @@ fn create_diagnostic(
             (reason, description)
         }
         _ => {
-            panic!("Unexpected error category: {:?}", category);
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                format!("Unexpected error category: {:?}", category),
+                None,
+            ));
         }
     };
 
-    CompilerDiagnostic {
+    Ok(CompilerDiagnostic {
         category,
         reason,
         description: Some(description),
         details: Vec::new(),
         suggestions: suggestion.map(|s| vec![s]),
-    }
+    })
 }
 
 // =============================================================================

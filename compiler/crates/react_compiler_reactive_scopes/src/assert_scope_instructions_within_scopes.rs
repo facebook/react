@@ -10,6 +10,7 @@
 
 use std::collections::HashSet;
 
+use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::{
     EvaluationOrder, Place, ReactiveFunction, ReactiveScopeBlock, ScopeId,
 };
@@ -21,7 +22,7 @@ use crate::visitors::{visit_reactive_function, ReactiveFunctionVisitor};
 /// Two-pass visitor:
 /// 1. Collect all scope IDs
 /// 2. Check that places referencing those scopes are within active scope blocks
-pub fn assert_scope_instructions_within_scopes(func: &ReactiveFunction, env: &Environment) {
+pub fn assert_scope_instructions_within_scopes(func: &ReactiveFunction, env: &Environment) -> Result<(), CompilerDiagnostic> {
     // Pass 1: Collect all scope IDs
     let mut existing_scopes: HashSet<ScopeId> = HashSet::new();
     let find_visitor = FindAllScopesVisitor;
@@ -32,8 +33,13 @@ pub fn assert_scope_instructions_within_scopes(func: &ReactiveFunction, env: &En
     let mut check_state = CheckState {
         existing_scopes,
         active_scopes: HashSet::new(),
+        error: None,
     };
     visit_reactive_function(func, &check_visitor, &mut check_state);
+    if let Some(err) = check_state.error {
+        return Err(err);
+    }
+    Ok(())
 }
 
 // =============================================================================
@@ -58,6 +64,7 @@ impl ReactiveFunctionVisitor for FindAllScopesVisitor {
 struct CheckState {
     existing_scopes: HashSet<ScopeId>,
     active_scopes: HashSet<ScopeId>,
+    error: Option<CompilerDiagnostic>,
 }
 
 struct CheckInstructionsAgainstScopesVisitor<'a> {
@@ -79,13 +86,17 @@ impl<'a> ReactiveFunctionVisitor for CheckInstructionsAgainstScopesVisitor<'a> {
                 && state.existing_scopes.contains(&scope_id)
                 && !state.active_scopes.contains(&scope_id)
             {
-                panic!(
-                    "Encountered an instruction that should be part of a scope, \
-                     but where that scope has already completed. \
-                     Instruction [{:?}] is part of scope @{:?}, \
-                     but that scope has already completed",
-                    id, scope_id
-                );
+                state.error = Some(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    format!(
+                        "Encountered an instruction that should be part of a scope, \
+                         but where that scope has already completed. \
+                         Instruction [{:?}] is part of scope @{:?}, \
+                         but that scope has already completed",
+                        id, scope_id
+                    ),
+                    None,
+                ));
             }
         }
     }
