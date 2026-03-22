@@ -39,7 +39,7 @@ use super::imports::{
     ProgramContext, get_react_compiler_runtime_module, validate_restricted_imports,
 };
 use super::pipeline;
-use super::plugin_options::{CompilerOutputMode, PluginOptions};
+use super::plugin_options::{CompilationMode, CompilerOutputMode, PanicThreshold, PluginOptions};
 use super::suppression::{
     SuppressionRange, filter_suppressions_that_affect_function, find_program_suppressions,
     suppressions_to_compiler_error,
@@ -809,23 +809,16 @@ fn get_react_function_type(
     //  which check for the `component` and `hook` keywords in the syntax.
     //  Since standard JS doesn't have these, we skip this for now.)
 
-    match opts.compilation_mode.as_str() {
-        "annotation" => {
+    match opts.compilation_mode {
+        CompilationMode::Annotation => {
             // opt-ins were checked above
             None
         }
-        "infer" => get_component_or_hook_like(name, params, body, parent_callee_name),
-        "syntax" => {
-            // In syntax mode, only compile declared components/hooks
-            // Since we don't have component/hook syntax support yet, return None
-            let _ = is_declaration;
-            None
-        }
-        "all" => Some(
+        CompilationMode::Infer => get_component_or_hook_like(name, params, body, parent_callee_name),
+        CompilationMode::All => Some(
             get_component_or_hook_like(name, params, body, parent_callee_name)
                 .unwrap_or(ReactFunctionType::Other),
         ),
-        _ => None,
     }
 }
 
@@ -1000,10 +993,10 @@ fn handle_error(
     // Log the error
     log_error(err, fn_loc, context);
 
-    let should_panic = match context.opts.panic_threshold.as_str() {
-        "all_errors" => true,
-        "critical_errors" => err.has_errors(),
-        _ => false,
+    let should_panic = match context.opts.panic_threshold {
+        PanicThreshold::AllErrors => true,
+        PanicThreshold::CriticalErrors => err.has_errors(),
+        PanicThreshold::None => false,
     };
 
     // Config errors always cause a panic
@@ -1173,7 +1166,7 @@ fn process_fn(
             }
 
             // Check annotation mode
-            if context.opts.compilation_mode == "annotation" && opt_in.is_none() {
+            if context.opts.compilation_mode == CompilationMode::Annotation && opt_in.is_none() {
                 return Ok(None);
             }
 
@@ -1420,7 +1413,7 @@ fn find_functions_to_compile<'a>(
                                 }
                                 // In 'all' mode, also find nested function expressions
                                 // (e.g., const _ = { useHook: () => {} })
-                                if opts.compilation_mode == "all" {
+                                if opts.compilation_mode == CompilationMode::All {
                                     find_nested_functions_in_expr(other, opts, context, &mut queue);
                                 }
                             }
@@ -1531,7 +1524,7 @@ fn find_functions_to_compile<'a>(
                 // In 'all' mode, also find function expressions/arrows nested
                 // in top-level expression statements (e.g., `Foo = () => ...`,
                 // `unknownFunction(function() { ... })`)
-                if opts.compilation_mode == "all" {
+                if opts.compilation_mode == CompilationMode::All {
                     find_nested_functions_in_expr(&expr_stmt.expression, opts, context, &mut queue);
                 }
             }
@@ -1950,8 +1943,8 @@ mod tests {
             enable_reanimated: false,
             is_dev: false,
             filename: None,
-            compilation_mode: "infer".to_string(),
-            panic_threshold: "none".to_string(),
+            compilation_mode: CompilationMode::Infer,
+            panic_threshold: PanicThreshold::None,
             target: super::super::plugin_options::CompilerTarget::Version("19".to_string()),
             gating: None,
             dynamic_gating: None,
