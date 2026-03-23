@@ -24,6 +24,7 @@ import * as babel from '@babel/core';
 import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import prettier from 'prettier';
 
 import {parseConfigPragmaForTests} from '../packages/babel-plugin-react-compiler/src/Utils/TestUtils';
 import {printDebugHIR} from '../packages/babel-plugin-react-compiler/src/HIR/DebugPrintHIR';
@@ -159,6 +160,7 @@ type LogItem = LogEntry | LogEvent;
 
 interface CompileOutput {
   log: LogItem[];
+  code: string | null;
   error: string | null;
 }
 
@@ -330,8 +332,9 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
   };
 
   let error: string | null = null;
+  let code: string | null = null;
   try {
-    babel.transformSync(source, {
+    const result = babel.transformSync(source, {
       filename: fixturePath,
       sourceType: isScript ? 'script' : 'module',
       parserOpts: {
@@ -341,11 +344,12 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
       configFile: false,
       babelrc: false,
     });
+    code = result?.code ?? null;
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
   }
 
-  return {log, error};
+  return {log, code, error};
 }
 
 // --- Format a single log item as comparable string ---
@@ -507,6 +511,14 @@ function unifiedDiff(expected: string, actual: string): string {
   return lines.join('\n');
 }
 
+// --- Format code with prettier ---
+async function formatCode(code: string, isFlow: boolean): Promise<string> {
+  return prettier.format(code, {
+    semi: true,
+    parser: isFlow ? 'flow' : 'babel-ts',
+  });
+}
+
 // --- Main ---
 const fixtures = discoverFixtures(fixturesPath);
 if (fixtures.length === 0) {
@@ -529,6 +541,15 @@ const failures: Array<{
   detail: string;
 }> = [];
 const failedFixtures: string[] = [];
+
+// Code comparison tracking
+let codePassed = 0;
+let codeFailed = 0;
+const codeFailures: Array<{
+  fixture: string;
+  detail: string;
+}> = [];
+const codeFailedFixtures: string[] = [];
 
 // Per-pass failure tracking for frontier detection
 const perPassResults = new Map<string, {passed: number; failed: number}>();
@@ -578,153 +599,218 @@ function findDivergencePass(tsLog: LogItem[], rustLog: LogItem[]): string {
   return PASS_ORDER[0];
 }
 
-for (const fixturePath of fixtures) {
-  const relPath = path.relative(REPO_ROOT, fixturePath);
-  const ts = compileFixture('ts', fixturePath);
-  const rust = compileFixture('rust', fixturePath);
+(async () => {
+  for (const fixturePath of fixtures) {
+    const relPath = path.relative(REPO_ROOT, fixturePath);
+    const ts = compileFixture('ts', fixturePath);
+    const rust = compileFixture('rust', fixturePath);
 
-  // Check if TS produced any entries for the target pass
-  if (ts.log.some(item => item.kind === 'entry' && item.name === passArg)) {
-    tsHadEntries = true;
-  }
-
-  // Compare the full log (entries + events in order, up to target pass)
-  const tsFormatted = normalizeIds(formatLog(ts.log));
-  const rustFormatted = normalizeIds(formatLog(rust.log));
-
-  if (tsFormatted === rustFormatted) {
-    passed++;
-    // Count as passed for all passes that appeared in the log
-    const seenPasses = new Set<string>();
-    for (const item of ts.log) {
-      if (item.kind === 'entry') seenPasses.add(item.name);
+    // Check if TS produced any entries for the target pass
+    if (ts.log.some(item => item.kind === 'entry' && item.name === passArg)) {
+      tsHadEntries = true;
     }
-    for (const pass of seenPasses) {
-      const stats = perPassResults.get(pass);
-      if (stats) stats.passed++;
-    }
-  } else {
-    failed++;
-    // Find which pass diverged and attribute the failure
-    const divergePass = findDivergencePass(ts.log, rust.log);
-    const stats = perPassResults.get(divergePass);
-    if (stats) stats.failed++;
-    // Count passes before divergence as passed
-    const seenPasses: string[] = [];
-    for (const item of ts.log) {
-      if (item.kind === 'entry' && item.name !== divergePass) {
-        seenPasses.push(item.name);
-      } else if (item.kind === 'entry') {
-        break;
+
+    // Compare the full log (entries + events in order, up to target pass)
+    const tsFormatted = normalizeIds(formatLog(ts.log));
+    const rustFormatted = normalizeIds(formatLog(rust.log));
+
+    if (tsFormatted === rustFormatted) {
+      passed++;
+      // Count as passed for all passes that appeared in the log
+      const seenPasses = new Set<string>();
+      for (const item of ts.log) {
+        if (item.kind === 'entry') seenPasses.add(item.name);
+      }
+      for (const pass of seenPasses) {
+        const stats = perPassResults.get(pass);
+        if (stats) stats.passed++;
+      }
+    } else {
+      failed++;
+      // Find which pass diverged and attribute the failure
+      const divergePass = findDivergencePass(ts.log, rust.log);
+      const stats = perPassResults.get(divergePass);
+      if (stats) stats.failed++;
+      // Count passes before divergence as passed
+      const seenPasses: string[] = [];
+      for (const item of ts.log) {
+        if (item.kind === 'entry' && item.name !== divergePass) {
+          seenPasses.push(item.name);
+        } else if (item.kind === 'entry') {
+          break;
+        }
+      }
+      for (const pass of seenPasses) {
+        const stats = perPassResults.get(pass);
+        if (stats) stats.passed++;
+      }
+
+      failedFixtures.push(relPath);
+      if (limitArg === 0 || failures.length < limitArg) {
+        failures.push({
+          fixture: relPath,
+          detail: unifiedDiff(tsFormatted, rustFormatted),
+        });
       }
     }
-    for (const pass of seenPasses) {
-      const stats = perPassResults.get(pass);
-      if (stats) stats.passed++;
+
+    // Compare final code output
+    const source = fs.readFileSync(fixturePath, 'utf8');
+    const isFlow = source.substring(0, source.indexOf('\n')).includes('@flow');
+    try {
+      const tsCode = await formatCode(ts.code ?? '', isFlow);
+      const rustCode = await formatCode(rust.code ?? '', isFlow);
+      if (tsCode === rustCode) {
+        codePassed++;
+      } else {
+        codeFailed++;
+        codeFailedFixtures.push(relPath);
+        if (limitArg === 0 || codeFailures.length < limitArg) {
+          codeFailures.push({
+            fixture: relPath,
+            detail: unifiedDiff(tsCode, rustCode),
+          });
+        }
+      }
+    } catch {
+      // If prettier fails, treat as a code mismatch
+      const tsCode = ts.code ?? '';
+      const rustCode = rust.code ?? '';
+      if (tsCode === rustCode) {
+        codePassed++;
+      } else {
+        codeFailed++;
+        codeFailedFixtures.push(relPath);
+        if (limitArg === 0 || codeFailures.length < limitArg) {
+          codeFailures.push({
+            fixture: relPath,
+            detail: unifiedDiff(tsCode, rustCode),
+          });
+        }
+      }
     }
-
-    failedFixtures.push(relPath);
-    if (limitArg === 0 || failures.length < limitArg) {
-      failures.push({
-        fixture: relPath,
-        detail: unifiedDiff(tsFormatted, rustFormatted),
-      });
-    }
-  }
-}
-
-// --- Check for invalid pass name ---
-if (!tsHadEntries) {
-  console.error(
-    `${RED}ERROR: TypeScript compiler produced no log entries for pass "${passArg}" across all fixtures.${RESET}`,
-  );
-  console.error('This likely means the pass name is incorrect.');
-  console.error('');
-  console.error('Pass names must match exactly as used in Pipeline.ts, e.g.:');
-  console.error(
-    '  HIR, PruneMaybeThrows, SSA, InferTypes, AnalyseFunctions, ...',
-  );
-  process.exit(1);
-}
-
-// --- Compute frontier ---
-let frontier: string | null = null;
-for (const pass of PASS_ORDER) {
-  const stats = perPassResults.get(pass);
-  if (stats && stats.failed > 0) {
-    frontier = pass;
-    break;
-  }
-}
-
-// --- Summary ---
-const total = fixtures.length;
-let frontierStr: string;
-if (frontier != null) {
-  frontierStr = frontier;
-} else if (passArgRaw) {
-  // Explicit pass arg given and it's clean — we can't know the global frontier
-  frontierStr = `${passArg} passes, rerun without a pass name to find frontier`;
-} else {
-  frontierStr = 'none';
-}
-
-// --- Per-pass breakdown ---
-const perPassParts: string[] = [];
-for (const pass of PASS_ORDER) {
-  const stats = perPassResults.get(pass);
-  if (stats && (stats.passed > 0 || stats.failed > 0)) {
-    perPassParts.push(`${pass} ${stats.passed}/${stats.passed + stats.failed}`);
-  }
-}
-
-// --- Output ---
-if (jsonMode) {
-  const output = {
-    pass: passArg,
-    autoDetected: !passArgRaw,
-    total,
-    passed,
-    failed,
-    frontier: frontier,
-    perPass: Object.fromEntries(
-      [...perPassResults.entries()].filter(
-        ([_, v]) => v.passed > 0 || v.failed > 0,
-      ),
-    ),
-    failures: failedFixtures,
-  };
-  console.log(JSON.stringify(output));
-} else if (failuresMode) {
-  for (const f of failedFixtures) {
-    console.log(f);
-  }
-} else {
-  const summaryColor = failed === 0 ? GREEN : RED;
-  const summaryLine = `${summaryColor}Results: ${passed} passed, ${failed} failed (${total} total), frontier: ${frontierStr}${RESET}`;
-
-  // Print summary first
-  console.log(summaryLine);
-  if (perPassParts.length > 0) {
-    console.log(`Per-pass: ${perPassParts.join(', ')}`);
-  }
-  console.log('');
-
-  // --- Show failures ---
-  for (const failure of failures) {
-    console.log(`${RED}FAIL${RESET} ${failure.fixture}`);
-    console.log(failure.detail);
-    console.log('');
   }
 
-  // --- Summary again (so tail -1 works) ---
-  console.log('---');
-  if (failures.length < failed) {
-    console.log(
-      `${DIM}  (showing first ${failures.length} of ${failed} failures)${RESET}`,
+  // --- Check for invalid pass name ---
+  if (!tsHadEntries) {
+    console.error(
+      `${RED}ERROR: TypeScript compiler produced no log entries for pass "${passArg}" across all fixtures.${RESET}`,
     );
+    console.error('This likely means the pass name is incorrect.');
+    console.error('');
+    console.error(
+      'Pass names must match exactly as used in Pipeline.ts, e.g.:',
+    );
+    console.error(
+      '  HIR, PruneMaybeThrows, SSA, InferTypes, AnalyseFunctions, ...',
+    );
+    process.exit(1);
   }
-  console.log(summaryLine);
-}
 
-process.exit(failed > 0 ? 1 : 0);
+  // --- Compute frontier ---
+  let frontier: string | null = null;
+  for (const pass of PASS_ORDER) {
+    const stats = perPassResults.get(pass);
+    if (stats && stats.failed > 0) {
+      frontier = pass;
+      break;
+    }
+  }
+
+  // --- Summary ---
+  const total = fixtures.length;
+  let frontierStr: string;
+  if (frontier != null) {
+    frontierStr = frontier;
+  } else if (passArgRaw) {
+    // Explicit pass arg given and it's clean — we can't know the global frontier
+    frontierStr = `${passArg} passes, rerun without a pass name to find frontier`;
+  } else {
+    frontierStr = 'none';
+  }
+
+  // --- Per-pass breakdown ---
+  const perPassParts: string[] = [];
+  for (const pass of PASS_ORDER) {
+    const stats = perPassResults.get(pass);
+    if (stats && (stats.passed > 0 || stats.failed > 0)) {
+      perPassParts.push(
+        `${pass} ${stats.passed}/${stats.passed + stats.failed}`,
+      );
+    }
+  }
+
+  // --- Output ---
+  if (jsonMode) {
+    const output = {
+      pass: passArg,
+      autoDetected: !passArgRaw,
+      total,
+      passed,
+      failed,
+      frontier: frontier,
+      perPass: Object.fromEntries(
+        [...perPassResults.entries()].filter(
+          ([_, v]) => v.passed > 0 || v.failed > 0,
+        ),
+      ),
+      failures: failedFixtures,
+      codePassed,
+      codeFailed,
+      codeFailures: codeFailedFixtures,
+    };
+    console.log(JSON.stringify(output));
+  } else if (failuresMode) {
+    for (const f of failedFixtures) {
+      console.log(f);
+    }
+  } else {
+    const summaryColor = failed === 0 ? GREEN : RED;
+    const summaryLine = `${summaryColor}Results: ${passed} passed, ${failed} failed (${total} total), frontier: ${frontierStr}${RESET}`;
+    const codeSummaryColor = codeFailed === 0 ? GREEN : RED;
+    const codeSummaryLine = `${codeSummaryColor}Code: ${codePassed} passed, ${codeFailed} failed (${total} total)${RESET}`;
+
+    // Print summary first
+    console.log(summaryLine);
+    console.log(codeSummaryLine);
+    if (perPassParts.length > 0) {
+      console.log(`Per-pass: ${perPassParts.join(', ')}`);
+    }
+    console.log('');
+
+    // --- Show log failures ---
+    for (const failure of failures) {
+      console.log(`${RED}FAIL${RESET} ${failure.fixture}`);
+      console.log(failure.detail);
+      console.log('');
+    }
+
+    // --- Show code failures ---
+    if (codeFailures.length > 0) {
+      console.log(`${BOLD}--- Code comparison failures ---${RESET}`);
+      console.log('');
+      for (const failure of codeFailures) {
+        console.log(`${RED}FAIL (code)${RESET} ${failure.fixture}`);
+        console.log(failure.detail);
+        console.log('');
+      }
+    }
+
+    // --- Summary again (so tail -1 works) ---
+    console.log('---');
+    if (failures.length < failed) {
+      console.log(
+        `${DIM}  (showing first ${failures.length} of ${failed} log failures)${RESET}`,
+      );
+    }
+    if (codeFailures.length < codeFailed) {
+      console.log(
+        `${DIM}  (showing first ${codeFailures.length} of ${codeFailed} code failures)${RESET}`,
+      );
+    }
+    console.log(summaryLine);
+    console.log(codeSummaryLine);
+  }
+
+  process.exit(failed > 0 || codeFailed > 0 ? 1 : 0);
+})();
