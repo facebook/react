@@ -1011,12 +1011,12 @@ export default class Store extends EventEmitter<{
   ): void {
     for (let i = 0; i < children.length; i++) {
       const childID = children[i];
-      const suspense = this.getSuspenseByID(childID);
-      if (suspense !== null) {
+      const suspense = this._idToSuspense.get(childID);
+      if (suspense !== undefined) {
         target.push(suspense.id);
       } else {
-        const childElement = this.getElementByID(childID);
-        if (childElement !== null) {
+        const childElement = this._idToElement.get(childID);
+        if (childElement !== undefined) {
           this._pushSuspenseChildrenInDocumentOrder(
             childElement.children,
             target,
