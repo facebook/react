@@ -2782,11 +2782,11 @@ describe('FragmentRefs', () => {
         // Per DOM spec, listener identity is (type, callback, capture).
         // passive is NOT part of the key, so these are the SAME listener.
         fragmentRef.current.addEventListener('click', handler, {passive: false});
-        // Second add is a no-op (same listener already registered)
+        // Second add is a no-op: same (type, callback, capture) identity.
         fragmentRef.current.addEventListener('click', handler, {passive: true});
 
         document.querySelector('#child').click();
-        // Only one invocation because it is the same listener
+        // First handler fires once (second add was a no-op).
         expect(logs).toEqual(['fired']);
 
         // removeEventListener also ignores passive when matching
@@ -2796,6 +2796,47 @@ describe('FragmentRefs', () => {
 
         logs.length = 0;
         document.querySelector('#child').click();
+        expect(logs).toEqual([]);
+      },
+    );
+    // @gate enableFragmentRefs
+    it(
+      'removes a listener registered with passive:false when removed with passive:true',
+      async () => {
+        const fragmentRef = React.createRef(null);
+        function Test() {
+          return (
+            <>
+              <div id="child-x" />
+            </>
+          );
+        }
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <Fragment ref={fragmentRef}>
+              <Test />
+            </Fragment>,
+          );
+        });
+        const logs = [];
+        function handler() {
+          logs.push('fired');
+        }
+        // Register with passive: false
+        fragmentRef.current.addEventListener('click', handler, {
+          passive: false,
+        });
+        document.querySelector('#child-x').click();
+        expect(logs).toEqual(['fired']);
+        logs.length = 0;
+        // Remove with passive: true - per DOM spec, passive is NOT part of identity
+        // so this MUST remove the listener regardless of passive mismatch.
+        fragmentRef.current.removeEventListener('click', handler, {
+          passive: true,
+        });
+        document.querySelector('#child-x').click();
+        // Listener removed - no more invocations
         expect(logs).toEqual([]);
       },
     );
