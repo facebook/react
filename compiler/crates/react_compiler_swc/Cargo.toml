@@ -11,6 +11,7 @@ swc_ecma_ast = "21"
 swc_ecma_visit = "21"
 swc_common = "19"
 swc_ecma_parser = "35"
+swc_ecma_codegen = "24"
 swc_atoms = "9"
 indexmap = { version = "2", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }

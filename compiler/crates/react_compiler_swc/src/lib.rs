@@ -116,6 +116,28 @@ pub fn lint(
     }
 }
 
+/// Emit an SWC Module to a string via swc_ecma_codegen.
+pub fn emit(module: &swc_ecma_ast::Module) -> String {
+    let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
+    let mut buf = vec![];
+    {
+        let wr = swc_ecma_codegen::text_writer::JsWriter::new(
+            cm.clone(),
+            "\n",
+            &mut buf,
+            None,
+        );
+        let mut emitter = swc_ecma_codegen::Emitter {
+            cfg: swc_ecma_codegen::Config::default().with_minify(false),
+            cm,
+            comments: None,
+            wr: Box::new(wr),
+        };
+        swc_ecma_codegen::Node::emit_with(module, &mut emitter).unwrap();
+    }
+    String::from_utf8(buf).unwrap()
+}
+
 /// Convenience wrapper — parses source text, then lints.
 pub fn lint_source(source_text: &str, options: PluginOptions) -> LintResult {
     let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());

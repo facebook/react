@@ -1,4 +1,5 @@
 // pub mod convert_ast;
+pub mod convert_ast_reverse;
 pub mod convert_scope;
 pub mod diagnostics;
 pub mod prefilter;
@@ -104,6 +105,13 @@ pub fn lint(
     LintResult {
         diagnostics: result.diagnostics,
     }
+}
+
+/// Emit a react_compiler_ast::File to a string via OXC codegen.
+/// Converts the File to an OXC Program, then uses oxc_codegen to emit.
+pub fn emit(file: &react_compiler_ast::File, allocator: &oxc_allocator::Allocator) -> String {
+    let program = convert_ast_reverse::convert_program_to_oxc(file, allocator);
+    oxc_codegen::Codegen::new().build(&program).code
 }
 
 /// Convenience wrapper — parses source text, runs semantic analysis, then lints.
