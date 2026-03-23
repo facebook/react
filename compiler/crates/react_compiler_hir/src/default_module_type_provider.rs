@@ -7,6 +7,8 @@
 //!
 //! Provides hardcoded type overrides for known-incompatible third-party libraries.
 
+use indexmap::IndexMap;
+
 use crate::type_config::{
     FunctionTypeConfig, HookTypeConfig, ObjectTypeConfig, TypeConfig, TypeReferenceConfig,
     BuiltInTypeRef, ValueKind,
@@ -18,11 +20,11 @@ use crate::Effect;
 pub fn default_module_type_provider(module_name: &str) -> Option<TypeConfig> {
     match module_name {
         "react-hook-form" => Some(TypeConfig::Object(ObjectTypeConfig {
-            properties: Some(vec![(
+            properties: Some(IndexMap::from([(
                 "useForm".to_string(),
                 TypeConfig::Hook(HookTypeConfig {
                     return_type: Box::new(TypeConfig::Object(ObjectTypeConfig {
-                        properties: Some(vec![(
+                        properties: Some(IndexMap::from([(
                             "watch".to_string(),
                             TypeConfig::Function(FunctionTypeConfig {
                                 positional_params: Vec::new(),
@@ -43,7 +45,7 @@ pub fn default_module_type_provider(module_name: &str) -> Option<TypeConfig> {
                                     "React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.".to_string(),
                                 ),
                             }),
-                        )]),
+                        )])),
                     })),
                     positional_params: None,
                     rest_param: None,
@@ -52,11 +54,11 @@ pub fn default_module_type_provider(module_name: &str) -> Option<TypeConfig> {
                     aliasing: None,
                     known_incompatible: None,
                 }),
-            )]),
+            )])),
         })),
 
         "@tanstack/react-table" => Some(TypeConfig::Object(ObjectTypeConfig {
-            properties: Some(vec![(
+            properties: Some(IndexMap::from([(
                 "useReactTable".to_string(),
                 TypeConfig::Hook(HookTypeConfig {
                     positional_params: Some(Vec::new()),
@@ -71,11 +73,11 @@ pub fn default_module_type_provider(module_name: &str) -> Option<TypeConfig> {
                         "TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely".to_string(),
                     ),
                 }),
-            )]),
+            )])),
         })),
 
         "@tanstack/react-virtual" => Some(TypeConfig::Object(ObjectTypeConfig {
-            properties: Some(vec![(
+            properties: Some(IndexMap::from([(
                 "useVirtualizer".to_string(),
                 TypeConfig::Hook(HookTypeConfig {
                     positional_params: Some(Vec::new()),
@@ -90,7 +92,7 @@ pub fn default_module_type_provider(module_name: &str) -> Option<TypeConfig> {
                         "TanStack Virtual's `useVirtualizer()` API returns functions that cannot be memoized safely".to_string(),
                     ),
                 }),
-            )]),
+            )])),
         })),
 
         _ => None,

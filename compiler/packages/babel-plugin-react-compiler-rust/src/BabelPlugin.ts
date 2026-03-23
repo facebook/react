@@ -26,6 +26,7 @@ export default function BabelPluginReactCompilerRust(
             pass.opts as PluginOptions,
             pass.file,
             filename,
+            pass.file.ast,
           );
 
           // Step 2: Quick bail — should we compile this file at all?

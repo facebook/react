@@ -6,6 +6,7 @@
  */
 
 import type * as BabelCore from '@babel/core';
+import type * as t from '@babel/types';
 
 export interface ResolvedOptions {
   // Pre-resolved by JS
@@ -71,10 +72,12 @@ function pipelineUsesReanimatedPlugin(
 
 /**
  * Prepare the environment config for JSON serialization to Rust.
- * Converts Map instances to plain objects and strips non-serializable fields.
+ * Converts Map instances to plain objects, pre-resolves moduleTypeProvider,
+ * and strips non-serializable fields.
  */
 function serializeEnvironment(
   rawEnv: Record<string, unknown>,
+  ast: t.File,
 ): Record<string, unknown> {
   const environment: Record<string, unknown> = {...rawEnv};
 
@@ -87,8 +90,35 @@ function serializeEnvironment(
     environment.customHooks = hooks;
   }
 
-  // Remove non-serializable fields (JS functions)
+  // Pre-resolve moduleTypeProvider: collect all import sources from AST,
+  // call the provider for each, and serialize results as a map
+  const moduleTypeProvider = rawEnv.moduleTypeProvider as
+    | ((name: string) => unknown)
+    | null
+    | undefined;
   delete environment.moduleTypeProvider;
+
+  if (typeof moduleTypeProvider === 'function') {
+    const moduleTypes: Record<string, unknown> = {};
+    for (const node of ast.program.body) {
+      if (
+        node.type === 'ImportDeclaration' &&
+        typeof node.source.value === 'string'
+      ) {
+        const moduleName = node.source.value;
+        if (!(moduleName in moduleTypes)) {
+          const result = moduleTypeProvider(moduleName);
+          if (result != null) {
+            moduleTypes[moduleName] = result;
+          }
+        }
+      }
+    }
+    if (Object.keys(moduleTypes).length > 0) {
+      environment.moduleTypeProvider = moduleTypes;
+    }
+  }
+
   delete environment.flowTypeProvider;
 
   return environment;
@@ -98,6 +128,7 @@ export function resolveOptions(
   rawOpts: PluginOptions,
   file: BabelCore.BabelFile,
   filename: string | null,
+  ast: t.File,
 ): ResolvedOptions {
   // Resolve sources filter (may be a function)
   let shouldCompile = true;
@@ -142,6 +173,7 @@ export function resolveOptions(
     customOptOutDirectives: rawOpts.customOptOutDirectives ?? null,
     environment: serializeEnvironment(
       (rawOpts.environment as Record<string, unknown>) ?? {},
+      ast,
     ),
   };
 }

@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::type_config::ValueKind;
+use crate::type_config::{TypeConfig, ValueKind};
 use crate::Effect;
 
 /// External function reference (source module + import name).
@@ -82,8 +82,10 @@ pub struct EnvironmentConfig {
     #[serde(default)]
     pub custom_hooks: HashMap<String, HookConfig>,
 
-    // TODO: moduleTypeProvider — requires JS function callback.
-    // The Rust port always uses defaultModuleTypeProvider (hardcoded).
+    /// Pre-resolved module type provider results.
+    /// Map from module name to TypeConfig, computed by the JS shim.
+    #[serde(default)]
+    pub module_type_provider: Option<indexmap::IndexMap<String, TypeConfig>>,
 
     /// Custom macro-like function names that should have their operands
     /// memoized in the same scope (similar to fbt).
@@ -186,6 +188,7 @@ impl Default for EnvironmentConfig {
         Self {
             custom_hooks: HashMap::new(),
             enable_reset_cache_on_source_file_changes: None,
+            module_type_provider: None,
             enable_preserve_existing_memoization_guarantees: true,
             validate_preserve_existing_memoization_guarantees: true,
             validate_exhaustive_memoization_dependencies: true,

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use crate::object_shape::*;
 use crate::type_config::{
-    AliasingEffectConfig, AliasingSignatureConfig, ApplyArgConfig, BuiltInTypeRef,
+    AliasingEffectConfig, AliasingSignatureConfig, ApplyArgConfig, ApplyArgHoleKind, BuiltInTypeRef,
     TypeConfig, TypeReferenceConfig, ValueKind, ValueReason,
 };
 use crate::Effect;
@@ -337,7 +337,7 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
                         mutates_function: false,
                         args: vec![
                             ApplyArgConfig::Place("@item".to_string()),
-                            ApplyArgConfig::Hole,
+                            ApplyArgConfig::Hole { kind: ApplyArgHoleKind::Hole },
                             ApplyArgConfig::Place("@receiver".to_string()),
                         ],
                         into: "@callbackReturn".to_string(),

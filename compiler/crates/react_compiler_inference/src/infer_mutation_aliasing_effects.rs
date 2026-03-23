@@ -2401,7 +2401,7 @@ fn compute_effects_for_aliasing_signature_config(
                     let mut apply_args: Vec<PlaceOrSpreadOrHole> = Vec::new();
                     for arg in a {
                         match arg {
-                            react_compiler_hir::type_config::ApplyArgConfig::Hole => {
+                            react_compiler_hir::type_config::ApplyArgConfig::Hole { .. } => {
                                 apply_args.push(PlaceOrSpreadOrHole::Hole);
                             }
                             react_compiler_hir::type_config::ApplyArgConfig::Place(name) => {
@@ -2411,7 +2411,7 @@ fn compute_effects_for_aliasing_signature_config(
                                     }
                                 }
                             }
-                            react_compiler_hir::type_config::ApplyArgConfig::Spread { place: name } => {
+                            react_compiler_hir::type_config::ApplyArgConfig::Spread { place: name, .. } => {
                                 if let Some(places) = substitutions.get(name) {
                                     if let Some(p) = places.first() {
                                         apply_args.push(PlaceOrSpreadOrHole::Spread(react_compiler_hir::SpreadPattern { place: p.clone() }));

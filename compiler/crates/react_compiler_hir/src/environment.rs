@@ -686,15 +686,19 @@ impl Environment {
     }
 
     /// Resolve the module type provider for a given module name.
-    /// Caches results. Uses `defaultModuleTypeProvider` (hardcoded).
-    ///
-    /// TODO: Support custom moduleTypeProvider from config (requires JS function callback).
+    /// Caches results. Checks pre-resolved provider results first, then falls
+    /// back to `defaultModuleTypeProvider` (hardcoded).
     fn resolve_module_type(&mut self, module_name: &str) -> Option<Global> {
         if let Some(cached) = self.module_types.get(module_name) {
             return cached.clone();
         }
 
-        let module_config = default_module_type_provider(module_name);
+        // Check pre-resolved provider results first, then fall back to default
+        let module_config = self.config.module_type_provider
+            .as_ref()
+            .and_then(|map| map.get(module_name).cloned())
+            .or_else(|| default_module_type_provider(module_name));
+
         let module_type = module_config.map(|config| {
             install_type_config(
                 &mut self.globals,
