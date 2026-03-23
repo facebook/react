@@ -299,6 +299,67 @@ function makeStats(): VariantStats {
   return {passed: 0, failed: 0, failures: [], failedFixtures: []};
 }
 
+// --- Progress helper ---
+function writeProgress(msg: string): void {
+  if (process.stderr.isTTY) {
+    process.stderr.write(`\r\x1b[K${msg}`);
+  }
+}
+
+function clearProgress(): void {
+  if (process.stderr.isTTY) {
+    process.stderr.write('\r\x1b[K');
+  }
+}
+
+// --- Pre-compute TS baselines (shared across variants) ---
+interface FixtureInfo {
+  fixturePath: string;
+  relPath: string;
+  source: string;
+  firstLine: string;
+  isFlow: boolean;
+}
+
+async function runVariant(
+  variant: Variant,
+  fixtureInfos: FixtureInfo[],
+  tsBaselines: Map<string, string>,
+  s: VariantStats,
+): Promise<void> {
+  for (let i = 0; i < fixtureInfos.length; i++) {
+    const {fixturePath, relPath, source, firstLine, isFlow} = fixtureInfos[i];
+    const tsCode = tsBaselines.get(fixturePath)!;
+
+    writeProgress(
+      `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${s.failed} failed)`,
+    );
+
+    let variantResult: {code: string | null; error: string | null};
+    if (variant === 'babel') {
+      variantResult = compileBabel(rustPlugin, fixturePath, source, firstLine);
+    } else {
+      variantResult = compileCli(variant, fixturePath, source, firstLine);
+    }
+
+    const variantCode = await formatCode(variantResult.code ?? '', isFlow);
+
+    if (tsCode === variantCode) {
+      s.passed++;
+    } else {
+      s.failed++;
+      s.failedFixtures.push(relPath);
+      if (limitArg === 0 || s.failures.length < limitArg) {
+        s.failures.push({
+          fixture: relPath,
+          detail: unifiedDiff(tsCode, variantCode, 'TypeScript', variant),
+        });
+      }
+    }
+  }
+  clearProgress();
+}
+
 (async () => {
   const stats = new Map<Variant, VariantStats>();
   for (const v of variants) {
@@ -316,47 +377,40 @@ function makeStats(): VariantStats {
   }
   console.log('');
 
-  for (const fixturePath of fixtures) {
+  // Pre-compute fixture info and TS baselines
+  const fixtureInfos: FixtureInfo[] = [];
+  const tsBaselines = new Map<string, string>();
+
+  console.log('Computing TS baselines...');
+  for (let i = 0; i < fixtures.length; i++) {
+    const fixturePath = fixtures[i];
     const relPath = path.relative(REPO_ROOT, fixturePath);
     const source = fs.readFileSync(fixturePath, 'utf8');
     const firstLine = source.substring(0, source.indexOf('\n'));
     const isFlow = firstLine.includes('@flow');
 
-    // TS baseline
+    writeProgress(`  baseline: ${i + 1}/${fixtures.length}`);
+
     const tsResult = compileBabel(tsPlugin, fixturePath, source, firstLine);
     const tsCode = await formatCode(tsResult.code ?? '', isFlow);
 
-    for (const variant of variants) {
-      const s = stats.get(variant)!;
-
-      let variantResult: {code: string | null; error: string | null};
-      if (variant === 'babel') {
-        variantResult = compileBabel(
-          rustPlugin,
-          fixturePath,
-          source,
-          firstLine,
-        );
-      } else {
-        variantResult = compileCli(variant, fixturePath, source, firstLine);
-      }
-
-      const variantCode = await formatCode(variantResult.code ?? '', isFlow);
-
-      if (tsCode === variantCode) {
-        s.passed++;
-      } else {
-        s.failed++;
-        s.failedFixtures.push(relPath);
-        if (limitArg === 0 || s.failures.length < limitArg) {
-          s.failures.push({
-            fixture: relPath,
-            detail: unifiedDiff(tsCode, variantCode, 'TypeScript', variant),
-          });
-        }
-      }
-    }
+    fixtureInfos.push({fixturePath, relPath, source, firstLine, isFlow});
+    tsBaselines.set(fixturePath, tsCode);
   }
+  clearProgress();
+  console.log(`Computed ${fixtures.length} baselines.`);
+  console.log('');
+
+  // Run each variant
+  for (const variant of variants) {
+    console.log(`Running ${BOLD}${variant}${RESET} variant...`);
+    await runVariant(variant, fixtureInfos, tsBaselines, stats.get(variant)!);
+    const s = stats.get(variant)!;
+    console.log(
+      `  ${s.passed} passed, ${s.failed} failed`,
+    );
+  }
+  console.log('');
 
   // --- Output ---
   if (variantArg) {
