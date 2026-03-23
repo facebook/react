@@ -451,6 +451,11 @@ pub fn compile_fn(
     context.log_debug(DebugLogEntry::new("StabilizeBlockIds", debug_stabilize));
 
     let unique_identifiers = react_compiler_reactive_scopes::rename_variables(&mut reactive_fn, &mut env);
+    // Register all renamed variables with ProgramContext so future compilations
+    // in the same program avoid naming conflicts (matches TS programContext.addNewReference).
+    for name in &unique_identifiers {
+        context.add_new_reference(name.clone());
+    }
     let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );

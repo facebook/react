@@ -813,13 +813,38 @@ impl CollectDependenciesVisitor {
                 (lvalues, rvalues)
             }
             InstructionValue::RegExpLiteral { .. }
-            | InstructionValue::ObjectMethod { .. }
-            | InstructionValue::FunctionExpression { .. }
             | InstructionValue::ArrayExpression { .. }
             | InstructionValue::NewExpression { .. }
             | InstructionValue::ObjectExpression { .. }
             | InstructionValue::PropertyStore { .. } => {
                 let operands = each_instruction_value_operand_public(value);
+                let mut lvalues: Vec<LValueMemoization> = operands
+                    .iter()
+                    .filter(|op| is_mutable_effect(op.effect))
+                    .map(|op| LValueMemoization {
+                        place_identifier: op.identifier,
+                        level: MemoizationLevel::Memoized,
+                    })
+                    .collect();
+                if let Some(lv) = lvalue {
+                    lvalues.push(LValueMemoization {
+                        place_identifier: lv,
+                        level: MemoizationLevel::Memoized,
+                    });
+                }
+                let rvalues: Vec<(IdentifierId, EvaluationOrder)> =
+                    operands.iter().map(|p| (p.identifier, id)).collect();
+                (lvalues, rvalues)
+            }
+            InstructionValue::ObjectMethod { lowered_func, .. }
+            | InstructionValue::FunctionExpression { lowered_func, .. } => {
+                // For FunctionExpression/ObjectMethod, the operands include context
+                // (captured variables). In TS, eachInstructionValueOperand yields
+                // loweredFunc.func.context. In Rust, context is stored separately
+                // in env.functions, so we need to include it explicitly.
+                let mut operands: Vec<&Place> = each_instruction_value_operand_public(value);
+                let context: &Vec<Place> = &env.functions[lowered_func.func.0 as usize].context;
+                operands.extend(context.iter());
                 let mut lvalues: Vec<LValueMemoization> = operands
                     .iter()
                     .filter(|op| is_mutable_effect(op.effect))

@@ -1,81 +1,58 @@
 # Status
 
-Overall: needs retest after rebase. All reactive passes ported through PruneHoistedContexts.
+Overall: 1704/1717 passing (99.2%), 13 failures. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) not yet ported.
 
-## Transformation passes (all ported through reactive)
+## Transformation passes
 
-HIR: complete (1653/1653)
-PruneMaybeThrows: complete (1720/1720, includes 2nd call)
-DropManualMemoization: complete (1652/1652)
-InlineImmediatelyInvokedFunctionExpressions: complete (1652/1652)
-MergeConsecutiveBlocks: complete (1652/1652)
-SSA: complete (1651/1651)
-EliminateRedundantPhi: complete (1651/1651)
-ConstantPropagation: complete (1651/1651)
-InferTypes: complete (1651/1651)
-OptimizePropsMethodCalls: complete (1651/1651)
-AnalyseFunctions: complete (1650/1650)
-InferMutationAliasingEffects: complete (1644/1644)
+HIR: partial (1651/1654, 3 failures)
+PruneMaybeThrows: complete (1661/1661, includes 2nd call)
+DropManualMemoization: complete
+MergeConsecutiveBlocks: complete
+SSA: complete (1649/1649)
+EliminateRedundantPhi: complete
+ConstantPropagation: complete
+InferTypes: complete
+OptimizePropsMethodCalls: complete
+AnalyseFunctions: complete (1648/1648)
+InferMutationAliasingEffects: complete (1642/1642)
 OptimizeForSSR: todo (conditional, outputMode === 'ssr')
-DeadCodeElimination: complete (1644/1644)
-InferMutationAliasingRanges: complete (1644/1644)
-InferReactivePlaces: complete (1644/1644)
-RewriteInstructionKindsBasedOnReassignment: complete (1643/1643)
-InferReactiveScopeVariables: complete (1643/1643)
-MemoizeFbtAndMacroOperandsInSameScope: complete (1643/1643)
+DeadCodeElimination: complete
+InferMutationAliasingRanges: complete
+InferReactivePlaces: complete
+ValidateExhaustiveDependencies: partial (1641/1642, 1 failure)
+RewriteInstructionKindsBasedOnReassignment: complete
+InferReactiveScopeVariables: complete
+MemoizeFbtAndMacroOperandsInSameScope: complete
 outlineJSX: complete (conditional on enableJsxOutlining)
 NameAnonymousFunctions: complete (2/2, conditional)
-OutlineFunctions: complete (1643/1643)
-AlignMethodCallScopes: complete (1643/1643)
-AlignObjectMethodScopes: complete (1643/1643)
-PruneUnusedLabelsHIR: complete (1643/1643)
-AlignReactiveScopesToBlockScopesHIR: complete (1643/1643)
-MergeOverlappingReactiveScopesHIR: complete (1643/1643)
-BuildReactiveScopeTerminalsHIR: complete (1643/1643)
-FlattenReactiveLoopsHIR: complete (1643/1643)
-FlattenScopesWithHooksOrUseHIR: complete (1643/1643)
-PropagateScopeDependenciesHIR: partial (1642/1643, 1 failure)
+OutlineFunctions: complete
+AlignMethodCallScopes: complete
+AlignObjectMethodScopes: complete
+PruneUnusedLabelsHIR: complete
+AlignReactiveScopesToBlockScopesHIR: complete
+MergeOverlappingReactiveScopesHIR: complete
+BuildReactiveScopeTerminalsHIR: complete
+FlattenReactiveLoopsHIR: complete
+FlattenScopesWithHooksOrUseHIR: complete
+PropagateScopeDependenciesHIR: partial (1640/1641, 1 failure)
 BuildReactiveFunction: complete
 AssertWellFormedBreakTargets: complete
 PruneUnusedLabels: complete
 AssertScopeInstructionsWithinScopes: complete
-PruneNonEscapingScopes: partial (1 failure)
-PruneNonReactiveDependencies: partial
+PruneNonEscapingScopes: complete (1640/1640)
+PruneNonReactiveDependencies: complete
 PruneUnusedScopes: complete
-MergeReactiveScopesThatInvalidateTogether: partial (6 failures)
+MergeReactiveScopesThatInvalidateTogether: partial (1634/1640, 6 failures)
 PruneAlwaysInvalidatingScopes: complete
 PropagateEarlyReturns: complete
 PruneUnusedLValues: complete
 PromoteUsedTemporaries: complete
-ExtractScopeDeclarationsFromDestructuring: partial (8 failures)
+ExtractScopeDeclarationsFromDestructuring: complete (1634/1634)
 StabilizeBlockIds: complete
-RenameVariables: partial
+RenameVariables: partial (1632/1634, 2 failures)
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-
-## Validation passes
-
-ValidateContextVariableLValues: complete (1652/1652)
-ValidateUseMemo: complete (1652/1652)
-ValidateHooksUsage: complete (1651/1651)
-ValidateNoCapitalizedCalls: complete (3/3)
-ValidateLocalsNotReassignedAfterRender: complete (1644/1644)
-ValidateNoRefAccessInRender: complete (1644/1644)
-ValidateNoSetStateInRender: complete (1644/1644)
-ValidateNoDerivedComputationsInEffects: complete (22/22)
-ValidateNoSetStateInEffects: complete (12/12)
-ValidateNoJSXInTryStatement: complete (4/4)
-ValidateNoFreezingKnownMutableFunctions: complete (1644/1644)
-ValidateStaticComponents: complete (5/5)
-ValidateExhaustiveDependencies: partial (1643/1644, 1 failure)
-ValidatePreservedManualMemoization: complete (1636/1636)
-
-## Remaining failure breakdown (4 total — all blocked)
-
-error.bug-invariant-expected-consistent-destructuring.js: RIKBR invariant error handling
-error.todo-functiondecl-hoisting.tsx: requires PruneHoistedContexts (reactive pass)
-error.todo-valid-functiondecl-hoisting.tsx: requires PruneHoistedContexts (reactive pass)
-rules-of-hooks/error.invalid-hook-for.js: pipeline error handling difference
+Codegen: todo
 
 # Logs
 
@@ -393,3 +370,14 @@ Ported 15 reactive passes + visitor infrastructure from TypeScript to Rust:
 - stabilizeBlockIds, renameVariables, pruneHoistedContexts
 Fixed RenameVariables value-level lvalue visiting and inner function traversal (154 failures fixed).
 Fixed PruneNonReactiveDependencies inner function context visiting (23 failures fixed).
+
+## 20260323-130614 Fix RenameVariables, ExtractScopeDeclarations, PruneNonEscapingScopes — 36→13 failures
+
+Fixed 23 test failures across three passes:
+- RenameVariables: PrunedScope scoping fix (visit_block_inner for pruned scopes, matching TS
+  traverseBlock vs visitBlock), plus addNewReference registration in pipeline.rs. 16→2 failures.
+- ExtractScopeDeclarationsFromDestructuring: Fixed temporary place metadata — copy type from
+  original identifier, preserve source location on identifier, use GeneratedSource for Place loc. 8→0 failures.
+- PruneNonEscapingScopes: Added FunctionExpression/ObjectMethod context operands from
+  env.functions for captured variable tracking. 1→0 failures.
+Overall: 1704/1717 passing (99.2%), 13 failures remaining.

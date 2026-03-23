@@ -150,6 +150,19 @@ fn visit_block(
     env: &mut Environment,
 ) {
     scopes.enter();
+    visit_block_inner(block, scopes, env);
+    scopes.leave();
+}
+
+/// Traverse block statements without pushing/popping a scope level.
+/// Used by visit_block (which wraps with enter/leave) and for pruned scopes
+/// (which should NOT push a new scope level, matching TS visitPrunedScope →
+/// traverseBlock behavior).
+fn visit_block_inner(
+    block: &mut ReactiveBlock,
+    scopes: &mut Scopes,
+    env: &mut Environment,
+) {
     for stmt in block.iter_mut() {
         match stmt {
             ReactiveStatement::Instruction(instr) => {
@@ -167,15 +180,17 @@ fn visit_block(
                 visit_block(&mut scope.instructions, scopes, env);
             }
             ReactiveStatement::PrunedScope(scope) => {
-                // For pruned scopes, just visit the block (no scope declarations to visit)
-                visit_block(&mut scope.instructions, scopes, env);
+                // For pruned scopes, traverse instructions without pushing a new scope.
+                // TS: visitPrunedScope calls traverseBlock (NOT visitBlock), so no
+                // enter/leave. This ensures names assigned inside pruned scopes remain
+                // visible in the enclosing scope, preventing name reuse.
+                visit_block_inner(&mut scope.instructions, scopes, env);
             }
             ReactiveStatement::Terminal(terminal) => {
                 visit_terminal(terminal, scopes, env);
             }
         }
     }
-    scopes.leave();
 }
 
 fn visit_instruction(

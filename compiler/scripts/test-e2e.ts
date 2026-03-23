@@ -32,9 +32,7 @@ const rawArgs = process.argv.slice(2);
 const noColor = rawArgs.includes('--no-color') || !!process.env.NO_COLOR;
 const variantIdx = rawArgs.indexOf('--variant');
 const variantArg =
-  variantIdx >= 0
-    ? (rawArgs[variantIdx + 1] as 'babel' | 'swc' | 'oxc')
-    : null;
+  variantIdx >= 0 ? (rawArgs[variantIdx + 1] as 'babel' | 'swc' | 'oxc') : null;
 const limitIdx = rawArgs.indexOf('--limit');
 const limitArg = limitIdx >= 0 ? parseInt(rawArgs[limitIdx + 1], 10) : 50;
 
@@ -104,11 +102,15 @@ try {
     '~/.cargo/bin/cargo build -p react_compiler_napi -p react_compiler_e2e_cli',
     {
       cwd: path.join(REPO_ROOT, 'compiler/crates'),
-      stdio: 'inherit',
+      stdio: ['inherit', 'pipe', 'pipe'],
       shell: true,
     },
   );
-} catch {
+} catch (e: any) {
+  // Show stderr on build failure (includes errors + warnings)
+  if (e.stderr) {
+    process.stderr.write(e.stderr);
+  }
   console.error(`${RED}ERROR: Failed to build Rust crates.${RESET}`);
   process.exit(1);
 }
@@ -406,9 +408,7 @@ async function runVariant(
     console.log(`Running ${BOLD}${variant}${RESET} variant...`);
     await runVariant(variant, fixtureInfos, tsBaselines, stats.get(variant)!);
     const s = stats.get(variant)!;
-    console.log(
-      `  ${s.passed} passed, ${s.failed} failed`,
-    );
+    console.log(`  ${s.passed} passed, ${s.failed} failed`);
   }
   console.log('');
 

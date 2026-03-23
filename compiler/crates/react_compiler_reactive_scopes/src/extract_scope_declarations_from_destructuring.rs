@@ -124,10 +124,16 @@ impl ReactiveFunctionTransform for Transform {
                     if !reassigned.contains(&place.identifier) {
                         return;
                     }
-                    // Create a temporary place
+                    // Create a temporary place (matches TS clonePlaceToTemporary)
                     let temp_id = state.env_mut().next_identifier_id();
                     let decl_id =
                         state.env().identifiers[temp_id.0 as usize].declaration_id;
+                    // Copy type from original identifier to temporary
+                    let original_type = state.env().identifiers[place.identifier.0 as usize].type_;
+                    state.env_mut().identifiers[temp_id.0 as usize].type_ = original_type;
+                    // Set identifier loc to the place's source location
+                    // (matches TS makeTemporaryIdentifier which receives place.loc)
+                    state.env_mut().identifiers[temp_id.0 as usize].loc = place.loc.clone();
                     // Promote the temporary
                     state.env_mut().identifiers[temp_id.0 as usize].name =
                         Some(IdentifierName::Promoted(format!("#t{}", decl_id.0)));
@@ -135,7 +141,7 @@ impl ReactiveFunctionTransform for Transform {
                         identifier: temp_id,
                         effect: place.effect,
                         reactive: place.reactive,
-                        loc: place.loc.clone(),
+                        loc: None, // GeneratedSource — matches TS createTemporaryPlace
                     };
                     let original = place.clone();
                     *place = temporary.clone();
