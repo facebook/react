@@ -194,7 +194,7 @@ function discoverFixtures(rootPath: string): string[] {
 
 // --- Format a source location for comparison ---
 function formatLoc(loc: unknown): string {
-  if (loc == null) return '(none)';
+  if (loc == null) return '(generated)';
   if (typeof loc === 'symbol') return '(generated)';
   const l = loc as Record<string, unknown>;
   const start = l.start as Record<string, unknown> | undefined;

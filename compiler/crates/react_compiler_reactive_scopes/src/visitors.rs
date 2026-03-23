@@ -7,6 +7,7 @@
 //!
 //! Corresponds to `src/ReactiveScopes/visitors.ts` in the TypeScript compiler.
 
+use react_compiler_diagnostics::CompilerError;
 use react_compiler_hir::{
     EvaluationOrder, Place, PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction,
     ReactiveInstruction, ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement,
@@ -306,19 +307,19 @@ pub enum TransformedValue {
 pub trait ReactiveFunctionTransform {
     type State;
 
-    fn visit_id(&mut self, _id: EvaluationOrder, _state: &mut Self::State) {}
+    fn visit_id(&mut self, _id: EvaluationOrder, _state: &mut Self::State) -> Result<(), CompilerError> { Ok(()) }
 
-    fn visit_place(&mut self, _id: EvaluationOrder, _place: &Place, _state: &mut Self::State) {}
+    fn visit_place(&mut self, _id: EvaluationOrder, _place: &Place, _state: &mut Self::State) -> Result<(), CompilerError> { Ok(()) }
 
-    fn visit_lvalue(&mut self, _id: EvaluationOrder, _lvalue: &Place, _state: &mut Self::State) {}
+    fn visit_lvalue(&mut self, _id: EvaluationOrder, _lvalue: &Place, _state: &mut Self::State) -> Result<(), CompilerError> { Ok(()) }
 
     fn visit_value(
         &mut self,
         id: EvaluationOrder,
         value: &mut ReactiveValue,
         state: &mut Self::State,
-    ) {
-        self.traverse_value(id, value, state);
+    ) -> Result<(), CompilerError> {
+        self.traverse_value(id, value, state)
     }
 
     fn traverse_value(
@@ -326,14 +327,14 @@ pub trait ReactiveFunctionTransform {
         id: EvaluationOrder,
         value: &mut ReactiveValue,
         state: &mut Self::State,
-    ) {
+    ) -> Result<(), CompilerError> {
         match value {
             ReactiveValue::OptionalExpression { value: inner, .. } => {
-                self.visit_value(id, inner, state);
+                self.visit_value(id, inner, state)?;
             }
             ReactiveValue::LogicalExpression { left, right, .. } => {
-                self.visit_value(id, left, state);
-                self.visit_value(id, right, state);
+                self.visit_value(id, left, state)?;
+                self.visit_value(id, right, state)?;
             }
             ReactiveValue::ConditionalExpression {
                 test,
@@ -341,9 +342,9 @@ pub trait ReactiveFunctionTransform {
                 alternate,
                 ..
             } => {
-                self.visit_value(id, test, state);
-                self.visit_value(id, consequent, state);
-                self.visit_value(id, alternate, state);
+                self.visit_value(id, test, state)?;
+                self.visit_value(id, consequent, state)?;
+                self.visit_value(id, alternate, state)?;
             }
             ReactiveValue::SequenceExpression {
                 instructions,
@@ -353,61 +354,62 @@ pub trait ReactiveFunctionTransform {
             } => {
                 let seq_id = *seq_id;
                 for instr in instructions.iter_mut() {
-                    self.visit_instruction(instr, state);
+                    self.visit_instruction(instr, state)?;
                 }
-                self.visit_value(seq_id, inner, state);
+                self.visit_value(seq_id, inner, state)?;
             }
             ReactiveValue::Instruction(instr_value) => {
                 for place in each_instruction_value_operand(instr_value) {
-                    self.visit_place(id, place, state);
+                    self.visit_place(id, place, state)?;
                 }
             }
         }
+        Ok(())
     }
 
     fn visit_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut Self::State,
-    ) {
-        self.traverse_instruction(instruction, state);
+    ) -> Result<(), CompilerError> {
+        self.traverse_instruction(instruction, state)
     }
 
     fn traverse_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut Self::State,
-    ) {
-        self.visit_id(instruction.id, state);
+    ) -> Result<(), CompilerError> {
+        self.visit_id(instruction.id, state)?;
         if let Some(lvalue) = &instruction.lvalue {
-            self.visit_lvalue(instruction.id, lvalue, state);
+            self.visit_lvalue(instruction.id, lvalue, state)?;
         }
-        self.visit_value(instruction.id, &mut instruction.value, state);
+        self.visit_value(instruction.id, &mut instruction.value, state)
     }
 
     fn visit_terminal(
         &mut self,
         stmt: &mut ReactiveTerminalStatement,
         state: &mut Self::State,
-    ) {
-        self.traverse_terminal(stmt, state);
+    ) -> Result<(), CompilerError> {
+        self.traverse_terminal(stmt, state)
     }
 
     fn traverse_terminal(
         &mut self,
         stmt: &mut ReactiveTerminalStatement,
         state: &mut Self::State,
-    ) {
+    ) -> Result<(), CompilerError> {
         let terminal = &mut stmt.terminal;
         let id = terminal_id(terminal);
-        self.visit_id(id, state);
+        self.visit_id(id, state)?;
         match terminal {
             ReactiveTerminal::Break { .. } | ReactiveTerminal::Continue { .. } => {}
             ReactiveTerminal::Return { value, id, .. } => {
-                self.visit_place(*id, value, state);
+                self.visit_place(*id, value, state)?;
             }
             ReactiveTerminal::Throw { value, id, .. } => {
-                self.visit_place(*id, value, state);
+                self.visit_place(*id, value, state)?;
             }
             ReactiveTerminal::For {
                 init,
@@ -418,11 +420,11 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, init, state);
-                self.visit_value(id, test, state);
-                self.visit_block(loop_block, state);
+                self.visit_value(id, init, state)?;
+                self.visit_value(id, test, state)?;
+                self.visit_block(loop_block, state)?;
                 if let Some(update) = update {
-                    self.visit_value(id, update, state);
+                    self.visit_value(id, update, state)?;
                 }
             }
             ReactiveTerminal::ForOf {
@@ -433,9 +435,9 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, init, state);
-                self.visit_value(id, test, state);
-                self.visit_block(loop_block, state);
+                self.visit_value(id, init, state)?;
+                self.visit_value(id, test, state)?;
+                self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::ForIn {
                 init,
@@ -444,8 +446,8 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, init, state);
-                self.visit_block(loop_block, state);
+                self.visit_value(id, init, state)?;
+                self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::DoWhile {
                 loop_block,
@@ -454,8 +456,8 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_block(loop_block, state);
-                self.visit_value(id, test, state);
+                self.visit_block(loop_block, state)?;
+                self.visit_value(id, test, state)?;
             }
             ReactiveTerminal::While {
                 test,
@@ -464,8 +466,8 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, test, state);
-                self.visit_block(loop_block, state);
+                self.visit_value(id, test, state)?;
+                self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::If {
                 test,
@@ -474,28 +476,28 @@ pub trait ReactiveFunctionTransform {
                 id,
                 ..
             } => {
-                self.visit_place(*id, test, state);
-                self.visit_block(consequent, state);
+                self.visit_place(*id, test, state)?;
+                self.visit_block(consequent, state)?;
                 if let Some(alt) = alternate {
-                    self.visit_block(alt, state);
+                    self.visit_block(alt, state)?;
                 }
             }
             ReactiveTerminal::Switch {
                 test, cases, id, ..
             } => {
                 let id = *id;
-                self.visit_place(id, test, state);
+                self.visit_place(id, test, state)?;
                 for case in cases.iter_mut() {
                     if let Some(t) = &case.test {
-                        self.visit_place(id, t, state);
+                        self.visit_place(id, t, state)?;
                     }
                     if let Some(block) = &mut case.block {
-                        self.visit_block(block, state);
+                        self.visit_block(block, state)?;
                     }
                 }
             }
             ReactiveTerminal::Label { block, .. } => {
-                self.visit_block(block, state);
+                self.visit_block(block, state)?;
             }
             ReactiveTerminal::Try {
                 block,
@@ -505,80 +507,81 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_block(block, state);
+                self.visit_block(block, state)?;
                 if let Some(binding) = handler_binding {
-                    self.visit_place(id, binding, state);
+                    self.visit_place(id, binding, state)?;
                 }
-                self.visit_block(handler, state);
+                self.visit_block(handler, state)?;
             }
         }
+        Ok(())
     }
 
-    fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut Self::State) {
-        self.traverse_scope(scope, state);
+    fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut Self::State) -> Result<(), CompilerError> {
+        self.traverse_scope(scope, state)
     }
 
-    fn traverse_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut Self::State) {
-        self.visit_block(&mut scope.instructions, state);
+    fn traverse_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut Self::State) -> Result<(), CompilerError> {
+        self.visit_block(&mut scope.instructions, state)
     }
 
     fn visit_pruned_scope(
         &mut self,
         scope: &mut PrunedReactiveScopeBlock,
         state: &mut Self::State,
-    ) {
-        self.traverse_pruned_scope(scope, state);
+    ) -> Result<(), CompilerError> {
+        self.traverse_pruned_scope(scope, state)
     }
 
     fn traverse_pruned_scope(
         &mut self,
         scope: &mut PrunedReactiveScopeBlock,
         state: &mut Self::State,
-    ) {
-        self.visit_block(&mut scope.instructions, state);
+    ) -> Result<(), CompilerError> {
+        self.visit_block(&mut scope.instructions, state)
     }
 
-    fn visit_block(&mut self, block: &mut ReactiveBlock, state: &mut Self::State) {
-        self.traverse_block(block, state);
+    fn visit_block(&mut self, block: &mut ReactiveBlock, state: &mut Self::State) -> Result<(), CompilerError> {
+        self.traverse_block(block, state)
     }
 
     fn transform_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut Self::State,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_instruction(instruction, state);
-        Transformed::Keep
+    ) -> Result<Transformed<ReactiveStatement>, CompilerError> {
+        self.visit_instruction(instruction, state)?;
+        Ok(Transformed::Keep)
     }
 
     fn transform_terminal(
         &mut self,
         stmt: &mut ReactiveTerminalStatement,
         state: &mut Self::State,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_terminal(stmt, state);
-        Transformed::Keep
+    ) -> Result<Transformed<ReactiveStatement>, CompilerError> {
+        self.visit_terminal(stmt, state)?;
+        Ok(Transformed::Keep)
     }
 
     fn transform_scope(
         &mut self,
         scope: &mut ReactiveScopeBlock,
         state: &mut Self::State,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_scope(scope, state);
-        Transformed::Keep
+    ) -> Result<Transformed<ReactiveStatement>, CompilerError> {
+        self.visit_scope(scope, state)?;
+        Ok(Transformed::Keep)
     }
 
     fn transform_pruned_scope(
         &mut self,
         scope: &mut PrunedReactiveScopeBlock,
         state: &mut Self::State,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_pruned_scope(scope, state);
-        Transformed::Keep
+    ) -> Result<Transformed<ReactiveStatement>, CompilerError> {
+        self.visit_pruned_scope(scope, state)?;
+        Ok(Transformed::Keep)
     }
 
-    fn traverse_block(&mut self, block: &mut ReactiveBlock, state: &mut Self::State) {
+    fn traverse_block(&mut self, block: &mut ReactiveBlock, state: &mut Self::State) -> Result<(), CompilerError> {
         let mut next_block: Option<Vec<ReactiveStatement>> = None;
         let len = block.len();
         for i in 0..len {
@@ -598,16 +601,16 @@ pub trait ReactiveFunctionTransform {
             );
             let transformed = match &mut stmt {
                 ReactiveStatement::Instruction(instr) => {
-                    self.transform_instruction(instr, state)
+                    self.transform_instruction(instr, state)?
                 }
                 ReactiveStatement::Scope(scope) => {
-                    self.transform_scope(scope, state)
+                    self.transform_scope(scope, state)?
                 }
                 ReactiveStatement::PrunedScope(scope) => {
-                    self.transform_pruned_scope(scope, state)
+                    self.transform_pruned_scope(scope, state)?
                 }
                 ReactiveStatement::Terminal(terminal) => {
-                    self.transform_terminal(terminal, state)
+                    self.transform_terminal(terminal, state)?
                 }
             };
             match transformed {
@@ -641,6 +644,7 @@ pub trait ReactiveFunctionTransform {
         if let Some(nb) = next_block {
             *block = nb;
         }
+        Ok(())
     }
 }
 
@@ -650,8 +654,8 @@ pub fn transform_reactive_function<T: ReactiveFunctionTransform>(
     func: &mut ReactiveFunction,
     transform: &mut T,
     state: &mut T::State,
-) {
-    transform.visit_block(&mut func.body, state);
+) -> Result<(), CompilerError> {
+    transform.visit_block(&mut func.body, state)
 }
 
 // =============================================================================

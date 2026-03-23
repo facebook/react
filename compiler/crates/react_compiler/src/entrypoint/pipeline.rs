@@ -381,7 +381,7 @@ pub fn compile_fn(
     react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn);
     context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
 
-    react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn);
+    react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn)?;
     let debug_prune_labels_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -390,7 +390,7 @@ pub fn compile_fn(
     react_compiler_reactive_scopes::assert_scope_instructions_within_scopes(&reactive_fn, &env)?;
     context.log_debug(DebugLogEntry::new("AssertScopeInstructionsWithinScopes", "ok".to_string()));
 
-    react_compiler_reactive_scopes::prune_non_escaping_scopes(&mut reactive_fn, &mut env);
+    react_compiler_reactive_scopes::prune_non_escaping_scopes(&mut reactive_fn, &mut env)?;
     let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -402,7 +402,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("PruneNonReactiveDependencies", debug_prune_non_reactive));
 
-    react_compiler_reactive_scopes::prune_unused_scopes(&mut reactive_fn, &env);
+    react_compiler_reactive_scopes::prune_unused_scopes(&mut reactive_fn, &env)?;
     let debug_prune_unused_scopes = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -414,7 +414,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("MergeReactiveScopesThatInvalidateTogether", debug));
 
-    react_compiler_reactive_scopes::prune_always_invalidating_scopes(&mut reactive_fn, &env);
+    react_compiler_reactive_scopes::prune_always_invalidating_scopes(&mut reactive_fn, &env)?;
     let debug_prune_always_inv = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -438,7 +438,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("PromoteUsedTemporaries", debug));
 
-    react_compiler_reactive_scopes::extract_scope_declarations_from_destructuring(&mut reactive_fn, &mut env);
+    react_compiler_reactive_scopes::extract_scope_declarations_from_destructuring(&mut reactive_fn, &mut env)?;
     let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -461,7 +461,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("RenameVariables", debug));
 
-    react_compiler_reactive_scopes::prune_hoisted_contexts(&mut reactive_fn, &mut env);
+    react_compiler_reactive_scopes::prune_hoisted_contexts(&mut reactive_fn, &mut env)?;
     let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );

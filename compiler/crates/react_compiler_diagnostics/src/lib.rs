@@ -146,6 +146,7 @@ impl CompilerDiagnostic {
             _ => None,
         })
     }
+
 }
 
 /// Legacy-style error detail (matches CompilerErrorDetail in TS)

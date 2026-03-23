@@ -16,7 +16,7 @@ use react_compiler_hir::{
     ReactiveValue, ReactiveScopeBlock,
     environment::Environment,
 };
-use react_compiler_diagnostics::{CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
 
 use crate::visitors::{ReactiveFunctionTransform, Transformed, transform_reactive_function};
 
@@ -27,13 +27,13 @@ use crate::visitors::{ReactiveFunctionTransform, Transformed, transform_reactive
 /// Prunes DeclareContexts lowered for HoistedConsts and transforms any
 /// references back to their original instruction kind.
 /// TS: `pruneHoistedContexts`
-pub fn prune_hoisted_contexts(func: &mut ReactiveFunction, env: &mut Environment) {
+pub fn prune_hoisted_contexts(func: &mut ReactiveFunction, env: &mut Environment) -> Result<(), CompilerError> {
     let mut transform = Transform { env_ptr: env as *mut Environment };
     let mut state = VisitorState {
         active_scopes: Vec::new(),
         uninitialized: HashMap::new(),
     };
-    transform_reactive_function(func, &mut transform, &mut state);
+    transform_reactive_function(func, &mut transform, &mut state)
 }
 
 // =============================================================================
@@ -78,7 +78,7 @@ impl Transform {
 impl ReactiveFunctionTransform for Transform {
     type State = VisitorState;
 
-    fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut VisitorState) {
+    fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut VisitorState) -> Result<(), CompilerError> {
         let scope_data = &self.env().scopes[scope.scope.0 as usize];
         let decl_ids: std::collections::HashSet<IdentifierId> = scope_data
             .declarations
@@ -94,7 +94,7 @@ impl ReactiveFunctionTransform for Transform {
         }
 
         state.active_scopes.push(decl_ids);
-        self.traverse_scope(scope, state);
+        self.traverse_scope(scope, state)?;
         state.active_scopes.pop();
 
         // Clean up uninitialized after scope
@@ -102,6 +102,33 @@ impl ReactiveFunctionTransform for Transform {
         for (_, decl) in &scope_data.declarations {
             state.uninitialized.remove(&decl.identifier);
         }
+        Ok(())
+    }
+
+    fn visit_value(
+        &mut self,
+        id: EvaluationOrder,
+        value: &mut ReactiveValue,
+        state: &mut VisitorState,
+    ) -> Result<(), CompilerError> {
+        // Default traversal for all value types
+        self.traverse_value(id, value, state)?;
+        // Additionally, visit FunctionExpression/ObjectMethod context places
+        // (TS eachInstructionValueOperand yields loweredFunc.func.context)
+        if let ReactiveValue::Instruction(iv) = value {
+            match iv {
+                InstructionValue::FunctionExpression { lowered_func, .. }
+                | InstructionValue::ObjectMethod { lowered_func, .. } => {
+                    let func = &self.env().functions[lowered_func.func.0 as usize];
+                    let ctx_places: Vec<Place> = func.context.clone();
+                    for ctx_place in &ctx_places {
+                        self.visit_place(id, ctx_place, state)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     fn visit_place(
@@ -109,29 +136,27 @@ impl ReactiveFunctionTransform for Transform {
         _id: EvaluationOrder,
         place: &Place,
         state: &mut VisitorState,
-    ) {
+    ) -> Result<(), CompilerError> {
         if let Some(kind) = state.uninitialized.get(&place.identifier) {
             if let UninitializedKind::Func { definition } = kind {
                 if *definition != Some(place.identifier) {
-                    // In TS this is CompilerError.throwTodo() which aborts compilation.
-                    // Record as a Todo error on env.
-                    self.env_mut().record_error(CompilerErrorDetail {
-                        category: ErrorCategory::Todo,
-                        reason: "[PruneHoistedContexts] Rewrite hoisted function references".to_string(),
-                        description: None,
-                        loc: place.loc.clone(),
-                        suggestions: None,
-                    });
+                    let mut err = CompilerError::new();
+                    err.push_error_detail(
+                        CompilerErrorDetail::new(ErrorCategory::Todo, "[PruneHoistedContexts] Rewrite hoisted function references".to_string())
+                            .with_loc(place.loc)
+                    );
+                    return Err(err);
                 }
             }
         }
+        Ok(())
     }
 
     fn transform_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut VisitorState,
-    ) -> Transformed<ReactiveStatement> {
+    ) -> Result<Transformed<ReactiveStatement>, CompilerError> {
         // Remove hoisted declarations to preserve TDZ
         if let ReactiveValue::Instruction(InstructionValue::DeclareContext {
             lvalue, ..
@@ -147,7 +172,7 @@ impl ReactiveFunctionTransform for Transform {
                         UninitializedKind::Func { definition: None },
                     );
                 }
-                return Transformed::Remove;
+                return Ok(Transformed::Remove);
             }
         }
 
@@ -179,21 +204,19 @@ impl ReactiveFunctionTransform for Transform {
                             state.uninitialized.remove(&lvalue_id);
                         }
                     } else {
-                        // In TS this is CompilerError.throwTodo() which aborts.
-                        self.env_mut().record_error(CompilerErrorDetail {
-                            category: ErrorCategory::Todo,
-                            reason: "[PruneHoistedContexts] Unexpected kind".to_string(),
-                            description: Some(format!("{:?}", lvalue.kind)),
-                            loc: instruction.loc.clone(),
-                            suggestions: None,
-                        });
+                        let mut err = CompilerError::new();
+                        err.push_error_detail(
+                            CompilerErrorDetail::new(ErrorCategory::Todo, "[PruneHoistedContexts] Unexpected kind".to_string())
+                                .with_loc(instruction.loc)
+                        );
+                        return Err(err);
                     }
                 }
             }
         }
 
-        self.visit_instruction(instruction, state);
-        Transformed::Keep
+        self.visit_instruction(instruction, state)?;
+        Ok(Transformed::Keep)
     }
 }
 

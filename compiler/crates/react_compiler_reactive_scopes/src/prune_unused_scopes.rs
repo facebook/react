@@ -23,12 +23,12 @@ struct State {
 
 /// Converts scopes without outputs into pruned-scopes (regular blocks).
 /// TS: `pruneUnusedScopes`
-pub fn prune_unused_scopes(func: &mut ReactiveFunction, env: &Environment) {
+pub fn prune_unused_scopes(func: &mut ReactiveFunction, env: &Environment) -> Result<(), react_compiler_diagnostics::CompilerError> {
     let mut transform = Transform { env };
     let mut state = State {
         has_return_statement: false,
     };
-    transform_reactive_function(func, &mut transform, &mut state);
+    transform_reactive_function(func, &mut transform, &mut state)
 }
 
 struct Transform<'a> {
@@ -42,22 +42,23 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
         &mut self,
         stmt: &mut ReactiveTerminalStatement,
         state: &mut State,
-    ) {
-        self.traverse_terminal(stmt, state);
+    ) -> Result<(), react_compiler_diagnostics::CompilerError> {
+        self.traverse_terminal(stmt, state)?;
         if matches!(stmt.terminal, ReactiveTerminal::Return { .. }) {
             state.has_return_statement = true;
         }
+        Ok(())
     }
 
     fn transform_scope(
         &mut self,
         scope: &mut ReactiveScopeBlock,
         _state: &mut State,
-    ) -> Transformed<ReactiveStatement> {
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
         let mut scope_state = State {
             has_return_statement: false,
         };
-        self.visit_scope(scope, &mut scope_state);
+        self.visit_scope(scope, &mut scope_state)?;
 
         let scope_id = scope.scope;
         let scope_data = &self.env.scopes[scope_id.0 as usize];
@@ -68,14 +69,14 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
                 || !has_own_declaration(scope_data, scope_id))
         {
             // Replace with pruned scope
-            Transformed::Replace(ReactiveStatement::PrunedScope(
+            Ok(Transformed::Replace(ReactiveStatement::PrunedScope(
                 PrunedReactiveScopeBlock {
                     scope: scope.scope,
                     instructions: std::mem::take(&mut scope.instructions),
                 },
-            ))
+            )))
         } else {
-            Transformed::Keep
+            Ok(Transformed::Keep)
         }
     }
 }

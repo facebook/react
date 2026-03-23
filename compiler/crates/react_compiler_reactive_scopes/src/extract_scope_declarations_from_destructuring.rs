@@ -30,7 +30,7 @@ use crate::visitors::{ReactiveFunctionTransform, Transformed, transform_reactive
 pub fn extract_scope_declarations_from_destructuring(
     func: &mut ReactiveFunction,
     env: &mut Environment,
-) {
+) -> Result<(), react_compiler_diagnostics::CompilerError> {
     let mut declared: HashSet<DeclarationId> = HashSet::new();
     for param in &func.params {
         let place = match param {
@@ -42,7 +42,7 @@ pub fn extract_scope_declarations_from_destructuring(
     }
     let mut transform = Transform;
     let mut state = ExtractState { env_ptr: env as *mut Environment, declared };
-    transform_reactive_function(func, &mut transform, &mut state);
+    transform_reactive_function(func, &mut transform, &mut state)
 }
 
 struct ExtractState {
@@ -67,7 +67,7 @@ struct Transform;
 impl ReactiveFunctionTransform for Transform {
     type State = ExtractState;
 
-    fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut ExtractState) {
+    fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut ExtractState) -> Result<(), react_compiler_diagnostics::CompilerError> {
         let scope_data = &state.env().scopes[scope.scope.0 as usize];
         let decl_ids: Vec<DeclarationId> = scope_data
             .declarations
@@ -80,15 +80,15 @@ impl ReactiveFunctionTransform for Transform {
         for decl_id in decl_ids {
             state.declared.insert(decl_id);
         }
-        self.traverse_scope(scope, state);
+        self.traverse_scope(scope, state)
     }
 
     fn transform_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut ExtractState,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_instruction(instruction, state);
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
+        self.visit_instruction(instruction, state)?;
 
         let mut extra_instructions: Option<Vec<ReactiveInstruction>> = None;
 
@@ -190,9 +190,9 @@ impl ReactiveFunctionTransform for Transform {
             for extra in extras {
                 all_instructions.push(ReactiveStatement::Instruction(extra));
             }
-            Transformed::ReplaceMany(all_instructions)
+            Ok(Transformed::ReplaceMany(all_instructions))
         } else {
-            Transformed::Keep
+            Ok(Transformed::Keep)
         }
     }
 }

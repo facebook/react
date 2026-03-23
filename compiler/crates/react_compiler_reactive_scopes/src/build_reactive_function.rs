@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory, SourceLocation};
+use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory, SourceLocation};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     BasicBlock, BlockId, EvaluationOrder, GotoVariant, HirFunction, InstructionValue, Place,
@@ -1128,9 +1128,12 @@ impl<'a, 'b> Driver<'a, 'b> {
                 if instructions.is_empty() {
                     return Err(CompilerDiagnostic::new(
                         ErrorCategory::Invariant,
-                        format!("Unexpected empty block with `goto` terminal (bb{})", block_id.0),
-                        None,
-                    ));
+                        "Unexpected empty block with `goto` terminal",
+                        Some(format!("Block bb{} is empty", block_id.0)),
+                    ).with_detail(CompilerDiagnosticDetail::Error {
+                        loc,
+                        message: Some("Unexpected empty block with `goto` terminal".to_string()),
+                    }));
                 }
                 Ok(self.extract_value_block_result(&instructions, block_id_val, loc))
             }

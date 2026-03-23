@@ -91,6 +91,11 @@ fn find_last_usage_in_value(
             for place in crate::visitors::each_instruction_value_operand_public(instr_value) {
                 record_place_usage(id, place, last_usage, env);
             }
+            // Also visit lvalues within instruction values (StoreLocal, DeclareLocal, etc.)
+            // TS: eachInstructionLValue yields both instr.lvalue and eachInstructionValueLValue
+            for place in crate::visitors::each_instruction_value_lvalue(value) {
+                record_place_usage(id, place, last_usage, env);
+            }
         }
         ReactiveValue::OptionalExpression { value: inner, .. } => {
             find_last_usage_in_value(id, inner, last_usage, env);
@@ -289,7 +294,7 @@ fn visit_block_for_merge(
                 }
             }
             ReactiveStatement::Terminal(term) => {
-                visit_terminal_for_merge(term, env, last_usage, temporaries)?;
+                visit_terminal_for_merge(term, env, last_usage, temporaries, parent_deps)?;
             }
             ReactiveStatement::PrunedScope(pruned) => {
                 visit_block_for_merge(
@@ -573,6 +578,7 @@ fn visit_terminal_for_merge(
     env: &mut Environment,
     last_usage: &HashMap<DeclarationId, EvaluationOrder>,
     temporaries: &mut HashMap<DeclarationId, DeclarationId>,
+    parent_deps: Option<&Vec<ReactiveScopeDependency>>,
 ) -> Result<(), CompilerDiagnostic> {
     match &mut stmt.terminal {
         ReactiveTerminal::Break { .. } | ReactiveTerminal::Continue { .. } => {}
@@ -580,53 +586,53 @@ fn visit_terminal_for_merge(
         ReactiveTerminal::For {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, parent_deps)?;
         }
         ReactiveTerminal::ForOf {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, parent_deps)?;
         }
         ReactiveTerminal::ForIn {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, parent_deps)?;
         }
         ReactiveTerminal::DoWhile {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, parent_deps)?;
         }
         ReactiveTerminal::While {
             loop_block, ..
         } => {
-            visit_block_for_merge(loop_block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(loop_block, env, last_usage, temporaries, parent_deps)?;
         }
         ReactiveTerminal::If {
             consequent,
             alternate,
             ..
         } => {
-            visit_block_for_merge(consequent, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(consequent, env, last_usage, temporaries, parent_deps)?;
             if let Some(alt) = alternate {
-                visit_block_for_merge(alt, env, last_usage, temporaries, None)?;
+                visit_block_for_merge(alt, env, last_usage, temporaries, parent_deps)?;
             }
         }
         ReactiveTerminal::Switch { cases, .. } => {
             for case in cases.iter_mut() {
                 if let Some(block) = &mut case.block {
-                    visit_block_for_merge(block, env, last_usage, temporaries, None)?;
+                    visit_block_for_merge(block, env, last_usage, temporaries, parent_deps)?;
                 }
             }
         }
         ReactiveTerminal::Label { block, .. } => {
-            visit_block_for_merge(block, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(block, env, last_usage, temporaries, parent_deps)?;
         }
         ReactiveTerminal::Try {
             block, handler, ..
         } => {
-            visit_block_for_merge(block, env, last_usage, temporaries, None)?;
-            visit_block_for_merge(handler, env, last_usage, temporaries, None)?;
+            visit_block_for_merge(block, env, last_usage, temporaries, parent_deps)?;
+            visit_block_for_merge(handler, env, last_usage, temporaries, parent_deps)?;
         }
     }
     Ok(())

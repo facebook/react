@@ -1,25 +1,25 @@
 # Status
 
-Overall: 1704/1717 passing (99.2%), 13 failures. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) not yet ported.
+Overall: 1715/1717 passing (99.9%), 2 failures. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) not yet ported.
 
 ## Transformation passes
 
-HIR: partial (1651/1654, 3 failures)
-PruneMaybeThrows: complete (1661/1661, includes 2nd call)
+HIR: partial (1651/1653, 2 failures — block ID ordering)
+PruneMaybeThrows: complete (1651/1651, includes 2nd call)
 DropManualMemoization: complete
 MergeConsecutiveBlocks: complete
-SSA: complete (1649/1649)
+SSA: complete (1650/1650)
 EliminateRedundantPhi: complete
 ConstantPropagation: complete
 InferTypes: complete
 OptimizePropsMethodCalls: complete
-AnalyseFunctions: complete (1648/1648)
-InferMutationAliasingEffects: complete (1642/1642)
+AnalyseFunctions: complete (1649/1649)
+InferMutationAliasingEffects: complete (1643/1643)
 OptimizeForSSR: todo (conditional, outputMode === 'ssr')
 DeadCodeElimination: complete
 InferMutationAliasingRanges: complete
 InferReactivePlaces: complete
-ValidateExhaustiveDependencies: partial (1641/1642, 1 failure)
+ValidateExhaustiveDependencies: complete
 RewriteInstructionKindsBasedOnReassignment: complete
 InferReactiveScopeVariables: complete
 MemoizeFbtAndMacroOperandsInSameScope: complete
@@ -34,22 +34,22 @@ MergeOverlappingReactiveScopesHIR: complete
 BuildReactiveScopeTerminalsHIR: complete
 FlattenReactiveLoopsHIR: complete
 FlattenScopesWithHooksOrUseHIR: complete
-PropagateScopeDependenciesHIR: partial (1640/1641, 1 failure)
+PropagateScopeDependenciesHIR: complete
 BuildReactiveFunction: complete
 AssertWellFormedBreakTargets: complete
 PruneUnusedLabels: complete
 AssertScopeInstructionsWithinScopes: complete
-PruneNonEscapingScopes: complete (1640/1640)
+PruneNonEscapingScopes: complete
 PruneNonReactiveDependencies: complete
 PruneUnusedScopes: complete
-MergeReactiveScopesThatInvalidateTogether: partial (1634/1640, 6 failures)
+MergeReactiveScopesThatInvalidateTogether: complete
 PruneAlwaysInvalidatingScopes: complete
 PropagateEarlyReturns: complete
 PruneUnusedLValues: complete
 PromoteUsedTemporaries: complete
-ExtractScopeDeclarationsFromDestructuring: complete (1634/1634)
+ExtractScopeDeclarationsFromDestructuring: complete
 StabilizeBlockIds: complete
-RenameVariables: partial (1632/1634, 2 failures)
+RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
 Codegen: todo
@@ -381,3 +381,17 @@ Fixed 23 test failures across three passes:
 - PruneNonEscapingScopes: Added FunctionExpression/ObjectMethod context operands from
   env.functions for captured variable tracking. 1→0 failures.
 Overall: 1704/1717 passing (99.2%), 13 failures remaining.
+
+## 20260323-160933 Fix 11 failures, add Result support to ReactiveFunctionTransform
+
+Fixed 11 test failures (13→2 remaining):
+- MergeReactiveScopesThatInvalidateTogether: propagate parent_deps through terminals,
+  add lvalue tracking in FindLastUsage. 6→0 failures.
+- Error message formatting: formatLoc treats null as (generated), invariant error details
+  in RIKBR, BuildReactiveFunction error format fix. 5→0 failures.
+- PruneHoistedContexts: return Err() for Todo errors instead of state workaround.
+
+Refactored ReactiveFunctionTransform trait to return Result<..., CompilerError> on all
+methods, enabling proper error propagation. Removed all .unwrap() calls on
+transform_reactive_function — callers propagate with ?.
+Overall: 1715/1717 passing (99.9%), 2 failures remaining (block ID ordering).

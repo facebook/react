@@ -26,14 +26,14 @@ use crate::visitors::{
 /// Prunes scopes that always invalidate because they depend on unmemoized
 /// always-invalidating values.
 /// TS: `pruneAlwaysInvalidatingScopes`
-pub fn prune_always_invalidating_scopes(func: &mut ReactiveFunction, env: &Environment) {
+pub fn prune_always_invalidating_scopes(func: &mut ReactiveFunction, env: &Environment) -> Result<(), react_compiler_diagnostics::CompilerError> {
     let mut transform = Transform {
         env,
         always_invalidating_values: HashSet::new(),
         unmemoized_values: HashSet::new(),
     };
     let mut state = false; // withinScope
-    transform_reactive_function(func, &mut transform, &mut state);
+    transform_reactive_function(func, &mut transform, &mut state)
 }
 
 struct Transform<'a> {
@@ -49,8 +49,8 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
         &mut self,
         instruction: &mut ReactiveInstruction,
         within_scope: &mut bool,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_instruction(instruction, within_scope);
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
+        self.visit_instruction(instruction, within_scope)?;
 
         let lvalue = &instruction.lvalue;
         match &instruction.value {
@@ -94,16 +94,16 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
             }
             _ => {}
         }
-        Transformed::Keep
+        Ok(Transformed::Keep)
     }
 
     fn transform_scope(
         &mut self,
         scope: &mut ReactiveScopeBlock,
         _within_scope: &mut bool,
-    ) -> Transformed<ReactiveStatement> {
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
         let mut within_scope = true;
-        self.visit_scope(scope, &mut within_scope);
+        self.visit_scope(scope, &mut within_scope)?;
 
         let scope_id = scope.scope;
         let scope_data = &self.env.scopes[scope_id.0 as usize];
@@ -130,14 +130,14 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
                     }
                 }
 
-                return Transformed::Replace(ReactiveStatement::PrunedScope(
+                return Ok(Transformed::Replace(ReactiveStatement::PrunedScope(
                     PrunedReactiveScopeBlock {
                         scope: scope.scope,
                         instructions: std::mem::take(&mut scope.instructions),
                     },
-                ));
+                )));
             }
         }
-        Transformed::Keep
+        Ok(Transformed::Keep)
     }
 }

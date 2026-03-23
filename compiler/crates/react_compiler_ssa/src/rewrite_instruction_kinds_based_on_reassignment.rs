@@ -18,7 +18,8 @@
 use std::collections::HashMap;
 
 use react_compiler_diagnostics::{
-    CompilerError, CompilerErrorDetail, ErrorCategory,
+    CompilerDiagnostic, CompilerDiagnosticDetail,
+    CompilerError, CompilerErrorDetail, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
     BlockKind, DeclarationId, HirFunction, InstructionKind, InstructionValue, ParamPattern,
@@ -29,13 +30,23 @@ use react_compiler_hir::{
 use react_compiler_hir::environment::Environment;
 
 /// Create an invariant CompilerError (matches TS CompilerError.invariant).
+/// When a loc is provided, creates a CompilerDiagnostic with an error detail item
+/// (matching TS CompilerError.invariant which uses .withDetails()).
 fn invariant_error(reason: &str, description: Option<String>) -> CompilerError {
+    invariant_error_with_loc(reason, description, None)
+}
+
+fn invariant_error_with_loc(reason: &str, description: Option<String>, loc: Option<SourceLocation>) -> CompilerError {
     let mut err = CompilerError::new();
-    let mut detail = CompilerErrorDetail::new(ErrorCategory::Invariant, reason);
-    if let Some(desc) = description {
-        detail = detail.with_description(desc);
-    }
-    err.push_error_detail(detail);
+    let diagnostic = CompilerDiagnostic::new(
+        ErrorCategory::Invariant,
+        reason,
+        description,
+    ).with_detail(CompilerDiagnosticDetail::Error {
+        loc,
+        message: Some(reason.to_string()),
+    });
+    err.push_diagnostic(diagnostic);
     err
 }
 
@@ -205,13 +216,14 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                         let ident = &env.identifiers[place.identifier.0 as usize];
                         if ident.name.is_none() {
                             if !(kind.is_none() || kind == Some(InstructionKind::Const)) {
-                                return Err(invariant_error(
+                                return Err(invariant_error_with_loc(
                                     "Expected consistent kind for destructuring",
                                     Some(format!(
                                         "other places were `{}` but '{}' is const",
                                         format_kind(kind),
                                         format_place(&place, env),
                                     )),
+                                    place.loc,
                                 ));
                             }
                             kind = Some(InstructionKind::Const);
@@ -220,13 +232,14 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                             if let Some(existing) = declarations.get(&decl_id) {
                                 // Reassignment
                                 if !(kind.is_none() || kind == Some(InstructionKind::Reassign)) {
-                                    return Err(invariant_error(
+                                    return Err(invariant_error_with_loc(
                                         "Expected consistent kind for destructuring",
                                         Some(format!(
                                             "Other places were `{}` but '{}' is reassigned",
                                             format_kind(kind),
                                             format_place(&place, env),
                                         )),
+                                        place.loc,
                                     ));
                                 }
                                 kind = Some(InstructionKind::Reassign);
@@ -244,9 +257,10 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                             } else {
                                 // New declaration
                                 if block_kind == BlockKind::Value {
-                                    return Err(invariant_error(
+                                    return Err(invariant_error_with_loc(
                                         "TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)",
                                         None,
+                                        place.loc,
                                     ));
                                 }
                                 declarations.insert(
@@ -257,13 +271,14 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                                     },
                                 );
                                 if !(kind.is_none() || kind == Some(InstructionKind::Const)) {
-                                    return Err(invariant_error(
+                                    return Err(invariant_error_with_loc(
                                         "Expected consistent kind for destructuring",
                                         Some(format!(
                                             "Other places were `{}` but '{}' is const",
                                             format_kind(kind),
                                             format_place(&place, env),
                                         )),
+                                        place.loc,
                                     ));
                                 }
                                 kind = Some(InstructionKind::Const);

@@ -30,7 +30,7 @@ use crate::visitors::{
 
 /// Prunes reactive scopes whose outputs don't escape.
 /// TS: `pruneNonEscapingScopes`
-pub fn prune_non_escaping_scopes(func: &mut ReactiveFunction, env: &mut Environment) {
+pub fn prune_non_escaping_scopes(func: &mut ReactiveFunction, env: &mut Environment) -> Result<(), react_compiler_diagnostics::CompilerError> {
     // First build up a map of which instructions are involved in creating which values,
     // and which values are returned.
     let mut state = CollectState::new();
@@ -57,7 +57,7 @@ pub fn prune_non_escaping_scopes(func: &mut ReactiveFunction, env: &mut Environm
         reassignments: HashMap::new(),
     };
     let mut memoized_state = memoized;
-    transform_reactive_function(func, &mut transform, &mut memoized_state);
+    transform_reactive_function(func, &mut transform, &mut memoized_state)
 }
 
 // =============================================================================
@@ -1342,8 +1342,8 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
         &mut self,
         scope: &mut ReactiveScopeBlock,
         state: &mut HashSet<DeclarationId>,
-    ) -> Transformed<ReactiveStatement> {
-        self.visit_scope(scope, state);
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
+        self.visit_scope(scope, state)?;
 
         let scope_id = scope.scope;
         let scope_data = &self.env.scopes[scope_id.0 as usize];
@@ -1353,7 +1353,7 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
         if (scope_data.declarations.is_empty() && scope_data.reassignments.is_empty())
             || scope_data.early_return_value.is_some()
         {
-            return Transformed::Keep;
+            return Ok(Transformed::Keep);
         }
 
         let has_memoized_output = scope_data
@@ -1369,10 +1369,10 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
             });
 
         if has_memoized_output {
-            Transformed::Keep
+            Ok(Transformed::Keep)
         } else {
             self.pruned_scopes.insert(scope_id);
-            Transformed::ReplaceMany(std::mem::take(&mut scope.instructions))
+            Ok(Transformed::ReplaceMany(std::mem::take(&mut scope.instructions)))
         }
     }
 
@@ -1380,8 +1380,8 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut HashSet<DeclarationId>,
-    ) -> Transformed<ReactiveStatement> {
-        self.traverse_instruction(instruction, state);
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
+        self.traverse_instruction(instruction, state)?;
 
         match &mut instruction.value {
             ReactiveValue::Instruction(InstructionValue::StoreLocal {
@@ -1451,6 +1451,6 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
             _ => {}
         }
 
-        Transformed::Keep
+        Ok(Transformed::Keep)
     }
 }

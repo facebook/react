@@ -18,10 +18,10 @@ use react_compiler_hir::{
 use crate::visitors::{transform_reactive_function, ReactiveFunctionTransform, Transformed};
 
 /// Prune unused labels from a reactive function.
-pub fn prune_unused_labels(func: &mut ReactiveFunction) {
+pub fn prune_unused_labels(func: &mut ReactiveFunction) -> Result<(), react_compiler_diagnostics::CompilerError> {
     let mut transform = Transform;
     let mut labels: HashSet<BlockId> = HashSet::new();
-    transform_reactive_function(func, &mut transform, &mut labels);
+    transform_reactive_function(func, &mut transform, &mut labels)
 }
 
 struct Transform;
@@ -33,9 +33,9 @@ impl ReactiveFunctionTransform for Transform {
         &mut self,
         stmt: &mut ReactiveTerminalStatement,
         state: &mut HashSet<BlockId>,
-    ) -> Transformed<ReactiveStatement> {
+    ) -> Result<Transformed<ReactiveStatement>, react_compiler_diagnostics::CompilerError> {
         // Traverse children first
-        self.traverse_terminal(stmt, state);
+        self.traverse_terminal(stmt, state)?;
 
         // Collect labeled break/continue targets
         match &stmt.terminal {
@@ -67,7 +67,7 @@ impl ReactiveFunctionTransform for Transform {
                 // to pop a trailing break, but since target is always a BlockId (number),
                 // that check is always false, so the trailing break is never removed.
                 let flattened = std::mem::take(block);
-                return Transformed::ReplaceMany(flattened);
+                return Ok(Transformed::ReplaceMany(flattened));
             }
         }
 
@@ -77,6 +77,6 @@ impl ReactiveFunctionTransform for Transform {
             }
         }
 
-        Transformed::Keep
+        Ok(Transformed::Keep)
     }
 }
