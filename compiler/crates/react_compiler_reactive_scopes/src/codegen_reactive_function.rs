@@ -1,0 +1,3177 @@
+// Copyright (c) Meta Platforms, Inc. and affiliates.
+//
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
+
+//! Code generation pass: converts a `ReactiveFunction` tree back into a Babel-compatible
+//! AST with memoization (useMemoCache) wired in.
+//!
+//! This is the final pass in the compilation pipeline.
+//!
+//! Corresponds to `src/ReactiveScopes/CodegenReactiveFunction.ts` in the TS compiler.
+
+use std::collections::{HashMap, HashSet};
+
+use react_compiler_ast::common::BaseNode;
+use react_compiler_ast::expressions::{
+    self as ast_expr, ArrowFunctionBody, Expression, Identifier as AstIdentifier,
+};
+use react_compiler_ast::jsx::{
+    JSXAttribute as AstJSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue,
+    JSXChild, JSXClosingElement, JSXClosingFragment, JSXElement, JSXElementName,
+    JSXExpressionContainer, JSXExpressionContainerExpr, JSXFragment, JSXIdentifier,
+    JSXMemberExprObject, JSXMemberExpression, JSXNamespacedName, JSXOpeningElement,
+    JSXOpeningFragment, JSXSpreadAttribute, JSXText,
+};
+use react_compiler_ast::literals::{
+    BooleanLiteral, NullLiteral, NumericLiteral, RegExpLiteral as AstRegExpLiteral, StringLiteral,
+    TemplateElement, TemplateElementValue,
+};
+use react_compiler_ast::operators::{
+    AssignmentOperator, BinaryOperator as AstBinaryOperator, LogicalOperator as AstLogicalOperator,
+    UnaryOperator as AstUnaryOperator, UpdateOperator as AstUpdateOperator,
+};
+use react_compiler_ast::patterns::{
+    ArrayPattern as AstArrayPattern, ObjectPatternProp, ObjectPatternProperty,
+    PatternLike, RestElement,
+};
+use react_compiler_ast::statements::{
+    BlockStatement, BreakStatement, CatchClause, ContinueStatement, DebuggerStatement, Directive,
+    DirectiveLiteral, DoWhileStatement, EmptyStatement, ExpressionStatement, ForInStatement,
+    ForInit, ForOfStatement, ForStatement, IfStatement, LabeledStatement, ReturnStatement,
+    Statement, SwitchCase, SwitchStatement, ThrowStatement, TryStatement, VariableDeclaration,
+    VariableDeclarationKind, VariableDeclarator, WhileStatement, FunctionDeclaration,
+};
+use react_compiler_diagnostics::{
+    CompilerError, CompilerErrorDetail, ErrorCategory,
+    SourceLocation as DiagSourceLocation,
+};
+use react_compiler_hir::environment::Environment;
+use react_compiler_hir::reactive::{
+    PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction, ReactiveInstruction,
+    ReactiveStatement, ReactiveTerminal, ReactiveTerminalTargetKind, ReactiveValue,
+    ReactiveScopeBlock,
+};
+use react_compiler_hir::{
+    ArrayElement, ArrayPattern, BlockId, DeclarationId, FunctionExpressionType, IdentifierId,
+    InstructionKind, InstructionValue, JsxAttribute, JsxTag,
+    LogicalOperator, ObjectPattern, ObjectPropertyKey, ObjectPropertyOrSpread,
+    ObjectPropertyType, ParamPattern, Pattern, Place, PlaceOrSpread, PrimitiveValue,
+    PropertyLiteral, ScopeId, SpreadPattern,
+};
+
+use crate::build_reactive_function::build_reactive_function;
+use crate::prune_hoisted_contexts::prune_hoisted_contexts;
+use crate::prune_unused_labels::prune_unused_labels;
+use crate::prune_unused_lvalues::prune_unused_lvalues;
+use crate::rename_variables::rename_variables;
+
+// =============================================================================
+// Public API
+// =============================================================================
+
+pub const MEMO_CACHE_SENTINEL: &str = "react.memo_cache_sentinel";
+pub const EARLY_RETURN_SENTINEL: &str = "react.early_return_sentinel";
+
+/// FBT tags whose children get special codegen treatment.
+const SINGLE_CHILD_FBT_TAGS: &[&str] = &["fbt:param", "fbs:param"];
+
+/// Result of code generation for a single function.
+pub struct CodegenFunction {
+    pub loc: Option<DiagSourceLocation>,
+    pub id: Option<AstIdentifier>,
+    pub name_hint: Option<String>,
+    pub params: Vec<PatternLike>,
+    pub body: BlockStatement,
+    pub generator: bool,
+    pub is_async: bool,
+    pub memo_slots_used: u32,
+    pub memo_blocks: u32,
+    pub memo_values: u32,
+    pub pruned_memo_blocks: u32,
+    pub pruned_memo_values: u32,
+    pub outlined: Vec<OutlinedFunction>,
+}
+
+impl std::fmt::Debug for CodegenFunction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CodegenFunction")
+            .field("memo_slots_used", &self.memo_slots_used)
+            .field("memo_blocks", &self.memo_blocks)
+            .field("memo_values", &self.memo_values)
+            .field("pruned_memo_blocks", &self.pruned_memo_blocks)
+            .field("pruned_memo_values", &self.pruned_memo_values)
+            .finish()
+    }
+}
+
+/// An outlined function extracted during compilation.
+pub struct OutlinedFunction {
+    pub func: CodegenFunction,
+    pub fn_type: Option<react_compiler_hir::ReactFunctionType>,
+}
+
+/// Top-level entry point: generates code for a reactive function.
+pub fn codegen_function(
+    func: &ReactiveFunction,
+    env: &mut Environment,
+    unique_identifiers: HashSet<String>,
+    fbt_operands: HashSet<IdentifierId>,
+) -> Result<CodegenFunction, CompilerError> {
+    let fn_name = func.id.as_deref().unwrap_or("[[ anonymous ]]");
+    let mut cx = Context::new(env, fn_name.to_string(), unique_identifiers, fbt_operands);
+
+    // Fast Refresh source hash handling is skipped in the Rust port
+    // (enableResetCacheOnSourceFileChanges not yet in config)
+
+    let mut compiled = codegen_reactive_function(&mut cx, func)?;
+
+    // Hook guard emission is skipped in the Rust port
+    // (enableEmitHookGuards not yet in config)
+
+    let cache_count = compiled.memo_slots_used;
+    if cache_count != 0 {
+        let mut preface: Vec<Statement> = Vec::new();
+        let cache_name = cx.synthesize_name("$");
+
+        // const $ = useMemoCache(N)
+        preface.push(Statement::VariableDeclaration(VariableDeclaration {
+            base: BaseNode::default(),
+            declarations: vec![VariableDeclarator {
+                base: BaseNode::default(),
+                id: PatternLike::Identifier(make_identifier(&cache_name)),
+                init: Some(Box::new(Expression::CallExpression(
+                    ast_expr::CallExpression {
+                        base: BaseNode::default(),
+                        callee: Box::new(Expression::Identifier(make_identifier(
+                            "useMemoCache",
+                        ))),
+                        arguments: vec![Expression::NumericLiteral(NumericLiteral {
+                            base: BaseNode::default(),
+                            value: cache_count as f64,
+                        })],
+                        type_parameters: None,
+                        type_arguments: None,
+                        optional: None,
+                    },
+                ))),
+                definite: None,
+            }],
+            kind: VariableDeclarationKind::Const,
+            declare: None,
+        }));
+
+        // Insert preface at the beginning of the body
+        let mut new_body = preface;
+        new_body.append(&mut compiled.body.body);
+        compiled.body.body = new_body;
+    }
+
+    // Instrument forget emission is skipped in the Rust port
+    // (enableEmitInstrumentForget not yet in config)
+
+    // Process outlined functions
+    let outlined_entries = cx.env.take_outlined_functions();
+    let mut outlined: Vec<OutlinedFunction> = Vec::new();
+    for entry in outlined_entries {
+        let reactive_fn = build_reactive_function(&entry.func, cx.env);
+        let mut reactive_fn_mut = reactive_fn;
+        prune_unused_labels(&mut reactive_fn_mut);
+        prune_unused_lvalues(&mut reactive_fn_mut, cx.env);
+        prune_hoisted_contexts(&mut reactive_fn_mut, cx.env);
+
+        let identifiers = rename_variables(&mut reactive_fn_mut, cx.env);
+        let mut outlined_cx = Context::new(
+            cx.env,
+            reactive_fn_mut.id.as_deref().unwrap_or("[[ anonymous ]]").to_string(),
+            identifiers,
+            cx.fbt_operands.clone(),
+        );
+        let codegen = codegen_reactive_function(&mut outlined_cx, &reactive_fn_mut)?;
+        outlined.push(OutlinedFunction {
+            func: codegen,
+            fn_type: entry.fn_type,
+        });
+    }
+    compiled.outlined = outlined;
+
+    Ok(compiled)
+}
+
+// =============================================================================
+// Context
+// =============================================================================
+
+type Temporaries = HashMap<DeclarationId, Option<ExpressionOrJsxText>>;
+
+#[derive(Clone)]
+enum ExpressionOrJsxText {
+    Expression(Expression),
+    JsxText(JSXText),
+}
+
+struct Context<'env> {
+    env: &'env mut Environment,
+    #[allow(dead_code)]
+    fn_name: String,
+    next_cache_index: u32,
+    declarations: HashSet<DeclarationId>,
+    temp: Temporaries,
+    object_methods: HashMap<IdentifierId, (InstructionValue, Option<react_compiler_diagnostics::SourceLocation>)>,
+    unique_identifiers: HashSet<String>,
+    fbt_operands: HashSet<IdentifierId>,
+    synthesized_names: HashMap<String, String>,
+}
+
+impl<'env> Context<'env> {
+    fn new(
+        env: &'env mut Environment,
+        fn_name: String,
+        unique_identifiers: HashSet<String>,
+        fbt_operands: HashSet<IdentifierId>,
+    ) -> Self {
+        Context {
+            env,
+            fn_name,
+            next_cache_index: 0,
+            declarations: HashSet::new(),
+            temp: HashMap::new(),
+            object_methods: HashMap::new(),
+            unique_identifiers,
+            fbt_operands,
+            synthesized_names: HashMap::new(),
+        }
+    }
+
+    fn alloc_cache_index(&mut self) -> u32 {
+        let idx = self.next_cache_index;
+        self.next_cache_index += 1;
+        idx
+    }
+
+    fn declare(&mut self, identifier_id: IdentifierId) {
+        let ident = &self.env.identifiers[identifier_id.0 as usize];
+        self.declarations.insert(ident.declaration_id);
+    }
+
+    fn has_declared(&self, identifier_id: IdentifierId) -> bool {
+        let ident = &self.env.identifiers[identifier_id.0 as usize];
+        self.declarations.contains(&ident.declaration_id)
+    }
+
+    fn synthesize_name(&mut self, name: &str) -> String {
+        if let Some(prev) = self.synthesized_names.get(name) {
+            return prev.clone();
+        }
+        let mut validated = format!("${name}");
+        let mut index = 0u32;
+        while self.unique_identifiers.contains(&validated) {
+            validated = format!("${name}{index}");
+            index += 1;
+        }
+        self.unique_identifiers.insert(validated.clone());
+        self.synthesized_names.insert(name.to_string(), validated.clone());
+        validated
+    }
+
+    fn record_error(&mut self, detail: CompilerErrorDetail) {
+        self.env.record_error(detail);
+    }
+}
+
+// =============================================================================
+// Core codegen functions
+// =============================================================================
+
+fn codegen_reactive_function(
+    cx: &mut Context,
+    func: &ReactiveFunction,
+) -> Result<CodegenFunction, CompilerError> {
+    // Register parameters
+    for param in &func.params {
+        let place = match param {
+            ParamPattern::Place(p) => p,
+            ParamPattern::Spread(sp) => &sp.place,
+        };
+        let ident = &cx.env.identifiers[place.identifier.0 as usize];
+        cx.temp.insert(ident.declaration_id, None);
+        cx.declare(place.identifier);
+    }
+
+    let params: Vec<PatternLike> = func.params.iter().map(|p| convert_parameter(p, cx.env)).collect();
+    let mut body = codegen_block(cx, &func.body)?;
+
+    // Add directives
+    body.directives = func
+        .directives
+        .iter()
+        .map(|d| Directive {
+            base: BaseNode::default(),
+            value: DirectiveLiteral {
+                base: BaseNode::default(),
+                value: d.clone(),
+            },
+        })
+        .collect();
+
+    // Remove trailing `return undefined`
+    if let Some(last) = body.body.last() {
+        if matches!(last, Statement::ReturnStatement(ret) if ret.argument.is_none()) {
+            body.body.pop();
+        }
+    }
+
+    // Count memo blocks
+    let (memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values) =
+        count_memo_blocks(func, cx.env);
+
+    Ok(CodegenFunction {
+        loc: func.loc,
+        id: func.id.as_ref().map(|name| make_identifier(name)),
+        name_hint: func.name_hint.clone(),
+        params,
+        body,
+        generator: func.generator,
+        is_async: func.is_async,
+        memo_slots_used: cx.next_cache_index,
+        memo_blocks,
+        memo_values,
+        pruned_memo_blocks,
+        pruned_memo_values,
+        outlined: Vec::new(),
+    })
+}
+
+fn convert_parameter(param: &ParamPattern, env: &Environment) -> PatternLike {
+    match param {
+        ParamPattern::Place(place) => {
+            PatternLike::Identifier(convert_identifier(place.identifier, env))
+        }
+        ParamPattern::Spread(spread) => PatternLike::RestElement(RestElement {
+            base: BaseNode::default(),
+            argument: Box::new(PatternLike::Identifier(convert_identifier(
+                spread.place.identifier,
+                env,
+            ))),
+            type_annotation: None,
+            decorators: None,
+        }),
+    }
+}
+
+// =============================================================================
+// Block codegen
+// =============================================================================
+
+fn codegen_block(cx: &mut Context, block: &ReactiveBlock) -> Result<BlockStatement, CompilerError> {
+    let temp_snapshot: Temporaries = cx.temp.clone();
+    let result = codegen_block_no_reset(cx, block)?;
+    cx.temp = temp_snapshot;
+    Ok(result)
+}
+
+fn codegen_block_no_reset(
+    cx: &mut Context,
+    block: &ReactiveBlock,
+) -> Result<BlockStatement, CompilerError> {
+    let mut statements: Vec<Statement> = Vec::new();
+    for item in block {
+        match item {
+            ReactiveStatement::Instruction(instr) => {
+                if let Some(stmt) = codegen_instruction_nullable(cx, instr)? {
+                    statements.push(stmt);
+                }
+            }
+            ReactiveStatement::PrunedScope(PrunedReactiveScopeBlock {
+                instructions, ..
+            }) => {
+                let scope_block = codegen_block_no_reset(cx, instructions)?;
+                statements.extend(scope_block.body);
+            }
+            ReactiveStatement::Scope(ReactiveScopeBlock {
+                scope,
+                instructions,
+            }) => {
+                let temp_snapshot = cx.temp.clone();
+                codegen_reactive_scope(cx, &mut statements, *scope, instructions)?;
+                cx.temp = temp_snapshot;
+            }
+            ReactiveStatement::Terminal(term_stmt) => {
+                let stmt = codegen_terminal(cx, &term_stmt.terminal)?;
+                let Some(stmt) = stmt else {
+                    continue;
+                };
+                if let Some(ref label) = term_stmt.label {
+                    if !label.implicit {
+                        let inner = if let Statement::BlockStatement(bs) = &stmt {
+                            if bs.body.len() == 1 {
+                                bs.body[0].clone()
+                            } else {
+                                stmt
+                            }
+                        } else {
+                            stmt
+                        };
+                        statements.push(Statement::LabeledStatement(LabeledStatement {
+                            base: BaseNode::default(),
+                            label: make_identifier(&codegen_label(label.id)),
+                            body: Box::new(inner),
+                        }));
+                    } else if let Statement::BlockStatement(bs) = stmt {
+                        statements.extend(bs.body);
+                    } else {
+                        statements.push(stmt);
+                    }
+                } else if let Statement::BlockStatement(bs) = stmt {
+                    statements.extend(bs.body);
+                } else {
+                    statements.push(stmt);
+                }
+            }
+        }
+    }
+    Ok(BlockStatement {
+        base: BaseNode::default(),
+        body: statements,
+        directives: Vec::new(),
+    })
+}
+
+// =============================================================================
+// Reactive scope codegen (memoization)
+// =============================================================================
+
+fn codegen_reactive_scope(
+    cx: &mut Context,
+    statements: &mut Vec<Statement>,
+    scope_id: ScopeId,
+    block: &ReactiveBlock,
+) -> Result<(), CompilerError> {
+    // Clone scope data upfront to avoid holding a borrow on cx.env
+    let scope_deps = cx.env.scopes[scope_id.0 as usize].dependencies.clone();
+    let scope_decls = cx.env.scopes[scope_id.0 as usize].declarations.clone();
+    let scope_reassignments = cx.env.scopes[scope_id.0 as usize].reassignments.clone();
+
+    let mut cache_store_stmts: Vec<Statement> = Vec::new();
+    let mut cache_load_stmts: Vec<Statement> = Vec::new();
+    let mut cache_loads: Vec<(AstIdentifier, u32, Expression)> = Vec::new();
+    let mut change_exprs: Vec<Expression> = Vec::new();
+
+    // Sort dependencies
+    let mut deps = scope_deps;
+    deps.sort_by(|a, b| compare_scope_dependency(a, b, cx.env));
+
+    for dep in &deps {
+        let index = cx.alloc_cache_index();
+        let cache_name = cx.synthesize_name("$");
+        let comparison = Expression::BinaryExpression(ast_expr::BinaryExpression {
+            base: BaseNode::default(),
+            operator: AstBinaryOperator::StrictNeq,
+            left: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                base: BaseNode::default(),
+                object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                    base: BaseNode::default(),
+                    value: index as f64,
+                })),
+                computed: true,
+            })),
+            right: Box::new(codegen_dependency(cx, dep)?),
+        });
+        change_exprs.push(comparison);
+
+        // Store dependency value into cache
+        let dep_value = codegen_dependency(cx, dep)?;
+        cache_store_stmts.push(Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::default(),
+            expression: Box::new(Expression::AssignmentExpression(
+                ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(Expression::Identifier(make_identifier(
+                                &cache_name,
+                            ))),
+                            property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                base: BaseNode::default(),
+                                value: index as f64,
+                            })),
+                            computed: true,
+                        },
+                    )),
+                    right: Box::new(dep_value),
+                },
+            )),
+        }));
+    }
+
+    let mut first_output_index: Option<u32> = None;
+
+    // Sort declarations
+    let mut decls = scope_decls;
+    decls.sort_by(|(_id_a, a), (_id_b, b)| compare_scope_declaration(a, b, cx.env));
+
+    for (_ident_id, decl) in &decls {
+        let index = cx.alloc_cache_index();
+        if first_output_index.is_none() {
+            first_output_index = Some(index);
+        }
+
+        let ident = &cx.env.identifiers[decl.identifier.0 as usize];
+        invariant(
+            ident.name.is_some(),
+            &format!(
+                "Expected scope declaration identifier to be named, id={}",
+                decl.identifier.0
+            ),
+            None,
+        )?;
+
+        let name = convert_identifier(decl.identifier, cx.env);
+        if !cx.has_declared(decl.identifier) {
+            statements.push(Statement::VariableDeclaration(VariableDeclaration {
+                base: BaseNode::default(),
+                declarations: vec![VariableDeclarator {
+                    base: BaseNode::default(),
+                    id: PatternLike::Identifier(name.clone()),
+                    init: None,
+                    definite: None,
+                }],
+                kind: VariableDeclarationKind::Let,
+                declare: None,
+            }));
+        }
+        cache_loads.push((name.clone(), index, Expression::Identifier(name.clone())));
+        cx.declare(decl.identifier);
+    }
+
+    for reassignment_id in scope_reassignments {
+        let index = cx.alloc_cache_index();
+        if first_output_index.is_none() {
+            first_output_index = Some(index);
+        }
+        let name = convert_identifier(reassignment_id, cx.env);
+        cache_loads.push((name.clone(), index, Expression::Identifier(name)));
+    }
+
+    // Build test condition
+    let test_condition = if change_exprs.is_empty() {
+        let first_idx = first_output_index.ok_or_else(|| {
+            invariant_err("Expected scope to have at least one declaration", None)
+        })?;
+        let cache_name = cx.synthesize_name("$");
+        Expression::BinaryExpression(ast_expr::BinaryExpression {
+            base: BaseNode::default(),
+            operator: AstBinaryOperator::StrictEq,
+            left: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                base: BaseNode::default(),
+                object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                    base: BaseNode::default(),
+                    value: first_idx as f64,
+                })),
+                computed: true,
+            })),
+            right: Box::new(symbol_for(MEMO_CACHE_SENTINEL)),
+        })
+    } else {
+        change_exprs
+            .into_iter()
+            .reduce(|acc, expr| {
+                Expression::LogicalExpression(ast_expr::LogicalExpression {
+                    base: BaseNode::default(),
+                    operator: AstLogicalOperator::Or,
+                    left: Box::new(acc),
+                    right: Box::new(expr),
+                })
+            })
+            .unwrap()
+    };
+
+    let mut computation_block = codegen_block(cx, block)?;
+
+    // Build cache store and load statements for declarations
+    for (name, index, value) in &cache_loads {
+        let cache_name = cx.synthesize_name("$");
+        cache_store_stmts.push(Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::default(),
+            expression: Box::new(Expression::AssignmentExpression(
+                ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(Expression::Identifier(make_identifier(
+                                &cache_name,
+                            ))),
+                            property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                base: BaseNode::default(),
+                                value: *index as f64,
+                            })),
+                            computed: true,
+                        },
+                    )),
+                    right: Box::new(value.clone()),
+                },
+            )),
+        }));
+        cache_load_stmts.push(Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::default(),
+            expression: Box::new(Expression::AssignmentExpression(
+                ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::Identifier(name.clone())),
+                    right: Box::new(Expression::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(Expression::Identifier(make_identifier(
+                                &cache_name,
+                            ))),
+                            property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                base: BaseNode::default(),
+                                value: *index as f64,
+                            })),
+                            computed: true,
+                        },
+                    )),
+                },
+            )),
+        }));
+    }
+
+    computation_block.body.extend(cache_store_stmts);
+
+    let memo_stmt = Statement::IfStatement(IfStatement {
+        base: BaseNode::default(),
+        test: Box::new(test_condition),
+        consequent: Box::new(Statement::BlockStatement(computation_block)),
+        alternate: Some(Box::new(Statement::BlockStatement(BlockStatement {
+            base: BaseNode::default(),
+            body: cache_load_stmts,
+            directives: Vec::new(),
+        }))),
+    });
+    statements.push(memo_stmt);
+
+    // Handle early return
+    let early_return_value = cx.env.scopes[scope_id.0 as usize].early_return_value.clone();
+    if let Some(ref early_return) = early_return_value {
+        let early_ident = &cx.env.identifiers[early_return.value.0 as usize];
+        let name = match &early_ident.name {
+            Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
+            Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
+            None => {
+                return Err(invariant_err(
+                        "Expected early return value to be promoted to a named variable",
+                        early_return.loc,
+                    ));
+            }
+        };
+        statements.push(Statement::IfStatement(IfStatement {
+            base: BaseNode::default(),
+            test: Box::new(Expression::BinaryExpression(ast_expr::BinaryExpression {
+                base: BaseNode::default(),
+                operator: AstBinaryOperator::StrictNeq,
+                left: Box::new(Expression::Identifier(make_identifier(&name))),
+                right: Box::new(symbol_for(EARLY_RETURN_SENTINEL)),
+            })),
+            consequent: Box::new(Statement::BlockStatement(BlockStatement {
+                base: BaseNode::default(),
+                body: vec![Statement::ReturnStatement(ReturnStatement {
+                    base: BaseNode::default(),
+                    argument: Some(Box::new(Expression::Identifier(make_identifier(&name)))),
+                })],
+                directives: Vec::new(),
+            })),
+            alternate: None,
+        }));
+    }
+
+    Ok(())
+}
+
+// =============================================================================
+// Terminal codegen
+// =============================================================================
+
+fn codegen_terminal(
+    cx: &mut Context,
+    terminal: &ReactiveTerminal,
+) -> Result<Option<Statement>, CompilerError> {
+    match terminal {
+        ReactiveTerminal::Break {
+            target,
+            target_kind,
+            ..
+        } => {
+            if *target_kind == ReactiveTerminalTargetKind::Implicit {
+                return Ok(None);
+            }
+            Ok(Some(Statement::BreakStatement(BreakStatement {
+                base: BaseNode::default(),
+                label: if *target_kind == ReactiveTerminalTargetKind::Labeled {
+                    Some(make_identifier(&codegen_label(*target)))
+                } else {
+                    None
+                },
+            })))
+        }
+        ReactiveTerminal::Continue {
+            target,
+            target_kind,
+            ..
+        } => {
+            if *target_kind == ReactiveTerminalTargetKind::Implicit {
+                return Ok(None);
+            }
+            Ok(Some(Statement::ContinueStatement(ContinueStatement {
+                base: BaseNode::default(),
+                label: if *target_kind == ReactiveTerminalTargetKind::Labeled {
+                    Some(make_identifier(&codegen_label(*target)))
+                } else {
+                    None
+                },
+            })))
+        }
+        ReactiveTerminal::Return { value, .. } => {
+            let expr = codegen_place_to_expression(cx, value)?;
+            if let Expression::Identifier(ref ident) = expr {
+                if ident.name == "undefined" {
+                    return Ok(Some(Statement::ReturnStatement(ReturnStatement {
+                        base: BaseNode::default(),
+                        argument: None,
+                    })));
+                }
+            }
+            Ok(Some(Statement::ReturnStatement(ReturnStatement {
+                base: BaseNode::default(),
+                argument: Some(Box::new(expr)),
+            })))
+        }
+        ReactiveTerminal::Throw { value, .. } => {
+            let expr = codegen_place_to_expression(cx, value)?;
+            Ok(Some(Statement::ThrowStatement(ThrowStatement {
+                base: BaseNode::default(),
+                argument: Box::new(expr),
+            })))
+        }
+        ReactiveTerminal::If {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
+            let test_expr = codegen_place_to_expression(cx, test)?;
+            let consequent_block = codegen_block(cx, consequent)?;
+            let alternate_stmt = if let Some(alt) = alternate {
+                let block = codegen_block(cx, alt)?;
+                if block.body.is_empty() {
+                    None
+                } else {
+                    Some(Box::new(Statement::BlockStatement(block)))
+                }
+            } else {
+                None
+            };
+            Ok(Some(Statement::IfStatement(IfStatement {
+                base: BaseNode::default(),
+                test: Box::new(test_expr),
+                consequent: Box::new(Statement::BlockStatement(consequent_block)),
+                alternate: alternate_stmt,
+            })))
+        }
+        ReactiveTerminal::Switch { test, cases, .. } => {
+            let test_expr = codegen_place_to_expression(cx, test)?;
+            let switch_cases: Vec<SwitchCase> = cases
+                .iter()
+                .map(|case| {
+                    let test = case
+                        .test
+                        .as_ref()
+                        .map(|t| codegen_place_to_expression(cx, t))
+                        .transpose()?;
+                    let block = case
+                        .block
+                        .as_ref()
+                        .map(|b| codegen_block(cx, b))
+                        .transpose()?;
+                    let consequent = match block {
+                        Some(b) if b.body.is_empty() => Vec::new(),
+                        Some(b) => vec![Statement::BlockStatement(b)],
+                        None => Vec::new(),
+                    };
+                    Ok(SwitchCase {
+                        base: BaseNode::default(),
+                        test: test.map(Box::new),
+                        consequent,
+                    })
+                })
+                .collect::<Result<_, CompilerError>>()?;
+            Ok(Some(Statement::SwitchStatement(SwitchStatement {
+                base: BaseNode::default(),
+                discriminant: Box::new(test_expr),
+                cases: switch_cases,
+            })))
+        }
+        ReactiveTerminal::DoWhile {
+            loop_block, test, ..
+        } => {
+            let test_expr = codegen_instruction_value_to_expression(cx, test)?;
+            let body = codegen_block(cx, loop_block)?;
+            Ok(Some(Statement::DoWhileStatement(DoWhileStatement {
+                base: BaseNode::default(),
+                test: Box::new(test_expr),
+                body: Box::new(Statement::BlockStatement(body)),
+            })))
+        }
+        ReactiveTerminal::While {
+            test, loop_block, ..
+        } => {
+            let test_expr = codegen_instruction_value_to_expression(cx, test)?;
+            let body = codegen_block(cx, loop_block)?;
+            Ok(Some(Statement::WhileStatement(WhileStatement {
+                base: BaseNode::default(),
+                test: Box::new(test_expr),
+                body: Box::new(Statement::BlockStatement(body)),
+            })))
+        }
+        ReactiveTerminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            ..
+        } => {
+            let init_val = codegen_for_init(cx, init)?;
+            let test_expr = codegen_instruction_value_to_expression(cx, test)?;
+            let update_expr = update
+                .as_ref()
+                .map(|u| codegen_instruction_value_to_expression(cx, u))
+                .transpose()?;
+            let body = codegen_block(cx, loop_block)?;
+            Ok(Some(Statement::ForStatement(ForStatement {
+                base: BaseNode::default(),
+                init: init_val.map(|v| Box::new(v)),
+                test: Some(Box::new(test_expr)),
+                update: update_expr.map(Box::new),
+                body: Box::new(Statement::BlockStatement(body)),
+            })))
+        }
+        ReactiveTerminal::ForIn {
+            init, loop_block, ..
+        } => {
+            codegen_for_in(cx, init, loop_block)
+        }
+        ReactiveTerminal::ForOf {
+            init,
+            test,
+            loop_block,
+            ..
+        } => {
+            codegen_for_of(cx, init, test, loop_block)
+        }
+        ReactiveTerminal::Label { block, .. } => {
+            let body = codegen_block(cx, block)?;
+            Ok(Some(Statement::BlockStatement(body)))
+        }
+        ReactiveTerminal::Try {
+            block,
+            handler_binding,
+            handler,
+            ..
+        } => {
+            let catch_param = handler_binding.as_ref().map(|binding| {
+                let ident = &cx.env.identifiers[binding.identifier.0 as usize];
+                cx.temp.insert(ident.declaration_id, None);
+                PatternLike::Identifier(convert_identifier(binding.identifier, cx.env))
+            });
+            let try_block = codegen_block(cx, block)?;
+            let handler_block = codegen_block(cx, handler)?;
+            Ok(Some(Statement::TryStatement(TryStatement {
+                base: BaseNode::default(),
+                block: try_block,
+                handler: Some(CatchClause {
+                    base: BaseNode::default(),
+                    param: catch_param,
+                    body: handler_block,
+                }),
+                finalizer: None,
+            })))
+        }
+    }
+}
+
+fn codegen_for_in(
+    cx: &mut Context,
+    init: &ReactiveValue,
+    loop_block: &ReactiveBlock,
+) -> Result<Option<Statement>, CompilerError> {
+    let ReactiveValue::SequenceExpression { instructions, .. } = init else {
+        return Err(invariant_err(
+            "Expected a sequence expression init for for..in",
+            None,
+        ));
+    };
+    if instructions.len() != 2 {
+        cx.record_error(CompilerErrorDetail {
+            category: ErrorCategory::Todo,
+            reason: "Support non-trivial for..in inits".to_string(),
+            description: None,
+            loc: None,
+            suggestions: None,
+        });
+        return Ok(Some(Statement::EmptyStatement(EmptyStatement {
+            base: BaseNode::default(),
+        })));
+    }
+    let iterable_collection = &instructions[0];
+    let iterable_item = &instructions[1];
+    let instr_value = get_instruction_value(&iterable_item.value)?;
+    let (lval, var_decl_kind) =
+        extract_for_in_of_lval(cx, instr_value, "for..in")?;
+    let right = codegen_instruction_value_to_expression(cx, &iterable_collection.value)?;
+    let body = codegen_block(cx, loop_block)?;
+    Ok(Some(Statement::ForInStatement(ForInStatement {
+        base: BaseNode::default(),
+        left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
+            VariableDeclaration {
+                base: BaseNode::default(),
+                declarations: vec![VariableDeclarator {
+                    base: BaseNode::default(),
+                    id: lval,
+                    init: None,
+                    definite: None,
+                }],
+                kind: var_decl_kind,
+                declare: None,
+            },
+        )),
+        right: Box::new(right),
+        body: Box::new(Statement::BlockStatement(body)),
+    })))
+}
+
+fn codegen_for_of(
+    cx: &mut Context,
+    init: &ReactiveValue,
+    test: &ReactiveValue,
+    loop_block: &ReactiveBlock,
+) -> Result<Option<Statement>, CompilerError> {
+    // Validate init is SequenceExpression with single GetIterator instruction
+    let ReactiveValue::SequenceExpression {
+        instructions: init_instrs,
+        ..
+    } = init
+    else {
+        return Err(invariant_err(
+            "Expected a sequence expression init for for..of",
+            None,
+        ));
+    };
+    if init_instrs.len() != 1 {
+        return Err(invariant_err(
+            "Expected a single-expression sequence expression init for for..of",
+            None,
+        ));
+    }
+    let get_iter_value = get_instruction_value(&init_instrs[0].value)?;
+    let InstructionValue::GetIterator { collection, .. } = get_iter_value else {
+        return Err(invariant_err(
+            "Expected GetIterator in for..of init",
+            None,
+        ));
+    };
+
+    let ReactiveValue::SequenceExpression {
+        instructions: test_instrs,
+        ..
+    } = test
+    else {
+        return Err(invariant_err(
+            "Expected a sequence expression test for for..of",
+            None,
+        ));
+    };
+    if test_instrs.len() != 2 {
+        cx.record_error(CompilerErrorDetail {
+            category: ErrorCategory::Todo,
+            reason: "Support non-trivial for..of inits".to_string(),
+            description: None,
+            loc: None,
+            suggestions: None,
+        });
+        return Ok(Some(Statement::EmptyStatement(EmptyStatement {
+            base: BaseNode::default(),
+        })));
+    }
+    let iterable_item = &test_instrs[1];
+    let instr_value = get_instruction_value(&iterable_item.value)?;
+    let (lval, var_decl_kind) =
+        extract_for_in_of_lval(cx, instr_value, "for..of")?;
+
+    let right = codegen_place_to_expression(cx, collection)?;
+    let body = codegen_block(cx, loop_block)?;
+    Ok(Some(Statement::ForOfStatement(ForOfStatement {
+        base: BaseNode::default(),
+        left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
+            VariableDeclaration {
+                base: BaseNode::default(),
+                declarations: vec![VariableDeclarator {
+                    base: BaseNode::default(),
+                    id: lval,
+                    init: None,
+                    definite: None,
+                }],
+                kind: var_decl_kind,
+                declare: None,
+            },
+        )),
+        right: Box::new(right),
+        body: Box::new(Statement::BlockStatement(body)),
+        is_await: false,
+    })))
+}
+
+/// Extract lval and declaration kind from a for-in/for-of iterable item instruction.
+fn extract_for_in_of_lval(
+    cx: &mut Context,
+    instr_value: &InstructionValue,
+    context_name: &str,
+) -> Result<(PatternLike, VariableDeclarationKind), CompilerError> {
+    let (lval, kind) = match instr_value {
+        InstructionValue::StoreLocal { lvalue, .. } => {
+            (codegen_lvalue(cx, &LvalueRef::Place(&lvalue.place))?, lvalue.kind)
+        }
+        InstructionValue::Destructure { lvalue, .. } => {
+            (codegen_lvalue(cx, &LvalueRef::Pattern(&lvalue.pattern))?, lvalue.kind)
+        }
+        InstructionValue::StoreContext { .. } => {
+            cx.record_error(CompilerErrorDetail {
+                category: ErrorCategory::Todo,
+                reason: format!("Support non-trivial {} inits", context_name),
+                description: None,
+                loc: None,
+                suggestions: None,
+            });
+            return Ok((
+                PatternLike::Identifier(make_identifier("_")),
+                VariableDeclarationKind::Let,
+            ));
+        }
+        _ => {
+            return Err(invariant_err(
+                &format!(
+                    "Expected a StoreLocal or Destructure in {} collection, found {:?}",
+                    context_name, std::mem::discriminant(instr_value)
+                ),
+                None,
+            ));
+        }
+    };
+    let var_decl_kind = match kind {
+        InstructionKind::Const => VariableDeclarationKind::Const,
+        InstructionKind::Let => VariableDeclarationKind::Let,
+        _ => {
+            return Err(invariant_err(
+                &format!("Unexpected {:?} variable in {} collection", kind, context_name),
+                None,
+            ));
+        }
+    };
+    Ok((lval, var_decl_kind))
+}
+
+fn codegen_for_init(
+    cx: &mut Context,
+    init: &ReactiveValue,
+) -> Result<Option<ForInit>, CompilerError> {
+    if let ReactiveValue::SequenceExpression { instructions, .. } = init {
+        let block_items: Vec<ReactiveStatement> = instructions
+            .iter()
+            .map(|i| ReactiveStatement::Instruction(i.clone()))
+            .collect();
+        let body = codegen_block(cx, &block_items)?.body;
+        let mut declarators: Vec<VariableDeclarator> = Vec::new();
+        let mut kind = VariableDeclarationKind::Const;
+        for instr in body {
+            // Check if this is an assignment that can be folded into the last declarator
+            if let Statement::ExpressionStatement(ref expr_stmt) = instr {
+                if let Expression::AssignmentExpression(ref assign) = *expr_stmt.expression {
+                if matches!(assign.operator, AssignmentOperator::Assign) {
+                    if let PatternLike::Identifier(ref left_ident) = *assign.left {
+                        if let Some(top) = declarators.last_mut() {
+                            if let PatternLike::Identifier(ref top_ident) = top.id {
+                                if top_ident.name == left_ident.name && top.init.is_none() {
+                                    top.init = Some(assign.right.clone());
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+                }
+            }
+
+            if let Statement::VariableDeclaration(var_decl) = instr {
+                match var_decl.kind {
+                    VariableDeclarationKind::Let | VariableDeclarationKind::Const => {}
+                    _ => {
+                        return Err(invariant_err("Expected a let or const variable declaration", None));
+                    }
+                }
+                if matches!(var_decl.kind, VariableDeclarationKind::Let) {
+                    kind = VariableDeclarationKind::Let;
+                }
+                declarators.extend(var_decl.declarations);
+            } else {
+                return Err(invariant_err(
+                    &format!("Expected a variable declaration in for-init, got {:?}", std::mem::discriminant(&instr)),
+                    None,
+                ));
+            }
+        }
+        if declarators.is_empty() {
+            return Err(invariant_err("Expected a variable declaration in for-init", None));
+        }
+        Ok(Some(ForInit::VariableDeclaration(VariableDeclaration {
+            base: BaseNode::default(),
+            declarations: declarators,
+            kind,
+            declare: None,
+        })))
+    } else {
+        let expr = codegen_instruction_value_to_expression(cx, init)?;
+        Ok(Some(ForInit::Expression(Box::new(expr))))
+    }
+}
+
+// =============================================================================
+// Instruction codegen
+// =============================================================================
+
+fn codegen_instruction_nullable(
+    cx: &mut Context,
+    instr: &ReactiveInstruction,
+) -> Result<Option<Statement>, CompilerError> {
+    // Only check specific InstructionValue kinds for the base Instruction variant
+    if let ReactiveValue::Instruction(ref value) = instr.value {
+        match value {
+            InstructionValue::StoreLocal { .. }
+            | InstructionValue::StoreContext { .. }
+            | InstructionValue::Destructure { .. }
+            | InstructionValue::DeclareLocal { .. }
+            | InstructionValue::DeclareContext { .. } => {
+                return codegen_store_or_declare(cx, instr, value);
+            }
+            InstructionValue::StartMemoize { .. } | InstructionValue::FinishMemoize { .. } => {
+                return Ok(None);
+            }
+            InstructionValue::Debugger { .. } => {
+                return Ok(Some(Statement::DebuggerStatement(DebuggerStatement {
+                    base: BaseNode::default(),
+                })));
+            }
+            InstructionValue::ObjectMethod { loc, .. } => {
+                invariant(instr.lvalue.is_some(), "Expected object methods to have a temp lvalue", None)?;
+                let lvalue = instr.lvalue.as_ref().unwrap();
+                cx.object_methods.insert(
+                    lvalue.identifier,
+                    (value.clone(), *loc),
+                );
+                return Ok(None);
+            }
+            _ => {} // fall through to general codegen
+        }
+    }
+    // General case: codegen the full ReactiveValue
+    let expr_value = codegen_instruction_value(cx, &instr.value)?;
+    let stmt = codegen_instruction(cx, instr, expr_value)?;
+    if matches!(stmt, Statement::EmptyStatement(_)) {
+        Ok(None)
+    } else {
+        Ok(Some(stmt))
+    }
+}
+
+fn codegen_store_or_declare(
+    cx: &mut Context,
+    instr: &ReactiveInstruction,
+    value: &InstructionValue,
+) -> Result<Option<Statement>, CompilerError> {
+    match value {
+        InstructionValue::StoreLocal { lvalue, value: val, .. } => {
+            let mut kind = lvalue.kind;
+            if cx.has_declared(lvalue.place.identifier) {
+                kind = InstructionKind::Reassign;
+            }
+            let rhs = codegen_place_to_expression(cx, val)?;
+            emit_store(cx, instr, kind, &LvalueRef::Place(&lvalue.place), Some(rhs))
+        }
+        InstructionValue::StoreContext { lvalue, value: val, .. } => {
+            let rhs = codegen_place_to_expression(cx, val)?;
+            emit_store(cx, instr, lvalue.kind, &LvalueRef::Place(&lvalue.place), Some(rhs))
+        }
+        InstructionValue::DeclareLocal { lvalue, .. }
+        | InstructionValue::DeclareContext { lvalue, .. } => {
+            if cx.has_declared(lvalue.place.identifier) {
+                return Ok(None);
+            }
+            emit_store(cx, instr, lvalue.kind, &LvalueRef::Place(&lvalue.place), None)
+        }
+        InstructionValue::Destructure { lvalue, value: val, .. } => {
+            let kind = lvalue.kind;
+            // Register temporaries for unnamed pattern operands
+            for place in each_pattern_operand(&lvalue.pattern) {
+                let ident = &cx.env.identifiers[place.identifier.0 as usize];
+                if kind != InstructionKind::Reassign && ident.name.is_none() {
+                    cx.temp.insert(ident.declaration_id, None);
+                }
+            }
+            let rhs = codegen_place_to_expression(cx, val)?;
+            emit_store(cx, instr, kind, &LvalueRef::Pattern(&lvalue.pattern), Some(rhs))
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn emit_store(
+    cx: &mut Context,
+    instr: &ReactiveInstruction,
+    kind: InstructionKind,
+    lvalue: &LvalueRef,
+    value: Option<Expression>,
+) -> Result<Option<Statement>, CompilerError> {
+    match kind {
+        InstructionKind::Const => {
+            let lval = codegen_lvalue(cx, lvalue)?;
+            Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
+                base: BaseNode::default(),
+                declarations: vec![make_var_declarator(lval, value)],
+                kind: VariableDeclarationKind::Const,
+                declare: None,
+            })))
+        }
+        InstructionKind::Function => {
+            let lval = codegen_lvalue(cx, lvalue)?;
+            let PatternLike::Identifier(fn_id) = lval else {
+                return Err(invariant_err("Expected an identifier as function declaration lvalue", None));
+            };
+            let Some(rhs) = value else {
+                return Err(invariant_err("Expected a function value for function declaration", None));
+            };
+            match rhs {
+                Expression::FunctionExpression(func_expr) => {
+                    Ok(Some(Statement::FunctionDeclaration(FunctionDeclaration {
+                        base: BaseNode::default(),
+                        id: Some(fn_id),
+                        params: func_expr.params,
+                        body: func_expr.body,
+                        generator: func_expr.generator,
+                        is_async: func_expr.is_async,
+                        declare: None,
+                        return_type: None,
+                        type_parameters: None,
+                        predicate: None,
+                    })))
+                }
+                _ => Err(invariant_err("Expected a function expression for function declaration", None)),
+            }
+        }
+        InstructionKind::Let => {
+            let lval = codegen_lvalue(cx, lvalue)?;
+            Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
+                base: BaseNode::default(),
+                declarations: vec![make_var_declarator(lval, value)],
+                kind: VariableDeclarationKind::Let,
+                declare: None,
+            })))
+        }
+        InstructionKind::Reassign => {
+            let Some(rhs) = value else {
+                return Err(invariant_err("Expected a value for reassignment", None));
+            };
+            let lval = codegen_lvalue(cx, lvalue)?;
+            let expr = Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                base: BaseNode::default(),
+                operator: AssignmentOperator::Assign,
+                left: Box::new(lval),
+                right: Box::new(rhs),
+            });
+            if let Some(ref lvalue_place) = instr.lvalue {
+                let is_store_context = matches!(&instr.value, ReactiveValue::Instruction(InstructionValue::StoreContext { .. }));
+                if !is_store_context {
+                    let ident = &cx.env.identifiers[lvalue_place.identifier.0 as usize];
+                    cx.temp.insert(ident.declaration_id, Some(ExpressionOrJsxText::Expression(expr)));
+                    return Ok(None);
+                } else {
+                    let stmt = codegen_instruction(cx, instr, ExpressionOrJsxText::Expression(expr))?;
+                    if matches!(stmt, Statement::EmptyStatement(_)) {
+                        return Ok(None);
+                    }
+                    return Ok(Some(stmt));
+                }
+            }
+            Ok(Some(Statement::ExpressionStatement(ExpressionStatement {
+                base: BaseNode::default(),
+                expression: Box::new(expr),
+            })))
+        }
+        InstructionKind::Catch => {
+            Ok(Some(Statement::EmptyStatement(EmptyStatement {
+                base: BaseNode::default(),
+            })))
+        }
+        InstructionKind::HoistedLet | InstructionKind::HoistedConst | InstructionKind::HoistedFunction => {
+            Err(invariant_err(
+                &format!("Expected {:?} to have been pruned in PruneHoistedContexts", kind),
+                None,
+            ))
+        }
+    }
+}
+
+fn codegen_instruction(
+    cx: &mut Context,
+    instr: &ReactiveInstruction,
+    value: ExpressionOrJsxText,
+) -> Result<Statement, CompilerError> {
+    let Some(ref lvalue) = instr.lvalue else {
+        let expr = convert_value_to_expression(value);
+        return Ok(Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::default(),
+            expression: Box::new(expr),
+        }));
+    };
+    let ident = &cx.env.identifiers[lvalue.identifier.0 as usize];
+    if ident.name.is_none() {
+        // temporary
+        cx.temp.insert(ident.declaration_id, Some(value));
+        return Ok(Statement::EmptyStatement(EmptyStatement {
+            base: BaseNode::default(),
+        }));
+    }
+    let expr_value = convert_value_to_expression(value);
+    if cx.has_declared(lvalue.identifier) {
+        Ok(Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::default(),
+            expression: Box::new(Expression::AssignmentExpression(
+                ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::Identifier(convert_identifier(
+                        lvalue.identifier,
+                        cx.env,
+                    ))),
+                    right: Box::new(expr_value),
+                },
+            )),
+        }))
+    } else {
+        Ok(Statement::VariableDeclaration(VariableDeclaration {
+            base: BaseNode::default(),
+            declarations: vec![make_var_declarator(
+                PatternLike::Identifier(convert_identifier(lvalue.identifier, cx.env)),
+                Some(expr_value),
+            )],
+            kind: VariableDeclarationKind::Const,
+            declare: None,
+        }))
+    }
+}
+
+// =============================================================================
+// Instruction value codegen
+// =============================================================================
+
+fn codegen_instruction_value_to_expression(
+    cx: &mut Context,
+    instr_value: &ReactiveValue,
+) -> Result<Expression, CompilerError> {
+    let value = codegen_instruction_value(cx, instr_value)?;
+    Ok(convert_value_to_expression(value))
+}
+
+fn codegen_instruction_value(
+    cx: &mut Context,
+    instr_value: &ReactiveValue,
+) -> Result<ExpressionOrJsxText, CompilerError> {
+    match instr_value {
+        ReactiveValue::Instruction(iv) => codegen_base_instruction_value(cx, iv),
+        ReactiveValue::LogicalExpression {
+            operator,
+            left,
+            right,
+            ..
+        } => {
+            let left_expr = codegen_instruction_value_to_expression(cx, left)?;
+            let right_expr = codegen_instruction_value_to_expression(cx, right)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::LogicalExpression(ast_expr::LogicalExpression {
+                    base: BaseNode::default(),
+                    operator: convert_logical_operator(operator),
+                    left: Box::new(left_expr),
+                    right: Box::new(right_expr),
+                }),
+            ))
+        }
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
+            let test_expr = codegen_instruction_value_to_expression(cx, test)?;
+            let cons_expr = codegen_instruction_value_to_expression(cx, consequent)?;
+            let alt_expr = codegen_instruction_value_to_expression(cx, alternate)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::ConditionalExpression(ast_expr::ConditionalExpression {
+                    base: BaseNode::default(),
+                    test: Box::new(test_expr),
+                    consequent: Box::new(cons_expr),
+                    alternate: Box::new(alt_expr),
+                }),
+            ))
+        }
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value,
+            ..
+        } => {
+            let block_items: Vec<ReactiveStatement> = instructions
+                .iter()
+                .map(|i| ReactiveStatement::Instruction(i.clone()))
+                .collect();
+            let body = codegen_block_no_reset(cx, &block_items)?.body;
+            let mut expressions: Vec<Expression> = Vec::new();
+            for stmt in body {
+                match stmt {
+                    Statement::ExpressionStatement(es) => {
+                        expressions.push(*es.expression);
+                    }
+                    Statement::VariableDeclaration(ref var_decl) => {
+                        let _declarator = &var_decl.declarations[0];
+                        cx.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Todo,
+                            reason: format!(
+                                "(CodegenReactiveFunction::codegenInstructionValue) Cannot declare variables in a value block"
+                            ),
+                            description: None,
+                            loc: None,
+                            suggestions: None,
+                        });
+                        expressions.push(Expression::StringLiteral(StringLiteral {
+                            base: BaseNode::default(),
+                            value: format!("TODO handle declaration"),
+                        }));
+                    }
+                    _ => {
+                        cx.record_error(CompilerErrorDetail {
+                            category: ErrorCategory::Todo,
+                            reason: format!(
+                                "(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of statement to expression"
+                            ),
+                            description: None,
+                            loc: None,
+                            suggestions: None,
+                        });
+                        expressions.push(Expression::StringLiteral(StringLiteral {
+                            base: BaseNode::default(),
+                            value: format!("TODO handle statement"),
+                        }));
+                    }
+                }
+            }
+            let final_expr = codegen_instruction_value_to_expression(cx, value)?;
+            if expressions.is_empty() {
+                Ok(ExpressionOrJsxText::Expression(final_expr))
+            } else {
+                expressions.push(final_expr);
+                Ok(ExpressionOrJsxText::Expression(
+                    Expression::SequenceExpression(ast_expr::SequenceExpression {
+                        base: BaseNode::default(),
+                        expressions,
+                    }),
+                ))
+            }
+        }
+        ReactiveValue::OptionalExpression {
+            value, optional, ..
+        } => {
+            let opt_value = codegen_instruction_value_to_expression(cx, value)?;
+            match opt_value {
+                Expression::OptionalCallExpression(oce) => {
+                    Ok(ExpressionOrJsxText::Expression(
+                        Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
+                            base: BaseNode::default(),
+                            callee: oce.callee,
+                            arguments: oce.arguments,
+                            optional: *optional,
+                            type_parameters: oce.type_parameters,
+                            type_arguments: oce.type_arguments,
+                        }),
+                    ))
+                }
+                Expression::CallExpression(ce) => {
+                    Ok(ExpressionOrJsxText::Expression(
+                        Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
+                            base: BaseNode::default(),
+                            callee: ce.callee,
+                            arguments: ce.arguments,
+                            optional: *optional,
+                            type_parameters: None,
+                            type_arguments: None,
+                        }),
+                    ))
+                }
+                Expression::OptionalMemberExpression(ome) => {
+                    Ok(ExpressionOrJsxText::Expression(
+                        Expression::OptionalMemberExpression(
+                            ast_expr::OptionalMemberExpression {
+                                base: BaseNode::default(),
+                                object: ome.object,
+                                property: ome.property,
+                                computed: ome.computed,
+                                optional: *optional,
+                            },
+                        ),
+                    ))
+                }
+                Expression::MemberExpression(me) => {
+                    Ok(ExpressionOrJsxText::Expression(
+                        Expression::OptionalMemberExpression(
+                            ast_expr::OptionalMemberExpression {
+                                base: BaseNode::default(),
+                                object: me.object,
+                                property: me.property,
+                                computed: me.computed,
+                                optional: *optional,
+                            },
+                        ),
+                    ))
+                }
+                other => Err(invariant_err(
+                    &format!(
+                        "Expected optional value to resolve to call or member expression, got {:?}",
+                        std::mem::discriminant(&other)
+                    ),
+                    None,
+                )),
+            }
+        }
+    }
+}
+
+fn codegen_base_instruction_value(
+    cx: &mut Context,
+    iv: &InstructionValue,
+) -> Result<ExpressionOrJsxText, CompilerError> {
+    match iv {
+        InstructionValue::Primitive { value, loc } => {
+            Ok(ExpressionOrJsxText::Expression(codegen_primitive_value(value, *loc)))
+        }
+        InstructionValue::BinaryExpression {
+            operator,
+            left,
+            right,
+            ..
+        } => {
+            let left_expr = codegen_place_to_expression(cx, left)?;
+            let right_expr = codegen_place_to_expression(cx, right)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::BinaryExpression(ast_expr::BinaryExpression {
+                    base: BaseNode::default(),
+                    operator: convert_binary_operator(operator),
+                    left: Box::new(left_expr),
+                    right: Box::new(right_expr),
+                }),
+            ))
+        }
+        InstructionValue::UnaryExpression { operator, value, .. } => {
+            let arg = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::UnaryExpression(ast_expr::UnaryExpression {
+                    base: BaseNode::default(),
+                    operator: convert_unary_operator(operator),
+                    prefix: true,
+                    argument: Box::new(arg),
+                }),
+            ))
+        }
+        InstructionValue::LoadLocal { place, .. } | InstructionValue::LoadContext { place, .. } => {
+            let expr = codegen_place_to_expression(cx, place)?;
+            Ok(ExpressionOrJsxText::Expression(expr))
+        }
+        InstructionValue::LoadGlobal { binding, .. } => {
+            Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
+                make_identifier(binding.name()),
+            )))
+        }
+        InstructionValue::CallExpression { callee, args, loc: _ } => {
+            let callee_expr = codegen_place_to_expression(cx, callee)?;
+            let arguments = args
+                .iter()
+                .map(|arg| codegen_argument(cx, arg))
+                .collect::<Result<_, _>>()?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::CallExpression(ast_expr::CallExpression {
+                    base: BaseNode::default(),
+                    callee: Box::new(callee_expr),
+                    arguments,
+                    type_parameters: None,
+                    type_arguments: None,
+                    optional: None,
+                }),
+            ))
+        }
+        InstructionValue::MethodCall {
+            receiver: _,
+            property,
+            args,
+            ..
+        } => {
+            let member_expr = codegen_place_to_expression(cx, property)?;
+            let arguments = args
+                .iter()
+                .map(|arg| codegen_argument(cx, arg))
+                .collect::<Result<_, _>>()?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::CallExpression(ast_expr::CallExpression {
+                    base: BaseNode::default(),
+                    callee: Box::new(member_expr),
+                    arguments,
+                    type_parameters: None,
+                    type_arguments: None,
+                    optional: None,
+                }),
+            ))
+        }
+        InstructionValue::NewExpression { callee, args, .. } => {
+            let callee_expr = codegen_place_to_expression(cx, callee)?;
+            let arguments = args
+                .iter()
+                .map(|arg| codegen_argument(cx, arg))
+                .collect::<Result<_, _>>()?;
+            Ok(ExpressionOrJsxText::Expression(Expression::NewExpression(
+                ast_expr::NewExpression {
+                    base: BaseNode::default(),
+                    callee: Box::new(callee_expr),
+                    arguments,
+                    type_parameters: None,
+                    type_arguments: None,
+                },
+            )))
+        }
+        InstructionValue::ArrayExpression { elements, .. } => {
+            let elems: Vec<Option<Expression>> = elements
+                .iter()
+                .map(|el| match el {
+                    ArrayElement::Place(place) => {
+                        Ok(Some(codegen_place_to_expression(cx, place)?))
+                    }
+                    ArrayElement::Spread(spread) => {
+                        let arg = codegen_place_to_expression(cx, &spread.place)?;
+                        Ok(Some(Expression::SpreadElement(ast_expr::SpreadElement {
+                            base: BaseNode::default(),
+                            argument: Box::new(arg),
+                        })))
+                    }
+                    ArrayElement::Hole => Ok(None),
+                })
+                .collect::<Result<_, CompilerError>>()?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::ArrayExpression(ast_expr::ArrayExpression {
+                    base: BaseNode::default(),
+                    elements: elems,
+                }),
+            ))
+        }
+        InstructionValue::ObjectExpression { properties, .. } => {
+            codegen_object_expression(cx, properties)
+        }
+        InstructionValue::PropertyLoad { object, property, .. } => {
+            let obj = codegen_place_to_expression(cx, object)?;
+            let (prop, computed) = property_literal_to_expression(property);
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::MemberExpression(ast_expr::MemberExpression {
+                    base: BaseNode::default(),
+                    object: Box::new(obj),
+                    property: Box::new(prop),
+                    computed,
+                }),
+            ))
+        }
+        InstructionValue::PropertyStore {
+            object,
+            property,
+            value,
+            ..
+        } => {
+            let obj = codegen_place_to_expression(cx, object)?;
+            let (prop, computed) = property_literal_to_expression(property);
+            let val = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(obj),
+                            property: Box::new(prop),
+                            computed,
+                        },
+                    )),
+                    right: Box::new(val),
+                }),
+            ))
+        }
+        InstructionValue::PropertyDelete { object, property, .. } => {
+            let obj = codegen_place_to_expression(cx, object)?;
+            let (prop, computed) = property_literal_to_expression(property);
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::UnaryExpression(ast_expr::UnaryExpression {
+                    base: BaseNode::default(),
+                    operator: AstUnaryOperator::Delete,
+                    prefix: true,
+                    argument: Box::new(Expression::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(obj),
+                            property: Box::new(prop),
+                            computed,
+                        },
+                    )),
+                }),
+            ))
+        }
+        InstructionValue::ComputedLoad { object, property, .. } => {
+            let obj = codegen_place_to_expression(cx, object)?;
+            let prop = codegen_place_to_expression(cx, property)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::MemberExpression(ast_expr::MemberExpression {
+                    base: BaseNode::default(),
+                    object: Box::new(obj),
+                    property: Box::new(prop),
+                    computed: true,
+                }),
+            ))
+        }
+        InstructionValue::ComputedStore {
+            object,
+            property,
+            value,
+            ..
+        } => {
+            let obj = codegen_place_to_expression(cx, object)?;
+            let prop = codegen_place_to_expression(cx, property)?;
+            let val = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(obj),
+                            property: Box::new(prop),
+                            computed: true,
+                        },
+                    )),
+                    right: Box::new(val),
+                }),
+            ))
+        }
+        InstructionValue::ComputedDelete { object, property, .. } => {
+            let obj = codegen_place_to_expression(cx, object)?;
+            let prop = codegen_place_to_expression(cx, property)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::UnaryExpression(ast_expr::UnaryExpression {
+                    base: BaseNode::default(),
+                    operator: AstUnaryOperator::Delete,
+                    prefix: true,
+                    argument: Box::new(Expression::MemberExpression(
+                        ast_expr::MemberExpression {
+                            base: BaseNode::default(),
+                            object: Box::new(obj),
+                            property: Box::new(prop),
+                            computed: true,
+                        },
+                    )),
+                }),
+            ))
+        }
+        InstructionValue::RegExpLiteral { pattern, flags, .. } => {
+            Ok(ExpressionOrJsxText::Expression(Expression::RegExpLiteral(
+                AstRegExpLiteral {
+                    base: BaseNode::default(),
+                    pattern: pattern.clone(),
+                    flags: flags.clone(),
+                },
+            )))
+        }
+        InstructionValue::MetaProperty { meta, property, .. } => {
+            Ok(ExpressionOrJsxText::Expression(Expression::MetaProperty(
+                ast_expr::MetaProperty {
+                    base: BaseNode::default(),
+                    meta: make_identifier(meta),
+                    property: make_identifier(property),
+                },
+            )))
+        }
+        InstructionValue::Await { value, .. } => {
+            let arg = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::AwaitExpression(ast_expr::AwaitExpression {
+                    base: BaseNode::default(),
+                    argument: Box::new(arg),
+                }),
+            ))
+        }
+        InstructionValue::GetIterator { collection, .. } => {
+            let expr = codegen_place_to_expression(cx, collection)?;
+            Ok(ExpressionOrJsxText::Expression(expr))
+        }
+        InstructionValue::IteratorNext { iterator, .. } => {
+            let expr = codegen_place_to_expression(cx, iterator)?;
+            Ok(ExpressionOrJsxText::Expression(expr))
+        }
+        InstructionValue::NextPropertyOf { value, .. } => {
+            let expr = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(expr))
+        }
+        InstructionValue::PostfixUpdate {
+            operation, lvalue, ..
+        } => {
+            let arg = codegen_place_to_expression(cx, lvalue)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::UpdateExpression(ast_expr::UpdateExpression {
+                    base: BaseNode::default(),
+                    operator: convert_update_operator(operation),
+                    argument: Box::new(arg),
+                    prefix: false,
+                }),
+            ))
+        }
+        InstructionValue::PrefixUpdate {
+            operation, lvalue, ..
+        } => {
+            let arg = codegen_place_to_expression(cx, lvalue)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::UpdateExpression(ast_expr::UpdateExpression {
+                    base: BaseNode::default(),
+                    operator: convert_update_operator(operation),
+                    argument: Box::new(arg),
+                    prefix: true,
+                }),
+            ))
+        }
+        InstructionValue::StoreLocal { lvalue, value, .. } => {
+            invariant(
+                lvalue.kind == InstructionKind::Reassign,
+                "Unexpected StoreLocal in codegenInstructionValue",
+                None,
+            )?;
+            let lval = codegen_lvalue(cx, &LvalueRef::Place(&lvalue.place))?;
+            let rhs = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(lval),
+                    right: Box::new(rhs),
+                }),
+            ))
+        }
+        InstructionValue::StoreGlobal { name, value, .. } => {
+            let rhs = codegen_place_to_expression(cx, value)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                    base: BaseNode::default(),
+                    operator: AssignmentOperator::Assign,
+                    left: Box::new(PatternLike::Identifier(make_identifier(name))),
+                    right: Box::new(rhs),
+                }),
+            ))
+        }
+        InstructionValue::FunctionExpression {
+            name,
+            name_hint,
+            lowered_func,
+            expr_type,
+            ..
+        } => {
+            codegen_function_expression(cx, name, name_hint, lowered_func, expr_type)
+        }
+        InstructionValue::TaggedTemplateExpression { tag, value, .. } => {
+            let tag_expr = codegen_place_to_expression(cx, tag)?;
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::TaggedTemplateExpression(ast_expr::TaggedTemplateExpression {
+                    base: BaseNode::default(),
+                    tag: Box::new(tag_expr),
+                    quasi: ast_expr::TemplateLiteral {
+                        base: BaseNode::default(),
+                        quasis: vec![TemplateElement {
+                            base: BaseNode::default(),
+                            value: TemplateElementValue {
+                                raw: value.raw.clone(),
+                                cooked: value.cooked.clone(),
+                            },
+                            tail: true,
+                        }],
+                        expressions: Vec::new(),
+                    },
+                    type_parameters: None,
+                }),
+            ))
+        }
+        InstructionValue::TemplateLiteral { subexprs, quasis, .. } => {
+            let exprs: Vec<Expression> = subexprs
+                .iter()
+                .map(|p| codegen_place_to_expression(cx, p))
+                .collect::<Result<_, _>>()?;
+            let template_elems: Vec<TemplateElement> = quasis
+                .iter()
+                .enumerate()
+                .map(|(i, q)| TemplateElement {
+                    base: BaseNode::default(),
+                    value: TemplateElementValue {
+                        raw: q.raw.clone(),
+                        cooked: q.cooked.clone(),
+                    },
+                    tail: i == quasis.len() - 1,
+                })
+                .collect();
+            Ok(ExpressionOrJsxText::Expression(
+                Expression::TemplateLiteral(ast_expr::TemplateLiteral {
+                    base: BaseNode::default(),
+                    quasis: template_elems,
+                    expressions: exprs,
+                }),
+            ))
+        }
+        InstructionValue::TypeCastExpression {
+            value,
+            type_annotation_kind: _,
+            ..
+        } => {
+            let expr = codegen_place_to_expression(cx, value)?;
+            // For TypeCast, we just pass through the expression since we don't have
+            // the type annotation in a form we can reconstruct
+            Ok(ExpressionOrJsxText::Expression(expr))
+        }
+        InstructionValue::JSXText { value, .. } => {
+            Ok(ExpressionOrJsxText::JsxText(JSXText {
+                base: BaseNode::default(),
+                value: value.clone(),
+            }))
+        }
+        InstructionValue::JsxExpression {
+            tag,
+            props,
+            children,
+            loc,
+            opening_loc,
+            closing_loc,
+        } => {
+            codegen_jsx_expression(cx, tag, props, children, *loc, *opening_loc, *closing_loc)
+        }
+        InstructionValue::JsxFragment { children, .. } => {
+            let child_elems: Vec<JSXChild> = children
+                .iter()
+                .map(|child| codegen_jsx_element(cx, child))
+                .collect::<Result<_, _>>()?;
+            Ok(ExpressionOrJsxText::Expression(Expression::JSXFragment(
+                JSXFragment {
+                    base: BaseNode::default(),
+                    opening_fragment: JSXOpeningFragment {
+                        base: BaseNode::default(),
+                    },
+                    closing_fragment: JSXClosingFragment {
+                        base: BaseNode::default(),
+                    },
+                    children: child_elems,
+                },
+            )))
+        }
+        InstructionValue::UnsupportedNode { node_type, .. } => {
+            // We don't have the original AST node, so emit a placeholder
+            Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
+                make_identifier(&format!(
+                    "__unsupported_{}",
+                    node_type.as_deref().unwrap_or("unknown")
+                )),
+            )))
+        }
+        InstructionValue::StartMemoize { .. }
+        | InstructionValue::FinishMemoize { .. }
+        | InstructionValue::Debugger { .. }
+        | InstructionValue::DeclareLocal { .. }
+        | InstructionValue::DeclareContext { .. }
+        | InstructionValue::Destructure { .. }
+        | InstructionValue::ObjectMethod { .. }
+        | InstructionValue::StoreContext { .. } => {
+            Err(invariant_err(
+                &format!(
+                    "Unexpected {:?} in codegenInstructionValue",
+                    std::mem::discriminant(iv)
+                ),
+                None,
+            ))
+        }
+    }
+}
+
+// =============================================================================
+// Function expression codegen
+// =============================================================================
+
+fn codegen_function_expression(
+    cx: &mut Context,
+    name: &Option<String>,
+    name_hint: &Option<String>,
+    lowered_func: &react_compiler_hir::LoweredFunction,
+    expr_type: &FunctionExpressionType,
+) -> Result<ExpressionOrJsxText, CompilerError> {
+    let func = &cx.env.functions[lowered_func.func.0 as usize];
+    let reactive_fn = build_reactive_function(func, cx.env);
+    let mut reactive_fn_mut = reactive_fn;
+    prune_unused_labels(&mut reactive_fn_mut);
+    prune_unused_lvalues(&mut reactive_fn_mut, cx.env);
+    prune_hoisted_contexts(&mut reactive_fn_mut, cx.env);
+
+    let mut inner_cx = Context::new(
+        cx.env,
+        reactive_fn_mut.id.as_deref().unwrap_or("[[ anonymous ]]").to_string(),
+        cx.unique_identifiers.clone(),
+        cx.fbt_operands.clone(),
+    );
+    inner_cx.temp = cx.temp.clone();
+
+    let fn_result = codegen_reactive_function(&mut inner_cx, &reactive_fn_mut)?;
+
+    let value = match expr_type {
+        FunctionExpressionType::ArrowFunctionExpression => {
+            let mut body: ArrowFunctionBody =
+                ArrowFunctionBody::BlockStatement(fn_result.body.clone());
+            // Optimize single-return arrow functions
+            if fn_result.body.body.len() == 1
+                && reactive_fn_mut.directives.is_empty()
+            {
+                if let Statement::ReturnStatement(ret) = &fn_result.body.body[0] {
+                    if let Some(ref arg) = ret.argument {
+                        body = ArrowFunctionBody::Expression(arg.clone());
+                    }
+                }
+            }
+            let is_expression = matches!(body, ArrowFunctionBody::Expression(_));
+            Expression::ArrowFunctionExpression(ast_expr::ArrowFunctionExpression {
+                base: BaseNode::default(),
+                params: fn_result.params,
+                body: Box::new(body),
+                id: None,
+                generator: false,
+                is_async: fn_result.is_async,
+                expression: Some(is_expression),
+                return_type: None,
+                type_parameters: None,
+                predicate: None,
+            })
+        }
+        _ => {
+            Expression::FunctionExpression(ast_expr::FunctionExpression {
+                base: BaseNode::default(),
+                params: fn_result.params,
+                body: fn_result.body,
+                id: name.as_ref().map(|n| make_identifier(n)),
+                generator: fn_result.generator,
+                is_async: fn_result.is_async,
+                return_type: None,
+                type_parameters: None,
+            })
+        }
+    };
+
+    // Handle enableNameAnonymousFunctions
+    if cx.env.config.enable_name_anonymous_functions
+        && name.is_none()
+        && name_hint.is_some()
+    {
+        let hint = name_hint.as_ref().unwrap();
+        let wrapped = Expression::MemberExpression(ast_expr::MemberExpression {
+            base: BaseNode::default(),
+            object: Box::new(Expression::ObjectExpression(ast_expr::ObjectExpression {
+                base: BaseNode::default(),
+                properties: vec![ast_expr::ObjectExpressionProperty::ObjectProperty(
+                    ast_expr::ObjectProperty {
+                        base: BaseNode::default(),
+                        key: Box::new(Expression::StringLiteral(StringLiteral {
+                            base: BaseNode::default(),
+                            value: hint.clone(),
+                        })),
+                        value: Box::new(value),
+                        computed: false,
+                        shorthand: false,
+                        decorators: None,
+                        method: None,
+                    },
+                )],
+            })),
+            property: Box::new(Expression::StringLiteral(StringLiteral {
+                base: BaseNode::default(),
+                value: hint.clone(),
+            })),
+            computed: true,
+        });
+        return Ok(ExpressionOrJsxText::Expression(wrapped));
+    }
+
+    Ok(ExpressionOrJsxText::Expression(value))
+}
+
+// =============================================================================
+// Object expression codegen
+// =============================================================================
+
+fn codegen_object_expression(
+    cx: &mut Context,
+    properties: &[ObjectPropertyOrSpread],
+) -> Result<ExpressionOrJsxText, CompilerError> {
+    let mut ast_properties: Vec<ast_expr::ObjectExpressionProperty> = Vec::new();
+    for prop in properties {
+        match prop {
+            ObjectPropertyOrSpread::Property(obj_prop) => {
+                let key = codegen_object_property_key(cx, &obj_prop.key)?;
+                match obj_prop.property_type {
+                    ObjectPropertyType::Property => {
+                        let value = codegen_place_to_expression(cx, &obj_prop.place)?;
+                        let is_shorthand = matches!(&key, Expression::Identifier(k_id)
+                            if matches!(&value, Expression::Identifier(v_id) if v_id.name == k_id.name));
+                        ast_properties.push(
+                            ast_expr::ObjectExpressionProperty::ObjectProperty(
+                                ast_expr::ObjectProperty {
+                                    base: BaseNode::default(),
+                                    key: Box::new(key),
+                                    value: Box::new(value),
+                                    computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
+                                    shorthand: is_shorthand,
+                                    decorators: None,
+                                    method: None,
+                                },
+                            ),
+                        );
+                    }
+                    ObjectPropertyType::Method => {
+                        let method_data = cx.object_methods.get(&obj_prop.place.identifier);
+                        let method_data = method_data.cloned();
+                        let Some((InstructionValue::ObjectMethod { lowered_func, .. }, _)) = method_data else {
+                            return Err(invariant_err("Expected ObjectMethod instruction", None));
+                        };
+
+                        let func = &cx.env.functions[lowered_func.func.0 as usize];
+                        let reactive_fn = build_reactive_function(func, cx.env);
+                        let mut reactive_fn_mut = reactive_fn;
+                        prune_unused_labels(&mut reactive_fn_mut);
+                        prune_unused_lvalues(&mut reactive_fn_mut, cx.env);
+
+                        let mut inner_cx = Context::new(
+                            cx.env,
+                            reactive_fn_mut.id.as_deref().unwrap_or("[[ anonymous ]]").to_string(),
+                            cx.unique_identifiers.clone(),
+                            cx.fbt_operands.clone(),
+                        );
+                        inner_cx.temp = cx.temp.clone();
+
+                        let fn_result = codegen_reactive_function(&mut inner_cx, &reactive_fn_mut)?;
+
+                        ast_properties.push(
+                            ast_expr::ObjectExpressionProperty::ObjectMethod(
+                                ast_expr::ObjectMethod {
+                                    base: BaseNode::default(),
+                                    method: true,
+                                    kind: ast_expr::ObjectMethodKind::Method,
+                                    key: Box::new(key),
+                                    params: fn_result.params,
+                                    body: fn_result.body,
+                                    computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
+                                    id: None,
+                                    generator: fn_result.generator,
+                                    is_async: fn_result.is_async,
+                                    decorators: None,
+                                    return_type: None,
+                                    type_parameters: None,
+                                },
+                            ),
+                        );
+                    }
+                }
+            }
+            ObjectPropertyOrSpread::Spread(spread) => {
+                let arg = codegen_place_to_expression(cx, &spread.place)?;
+                ast_properties.push(ast_expr::ObjectExpressionProperty::SpreadElement(
+                    ast_expr::SpreadElement {
+                        base: BaseNode::default(),
+                        argument: Box::new(arg),
+                    },
+                ));
+            }
+        }
+    }
+    Ok(ExpressionOrJsxText::Expression(
+        Expression::ObjectExpression(ast_expr::ObjectExpression {
+            base: BaseNode::default(),
+            properties: ast_properties,
+        }),
+    ))
+}
+
+fn codegen_object_property_key(
+    cx: &mut Context,
+    key: &ObjectPropertyKey,
+) -> Result<Expression, CompilerError> {
+    match key {
+        ObjectPropertyKey::String { name } => Ok(Expression::StringLiteral(StringLiteral {
+            base: BaseNode::default(),
+            value: name.clone(),
+        })),
+        ObjectPropertyKey::Identifier { name } => {
+            Ok(Expression::Identifier(make_identifier(name)))
+        }
+        ObjectPropertyKey::Computed { name } => {
+            let expr = codegen_place(cx, name)?;
+            match expr {
+                ExpressionOrJsxText::Expression(e) => Ok(e),
+                ExpressionOrJsxText::JsxText(_) => {
+                    Err(invariant_err("Expected object property key to be an expression", None))
+                }
+            }
+        }
+        ObjectPropertyKey::Number { name } => {
+            Ok(Expression::NumericLiteral(NumericLiteral {
+                base: BaseNode::default(),
+                value: name.value(),
+            }))
+        }
+    }
+}
+
+// =============================================================================
+// JSX codegen
+// =============================================================================
+
+fn codegen_jsx_expression(
+    cx: &mut Context,
+    tag: &JsxTag,
+    props: &[JsxAttribute],
+    children: &Option<Vec<Place>>,
+    _loc: Option<DiagSourceLocation>,
+    _opening_loc: Option<DiagSourceLocation>,
+    _closing_loc: Option<DiagSourceLocation>,
+) -> Result<ExpressionOrJsxText, CompilerError> {
+    let mut attributes: Vec<JSXAttributeItem> = Vec::new();
+    for attr in props {
+        attributes.push(codegen_jsx_attribute(cx, attr)?);
+    }
+
+    let (tag_value, _tag_loc) = match tag {
+        JsxTag::Place(place) => {
+            (codegen_place_to_expression(cx, place)?, place.loc)
+        }
+        JsxTag::Builtin(builtin) => {
+            (Expression::StringLiteral(StringLiteral {
+                base: BaseNode::default(),
+                value: builtin.name.clone(),
+            }), None)
+        }
+    };
+
+    let jsx_tag = expression_to_jsx_tag(&tag_value, jsx_tag_loc(tag))?;
+
+    let is_fbt_tag = if let Expression::StringLiteral(ref s) = tag_value {
+        SINGLE_CHILD_FBT_TAGS.contains(&s.value.as_str())
+    } else {
+        false
+    };
+
+    let child_nodes = if is_fbt_tag {
+        children
+            .as_ref()
+            .map(|c| {
+                c.iter()
+                    .map(|child| codegen_jsx_fbt_child_element(cx, child))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .transpose()?
+            .unwrap_or_default()
+    } else {
+        children
+            .as_ref()
+            .map(|c| {
+                c.iter()
+                    .map(|child| codegen_jsx_element(cx, child))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .transpose()?
+            .unwrap_or_default()
+    };
+
+    let is_self_closing = children.is_none();
+
+    let element = JSXElement {
+        base: BaseNode::default(),
+        opening_element: JSXOpeningElement {
+            base: BaseNode::default(),
+            name: jsx_tag.clone(),
+            attributes,
+            self_closing: is_self_closing,
+            type_parameters: None,
+        },
+        closing_element: if !is_self_closing {
+            Some(JSXClosingElement {
+                base: BaseNode::default(),
+                name: jsx_tag,
+            })
+        } else {
+            None
+        },
+        children: child_nodes,
+        self_closing: if is_self_closing { Some(true) } else { None },
+    };
+
+    Ok(ExpressionOrJsxText::Expression(Expression::JSXElement(
+        Box::new(element),
+    )))
+}
+
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN: &[char] = &['<', '>', '&', '{', '}'];
+const STRING_REQUIRES_EXPR_CONTAINER_CHARS: &str = "\"\\";
+
+fn string_requires_expr_container(s: &str) -> bool {
+    for c in s.chars() {
+        if STRING_REQUIRES_EXPR_CONTAINER_CHARS.contains(c) {
+            return true;
+        }
+        // Check for control chars and non-basic-latin
+        let code = c as u32;
+        if code <= 0x1F
+            || code == 0x7F
+            || (code >= 0x80 && code <= 0x9F)
+            || (code >= 0xA0)
+        {
+            return true;
+        }
+    }
+    false
+}
+
+fn codegen_jsx_attribute(
+    cx: &mut Context,
+    attr: &JsxAttribute,
+) -> Result<JSXAttributeItem, CompilerError> {
+    match attr {
+        JsxAttribute::Attribute { name, place } => {
+            let prop_name = if name.contains(':') {
+                let parts: Vec<&str> = name.splitn(2, ':').collect();
+                JSXAttributeName::JSXNamespacedName(JSXNamespacedName {
+                    base: BaseNode::default(),
+                    namespace: JSXIdentifier {
+                        base: BaseNode::default(),
+                        name: parts[0].to_string(),
+                    },
+                    name: JSXIdentifier {
+                        base: BaseNode::default(),
+                        name: parts[1].to_string(),
+                    },
+                })
+            } else {
+                JSXAttributeName::JSXIdentifier(JSXIdentifier {
+                    base: BaseNode::default(),
+                    name: name.clone(),
+                })
+            };
+
+            let inner_value = codegen_place_to_expression(cx, place)?;
+            let attr_value = match &inner_value {
+                Expression::StringLiteral(s) => {
+                    if string_requires_expr_container(&s.value)
+                        && !cx.fbt_operands.contains(&place.identifier)
+                    {
+                        Some(JSXAttributeValue::JSXExpressionContainer(
+                            JSXExpressionContainer {
+                                base: BaseNode::default(),
+                                expression: JSXExpressionContainerExpr::Expression(Box::new(
+                                    inner_value,
+                                )),
+                            },
+                        ))
+                    } else {
+                        Some(JSXAttributeValue::StringLiteral(StringLiteral {
+                            base: BaseNode::default(),
+                            value: s.value.clone(),
+                        }))
+                    }
+                }
+                _ => Some(JSXAttributeValue::JSXExpressionContainer(
+                    JSXExpressionContainer {
+                        base: BaseNode::default(),
+                        expression: JSXExpressionContainerExpr::Expression(Box::new(inner_value)),
+                    },
+                )),
+            };
+            Ok(JSXAttributeItem::JSXAttribute(AstJSXAttribute {
+                base: BaseNode::default(),
+                name: prop_name,
+                value: attr_value,
+            }))
+        }
+        JsxAttribute::SpreadAttribute { argument } => {
+            let expr = codegen_place_to_expression(cx, argument)?;
+            Ok(JSXAttributeItem::JSXSpreadAttribute(JSXSpreadAttribute {
+                base: BaseNode::default(),
+                argument: Box::new(expr),
+            }))
+        }
+    }
+}
+
+fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, CompilerError> {
+    let value = codegen_place(cx, place)?;
+    match value {
+        ExpressionOrJsxText::JsxText(ref text) => {
+            if text
+                .value
+                .contains(JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN)
+            {
+                Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
+                    base: BaseNode::default(),
+                    expression: JSXExpressionContainerExpr::Expression(Box::new(
+                        Expression::StringLiteral(StringLiteral {
+                            base: BaseNode::default(),
+                            value: text.value.clone(),
+                        }),
+                    )),
+                }))
+            } else {
+                Ok(JSXChild::JSXText(JSXText {
+                    base: BaseNode::default(),
+                    value: text.value.clone(),
+                }))
+            }
+        }
+        ExpressionOrJsxText::Expression(Expression::JSXElement(elem)) => {
+            Ok(JSXChild::JSXElement(elem))
+        }
+        ExpressionOrJsxText::Expression(Expression::JSXFragment(frag)) => {
+            Ok(JSXChild::JSXFragment(frag))
+        }
+        ExpressionOrJsxText::Expression(expr) => {
+            Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
+                base: BaseNode::default(),
+                expression: JSXExpressionContainerExpr::Expression(Box::new(expr)),
+            }))
+        }
+    }
+}
+
+fn codegen_jsx_fbt_child_element(
+    cx: &mut Context,
+    place: &Place,
+) -> Result<JSXChild, CompilerError> {
+    let value = codegen_place(cx, place)?;
+    match value {
+        ExpressionOrJsxText::JsxText(text) => Ok(JSXChild::JSXText(text)),
+        ExpressionOrJsxText::Expression(Expression::JSXElement(elem)) => {
+            Ok(JSXChild::JSXElement(elem))
+        }
+        ExpressionOrJsxText::Expression(expr) => {
+            Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
+                base: BaseNode::default(),
+                expression: JSXExpressionContainerExpr::Expression(Box::new(expr)),
+            }))
+        }
+    }
+}
+
+fn expression_to_jsx_tag(
+    expr: &Expression,
+    _loc: Option<DiagSourceLocation>,
+) -> Result<JSXElementName, CompilerError> {
+    match expr {
+        Expression::Identifier(ident) => Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
+            base: BaseNode::default(),
+            name: ident.name.clone(),
+        })),
+        Expression::MemberExpression(me) => {
+            Ok(JSXElementName::JSXMemberExpression(
+                convert_member_expression_to_jsx(me)?,
+            ))
+        }
+        Expression::StringLiteral(s) => {
+            if s.value.contains(':') {
+                let parts: Vec<&str> = s.value.splitn(2, ':').collect();
+                Ok(JSXElementName::JSXNamespacedName(JSXNamespacedName {
+                    base: BaseNode::default(),
+                    namespace: JSXIdentifier {
+                        base: BaseNode::default(),
+                        name: parts[0].to_string(),
+                    },
+                    name: JSXIdentifier {
+                        base: BaseNode::default(),
+                        name: parts[1].to_string(),
+                    },
+                }))
+            } else {
+                Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
+                    base: BaseNode::default(),
+                    name: s.value.clone(),
+                }))
+            }
+        }
+        _ => Err(invariant_err(
+            &format!("Expected JSX tag to be an identifier or string"),
+            None,
+        )),
+    }
+}
+
+fn convert_member_expression_to_jsx(
+    me: &ast_expr::MemberExpression,
+) -> Result<JSXMemberExpression, CompilerError> {
+    let Expression::Identifier(ref prop_ident) = *me.property else {
+        return Err(invariant_err(
+            "Expected JSX member expression property to be a string",
+            None,
+        ));
+    };
+    let property = JSXIdentifier {
+        base: BaseNode::default(),
+        name: prop_ident.name.clone(),
+    };
+    match &*me.object {
+        Expression::Identifier(ident) => Ok(JSXMemberExpression {
+            base: BaseNode::default(),
+            object: Box::new(JSXMemberExprObject::JSXIdentifier(JSXIdentifier {
+                base: BaseNode::default(),
+                name: ident.name.clone(),
+            })),
+            property,
+        }),
+        Expression::MemberExpression(inner_me) => {
+            let inner = convert_member_expression_to_jsx(inner_me)?;
+            Ok(JSXMemberExpression {
+                base: BaseNode::default(),
+                object: Box::new(JSXMemberExprObject::JSXMemberExpression(Box::new(inner))),
+                property,
+            })
+        }
+        _ => Err(invariant_err(
+            "Expected JSX member expression to be an identifier or nested member expression",
+            None,
+        )),
+    }
+}
+
+// =============================================================================
+// Pattern codegen (lvalues)
+// =============================================================================
+
+enum LvalueRef<'a> {
+    Place(&'a Place),
+    Pattern(&'a Pattern),
+    Spread(&'a SpreadPattern),
+}
+
+fn codegen_lvalue(cx: &mut Context, pattern: &LvalueRef) -> Result<PatternLike, CompilerError> {
+    match pattern {
+        LvalueRef::Place(place) => {
+            Ok(PatternLike::Identifier(convert_identifier(
+                place.identifier,
+                cx.env,
+            )))
+        }
+        LvalueRef::Pattern(pat) => match pat {
+            Pattern::Array(arr) => codegen_array_pattern(cx, arr),
+            Pattern::Object(obj) => codegen_object_pattern(cx, obj),
+        },
+        LvalueRef::Spread(spread) => {
+            let inner = codegen_lvalue(cx, &LvalueRef::Place(&spread.place))?;
+            Ok(PatternLike::RestElement(RestElement {
+                base: BaseNode::default(),
+                argument: Box::new(inner),
+                type_annotation: None,
+                decorators: None,
+            }))
+        }
+    }
+}
+
+fn codegen_array_pattern(
+    cx: &mut Context,
+    pattern: &ArrayPattern,
+) -> Result<PatternLike, CompilerError> {
+    let elements: Vec<Option<PatternLike>> = pattern
+        .items
+        .iter()
+        .map(|item| match item {
+            react_compiler_hir::ArrayPatternElement::Place(place) => {
+                Ok(Some(codegen_lvalue(cx, &LvalueRef::Place(place))?))
+            }
+            react_compiler_hir::ArrayPatternElement::Spread(spread) => {
+                Ok(Some(codegen_lvalue(cx, &LvalueRef::Spread(spread))?))
+            }
+            react_compiler_hir::ArrayPatternElement::Hole => Ok(None),
+        })
+        .collect::<Result<_, CompilerError>>()?;
+    Ok(PatternLike::ArrayPattern(AstArrayPattern {
+        base: BaseNode::default(),
+        elements,
+        type_annotation: None,
+        decorators: None,
+    }))
+}
+
+fn codegen_object_pattern(
+    cx: &mut Context,
+    pattern: &ObjectPattern,
+) -> Result<PatternLike, CompilerError> {
+    let properties: Vec<ObjectPatternProperty> = pattern
+        .properties
+        .iter()
+        .map(|prop| match prop {
+            ObjectPropertyOrSpread::Property(obj_prop) => {
+                let key = codegen_object_property_key(cx, &obj_prop.key)?;
+                let value = codegen_lvalue(cx, &LvalueRef::Place(&obj_prop.place))?;
+                let is_shorthand = matches!(&key, Expression::Identifier(k_id)
+                    if matches!(&value, PatternLike::Identifier(v_id) if v_id.name == k_id.name));
+                Ok(ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
+                    base: BaseNode::default(),
+                    key: Box::new(key),
+                    value: Box::new(value),
+                    computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
+                    shorthand: is_shorthand,
+                    decorators: None,
+                    method: None,
+                }))
+            }
+            ObjectPropertyOrSpread::Spread(spread) => {
+                let inner = codegen_lvalue(cx, &LvalueRef::Place(&spread.place))?;
+                Ok(ObjectPatternProperty::RestElement(RestElement {
+                    base: BaseNode::default(),
+                    argument: Box::new(inner),
+                    type_annotation: None,
+                    decorators: None,
+                }))
+            }
+        })
+        .collect::<Result<_, CompilerError>>()?;
+    Ok(PatternLike::ObjectPattern(
+        react_compiler_ast::patterns::ObjectPattern {
+            base: BaseNode::default(),
+            properties,
+            type_annotation: None,
+            decorators: None,
+        },
+    ))
+}
+
+// =============================================================================
+// Place / identifier codegen
+// =============================================================================
+
+fn codegen_place_to_expression(
+    cx: &mut Context,
+    place: &Place,
+) -> Result<Expression, CompilerError> {
+    let value = codegen_place(cx, place)?;
+    Ok(convert_value_to_expression(value))
+}
+
+fn codegen_place(
+    cx: &mut Context,
+    place: &Place,
+) -> Result<ExpressionOrJsxText, CompilerError> {
+    let ident = &cx.env.identifiers[place.identifier.0 as usize];
+    if let Some(tmp) = cx.temp.get(&ident.declaration_id) {
+        if let Some(val) = tmp {
+            return Ok(val.clone());
+        }
+        // tmp is None — means declared but no temp value, fall through
+    }
+    // Check if it's an unnamed identifier without a temp
+    if ident.name.is_none() && !cx.temp.contains_key(&ident.declaration_id) {
+        return Err(invariant_err(
+            &format!(
+                "[Codegen] No value found for temporary, identifier id={}",
+                place.identifier.0
+            ),
+            place.loc,
+        ));
+    }
+    let ast_ident = convert_identifier(place.identifier, cx.env);
+    Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
+        ast_ident,
+    )))
+}
+
+fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> AstIdentifier {
+    let ident = &env.identifiers[identifier_id.0 as usize];
+    let name = match &ident.name {
+        Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
+        Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
+        None => {
+            // This shouldn't happen after RenameVariables, but be defensive
+            format!("_t{}", identifier_id.0)
+        }
+    };
+    make_identifier(&name)
+}
+
+fn codegen_argument(
+    cx: &mut Context,
+    arg: &PlaceOrSpread,
+) -> Result<Expression, CompilerError> {
+    match arg {
+        PlaceOrSpread::Place(place) => codegen_place_to_expression(cx, place),
+        PlaceOrSpread::Spread(spread) => {
+            let expr = codegen_place_to_expression(cx, &spread.place)?;
+            Ok(Expression::SpreadElement(ast_expr::SpreadElement {
+                base: BaseNode::default(),
+                argument: Box::new(expr),
+            }))
+        }
+    }
+}
+
+// =============================================================================
+// Dependency codegen
+// =============================================================================
+
+fn codegen_dependency(
+    cx: &mut Context,
+    dep: &react_compiler_hir::ReactiveScopeDependency,
+) -> Result<Expression, CompilerError> {
+    let mut object: Expression =
+        Expression::Identifier(convert_identifier(dep.identifier, cx.env));
+    if !dep.path.is_empty() {
+        let has_optional = dep.path.iter().any(|p| p.optional);
+        for path_entry in &dep.path {
+            let (property, is_computed) = property_literal_to_expression(&path_entry.property);
+            if has_optional {
+                object = Expression::OptionalMemberExpression(
+                    ast_expr::OptionalMemberExpression {
+                        base: BaseNode::default(),
+                        object: Box::new(object),
+                        property: Box::new(property),
+                        computed: is_computed,
+                        optional: path_entry.optional,
+                    },
+                );
+            } else {
+                object = Expression::MemberExpression(ast_expr::MemberExpression {
+                    base: BaseNode::default(),
+                    object: Box::new(object),
+                    property: Box::new(property),
+                    computed: is_computed,
+                });
+            }
+        }
+    }
+    Ok(object)
+}
+
+// =============================================================================
+// Counting helpers
+// =============================================================================
+
+fn count_memo_blocks(
+    func: &ReactiveFunction,
+    env: &Environment,
+) -> (u32, u32, u32, u32) {
+    let mut memo_blocks = 0u32;
+    let mut memo_values = 0u32;
+    let mut pruned_memo_blocks = 0u32;
+    let mut pruned_memo_values = 0u32;
+    count_memo_blocks_in_block(
+        &func.body,
+        env,
+        &mut memo_blocks,
+        &mut memo_values,
+        &mut pruned_memo_blocks,
+        &mut pruned_memo_values,
+    );
+    (memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values)
+}
+
+fn count_memo_blocks_in_block(
+    block: &ReactiveBlock,
+    env: &Environment,
+    memo_blocks: &mut u32,
+    memo_values: &mut u32,
+    pruned_memo_blocks: &mut u32,
+    pruned_memo_values: &mut u32,
+) {
+    for item in block {
+        match item {
+            ReactiveStatement::Scope(scope_block) => {
+                *memo_blocks += 1;
+                let scope = &env.scopes[scope_block.scope.0 as usize];
+                *memo_values += scope.declarations.len() as u32;
+                count_memo_blocks_in_block(
+                    &scope_block.instructions,
+                    env,
+                    memo_blocks,
+                    memo_values,
+                    pruned_memo_blocks,
+                    pruned_memo_values,
+                );
+            }
+            ReactiveStatement::PrunedScope(pruned) => {
+                *pruned_memo_blocks += 1;
+                let scope = &env.scopes[pruned.scope.0 as usize];
+                *pruned_memo_values += scope.declarations.len() as u32;
+                count_memo_blocks_in_block(
+                    &pruned.instructions,
+                    env,
+                    memo_blocks,
+                    memo_values,
+                    pruned_memo_blocks,
+                    pruned_memo_values,
+                );
+            }
+            ReactiveStatement::Terminal(term) => {
+                count_memo_blocks_in_terminal(
+                    &term.terminal,
+                    env,
+                    memo_blocks,
+                    memo_values,
+                    pruned_memo_blocks,
+                    pruned_memo_values,
+                );
+            }
+            ReactiveStatement::Instruction(_) => {}
+        }
+    }
+}
+
+fn count_memo_blocks_in_terminal(
+    terminal: &ReactiveTerminal,
+    env: &Environment,
+    memo_blocks: &mut u32,
+    memo_values: &mut u32,
+    pruned_memo_blocks: &mut u32,
+    pruned_memo_values: &mut u32,
+) {
+    match terminal {
+        ReactiveTerminal::If { consequent, alternate, .. } => {
+            count_memo_blocks_in_block(consequent, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+            if let Some(alt) = alternate {
+                count_memo_blocks_in_block(alt, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+            }
+        }
+        ReactiveTerminal::Switch { cases, .. } => {
+            for case in cases {
+                if let Some(ref block) = case.block {
+                    count_memo_blocks_in_block(block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+                }
+            }
+        }
+        ReactiveTerminal::For { loop_block, .. }
+        | ReactiveTerminal::ForOf { loop_block, .. }
+        | ReactiveTerminal::ForIn { loop_block, .. }
+        | ReactiveTerminal::While { loop_block, .. }
+        | ReactiveTerminal::DoWhile { loop_block, .. } => {
+            count_memo_blocks_in_block(loop_block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+        }
+        ReactiveTerminal::Try { block, handler, .. } => {
+            count_memo_blocks_in_block(block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+            count_memo_blocks_in_block(handler, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+        }
+        ReactiveTerminal::Label { block, .. } => {
+            count_memo_blocks_in_block(block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
+        }
+        _ => {}
+    }
+}
+
+// =============================================================================
+// Operator conversions
+// =============================================================================
+
+fn convert_binary_operator(op: &react_compiler_hir::BinaryOperator) -> AstBinaryOperator {
+    match op {
+        react_compiler_hir::BinaryOperator::Equal => AstBinaryOperator::Eq,
+        react_compiler_hir::BinaryOperator::NotEqual => AstBinaryOperator::Neq,
+        react_compiler_hir::BinaryOperator::StrictEqual => AstBinaryOperator::StrictEq,
+        react_compiler_hir::BinaryOperator::StrictNotEqual => AstBinaryOperator::StrictNeq,
+        react_compiler_hir::BinaryOperator::LessThan => AstBinaryOperator::Lt,
+        react_compiler_hir::BinaryOperator::LessEqual => AstBinaryOperator::Lte,
+        react_compiler_hir::BinaryOperator::GreaterThan => AstBinaryOperator::Gt,
+        react_compiler_hir::BinaryOperator::GreaterEqual => AstBinaryOperator::Gte,
+        react_compiler_hir::BinaryOperator::ShiftLeft => AstBinaryOperator::Shl,
+        react_compiler_hir::BinaryOperator::ShiftRight => AstBinaryOperator::Shr,
+        react_compiler_hir::BinaryOperator::UnsignedShiftRight => AstBinaryOperator::UShr,
+        react_compiler_hir::BinaryOperator::Add => AstBinaryOperator::Add,
+        react_compiler_hir::BinaryOperator::Subtract => AstBinaryOperator::Sub,
+        react_compiler_hir::BinaryOperator::Multiply => AstBinaryOperator::Mul,
+        react_compiler_hir::BinaryOperator::Divide => AstBinaryOperator::Div,
+        react_compiler_hir::BinaryOperator::Modulo => AstBinaryOperator::Rem,
+        react_compiler_hir::BinaryOperator::Exponent => AstBinaryOperator::Exp,
+        react_compiler_hir::BinaryOperator::BitwiseOr => AstBinaryOperator::BitOr,
+        react_compiler_hir::BinaryOperator::BitwiseXor => AstBinaryOperator::BitXor,
+        react_compiler_hir::BinaryOperator::BitwiseAnd => AstBinaryOperator::BitAnd,
+        react_compiler_hir::BinaryOperator::In => AstBinaryOperator::In,
+        react_compiler_hir::BinaryOperator::InstanceOf => AstBinaryOperator::Instanceof,
+    }
+}
+
+fn convert_unary_operator(op: &react_compiler_hir::UnaryOperator) -> AstUnaryOperator {
+    match op {
+        react_compiler_hir::UnaryOperator::Minus => AstUnaryOperator::Neg,
+        react_compiler_hir::UnaryOperator::Plus => AstUnaryOperator::Plus,
+        react_compiler_hir::UnaryOperator::Not => AstUnaryOperator::Not,
+        react_compiler_hir::UnaryOperator::BitwiseNot => AstUnaryOperator::BitNot,
+        react_compiler_hir::UnaryOperator::TypeOf => AstUnaryOperator::TypeOf,
+        react_compiler_hir::UnaryOperator::Void => AstUnaryOperator::Void,
+    }
+}
+
+fn convert_logical_operator(op: &LogicalOperator) -> AstLogicalOperator {
+    match op {
+        LogicalOperator::And => AstLogicalOperator::And,
+        LogicalOperator::Or => AstLogicalOperator::Or,
+        LogicalOperator::NullishCoalescing => AstLogicalOperator::NullishCoalescing,
+    }
+}
+
+fn convert_update_operator(op: &react_compiler_hir::UpdateOperator) -> AstUpdateOperator {
+    match op {
+        react_compiler_hir::UpdateOperator::Increment => AstUpdateOperator::Increment,
+        react_compiler_hir::UpdateOperator::Decrement => AstUpdateOperator::Decrement,
+    }
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+fn make_identifier(name: &str) -> AstIdentifier {
+    AstIdentifier {
+        base: BaseNode::default(),
+        name: name.to_string(),
+        type_annotation: None,
+        optional: None,
+        decorators: None,
+    }
+}
+
+fn make_var_declarator(id: PatternLike, init: Option<Expression>) -> VariableDeclarator {
+    VariableDeclarator {
+        base: BaseNode::default(),
+        id,
+        init: init.map(Box::new),
+        definite: None,
+    }
+}
+
+fn codegen_label(id: BlockId) -> String {
+    format!("bb{}", id.0)
+}
+
+fn symbol_for(name: &str) -> Expression {
+    Expression::CallExpression(ast_expr::CallExpression {
+        base: BaseNode::default(),
+        callee: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+            base: BaseNode::default(),
+            object: Box::new(Expression::Identifier(make_identifier("Symbol"))),
+            property: Box::new(Expression::Identifier(make_identifier("for"))),
+            computed: false,
+        })),
+        arguments: vec![Expression::StringLiteral(StringLiteral {
+            base: BaseNode::default(),
+            value: name.to_string(),
+        })],
+        type_parameters: None,
+        type_arguments: None,
+        optional: None,
+    })
+}
+
+fn codegen_primitive_value(
+    value: &PrimitiveValue,
+    _loc: Option<DiagSourceLocation>,
+) -> Expression {
+    match value {
+        PrimitiveValue::Number(n) => {
+            let f = n.value();
+            if f < 0.0 {
+                Expression::UnaryExpression(ast_expr::UnaryExpression {
+                    base: BaseNode::default(),
+                    operator: AstUnaryOperator::Neg,
+                    prefix: true,
+                    argument: Box::new(Expression::NumericLiteral(NumericLiteral {
+                        base: BaseNode::default(),
+                        value: -f,
+                    })),
+                })
+            } else {
+                Expression::NumericLiteral(NumericLiteral {
+                    base: BaseNode::default(),
+                    value: f,
+                })
+            }
+        }
+        PrimitiveValue::Boolean(b) => Expression::BooleanLiteral(BooleanLiteral {
+            base: BaseNode::default(),
+            value: *b,
+        }),
+        PrimitiveValue::String(s) => Expression::StringLiteral(StringLiteral {
+            base: BaseNode::default(),
+            value: s.clone(),
+        }),
+        PrimitiveValue::Null => Expression::NullLiteral(NullLiteral {
+            base: BaseNode::default(),
+        }),
+        PrimitiveValue::Undefined => Expression::Identifier(make_identifier("undefined")),
+    }
+}
+
+fn property_literal_to_expression(prop: &PropertyLiteral) -> (Expression, bool) {
+    match prop {
+        PropertyLiteral::String(s) => (Expression::Identifier(make_identifier(s)), false),
+        PropertyLiteral::Number(n) => (
+            Expression::NumericLiteral(NumericLiteral {
+                base: BaseNode::default(),
+                value: n.value(),
+            }),
+            true,
+        ),
+    }
+}
+
+fn convert_value_to_expression(value: ExpressionOrJsxText) -> Expression {
+    match value {
+        ExpressionOrJsxText::Expression(e) => e,
+        ExpressionOrJsxText::JsxText(text) => Expression::StringLiteral(StringLiteral {
+            base: BaseNode::default(),
+            value: text.value,
+        }),
+    }
+}
+
+fn get_instruction_value(reactive_value: &ReactiveValue) -> Result<&InstructionValue, CompilerError> {
+    match reactive_value {
+        ReactiveValue::Instruction(iv) => Ok(iv),
+        _ => Err(invariant_err("Expected base instruction value", None)),
+    }
+}
+
+fn invariant(
+    condition: bool,
+    reason: &str,
+    loc: Option<DiagSourceLocation>,
+) -> Result<(), CompilerError> {
+    if !condition {
+        Err(invariant_err(reason, loc))
+    } else {
+        Ok(())
+    }
+}
+
+fn invariant_err(reason: &str, loc: Option<DiagSourceLocation>) -> CompilerError {
+    let mut err = CompilerError::new();
+    err.push_error_detail(CompilerErrorDetail {
+        category: ErrorCategory::Invariant,
+        reason: reason.to_string(),
+        description: None,
+        loc,
+        suggestions: None,
+    });
+    err
+}
+
+fn each_pattern_operand(pattern: &Pattern) -> Vec<&Place> {
+    let mut operands = Vec::new();
+    match pattern {
+        Pattern::Array(arr) => {
+            for item in &arr.items {
+                match item {
+                    react_compiler_hir::ArrayPatternElement::Place(p) => operands.push(p),
+                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
+                        operands.push(&s.place)
+                    }
+                    react_compiler_hir::ArrayPatternElement::Hole => {}
+                }
+            }
+        }
+        Pattern::Object(obj) => {
+            for prop in &obj.properties {
+                match prop {
+                    ObjectPropertyOrSpread::Property(p) => operands.push(&p.place),
+                    ObjectPropertyOrSpread::Spread(s) => operands.push(&s.place),
+                }
+            }
+        }
+    }
+    operands
+}
+
+fn compare_scope_dependency(
+    a: &react_compiler_hir::ReactiveScopeDependency,
+    b: &react_compiler_hir::ReactiveScopeDependency,
+    env: &Environment,
+) -> std::cmp::Ordering {
+    let a_name = dep_to_sort_key(a, env);
+    let b_name = dep_to_sort_key(b, env);
+    a_name.cmp(&b_name)
+}
+
+fn dep_to_sort_key(
+    dep: &react_compiler_hir::ReactiveScopeDependency,
+    env: &Environment,
+) -> String {
+    let ident = &env.identifiers[dep.identifier.0 as usize];
+    let base = match &ident.name {
+        Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
+        Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
+        None => format!("_t{}", dep.identifier.0),
+    };
+    let mut parts = vec![base];
+    for entry in &dep.path {
+        let prefix = if entry.optional { "?" } else { "" };
+        let prop = match &entry.property {
+            PropertyLiteral::String(s) => s.clone(),
+            PropertyLiteral::Number(n) => n.value().to_string(),
+        };
+        parts.push(format!("{prefix}{prop}"));
+    }
+    parts.join(".")
+}
+
+fn compare_scope_declaration(
+    a: &react_compiler_hir::ReactiveScopeDeclaration,
+    b: &react_compiler_hir::ReactiveScopeDeclaration,
+    env: &Environment,
+) -> std::cmp::Ordering {
+    let a_name = ident_sort_key(a.identifier, env);
+    let b_name = ident_sort_key(b.identifier, env);
+    a_name.cmp(&b_name)
+}
+
+fn ident_sort_key(id: IdentifierId, env: &Environment) -> String {
+    let ident = &env.identifiers[id.0 as usize];
+    match &ident.name {
+        Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
+        Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
+        None => format!("_t{}", id.0),
+    }
+}
+
+fn jsx_tag_loc(tag: &JsxTag) -> Option<DiagSourceLocation> {
+    match tag {
+        JsxTag::Place(p) => p.loc,
+        JsxTag::Builtin(_) => None,
+    }
+}
