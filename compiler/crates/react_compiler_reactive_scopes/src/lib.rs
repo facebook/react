@@ -10,6 +10,7 @@
 //!
 //! Corresponds to `src/ReactiveScopes/` in the TypeScript compiler.
 
+pub mod codegen_reactive_function;
 mod assert_scope_instructions_within_scopes;
 mod assert_well_formed_break_targets;
 mod build_reactive_function;
@@ -45,4 +46,5 @@ pub use prune_unused_labels::prune_unused_labels;
 pub use prune_unused_lvalues::prune_unused_lvalues;
 pub use prune_unused_scopes::prune_unused_scopes;
 pub use rename_variables::rename_variables;
+pub use codegen_reactive_function::codegen_function;
 pub use stabilize_block_ids::stabilize_block_ids;

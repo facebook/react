@@ -15,7 +15,7 @@ use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 
-use super::compile_result::{CodegenFunction, CompilerErrorDetailInfo, CompilerErrorItemInfo, DebugLogEntry};
+use super::compile_result::{CodegenFunction, CompilerErrorDetailInfo, CompilerErrorItemInfo, DebugLogEntry, OutlinedFunction};
 use super::imports::ProgramContext;
 use super::plugin_options::CompilerOutputMode;
 use crate::debug_print;
@@ -450,7 +450,7 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("StabilizeBlockIds", debug_stabilize));
 
-    let _unique_identifiers = react_compiler_reactive_scopes::rename_variables(&mut reactive_fn, &mut env);
+    let unique_identifiers = react_compiler_reactive_scopes::rename_variables(&mut reactive_fn, &mut env);
     let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -469,7 +469,12 @@ pub fn compile_fn(
         context.log_debug(DebugLogEntry::new("ValidatePreservedManualMemoization", "ok".to_string()));
     }
 
-    // TODO: port codegenFunction (kind: 'ast', skipped by test harness)
+    let codegen_result = react_compiler_reactive_scopes::codegen_function(
+        &reactive_fn,
+        &mut env,
+        unique_identifiers,
+        fbt_operands,
+    )?;
 
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
@@ -478,13 +483,24 @@ pub fn compile_fn(
     }
 
     Ok(CodegenFunction {
-        loc: None,
-        memo_slots_used: 0,
-        memo_blocks: 0,
-        memo_values: 0,
-        pruned_memo_blocks: 0,
-        pruned_memo_values: 0,
-        outlined: Vec::new(),
+        loc: codegen_result.loc,
+        memo_slots_used: codegen_result.memo_slots_used,
+        memo_blocks: codegen_result.memo_blocks,
+        memo_values: codegen_result.memo_values,
+        pruned_memo_blocks: codegen_result.pruned_memo_blocks,
+        pruned_memo_values: codegen_result.pruned_memo_values,
+        outlined: codegen_result.outlined.into_iter().map(|o| OutlinedFunction {
+            func: CodegenFunction {
+                loc: o.func.loc,
+                memo_slots_used: o.func.memo_slots_used,
+                memo_blocks: o.func.memo_blocks,
+                memo_values: o.func.memo_values,
+                pruned_memo_blocks: o.func.pruned_memo_blocks,
+                pruned_memo_values: o.func.pruned_memo_values,
+                outlined: Vec::new(),
+            },
+            fn_type: o.fn_type,
+        }).collect(),
     })
 }
 
