@@ -1,3 +1,6 @@
+use react_compiler_ast::expressions::Identifier as AstIdentifier;
+use react_compiler_ast::patterns::PatternLike;
+use react_compiler_ast::statements::BlockStatement;
 use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
 use serde::Serialize;
@@ -93,11 +96,17 @@ impl DebugLogEntry {
     }
 }
 
-/// Placeholder for codegen output. Since codegen isn't implemented yet,
-/// all memo fields default to 0. Matches the TS `CodegenFunction` shape.
+/// Codegen output for a single compiled function.
+/// Carries the generated AST fields needed to replace the original function.
 #[derive(Debug, Clone)]
 pub struct CodegenFunction {
     pub loc: Option<SourceLocation>,
+    pub id: Option<AstIdentifier>,
+    pub name_hint: Option<String>,
+    pub params: Vec<PatternLike>,
+    pub body: BlockStatement,
+    pub generator: bool,
+    pub is_async: bool,
     pub memo_slots_used: u32,
     pub memo_blocks: u32,
     pub memo_values: u32,

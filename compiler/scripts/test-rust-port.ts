@@ -345,8 +345,14 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
       babelrc: false,
     });
     code = result?.code ?? null;
+    if (mode === 'rust' && code !== null && code.length < 10) {
+      console.error(`RUST DEBUG [${fixturePath.split('/').pop()}]: code=${JSON.stringify(code)}, error=${error}, result keys=${Object.keys(result ?? {})}`);
+    }
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
+    if (mode === 'rust') {
+      console.error(`RUST DEBUG CATCH [${fixturePath.split('/').pop()}]: error=${error?.substring(0, 200)}`);
+    }
   }
 
   return {log, code, error};

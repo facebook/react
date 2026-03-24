@@ -125,12 +125,90 @@ export default function BabelPluginReactCompilerRust(
           }
 
           if (result.ast != null) {
-            // Replace the entire program body with Rust's output
-            prog.replaceWith(result.ast);
+            // Replace the program with Rust's compiled output.
+            const newFile = result.ast as any;
+            const newProgram = newFile.program ?? newFile;
+
+            // After JSON round-tripping through Rust, comment objects that were
+            // shared by reference in Babel's AST (e.g., a comment between two
+            // statements appears as trailingComments on stmt A and leadingComments
+            // on stmt B, sharing the same JS object) become separate objects.
+            // Babel's generator uses reference identity to avoid printing the
+            // same comment twice. We restore sharing by deduplicating: for each
+            // unique comment position, we keep one canonical object and replace
+            // all duplicates with references to it.
+            deduplicateComments(newProgram);
+
+            pass.file.ast.program = newProgram;
+            pass.file.ast.comments = [];
             prog.skip(); // Don't re-traverse
           }
         },
       },
     },
   };
+}
+
+/**
+ * Deduplicate comments across AST nodes after JSON round-tripping.
+ *
+ * Babel's parser attaches the same comment object to multiple nodes
+ * (e.g., as trailingComments on node A and leadingComments on node B).
+ * The code generator uses reference identity (`===`) to avoid printing
+ * a comment twice. After JSON serialization/deserialization through Rust,
+ * these shared references become separate objects with identical content.
+ *
+ * This function walks the AST, finds comments with the same (start, end)
+ * position, and replaces duplicates with references to a single canonical
+ * object, restoring the sharing that Babel expects.
+ */
+function deduplicateComments(node: any): void {
+  // Map from "start:end" to canonical comment object
+  const canonical = new Map<string, any>();
+
+  function dedup(comments: any[]): any[] {
+    return comments.map(c => {
+      const key = `${c.start}:${c.end}`;
+      const existing = canonical.get(key);
+      if (existing != null) {
+        return existing;
+      }
+      canonical.set(key, c);
+      return c;
+    });
+  }
+
+  function visit(n: any): void {
+    if (n == null || typeof n !== 'object') return;
+    if (Array.isArray(n)) {
+      for (const item of n) {
+        visit(item);
+      }
+      return;
+    }
+    if (n.leadingComments) {
+      n.leadingComments = dedup(n.leadingComments);
+    }
+    if (n.trailingComments) {
+      n.trailingComments = dedup(n.trailingComments);
+    }
+    if (n.innerComments) {
+      n.innerComments = dedup(n.innerComments);
+    }
+    for (const key of Object.keys(n)) {
+      if (
+        key === 'leadingComments' ||
+        key === 'trailingComments' ||
+        key === 'innerComments' ||
+        key === 'start' ||
+        key === 'end' ||
+        key === 'loc'
+      ) {
+        continue;
+      }
+      visit(n[key]);
+    }
+  }
+
+  visit(node);
 }

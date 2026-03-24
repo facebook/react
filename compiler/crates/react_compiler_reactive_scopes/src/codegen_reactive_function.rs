@@ -136,18 +136,18 @@ pub fn codegen_function(
 
         // const $ = useMemoCache(N)
         preface.push(Statement::VariableDeclaration(VariableDeclaration {
-            base: BaseNode::default(),
+            base: BaseNode::typed("VariableDeclaration"),
             declarations: vec![VariableDeclarator {
-                base: BaseNode::default(),
+                base: BaseNode::typed("VariableDeclarator"),
                 id: PatternLike::Identifier(make_identifier(&cache_name)),
                 init: Some(Box::new(Expression::CallExpression(
                     ast_expr::CallExpression {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("CallExpression"),
                         callee: Box::new(Expression::Identifier(make_identifier(
                             "useMemoCache",
                         ))),
                         arguments: vec![Expression::NumericLiteral(NumericLiteral {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("NumericLiteral"),
                             value: cache_count as f64,
                         })],
                         type_parameters: None,
@@ -263,10 +263,10 @@ impl<'env> Context<'env> {
         if let Some(prev) = self.synthesized_names.get(name) {
             return prev.clone();
         }
-        let mut validated = format!("${name}");
+        let mut validated = name.to_string();
         let mut index = 0u32;
         while self.unique_identifiers.contains(&validated) {
-            validated = format!("${name}{index}");
+            validated = format!("{name}{index}");
             index += 1;
         }
         self.unique_identifiers.insert(validated.clone());
@@ -306,9 +306,9 @@ fn codegen_reactive_function(
         .directives
         .iter()
         .map(|d| Directive {
-            base: BaseNode::default(),
+            base: BaseNode::typed("Directive"),
             value: DirectiveLiteral {
-                base: BaseNode::default(),
+                base: BaseNode::typed("DirectiveLiteral"),
                 value: d.clone(),
             },
         })
@@ -348,7 +348,7 @@ fn convert_parameter(param: &ParamPattern, env: &Environment) -> PatternLike {
             PatternLike::Identifier(convert_identifier(place.identifier, env))
         }
         ParamPattern::Spread(spread) => PatternLike::RestElement(RestElement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("RestElement"),
             argument: Box::new(PatternLike::Identifier(convert_identifier(
                 spread.place.identifier,
                 env,
@@ -413,7 +413,7 @@ fn codegen_block_no_reset(
                             stmt
                         };
                         statements.push(Statement::LabeledStatement(LabeledStatement {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("LabeledStatement"),
                             label: make_identifier(&codegen_label(label.id)),
                             body: Box::new(inner),
                         }));
@@ -431,7 +431,7 @@ fn codegen_block_no_reset(
         }
     }
     Ok(BlockStatement {
-        base: BaseNode::default(),
+        base: BaseNode::typed("BlockStatement"),
         body: statements,
         directives: Vec::new(),
     })
@@ -465,13 +465,13 @@ fn codegen_reactive_scope(
         let index = cx.alloc_cache_index();
         let cache_name = cx.synthesize_name("$");
         let comparison = Expression::BinaryExpression(ast_expr::BinaryExpression {
-            base: BaseNode::default(),
+            base: BaseNode::typed("BinaryExpression"),
             operator: AstBinaryOperator::StrictNeq,
             left: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("MemberExpression"),
                 object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
                 property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("NumericLiteral"),
                     value: index as f64,
                 })),
                 computed: true,
@@ -483,19 +483,19 @@ fn codegen_reactive_scope(
         // Store dependency value into cache
         let dep_value = codegen_dependency(cx, dep)?;
         cache_store_stmts.push(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ExpressionStatement"),
             expression: Box::new(Expression::AssignmentExpression(
                 ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(Expression::Identifier(make_identifier(
                                 &cache_name,
                             ))),
                             property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                base: BaseNode::default(),
+                                base: BaseNode::typed("NumericLiteral"),
                                 value: index as f64,
                             })),
                             computed: true,
@@ -532,9 +532,9 @@ fn codegen_reactive_scope(
         let name = convert_identifier(decl.identifier, cx.env);
         if !cx.has_declared(decl.identifier) {
             statements.push(Statement::VariableDeclaration(VariableDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![VariableDeclarator {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("VariableDeclarator"),
                     id: PatternLike::Identifier(name.clone()),
                     init: None,
                     definite: None,
@@ -563,13 +563,13 @@ fn codegen_reactive_scope(
         })?;
         let cache_name = cx.synthesize_name("$");
         Expression::BinaryExpression(ast_expr::BinaryExpression {
-            base: BaseNode::default(),
+            base: BaseNode::typed("BinaryExpression"),
             operator: AstBinaryOperator::StrictEq,
             left: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("MemberExpression"),
                 object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
                 property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("NumericLiteral"),
                     value: first_idx as f64,
                 })),
                 computed: true,
@@ -581,7 +581,7 @@ fn codegen_reactive_scope(
             .into_iter()
             .reduce(|acc, expr| {
                 Expression::LogicalExpression(ast_expr::LogicalExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("LogicalExpression"),
                     operator: AstLogicalOperator::Or,
                     left: Box::new(acc),
                     right: Box::new(expr),
@@ -596,19 +596,19 @@ fn codegen_reactive_scope(
     for (name, index, value) in &cache_loads {
         let cache_name = cx.synthesize_name("$");
         cache_store_stmts.push(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ExpressionStatement"),
             expression: Box::new(Expression::AssignmentExpression(
                 ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(Expression::Identifier(make_identifier(
                                 &cache_name,
                             ))),
                             property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                base: BaseNode::default(),
+                                base: BaseNode::typed("NumericLiteral"),
                                 value: *index as f64,
                             })),
                             computed: true,
@@ -619,20 +619,20 @@ fn codegen_reactive_scope(
             )),
         }));
         cache_load_stmts.push(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ExpressionStatement"),
             expression: Box::new(Expression::AssignmentExpression(
                 ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::Identifier(name.clone())),
                     right: Box::new(Expression::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(Expression::Identifier(make_identifier(
                                 &cache_name,
                             ))),
                             property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                base: BaseNode::default(),
+                                base: BaseNode::typed("NumericLiteral"),
                                 value: *index as f64,
                             })),
                             computed: true,
@@ -646,11 +646,11 @@ fn codegen_reactive_scope(
     computation_block.body.extend(cache_store_stmts);
 
     let memo_stmt = Statement::IfStatement(IfStatement {
-        base: BaseNode::default(),
+        base: BaseNode::typed("IfStatement"),
         test: Box::new(test_condition),
         consequent: Box::new(Statement::BlockStatement(computation_block)),
         alternate: Some(Box::new(Statement::BlockStatement(BlockStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("BlockStatement"),
             body: cache_load_stmts,
             directives: Vec::new(),
         }))),
@@ -672,17 +672,17 @@ fn codegen_reactive_scope(
             }
         };
         statements.push(Statement::IfStatement(IfStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("IfStatement"),
             test: Box::new(Expression::BinaryExpression(ast_expr::BinaryExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("BinaryExpression"),
                 operator: AstBinaryOperator::StrictNeq,
                 left: Box::new(Expression::Identifier(make_identifier(&name))),
                 right: Box::new(symbol_for(EARLY_RETURN_SENTINEL)),
             })),
             consequent: Box::new(Statement::BlockStatement(BlockStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("BlockStatement"),
                 body: vec![Statement::ReturnStatement(ReturnStatement {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("ReturnStatement"),
                     argument: Some(Box::new(Expression::Identifier(make_identifier(&name)))),
                 })],
                 directives: Vec::new(),
@@ -712,7 +712,7 @@ fn codegen_terminal(
                 return Ok(None);
             }
             Ok(Some(Statement::BreakStatement(BreakStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("BreakStatement"),
                 label: if *target_kind == ReactiveTerminalTargetKind::Labeled {
                     Some(make_identifier(&codegen_label(*target)))
                 } else {
@@ -729,7 +729,7 @@ fn codegen_terminal(
                 return Ok(None);
             }
             Ok(Some(Statement::ContinueStatement(ContinueStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ContinueStatement"),
                 label: if *target_kind == ReactiveTerminalTargetKind::Labeled {
                     Some(make_identifier(&codegen_label(*target)))
                 } else {
@@ -742,20 +742,20 @@ fn codegen_terminal(
             if let Expression::Identifier(ref ident) = expr {
                 if ident.name == "undefined" {
                     return Ok(Some(Statement::ReturnStatement(ReturnStatement {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("ReturnStatement"),
                         argument: None,
                     })));
                 }
             }
             Ok(Some(Statement::ReturnStatement(ReturnStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ReturnStatement"),
                 argument: Some(Box::new(expr)),
             })))
         }
         ReactiveTerminal::Throw { value, .. } => {
             let expr = codegen_place_to_expression(cx, value)?;
             Ok(Some(Statement::ThrowStatement(ThrowStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ThrowStatement"),
                 argument: Box::new(expr),
             })))
         }
@@ -778,7 +778,7 @@ fn codegen_terminal(
                 None
             };
             Ok(Some(Statement::IfStatement(IfStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("IfStatement"),
                 test: Box::new(test_expr),
                 consequent: Box::new(Statement::BlockStatement(consequent_block)),
                 alternate: alternate_stmt,
@@ -805,14 +805,14 @@ fn codegen_terminal(
                         None => Vec::new(),
                     };
                     Ok(SwitchCase {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("SwitchCase"),
                         test: test.map(Box::new),
                         consequent,
                     })
                 })
                 .collect::<Result<_, CompilerError>>()?;
             Ok(Some(Statement::SwitchStatement(SwitchStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("SwitchStatement"),
                 discriminant: Box::new(test_expr),
                 cases: switch_cases,
             })))
@@ -823,7 +823,7 @@ fn codegen_terminal(
             let test_expr = codegen_instruction_value_to_expression(cx, test)?;
             let body = codegen_block(cx, loop_block)?;
             Ok(Some(Statement::DoWhileStatement(DoWhileStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("DoWhileStatement"),
                 test: Box::new(test_expr),
                 body: Box::new(Statement::BlockStatement(body)),
             })))
@@ -834,7 +834,7 @@ fn codegen_terminal(
             let test_expr = codegen_instruction_value_to_expression(cx, test)?;
             let body = codegen_block(cx, loop_block)?;
             Ok(Some(Statement::WhileStatement(WhileStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("WhileStatement"),
                 test: Box::new(test_expr),
                 body: Box::new(Statement::BlockStatement(body)),
             })))
@@ -854,7 +854,7 @@ fn codegen_terminal(
                 .transpose()?;
             let body = codegen_block(cx, loop_block)?;
             Ok(Some(Statement::ForStatement(ForStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ForStatement"),
                 init: init_val.map(|v| Box::new(v)),
                 test: Some(Box::new(test_expr)),
                 update: update_expr.map(Box::new),
@@ -892,10 +892,10 @@ fn codegen_terminal(
             let try_block = codegen_block(cx, block)?;
             let handler_block = codegen_block(cx, handler)?;
             Ok(Some(Statement::TryStatement(TryStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("TryStatement"),
                 block: try_block,
                 handler: Some(CatchClause {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("CatchClause"),
                     param: catch_param,
                     body: handler_block,
                 }),
@@ -925,7 +925,7 @@ fn codegen_for_in(
             suggestions: None,
         });
         return Ok(Some(Statement::EmptyStatement(EmptyStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("EmptyStatement"),
         })));
     }
     let iterable_collection = &instructions[0];
@@ -936,12 +936,12 @@ fn codegen_for_in(
     let right = codegen_instruction_value_to_expression(cx, &iterable_collection.value)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForInStatement(ForInStatement {
-        base: BaseNode::default(),
+        base: BaseNode::typed("ForInStatement"),
         left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
             VariableDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![VariableDeclarator {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("VariableDeclarator"),
                     id: lval,
                     init: None,
                     definite: None,
@@ -1005,7 +1005,7 @@ fn codegen_for_of(
             suggestions: None,
         });
         return Ok(Some(Statement::EmptyStatement(EmptyStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("EmptyStatement"),
         })));
     }
     let iterable_item = &test_instrs[1];
@@ -1016,12 +1016,12 @@ fn codegen_for_of(
     let right = codegen_place_to_expression(cx, collection)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForOfStatement(ForOfStatement {
-        base: BaseNode::default(),
+        base: BaseNode::typed("ForOfStatement"),
         left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
             VariableDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![VariableDeclarator {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("VariableDeclarator"),
                     id: lval,
                     init: None,
                     definite: None,
@@ -1138,7 +1138,7 @@ fn codegen_for_init(
             return Err(invariant_err("Expected a variable declaration in for-init", None));
         }
         Ok(Some(ForInit::VariableDeclaration(VariableDeclaration {
-            base: BaseNode::default(),
+            base: BaseNode::typed("VariableDeclaration"),
             declarations: declarators,
             kind,
             declare: None,
@@ -1172,7 +1172,7 @@ fn codegen_instruction_nullable(
             }
             InstructionValue::Debugger { .. } => {
                 return Ok(Some(Statement::DebuggerStatement(DebuggerStatement {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("DebuggerStatement"),
                 })));
             }
             InstructionValue::ObjectMethod { loc, .. } => {
@@ -1249,7 +1249,7 @@ fn emit_store(
         InstructionKind::Const => {
             let lval = codegen_lvalue(cx, lvalue)?;
             Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![make_var_declarator(lval, value)],
                 kind: VariableDeclarationKind::Const,
                 declare: None,
@@ -1266,7 +1266,7 @@ fn emit_store(
             match rhs {
                 Expression::FunctionExpression(func_expr) => {
                     Ok(Some(Statement::FunctionDeclaration(FunctionDeclaration {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("FunctionDeclaration"),
                         id: Some(fn_id),
                         params: func_expr.params,
                         body: func_expr.body,
@@ -1284,7 +1284,7 @@ fn emit_store(
         InstructionKind::Let => {
             let lval = codegen_lvalue(cx, lvalue)?;
             Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![make_var_declarator(lval, value)],
                 kind: VariableDeclarationKind::Let,
                 declare: None,
@@ -1296,7 +1296,7 @@ fn emit_store(
             };
             let lval = codegen_lvalue(cx, lvalue)?;
             let expr = Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("AssignmentExpression"),
                 operator: AssignmentOperator::Assign,
                 left: Box::new(lval),
                 right: Box::new(rhs),
@@ -1316,13 +1316,13 @@ fn emit_store(
                 }
             }
             Ok(Some(Statement::ExpressionStatement(ExpressionStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ExpressionStatement"),
                 expression: Box::new(expr),
             })))
         }
         InstructionKind::Catch => {
             Ok(Some(Statement::EmptyStatement(EmptyStatement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("EmptyStatement"),
             })))
         }
         InstructionKind::HoistedLet | InstructionKind::HoistedConst | InstructionKind::HoistedFunction => {
@@ -1342,7 +1342,7 @@ fn codegen_instruction(
     let Some(ref lvalue) = instr.lvalue else {
         let expr = convert_value_to_expression(value);
         return Ok(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ExpressionStatement"),
             expression: Box::new(expr),
         }));
     };
@@ -1351,16 +1351,16 @@ fn codegen_instruction(
         // temporary
         cx.temp.insert(ident.declaration_id, Some(value));
         return Ok(Statement::EmptyStatement(EmptyStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("EmptyStatement"),
         }));
     }
     let expr_value = convert_value_to_expression(value);
     if cx.has_declared(lvalue.identifier) {
         Ok(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ExpressionStatement"),
             expression: Box::new(Expression::AssignmentExpression(
                 ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::Identifier(convert_identifier(
                         lvalue.identifier,
@@ -1372,7 +1372,7 @@ fn codegen_instruction(
         }))
     } else {
         Ok(Statement::VariableDeclaration(VariableDeclaration {
-            base: BaseNode::default(),
+            base: BaseNode::typed("VariableDeclaration"),
             declarations: vec![make_var_declarator(
                 PatternLike::Identifier(convert_identifier(lvalue.identifier, cx.env)),
                 Some(expr_value),
@@ -1411,7 +1411,7 @@ fn codegen_instruction_value(
             let right_expr = codegen_instruction_value_to_expression(cx, right)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::LogicalExpression(ast_expr::LogicalExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("LogicalExpression"),
                     operator: convert_logical_operator(operator),
                     left: Box::new(left_expr),
                     right: Box::new(right_expr),
@@ -1429,7 +1429,7 @@ fn codegen_instruction_value(
             let alt_expr = codegen_instruction_value_to_expression(cx, alternate)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::ConditionalExpression(ast_expr::ConditionalExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("ConditionalExpression"),
                     test: Box::new(test_expr),
                     consequent: Box::new(cons_expr),
                     alternate: Box::new(alt_expr),
@@ -1464,7 +1464,7 @@ fn codegen_instruction_value(
                             suggestions: None,
                         });
                         expressions.push(Expression::StringLiteral(StringLiteral {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("StringLiteral"),
                             value: format!("TODO handle declaration"),
                         }));
                     }
@@ -1479,7 +1479,7 @@ fn codegen_instruction_value(
                             suggestions: None,
                         });
                         expressions.push(Expression::StringLiteral(StringLiteral {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("StringLiteral"),
                             value: format!("TODO handle statement"),
                         }));
                     }
@@ -1492,7 +1492,7 @@ fn codegen_instruction_value(
                 expressions.push(final_expr);
                 Ok(ExpressionOrJsxText::Expression(
                     Expression::SequenceExpression(ast_expr::SequenceExpression {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("SequenceExpression"),
                         expressions,
                     }),
                 ))
@@ -1506,7 +1506,7 @@ fn codegen_instruction_value(
                 Expression::OptionalCallExpression(oce) => {
                     Ok(ExpressionOrJsxText::Expression(
                         Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("OptionalCallExpression"),
                             callee: oce.callee,
                             arguments: oce.arguments,
                             optional: *optional,
@@ -1518,7 +1518,7 @@ fn codegen_instruction_value(
                 Expression::CallExpression(ce) => {
                     Ok(ExpressionOrJsxText::Expression(
                         Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("OptionalCallExpression"),
                             callee: ce.callee,
                             arguments: ce.arguments,
                             optional: *optional,
@@ -1531,7 +1531,7 @@ fn codegen_instruction_value(
                     Ok(ExpressionOrJsxText::Expression(
                         Expression::OptionalMemberExpression(
                             ast_expr::OptionalMemberExpression {
-                                base: BaseNode::default(),
+                                base: BaseNode::typed("OptionalMemberExpression"),
                                 object: ome.object,
                                 property: ome.property,
                                 computed: ome.computed,
@@ -1544,7 +1544,7 @@ fn codegen_instruction_value(
                     Ok(ExpressionOrJsxText::Expression(
                         Expression::OptionalMemberExpression(
                             ast_expr::OptionalMemberExpression {
-                                base: BaseNode::default(),
+                                base: BaseNode::typed("OptionalMemberExpression"),
                                 object: me.object,
                                 property: me.property,
                                 computed: me.computed,
@@ -1583,7 +1583,7 @@ fn codegen_base_instruction_value(
             let right_expr = codegen_place_to_expression(cx, right)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::BinaryExpression(ast_expr::BinaryExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("BinaryExpression"),
                     operator: convert_binary_operator(operator),
                     left: Box::new(left_expr),
                     right: Box::new(right_expr),
@@ -1594,7 +1594,7 @@ fn codegen_base_instruction_value(
             let arg = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("UnaryExpression"),
                     operator: convert_unary_operator(operator),
                     prefix: true,
                     argument: Box::new(arg),
@@ -1618,7 +1618,7 @@ fn codegen_base_instruction_value(
                 .collect::<Result<_, _>>()?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::CallExpression(ast_expr::CallExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("CallExpression"),
                     callee: Box::new(callee_expr),
                     arguments,
                     type_parameters: None,
@@ -1640,7 +1640,7 @@ fn codegen_base_instruction_value(
                 .collect::<Result<_, _>>()?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::CallExpression(ast_expr::CallExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("CallExpression"),
                     callee: Box::new(member_expr),
                     arguments,
                     type_parameters: None,
@@ -1657,7 +1657,7 @@ fn codegen_base_instruction_value(
                 .collect::<Result<_, _>>()?;
             Ok(ExpressionOrJsxText::Expression(Expression::NewExpression(
                 ast_expr::NewExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("NewExpression"),
                     callee: Box::new(callee_expr),
                     arguments,
                     type_parameters: None,
@@ -1675,7 +1675,7 @@ fn codegen_base_instruction_value(
                     ArrayElement::Spread(spread) => {
                         let arg = codegen_place_to_expression(cx, &spread.place)?;
                         Ok(Some(Expression::SpreadElement(ast_expr::SpreadElement {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("SpreadElement"),
                             argument: Box::new(arg),
                         })))
                     }
@@ -1684,7 +1684,7 @@ fn codegen_base_instruction_value(
                 .collect::<Result<_, CompilerError>>()?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::ArrayExpression(ast_expr::ArrayExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("ArrayExpression"),
                     elements: elems,
                 }),
             ))
@@ -1697,7 +1697,7 @@ fn codegen_base_instruction_value(
             let (prop, computed) = property_literal_to_expression(property);
             Ok(ExpressionOrJsxText::Expression(
                 Expression::MemberExpression(ast_expr::MemberExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("MemberExpression"),
                     object: Box::new(obj),
                     property: Box::new(prop),
                     computed,
@@ -1715,11 +1715,11 @@ fn codegen_base_instruction_value(
             let val = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(obj),
                             property: Box::new(prop),
                             computed,
@@ -1734,12 +1734,12 @@ fn codegen_base_instruction_value(
             let (prop, computed) = property_literal_to_expression(property);
             Ok(ExpressionOrJsxText::Expression(
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("UnaryExpression"),
                     operator: AstUnaryOperator::Delete,
                     prefix: true,
                     argument: Box::new(Expression::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(obj),
                             property: Box::new(prop),
                             computed,
@@ -1753,7 +1753,7 @@ fn codegen_base_instruction_value(
             let prop = codegen_place_to_expression(cx, property)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::MemberExpression(ast_expr::MemberExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("MemberExpression"),
                     object: Box::new(obj),
                     property: Box::new(prop),
                     computed: true,
@@ -1771,11 +1771,11 @@ fn codegen_base_instruction_value(
             let val = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(obj),
                             property: Box::new(prop),
                             computed: true,
@@ -1790,12 +1790,12 @@ fn codegen_base_instruction_value(
             let prop = codegen_place_to_expression(cx, property)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("UnaryExpression"),
                     operator: AstUnaryOperator::Delete,
                     prefix: true,
                     argument: Box::new(Expression::MemberExpression(
                         ast_expr::MemberExpression {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("MemberExpression"),
                             object: Box::new(obj),
                             property: Box::new(prop),
                             computed: true,
@@ -1807,7 +1807,7 @@ fn codegen_base_instruction_value(
         InstructionValue::RegExpLiteral { pattern, flags, .. } => {
             Ok(ExpressionOrJsxText::Expression(Expression::RegExpLiteral(
                 AstRegExpLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("RegExpLiteral"),
                     pattern: pattern.clone(),
                     flags: flags.clone(),
                 },
@@ -1816,7 +1816,7 @@ fn codegen_base_instruction_value(
         InstructionValue::MetaProperty { meta, property, .. } => {
             Ok(ExpressionOrJsxText::Expression(Expression::MetaProperty(
                 ast_expr::MetaProperty {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("MetaProperty"),
                     meta: make_identifier(meta),
                     property: make_identifier(property),
                 },
@@ -1826,7 +1826,7 @@ fn codegen_base_instruction_value(
             let arg = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::AwaitExpression(ast_expr::AwaitExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AwaitExpression"),
                     argument: Box::new(arg),
                 }),
             ))
@@ -1849,7 +1849,7 @@ fn codegen_base_instruction_value(
             let arg = codegen_place_to_expression(cx, lvalue)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::UpdateExpression(ast_expr::UpdateExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("UpdateExpression"),
                     operator: convert_update_operator(operation),
                     argument: Box::new(arg),
                     prefix: false,
@@ -1862,7 +1862,7 @@ fn codegen_base_instruction_value(
             let arg = codegen_place_to_expression(cx, lvalue)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::UpdateExpression(ast_expr::UpdateExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("UpdateExpression"),
                     operator: convert_update_operator(operation),
                     argument: Box::new(arg),
                     prefix: true,
@@ -1879,7 +1879,7 @@ fn codegen_base_instruction_value(
             let rhs = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(lval),
                     right: Box::new(rhs),
@@ -1890,7 +1890,7 @@ fn codegen_base_instruction_value(
             let rhs = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::Identifier(make_identifier(name))),
                     right: Box::new(rhs),
@@ -1910,12 +1910,12 @@ fn codegen_base_instruction_value(
             let tag_expr = codegen_place_to_expression(cx, tag)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::TaggedTemplateExpression(ast_expr::TaggedTemplateExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("TaggedTemplateExpression"),
                     tag: Box::new(tag_expr),
                     quasi: ast_expr::TemplateLiteral {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("TemplateLiteral"),
                         quasis: vec![TemplateElement {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("TemplateElement"),
                             value: TemplateElementValue {
                                 raw: value.raw.clone(),
                                 cooked: value.cooked.clone(),
@@ -1937,7 +1937,7 @@ fn codegen_base_instruction_value(
                 .iter()
                 .enumerate()
                 .map(|(i, q)| TemplateElement {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("TemplateElement"),
                     value: TemplateElementValue {
                         raw: q.raw.clone(),
                         cooked: q.cooked.clone(),
@@ -1947,7 +1947,7 @@ fn codegen_base_instruction_value(
                 .collect();
             Ok(ExpressionOrJsxText::Expression(
                 Expression::TemplateLiteral(ast_expr::TemplateLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("TemplateLiteral"),
                     quasis: template_elems,
                     expressions: exprs,
                 }),
@@ -1965,7 +1965,7 @@ fn codegen_base_instruction_value(
         }
         InstructionValue::JSXText { value, .. } => {
             Ok(ExpressionOrJsxText::JsxText(JSXText {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXText"),
                 value: value.clone(),
             }))
         }
@@ -1986,12 +1986,12 @@ fn codegen_base_instruction_value(
                 .collect::<Result<_, _>>()?;
             Ok(ExpressionOrJsxText::Expression(Expression::JSXFragment(
                 JSXFragment {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXFragment"),
                     opening_fragment: JSXOpeningFragment {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXOpeningFragment"),
                     },
                     closing_fragment: JSXClosingFragment {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXClosingFragment"),
                     },
                     children: child_elems,
                 },
@@ -2069,7 +2069,7 @@ fn codegen_function_expression(
             }
             let is_expression = matches!(body, ArrowFunctionBody::Expression(_));
             Expression::ArrowFunctionExpression(ast_expr::ArrowFunctionExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ArrowFunctionExpression"),
                 params: fn_result.params,
                 body: Box::new(body),
                 id: None,
@@ -2083,7 +2083,7 @@ fn codegen_function_expression(
         }
         _ => {
             Expression::FunctionExpression(ast_expr::FunctionExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("FunctionExpression"),
                 params: fn_result.params,
                 body: fn_result.body,
                 id: name.as_ref().map(|n| make_identifier(n)),
@@ -2102,14 +2102,14 @@ fn codegen_function_expression(
     {
         let hint = name_hint.as_ref().unwrap();
         let wrapped = Expression::MemberExpression(ast_expr::MemberExpression {
-            base: BaseNode::default(),
+            base: BaseNode::typed("MemberExpression"),
             object: Box::new(Expression::ObjectExpression(ast_expr::ObjectExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ObjectExpression"),
                 properties: vec![ast_expr::ObjectExpressionProperty::ObjectProperty(
                     ast_expr::ObjectProperty {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("ObjectProperty"),
                         key: Box::new(Expression::StringLiteral(StringLiteral {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("StringLiteral"),
                             value: hint.clone(),
                         })),
                         value: Box::new(value),
@@ -2121,7 +2121,7 @@ fn codegen_function_expression(
                 )],
             })),
             property: Box::new(Expression::StringLiteral(StringLiteral {
-                base: BaseNode::default(),
+                base: BaseNode::typed("StringLiteral"),
                 value: hint.clone(),
             })),
             computed: true,
@@ -2153,7 +2153,7 @@ fn codegen_object_expression(
                         ast_properties.push(
                             ast_expr::ObjectExpressionProperty::ObjectProperty(
                                 ast_expr::ObjectProperty {
-                                    base: BaseNode::default(),
+                                    base: BaseNode::typed("ObjectProperty"),
                                     key: Box::new(key),
                                     value: Box::new(value),
                                     computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
@@ -2190,7 +2190,7 @@ fn codegen_object_expression(
                         ast_properties.push(
                             ast_expr::ObjectExpressionProperty::ObjectMethod(
                                 ast_expr::ObjectMethod {
-                                    base: BaseNode::default(),
+                                    base: BaseNode::typed("ObjectMethod"),
                                     method: true,
                                     kind: ast_expr::ObjectMethodKind::Method,
                                     key: Box::new(key),
@@ -2213,7 +2213,7 @@ fn codegen_object_expression(
                 let arg = codegen_place_to_expression(cx, &spread.place)?;
                 ast_properties.push(ast_expr::ObjectExpressionProperty::SpreadElement(
                     ast_expr::SpreadElement {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("SpreadElement"),
                         argument: Box::new(arg),
                     },
                 ));
@@ -2222,7 +2222,7 @@ fn codegen_object_expression(
     }
     Ok(ExpressionOrJsxText::Expression(
         Expression::ObjectExpression(ast_expr::ObjectExpression {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ObjectExpression"),
             properties: ast_properties,
         }),
     ))
@@ -2234,7 +2234,7 @@ fn codegen_object_property_key(
 ) -> Result<Expression, CompilerError> {
     match key {
         ObjectPropertyKey::String { name } => Ok(Expression::StringLiteral(StringLiteral {
-            base: BaseNode::default(),
+            base: BaseNode::typed("StringLiteral"),
             value: name.clone(),
         })),
         ObjectPropertyKey::Identifier { name } => {
@@ -2251,7 +2251,7 @@ fn codegen_object_property_key(
         }
         ObjectPropertyKey::Number { name } => {
             Ok(Expression::NumericLiteral(NumericLiteral {
-                base: BaseNode::default(),
+                base: BaseNode::typed("NumericLiteral"),
                 value: name.value(),
             }))
         }
@@ -2282,7 +2282,7 @@ fn codegen_jsx_expression(
         }
         JsxTag::Builtin(builtin) => {
             (Expression::StringLiteral(StringLiteral {
-                base: BaseNode::default(),
+                base: BaseNode::typed("StringLiteral"),
                 value: builtin.name.clone(),
             }), None)
         }
@@ -2321,9 +2321,9 @@ fn codegen_jsx_expression(
     let is_self_closing = children.is_none();
 
     let element = JSXElement {
-        base: BaseNode::default(),
+        base: BaseNode::typed("JSXElement"),
         opening_element: JSXOpeningElement {
-            base: BaseNode::default(),
+            base: BaseNode::typed("JSXOpeningElement"),
             name: jsx_tag.clone(),
             attributes,
             self_closing: is_self_closing,
@@ -2331,7 +2331,7 @@ fn codegen_jsx_expression(
         },
         closing_element: if !is_self_closing {
             Some(JSXClosingElement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXClosingElement"),
                 name: jsx_tag,
             })
         } else {
@@ -2376,19 +2376,19 @@ fn codegen_jsx_attribute(
             let prop_name = if name.contains(':') {
                 let parts: Vec<&str> = name.splitn(2, ':').collect();
                 JSXAttributeName::JSXNamespacedName(JSXNamespacedName {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXNamespacedName"),
                     namespace: JSXIdentifier {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXIdentifier"),
                         name: parts[0].to_string(),
                     },
                     name: JSXIdentifier {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXIdentifier"),
                         name: parts[1].to_string(),
                     },
                 })
             } else {
                 JSXAttributeName::JSXIdentifier(JSXIdentifier {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXIdentifier"),
                     name: name.clone(),
                 })
             };
@@ -2401,7 +2401,7 @@ fn codegen_jsx_attribute(
                     {
                         Some(JSXAttributeValue::JSXExpressionContainer(
                             JSXExpressionContainer {
-                                base: BaseNode::default(),
+                                base: BaseNode::typed("JSXExpressionContainer"),
                                 expression: JSXExpressionContainerExpr::Expression(Box::new(
                                     inner_value,
                                 )),
@@ -2409,20 +2409,20 @@ fn codegen_jsx_attribute(
                         ))
                     } else {
                         Some(JSXAttributeValue::StringLiteral(StringLiteral {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("StringLiteral"),
                             value: s.value.clone(),
                         }))
                     }
                 }
                 _ => Some(JSXAttributeValue::JSXExpressionContainer(
                     JSXExpressionContainer {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXExpressionContainer"),
                         expression: JSXExpressionContainerExpr::Expression(Box::new(inner_value)),
                     },
                 )),
             };
             Ok(JSXAttributeItem::JSXAttribute(AstJSXAttribute {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXAttribute"),
                 name: prop_name,
                 value: attr_value,
             }))
@@ -2430,7 +2430,7 @@ fn codegen_jsx_attribute(
         JsxAttribute::SpreadAttribute { argument } => {
             let expr = codegen_place_to_expression(cx, argument)?;
             Ok(JSXAttributeItem::JSXSpreadAttribute(JSXSpreadAttribute {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXSpreadAttribute"),
                 argument: Box::new(expr),
             }))
         }
@@ -2446,17 +2446,17 @@ fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, Comp
                 .contains(JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN)
             {
                 Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXExpressionContainer"),
                     expression: JSXExpressionContainerExpr::Expression(Box::new(
                         Expression::StringLiteral(StringLiteral {
-                            base: BaseNode::default(),
+                            base: BaseNode::typed("StringLiteral"),
                             value: text.value.clone(),
                         }),
                     )),
                 }))
             } else {
                 Ok(JSXChild::JSXText(JSXText {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXText"),
                     value: text.value.clone(),
                 }))
             }
@@ -2469,7 +2469,7 @@ fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, Comp
         }
         ExpressionOrJsxText::Expression(expr) => {
             Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXExpressionContainer"),
                 expression: JSXExpressionContainerExpr::Expression(Box::new(expr)),
             }))
         }
@@ -2488,7 +2488,7 @@ fn codegen_jsx_fbt_child_element(
         }
         ExpressionOrJsxText::Expression(expr) => {
             Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXExpressionContainer"),
                 expression: JSXExpressionContainerExpr::Expression(Box::new(expr)),
             }))
         }
@@ -2501,7 +2501,7 @@ fn expression_to_jsx_tag(
 ) -> Result<JSXElementName, CompilerError> {
     match expr {
         Expression::Identifier(ident) => Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
-            base: BaseNode::default(),
+            base: BaseNode::typed("JSXIdentifier"),
             name: ident.name.clone(),
         })),
         Expression::MemberExpression(me) => {
@@ -2513,19 +2513,19 @@ fn expression_to_jsx_tag(
             if s.value.contains(':') {
                 let parts: Vec<&str> = s.value.splitn(2, ':').collect();
                 Ok(JSXElementName::JSXNamespacedName(JSXNamespacedName {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXNamespacedName"),
                     namespace: JSXIdentifier {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXIdentifier"),
                         name: parts[0].to_string(),
                     },
                     name: JSXIdentifier {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("JSXIdentifier"),
                         name: parts[1].to_string(),
                     },
                 }))
             } else {
                 Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("JSXIdentifier"),
                     name: s.value.clone(),
                 }))
             }
@@ -2547,14 +2547,14 @@ fn convert_member_expression_to_jsx(
         ));
     };
     let property = JSXIdentifier {
-        base: BaseNode::default(),
+        base: BaseNode::typed("JSXIdentifier"),
         name: prop_ident.name.clone(),
     };
     match &*me.object {
         Expression::Identifier(ident) => Ok(JSXMemberExpression {
-            base: BaseNode::default(),
+            base: BaseNode::typed("JSXMemberExpression"),
             object: Box::new(JSXMemberExprObject::JSXIdentifier(JSXIdentifier {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXIdentifier"),
                 name: ident.name.clone(),
             })),
             property,
@@ -2562,7 +2562,7 @@ fn convert_member_expression_to_jsx(
         Expression::MemberExpression(inner_me) => {
             let inner = convert_member_expression_to_jsx(inner_me)?;
             Ok(JSXMemberExpression {
-                base: BaseNode::default(),
+                base: BaseNode::typed("JSXMemberExpression"),
                 object: Box::new(JSXMemberExprObject::JSXMemberExpression(Box::new(inner))),
                 property,
             })
@@ -2599,7 +2599,7 @@ fn codegen_lvalue(cx: &mut Context, pattern: &LvalueRef) -> Result<PatternLike, 
         LvalueRef::Spread(spread) => {
             let inner = codegen_lvalue(cx, &LvalueRef::Place(&spread.place))?;
             Ok(PatternLike::RestElement(RestElement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("RestElement"),
                 argument: Box::new(inner),
                 type_annotation: None,
                 decorators: None,
@@ -2626,7 +2626,7 @@ fn codegen_array_pattern(
         })
         .collect::<Result<_, CompilerError>>()?;
     Ok(PatternLike::ArrayPattern(AstArrayPattern {
-        base: BaseNode::default(),
+        base: BaseNode::typed("ArrayPattern"),
         elements,
         type_annotation: None,
         decorators: None,
@@ -2647,7 +2647,7 @@ fn codegen_object_pattern(
                 let is_shorthand = matches!(&key, Expression::Identifier(k_id)
                     if matches!(&value, PatternLike::Identifier(v_id) if v_id.name == k_id.name));
                 Ok(ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("ObjectProperty"),
                     key: Box::new(key),
                     value: Box::new(value),
                     computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
@@ -2659,7 +2659,7 @@ fn codegen_object_pattern(
             ObjectPropertyOrSpread::Spread(spread) => {
                 let inner = codegen_lvalue(cx, &LvalueRef::Place(&spread.place))?;
                 Ok(ObjectPatternProperty::RestElement(RestElement {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("RestElement"),
                     argument: Box::new(inner),
                     type_annotation: None,
                     decorators: None,
@@ -2669,7 +2669,7 @@ fn codegen_object_pattern(
         .collect::<Result<_, CompilerError>>()?;
     Ok(PatternLike::ObjectPattern(
         react_compiler_ast::patterns::ObjectPattern {
-            base: BaseNode::default(),
+            base: BaseNode::typed("ObjectPattern"),
             properties,
             type_annotation: None,
             decorators: None,
@@ -2738,7 +2738,7 @@ fn codegen_argument(
         PlaceOrSpread::Spread(spread) => {
             let expr = codegen_place_to_expression(cx, &spread.place)?;
             Ok(Expression::SpreadElement(ast_expr::SpreadElement {
-                base: BaseNode::default(),
+                base: BaseNode::typed("SpreadElement"),
                 argument: Box::new(expr),
             }))
         }
@@ -2762,7 +2762,7 @@ fn codegen_dependency(
             if has_optional {
                 object = Expression::OptionalMemberExpression(
                     ast_expr::OptionalMemberExpression {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("OptionalMemberExpression"),
                         object: Box::new(object),
                         property: Box::new(property),
                         computed: is_computed,
@@ -2771,7 +2771,7 @@ fn codegen_dependency(
                 );
             } else {
                 object = Expression::MemberExpression(ast_expr::MemberExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("MemberExpression"),
                     object: Box::new(object),
                     property: Box::new(property),
                     computed: is_computed,
@@ -2959,7 +2959,7 @@ fn convert_update_operator(op: &react_compiler_hir::UpdateOperator) -> AstUpdate
 
 fn make_identifier(name: &str) -> AstIdentifier {
     AstIdentifier {
-        base: BaseNode::default(),
+        base: BaseNode::typed("Identifier"),
         name: name.to_string(),
         type_annotation: None,
         optional: None,
@@ -2969,7 +2969,7 @@ fn make_identifier(name: &str) -> AstIdentifier {
 
 fn make_var_declarator(id: PatternLike, init: Option<Expression>) -> VariableDeclarator {
     VariableDeclarator {
-        base: BaseNode::default(),
+        base: BaseNode::typed("VariableDeclarator"),
         id,
         init: init.map(Box::new),
         definite: None,
@@ -2982,15 +2982,15 @@ fn codegen_label(id: BlockId) -> String {
 
 fn symbol_for(name: &str) -> Expression {
     Expression::CallExpression(ast_expr::CallExpression {
-        base: BaseNode::default(),
+        base: BaseNode::typed("CallExpression"),
         callee: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
-            base: BaseNode::default(),
+            base: BaseNode::typed("MemberExpression"),
             object: Box::new(Expression::Identifier(make_identifier("Symbol"))),
             property: Box::new(Expression::Identifier(make_identifier("for"))),
             computed: false,
         })),
         arguments: vec![Expression::StringLiteral(StringLiteral {
-            base: BaseNode::default(),
+            base: BaseNode::typed("StringLiteral"),
             value: name.to_string(),
         })],
         type_parameters: None,
@@ -3008,31 +3008,31 @@ fn codegen_primitive_value(
             let f = n.value();
             if f < 0.0 {
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("UnaryExpression"),
                     operator: AstUnaryOperator::Neg,
                     prefix: true,
                     argument: Box::new(Expression::NumericLiteral(NumericLiteral {
-                        base: BaseNode::default(),
+                        base: BaseNode::typed("NumericLiteral"),
                         value: -f,
                     })),
                 })
             } else {
                 Expression::NumericLiteral(NumericLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("NumericLiteral"),
                     value: f,
                 })
             }
         }
         PrimitiveValue::Boolean(b) => Expression::BooleanLiteral(BooleanLiteral {
-            base: BaseNode::default(),
+            base: BaseNode::typed("BooleanLiteral"),
             value: *b,
         }),
         PrimitiveValue::String(s) => Expression::StringLiteral(StringLiteral {
-            base: BaseNode::default(),
+            base: BaseNode::typed("StringLiteral"),
             value: s.clone(),
         }),
         PrimitiveValue::Null => Expression::NullLiteral(NullLiteral {
-            base: BaseNode::default(),
+            base: BaseNode::typed("NullLiteral"),
         }),
         PrimitiveValue::Undefined => Expression::Identifier(make_identifier("undefined")),
     }
@@ -3043,7 +3043,7 @@ fn property_literal_to_expression(prop: &PropertyLiteral) -> (Expression, bool) 
         PropertyLiteral::String(s) => (Expression::Identifier(make_identifier(s)), false),
         PropertyLiteral::Number(n) => (
             Expression::NumericLiteral(NumericLiteral {
-                base: BaseNode::default(),
+                base: BaseNode::typed("NumericLiteral"),
                 value: n.value(),
             }),
             true,
@@ -3055,7 +3055,7 @@ fn convert_value_to_expression(value: ExpressionOrJsxText) -> Expression {
     match value {
         ExpressionOrJsxText::Expression(e) => e,
         ExpressionOrJsxText::JsxText(text) => Expression::StringLiteral(StringLiteral {
-            base: BaseNode::default(),
+            base: BaseNode::typed("StringLiteral"),
             value: text.value,
         }),
     }

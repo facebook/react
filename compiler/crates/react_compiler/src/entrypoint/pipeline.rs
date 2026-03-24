@@ -489,6 +489,12 @@ pub fn compile_fn(
 
     Ok(CodegenFunction {
         loc: codegen_result.loc,
+        id: codegen_result.id,
+        name_hint: codegen_result.name_hint,
+        params: codegen_result.params,
+        body: codegen_result.body,
+        generator: codegen_result.generator,
+        is_async: codegen_result.is_async,
         memo_slots_used: codegen_result.memo_slots_used,
         memo_blocks: codegen_result.memo_blocks,
         memo_values: codegen_result.memo_values,
@@ -497,6 +503,12 @@ pub fn compile_fn(
         outlined: codegen_result.outlined.into_iter().map(|o| OutlinedFunction {
             func: CodegenFunction {
                 loc: o.func.loc,
+                id: o.func.id,
+                name_hint: o.func.name_hint,
+                params: o.func.params,
+                body: o.func.body,
+                generator: o.func.generator,
+                is_async: o.func.is_async,
                 memo_slots_used: o.func.memo_slots_used,
                 memo_blocks: o.func.memo_blocks,
                 memo_values: o.func.memo_values,

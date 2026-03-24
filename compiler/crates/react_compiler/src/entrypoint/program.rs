@@ -36,7 +36,8 @@ use super::compile_result::{
     CompilerErrorItemInfo, DebugLogEntry, LoggerEvent,
 };
 use super::imports::{
-    ProgramContext, get_react_compiler_runtime_module, validate_restricted_imports,
+    ProgramContext, add_imports_to_program, get_react_compiler_runtime_module,
+    validate_restricted_imports,
 };
 use super::pipeline;
 use super::plugin_options::{CompilerOutputMode, PluginOptions};
@@ -1665,16 +1666,425 @@ struct CompiledFunction<'a> {
     kind: CompileSourceKind,
     #[allow(dead_code)]
     source: &'a CompileSource<'a>,
-    #[allow(dead_code)]
     codegen_fn: CodegenFunction,
 }
 
-/// Stub for applying compiled functions back to the AST.
-/// TODO: Implement AST rewriting (replace original functions with compiled versions).
+/// The type of the original function node, used to determine what kind of
+/// replacement node to create.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OriginalFnKind {
+    FunctionDeclaration,
+    FunctionExpression,
+    ArrowFunctionExpression,
+}
+
+/// Owned representation of a compiled function for AST replacement.
+/// Does not borrow from the original program, so we can mutate the AST.
+struct CompiledFnForReplacement {
+    /// Start position of the original function, used to find it in the AST.
+    fn_start: Option<u32>,
+    /// The kind of the original function node.
+    original_kind: OriginalFnKind,
+    /// The compiled codegen output.
+    codegen_fn: CodegenFunction,
+}
+
+/// Apply compiled functions back to the AST by replacing original function nodes
+/// with their compiled versions, inserting outlined functions, and adding imports.
+fn apply_compiled_functions(
+    compiled_fns: &[CompiledFnForReplacement],
+    program: &mut Program,
+    context: &mut ProgramContext,
+) {
+    if compiled_fns.is_empty() {
+        return;
+    }
+
+    // Collect outlined functions to insert (as FunctionDeclarations).
+    // For FunctionDeclarations: insert right after the parent (matching TS insertAfter behavior)
+    // For FunctionExpression/ArrowFunctionExpression: append at end of program body
+    //   (matching TS pushContainer behavior)
+    let mut outlined_decls: Vec<(Option<u32>, OriginalFnKind, FunctionDeclaration)> = Vec::new();
+
+    // Replace each compiled function in the AST
+    for compiled in compiled_fns {
+        // Collect outlined functions for this compiled function
+        for outlined in &compiled.codegen_fn.outlined {
+            let outlined_decl = FunctionDeclaration {
+                base: BaseNode::typed("FunctionDeclaration"),
+                id: outlined.func.id.clone(),
+                params: outlined.func.params.clone(),
+                body: outlined.func.body.clone(),
+                generator: outlined.func.generator,
+                is_async: outlined.func.is_async,
+                declare: None,
+                return_type: None,
+                type_parameters: None,
+                predicate: None,
+            };
+            outlined_decls.push((compiled.fn_start, compiled.original_kind, outlined_decl));
+        }
+
+        // Find and replace the original function in the program body
+        replace_function_in_program(program, compiled);
+    }
+
+    // Insert outlined function declarations.
+    // Separate into two groups: those inserted at specific positions (FunctionDeclaration)
+    // and those appended at the end (FunctionExpression/ArrowFunctionExpression).
+    let mut insert_decls: Vec<(Option<u32>, FunctionDeclaration)> = Vec::new();
+    let mut push_decls: Vec<FunctionDeclaration> = Vec::new();
+
+    for (parent_start, original_kind, outlined_decl) in outlined_decls {
+        match original_kind {
+            OriginalFnKind::FunctionDeclaration => {
+                insert_decls.push((parent_start, outlined_decl));
+            }
+            OriginalFnKind::FunctionExpression | OriginalFnKind::ArrowFunctionExpression => {
+                push_decls.push(outlined_decl);
+            }
+        }
+    }
+
+    // Insert-at-position decls in reverse order so indices remain valid
+    for (parent_start, outlined_decl) in insert_decls.into_iter().rev() {
+        let insert_idx = if let Some(start) = parent_start {
+            program
+                .body
+                .iter()
+                .position(|stmt| stmt_has_fn_at_start(stmt, start))
+                .map(|pos| pos + 1)
+                .unwrap_or(program.body.len())
+        } else {
+            program.body.len()
+        };
+        program
+            .body
+            .insert(insert_idx, Statement::FunctionDeclaration(outlined_decl));
+    }
+
+    // Push-to-end decls in forward order (matching TS pushContainer behavior)
+    for outlined_decl in push_decls {
+        program
+            .body
+            .push(Statement::FunctionDeclaration(outlined_decl));
+    }
+
+    // Register the memo cache import and rename useMemoCache references.
+    // Codegen produces `useMemoCache(N)` calls, but the actual import alias
+    // (e.g., `_c`) is determined by ProgramContext. We rename the identifier
+    // in the compiled function bodies before inserting them.
+    let needs_memo_import = compiled_fns
+        .iter()
+        .any(|cf| cf.codegen_fn.memo_slots_used > 0);
+    if needs_memo_import {
+        let import_spec = context.add_memo_cache_import();
+        let local_name = import_spec.name;
+        // Rename useMemoCache -> local_name in all function bodies in the program.
+        // The codegen only emits `useMemoCache` as the callee of the first statement
+        // in compiled functions, but we do a general rename for robustness.
+        for stmt in program.body.iter_mut() {
+            rename_identifier_in_statement(stmt, "useMemoCache", &local_name);
+        }
+    }
+
+    add_imports_to_program(program, context);
+}
+
+/// Rename an identifier in a statement (recursive walk).
+fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name: &str) {
+    match stmt {
+        Statement::FunctionDeclaration(f) => {
+            rename_identifier_in_block(&mut f.body, old_name, new_name);
+        }
+        Statement::VariableDeclaration(var_decl) => {
+            for decl in var_decl.declarations.iter_mut() {
+                if let Some(ref mut init) = decl.init {
+                    rename_identifier_in_expression(init, old_name, new_name);
+                }
+            }
+        }
+        Statement::ExportDefaultDeclaration(export) => match export.declaration.as_mut() {
+            ExportDefaultDecl::FunctionDeclaration(f) => {
+                rename_identifier_in_block(&mut f.body, old_name, new_name);
+            }
+            ExportDefaultDecl::Expression(e) => {
+                rename_identifier_in_expression(e, old_name, new_name);
+            }
+            _ => {}
+        },
+        Statement::ExportNamedDeclaration(export) => {
+            if let Some(ref mut decl) = export.declaration {
+                match decl.as_mut() {
+                    Declaration::FunctionDeclaration(f) => {
+                        rename_identifier_in_block(&mut f.body, old_name, new_name);
+                    }
+                    Declaration::VariableDeclaration(var_decl) => {
+                        for d in var_decl.declarations.iter_mut() {
+                            if let Some(ref mut init) = d.init {
+                                rename_identifier_in_expression(init, old_name, new_name);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Rename an identifier in a block statement body (recursive walk).
+fn rename_identifier_in_block(block: &mut BlockStatement, old_name: &str, new_name: &str) {
+    for stmt in block.body.iter_mut() {
+        rename_identifier_in_statement(stmt, old_name, new_name);
+    }
+}
+
+/// Rename an identifier in an expression (recursive walk into function bodies).
+fn rename_identifier_in_expression(expr: &mut Expression, old_name: &str, new_name: &str) {
+    match expr {
+        Expression::Identifier(id) => {
+            if id.name == old_name {
+                id.name = new_name.to_string();
+            }
+        }
+        Expression::CallExpression(call) => {
+            rename_identifier_in_expression(&mut call.callee, old_name, new_name);
+            for arg in call.arguments.iter_mut() {
+                rename_identifier_in_expression(arg, old_name, new_name);
+            }
+        }
+        Expression::FunctionExpression(f) => {
+            rename_identifier_in_block(&mut f.body, old_name, new_name);
+        }
+        Expression::ArrowFunctionExpression(f) => {
+            if let ArrowFunctionBody::BlockStatement(block) = f.body.as_mut() {
+                rename_identifier_in_block(block, old_name, new_name);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// Check if a statement contains a function whose BaseNode.start matches.
+fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
+    match stmt {
+        Statement::FunctionDeclaration(f) => f.base.start == Some(start),
+        Statement::VariableDeclaration(var_decl) => {
+            var_decl.declarations.iter().any(|decl| {
+                if let Some(ref init) = decl.init {
+                    expr_has_fn_at_start(init, start)
+                } else {
+                    false
+                }
+            })
+        }
+        Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
+            ExportDefaultDecl::FunctionDeclaration(f) => f.base.start == Some(start),
+            ExportDefaultDecl::Expression(e) => expr_has_fn_at_start(e, start),
+            _ => false,
+        },
+        Statement::ExportNamedDeclaration(export) => {
+            if let Some(ref decl) = export.declaration {
+                match decl.as_ref() {
+                    Declaration::FunctionDeclaration(f) => f.base.start == Some(start),
+                    Declaration::VariableDeclaration(var_decl) => {
+                        var_decl.declarations.iter().any(|d| {
+                            if let Some(ref init) = d.init {
+                                expr_has_fn_at_start(init, start)
+                            } else {
+                                false
+                            }
+                        })
+                    }
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        }
+        _ => false,
+    }
+}
+
+/// Check if an expression contains a function whose BaseNode.start matches.
+fn expr_has_fn_at_start(expr: &Expression, start: u32) -> bool {
+    match expr {
+        Expression::FunctionExpression(f) => f.base.start == Some(start),
+        Expression::ArrowFunctionExpression(f) => f.base.start == Some(start),
+        // Check for forwardRef/memo wrappers: the inner function
+        Expression::CallExpression(call) => {
+            call.arguments.iter().any(|arg| expr_has_fn_at_start(arg, start))
+        }
+        _ => false,
+    }
+}
+
+/// Replace a function in the program body with its compiled version.
+fn replace_function_in_program(program: &mut Program, compiled: &CompiledFnForReplacement) {
+    let start = match compiled.fn_start {
+        Some(s) => s,
+        None => return,
+    };
+
+    for stmt in program.body.iter_mut() {
+        if replace_fn_in_statement(stmt, start, compiled) {
+            return;
+        }
+    }
+}
+
+/// Clear comments from a BaseNode so Babel doesn't emit them in the compiled output.
+/// In the TS compiler, replaceWith() creates new nodes without comments; we achieve
+/// the same by stripping them from replaced function nodes.
 #[allow(dead_code)]
-fn apply_compiled_functions(_compiled_fns: &[CompiledFunction<'_>], _program: &mut Program) {
-    // Future: iterate compiled_fns and replace original function nodes with
-    // codegen output. For now this is a no-op.
+fn clear_comments(base: &mut BaseNode) {
+    base.leading_comments = None;
+    base.trailing_comments = None;
+    base.inner_comments = None;
+}
+
+/// Try to replace a function in a statement. Returns true if replaced.
+fn replace_fn_in_statement(
+    stmt: &mut Statement,
+    start: u32,
+    compiled: &CompiledFnForReplacement,
+) -> bool {
+    match stmt {
+        Statement::FunctionDeclaration(f) => {
+            if f.base.start == Some(start) {
+                f.id = compiled.codegen_fn.id.clone();
+                f.params = compiled.codegen_fn.params.clone();
+                f.body = compiled.codegen_fn.body.clone();
+                f.generator = compiled.codegen_fn.generator;
+                f.is_async = compiled.codegen_fn.is_async;
+                // Clear type annotations — the TS compiler creates a fresh node
+                // without returnType/typeParameters/predicate/declare
+                f.return_type = None;
+                f.type_parameters = None;
+                f.predicate = None;
+                f.declare = None;
+                return true;
+            }
+        }
+        Statement::VariableDeclaration(var_decl) => {
+            for decl in var_decl.declarations.iter_mut() {
+                if let Some(ref mut init) = decl.init {
+                    if replace_fn_in_expression(init, start, compiled) {
+                        return true;
+                    }
+                }
+            }
+        }
+        Statement::ExportDefaultDeclaration(export) => {
+            match export.declaration.as_mut() {
+                ExportDefaultDecl::FunctionDeclaration(f) => {
+                    if f.base.start == Some(start) {
+                        f.id = compiled.codegen_fn.id.clone();
+                        f.params = compiled.codegen_fn.params.clone();
+                        f.body = compiled.codegen_fn.body.clone();
+                        f.generator = compiled.codegen_fn.generator;
+                        f.is_async = compiled.codegen_fn.is_async;
+                        f.return_type = None;
+                        f.type_parameters = None;
+                        f.predicate = None;
+                        f.declare = None;
+                        return true;
+                    }
+                }
+                ExportDefaultDecl::Expression(e) => {
+                    if replace_fn_in_expression(e, start, compiled) {
+                        return true;
+                    }
+                }
+                _ => {}
+            }
+        }
+        Statement::ExportNamedDeclaration(export) => {
+            if let Some(ref mut decl) = export.declaration {
+                match decl.as_mut() {
+                    Declaration::FunctionDeclaration(f) => {
+                        if f.base.start == Some(start) {
+                            f.id = compiled.codegen_fn.id.clone();
+                            f.params = compiled.codegen_fn.params.clone();
+                            f.body = compiled.codegen_fn.body.clone();
+                            f.generator = compiled.codegen_fn.generator;
+                            f.is_async = compiled.codegen_fn.is_async;
+                            f.return_type = None;
+                            f.type_parameters = None;
+                            f.predicate = None;
+                            f.declare = None;
+                            return true;
+                        }
+                    }
+                    Declaration::VariableDeclaration(var_decl) => {
+                        for d in var_decl.declarations.iter_mut() {
+                            if let Some(ref mut init) = d.init {
+                                if replace_fn_in_expression(init, start, compiled) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        _ => {}
+    }
+    false
+}
+
+/// Try to replace a function in an expression. Returns true if replaced.
+fn replace_fn_in_expression(
+    expr: &mut Expression,
+    start: u32,
+    compiled: &CompiledFnForReplacement,
+) -> bool {
+    match expr {
+        Expression::FunctionExpression(f) => {
+            if f.base.start == Some(start) {
+                f.id = compiled.codegen_fn.id.clone();
+                f.params = compiled.codegen_fn.params.clone();
+                f.body = compiled.codegen_fn.body.clone();
+                f.generator = compiled.codegen_fn.generator;
+                f.is_async = compiled.codegen_fn.is_async;
+                // Clear type annotations — the TS compiler creates a fresh node
+                f.return_type = None;
+                f.type_parameters = None;
+                return true;
+            }
+        }
+        Expression::ArrowFunctionExpression(f) => {
+            if f.base.start == Some(start) {
+                f.params = compiled.codegen_fn.params.clone();
+                f.body = Box::new(ArrowFunctionBody::BlockStatement(
+                    compiled.codegen_fn.body.clone(),
+                ));
+                f.generator = compiled.codegen_fn.generator;
+                f.is_async = compiled.codegen_fn.is_async;
+                // Arrow functions always have expression: false after compilation
+                // since codegen produces a BlockStatement body
+                f.expression = Some(false);
+                // Clear type annotations — the TS compiler creates a fresh node
+                f.return_type = None;
+                f.type_parameters = None;
+                f.predicate = None;
+                return true;
+            }
+        }
+        // Handle forwardRef/memo wrappers: replace the inner function
+        Expression::CallExpression(call) => {
+            for arg in call.arguments.iter_mut() {
+                if replace_fn_in_expression(arg, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        _ => {}
+    }
+    false
 }
 
 /// Main entry point for the React Compiler.
@@ -1690,7 +2100,7 @@ fn apply_compiled_functions(_compiled_fns: &[CompiledFunction<'_>], _program: &m
 /// - findFunctionsToCompile: traverse program to find components and hooks
 /// - processFn: per-function compilation with directive and suppression handling
 /// - applyCompiledFunctions: replace original functions with compiled versions
-pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> CompileResult {
+pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions) -> CompileResult {
     // Compute output mode once, up front
     let output_mode = CompilerOutputMode::from_opts(&options);
 
@@ -1823,11 +2233,51 @@ pub fn compile_program(file: File, scope: ScopeInfo, options: PluginOptions) -> 
         };
     }
 
-    // Apply compiled functions to the AST (stub for now)
-    // apply_compiled_functions(&compiled_fns, &mut file.program);
+    // Convert compiled functions to owned representations (dropping borrows)
+    // so we can mutate the AST.
+    let replacements: Vec<CompiledFnForReplacement> = compiled_fns
+        .into_iter()
+        .map(|cf| {
+            let original_kind = match cf.source.fn_node {
+                FunctionNode::FunctionDeclaration(_) => OriginalFnKind::FunctionDeclaration,
+                FunctionNode::FunctionExpression(_) => OriginalFnKind::FunctionExpression,
+                FunctionNode::ArrowFunctionExpression(_) => OriginalFnKind::ArrowFunctionExpression,
+            };
+            CompiledFnForReplacement {
+                fn_start: cf.source.fn_start,
+                original_kind,
+                codegen_fn: cf.codegen_fn,
+            }
+        })
+        .collect();
+    // Drop queue (and its borrows from file.program)
+    drop(queue);
+
+    if replacements.is_empty() {
+        return CompileResult::Success {
+            ast: None,
+            events: context.events,
+            debug_logs: context.debug_logs,
+            ordered_log: context.ordered_log,
+        };
+    }
+
+    // Now we can mutate file.program
+    apply_compiled_functions(&replacements, &mut file.program, &mut context);
+
+    // Serialize the modified File AST.
+    // The BabelPlugin.ts receives this as result.ast (t.File) and calls
+    // prog.replaceWith(result.ast) to replace the entire program.
+    let ast = match serde_json::to_value(&file) {
+        Ok(v) => Some(v),
+        Err(e) => {
+            eprintln!("RUST COMPILER: Failed to serialize AST: {}", e);
+            None
+        }
+    };
 
     CompileResult::Success {
-        ast: None,
+        ast,
         events: context.events,
         debug_logs: context.debug_logs,
         ordered_log: context.ordered_log,

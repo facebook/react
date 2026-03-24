@@ -282,10 +282,10 @@ pub fn add_imports_to_program(program: &mut Program, context: &ProgramContext) {
         } else if matches!(program.source_type, SourceType::Module) {
             // ESM: import { ... } from 'module'
             stmts.push(Statement::ImportDeclaration(ImportDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ImportDeclaration"),
                 specifiers: import_specifiers,
                 source: StringLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("StringLiteral"),
                     value: module_name.clone(),
                 },
                 import_kind: None,
@@ -299,10 +299,10 @@ pub fn add_imports_to_program(program: &mut Program, context: &ProgramContext) {
             // uses ESM, and proper CJS require generation needs ObjectPattern
             // support which can be added later.
             stmts.push(Statement::ImportDeclaration(ImportDeclaration {
-                base: BaseNode::default(),
+                base: BaseNode::typed("ImportDeclaration"),
                 specifiers: import_specifiers,
                 source: StringLiteral {
-                    base: BaseNode::default(),
+                    base: BaseNode::typed("StringLiteral"),
                     value: module_name.clone(),
                 },
                 import_kind: None,
@@ -323,16 +323,16 @@ pub fn add_imports_to_program(program: &mut Program, context: &ProgramContext) {
 /// Create an ImportSpecifier AST node from a NonLocalImportSpecifier.
 fn make_import_specifier(spec: &NonLocalImportSpecifier) -> ImportSpecifier {
     ImportSpecifier::ImportSpecifier(ImportSpecifierData {
-        base: BaseNode::default(),
+        base: BaseNode::typed("ImportSpecifier"),
         local: Identifier {
-            base: BaseNode::default(),
+            base: BaseNode::typed("Identifier"),
             name: spec.name.clone(),
             type_annotation: None,
             optional: None,
             decorators: None,
         },
         imported: ModuleExportName::Identifier(Identifier {
-            base: BaseNode::default(),
+            base: BaseNode::typed("Identifier"),
             name: spec.imported.clone(),
             type_annotation: None,
             optional: None,

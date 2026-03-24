@@ -58,6 +58,9 @@ pub struct CommentData {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BaseNode {
+    // NOTE: When creating AST nodes for code generation output, use
+    // `BaseNode::typed("NodeTypeName")` instead of `BaseNode::default()`
+    // to ensure the "type" field is emitted during serialization.
     /// The node type string (e.g. "BlockStatement").
     /// When deserialized through a `#[serde(tag = "type")]` enum, the enum
     /// consumes the "type" field so this defaults to None. When deserialized
@@ -96,4 +99,16 @@ pub struct BaseNode {
         rename = "trailingComments"
     )]
     pub trailing_comments: Option<Vec<Comment>>,
+}
+
+impl BaseNode {
+    /// Create a BaseNode with the given type name.
+    /// Use this when creating AST nodes for code generation to ensure the
+    /// `"type"` field is present in serialized output.
+    pub fn typed(type_name: &str) -> Self {
+        Self {
+            node_type: Some(type_name.to_string()),
+            ..Default::default()
+        }
+    }
 }
