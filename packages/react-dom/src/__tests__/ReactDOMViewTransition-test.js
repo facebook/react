@@ -18,6 +18,7 @@ let act;
 let assertLog;
 let Scheduler;
 let startTransition;
+let addTransitionType;
 let textCache;
 
 describe('ReactDOMViewTransition', () => {
@@ -33,6 +34,7 @@ describe('ReactDOMViewTransition', () => {
     Suspense = React.Suspense;
     ViewTransition = React.ViewTransition;
     startTransition = React.startTransition;
+    addTransitionType = React.addTransitionType;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
@@ -460,6 +462,202 @@ describe('ReactDOMViewTransition', () => {
       expect(
         onEnter.mock.calls.length + enterCallsAfterFallback,
       ).toBeGreaterThanOrEqual(1);
+    });
+
+    // @gate enableViewTransition
+    it('does not fire onExit/onEnter for nested ViewTransitions without type match', async () => {
+      const onOuterExit = jest.fn();
+      const onNestedExit = jest.fn();
+      const onOuterEnter = jest.fn();
+      const onNestedEnter = jest.fn();
+
+      function App({page}) {
+        if (page === 'feed') {
+          return (
+            <ViewTransition key="feed" onExit={onOuterExit}>
+              <div>
+                <ViewTransition onExit={onNestedExit}>
+                  <div>Item 1</div>
+                </ViewTransition>
+              </div>
+            </ViewTransition>
+          );
+        }
+        return (
+          <ViewTransition key="details" onEnter={onOuterEnter}>
+            <div>
+              <ViewTransition onEnter={onNestedEnter}>
+                <div>Details</div>
+              </ViewTransition>
+            </div>
+          </ViewTransition>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+
+      // Render feed page
+      await act(() => {
+        startTransition(() => {
+          root.render(<App page="feed" />);
+        });
+      });
+
+      // Clear initial callbacks
+      onOuterExit.mockClear();
+      onNestedExit.mockClear();
+      onOuterEnter.mockClear();
+      onNestedEnter.mockClear();
+
+      // Switch to details page
+      await act(() => {
+        startTransition(() => {
+          root.render(<App page="details" />);
+        });
+      });
+
+      // Outer VT exit fires
+      expect(onOuterExit).toHaveBeenCalledTimes(1);
+      // Nested VT exit does NOT fire
+      expect(onNestedExit).not.toHaveBeenCalled();
+      // Outer VT enter fires
+      expect(onOuterEnter).toHaveBeenCalledTimes(1);
+      // Nested VT enter does NOT fire
+      expect(onNestedEnter).not.toHaveBeenCalled();
+    });
+
+    // @gate enableViewTransition && enableViewTransitionNested
+    it('fires nested onExit/onEnter only on transition type match', async () => {
+      const onOuterExit = jest.fn();
+      const onNestedExit = jest.fn();
+      const onOuterEnter = jest.fn();
+      const onNestedEnter = jest.fn();
+      const onStringExit = jest.fn();
+      const onStringEnter = jest.fn();
+
+      function App({page}) {
+        if (page === 'feed') {
+          return (
+            <ViewTransition key="feed" onExit={onOuterExit}>
+              <div>
+                <ViewTransition
+                  exit={{'nav': 'slow-fade'}}
+                  onExit={onNestedExit}>
+                  <div>Item 1</div>
+                </ViewTransition>
+                <ViewTransition exit="fade" onExit={onStringExit}>
+                  <div>Item 2</div>
+                </ViewTransition>
+              </div>
+            </ViewTransition>
+          );
+        }
+        return (
+          <ViewTransition key="details" onEnter={onOuterEnter}>
+            <div>
+              <ViewTransition
+                enter={{'nav': 'slide-in'}}
+                onEnter={onNestedEnter}>
+                <div>Detail Item</div>
+              </ViewTransition>
+              <ViewTransition enter="fade" onEnter={onStringEnter}>
+                <div>Detail Item 2</div>
+              </ViewTransition>
+            </div>
+          </ViewTransition>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+
+      // Render feed page
+      await act(() => {
+        startTransition(() => {
+          root.render(<App page="feed" />);
+        });
+      });
+
+      // Clear initial callbacks
+      onOuterExit.mockClear();
+      onNestedExit.mockClear();
+      onOuterEnter.mockClear();
+      onNestedEnter.mockClear();
+      onStringExit.mockClear();
+      onStringEnter.mockClear();
+
+      // Switch to details page with 'nav' transition type
+      await act(() => {
+        startTransition(() => {
+          addTransitionType('nav');
+          root.render(<App page="details" />);
+        });
+      });
+
+      // Outer VT exit fires (top-level always fires)
+      expect(onOuterExit).toHaveBeenCalledTimes(1);
+      // Nested VT with type match fires
+      expect(onNestedExit).toHaveBeenCalledTimes(1);
+      // Nested VT with plain string exit does NOT fire (no type match)
+      expect(onStringExit).not.toHaveBeenCalled();
+      // Outer VT enter fires (top-level always fires)
+      expect(onOuterEnter).toHaveBeenCalledTimes(1);
+      // Nested VT with type match fires
+      expect(onNestedEnter).toHaveBeenCalledTimes(1);
+      // Nested VT with plain string enter does NOT fire (no type match)
+      expect(onStringEnter).not.toHaveBeenCalled();
+    });
+
+    // @gate enableViewTransition && enableViewTransitionNested
+    it('nested exit respects transition type filtering', async () => {
+      const onNestedExit1 = jest.fn();
+      const onNestedExit2 = jest.fn();
+
+      function App({page}) {
+        if (page === 'feed') {
+          return (
+            <ViewTransition key="feed">
+              <div>
+                <ViewTransition
+                  exit={{'nav': 'slow-fade', default: 'none'}}
+                  onExit={onNestedExit1}>
+                  <div>Item 1</div>
+                </ViewTransition>
+                <ViewTransition
+                  exit={{'other': 'slide', default: 'none'}}
+                  onExit={onNestedExit2}>
+                  <div>Item 2</div>
+                </ViewTransition>
+              </div>
+            </ViewTransition>
+          );
+        }
+        return (
+          <ViewTransition key="details">
+            <div>Details</div>
+          </ViewTransition>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        startTransition(() => {
+          root.render(<App page="feed" />);
+        });
+      });
+
+      // Switch with 'nav' transition type
+      await act(() => {
+        startTransition(() => {
+          addTransitionType('nav');
+          root.render(<App page="details" />);
+        });
+      });
+
+      // First nested VT matches 'nav' type, so exit fires
+      expect(onNestedExit1).toHaveBeenCalledTimes(1);
+      // Second nested VT matches 'other' type (not active), default is 'none', so exit does NOT fire
+      expect(onNestedExit2).not.toHaveBeenCalled();
     });
   });
 });

@@ -40,6 +40,7 @@ import {
   passChildrenWhenCloningPersistedNodes,
   disableLegacyMode,
   enableViewTransition,
+  enableViewTransitionNested,
   enableSuspenseyImages,
 } from 'shared/ReactFeatureFlags';
 
@@ -98,6 +99,7 @@ import {
   ShouldSuspendCommit,
   Cloned,
   ViewTransitionStatic,
+  ViewTransitionStaticNested,
   Hydrate,
   PortalStatic,
 } from './ReactFiberFlags';
@@ -2060,6 +2062,18 @@ function completeWork(
         // bubble up to the parent tree to indicate that there's a child that
         // might need an exit View Transition upon unmount.
         workInProgress.flags |= ViewTransitionStatic;
+        if (enableViewTransitionNested) {
+          const props = workInProgress.pendingProps;
+          if (
+            (props.enter != null && typeof props.enter !== 'string') ||
+            (props.exit != null && typeof props.exit !== 'string')
+          ) {
+            workInProgress.flags |= ViewTransitionStaticNested;
+          } else {
+            // Clear if enter/exit type configs were removed in an update.
+            workInProgress.flags &= ~ViewTransitionStaticNested;
+          }
+        }
         bubbleProperties(workInProgress);
       }
       return null;

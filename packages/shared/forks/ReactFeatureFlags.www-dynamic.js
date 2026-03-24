@@ -30,6 +30,7 @@ export const enableInfiniteRenderLoopDetection: boolean = __VARIANT__;
 
 export const enableFastAddPropertiesInDiffing: boolean = __VARIANT__;
 export const enableViewTransition: boolean = __VARIANT__;
+export const enableViewTransitionNested: boolean = __VARIANT__;
 export const enableScrollEndPolyfill: boolean = __VARIANT__;
 export const enableFragmentRefs: boolean = __VARIANT__;
 export const enableFragmentRefsScrollIntoView: boolean = __VARIANT__;
