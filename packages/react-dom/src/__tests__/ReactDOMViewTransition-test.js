@@ -540,9 +540,7 @@ describe('ReactDOMViewTransition', () => {
           return (
             <ViewTransition key="feed" onExit={onOuterExit}>
               <div>
-                <ViewTransition
-                  exit={{'nav': 'slow-fade'}}
-                  onExit={onNestedExit}>
+                <ViewTransition exit={{nav: 'slow-fade'}} onExit={onNestedExit}>
                   <div>Item 1</div>
                 </ViewTransition>
                 <ViewTransition exit="fade" onExit={onStringExit}>
@@ -555,9 +553,7 @@ describe('ReactDOMViewTransition', () => {
         return (
           <ViewTransition key="details" onEnter={onOuterEnter}>
             <div>
-              <ViewTransition
-                enter={{'nav': 'slide-in'}}
-                onEnter={onNestedEnter}>
+              <ViewTransition enter={{nav: 'slide-in'}} onEnter={onNestedEnter}>
                 <div>Detail Item</div>
               </ViewTransition>
               <ViewTransition enter="fade" onEnter={onStringEnter}>
@@ -618,12 +614,12 @@ describe('ReactDOMViewTransition', () => {
             <ViewTransition key="feed">
               <div>
                 <ViewTransition
-                  exit={{'nav': 'slow-fade', default: 'none'}}
+                  exit={{nav: 'slow-fade', default: 'none'}}
                   onExit={onNestedExit1}>
                   <div>Item 1</div>
                 </ViewTransition>
                 <ViewTransition
-                  exit={{'other': 'slide', default: 'none'}}
+                  exit={{other: 'slide', default: 'none'}}
                   onExit={onNestedExit2}>
                   <div>Item 2</div>
                 </ViewTransition>

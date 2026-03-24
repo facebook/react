@@ -1,4 +1,9 @@
-import React, {ViewTransition, useState, startTransition, addTransitionType} from 'react';
+import React, {
+  ViewTransition,
+  useState,
+  startTransition,
+  addTransitionType,
+} from 'react';
 
 import './NestedExit.css';
 
@@ -15,8 +20,7 @@ function FeedItem({item, index, onSelect}) {
   items.forEach((_, otherIndex) => {
     if (otherIndex !== index) {
       const key = 'select-' + otherIndex;
-      exitMap[key] =
-        index < otherIndex ? 'nested-exit-up' : 'nested-exit-down';
+      exitMap[key] = index < otherIndex ? 'nested-exit-up' : 'nested-exit-down';
       enterMap[key] =
         index < otherIndex ? 'nested-enter-from-up' : 'nested-enter-from-down';
     }

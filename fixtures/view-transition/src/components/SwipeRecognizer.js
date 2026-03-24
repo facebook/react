@@ -13,8 +13,7 @@ let TouchPanTimeline;
 if (typeof document !== 'undefined') {
   ScrollTimelinePolyfill =
     require('animation-timelines/scroll-timeline').default;
-  TouchPanTimeline =
-    require('animation-timelines/touch-pan-timeline').default;
+  TouchPanTimeline = require('animation-timelines/touch-pan-timeline').default;
 }
 
 const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;
