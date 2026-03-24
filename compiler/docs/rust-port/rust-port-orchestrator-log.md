@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1715/1717 passing (99.9%), 2 failures. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) not yet ported.
+Overall: 1715/1717 passing (99.9%), 2 flaky failures. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) ported with application. Code comparison: 1586/1717 (92.4%).
 
 ## Transformation passes
 
@@ -52,7 +52,7 @@ StabilizeBlockIds: complete
 RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-Codegen: todo
+Codegen: partial (1586/1717 code comparison, 131 remaining)
 
 # Logs
 
@@ -395,3 +395,21 @@ Refactored ReactiveFunctionTransform trait to return Result<..., CompilerError> 
 methods, enabling proper error propagation. Removed all .unwrap() calls on
 transform_reactive_function — callers propagate with ?.
 Overall: 1715/1717 passing (99.9%), 2 failures remaining (block ID ordering).
+
+## 20260323-201154 Implement apply_compiled_functions — codegen application
+
+Implemented the full codegen application pipeline so the Rust compiler now produces
+actual compiled JavaScript output instead of returning the original source:
+- compile_result.rs: Added id, params, body, generator, is_async fields to CodegenFunction
+- pipeline.rs: Pass through AST fields from codegen result
+- program.rs: Full apply_compiled_functions implementation — finds functions by BaseNode.start,
+  replaces params/body, inserts outlined functions, renames useMemoCache, adds imports
+- codegen_reactive_function.rs: All BaseNode::default() → BaseNode::typed("...") for proper
+  JSON serialization of AST node types
+- common.rs: Added BaseNode::typed() constructor
+- BabelPlugin.ts: Replaced prog.replaceWith() with pass.file.ast.program assignment,
+  added comment deduplication for JSON round-trip reference sharing
+- imports.rs: BaseNode::typed() for import-related AST nodes
+Pass tests: 1715/1717 (2 flaky, pass individually). Code tests: 1586/1717 (92.4%).
+Remaining 131 code failures: error handling differences (67), codegen output (23),
+gating features (21), outlined ordering (12), other (8).
