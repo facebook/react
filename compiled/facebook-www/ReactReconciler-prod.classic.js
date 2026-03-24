@@ -12649,7 +12649,9 @@ module.exports = function ($$$config) {
         (workInProgressRootRenderLanes & 62914560) ===
           workInProgressRootRenderLanes &&
         300 > now() - globalMostRecentFallbackTime)
-        ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
+        ? 0 === (executionContext & 2)
+          ? prepareFreshStack(root, 0)
+          : (workInProgressRootPingedLanes |= pingedLanes)
         : (workInProgressRootPingedLanes |= pingedLanes),
       workInProgressSuspendedRetryLanes === workInProgressRootRenderLanes &&
         (workInProgressSuspendedRetryLanes = 0));
@@ -14458,7 +14460,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-6a04c369-20260319"
+      reconcilerVersion: "19.3.0-www-classic-c0d218f0-20260324"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
