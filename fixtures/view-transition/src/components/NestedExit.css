@@ -1,0 +1,238 @@
+.nested-exit-demo {
+  width: 300px;
+  min-height: 280px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.feed-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.feed-item:hover {
+  background: #f0f0f0;
+}
+
+.feed-item h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.feed-item p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.detail-view {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detail-view h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.detail-view p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.back-button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+/* Directional exit: posts above go up, posts below go down */
+@keyframes nested-exit-up {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 0 -60px;
+  }
+}
+
+@keyframes nested-exit-down {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 0 60px;
+  }
+}
+
+::view-transition-old(.nested-exit-up):only-child {
+  animation: nested-exit-up 600ms ease-out forwards;
+}
+
+::view-transition-old(.nested-exit-down):only-child {
+  animation: nested-exit-down 600ms ease-out forwards;
+}
+
+/* Forward shared: delayed until exits finish */
+::view-transition-group(.nested-shared-post-forward) {
+  animation-duration: 700ms;
+  animation-delay: 300ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+}
+
+::view-transition-old(.nested-shared-post-forward) {
+  animation-delay: 300ms;
+  animation-duration: 700ms;
+  animation-fill-mode: both;
+}
+
+::view-transition-new(.nested-shared-post-forward) {
+  animation-delay: 300ms;
+  animation-duration: 700ms;
+  animation-fill-mode: both;
+}
+
+/* Back shared: starts immediately, then items enter after */
+::view-transition-group(.nested-shared-post-back) {
+  animation-duration: 700ms;
+  animation-timing-function: ease-in-out;
+}
+
+/* Inner shared elements (title, body) start after card begins growing */
+::view-transition-group(.nested-shared-inner-forward) {
+  animation-duration: 600ms;
+  animation-delay: 450ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+}
+
+::view-transition-old(.nested-shared-inner-forward) {
+  animation-delay: 450ms;
+  animation-duration: 600ms;
+  animation-fill-mode: both;
+}
+
+::view-transition-new(.nested-shared-inner-forward) {
+  animation-delay: 450ms;
+  animation-duration: 600ms;
+  animation-fill-mode: both;
+}
+
+::view-transition-group(.nested-shared-inner-back) {
+  animation-duration: 600ms;
+  animation-delay: 100ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+}
+
+/* Back button slides in from left */
+@keyframes nested-back-btn-enter {
+  from {
+    opacity: 0;
+    translate: -20px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes nested-back-btn-exit {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: -20px 0;
+  }
+}
+
+::view-transition-new(.nested-back-btn-enter):only-child {
+  animation: nested-back-btn-enter 300ms ease-out 700ms both;
+}
+
+::view-transition-old(.nested-back-btn-exit):only-child {
+  animation: nested-back-btn-exit 200ms ease-in forwards;
+}
+
+/* Extra detail content fades in/out */
+@keyframes nested-extra-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+::view-transition-new(.nested-extra-enter):only-child {
+  animation: nested-extra-enter 300ms ease-out 700ms both;
+}
+
+::view-transition-old(.nested-extra-exit):only-child {
+  animation: nested-extra-enter 200ms ease-in reverse forwards;
+}
+
+/* Directional enter: items fly back in after shared transition finishes */
+@keyframes nested-enter-from-up {
+  from {
+    opacity: 0;
+    translate: 0 -60px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes nested-enter-from-down {
+  from {
+    opacity: 0;
+    translate: 0 60px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+::view-transition-new(.nested-enter-from-up):only-child {
+  animation: nested-enter-from-up 600ms ease-out 700ms both;
+}
+
+::view-transition-new(.nested-enter-from-down):only-child {
+  animation: nested-enter-from-down 600ms ease-out 700ms both;
+}
+
+/* Enter animation for detail view (when no shared match) */
+@keyframes nested-enter-detail {
+  from {
+    opacity: 0;
+    translate: 0 30px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+::view-transition-new(.nested-enter-detail):only-child {
+  animation: nested-enter-detail 600ms ease-out both;
+}

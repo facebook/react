@@ -5,8 +5,17 @@ import React, {
   unstable_startGestureTransition as startGestureTransition,
 } from 'react';
 
-import ScrollTimelinePolyfill from 'animation-timelines/scroll-timeline';
-import TouchPanTimeline from 'animation-timelines/touch-pan-timeline';
+// These are ESM-only packages. We use a conditional require to avoid
+// require() of ESM errors during SSR with @babel/register.
+// On the client, webpack handles the bundling and supports require of ESM.
+let ScrollTimelinePolyfill;
+let TouchPanTimeline;
+if (typeof document !== 'undefined') {
+  ScrollTimelinePolyfill =
+    require('animation-timelines/scroll-timeline').default;
+  TouchPanTimeline =
+    require('animation-timelines/touch-pan-timeline').default;
+}
 
 const ua = typeof navigator === 'undefined' ? '' : navigator.userAgent;
 const isSafariMobile =
