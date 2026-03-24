@@ -1,0 +1,184 @@
+'use strict';
+
+const path = require('path');
+const url = require('url');
+const fs = require('fs');
+const webpack = require('webpack');
+const {PassThrough, Writable} = require('stream');
+
+// ---------------------------------------------------------------------------
+// Manifest setup (WebpackMock pattern)
+// ---------------------------------------------------------------------------
+
+const clientModules = {};
+const clientManifest = {};
+const ssrModuleMap = {};
+let moduleIdx = 0;
+
+function registerClientModule(modulePath) {
+  const id = String(moduleIdx++);
+  const absPath = path.resolve(__dirname, modulePath);
+  const actualExports = require(absPath);
+  clientModules[id] = actualExports;
+
+  const href = url.pathToFileURL(absPath).href;
+  clientManifest[href] = {id, chunks: [], name: '*'};
+  ssrModuleMap[id] = {'*': {id, chunks: [], name: '*'}};
+}
+
+registerClientModule('./src/ProductCard.js');
+registerClientModule('./src/Header.js');
+
+global.__webpack_require__ = function (id) {
+  if (clientModules[id]) {
+    return clientModules[id];
+  }
+  throw new Error('Unknown module: ' + id);
+};
+global.__webpack_chunk_load__ = function () {
+  return Promise.resolve();
+};
+
+const ssrManifest = {
+  moduleMap: ssrModuleMap,
+  moduleLoading: null,
+  serverModuleMap: null,
+};
+
+// ---------------------------------------------------------------------------
+// Build
+// ---------------------------------------------------------------------------
+
+function build() {
+  const config = require('./webpack.config');
+  return new Promise(function (resolve, reject) {
+    webpack(config, function (err, stats) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      if (stats.hasErrors()) {
+        reject(new Error(stats.toString({errors: true})));
+        return;
+      }
+      console.log(
+        stats.toString({colors: true, modules: false, entrypoints: false})
+      );
+      resolve();
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Render helpers
+// ---------------------------------------------------------------------------
+
+function renderClassical(AppComponent, itemCount) {
+  const React = require('react');
+  const {renderToPipeableStream} = require('react-dom/server');
+
+  return new Promise(function (resolve, reject) {
+    const element = React.createElement(AppComponent, {itemCount});
+    const {pipe} = renderToPipeableStream(element, {
+      onAllReady() {
+        const chunks = [];
+        const writable = new Writable({
+          write(chunk, _encoding, cb) {
+            chunks.push(chunk);
+            cb();
+          },
+          final(cb) {
+            resolve(Buffer.concat(chunks).toString('utf-8'));
+            cb();
+          },
+        });
+        pipe(writable);
+      },
+      onError: reject,
+    });
+  });
+}
+
+function renderFlight(rscBundle, AppComponent, itemCount) {
+  const React = require('react');
+  const {renderToPipeableStream} = require('react-dom/server');
+  const {createFromNodeStream} = require('react-server-dom-webpack/client');
+
+  const {pipe: rscPipe} = rscBundle(clientManifest, AppComponent, itemCount);
+  const flightStream = new PassThrough();
+  rscPipe(flightStream);
+
+  return new Promise(function (resolve, reject) {
+    let cachedResult;
+    function Root() {
+      if (!cachedResult) {
+        cachedResult = createFromNodeStream(flightStream, ssrManifest);
+      }
+      return React.use(cachedResult);
+    }
+
+    const {pipe} = renderToPipeableStream(React.createElement(Root), {
+      onAllReady() {
+        const chunks = [];
+        const writable = new Writable({
+          write(chunk, _encoding, cb) {
+            chunks.push(chunk);
+            cb();
+          },
+          final(cb) {
+            resolve(Buffer.concat(chunks).toString('utf-8'));
+            cb();
+          },
+        });
+        pipe(writable);
+      },
+      onError: reject,
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main() {
+  const itemCount = parseInt(process.argv[2], 10) || 200;
+
+  console.log('Building RSC bundle...\n');
+  await build();
+
+  const rscBundle = require('./build/rsc-bundle.js');
+  const App = require('./src/App.js');
+  const AppAsync = require('./src/AppAsync.js');
+
+  const outputDir = path.resolve(__dirname, 'build');
+  fs.mkdirSync(outputDir, {recursive: true});
+
+  const variants = [
+    {name: 'classical-sync', render: () => renderClassical(App, itemCount)},
+    {
+      name: 'flight-sync',
+      render: () => renderFlight(rscBundle, rscBundle.App, itemCount),
+    },
+    {
+      name: 'classical-async',
+      render: () => renderClassical(AppAsync, itemCount),
+    },
+    {
+      name: 'flight-async',
+      render: () => renderFlight(rscBundle, rscBundle.AppAsync, itemCount),
+    },
+  ];
+
+  for (const {name, render} of variants) {
+    const html = await render();
+    const outPath = path.join(outputDir, name + '.html');
+    fs.writeFileSync(outPath, html);
+    console.log('%s: %d bytes → %s', name, html.length, outPath);
+  }
+}
+
+main().catch(function (err) {
+  console.error(err);
+  process.exit(1);
+});

@@ -77,7 +77,7 @@
     "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --enable-source-maps --experimental-loader ./loader/region.js --conditions=react-server --inspect=127.0.0.1:9229 server/region",
     "start": "node scripts/build.js && concurrently \"yarn run start:region\" \"yarn run start:global\"",
     "start:global": "NODE_ENV=production node --experimental-loader ./loader/global.js server/global",
-    "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server server/region",
+    "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server --inspect server/region",
     "build": "node scripts/build.js",
     "test": "playwright test"
   },
