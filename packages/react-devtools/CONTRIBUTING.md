@@ -53,7 +53,7 @@ yarn start
 Now any changes you make to DevTools will automatically reload in the test app at http://localhost:8080
 
 ### Option 2: Using the extension
-Some changes requiring testing in the browser extension (e.g. like "named hooks"). To do this, run the following script:
+Some changes require testing in the browser extension (e.g. like "named hooks"). To do this, run the following script:
 ```sh
 cd <react-repo>
 cd packages/react-devtools-extensions

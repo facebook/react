@@ -8,7 +8,7 @@ This is an experimental package for creating custom React streaming server rende
 
 ## Usage
 
-`react-server` is a package implementing various Server Rendering capabilities. The two implementation are codenamed `Fizz` and `Flight`.
+`react-server` is a package implementing various Server Rendering capabilities. The two implementations are codenamed `Fizz` and `Flight`.
 
 `Fizz` is a renderer for Server Side Rendering React. The same code that runs in the client (browser or native) is run on the server to produce an initial view to send to the client before it has to download and run React and all the user code to produce that view on the client.
 
@@ -86,7 +86,7 @@ createResponse({ messages: ['hello', 'react'] }, ...)
 createResponse({ m: Map(['k', 'v'])}, ...)
 ```
 
-Additionally React built ins can be rendered including Function Components
+Additionally, React built-ins can be rendered, including Function Components
 
 Function Component are called and the return value can be any renderable type. Since `react-server` supports Promises, Function Components can be async functions.
 
@@ -100,10 +100,10 @@ async function App({ children }) {
 createResponse(<App ><Children /></App>, ...)
 ```
 
-Finally, There are two types of references in `react-server` that can be rendered
+Finally, there are two types of references in `react-server` that can be rendered
 
 #### Client References
-When a React Server Component framework bundles an application and encounters a `"use client"` directive it must resister exported members with `"registerClientReference"` which will encode the necessary information for `Flight` to interpret the export as a reference to be loaded on the client rather than a direct dependency on the Server module graph.
+When a React Server Component framework bundles an application and encounters a `"use client"` directive it must register exported members with `"registerClientReference"` which will encode the necessary information for `Flight` to interpret the export as a reference to be loaded on the client rather than a direct dependency on the Server module graph.
 
 When rendering a client reference `Flight` will encode necessary information in the serialized output to describe how to load the code which represents the client module.
 
@@ -146,7 +146,7 @@ createResponse(
 ```
 
 #### Server References
-Similarly When a React Server Component framework bundles an application and encounters a `"use server"` directive in a file or in a function body, including closures, it must implement that function as as a server entrypoint that can be called from the client. To make `Flight` aware that a function is a Server Reference the function should be registered with `registerServerReference()`.
+Similarly When a React Server Component framework bundles an application and encounters a `"use server"` directive in a file or in a function body, including closures, it must implement that function as a server entrypoint that can be called from the client. To make `Flight` aware that a function is a Server Reference the function should be registered with `registerServerReference()`.
 
 ```js
 
@@ -172,9 +172,9 @@ createResponse(
 
 When rendering with `react-server` there are two broad contexts when this might happen. Realtime when responding to a user request and ahead of time when prerendering a page that can later be used more than once.
 
-While the core rendering implementation is the same in both cases there are subtle differences we can adopt that take advantage of the context. For instance while rendering in response to a real user request we want to stream eagerly if the consumer is requesting information. This allows us to stream content to the consumer as it becomes available but might have implications for the stability of the serialized format. When prerendering we assume there is not urgency to producing a partial result as quickly as possible so we can alter the internal implementation take advantage of this. To implement a prerender API use `createPrerenderRequest` in place of `createRequest`.
+While the core rendering implementation is the same in both cases there are subtle differences we can adopt that take advantage of the context. For instance while rendering in response to a real user request we want to stream eagerly if the consumer is requesting information. This allows us to stream content to the consumer as it becomes available but might have implications for the stability of the serialized format. When prerendering we assume there is not urgency to producing a partial result as quickly as possible so we can alter the internal implementation to take advantage of this. To implement a prerender API use `createPrerenderRequest` in place of `createRequest`.
 
-One key semantic change prerendering has with rendering is how errors are handled. When rendering an error is embedded into the output and must be handled by the consumer such as an SSR render or on the client. However with prerendering there is an expectation that if the prerender errors then the entire prerender will be discarded or it will be used but the consumer will attempt to recover that error by asking for a dynamic render. This is analogous to how errors during SSR aren't immediately handled they are actually encoded as requests for client recovery. The error only is observed if the retry on the client actually fails. To account for this prerenders simply omit parts of the model that errored. you can use the `onError` argument in `createPrerenderRequest` to observe if an error occurred and users of your `prerender` implementation can choose whether to abandon the prerender or implement dynamic recovery when an error occurs.
+One key semantic change prerendering has with rendering is how errors are handled. When rendering an error is embedded into the output and must be handled by the consumer such as an SSR render or on the client. However with prerendering there is an expectation that if the prerender errors then the entire prerender will be discarded or it will be used but the consumer will attempt to recover that error by asking for a dynamic render. This is analogous to how errors during SSR aren't immediately handled they are actually encoded as requests for client recovery. The error only is observed if the retry on the client actually fails. To account for this prerenders simply omit parts of the model that errored. You can use the `onError` argument in `createPrerenderRequest` to observe if an error occurred and users of your `prerender` implementation can choose whether to abandon the prerender or implement dynamic recovery when an error occurs.
 
 Existing implementations only return the stream containing the output of the prerender once it has completed. In the future we may introduce a `resume` API similar to the one that exists for `Fizz`. In anticipation of such an API it is expected that implementations of `prerender` return the type `Promise<{ prelude: <Host Appropriate Stream Type> }>`
 

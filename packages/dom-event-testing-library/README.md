@@ -3,7 +3,7 @@
 A library for unit testing events via high-level interactions, e.g., `pointerdown`,
 that produce realistic and complete DOM event sequences.
 
-There are number of challenges involved in unit testing modules that work with
+There are a number of challenges involved in unit testing modules that work with
 DOM events.
 
 1. Gesture recognizers may need to support environments with and without support for
