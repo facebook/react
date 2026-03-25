@@ -1,6 +1,6 @@
 # Status
 
-Overall: 1717/1717 passing (100%), 2 flaky in batch runs. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) ported with application. Code comparison: 1607/1717 (93.6%).
+Overall: 1717/1717 passing (100%). All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported with application. Code comparison: 1717/1717 (100%).
 
 ## Transformation passes
 
@@ -52,7 +52,7 @@ StabilizeBlockIds: complete
 RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-Codegen: partial (1703/1717 code comparison, 14 remaining)
+Codegen: complete (1717/1717 code comparison)
 
 # Logs
 
@@ -469,3 +469,17 @@ Two parallel fixes:
    exports, gating edge cases.
 Commits: 526eced507 (function discovery), plus outstanding environment.rs changes.
 Code: 1687→1703 (99.2%). 14 remaining.
+
+## 20260325-145443 Fix all remaining failures — 1717/1717 pass + code (100%)
+
+Fixed final 14 code failures + 1 pass-level failure:
+- Instrumentation: enableEmitInstrumentForget codegen (3 fixtures), enableEmitHookGuards
+  with per-hook-call try/finally wrapping (1 fixture)
+- Dynamic gating: fixed error handling to use handle_error (3 fixtures)
+- StabilizeBlockIds: IndexSet for deterministic iteration, fixing dominator.js + useMemo-inverted-if
+- Fast refresh: enableResetCacheOnSourceFileChanges with HMAC-SHA256 hash codegen (1 fixture)
+- Reserved words: Babel plugin throws on scope extraction failure with panicThreshold (1 fixture)
+- Source locations: run full pipeline before recording Todo error (1 fixture)
+- Variable renaming: surface BindingRename from HIR to BabelPlugin for scope.rename() (2 fixtures)
+- Use-no-forget: add memo cache import before error check in pipeline (1 fixture)
+ALL TESTS PASSING: Pass 1717/1717, Code 1717/1717.
