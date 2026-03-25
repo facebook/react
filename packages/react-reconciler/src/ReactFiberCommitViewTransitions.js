@@ -410,7 +410,7 @@ export function commitEnterViewTransitions(
     if (enableViewTransitionNested) {
       commitNestedEnterViewTransitions(placement, gesture);
     }
-  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+  } else if ((placement.subtreeFlags & (ViewTransitionStatic | ViewTransitionNamedStatic)) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
       commitEnterViewTransitions(child, gesture);
