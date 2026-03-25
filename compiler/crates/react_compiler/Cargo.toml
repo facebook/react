@@ -14,6 +14,7 @@ react_compiler_reactive_scopes = { path = "../react_compiler_reactive_scopes" }
 react_compiler_ssa = { path = "../react_compiler_ssa" }
 react_compiler_typeinference = { path = "../react_compiler_typeinference" }
 react_compiler_validation = { path = "../react_compiler_validation" }
+indexmap = "2"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

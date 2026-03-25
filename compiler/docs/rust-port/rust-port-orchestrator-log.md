@@ -52,7 +52,7 @@ StabilizeBlockIds: complete
 RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-Codegen: partial (1687/1717 code comparison, 30 remaining)
+Codegen: partial (1703/1717 code comparison, 14 remaining)
 
 # Logs
 
@@ -458,3 +458,14 @@ Fixed 8 code comparison failures:
 - Const/Let declaration invariant: cannot have outer lvalue (expression reference)
 - useMemo-switch-return: fixed as side effect (was flaky, now passes consistently)
 Code: 1679→1687 (98.3%). 30 remaining.
+
+## 20260325-123533 Fix JSX outlining, function discovery, gating — 32→14 code failures
+
+Two parallel fixes:
+1. JSX outlining: re-compile outlined functions through full pipeline (create fresh Environment,
+   build synthetic AST, lower to HIR, run all passes). All 9 jsx-outlining-* fixtures pass.
+2. Function discovery: add ExpressionStatement + deep expression recursion to AST replacement/
+   gating/rename traversals. Fix infer mode for React.memo/forwardRef, nested arrows in
+   exports, gating edge cases.
+Commits: 526eced507 (function discovery), plus outstanding environment.rs changes.
+Code: 1687→1703 (99.2%). 14 remaining.

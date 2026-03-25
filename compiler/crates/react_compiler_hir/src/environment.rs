@@ -157,6 +157,44 @@ impl Environment {
         }
     }
 
+    /// Create a child Environment for compiling an outlined function.
+    ///
+    /// The child shares the same config, globals, and shapes, and receives copies of
+    /// all arenas (identifiers, types, scopes, functions) so that references from
+    /// the outlined HIR remain valid. Block/scope counters start past the cloned
+    /// data to avoid ID conflicts.
+    pub fn for_outlined_fn(&self, fn_type: ReactFunctionType) -> Self {
+        Self {
+            // Start block counter past any existing blocks in the outlined function.
+            // The outlined function has BlockId(0), parent may have more. Use parent's
+            // counter which is guaranteed to be > any block ID in the outlined function.
+            next_block_id_counter: self.next_block_id_counter,
+            // Scope counter must be consistent with scopes vec length
+            next_scope_id_counter: self.scopes.len() as u32,
+            identifiers: self.identifiers.clone(),
+            types: self.types.clone(),
+            scopes: self.scopes.clone(),
+            functions: self.functions.clone(),
+            errors: CompilerError::new(),
+            fn_type,
+            output_mode: self.output_mode,
+            hoisted_identifiers: HashSet::new(),
+            validate_preserve_existing_memoization_guarantees: self
+                .validate_preserve_existing_memoization_guarantees,
+            validate_no_set_state_in_render: self.validate_no_set_state_in_render,
+            enable_preserve_existing_memoization_guarantees: self
+                .enable_preserve_existing_memoization_guarantees,
+            globals: self.globals.clone(),
+            shapes: self.shapes.clone(),
+            module_types: self.module_types.clone(),
+            config: self.config.clone(),
+            default_nonmutating_hook: self.default_nonmutating_hook.clone(),
+            default_mutating_hook: self.default_mutating_hook.clone(),
+            outlined_functions: Vec::new(),
+            uid_counter: self.uid_counter,
+        }
+    }
+
     pub fn next_block_id(&mut self) -> BlockId {
         let id = BlockId(self.next_block_id_counter);
         self.next_block_id_counter += 1;
