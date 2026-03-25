@@ -298,7 +298,7 @@ fn codegen_reactive_function(
         cx.declare(place.identifier);
     }
 
-    let params: Vec<PatternLike> = func.params.iter().map(|p| convert_parameter(p, cx.env)).collect();
+    let params: Vec<PatternLike> = func.params.iter().map(|p| convert_parameter(p, cx.env)).collect::<Result<_, _>>()?;
     let mut body = codegen_block(cx, &func.body)?;
 
     // Add directives
@@ -342,20 +342,20 @@ fn codegen_reactive_function(
     })
 }
 
-fn convert_parameter(param: &ParamPattern, env: &Environment) -> PatternLike {
+fn convert_parameter(param: &ParamPattern, env: &Environment) -> Result<PatternLike, CompilerError> {
     match param {
         ParamPattern::Place(place) => {
-            PatternLike::Identifier(convert_identifier(place.identifier, env))
+            Ok(PatternLike::Identifier(convert_identifier(place.identifier, env)?))
         }
-        ParamPattern::Spread(spread) => PatternLike::RestElement(RestElement {
+        ParamPattern::Spread(spread) => Ok(PatternLike::RestElement(RestElement {
             base: BaseNode::typed("RestElement"),
             argument: Box::new(PatternLike::Identifier(convert_identifier(
                 spread.place.identifier,
                 env,
-            ))),
+            )?)),
             type_annotation: None,
             decorators: None,
-        }),
+        })),
     }
 }
 
@@ -529,7 +529,7 @@ fn codegen_reactive_scope(
             None,
         )?;
 
-        let name = convert_identifier(decl.identifier, cx.env);
+        let name = convert_identifier(decl.identifier, cx.env)?;
         if !cx.has_declared(decl.identifier) {
             statements.push(Statement::VariableDeclaration(VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
@@ -552,7 +552,7 @@ fn codegen_reactive_scope(
         if first_output_index.is_none() {
             first_output_index = Some(index);
         }
-        let name = convert_identifier(reassignment_id, cx.env);
+        let name = convert_identifier(reassignment_id, cx.env)?;
         cache_loads.push((name.clone(), index, Expression::Identifier(name)));
     }
 
@@ -884,11 +884,14 @@ fn codegen_terminal(
             handler,
             ..
         } => {
-            let catch_param = handler_binding.as_ref().map(|binding| {
-                let ident = &cx.env.identifiers[binding.identifier.0 as usize];
-                cx.temp.insert(ident.declaration_id, None);
-                PatternLike::Identifier(convert_identifier(binding.identifier, cx.env))
-            });
+            let catch_param = match handler_binding.as_ref() {
+                Some(binding) => {
+                    let ident = &cx.env.identifiers[binding.identifier.0 as usize];
+                    cx.temp.insert(ident.declaration_id, None);
+                    Some(PatternLike::Identifier(convert_identifier(binding.identifier, cx.env)?))
+                }
+                None => None,
+            };
             let try_block = codegen_block(cx, block)?;
             let handler_block = codegen_block(cx, handler)?;
             Ok(Some(Statement::TryStatement(TryStatement {
@@ -1175,6 +1178,13 @@ fn codegen_instruction_nullable(
                     base: BaseNode::typed("DebuggerStatement"),
                 })));
             }
+            InstructionValue::UnsupportedNode { original_node: Some(node), .. } => {
+                // We have the original AST node serialized as JSON; deserialize and emit it directly
+                let stmt: Statement = serde_json::from_value(node.clone()).map_err(|e| {
+                    invariant_err(&format!("Failed to deserialize original AST node: {}", e), None)
+                })?;
+                return Ok(Some(stmt));
+            }
             InstructionValue::ObjectMethod { loc, .. } => {
                 invariant(instr.lvalue.is_some(), "Expected object methods to have a temp lvalue", None)?;
                 let lvalue = instr.lvalue.as_ref().unwrap();
@@ -1247,6 +1257,14 @@ fn emit_store(
 ) -> Result<Option<Statement>, CompilerError> {
     match kind {
         InstructionKind::Const => {
+            // Invariant: Const declarations cannot also have an outer lvalue
+            // (i.e., cannot be referenced as an expression)
+            if instr.lvalue.is_some() {
+                return Err(invariant_err(
+                    "Const declaration cannot be referenced as an expression",
+                    None,
+                ));
+            }
             let lval = codegen_lvalue(cx, lvalue)?;
             Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
@@ -1282,6 +1300,13 @@ fn emit_store(
             }
         }
         InstructionKind::Let => {
+            // Invariant: Let declarations cannot also have an outer lvalue
+            if instr.lvalue.is_some() {
+                return Err(invariant_err(
+                    "Const declaration cannot be referenced as an expression",
+                    None,
+                ));
+            }
             let lval = codegen_lvalue(cx, lvalue)?;
             Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
@@ -1365,7 +1390,7 @@ fn codegen_instruction(
                     left: Box::new(PatternLike::Identifier(convert_identifier(
                         lvalue.identifier,
                         cx.env,
-                    ))),
+                    )?)),
                     right: Box::new(expr_value),
                 },
             )),
@@ -1374,7 +1399,7 @@ fn codegen_instruction(
         Ok(Statement::VariableDeclaration(VariableDeclaration {
             base: BaseNode::typed("VariableDeclaration"),
             declarations: vec![make_var_declarator(
-                PatternLike::Identifier(convert_identifier(lvalue.identifier, cx.env)),
+                PatternLike::Identifier(convert_identifier(lvalue.identifier, cx.env)?),
                 Some(expr_value),
             )],
             kind: VariableDeclarationKind::Const,
@@ -1631,9 +1656,23 @@ fn codegen_base_instruction_value(
             receiver: _,
             property,
             args,
-            ..
+            loc,
         } => {
             let member_expr = codegen_place_to_expression(cx, property)?;
+            // Invariant: MethodCall::property must resolve to a MemberExpression
+            if !matches!(member_expr, Expression::MemberExpression(_) | Expression::OptionalMemberExpression(_)) {
+                let expr_type = match &member_expr {
+                    Expression::Identifier(_) => "Identifier",
+                    _ => "unknown",
+                };
+                return Err(invariant_err(
+                    &format!(
+                        "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got: '{}'",
+                        expr_type
+                    ),
+                    *loc,
+                ));
+            }
             let arguments = args
                 .iter()
                 .map(|arg| codegen_argument(cx, arg))
@@ -2615,7 +2654,7 @@ fn codegen_lvalue(cx: &mut Context, pattern: &LvalueRef) -> Result<PatternLike, 
             Ok(PatternLike::Identifier(convert_identifier(
                 place.identifier,
                 cx.env,
-            )))
+            )?))
         }
         LvalueRef::Pattern(pat) => match pat {
             Pattern::Array(arr) => codegen_array_pattern(cx, arr),
@@ -2735,23 +2774,28 @@ fn codegen_place(
             place.loc,
         ));
     }
-    let ast_ident = convert_identifier(place.identifier, cx.env);
+    let ast_ident = convert_identifier(place.identifier, cx.env)?;
     Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
         ast_ident,
     )))
 }
 
-fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> AstIdentifier {
+fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<AstIdentifier, CompilerError> {
     let ident = &env.identifiers[identifier_id.0 as usize];
     let name = match &ident.name {
         Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
         Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
         None => {
-            // This shouldn't happen after RenameVariables, but be defensive
-            format!("_t{}", identifier_id.0)
+            return Err(invariant_err(
+                &format!(
+                    "Expected temporaries to be promoted to named identifiers in an earlier pass. identifier {} is unnamed",
+                    identifier_id.0
+                ),
+                None,
+            ));
         }
     };
-    make_identifier(&name)
+    Ok(make_identifier(&name))
 }
 
 fn codegen_argument(
@@ -2779,7 +2823,7 @@ fn codegen_dependency(
     dep: &react_compiler_hir::ReactiveScopeDependency,
 ) -> Result<Expression, CompilerError> {
     let mut object: Expression =
-        Expression::Identifier(convert_identifier(dep.identifier, cx.env));
+        Expression::Identifier(convert_identifier(dep.identifier, cx.env)?);
     if !dep.path.is_empty() {
         let has_optional = dep.path.iter().any(|p| p.optional);
         for path_entry in &dep.path {

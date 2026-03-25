@@ -1611,7 +1611,7 @@ fn format_instruction_value_impl(printer: &mut DebugPrinter, value: &Instruction
             printer.dedent();
             printer.line("}");
         }
-        InstructionValue::UnsupportedNode { node_type, loc } => {
+        InstructionValue::UnsupportedNode { node_type, loc, .. } => {
             match node_type {
                 Some(t) => printer.line(&format!("UnsupportedNode {{ type: {:?}, loc: {} }}", t, format_loc(loc))),
                 None => printer.line(&format!("UnsupportedNode {{ loc: {} }}", format_loc(loc))),

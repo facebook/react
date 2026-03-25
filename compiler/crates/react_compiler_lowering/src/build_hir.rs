@@ -409,7 +409,7 @@ fn lower_member_expression_with_object(
                 return LoweredMemberExpression {
                     object,
                     property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
-                    value: InstructionValue::UnsupportedNode { node_type: None, loc },
+                    value: InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc },
                 };
             }
         };
@@ -469,7 +469,7 @@ fn lower_member_expression_impl(
                 return LoweredMemberExpression {
                     object,
                     property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
-                    value: InstructionValue::UnsupportedNode { node_type: None, loc },
+                    value: InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc },
                 };
             }
         };
@@ -562,7 +562,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { node_type: None, loc };
+                return InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc };
             }
             let left = lower_expression_to_temporary(builder, &bin.left);
             let right = lower_expression_to_temporary(builder, &bin.right);
@@ -600,7 +600,7 @@ fn lower_expression(
                                             description: None,
                                             suggestions: None,
                                         });
-                                        InstructionValue::UnsupportedNode { node_type: None, loc }
+                                        InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
                                     }
                                 }
                             } else {
@@ -621,7 +621,7 @@ fn lower_expression(
                                 description: None,
                                 suggestions: None,
                             });
-                            InstructionValue::UnsupportedNode { node_type: None, loc }
+                            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
                         }
                     }
                 }
@@ -635,7 +635,7 @@ fn lower_expression(
                         description: None,
                         suggestions: None,
                     });
-                    InstructionValue::UnsupportedNode { node_type: None, loc }
+                    InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
                 }
                 op => {
                     let value = lower_expression_to_temporary(builder, &unary.argument);
@@ -834,7 +834,7 @@ fn lower_expression(
                             loc: loc.clone(),
                             suggestions: None,
                         });
-                        return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), loc };
+                        return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), original_node: None, loc };
                     }
 
                     let ident_loc = convert_opt_loc(&ident.base.loc);
@@ -848,7 +848,7 @@ fn lower_expression(
                                 loc: loc.clone(),
                                 suggestions: None,
                             });
-                            return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), loc };
+                            return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), original_node: None, loc };
                         }
                         _ => {}
                     }
@@ -862,7 +862,7 @@ fn lower_expression(
                                 loc: loc.clone(),
                                 suggestions: None,
                             });
-                            return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), loc };
+                            return InstructionValue::UnsupportedNode { node_type: Some("UpdateExpression".to_string()), original_node: None, loc };
                         }
                     };
                     let lvalue_place = Place {
@@ -904,7 +904,7 @@ fn lower_expression(
                         loc: loc.clone(),
                         suggestions: None,
                     });
-                    InstructionValue::UnsupportedNode { node_type: None, loc }
+                    InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
                 }
             }
         }
@@ -1008,7 +1008,7 @@ fn lower_expression(
                                         description: Some(format!("`{}` is declared as const", &ident.name)),
                                         suggestions: None,
                                     });
-                                    return InstructionValue::UnsupportedNode { node_type: Some("Identifier".to_string()), loc: ident_loc };
+                                    return InstructionValue::UnsupportedNode { node_type: Some("Identifier".to_string()), original_node: None, loc: ident_loc };
                                 }
                                 let place = Place {
                                     identifier,
@@ -1137,14 +1137,14 @@ fn lower_expression(
                             description: None,
                             suggestions: None,
                         });
-                        return InstructionValue::UnsupportedNode { node_type: None, loc };
+                        return InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc };
                     }
                     AssignmentOperator::Assign => unreachable!(),
                 };
                 let binary_op = match binary_op {
                     Some(op) => op,
                     None => {
-                        return InstructionValue::UnsupportedNode { node_type: None, loc };
+                        return InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc };
                     }
                 };
 
@@ -1251,7 +1251,7 @@ fn lower_expression(
                             description: None,
                             suggestions: None,
                         });
-                        InstructionValue::UnsupportedNode { node_type: None, loc }
+                        InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
                     }
                 }
             }
@@ -1268,7 +1268,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { node_type: None, loc };
+                return InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc };
             }
 
             let continuation_block = builder.reserve(builder.current_block_kind());
@@ -1403,7 +1403,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { node_type: Some("TaggedTemplateExpression".to_string()), loc };
+                return InstructionValue::UnsupportedNode { node_type: Some("TaggedTemplateExpression".to_string()), original_node: None, loc };
             }
             assert!(
                 tagged.quasi.quasis.len() == 1,
@@ -1419,7 +1419,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                return InstructionValue::UnsupportedNode { node_type: Some("TaggedTemplateExpression".to_string()), loc };
+                return InstructionValue::UnsupportedNode { node_type: Some("TaggedTemplateExpression".to_string()), original_node: None, loc };
             }
             let value = TemplateQuasi {
                 raw: quasi.value.raw.clone(),
@@ -1442,7 +1442,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: Some("YieldExpression".to_string()), loc }
+            InstructionValue::UnsupportedNode { node_type: Some("YieldExpression".to_string()), original_node: None, loc }
         }
         Expression::SpreadElement(spread) => {
             // SpreadElement should be handled by the parent context (array/object/call)
@@ -1465,7 +1465,7 @@ fn lower_expression(
                     loc: loc.clone(),
                     suggestions: None,
                 });
-                InstructionValue::UnsupportedNode { node_type: Some("MetaProperty".to_string()), loc }
+                InstructionValue::UnsupportedNode { node_type: Some("MetaProperty".to_string()), original_node: None, loc }
             }
         }
         Expression::ClassExpression(cls) => {
@@ -1477,7 +1477,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::PrivateName(pn) => {
             let loc = convert_opt_loc(&pn.base.loc);
@@ -1488,7 +1488,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::Super(sup) => {
             let loc = convert_opt_loc(&sup.base.loc);
@@ -1499,7 +1499,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::Import(imp) => {
             let loc = convert_opt_loc(&imp.base.loc);
@@ -1510,7 +1510,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::ThisExpression(this) => {
             let loc = convert_opt_loc(&this.base.loc);
@@ -1521,7 +1521,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::ParenthesizedExpression(paren) => {
             lower_expression(builder, &paren.expression)
@@ -1727,7 +1727,7 @@ fn lower_expression(
                 description: None,
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::TSAsExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
@@ -1773,7 +1773,7 @@ fn lower_expression(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            InstructionValue::UnsupportedNode { node_type: None, loc }
+            InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc }
         }
         Expression::RegExpLiteral(re) => {
             let loc = convert_opt_loc(&re.base.loc);
@@ -3273,7 +3273,7 @@ fn lower_statement(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc });
         }
         Statement::FunctionDeclaration(func_decl) => {
             lower_function_declaration(builder, func_decl);
@@ -3287,7 +3287,7 @@ fn lower_statement(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("ClassDeclaration".to_string()), loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("ClassDeclaration".to_string()), original_node: None, loc });
         }
         Statement::ImportDeclaration(_)
         | Statement::ExportNamedDeclaration(_)
@@ -3307,16 +3307,18 @@ fn lower_statement(
                 loc: loc.clone(),
                 suggestions: None,
             });
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc });
         }
         // TypeScript/Flow declarations are type-only, skip them
         Statement::TSEnumDeclaration(e) => {
             let loc = convert_opt_loc(&e.base.loc);
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("TSEnumDeclaration".to_string()), loc });
+            let original_node = serde_json::to_value(&react_compiler_ast::statements::Statement::TSEnumDeclaration(e.clone())).ok();
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("TSEnumDeclaration".to_string()), original_node, loc });
         }
         Statement::EnumDeclaration(e) => {
             let loc = convert_opt_loc(&e.base.loc);
-            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("EnumDeclaration".to_string()), loc });
+            let original_node = serde_json::to_value(&react_compiler_ast::statements::Statement::EnumDeclaration(e.clone())).ok();
+            lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: Some("EnumDeclaration".to_string()), original_node, loc });
         }
         // TypeScript/Flow type declarations are type-only, skip them
         Statement::TSTypeAliasDeclaration(_)
@@ -3584,7 +3586,7 @@ fn lower_assignment(
                                 suggestions: None,
                                 description: None,
                             });
-                            let temp = lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc });
+                            let temp = lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc });
                             return Some(temp);
                         }
                         let temp = lower_value_to_temporary(builder, InstructionValue::StoreContext {
@@ -3646,7 +3648,7 @@ fn lower_assignment(
                             description: None,
                             suggestions: None,
                         });
-                        lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc })
+                        lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc })
                     }
                 }
             } else {
@@ -3658,7 +3660,7 @@ fn lower_assignment(
                         description: None,
                         suggestions: None,
                     });
-                    lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, loc })
+                    lower_value_to_temporary(builder, InstructionValue::UnsupportedNode { node_type: None, original_node: None, loc })
                 } else {
                     let property_place = lower_expression_to_temporary(builder, &member.property);
                     lower_value_to_temporary(builder, InstructionValue::ComputedStore {

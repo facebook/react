@@ -481,6 +481,19 @@ pub fn compile_fn(
         fbt_operands,
     )?;
 
+    // Simulate unexpected exception for testing (matches TS Pipeline.ts)
+    if env.config.throw_unknown_exception_testonly {
+        let mut err = CompilerError::new();
+        err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
+            category: react_compiler_diagnostics::ErrorCategory::Invariant,
+            reason: "unexpected error".to_string(),
+            description: None,
+            loc: None,
+            suggestions: None,
+        });
+        return Err(err);
+    }
+
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {

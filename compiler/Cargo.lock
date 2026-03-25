@@ -1258,6 +1258,7 @@ dependencies = [
  "react_compiler_ast",
  "react_compiler_diagnostics",
  "react_compiler_hir",
+ "serde_json",
 ]
 
 [[package]]

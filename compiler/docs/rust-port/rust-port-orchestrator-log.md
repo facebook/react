@@ -52,7 +52,7 @@ StabilizeBlockIds: complete
 RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-Codegen: partial (1679/1717 code comparison, 38 remaining)
+Codegen: partial (1687/1717 code comparison, 30 remaining)
 
 # Logs
 
@@ -447,3 +447,14 @@ Validates that compiled output preserves manual useMemo/useCallback memoization:
 - Scope dependency matching (inferred deps must match manually specified deps)
 Replaced TODO stub in pipeline.rs with real validation pass call.
 Fixed 58 code comparison failures. Code: 1621→1679 (97.8%). 38 remaining.
+
+## 20260325-011107 Fix error handling, enum passthrough, codegen invariants — 38→30 code failures
+
+Fixed 8 code comparison failures:
+- Enum declarations: preserve original AST node through codegen instead of __unsupported_* placeholder
+- throwUnknownException__testonly: pipeline support for test-only exception pragma
+- MethodCall invariant: codegen checks property resolves to MemberExpression
+- Unnamed temporary invariant: convert_identifier returns Result, errors on unnamed temps
+- Const/Let declaration invariant: cannot have outer lvalue (expression reference)
+- useMemo-switch-return: fixed as side effect (was flaky, now passes consistently)
+Code: 1679→1687 (98.3%). 30 remaining.
