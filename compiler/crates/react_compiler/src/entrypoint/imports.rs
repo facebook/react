@@ -10,10 +10,13 @@ use react_compiler_ast::common::BaseNode;
 use react_compiler_ast::declarations::{
     ImportDeclaration, ImportKind, ImportSpecifier, ImportSpecifierData, ModuleExportName,
 };
-use react_compiler_ast::expressions::Identifier;
+use react_compiler_ast::expressions::{CallExpression, Expression, Identifier};
 use react_compiler_ast::literals::StringLiteral;
+use react_compiler_ast::patterns::{ObjectPattern, ObjectPatternProp, ObjectPatternProperty, PatternLike};
 use react_compiler_ast::scope::ScopeInfo;
-use react_compiler_ast::statements::Statement;
+use react_compiler_ast::statements::{
+    Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+};
 use react_compiler_ast::{Program, SourceType};
 use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory, Position, SourceLocation};
 
@@ -293,21 +296,65 @@ pub fn add_imports_to_program(program: &mut Program, context: &ProgramContext) {
                 attributes: None,
             }));
         } else {
-            // CommonJS: const { imported: name } = require('module')
-            // Build as a VariableDeclaration with destructuring.
-            // For now, we emit an import declaration since most React code
-            // uses ESM, and proper CJS require generation needs ObjectPattern
-            // support which can be added later.
-            stmts.push(Statement::ImportDeclaration(ImportDeclaration {
-                base: BaseNode::typed("ImportDeclaration"),
-                specifiers: import_specifiers,
-                source: StringLiteral {
-                    base: BaseNode::typed("StringLiteral"),
-                    value: module_name.clone(),
-                },
-                import_kind: None,
-                assertions: None,
-                attributes: None,
+            // CommonJS: const { imported: local, ... } = require('module')
+            let properties: Vec<ObjectPatternProperty> = sorted_imports
+                .iter()
+                .map(|spec| {
+                    ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
+                        base: BaseNode::typed("ObjectProperty"),
+                        key: Box::new(Expression::Identifier(Identifier {
+                            base: BaseNode::typed("Identifier"),
+                            name: spec.imported.clone(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        })),
+                        value: Box::new(PatternLike::Identifier(Identifier {
+                            base: BaseNode::typed("Identifier"),
+                            name: spec.name.clone(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        })),
+                        computed: false,
+                        shorthand: false,
+                        decorators: None,
+                        method: None,
+                    })
+                })
+                .collect();
+
+            stmts.push(Statement::VariableDeclaration(VariableDeclaration {
+                base: BaseNode::typed("VariableDeclaration"),
+                kind: VariableDeclarationKind::Const,
+                declarations: vec![VariableDeclarator {
+                    base: BaseNode::typed("VariableDeclarator"),
+                    id: PatternLike::ObjectPattern(ObjectPattern {
+                        base: BaseNode::typed("ObjectPattern"),
+                        properties,
+                        type_annotation: None,
+                        decorators: None,
+                    }),
+                    init: Some(Box::new(Expression::CallExpression(CallExpression {
+                        base: BaseNode::typed("CallExpression"),
+                        callee: Box::new(Expression::Identifier(Identifier {
+                            base: BaseNode::typed("Identifier"),
+                            name: "require".to_string(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        })),
+                        arguments: vec![Expression::StringLiteral(StringLiteral {
+                            base: BaseNode::typed("StringLiteral"),
+                            value: module_name.clone(),
+                        })],
+                        type_parameters: None,
+                        type_arguments: None,
+                        optional: None,
+                    }))),
+                    definite: None,
+                }],
+                declare: None,
             }));
         }
     }

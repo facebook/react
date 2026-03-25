@@ -1180,6 +1180,7 @@ dependencies = [
  "indexmap",
  "react_compiler_diagnostics",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

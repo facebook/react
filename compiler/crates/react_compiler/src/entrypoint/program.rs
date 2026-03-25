@@ -1746,8 +1746,11 @@ fn apply_compiled_functions(
         }
     }
 
-    // Insert-at-position decls in reverse order so indices remain valid
-    for (parent_start, outlined_decl) in insert_decls.into_iter().rev() {
+    // Insert-at-position decls in forward order: each insert goes right after the
+    // parent function, pushing previously inserted outlined functions down. This
+    // matches Babel's insertAfter() behavior where the last outlined function ends
+    // up closest to the parent.
+    for (parent_start, outlined_decl) in insert_decls.into_iter() {
         let insert_idx = if let Some(start) = parent_start {
             program
                 .body

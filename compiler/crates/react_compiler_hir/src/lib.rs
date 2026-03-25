@@ -579,6 +579,10 @@ pub enum InstructionValue {
         type_: Type,
         type_annotation_name: Option<String>,
         type_annotation_kind: Option<String>,
+        /// The original AST type annotation node, preserved for codegen.
+        /// For Flow: the inner type from TypeAnnotation.typeAnnotation
+        /// For TS: the TSType node from TSAsExpression/TSSatisfiesExpression
+        type_annotation: Option<Box<serde_json::Value>>,
         loc: Option<SourceLocation>,
     },
     JsxExpression {

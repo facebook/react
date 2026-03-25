@@ -1955,13 +1955,38 @@ fn codegen_base_instruction_value(
         }
         InstructionValue::TypeCastExpression {
             value,
-            type_annotation_kind: _,
+            type_annotation_kind,
+            type_annotation,
             ..
         } => {
             let expr = codegen_place_to_expression(cx, value)?;
-            // For TypeCast, we just pass through the expression since we don't have
-            // the type annotation in a form we can reconstruct
-            Ok(ExpressionOrJsxText::Expression(expr))
+            // Wrap in the appropriate type cast expression if we have the
+            // original type annotation AST node
+            let wrapped = match (type_annotation_kind.as_deref(), type_annotation) {
+                (Some("satisfies"), Some(ta)) => {
+                    Expression::TSSatisfiesExpression(ast_expr::TSSatisfiesExpression {
+                        base: BaseNode::typed("TSSatisfiesExpression"),
+                        expression: Box::new(expr),
+                        type_annotation: ta.clone(),
+                    })
+                }
+                (Some("as"), Some(ta)) => {
+                    Expression::TSAsExpression(ast_expr::TSAsExpression {
+                        base: BaseNode::typed("TSAsExpression"),
+                        expression: Box::new(expr),
+                        type_annotation: ta.clone(),
+                    })
+                }
+                (Some("cast"), Some(ta)) => {
+                    Expression::TypeCastExpression(ast_expr::TypeCastExpression {
+                        base: BaseNode::typed("TypeCastExpression"),
+                        expression: Box::new(expr),
+                        type_annotation: ta.clone(),
+                    })
+                }
+                _ => expr,
+            };
+            Ok(ExpressionOrJsxText::Expression(wrapped))
         }
         InstructionValue::JSXText { value, .. } => {
             Ok(ExpressionOrJsxText::JsxText(JSXText {

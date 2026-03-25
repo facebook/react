@@ -1538,7 +1538,7 @@ fn format_instruction_value_impl(printer: &mut DebugPrinter, value: &Instruction
         InstructionValue::Primitive { value: prim, loc } => {
             printer.line(&format!("Primitive {{ value: {}, loc: {} }}", format_primitive(prim), format_loc(loc)));
         }
-        InstructionValue::TypeCastExpression { value: val, type_, type_annotation_name, type_annotation_kind, loc } => {
+        InstructionValue::TypeCastExpression { value: val, type_, type_annotation_name, type_annotation_kind, type_annotation: _, loc } => {
             printer.line("TypeCastExpression {");
             printer.indent();
             printer.format_place_field("value", val);

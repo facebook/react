@@ -1735,7 +1735,7 @@ fn lower_expression(
             let type_annotation = &*ts.type_annotation;
             let type_ = lower_type_annotation(type_annotation, builder);
             let type_annotation_name = get_type_annotation_name(type_annotation);
-            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("as".to_string()), loc }
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("as".to_string()), type_annotation: Some(ts.type_annotation.clone()), loc }
         }
         Expression::TSSatisfiesExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
@@ -1743,7 +1743,7 @@ fn lower_expression(
             let type_annotation = &*ts.type_annotation;
             let type_ = lower_type_annotation(type_annotation, builder);
             let type_annotation_name = get_type_annotation_name(type_annotation);
-            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("satisfies".to_string()), loc }
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("satisfies".to_string()), type_annotation: Some(ts.type_annotation.clone()), loc }
         }
         Expression::TSNonNullExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TSTypeAssertion(ts) => {
@@ -1752,7 +1752,7 @@ fn lower_expression(
             let type_annotation = &*ts.type_annotation;
             let type_ = lower_type_annotation(type_annotation, builder);
             let type_annotation_name = get_type_annotation_name(type_annotation);
-            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("as".to_string()), loc }
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("as".to_string()), type_annotation: Some(ts.type_annotation.clone()), loc }
         }
         Expression::TSInstantiationExpression(ts) => lower_expression(builder, &ts.expression),
         Expression::TypeCastExpression(tc) => {
@@ -1762,7 +1762,7 @@ fn lower_expression(
             let inner_type = tc.type_annotation.get("typeAnnotation").unwrap_or(&*tc.type_annotation);
             let type_ = lower_type_annotation(inner_type, builder);
             let type_annotation_name = get_type_annotation_name(inner_type);
-            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("cast".to_string()), loc }
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind: Some("cast".to_string()), type_annotation: Some(tc.type_annotation.clone()), loc }
         }
         Expression::BigIntLiteral(big) => {
             let loc = convert_opt_loc(&big.base.loc);

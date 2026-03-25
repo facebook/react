@@ -860,7 +860,7 @@ impl<'a> DebugPrinter<'a> {
                     format_loc(loc)
                 ));
             }
-            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind, loc } => {
+            InstructionValue::TypeCastExpression { value, type_, type_annotation_name, type_annotation_kind, type_annotation: _, loc } => {
                 self.line("TypeCastExpression {");
                 self.indent();
                 self.format_place_field("value", value);
