@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<c54a1094e6a68c023c6ac245b645fb66>>
+ * @generated SignedSource<<27f0c75794d776441e0a3f8cb70a7791>>
  */
 
 'use strict';
@@ -51738,6 +51738,20 @@ function BabelPluginReactCompiler(_babel) {
     };
 }
 
+// -----------------------------------------------------------------------------
+// Land or remove (zero effort)
+//
+// Flags that can likely be deleted or landed without consequences
+// -----------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
+// eslint-plugin-react-hooks
+// -----------------------------------------------------------------------------
+var eprh_enableUseKeyedStateCompilerLint = false;
+var eprh_enableVerboseNoSetStateInEffectCompilerLint = false;
+var eprh_enableExhaustiveEffectDependenciesCompilerLint = 'off';
+
 var _LRUCache_values, _LRUCache_headIdx;
 const COMPONENT_NAME_PATTERN = /^[A-Z]/;
 const HOOK_NAME_PATTERN = /^use[A-Z0-9]/;
@@ -51772,8 +51786,7 @@ function checkTopLevelNode(node) {
         return checkTopLevelNode(decl);
     }
     if (node.type === 'FunctionDeclaration') {
-        if ('__componentDeclaration' in node ||
-            '__hookDeclaration' in node) {
+        if ('__componentDeclaration' in node || '__hookDeclaration' in node) {
             return true;
         }
         const id = node.id;
@@ -51792,7 +51805,8 @@ function checkTopLevelNode(node) {
                     (init.type === 'ArrowFunctionExpression' ||
                         init.type === 'FunctionExpression')) {
                     const name = decl.id.name;
-                    if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
+                    if (COMPONENT_NAME_PATTERN.test(name) ||
+                        HOOK_NAME_PATTERN.test(name)) {
                         return true;
                     }
                 }
@@ -51817,9 +51831,9 @@ const COMPILER_OPTIONS = {
         validateNoCapitalizedCalls: [],
         validateHooksUsage: true,
         validateNoDerivedComputationsInEffects: true,
-        enableUseKeyedState: true,
-        enableVerboseNoSetStateInEffect: true,
-        validateExhaustiveEffectDependencies: 'extra-only',
+        enableUseKeyedState: eprh_enableUseKeyedStateCompilerLint,
+        enableVerboseNoSetStateInEffect: eprh_enableVerboseNoSetStateInEffectCompilerLint,
+        validateExhaustiveEffectDependencies: eprh_enableExhaustiveEffectDependenciesCompilerLint,
     },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;

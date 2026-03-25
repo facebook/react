@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<0c2bc4668c6eb3401171a3c2748305eb>>
+ * @generated SignedSource<<206b54c22a94fb32f75b4b221a7cb411>>
  */
 
 'use strict';
@@ -51517,6 +51517,20 @@ function BabelPluginReactCompiler(_babel) {
     };
 }
 
+// -----------------------------------------------------------------------------
+// Land or remove (zero effort)
+//
+// Flags that can likely be deleted or landed without consequences
+// -----------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
+// eslint-plugin-react-hooks
+// -----------------------------------------------------------------------------
+const eprh_enableUseKeyedStateCompilerLint = false;
+const eprh_enableVerboseNoSetStateInEffectCompilerLint = false;
+const eprh_enableExhaustiveEffectDependenciesCompilerLint = 'off';
+
 var _LRUCache_values, _LRUCache_headIdx;
 const COMPONENT_NAME_PATTERN = /^[A-Z]/;
 const HOOK_NAME_PATTERN = /^use[A-Z0-9]/;
@@ -51551,8 +51565,7 @@ function checkTopLevelNode(node) {
         return checkTopLevelNode(decl);
     }
     if (node.type === 'FunctionDeclaration') {
-        if ('__componentDeclaration' in node ||
-            '__hookDeclaration' in node) {
+        if ('__componentDeclaration' in node || '__hookDeclaration' in node) {
             return true;
         }
         const id = node.id;
@@ -51571,7 +51584,8 @@ function checkTopLevelNode(node) {
                     (init.type === 'ArrowFunctionExpression' ||
                         init.type === 'FunctionExpression')) {
                     const name = decl.id.name;
-                    if (COMPONENT_NAME_PATTERN.test(name) || HOOK_NAME_PATTERN.test(name)) {
+                    if (COMPONENT_NAME_PATTERN.test(name) ||
+                        HOOK_NAME_PATTERN.test(name)) {
                         return true;
                     }
                 }
@@ -51596,9 +51610,9 @@ const COMPILER_OPTIONS = {
         validateNoCapitalizedCalls: [],
         validateHooksUsage: true,
         validateNoDerivedComputationsInEffects: true,
-        enableUseKeyedState: true,
-        enableVerboseNoSetStateInEffect: true,
-        validateExhaustiveEffectDependencies: 'extra-only',
+        enableUseKeyedState: eprh_enableUseKeyedStateCompilerLint,
+        enableVerboseNoSetStateInEffect: eprh_enableVerboseNoSetStateInEffectCompilerLint,
+        validateExhaustiveEffectDependencies: eprh_enableExhaustiveEffectDependenciesCompilerLint,
     },
 };
 const FLOW_SUPPRESSION_REGEX = /\$FlowFixMe\[([^\]]*)\]/g;
