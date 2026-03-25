@@ -1,13 +1,12 @@
-const React = require('react');
-const {renderToPipeableStream} = require('react-server-dom-webpack/server');
-const App = require('./App');
-const AppAsync = require('./AppAsync');
+import {renderToPipeableStream} from 'react-server-dom-webpack/server';
+import App from './App';
+import AppAsync from './AppAsync';
 
-function renderRSC(clientManifest, Component, itemCount) {
-  const element = React.createElement(Component, {itemCount});
-  return renderToPipeableStream(element, clientManifest);
+export default function renderRSC(clientManifest, Component, itemCount) {
+  return renderToPipeableStream(
+    <Component itemCount={itemCount} />,
+    clientManifest
+  );
 }
 
-module.exports = renderRSC;
-module.exports.App = App;
-module.exports.AppAsync = AppAsync;
+export {App, AppAsync};

@@ -1,5 +1,4 @@
-const React = require('react');
-const ProductCard = require('./ProductCard');
+import ProductCard from './ProductCard';
 
 function generateProducts(count) {
   const products = [];
@@ -17,21 +16,18 @@ function generateProducts(count) {
   return products;
 }
 
-function ProductList({count}) {
+export default function ProductList({count}) {
   const products = generateProducts(count);
-  return React.createElement(
-    'div',
-    {className: 'product-list'},
-    products.map(function (p) {
-      return React.createElement(ProductCard, {
-        key: p.id,
-        name: p.name,
-        price: p.price,
-        description: p.description,
-      });
-    })
+  return (
+    <div className="product-list">
+      {products.map(p => (
+        <ProductCard
+          key={p.id}
+          name={p.name}
+          price={p.price}
+          description={p.description}
+        />
+      ))}
+    </div>
   );
 }
-
-module.exports = ProductList;
-module.exports.default = ProductList;

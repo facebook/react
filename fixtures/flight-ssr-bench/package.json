@@ -8,6 +8,7 @@
   "dependencies": {
     "@babel/core": "^7.16.0",
     "@babel/preset-react": "^7.22.5",
+    "@babel/register": "^7.28.6",
     "babel-loader": "^8.2.3",
     "react": "experimental",
     "react-dom": "experimental",

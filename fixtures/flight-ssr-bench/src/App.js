@@ -1,24 +1,16 @@
-const React = require('react');
-const Header = require('./Header');
-const Layout = require('./Layout');
-const ProductList = require('./ProductList');
+import Header from './Header';
+import Layout from './Layout';
+import ProductList from './ProductList';
 
-function App({itemCount}) {
-  return React.createElement(
-    'html',
-    null,
-    React.createElement(
-      'body',
-      null,
-      React.createElement(Header, {title: 'Flight SSR Benchmark'}),
-      React.createElement(
-        Layout,
-        null,
-        React.createElement(ProductList, {count: itemCount})
-      )
-    )
+export default function App({itemCount}) {
+  return (
+    <html>
+      <body>
+        <Header title="Flight SSR Benchmark" />
+        <Layout>
+          <ProductList count={itemCount} />
+        </Layout>
+      </body>
+    </html>
   );
 }
-
-module.exports = App;
-module.exports.default = App;

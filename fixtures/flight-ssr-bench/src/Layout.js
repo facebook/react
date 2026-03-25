@@ -1,8 +1,3 @@
-const React = require('react');
-
-function Layout({children}) {
-  return React.createElement('main', {className: 'layout'}, children);
+export default function Layout({children}) {
+  return <main className="layout">{children}</main>;
 }
-
-module.exports = Layout;
-module.exports.default = Layout;

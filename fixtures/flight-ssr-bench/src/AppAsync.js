@@ -1,24 +1,16 @@
-const React = require('react');
-const Header = require('./Header');
-const Layout = require('./Layout');
-const ProductListAsync = require('./ProductListAsync');
+import Header from './Header';
+import Layout from './Layout';
+import ProductListAsync from './ProductListAsync';
 
-function AppAsync({itemCount}) {
-  return React.createElement(
-    'html',
-    null,
-    React.createElement(
-      'body',
-      null,
-      React.createElement(Header, {title: 'Flight SSR Benchmark (Async)'}),
-      React.createElement(
-        Layout,
-        null,
-        React.createElement(ProductListAsync, {count: itemCount})
-      )
-    )
+export default function AppAsync({itemCount}) {
+  return (
+    <html>
+      <body>
+        <Header title="Flight SSR Benchmark (Async)" />
+        <Layout>
+          <ProductListAsync count={itemCount} />
+        </Layout>
+      </body>
+    </html>
   );
 }
-
-module.exports = AppAsync;
-module.exports.default = AppAsync;

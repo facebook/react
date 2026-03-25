@@ -1,5 +1,5 @@
-const React = require('react');
-const ProductCard = require('./ProductCard');
+import {Suspense} from 'react';
+import ProductCard from './ProductCard';
 
 function generateProducts(start, end) {
   const products = [];
@@ -17,45 +17,36 @@ function generateProducts(start, end) {
   return products;
 }
 
-// Simulated async data fetch — resolves immediately but goes through the
-// async/microtask path so Suspense boundaries are exercised.
 function fetchProducts(start, end) {
   return Promise.resolve(generateProducts(start, end));
 }
 
-// Async server component. Each chunk fetches its own batch and renders
-// inside a Suspense boundary in the parent.
 async function ProductListAsyncChunk({start, end}) {
   const products = await fetchProducts(start, end);
-  return React.createElement(
-    React.Fragment,
-    null,
-    products.map(function (p, i) {
-      return React.createElement(ProductCard, {
-        key: start + i,
-        name: p.name,
-        price: p.price,
-        description: p.description,
-      });
-    })
+  return (
+    <>
+      {products.map(p => (
+        <ProductCard
+          key={p.id}
+          name={p.name}
+          price={p.price}
+          description={p.description}
+        />
+      ))}
+    </>
   );
 }
 
-function ProductListAsync({count}) {
+export default function ProductListAsync({count}) {
   const chunkSize = Math.ceil(count / 4);
   const chunks = [];
   for (let i = 0; i < count; i += chunkSize) {
     const end = Math.min(i + chunkSize, count);
     chunks.push(
-      React.createElement(
-        React.Suspense,
-        {key: i, fallback: React.createElement('div', null, 'Loading...')},
-        React.createElement(ProductListAsyncChunk, {start: i, end: end})
-      )
+      <Suspense key={i} fallback={<div>Loading...</div>}>
+        <ProductListAsyncChunk start={i} end={end} />
+      </Suspense>
     );
   }
-  return React.createElement('div', {className: 'product-list'}, chunks);
+  return <div className="product-list">{chunks}</div>;
 }
-
-module.exports = ProductListAsync;
-module.exports.default = ProductListAsync;

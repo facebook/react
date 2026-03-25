@@ -1,20 +1,13 @@
 'use client';
 
-const React = require('react');
-
-function Header({title}) {
-  return React.createElement(
-    'header',
-    null,
-    React.createElement('h1', null, title),
-    React.createElement(
-      'nav',
-      null,
-      React.createElement('a', {href: '/'}, 'Home'),
-      React.createElement('a', {href: '/products'}, 'Products')
-    )
+export default function Header({title}) {
+  return (
+    <header>
+      <h1>{title}</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/products">Products</a>
+      </nav>
+    </header>
   );
 }
-
-module.exports = Header;
-module.exports.default = Header;

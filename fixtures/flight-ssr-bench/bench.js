@@ -1,5 +1,11 @@
 'use strict';
 
+require('@babel/register')({
+  presets: [['@babel/preset-react', {runtime: 'automatic'}]],
+  plugins: ['@babel/plugin-transform-modules-commonjs'],
+  only: [/\/src\//],
+});
+
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
@@ -295,9 +301,10 @@ async function main() {
   console.log('Building RSC bundle...\n');
   await build();
 
-  const rscBundle = require('./build/rsc-bundle.js');
-  const App = require('./src/App.js');
-  const AppAsync = require('./src/AppAsync.js');
+  const rscBundle = require('./build/rsc-bundle.js').default;
+  const rscApps = require('./build/rsc-bundle.js');
+  const App = require('./src/App.js').default;
+  const AppAsync = require('./src/AppAsync.js').default;
 
   const ITEM_COUNT = 200;
   const WARMUP = 50;
@@ -311,7 +318,7 @@ async function main() {
   const classicalHtml = await renderClassical(App, ITEM_COUNT);
   console.log('Classical SSR (sync):  %d bytes', classicalHtml.length);
 
-  const flightHtml = await renderFlight(rscBundle, rscBundle.App, ITEM_COUNT);
+  const flightHtml = await renderFlight(rscBundle, rscApps.App, ITEM_COUNT);
   console.log('Flight SSR (sync):     %d bytes', flightHtml.length);
 
   const classicalAsyncHtml = await renderClassical(AppAsync, ITEM_COUNT);
@@ -319,7 +326,7 @@ async function main() {
 
   const flightAsyncHtml = await renderFlight(
     rscBundle,
-    rscBundle.AppAsync,
+    rscApps.AppAsync,
     ITEM_COUNT
   );
   console.log('Flight SSR (async):    %d bytes', flightAsyncHtml.length);
@@ -342,7 +349,7 @@ async function main() {
 
   const flightSync = await runBenchmark(
     'Flight SSR (sync)',
-    () => renderFlight(rscBundle, rscBundle.App, ITEM_COUNT),
+    () => renderFlight(rscBundle, rscApps.App, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
@@ -358,7 +365,7 @@ async function main() {
 
   const flightAsync = await runBenchmark(
     'Flight SSR (async)',
-    () => renderFlight(rscBundle, rscBundle.AppAsync, ITEM_COUNT),
+    () => renderFlight(rscBundle, rscApps.AppAsync, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
@@ -388,7 +395,7 @@ async function main() {
 
     await profileRun(
       'Flight SSR (sync)',
-      () => renderFlight(rscBundle, rscBundle.App, ITEM_COUNT),
+      () => renderFlight(rscBundle, rscApps.App, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
       path.join(profileDir, 'sync-flight.cpuprofile')
@@ -404,7 +411,7 @@ async function main() {
 
     await profileRun(
       'Flight SSR (async)',
-      () => renderFlight(rscBundle, rscBundle.AppAsync, ITEM_COUNT),
+      () => renderFlight(rscBundle, rscApps.AppAsync, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
       path.join(profileDir, 'async-flight.cpuprofile')

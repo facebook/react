@@ -1,5 +1,11 @@
 'use strict';
 
+require('@babel/register')({
+  presets: [['@babel/preset-react', {runtime: 'automatic'}]],
+  plugins: ['@babel/plugin-transform-modules-commonjs'],
+  only: [/\/src\//],
+});
+
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
@@ -147,9 +153,10 @@ async function main() {
   console.log('Building RSC bundle...\n');
   await build();
 
-  const rscBundle = require('./build/rsc-bundle.js');
-  const App = require('./src/App.js');
-  const AppAsync = require('./src/AppAsync.js');
+  const rscBundle = require('./build/rsc-bundle.js').default;
+  const rscApps = require('./build/rsc-bundle.js');
+  const App = require('./src/App.js').default;
+  const AppAsync = require('./src/AppAsync.js').default;
 
   const outputDir = path.resolve(__dirname, 'build');
   fs.mkdirSync(outputDir, {recursive: true});
@@ -158,7 +165,7 @@ async function main() {
     {name: 'classical-sync', render: () => renderClassical(App, itemCount)},
     {
       name: 'flight-sync',
-      render: () => renderFlight(rscBundle, rscBundle.App, itemCount),
+      render: () => renderFlight(rscBundle, rscApps.App, itemCount),
     },
     {
       name: 'classical-async',
@@ -166,7 +173,7 @@ async function main() {
     },
     {
       name: 'flight-async',
-      render: () => renderFlight(rscBundle, rscBundle.AppAsync, itemCount),
+      render: () => renderFlight(rscBundle, rscApps.AppAsync, itemCount),
     },
   ];
 
