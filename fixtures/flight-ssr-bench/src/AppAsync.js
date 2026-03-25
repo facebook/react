@@ -1,15 +1,17 @@
-import Header from './Header';
-import Layout from './Layout';
-import ProductListAsync from './ProductListAsync';
+import Shell from './components/Shell';
+import Sidebar from './components/Sidebar';
+import DashboardAsync from './components/DashboardAsync';
+import Footer from './components/Footer';
 
 export default function AppAsync({itemCount}) {
   return (
     <html>
       <body>
-        <Header title="Flight SSR Benchmark (Async)" />
-        <Layout>
-          <ProductListAsync count={itemCount} />
-        </Layout>
+        <Shell>
+          <Sidebar itemCount={itemCount} />
+          <DashboardAsync itemCount={itemCount} />
+          <Footer />
+        </Shell>
       </body>
     </html>
   );

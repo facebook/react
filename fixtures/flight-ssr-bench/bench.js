@@ -35,9 +35,22 @@ function registerClientModule(modulePath) {
   ssrModuleMap[id] = {'*': {id, chunks: [], name: '*'}};
 }
 
-// Register all 'use client' components before loading react-server-dom-webpack/client
-registerClientModule('./src/ProductCard.js');
-registerClientModule('./src/Header.js');
+// Auto-register all 'use client' components by scanning src/
+const srcDirs = [
+  path.resolve(__dirname, 'src'),
+  path.resolve(__dirname, 'src/components'),
+];
+for (const dir of srcDirs) {
+  if (!fs.existsSync(dir)) continue;
+  for (const file of fs.readdirSync(dir)) {
+    if (!file.endsWith('.js')) continue;
+    const filePath = path.join(dir, file);
+    const source = fs.readFileSync(filePath, 'utf-8');
+    if (source.trimStart().startsWith("'use client'") || source.trimStart().startsWith('"use client"')) {
+      registerClientModule(filePath);
+    }
+  }
+}
 
 global.__webpack_require__ = function (id) {
   if (clientModules[id]) {

@@ -1,15 +1,17 @@
-import Header from './Header';
-import Layout from './Layout';
-import ProductList from './ProductList';
+import Shell from './components/Shell';
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
+import Footer from './components/Footer';
 
 export default function App({itemCount}) {
   return (
     <html>
       <body>
-        <Header title="Flight SSR Benchmark" />
-        <Layout>
-          <ProductList count={itemCount} />
-        </Layout>
+        <Shell>
+          <Sidebar itemCount={itemCount} />
+          <Dashboard itemCount={itemCount} />
+          <Footer />
+        </Shell>
       </body>
     </html>
   );
