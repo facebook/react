@@ -470,7 +470,7 @@ pub fn compile_fn(
     if env.config.enable_preserve_existing_memoization_guarantees
         || env.config.validate_preserve_existing_memoization_guarantees
     {
-        // TODO: port validatePreservedManualMemoization
+        react_compiler_validation::validate_preserved_manual_memoization(&reactive_fn, &mut env);
         context.log_debug(DebugLogEntry::new("ValidatePreservedManualMemoization", "ok".to_string()));
     }
 

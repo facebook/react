@@ -52,7 +52,7 @@ StabilizeBlockIds: complete
 RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-Codegen: partial (1621/1717 code comparison, 96 remaining)
+Codegen: partial (1679/1717 code comparison, 38 remaining)
 
 # Logs
 
@@ -437,3 +437,13 @@ Implemented function gating for the Rust compiler port:
 17 gating fixtures fixed (21/29 gating tests passing). 8 remaining are function discovery,
 error handling paths, and unimplemented instrumentation features.
 Code comparison: 1607→1621 passing (94.4%). 96 remaining.
+
+## 20260324-233646 Port ValidatePreservedManualMemoization — 96→38 code failures
+
+Ported ValidatePreservedManualMemoization from TypeScript to Rust (~440 lines).
+Validates that compiled output preserves manual useMemo/useCallback memoization:
+- StartMemoize operand scope checks (dependency scope must complete before memo block)
+- FinishMemoize unmemoized value detection (values must be within reactive scopes)
+- Scope dependency matching (inferred deps must match manually specified deps)
+Replaced TODO stub in pipeline.rs with real validation pass call.
+Fixed 58 code comparison failures. Code: 1621→1679 (97.8%). 38 remaining.
