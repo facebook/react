@@ -14,6 +14,28 @@ use serde::{Deserialize, Serialize};
 use crate::type_config::ValueKind;
 use crate::Effect;
 
+/// External function reference (source module + import name).
+/// Corresponds to TS `ExternalFunction`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalFunctionConfig {
+    pub source: String,
+    pub import_specifier_name: String,
+}
+
+/// Instrumentation configuration.
+/// Corresponds to TS `InstrumentationSchema`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstrumentationConfig {
+    #[serde(rename = "fn")]
+    pub fn_: ExternalFunctionConfig,
+    #[serde(default)]
+    pub gating: Option<ExternalFunctionConfig>,
+    #[serde(default)]
+    pub global_gating: Option<String>,
+}
+
 /// Custom hook configuration, ported from TS `HookSchema`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -68,7 +90,10 @@ pub struct EnvironmentConfig {
     #[serde(default)]
     pub custom_macros: Option<Vec<String>>,
 
-    // TODO: enableResetCacheOnSourceFileChanges — only used in codegen.
+    /// If true, emit code to reset the memo cache on source file changes (HMR/fast refresh).
+    /// If null (None), HMR detection is conditionally enabled based on NODE_ENV/__DEV__.
+    #[serde(default)]
+    pub enable_reset_cache_on_source_file_changes: Option<bool>,
 
     #[serde(default = "default_true")]
     pub enable_preserve_existing_memoization_guarantees: bool,
@@ -121,8 +146,13 @@ pub struct EnvironmentConfig {
     #[serde(default = "default_true")]
     pub enable_transitively_freeze_function_expressions: bool,
 
-    // TODO: enableEmitHookGuards — ExternalFunction, requires codegen.
-    // TODO: enableEmitInstrumentForget — InstrumentationSchema, requires codegen.
+    /// Hook guard configuration. When set, wraps hook calls with dispatcher guard calls.
+    #[serde(default)]
+    pub enable_emit_hook_guards: Option<ExternalFunctionConfig>,
+
+    /// Instrumentation configuration. When set, emits calls to instrument functions.
+    #[serde(default)]
+    pub enable_emit_instrument_forget: Option<InstrumentationConfig>,
 
     #[serde(default = "default_true")]
     pub enable_function_outlining: bool,
@@ -155,6 +185,7 @@ impl Default for EnvironmentConfig {
     fn default() -> Self {
         Self {
             custom_hooks: HashMap::new(),
+            enable_reset_cache_on_source_file_changes: None,
             enable_preserve_existing_memoization_guarantees: true,
             validate_preserve_existing_memoization_guarantees: true,
             validate_exhaustive_memoization_dependencies: true,
@@ -177,6 +208,8 @@ impl Default for EnvironmentConfig {
             validate_no_freezing_known_mutable_functions: false,
             enable_assume_hooks_follow_rules_of_react: true,
             enable_transitively_freeze_function_expressions: true,
+            enable_emit_hook_guards: None,
+            enable_emit_instrument_forget: None,
             enable_function_outlining: true,
             enable_jsx_outlining: false,
             assert_valid_mutable_ranges: false,

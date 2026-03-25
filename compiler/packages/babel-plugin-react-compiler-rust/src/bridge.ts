@@ -72,13 +72,15 @@ export function compileWithRust(
   ast: t.File,
   scopeInfo: ScopeInfo,
   options: ResolvedOptions,
+  code?: string | null,
 ): CompileResult {
   const compile = getRustCompile();
 
+  const optionsWithCode = code != null ? {...options, __sourceCode: code} : options;
   const resultJson = compile(
     JSON.stringify(ast),
     JSON.stringify(scopeInfo),
-    JSON.stringify(options),
+    JSON.stringify(optionsWithCode),
   );
 
   return JSON.parse(resultJson) as CompileResult;

@@ -41,6 +41,18 @@ pub struct Environment {
     // Output mode (Client, Ssr, Lint)
     pub output_mode: OutputMode,
 
+    // Source file code (for fast refresh hash computation)
+    pub code: Option<String>,
+
+    // Source file name (for instrumentation)
+    pub filename: Option<String>,
+
+    // Pre-resolved import local names for instrumentation/hook guards.
+    // Set by the program-level code before compilation.
+    pub instrument_fn_name: Option<String>,
+    pub instrument_gating_name: Option<String>,
+    pub hook_guard_name: Option<String>,
+
     // Hoisted identifiers: tracks which bindings have already been hoisted
     // via DeclareContext to avoid duplicate hoisting.
     // Uses u32 to avoid depending on react_compiler_ast types.
@@ -140,6 +152,11 @@ impl Environment {
             errors: CompilerError::new(),
             fn_type: ReactFunctionType::Other,
             output_mode: OutputMode::Client,
+            code: None,
+            filename: None,
+            instrument_fn_name: None,
+            instrument_gating_name: None,
+            hook_guard_name: None,
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: config
                 .validate_preserve_existing_memoization_guarantees,
@@ -178,6 +195,11 @@ impl Environment {
             errors: CompilerError::new(),
             fn_type,
             output_mode: self.output_mode,
+            code: self.code.clone(),
+            filename: self.filename.clone(),
+            instrument_fn_name: self.instrument_fn_name.clone(),
+            instrument_gating_name: self.instrument_gating_name.clone(),
+            hook_guard_name: self.hook_guard_name.clone(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: self
                 .validate_preserve_existing_memoization_guarantees,

@@ -85,11 +85,24 @@ export default function BabelPluginReactCompilerRust(
                 },
               });
             }
+            // Respect panicThreshold: if set to 'all_errors', throw to match TS behavior
+            const panicThreshold = (pass.opts as PluginOptions).panicThreshold;
+            if (
+              panicThreshold === 'all_errors' ||
+              panicThreshold === 'critical_errors'
+            ) {
+              throw e;
+            }
             return;
           }
 
           // Step 5: Call Rust compiler
-          const result = compileWithRust(pass.file.ast, scopeInfo, opts);
+          const result = compileWithRust(
+            pass.file.ast,
+            scopeInfo,
+            opts,
+            pass.file.code ?? null,
+          );
 
           // Step 6: Forward logger events and debug logs
           // Use orderedLog when available to maintain correct interleaving

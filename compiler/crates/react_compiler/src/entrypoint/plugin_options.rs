@@ -66,6 +66,10 @@ pub struct PluginOptions {
     pub custom_opt_out_directives: Option<Vec<String>>,
     #[serde(default)]
     pub environment: EnvironmentConfig,
+
+    /// Source code of the file being compiled (passed from Babel plugin for fast refresh hash).
+    #[serde(default, rename = "__sourceCode")]
+    pub source_code: Option<String>,
 }
 
 fn default_compilation_mode() -> String {

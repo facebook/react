@@ -49,6 +49,11 @@ pub struct ProgramContext {
     /// in the order they were emitted during compilation.
     pub ordered_log: Vec<OrderedLogItem>,
 
+    // Pre-resolved import local names for codegen
+    pub instrument_fn_name: Option<String>,
+    pub instrument_gating_name: Option<String>,
+    pub hook_guard_name: Option<String>,
+
     // Internal state
     already_compiled: HashSet<u32>,
     known_referenced_names: HashSet<String>,
@@ -74,6 +79,9 @@ impl ProgramContext {
             events: Vec::new(),
             debug_logs: Vec::new(),
             ordered_log: Vec::new(),
+            instrument_fn_name: None,
+            instrument_gating_name: None,
+            hook_guard_name: None,
             already_compiled: HashSet::new(),
             known_referenced_names: HashSet::new(),
             imports: HashMap::new(),
@@ -94,7 +102,10 @@ impl ProgramContext {
     /// Initialize known referenced names from scope bindings.
     /// Call this after construction to seed conflict detection with program scope bindings.
     pub fn init_from_scope(&mut self, scope: &ScopeInfo) {
-        for binding in scope.scope_bindings(scope.program_scope) {
+        // Register ALL bindings (not just program-scope) so that UID generation
+        // avoids name conflicts with any binding in the file. This matches
+        // Babel's generateUid() which checks all scopes.
+        for binding in &scope.bindings {
             self.known_referenced_names.insert(binding.name.clone());
         }
     }
@@ -125,11 +136,12 @@ impl ProgramContext {
             self.known_referenced_names.insert(name.to_string());
             name.to_string()
         } else {
-            // Generate unique name with underscore prefix (similar to Babel's generateUid)
+            // Generate unique name with underscore prefix (similar to Babel's generateUid).
+            // Babel generates: _name, _name2, _name3, etc.
             let mut uid = format!("_{}", name);
-            let mut i = 0;
+            let mut i = 2;
             while self.has_reference(&uid) {
-                uid = format!("_{}${}", name, i);
+                uid = format!("_{}{}", name, i);
                 i += 1;
             }
             self.known_referenced_names.insert(uid.clone());

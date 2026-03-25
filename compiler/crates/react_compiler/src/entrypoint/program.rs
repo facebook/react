@@ -1134,7 +1134,10 @@ fn process_fn(
     let opt_in = match opt_in_result {
         Ok(d) => d,
         Err(err) => {
-            log_error(&err, source.fn_loc.clone(), context);
+            // Apply panic threshold logic (same as compilation errors)
+            if let Some(result) = handle_error(&err, source.fn_loc.clone(), context) {
+                return Err(result);
+            }
             return Ok(None);
         }
     };
@@ -1164,6 +1167,13 @@ fn process_fn(
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
                     loc: opt_out.and_then(|d| d.base.loc.as_ref().map(convert_loc)),
                 });
+                // Even though the function is skipped, register the memo cache import
+                // if the compiled function had memo slots. This matches TS behavior where
+                // addMemoCacheImport() is called during codegen as a side effect that
+                // persists even when the function is later skipped.
+                if codegen_fn.memo_slots_used > 0 {
+                    context.add_memo_cache_import();
+                }
                 return Ok(None);
             }
 
@@ -2197,6 +2207,10 @@ fn apply_compiled_functions(
             rename_identifier_in_statement(stmt, "useMemoCache", &local_name);
         }
     }
+
+    // Instrumentation and hook guard imports are pre-registered in compile_program
+    // before compilation, so they are already in the imports map. No post-hoc
+    // renaming needed since codegen uses the pre-resolved local names.
 
     add_imports_to_program(program, context);
 }
@@ -3370,7 +3384,8 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     let mut context = ProgramContext::new(
         options.clone(),
         options.filename.clone(),
-        None, // code is not needed for Rust compilation
+        // Pass the source code for fast refresh hash computation.
+        options.source_code.clone(),
         suppressions,
         has_module_scope_opt_out,
     );
@@ -3393,6 +3408,44 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             ordered_log: context.ordered_log,
         };
     }
+
+    // Pre-register instrumentation imports to get stable local names.
+    // These are needed before compilation so codegen can use the correct names.
+    let instrument_fn_name: Option<String>;
+    let instrument_gating_name: Option<String>;
+    let hook_guard_name: Option<String>;
+
+    if let Some(ref instrument_config) = options.environment.enable_emit_instrument_forget {
+        let fn_spec = context.add_import_specifier(
+            &instrument_config.fn_.source,
+            &instrument_config.fn_.import_specifier_name,
+            None,
+        );
+        instrument_fn_name = Some(fn_spec.name.clone());
+        instrument_gating_name = instrument_config.gating.as_ref().map(|g| {
+            let spec = context.add_import_specifier(&g.source, &g.import_specifier_name, None);
+            spec.name.clone()
+        });
+    } else {
+        instrument_fn_name = None;
+        instrument_gating_name = None;
+    }
+
+    if let Some(ref hook_guard_config) = options.environment.enable_emit_hook_guards {
+        let spec = context.add_import_specifier(
+            &hook_guard_config.source,
+            &hook_guard_config.import_specifier_name,
+            None,
+        );
+        hook_guard_name = Some(spec.name.clone());
+    } else {
+        hook_guard_name = None;
+    }
+
+    // Store pre-resolved names on context for pipeline access
+    context.instrument_fn_name = instrument_fn_name;
+    context.instrument_gating_name = instrument_gating_name;
+    context.hook_guard_name = hook_guard_name;
 
     // Find all functions to compile
     let queue = find_functions_to_compile(program, &options, &mut context);

@@ -34,6 +34,20 @@ pub fn compile_fn(
     env_config: &EnvironmentConfig,
     context: &mut ProgramContext,
 ) -> Result<CodegenFunction, CompilerError> {
+    // Bail early if validateSourceLocations is enabled — the Rust port cannot
+    // implement this validation (it requires the original Babel AST).
+    if env_config.validate_source_locations {
+        let mut err = CompilerError::new();
+        err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
+            category: react_compiler_diagnostics::ErrorCategory::Invariant,
+            reason: "ValidateSourceLocations is not yet supported in the Rust compiler".to_string(),
+            description: Some("Source location validation requires access to the original AST".to_string()),
+            loc: None,
+            suggestions: None,
+        });
+        return Err(err);
+    }
+
     let mut env = Environment::with_config(env_config.clone());
     env.fn_type = fn_type;
     env.output_mode = match mode {
@@ -41,6 +55,11 @@ pub fn compile_fn(
         CompilerOutputMode::Client => OutputMode::Client,
         CompilerOutputMode::Lint => OutputMode::Lint,
     };
+    env.code = context.code.clone();
+    env.filename = context.filename.clone();
+    env.instrument_fn_name = context.instrument_fn_name.clone();
+    env.instrument_gating_name = context.instrument_gating_name.clone();
+    env.hook_guard_name = context.hook_guard_name.clone();
 
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
 

@@ -12,6 +12,7 @@
 
 use std::collections::HashMap;
 
+use indexmap::IndexSet;
 use react_compiler_hir::{
     BlockId, ReactiveBlock, ReactiveFunction,
     ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue,
@@ -24,12 +25,12 @@ use crate::visitors::{ReactiveFunctionVisitor, visit_reactive_function};
 /// Rewrites block IDs to sequential values.
 /// TS: `stabilizeBlockIds`
 pub fn stabilize_block_ids(func: &mut ReactiveFunction, env: &mut Environment) {
-    // Pass 1: Collect referenced labels
-    let mut referenced: std::collections::HashSet<BlockId> = std::collections::HashSet::new();
+    // Pass 1: Collect referenced labels (preserving insertion order to match TS Set behavior)
+    let mut referenced: IndexSet<BlockId> = IndexSet::new();
     let collector = CollectReferencedLabels { env: &*env };
     visit_reactive_function(func, &collector, &mut referenced);
 
-    // Build mappings: referenced block IDs -> sequential IDs
+    // Build mappings: referenced block IDs -> sequential IDs (insertion-order deterministic)
     let mut mappings: HashMap<BlockId, BlockId> = HashMap::new();
     for block_id in &referenced {
         let len = mappings.len() as u32;
@@ -49,7 +50,7 @@ struct CollectReferencedLabels<'a> {
 }
 
 impl<'a> ReactiveFunctionVisitor for CollectReferencedLabels<'a> {
-    type State = std::collections::HashSet<BlockId>;
+    type State = IndexSet<BlockId>;
 
     fn visit_scope(
         &self,

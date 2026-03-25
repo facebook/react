@@ -121,13 +121,32 @@ pub fn codegen_function(
     let fn_name = func.id.as_deref().unwrap_or("[[ anonymous ]]");
     let mut cx = Context::new(env, fn_name.to_string(), unique_identifiers, fbt_operands);
 
-    // Fast Refresh source hash handling is skipped in the Rust port
-    // (enableResetCacheOnSourceFileChanges not yet in config)
+    // Fast Refresh: compute source hash and reserve a cache slot if enabled
+    let fast_refresh_state: Option<(u32, String)> = if cx.env.config.enable_reset_cache_on_source_file_changes == Some(true) {
+        if let Some(ref code) = cx.env.code {
+            use sha2::Sha256;
+            use hmac::{Hmac, Mac};
+            type HmacSha256 = Hmac<Sha256>;
+            // Match TS: createHmac('sha256', code).digest('hex')
+            // Node's createHmac uses the code as the HMAC key and hashes empty data.
+            let mac = HmacSha256::new_from_slice(code.as_bytes())
+                .expect("HMAC can take key of any size");
+            let hash = format!("{:x}", mac.finalize().into_bytes());
+            let cache_index = cx.alloc_cache_index(); // Reserve slot 0 for the hash check
+            Some((cache_index, hash))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
     let mut compiled = codegen_reactive_function(&mut cx, func)?;
 
-    // Hook guard emission is skipped in the Rust port
-    // (enableEmitHookGuards not yet in config)
+    // Hook guards: TODO — requires per-hook-call wrapping which is complex.
+    // The enableEmitHookGuards feature wraps each hook call in a try/finally
+    // with $dispatcherGuard calls. This requires traversing the generated AST
+    // to identify hook calls and wrap them individually.
 
     let cache_count = compiled.memo_slots_used;
     if cache_count != 0 {
@@ -161,14 +180,197 @@ pub fn codegen_function(
             declare: None,
         }));
 
+        // Fast Refresh: emit cache invalidation check after useMemoCache
+        if let Some((cache_index, ref hash)) = fast_refresh_state {
+            let index_var = cx.synthesize_name("$i");
+            // if ($[cacheIndex] !== "hash") { for (let $i = 0; $i < N; $i += 1) { $[$i] = Symbol.for("react.memo_cache_sentinel"); } $[cacheIndex] = "hash"; }
+            preface.push(Statement::IfStatement(IfStatement {
+                base: BaseNode::typed("IfStatement"),
+                test: Box::new(Expression::BinaryExpression(ast_expr::BinaryExpression {
+                    base: BaseNode::typed("BinaryExpression"),
+                    operator: AstBinaryOperator::StrictNeq,
+                    left: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                        property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                            base: BaseNode::typed("NumericLiteral"),
+                            value: cache_index as f64,
+                        })),
+                        computed: true,
+                    })),
+                    right: Box::new(Expression::StringLiteral(StringLiteral {
+                        base: BaseNode::typed("StringLiteral"),
+                        value: hash.clone(),
+                    })),
+                })),
+                consequent: Box::new(Statement::BlockStatement(BlockStatement {
+                    base: BaseNode::typed("BlockStatement"),
+                    body: vec![
+                        // for (let $i = 0; $i < N; $i += 1) { $[$i] = Symbol.for("react.memo_cache_sentinel"); }
+                        Statement::ForStatement(ForStatement {
+                            base: BaseNode::typed("ForStatement"),
+                            init: Some(Box::new(ForInit::VariableDeclaration(VariableDeclaration {
+                                base: BaseNode::typed("VariableDeclaration"),
+                                declarations: vec![VariableDeclarator {
+                                    base: BaseNode::typed("VariableDeclarator"),
+                                    id: PatternLike::Identifier(make_identifier(&index_var)),
+                                    init: Some(Box::new(Expression::NumericLiteral(NumericLiteral {
+                                        base: BaseNode::typed("NumericLiteral"),
+                                        value: 0.0,
+                                    }))),
+                                    definite: None,
+                                }],
+                                kind: VariableDeclarationKind::Let,
+                                declare: None,
+                            }))),
+                            test: Some(Box::new(Expression::BinaryExpression(ast_expr::BinaryExpression {
+                                base: BaseNode::typed("BinaryExpression"),
+                                operator: AstBinaryOperator::Lt,
+                                left: Box::new(Expression::Identifier(make_identifier(&index_var))),
+                                right: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                    base: BaseNode::typed("NumericLiteral"),
+                                    value: cache_count as f64,
+                                })),
+                            }))),
+                            update: Some(Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                                base: BaseNode::typed("AssignmentExpression"),
+                                operator: AssignmentOperator::AddAssign,
+                                left: Box::new(PatternLike::Identifier(make_identifier(&index_var))),
+                                right: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                    base: BaseNode::typed("NumericLiteral"),
+                                    value: 1.0,
+                                })),
+                            }))),
+                            body: Box::new(Statement::BlockStatement(BlockStatement {
+                                base: BaseNode::typed("BlockStatement"),
+                                body: vec![Statement::ExpressionStatement(ExpressionStatement {
+                                    base: BaseNode::typed("ExpressionStatement"),
+                                    expression: Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                                        base: BaseNode::typed("AssignmentExpression"),
+                                        operator: AssignmentOperator::Assign,
+                                        left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
+                                            base: BaseNode::typed("MemberExpression"),
+                                            object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                                            property: Box::new(Expression::Identifier(make_identifier(&index_var))),
+                                            computed: true,
+                                        })),
+                                        right: Box::new(Expression::CallExpression(ast_expr::CallExpression {
+                                            base: BaseNode::typed("CallExpression"),
+                                            callee: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                                                base: BaseNode::typed("MemberExpression"),
+                                                object: Box::new(Expression::Identifier(make_identifier("Symbol"))),
+                                                property: Box::new(Expression::Identifier(make_identifier("for"))),
+                                                computed: false,
+                                            })),
+                                            arguments: vec![Expression::StringLiteral(StringLiteral {
+                                                base: BaseNode::typed("StringLiteral"),
+                                                value: MEMO_CACHE_SENTINEL.to_string(),
+                                            })],
+                                            type_parameters: None,
+                                            type_arguments: None,
+                                            optional: None,
+                                        })),
+                                    })),
+                                })],
+                                directives: Vec::new(),
+                            })),
+                        }),
+                        // $[cacheIndex] = "hash"
+                        Statement::ExpressionStatement(ExpressionStatement {
+                            base: BaseNode::typed("ExpressionStatement"),
+                            expression: Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
+                                base: BaseNode::typed("AssignmentExpression"),
+                                operator: AssignmentOperator::Assign,
+                                left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
+                                    base: BaseNode::typed("MemberExpression"),
+                                    object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                                    property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                        base: BaseNode::typed("NumericLiteral"),
+                                        value: cache_index as f64,
+                                    })),
+                                    computed: true,
+                                })),
+                                right: Box::new(Expression::StringLiteral(StringLiteral {
+                                    base: BaseNode::typed("StringLiteral"),
+                                    value: hash.clone(),
+                                })),
+                            })),
+                        }),
+                    ],
+                    directives: Vec::new(),
+                })),
+                alternate: None,
+            }));
+        }
+
         // Insert preface at the beginning of the body
         let mut new_body = preface;
         new_body.append(&mut compiled.body.body);
         compiled.body.body = new_body;
     }
 
-    // Instrument forget emission is skipped in the Rust port
-    // (enableEmitInstrumentForget not yet in config)
+    // Instrument forget: emit instrumentation call at the top of the function body
+    let emit_instrument_forget = cx.env.config.enable_emit_instrument_forget.clone();
+    if let Some(ref instrument_config) = emit_instrument_forget {
+        if func.id.is_some() && cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client {
+            // Use pre-resolved import names from environment (set by program-level code)
+            let instrument_fn_local = cx.env.instrument_fn_name.clone()
+                .unwrap_or_else(|| instrument_config.fn_.import_specifier_name.clone());
+            let instrument_gating_local = cx.env.instrument_gating_name.clone();
+
+            // Build the gating condition
+            let gating_expr: Option<Expression> = instrument_gating_local.map(|name| {
+                Expression::Identifier(make_identifier(&name))
+            });
+            let global_gating_expr: Option<Expression> = instrument_config.global_gating.as_ref().map(|g| {
+                Expression::Identifier(make_identifier(g))
+            });
+
+            let if_test = match (gating_expr, global_gating_expr) {
+                (Some(gating), Some(global)) => Expression::LogicalExpression(ast_expr::LogicalExpression {
+                    base: BaseNode::typed("LogicalExpression"),
+                    operator: AstLogicalOperator::And,
+                    left: Box::new(global),
+                    right: Box::new(gating),
+                }),
+                (Some(gating), None) => gating,
+                (None, Some(global)) => global,
+                (None, None) => unreachable!("InstrumentationConfig requires at least one of gating or globalGating"),
+            };
+
+            let fn_name_str = func.id.as_deref().unwrap_or("");
+            let filename_str = cx.env.filename.as_deref().unwrap_or("");
+
+            let instrument_call = Statement::IfStatement(IfStatement {
+                base: BaseNode::typed("IfStatement"),
+                test: Box::new(if_test),
+                consequent: Box::new(Statement::ExpressionStatement(ExpressionStatement {
+                    base: BaseNode::typed("ExpressionStatement"),
+                    expression: Box::new(Expression::CallExpression(ast_expr::CallExpression {
+                        base: BaseNode::typed("CallExpression"),
+                        callee: Box::new(Expression::Identifier(make_identifier(
+                            &instrument_fn_local,
+                        ))),
+                        arguments: vec![
+                            Expression::StringLiteral(StringLiteral {
+                                base: BaseNode::typed("StringLiteral"),
+                                value: fn_name_str.to_string(),
+                            }),
+                            Expression::StringLiteral(StringLiteral {
+                                base: BaseNode::typed("StringLiteral"),
+                                value: filename_str.to_string(),
+                            }),
+                        ],
+                        type_parameters: None,
+                        type_arguments: None,
+                        optional: None,
+                    })),
+                })),
+                alternate: None,
+            });
+            compiled.body.body.insert(0, instrument_call);
+        }
+    }
 
     // Process outlined functions
     let outlined_entries = cx.env.take_outlined_functions();
