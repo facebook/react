@@ -314,7 +314,7 @@ fn collect_operands(value: &InstructionValue, func: &HirFunction) -> Vec<Identif
             let inner_func = &func.instructions; // just need context
             let _ = inner_func;
             // Context captures are operands
-            let inner = &lowered_func.func;
+            let _inner = &lowered_func.func;
             // We can't easily get context here without the functions array,
             // but the lvalue is what matters for propagation
         }

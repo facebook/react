@@ -15,7 +15,7 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
-    DeclarationId, DependencyPathEntry, IdentifierId, InstructionKind, InstructionValue, LValue,
+    DeclarationId, DependencyPathEntry, IdentifierId, InstructionKind, InstructionValue,
     ManualMemoDependency, ManualMemoDependencyRoot, Place, ReactiveBlock, ReactiveFunction,
     ReactiveInstruction, ReactiveScopeBlock, ReactiveStatement, ReactiveValue, ScopeId,
     IdentifierName, Identifier,

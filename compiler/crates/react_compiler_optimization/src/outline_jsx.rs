@@ -35,6 +35,7 @@ pub fn outline_jsx(func: &mut HirFunction, env: &mut Environment) {
 /// Data about a JSX instruction for outlining
 struct JsxInstrInfo {
     instr_idx: usize,        // index into func.instructions
+    #[allow(dead_code)]
     instr_id: InstructionId,  // the InstructionId
     lvalue_id: IdentifierId,
     eval_order: EvaluationOrder,
@@ -250,7 +251,7 @@ fn collect_props(
     let mut attributes = Vec::new();
     let jsx_ids: HashSet<IdentifierId> = jsx_group.iter().map(|j| j.lvalue_id).collect();
 
-    let mut generate_name = |old_name: &str, env: &mut Environment| -> String {
+    let mut generate_name = |old_name: &str, _env: &mut Environment| -> String {
         let mut new_name = old_name.to_string();
         while seen.contains(&new_name) {
             new_name = format!("{}{}", old_name, id_counter);

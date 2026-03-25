@@ -12,9 +12,9 @@ use std::collections::{HashMap, HashSet};
 
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::{
-    DeclarationId, DependencyPathEntry, EvaluationOrder, IdentifierId, InstructionKind,
+    DeclarationId, DependencyPathEntry, EvaluationOrder, InstructionKind,
     InstructionValue, ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveStatement,
-    ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue, ReactiveScopeBlock,
+    ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue,
     ReactiveScopeDependency, ScopeId, Type,
     environment::Environment,
     object_shape::{BUILT_IN_ARRAY_ID, BUILT_IN_FUNCTION_ID, BUILT_IN_JSX_ID, BUILT_IN_OBJECT_ID},
@@ -313,6 +313,7 @@ fn visit_block_for_merge(
     // Pass 2: identify scopes for merging
     struct MergedScope {
         /// Index of the first scope in the merge range
+        #[allow(dead_code)]
         scope_index: usize,
         /// Scope ID of the first (target) scope
         scope_id: ScopeId,
@@ -362,7 +363,7 @@ fn visit_block_for_merge(
                                             [lvalue.identifier.0 as usize]
                                             .declaration_id;
                                         c.lvalues.insert(decl_id);
-                                        if matches!(iv, InstructionValue::LoadLocal { place, .. })
+                                        if matches!(iv, InstructionValue::LoadLocal { place: _, .. })
                                         {
                                             if let InstructionValue::LoadLocal { place, .. } = iv {
                                                 let src_decl = env.identifiers

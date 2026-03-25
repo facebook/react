@@ -53,6 +53,7 @@ pub fn transform(
         events: vec![],
         debug_logs: vec![],
         ordered_log: vec![],
+        renames: vec![],
     };
     // let result = react_compiler::entrypoint::program::compile_program(file, scope_info, options);
 

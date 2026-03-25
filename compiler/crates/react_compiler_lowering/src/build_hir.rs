@@ -3358,7 +3358,7 @@ enum FunctionBody<'a> {
 /// declarator rather than the function node itself, e.g. `const Foo = () => {}`).
 pub fn lower(
     func: &FunctionNode<'_>,
-    id: Option<&str>,
+    _id: Option<&str>,
     scope_info: &ScopeInfo,
     env: &mut Environment,
 ) -> Result<HirFunction, CompilerError> {

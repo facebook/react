@@ -59,6 +59,7 @@ enum ControlFlowTarget {
     },
     Loop {
         block: BlockId,
+        #[allow(dead_code)]
         owns_block: bool,
         continue_block: BlockId,
         loop_block: Option<BlockId>,

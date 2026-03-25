@@ -158,6 +158,7 @@ fn path_to_string(path: &[DependencyPathEntry]) -> String {
 /// Callbacks for StartMemoize/FinishMemoize/Effect events
 struct Callbacks<'a> {
     start_memo: &'a mut Option<StartMemoInfo>,
+    #[allow(dead_code)]
     memo_locals: &'a mut HashSet<IdentifierId>,
     validate_memo: bool,
     validate_effect: ExhaustiveEffectDepsMode,
@@ -858,7 +859,7 @@ fn collect_dependencies(
                             if let Some(saved) = saved_dependencies.take() {
                                 // Merge current memo-block deps into the restored outer deps
                                 let memo_deps = std::mem::replace(&mut dependencies, saved);
-                                let memo_keys = std::mem::replace(
+                                let _memo_keys = std::mem::replace(
                                     &mut dep_keys,
                                     saved_dep_keys.take().unwrap_or_default(),
                                 );

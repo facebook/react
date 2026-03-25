@@ -20,7 +20,7 @@ use react_compiler_hir::object_shape::{
 };
 use react_compiler_hir::type_config::{ValueKind, ValueReason};
 use react_compiler_hir::{
-    AliasingEffect, AliasingSignature, BasicBlock, BlockId, DeclarationId, Effect,
+    AliasingEffect, AliasingSignature, BlockId, DeclarationId, Effect,
     FunctionId, HirFunction, IdentifierId, InstructionKind, InstructionValue,
     MutationReason, ParamPattern, Place, PlaceOrSpread, PlaceOrSpreadOrHole,
     ReactFunctionType, SourceLocation, Type,
@@ -350,6 +350,7 @@ impl InferenceState {
         }
     }
 
+    #[allow(dead_code)]
     fn kind_opt(&self, place_id: IdentifierId) -> Option<AbstractValue> {
         let values = self.variables.get(&place_id)?;
         let mut merged_kind: Option<AbstractValue> = None;
@@ -400,6 +401,7 @@ impl InferenceState {
         // since we don't have access to the function arena from within state.
     }
 
+    #[allow(dead_code)]
     fn mutate(
         &self,
         variant: MutateVariant,
@@ -1206,7 +1208,7 @@ fn apply_effect(
         AliasingEffect::MaybeAlias { ref from, ref into }
         | AliasingEffect::Alias { ref from, ref into }
         | AliasingEffect::Capture { ref from, ref into } => {
-            let is_capture = matches!(effect, AliasingEffect::Capture { .. });
+            let _is_capture = matches!(effect, AliasingEffect::Capture { .. });
             let is_maybe_alias = matches!(effect, AliasingEffect::MaybeAlias { .. });
 
             // Check destination kind
@@ -1503,7 +1505,7 @@ fn compute_signature_for_instruction(
     context: &mut Context,
     env: &Environment,
     instr: &react_compiler_hir::Instruction,
-    func: &HirFunction,
+    _func: &HirFunction,
 ) -> InstructionSignature {
     let lvalue = &instr.lvalue;
     let value = &instr.value;
@@ -1773,7 +1775,7 @@ fn compute_signature_for_instruction(
                 }
             }
         }
-        InstructionValue::JsxFragment { children, .. } => {
+        InstructionValue::JsxFragment { children: _, .. } => {
             effects.push(AliasingEffect::Create {
                 into: lvalue.clone(),
                 value: ValueKind::Frozen,
@@ -1928,7 +1930,7 @@ fn compute_signature_for_instruction(
                 reason: ValueReason::Other,
             });
         }
-        InstructionValue::StoreGlobal { name, value: sg_value, loc, .. } => {
+        InstructionValue::StoreGlobal { name, value: sg_value, loc: _, .. } => {
             let variable = format!("`{}`", name);
             let mut diagnostic = CompilerDiagnostic::new(
                 ErrorCategory::Globals,
@@ -2629,7 +2631,7 @@ fn compute_effects_for_aliasing_signature(
                     effects.push(AliasingEffect::Create { into: v, value: *value, reason: *reason });
                 }
             }
-            AliasingEffect::Apply { receiver: r, function: f, mutates_function: mf, args: a, into: i, signature: s, loc: l } => {
+            AliasingEffect::Apply { receiver: r, function: f, mutates_function: mf, args: a, into: i, signature: s, loc: _l } => {
                 let recv = substitutions.get(&r.identifier).and_then(|v| v.first()).cloned();
                 let func = substitutions.get(&f.identifier).and_then(|v| v.first()).cloned();
                 let apply_into = substitutions.get(&i.identifier).and_then(|v| v.first()).cloned();

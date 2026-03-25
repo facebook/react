@@ -6,7 +6,7 @@ use react_compiler_diagnostics::{
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::HookKind;
 use react_compiler_hir::{
-    AliasingEffect, ArrayElement, BlockId, Effect, HirFunction, Identifier, IdentifierId,
+    AliasingEffect, ArrayElement, BlockId, HirFunction, Identifier, IdentifierId,
     InstructionValue, JsxAttribute, JsxTag, ObjectPropertyOrSpread, Place, PlaceOrSpread,
     PrimitiveValue, PropertyLiteral, Terminal, Type, UnaryOperator,
 };

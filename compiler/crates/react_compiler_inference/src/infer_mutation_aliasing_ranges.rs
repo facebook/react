@@ -29,6 +29,7 @@ use react_compiler_hir::{
 // =============================================================================
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(dead_code)]
 enum MutationKind {
     None = 0,
     Conditional = 1,

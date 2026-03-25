@@ -209,6 +209,7 @@ enum ScopeBlockInfo {
     Begin {
         scope_id: ScopeId,
         pruned: bool,
+        #[allow(dead_code)]
         fallthrough: BlockId,
     },
     End {
@@ -550,7 +551,7 @@ struct MatchConsequentResult {
 fn match_optional_test_block(
     test: &Terminal,
     func: &HirFunction,
-    env: &Environment,
+    _env: &Environment,
 ) -> Option<MatchConsequentResult> {
     let (test_place, consequent_block_id, alternate_block_id) = match test {
         Terminal::Branch {
@@ -708,7 +709,7 @@ fn traverse_optional_block(
         }
         Terminal::Optional {
             fallthrough: inner_fallthrough,
-            optional: inner_optional,
+            optional: _inner_optional,
             ..
         } => {
             let test_block = func.body.blocks.get(inner_fallthrough)?;
@@ -850,9 +851,11 @@ fn traverse_optional_block(
 struct PropertyPathNode {
     properties: HashMap<PropertyLiteral, usize>,          // index into registry
     optional_properties: HashMap<PropertyLiteral, usize>, // index into registry
+    #[allow(dead_code)]
     parent: Option<usize>,
     full_path: ReactiveScopeDependency,
     has_optional: bool,
+    #[allow(dead_code)]
     root: Option<IdentifierId>,
 }
 
@@ -1019,6 +1022,7 @@ struct BlockInfo {
     assumed_non_null_objects: BTreeSet<usize>, // indices into PropertyPathRegistry
 }
 
+#[allow(dead_code)]
 fn collect_hoistable_property_loads(
     func: &HirFunction,
     env: &Environment,
@@ -1111,6 +1115,7 @@ fn get_maybe_non_null_in_instruction(
     }
 }
 
+#[allow(dead_code)]
 fn collect_hoistable_property_loads_impl(
     func: &HirFunction,
     env: &Environment,
@@ -1579,6 +1584,7 @@ fn collect_hoistable_and_propagate(
 }
 
 // Restructured version used by the main entry point
+#[allow(dead_code)]
 fn key_by_scope_id(
     func: &HirFunction,
     block_keyed: &HashMap<BlockId, BlockInfo>,
@@ -1855,6 +1861,7 @@ struct DependencyCollectionContext<'a> {
     dep_stack: Vec<Vec<ReactiveScopeDependency>>,
     deps: IndexMap<ScopeId, Vec<ReactiveScopeDependency>>,
     temporaries: &'a HashMap<IdentifierId, ReactiveScopeDependency>,
+    #[allow(dead_code)]
     temporaries_used_outside_scope: &'a HashSet<DeclarationId>,
     processed_instrs_in_optional: &'a HashSet<ProcessedInstr>,
     inner_fn_context: Option<EvaluationOrder>,

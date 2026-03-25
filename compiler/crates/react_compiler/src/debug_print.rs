@@ -2016,6 +2016,7 @@ fn format_non_local_binding(binding: &react_compiler_hir::NonLocalBinding) -> St
 // Helpers for effect formatting
 // =============================================================================
 
+#[allow(dead_code)]
 fn format_place_short(place: &Place, env: &Environment) -> String {
     let ident = &env.identifiers[place.identifier.0 as usize];
     // Match TS printIdentifier: name$id + scope

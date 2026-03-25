@@ -666,7 +666,7 @@ fn build_outlined_scope_info(
     let mut ref_to_binding: indexmap::IndexMap<u32, BindingId> = indexmap::IndexMap::new();
 
     // Helper to add a binding
-    let mut add_binding = |name: &str,
+    let _add_binding = |name: &str,
                            kind: BindingKind,
                            p: u32,
                            fn_bindings: &mut HashMap<String, BindingId>,

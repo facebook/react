@@ -2,7 +2,7 @@ use indexmap::{IndexMap, IndexSet};
 
 use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
 use crate::identifier_loc_index::IdentifierLocIndex;
-use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 
@@ -985,7 +985,7 @@ pub fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
 /// Blocks not reachable through successors are removed. Blocks that are
 /// only reachable as fallthroughs (not through real successor edges) are
 /// replaced with empty blocks that have an Unreachable terminal.
-pub fn get_reverse_postordered_blocks(hir: &HIR, instructions: &[Instruction]) -> IndexMap<BlockId, BasicBlock> {
+pub fn get_reverse_postordered_blocks(hir: &HIR, _instructions: &[Instruction]) -> IndexMap<BlockId, BasicBlock> {
     let mut visited: IndexSet<BlockId> = IndexSet::new();
     let mut used: IndexSet<BlockId> = IndexSet::new();
     let mut used_fallthroughs: IndexSet<BlockId> = IndexSet::new();

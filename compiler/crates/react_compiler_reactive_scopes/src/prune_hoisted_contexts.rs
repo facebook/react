@@ -70,6 +70,7 @@ impl Transform {
     fn env(&self) -> &Environment {
         unsafe { &*self.env_ptr }
     }
+    #[allow(dead_code)]
     fn env_mut(&mut self) -> &mut Environment {
         unsafe { &mut *self.env_ptr }
     }

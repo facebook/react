@@ -15,7 +15,7 @@ use react_compiler_diagnostics::{
 use react_compiler_hir::dominator::compute_unconditional_blocks;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
-    BlockId, HirFunction, Identifier, IdentifierId, InstructionValue, PlaceOrSpread, Type,
+    BlockId, HirFunction, Identifier, IdentifierId, InstructionValue, Type,
 };
 
 pub fn validate_no_set_state_in_render(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {

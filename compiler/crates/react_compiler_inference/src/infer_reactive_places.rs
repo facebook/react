@@ -1078,6 +1078,7 @@ fn set_reactive_on_value_operands(
     }
 }
 
+#[allow(dead_code)]
 fn set_reactive_on_pattern(
     pattern: &mut react_compiler_hir::Pattern,
     reactive_ids: &HashSet<IdentifierId>,

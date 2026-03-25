@@ -15,7 +15,7 @@ use react_compiler_hir::{
     InstructionValue, LValue, NonLocalBinding, Place, PlaceOrSpread, PrimitiveValue,
     PropertyLiteral, ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveLabel,
     ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveTerminalTargetKind,
-    ReactiveValue, ReactiveScopeBlock, ReactiveScopeDeclaration, ReactiveScopeEarlyReturn, ScopeId,
+    ReactiveValue, ReactiveScopeBlock, ReactiveScopeDeclaration, ReactiveScopeEarlyReturn,
     environment::Environment,
 };
 

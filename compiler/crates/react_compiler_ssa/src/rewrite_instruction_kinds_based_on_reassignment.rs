@@ -19,7 +19,7 @@ use std::collections::HashMap;
 
 use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail,
-    CompilerError, CompilerErrorDetail, ErrorCategory, SourceLocation,
+    CompilerError, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
     BlockKind, DeclarationId, HirFunction, InstructionKind, InstructionValue, ParamPattern,
