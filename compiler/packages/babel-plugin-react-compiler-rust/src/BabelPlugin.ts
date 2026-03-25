@@ -7,7 +7,7 @@
 
 import type * as BabelCore from '@babel/core';
 import {hasReactLikeFunctions} from './prefilter';
-import {compileWithRust} from './bridge';
+import {compileWithRust, type BindingRenameInfo} from './bridge';
 import {extractScopeInfo} from './scope';
 import {resolveOptions, type PluginOptions} from './options';
 
@@ -137,6 +137,14 @@ export default function BabelPluginReactCompilerRust(
             throw err;
           }
 
+          // Apply variable renames from lowering to the Babel AST.
+          // This matches the TS compiler's scope.rename() calls in HIRBuilder,
+          // which rename shadowed variables in the original AST even when the
+          // compiled function is not inserted (e.g., lint mode).
+          if (result.renames != null && result.renames.length > 0) {
+            applyRenames(prog, result.renames);
+          }
+
           if (result.ast != null) {
             // Replace the program with Rust's compiled output.
             const newFile = result.ast as any;
@@ -175,6 +183,43 @@ export default function BabelPluginReactCompilerRust(
  * position, and replaces duplicates with references to a single canonical
  * object, restoring the sharing that Babel expects.
  */
+/**
+ * Apply variable renames from the Rust compiler's lowering phase to the Babel AST.
+ *
+ * During lowering, the Rust compiler renames variables that shadow outer bindings
+ * (e.g., an inner function parameter `ref` that shadows an outer `ref` becomes `ref_0`).
+ * In the TS compiler, this is done via Babel's `scope.rename()` during HIRBuilder.
+ * Since the Rust compiler doesn't have access to Babel's scope API, it records the
+ * renames and returns them here for the Babel plugin to apply.
+ */
+function applyRenames(
+  prog: BabelCore.NodePath<BabelCore.types.Program>,
+  renames: Array<BindingRenameInfo>,
+): void {
+  // Build a map from declaration start position to rename info
+  const renamesByPos = new Map<number, BindingRenameInfo>();
+  for (const rename of renames) {
+    renamesByPos.set(rename.declarationStart, rename);
+  }
+
+  // Traverse all scopes to find bindings that match
+  prog.traverse({
+    Scope(path: BabelCore.NodePath) {
+      const scope = path.scope;
+      for (const [name, binding] of Object.entries(scope.bindings)) {
+        const start = binding.identifier.start;
+        if (start != null) {
+          const rename = renamesByPos.get(start);
+          if (rename != null && name === rename.original) {
+            scope.rename(rename.original, rename.renamed);
+            renamesByPos.delete(start);
+          }
+        }
+      }
+    },
+  });
+}
+
 function deduplicateComments(node: any): void {
   // Map from "start:end" to canonical comment object
   const canonical = new Map<string, any>();

@@ -54,6 +54,9 @@ pub struct ProgramContext {
     pub instrument_gating_name: Option<String>,
     pub hook_guard_name: Option<String>,
 
+    // Variable renames from lowering, to be applied back to the Babel AST
+    pub renames: Vec<react_compiler_hir::environment::BindingRename>,
+
     // Internal state
     already_compiled: HashSet<u32>,
     known_referenced_names: HashSet<String>,
@@ -82,6 +85,7 @@ impl ProgramContext {
             instrument_fn_name: None,
             instrument_gating_name: None,
             hook_guard_name: None,
+            renames: Vec::new(),
             already_compiled: HashSet::new(),
             known_referenced_names: HashSet::new(),
             imports: HashMap::new(),
@@ -202,6 +206,11 @@ impl ProgramContext {
     pub fn log_debug(&mut self, entry: DebugLogEntry) {
         self.ordered_log.push(OrderedLogItem::Debug { entry: entry.clone() });
         self.debug_logs.push(entry);
+    }
+
+    /// Check if there are any pending imports to add to the program.
+    pub fn has_pending_imports(&self) -> bool {
+        !self.imports.is_empty()
     }
 
     /// Get an immutable view of the generated imports.

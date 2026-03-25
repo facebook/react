@@ -34,20 +34,6 @@ pub fn compile_fn(
     env_config: &EnvironmentConfig,
     context: &mut ProgramContext,
 ) -> Result<CodegenFunction, CompilerError> {
-    // Bail early if validateSourceLocations is enabled — the Rust port cannot
-    // implement this validation (it requires the original Babel AST).
-    if env_config.validate_source_locations {
-        let mut err = CompilerError::new();
-        err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
-            category: react_compiler_diagnostics::ErrorCategory::Invariant,
-            reason: "ValidateSourceLocations is not yet supported in the Rust compiler".to_string(),
-            description: Some("Source location validation requires access to the original AST".to_string()),
-            loc: None,
-            suggestions: None,
-        });
-        return Err(err);
-    }
-
     let mut env = Environment::with_config(env_config.clone());
     env.fn_type = fn_type;
     env.output_mode = match mode {
@@ -62,6 +48,11 @@ pub fn compile_fn(
     env.hook_guard_name = context.hook_guard_name.clone();
 
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
+
+    // Collect any renames from lowering and pass to context
+    if !env.renames.is_empty() {
+        context.renames.extend(env.renames.drain(..));
+    }
 
     // Check for Invariant errors after lowering, before logging HIR.
     // In TS, Invariant errors throw from recordError(), aborting lower() before
@@ -499,6 +490,28 @@ pub fn compile_fn(
         unique_identifiers,
         fbt_operands,
     )?;
+
+    // Register the memo cache import as a side effect of codegen, matching TS behavior
+    // where addMemoCacheImport() is called during codegenReactiveFunction. This must happen
+    // BEFORE the env.has_errors() check so the import persists even when the pipeline
+    // returns Err (e.g., when validation errors are accumulated but codegen succeeded).
+    if codegen_result.memo_slots_used > 0 {
+        context.add_memo_cache_import();
+    }
+
+    // ValidateSourceLocations: record errors after codegen so pass logs are emitted.
+    // The Rust port cannot implement this validation (it requires the original Babel AST),
+    // but we record errors here so the function compilation is suppressed, matching TS behavior
+    // where validateSourceLocations records errors that cause env.hasErrors() to be true.
+    if env.config.validate_source_locations {
+        env.record_error(react_compiler_diagnostics::CompilerErrorDetail {
+            category: react_compiler_diagnostics::ErrorCategory::Todo,
+            reason: "ValidateSourceLocations is not yet supported in the Rust compiler".to_string(),
+            description: Some("Source location validation requires access to the original AST".to_string()),
+            loc: None,
+            suggestions: None,
+        });
+    }
 
     // Simulate unexpected exception for testing (matches TS Pipeline.ts)
     if env.config.throw_unknown_exception_testonly {

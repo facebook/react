@@ -5,6 +5,15 @@ use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
 use serde::Serialize;
 
+/// A variable rename from lowering, serialized for the JS shim.
+#[derive(Debug, Clone, Serialize)]
+pub struct BindingRenameInfo {
+    pub original: String,
+    pub renamed: String,
+    #[serde(rename = "declarationStart")]
+    pub declaration_start: u32,
+}
+
 /// Main result type returned by the compile function.
 /// Serialized to JSON and returned to the JS shim.
 #[derive(Debug, Clone, Serialize)]
@@ -21,6 +30,11 @@ pub enum CompileResult {
         /// Items appear in the order they were emitted during compilation.
         #[serde(rename = "orderedLog", skip_serializing_if = "Vec::is_empty")]
         ordered_log: Vec<OrderedLogItem>,
+        /// Variable renames from lowering, for applying back to the Babel AST.
+        /// Each entry maps an original binding name to its renamed version,
+        /// identified by the binding's declaration start position in the source.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        renames: Vec<BindingRenameInfo>,
     },
     /// A fatal error occurred and panicThreshold dictates it should throw.
     Error {

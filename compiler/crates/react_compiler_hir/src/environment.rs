@@ -12,6 +12,15 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerError, CompilerErrorDetail, ErrorCategory,
 };
 
+/// A variable rename from lowering: the binding at `declaration_start` position
+/// was renamed from `original` to `renamed`.
+#[derive(Debug, Clone)]
+pub struct BindingRename {
+    pub original: String,
+    pub renamed: String,
+    pub declaration_start: u32,
+}
+
 /// Output mode for the compiler, mirrored from the entrypoint's CompilerOutputMode.
 /// Stored on Environment so pipeline passes can access it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,6 +61,10 @@ pub struct Environment {
     pub instrument_fn_name: Option<String>,
     pub instrument_gating_name: Option<String>,
     pub hook_guard_name: Option<String>,
+
+    // Renames: tracks variable renames from lowering (original_name → new_name)
+    // keyed by binding declaration position, for applying back to the Babel AST.
+    pub renames: Vec<BindingRename>,
 
     // Hoisted identifiers: tracks which bindings have already been hoisted
     // via DeclareContext to avoid duplicate hoisting.
@@ -157,6 +170,7 @@ impl Environment {
             instrument_fn_name: None,
             instrument_gating_name: None,
             hook_guard_name: None,
+            renames: Vec::new(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: config
                 .validate_preserve_existing_memoization_guarantees,
@@ -200,6 +214,7 @@ impl Environment {
             instrument_fn_name: self.instrument_fn_name.clone(),
             instrument_gating_name: self.instrument_gating_name.clone(),
             hook_guard_name: self.hook_guard_name.clone(),
+            renames: Vec::new(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: self
                 .validate_preserve_existing_memoization_guarantees,

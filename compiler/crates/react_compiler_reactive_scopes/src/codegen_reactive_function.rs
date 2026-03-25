@@ -143,10 +143,21 @@ pub fn codegen_function(
 
     let mut compiled = codegen_reactive_function(&mut cx, func)?;
 
-    // Hook guards: TODO — requires per-hook-call wrapping which is complex.
-    // The enableEmitHookGuards feature wraps each hook call in a try/finally
-    // with $dispatcherGuard calls. This requires traversing the generated AST
-    // to identify hook calls and wrap them individually.
+    // enableEmitHookGuards: wrap entire function body in try/finally with
+    // $dispatcherGuard(PushHookGuard=0) / $dispatcherGuard(PopHookGuard=1).
+    // Per-hook-call wrapping is done inline during codegen (CallExpression/MethodCall).
+    if cx.env.hook_guard_name.is_some()
+        && cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client
+    {
+        let guard_name = cx.env.hook_guard_name.as_ref().unwrap().clone();
+        let body_stmts = std::mem::replace(
+            &mut compiled.body.body,
+            Vec::new(),
+        );
+        compiled.body.body = vec![create_function_body_hook_guard(
+            &guard_name, body_stmts, 0, 1,
+        )];
+    }
 
     let cache_count = compiled.memo_slots_used;
     if cache_count != 0 {
@@ -1843,16 +1854,17 @@ fn codegen_base_instruction_value(
                 .iter()
                 .map(|arg| codegen_argument(cx, arg))
                 .collect::<Result<_, _>>()?;
-            Ok(ExpressionOrJsxText::Expression(
-                Expression::CallExpression(ast_expr::CallExpression {
-                    base: BaseNode::typed("CallExpression"),
-                    callee: Box::new(callee_expr),
-                    arguments,
-                    type_parameters: None,
-                    type_arguments: None,
-                    optional: None,
-                }),
-            ))
+            let call_expr = Expression::CallExpression(ast_expr::CallExpression {
+                base: BaseNode::typed("CallExpression"),
+                callee: Box::new(callee_expr),
+                arguments,
+                type_parameters: None,
+                type_arguments: None,
+                optional: None,
+            });
+            // enableEmitHookGuards: wrap hook calls in try/finally IIFE
+            let result = maybe_wrap_hook_call(cx, call_expr, callee.identifier);
+            Ok(ExpressionOrJsxText::Expression(result))
         }
         InstructionValue::MethodCall {
             receiver: _,
@@ -1879,16 +1891,17 @@ fn codegen_base_instruction_value(
                 .iter()
                 .map(|arg| codegen_argument(cx, arg))
                 .collect::<Result<_, _>>()?;
-            Ok(ExpressionOrJsxText::Expression(
-                Expression::CallExpression(ast_expr::CallExpression {
-                    base: BaseNode::typed("CallExpression"),
-                    callee: Box::new(member_expr),
-                    arguments,
-                    type_parameters: None,
-                    type_arguments: None,
-                    optional: None,
-                }),
-            ))
+            let call_expr = Expression::CallExpression(ast_expr::CallExpression {
+                base: BaseNode::typed("CallExpression"),
+                callee: Box::new(member_expr),
+                arguments,
+                type_parameters: None,
+                type_arguments: None,
+                optional: None,
+            });
+            // enableEmitHookGuards: wrap hook method calls in try/finally IIFE
+            let result = maybe_wrap_hook_call(cx, call_expr, property.identifier);
+            Ok(ExpressionOrJsxText::Expression(result))
         }
         InstructionValue::NewExpression { callee, args, .. } => {
             let callee_expr = codegen_place_to_expression(cx, callee)?;
@@ -3445,4 +3458,139 @@ fn jsx_tag_loc(tag: &JsxTag) -> Option<DiagSourceLocation> {
         JsxTag::Place(p) => p.loc,
         JsxTag::Builtin(_) => None,
     }
+}
+
+/// Conditionally wrap a call expression in a hook guard IIFE if enableEmitHookGuards
+/// is enabled and the callee is a hook.
+fn maybe_wrap_hook_call(cx: &Context<'_>, call_expr: Expression, callee_id: IdentifierId) -> Expression {
+    if let Some(ref guard_name) = cx.env.hook_guard_name {
+        if cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client
+            && is_hook_identifier(cx, callee_id)
+        {
+            return wrap_hook_call_with_guard(guard_name, call_expr, 2, 3);
+        }
+    }
+    call_expr
+}
+
+/// Check if a callee identifier refers to a hook function.
+fn is_hook_identifier(cx: &Context<'_>, identifier_id: IdentifierId) -> bool {
+    let identifier = &cx.env.identifiers[identifier_id.0 as usize];
+    let type_ = &cx.env.types[identifier.type_.0 as usize];
+    cx.env.get_hook_kind_for_type(type_).ok().flatten().is_some()
+}
+
+/// Create the hook guard IIFE wrapper for a hook call expression.
+/// Wraps the call in: `(function() { try { $guard(before); return callExpr; } finally { $guard(after); } })()`
+fn wrap_hook_call_with_guard(
+    guard_name: &str,
+    call_expr: Expression,
+    before: u32,
+    after: u32,
+) -> Expression {
+    let guard_call = |kind: u32| -> Statement {
+        Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::typed("ExpressionStatement"),
+            expression: Box::new(Expression::CallExpression(ast_expr::CallExpression {
+                base: BaseNode::typed("CallExpression"),
+                callee: Box::new(Expression::Identifier(make_identifier(guard_name))),
+                arguments: vec![Expression::NumericLiteral(NumericLiteral {
+                    base: BaseNode::typed("NumericLiteral"),
+                    value: kind as f64,
+                })],
+                type_parameters: None,
+                type_arguments: None,
+                optional: None,
+            })),
+        })
+    };
+
+    let try_stmt = Statement::TryStatement(TryStatement {
+        base: BaseNode::typed("TryStatement"),
+        block: BlockStatement {
+            base: BaseNode::typed("BlockStatement"),
+            body: vec![
+                guard_call(before),
+                Statement::ReturnStatement(ReturnStatement {
+                    base: BaseNode::typed("ReturnStatement"),
+                    argument: Some(Box::new(call_expr)),
+                }),
+            ],
+            directives: Vec::new(),
+        },
+        handler: None,
+        finalizer: Some(BlockStatement {
+            base: BaseNode::typed("BlockStatement"),
+            body: vec![guard_call(after)],
+            directives: Vec::new(),
+        }),
+    });
+
+    let iife = Expression::FunctionExpression(ast_expr::FunctionExpression {
+        base: BaseNode::typed("FunctionExpression"),
+        id: None,
+        params: Vec::new(),
+        body: BlockStatement {
+            base: BaseNode::typed("BlockStatement"),
+            body: vec![try_stmt],
+            directives: Vec::new(),
+        },
+        generator: false,
+        is_async: false,
+        return_type: None,
+        type_parameters: None,
+    });
+
+    Expression::CallExpression(ast_expr::CallExpression {
+        base: BaseNode::typed("CallExpression"),
+        callee: Box::new(iife),
+        arguments: vec![],
+        type_parameters: None,
+        type_arguments: None,
+        optional: None,
+    })
+}
+
+/// Create a try/finally wrapping for the entire function body.
+/// `try { $guard(before); ...body...; } finally { $guard(after); }`
+fn create_function_body_hook_guard(
+    guard_name: &str,
+    body_stmts: Vec<Statement>,
+    before: u32,
+    after: u32,
+) -> Statement {
+    let guard_call = |kind: u32| -> Statement {
+        Statement::ExpressionStatement(ExpressionStatement {
+            base: BaseNode::typed("ExpressionStatement"),
+            expression: Box::new(Expression::CallExpression(ast_expr::CallExpression {
+                base: BaseNode::typed("CallExpression"),
+                callee: Box::new(Expression::Identifier(make_identifier(guard_name))),
+                arguments: vec![Expression::NumericLiteral(NumericLiteral {
+                    base: BaseNode::typed("NumericLiteral"),
+                    value: kind as f64,
+                })],
+                type_parameters: None,
+                type_arguments: None,
+                optional: None,
+            })),
+        })
+    };
+
+    let mut try_body = vec![guard_call(before)];
+    try_body.extend(body_stmts);
+
+    Statement::TryStatement(TryStatement {
+        base: BaseNode::typed("TryStatement"),
+        block: BlockStatement {
+            base: BaseNode::typed("BlockStatement"),
+            body: try_body,
+            directives: Vec::new(),
+        },
+        handler: None,
+        finalizer: Some(BlockStatement {
+            base: BaseNode::typed("BlockStatement"),
+            body: vec![guard_call(after)],
+            directives: Vec::new(),
+        }),
+    })
 }

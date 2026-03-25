@@ -33,7 +33,7 @@ use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
 use super::compile_result::{
-    CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo,
+    BindingRenameInfo, CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo,
     CompilerErrorItemInfo, DebugLogEntry, LoggerEvent,
 };
 use super::imports::{
@@ -3335,6 +3335,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             events: early_events,
             debug_logs: early_debug_logs,
             ordered_log: Vec::new(),
+            renames: Vec::new(),
         };
     }
 
@@ -3347,6 +3348,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             events: early_events,
             debug_logs: early_debug_logs,
             ordered_log: Vec::new(),
+            renames: Vec::new(),
         };
     }
 
@@ -3406,6 +3408,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             events: context.events,
             debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
+            renames: convert_renames(&context.renames),
         };
     }
 
@@ -3456,7 +3459,6 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     for source in &queue {
         match process_fn(source, &scope, output_mode, &mut context) {
             Ok(Some(codegen_fn)) => {
-                // TODO: Re-compile outlined functions (JSX outlining, parallel agent).
                 compiled_fns.push(CompiledFunction {
                     kind: source.kind,
                     source,
@@ -3487,6 +3489,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             events: context.events,
             debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
+            renames: convert_renames(&context.renames),
         };
     }
 
@@ -3534,11 +3537,16 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     drop(queue);
 
     if replacements.is_empty() {
+        // No functions to replace. Return renames for the Babel plugin to apply
+        // (e.g., variable shadowing renames in lint mode). Imports are NOT added
+        // when there are no replacements — matching TS behavior where
+        // addImportsToProgram is only called when compiledFns.length > 0.
         return CompileResult::Success {
             ast: None,
             events: context.events,
             debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
+            renames: convert_renames(&context.renames),
         };
     }
 
@@ -3561,7 +3569,17 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         events: context.events,
         debug_logs: context.debug_logs,
         ordered_log: context.ordered_log,
+        renames: convert_renames(&context.renames),
     }
+}
+
+/// Convert internal BindingRename structs to the serializable BindingRenameInfo format.
+fn convert_renames(renames: &[react_compiler_hir::environment::BindingRename]) -> Vec<BindingRenameInfo> {
+    renames.iter().map(|r| BindingRenameInfo {
+        original: r.original.clone(),
+        renamed: r.renamed.clone(),
+        declaration_start: r.declaration_start,
+    }).collect()
 }
 
 #[cfg(test)]

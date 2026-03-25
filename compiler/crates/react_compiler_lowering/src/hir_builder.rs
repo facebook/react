@@ -770,6 +770,18 @@ impl<'a> HirBuilder<'a> {
             }
         }
 
+        // Record rename if the candidate differs from the original name
+        if candidate != name {
+            let binding = &self.scope_info.bindings[binding_id.0 as usize];
+            if let Some(decl_start) = binding.declaration_start {
+                self.env.renames.push(react_compiler_hir::environment::BindingRename {
+                    original: name.to_string(),
+                    renamed: candidate.clone(),
+                    declaration_start: decl_start,
+                });
+            }
+        }
+
         // Allocate identifier in the arena
         let id = self.env.next_identifier_id();
         // Update the name and loc on the allocated identifier

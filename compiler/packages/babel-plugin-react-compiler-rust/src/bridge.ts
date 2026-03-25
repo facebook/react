@@ -15,11 +15,18 @@ export interface DebugLogEntry {
   value: string;
 }
 
+export interface BindingRenameInfo {
+  original: string;
+  renamed: string;
+  declarationStart: number;
+}
+
 export interface CompileSuccess {
   kind: 'success';
   ast: t.File | null;
   events: Array<LoggerEvent>;
   debugLogs?: Array<DebugLogEntry>;
+  renames?: Array<BindingRenameInfo>;
 }
 
 export interface CompileError {
