@@ -4,22 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
- *
  * @noflow
  * @nolint
  * @preventMunge
  * @preserve-invariant-messages
  */
 
-'use strict';
-
-if (__DEV__) {
-  (function() {
 'use strict';
 
 var core$1 = require('@babel/core');
@@ -1481,11 +1471,6 @@ function requireInvariant () {
 	hasRequiredInvariant = 1;
 
 	var invariant = function(condition, format, a, b, c, d, e, f) {
-	  {
-	    if (format === undefined) {
-	      throw new Error('invariant requires an error message argument');
-	    }
-	  }
 
 	  if (!condition) {
 	    var error;
@@ -27777,12 +27762,6 @@ function requireCollections () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 *
 	 */
 	const getKeysOfEnumerableProperties = object => {
@@ -28113,12 +28092,6 @@ function requireConvertAnsi () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 */
 	const toHumanReadableAnsi = text =>
 	  text.replace((0, _ansiRegex.default)(), match => {
@@ -28332,12 +28305,6 @@ function requireEscapeHTML () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 */
 	function escapeHTML$1(str) {
 	  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -28367,12 +28334,6 @@ function requireMarkup () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 */
 	// Return empty string if keys is empty.
 	const printProps = (keys, props, config, indentation, depth, refs, printer) => {
@@ -28523,12 +28484,6 @@ function requireDOMElement () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 */
 	const ELEMENT_NODE = 1;
 	const TEXT_NODE = 3;
@@ -28642,12 +28597,6 @@ function requireImmutable () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 */
 	// SENTINEL constants are from https://github.com/facebook/immutable-js
 	const IS_ITERABLE_SENTINEL = '@@__IMMUTABLE_ITERABLE__@@';
@@ -28891,184 +28840,20 @@ var reactIs = {
   set exports(v){ reactIsExports = v; },
 };
 
-var reactIs_development = {};
+var reactIs_production_min = {};
 
-var hasRequiredReactIs_development;
+var hasRequiredReactIs_production_min;
 
-function requireReactIs_development () {
-	if (hasRequiredReactIs_development) return reactIs_development;
-	hasRequiredReactIs_development = 1;
-
-
-
-	{
-	  (function() {
-
-	// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-	// nor polyfill, then a plain number is used for performance.
-	var hasSymbol = typeof Symbol === 'function' && Symbol.for;
-	var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
-	var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
-	var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
-	var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
-	var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
-	var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
-	var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace; // TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
-	// (unstable) APIs that have been removed. Can we remove the symbols?
-
-	var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
-	var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
-	var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
-	var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
-	var REACT_SUSPENSE_LIST_TYPE = hasSymbol ? Symbol.for('react.suspense_list') : 0xead8;
-	var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
-	var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
-	var REACT_BLOCK_TYPE = hasSymbol ? Symbol.for('react.block') : 0xead9;
-	var REACT_FUNDAMENTAL_TYPE = hasSymbol ? Symbol.for('react.fundamental') : 0xead5;
-	var REACT_RESPONDER_TYPE = hasSymbol ? Symbol.for('react.responder') : 0xead6;
-	var REACT_SCOPE_TYPE = hasSymbol ? Symbol.for('react.scope') : 0xead7;
-
-	function isValidElementType(type) {
-	  return typeof type === 'string' || typeof type === 'function' || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-	  type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || type.$$typeof === REACT_FUNDAMENTAL_TYPE || type.$$typeof === REACT_RESPONDER_TYPE || type.$$typeof === REACT_SCOPE_TYPE || type.$$typeof === REACT_BLOCK_TYPE);
-	}
-
-	function typeOf(object) {
-	  if (typeof object === 'object' && object !== null) {
-	    var $$typeof = object.$$typeof;
-
-	    switch ($$typeof) {
-	      case REACT_ELEMENT_TYPE:
-	        var type = object.type;
-
-	        switch (type) {
-	          case REACT_ASYNC_MODE_TYPE:
-	          case REACT_CONCURRENT_MODE_TYPE:
-	          case REACT_FRAGMENT_TYPE:
-	          case REACT_PROFILER_TYPE:
-	          case REACT_STRICT_MODE_TYPE:
-	          case REACT_SUSPENSE_TYPE:
-	            return type;
-
-	          default:
-	            var $$typeofType = type && type.$$typeof;
-
-	            switch ($$typeofType) {
-	              case REACT_CONTEXT_TYPE:
-	              case REACT_FORWARD_REF_TYPE:
-	              case REACT_LAZY_TYPE:
-	              case REACT_MEMO_TYPE:
-	              case REACT_PROVIDER_TYPE:
-	                return $$typeofType;
-
-	              default:
-	                return $$typeof;
-	            }
-
-	        }
-
-	      case REACT_PORTAL_TYPE:
-	        return $$typeof;
-	    }
-	  }
-
-	  return undefined;
-	} // AsyncMode is deprecated along with isAsyncMode
-
-	var AsyncMode = REACT_ASYNC_MODE_TYPE;
-	var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-	var ContextConsumer = REACT_CONTEXT_TYPE;
-	var ContextProvider = REACT_PROVIDER_TYPE;
-	var Element = REACT_ELEMENT_TYPE;
-	var ForwardRef = REACT_FORWARD_REF_TYPE;
-	var Fragment = REACT_FRAGMENT_TYPE;
-	var Lazy = REACT_LAZY_TYPE;
-	var Memo = REACT_MEMO_TYPE;
-	var Portal = REACT_PORTAL_TYPE;
-	var Profiler = REACT_PROFILER_TYPE;
-	var StrictMode = REACT_STRICT_MODE_TYPE;
-	var Suspense = REACT_SUSPENSE_TYPE;
-	var hasWarnedAboutDeprecatedIsAsyncMode = false; // AsyncMode should be deprecated
-
-	function isAsyncMode(object) {
-	  {
-	    if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-	      hasWarnedAboutDeprecatedIsAsyncMode = true; // Using console['warn'] to evade Babel and ESLint
-
-	      console['warn']('The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
-	    }
-	  }
-
-	  return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
-	}
-	function isConcurrentMode(object) {
-	  return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
-	}
-	function isContextConsumer(object) {
-	  return typeOf(object) === REACT_CONTEXT_TYPE;
-	}
-	function isContextProvider(object) {
-	  return typeOf(object) === REACT_PROVIDER_TYPE;
-	}
-	function isElement(object) {
-	  return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-	}
-	function isForwardRef(object) {
-	  return typeOf(object) === REACT_FORWARD_REF_TYPE;
-	}
-	function isFragment(object) {
-	  return typeOf(object) === REACT_FRAGMENT_TYPE;
-	}
-	function isLazy(object) {
-	  return typeOf(object) === REACT_LAZY_TYPE;
-	}
-	function isMemo(object) {
-	  return typeOf(object) === REACT_MEMO_TYPE;
-	}
-	function isPortal(object) {
-	  return typeOf(object) === REACT_PORTAL_TYPE;
-	}
-	function isProfiler(object) {
-	  return typeOf(object) === REACT_PROFILER_TYPE;
-	}
-	function isStrictMode(object) {
-	  return typeOf(object) === REACT_STRICT_MODE_TYPE;
-	}
-	function isSuspense(object) {
-	  return typeOf(object) === REACT_SUSPENSE_TYPE;
-	}
-
-	reactIs_development.AsyncMode = AsyncMode;
-	reactIs_development.ConcurrentMode = ConcurrentMode;
-	reactIs_development.ContextConsumer = ContextConsumer;
-	reactIs_development.ContextProvider = ContextProvider;
-	reactIs_development.Element = Element;
-	reactIs_development.ForwardRef = ForwardRef;
-	reactIs_development.Fragment = Fragment;
-	reactIs_development.Lazy = Lazy;
-	reactIs_development.Memo = Memo;
-	reactIs_development.Portal = Portal;
-	reactIs_development.Profiler = Profiler;
-	reactIs_development.StrictMode = StrictMode;
-	reactIs_development.Suspense = Suspense;
-	reactIs_development.isAsyncMode = isAsyncMode;
-	reactIs_development.isConcurrentMode = isConcurrentMode;
-	reactIs_development.isContextConsumer = isContextConsumer;
-	reactIs_development.isContextProvider = isContextProvider;
-	reactIs_development.isElement = isElement;
-	reactIs_development.isForwardRef = isForwardRef;
-	reactIs_development.isFragment = isFragment;
-	reactIs_development.isLazy = isLazy;
-	reactIs_development.isMemo = isMemo;
-	reactIs_development.isPortal = isPortal;
-	reactIs_development.isProfiler = isProfiler;
-	reactIs_development.isStrictMode = isStrictMode;
-	reactIs_development.isSuspense = isSuspense;
-	reactIs_development.isValidElementType = isValidElementType;
-	reactIs_development.typeOf = typeOf;
-	  })();
-	}
-	return reactIs_development;
+function requireReactIs_production_min () {
+	if (hasRequiredReactIs_production_min) return reactIs_production_min;
+	hasRequiredReactIs_production_min = 1;
+var b="function"===typeof Symbol&&Symbol.for,c=b?Symbol.for("react.element"):60103,d=b?Symbol.for("react.portal"):60106,e=b?Symbol.for("react.fragment"):60107,f=b?Symbol.for("react.strict_mode"):60108,g=b?Symbol.for("react.profiler"):60114,h=b?Symbol.for("react.provider"):60109,k=b?Symbol.for("react.context"):60110,l=b?Symbol.for("react.async_mode"):60111,m=b?Symbol.for("react.concurrent_mode"):60111,n=b?Symbol.for("react.forward_ref"):60112,p=b?Symbol.for("react.suspense"):60113,q=b?
+	Symbol.for("react.suspense_list"):60120,r=b?Symbol.for("react.memo"):60115,t=b?Symbol.for("react.lazy"):60116,v=b?Symbol.for("react.block"):60121,w=b?Symbol.for("react.fundamental"):60117,x=b?Symbol.for("react.responder"):60118,y=b?Symbol.for("react.scope"):60119;
+	function z(a){if("object"===typeof a&&null!==a){var u=a.$$typeof;switch(u){case c:switch(a=a.type,a){case l:case m:case e:case g:case f:case p:return a;default:switch(a=a&&a.$$typeof,a){case k:case n:case t:case r:case h:return a;default:return u}}case d:return u}}}function A(a){return z(a)===m}reactIs_production_min.AsyncMode=l;reactIs_production_min.ConcurrentMode=m;reactIs_production_min.ContextConsumer=k;reactIs_production_min.ContextProvider=h;reactIs_production_min.Element=c;reactIs_production_min.ForwardRef=n;reactIs_production_min.Fragment=e;reactIs_production_min.Lazy=t;reactIs_production_min.Memo=r;reactIs_production_min.Portal=d;
+	reactIs_production_min.Profiler=g;reactIs_production_min.StrictMode=f;reactIs_production_min.Suspense=p;reactIs_production_min.isAsyncMode=function(a){return A(a)||z(a)===l};reactIs_production_min.isConcurrentMode=A;reactIs_production_min.isContextConsumer=function(a){return z(a)===k};reactIs_production_min.isContextProvider=function(a){return z(a)===h};reactIs_production_min.isElement=function(a){return "object"===typeof a&&null!==a&&a.$$typeof===c};reactIs_production_min.isForwardRef=function(a){return z(a)===n};reactIs_production_min.isFragment=function(a){return z(a)===e};reactIs_production_min.isLazy=function(a){return z(a)===t};
+	reactIs_production_min.isMemo=function(a){return z(a)===r};reactIs_production_min.isPortal=function(a){return z(a)===d};reactIs_production_min.isProfiler=function(a){return z(a)===g};reactIs_production_min.isStrictMode=function(a){return z(a)===f};reactIs_production_min.isSuspense=function(a){return z(a)===p};
+	reactIs_production_min.isValidElementType=function(a){return "string"===typeof a||"function"===typeof a||a===e||a===m||a===g||a===f||a===p||a===q||"object"===typeof a&&null!==a&&(a.$$typeof===t||a.$$typeof===r||a.$$typeof===h||a.$$typeof===k||a.$$typeof===n||a.$$typeof===w||a.$$typeof===x||a.$$typeof===y||a.$$typeof===v)};reactIs_production_min.typeOf=z;
+	return reactIs_production_min;
 }
 
 var hasRequiredReactIs;
@@ -29079,7 +28864,7 @@ function requireReactIs () {
 	(function (module) {
 
 		{
-		  module.exports = requireReactIs_development();
+		  module.exports = requireReactIs_production_min();
 		}
 } (reactIs));
 	return reactIsExports;
@@ -29130,12 +28915,6 @@ function requireReactElement () {
 	 *
 	 * This source code is licensed under the MIT license found in the
 	 * LICENSE file in the root directory of this source tree.
- *
- * @noformat
- * @nolint
- * @lightSyntaxTransform
- * @preventMunge
- * @oncall react_core
 	 */
 	// Given element.props.children, or subtree during recursive traversal,
 	// return flattened array of children.
@@ -51687,7 +51466,7 @@ function BabelPluginReactCompiler(_babel) {
                             });
                         }
                         let opts = parsePluginOptions(pass.opts);
-                        const isDev = (typeof true !== 'undefined' && true === true) ||
+                        const isDev = (typeof false !== 'undefined' && false === true) ||
                             process.env['NODE_ENV'] === 'development';
                         if (opts.enableReanimatedCheck === true &&
                             pipelineUsesReanimatedPlugin(pass.file.opts.plugins)) {
@@ -51741,9 +51520,9 @@ function BabelPluginReactCompiler(_babel) {
 
 // Re-export dynamic flags from the www version.
 require('ReactFeatureFlags');
-var eprh_enableUseKeyedStateCompilerLint = true;
-var eprh_enableVerboseNoSetStateInEffectCompilerLint = true;
-var eprh_enableExhaustiveEffectDependenciesCompilerLint = 'extra-only';
+const eprh_enableUseKeyedStateCompilerLint = true;
+const eprh_enableVerboseNoSetStateInEffectCompilerLint = true;
+const eprh_enableExhaustiveEffectDependenciesCompilerLint = 'extra-only';
 
 var _LRUCache_values, _LRUCache_headIdx;
 const COMPONENT_NAME_PATTERN = /^[A-Z]/;
@@ -52258,7 +52037,7 @@ function requireCodePathSegment() {
      * @returns {CodePathSegment} The created segment.
      */
     static newUnreachable(id, allPrevSegments) {
-      var segment = new CodePathSegment(id, CodePathSegment.flattenUnusedSegments(allPrevSegments), false);
+      const segment = new CodePathSegment(id, CodePathSegment.flattenUnusedSegments(allPrevSegments), false);
 
       /*
        * In `if (a) return a; foo();` case, the unreachable segment preceded by
@@ -52292,10 +52071,10 @@ function requireCodePathSegment() {
         return;
       }
       segment.internal.used = true;
-      var i;
+      let i;
       if (segment.reachable) {
         for (i = 0; i < segment.allPrevSegments.length; ++i) {
-          var prevSegment = segment.allPrevSegments[i];
+          const prevSegment = segment.allPrevSegments[i];
           prevSegment.allNextSegments.push(segment);
           prevSegment.nextSegments.push(segment);
         }
@@ -52322,10 +52101,10 @@ function requireCodePathSegment() {
      * @returns {CodePathSegment[]} The replaced array.
      */
     static flattenUnusedSegments(segments) {
-      var done = Object.create(null);
-      var retv = [];
-      for (var i = 0; i < segments.length; ++i) {
-        var segment = segments[i];
+      const done = Object.create(null);
+      const retv = [];
+      for (let i = 0; i < segments.length; ++i) {
+        const segment = segments[i];
 
         // Ignores duplicated.
         if (done[segment.id]) {
@@ -52334,8 +52113,8 @@ function requireCodePathSegment() {
 
         // Use previous segments if unused.
         if (!segment.internal.used) {
-          for (var j = 0; j < segment.allPrevSegments.length; ++j) {
-            var prevSegment = segment.allPrevSegments[j];
+          for (let j = 0; j < segment.allPrevSegments.length; ++j) {
+            const prevSegment = segment.allPrevSegments[j];
             if (!done[prevSegment.id]) {
               done[prevSegment.id] = true;
               retv.push(prevSegment);
@@ -52364,9 +52143,9 @@ function requireForkContext() {
   //------------------------------------------------------------------------------
 
   // eslint-disable-next-line
-  var assert = requireAssert();
+  const assert = requireAssert();
   // eslint-disable-next-line
-  var CodePathSegment = requireCodePathSegment();
+  const CodePathSegment = requireCodePathSegment();
 
   //------------------------------------------------------------------------------
   // Helpers
@@ -52394,13 +52173,13 @@ function requireForkContext() {
    * @returns {CodePathSegment[]} New segments.
    */
   function makeSegments(context, begin, end, create) {
-    var list = context.segmentsList;
-    var normalizedBegin = begin >= 0 ? begin : list.length + begin;
-    var normalizedEnd = end >= 0 ? end : list.length + end;
-    var segments = [];
-    for (var i = 0; i < context.count; ++i) {
-      var allPrevSegments = [];
-      for (var j = normalizedBegin; j <= normalizedEnd; ++j) {
+    const list = context.segmentsList;
+    const normalizedBegin = begin >= 0 ? begin : list.length + begin;
+    const normalizedEnd = end >= 0 ? end : list.length + end;
+    const segments = [];
+    for (let i = 0; i < context.count; ++i) {
+      const allPrevSegments = [];
+      for (let j = normalizedBegin; j <= normalizedEnd; ++j) {
         allPrevSegments.push(list[j][i]);
       }
       segments.push(create(context.idGenerator.next(), allPrevSegments));
@@ -52418,10 +52197,10 @@ function requireForkContext() {
    * @returns {CodePathSegment[]} The merged segments.
    */
   function mergeExtraSegments(context, segments) {
-    var currentSegments = segments;
+    let currentSegments = segments;
     while (currentSegments.length > context.count) {
-      var merged = [];
-      for (var i = 0, length = currentSegments.length / 2 | 0; i < length; ++i) {
+      const merged = [];
+      for (let i = 0, length = currentSegments.length / 2 | 0; i < length; ++i) {
         merged.push(CodePathSegment.newNext(context.idGenerator.next(), [currentSegments[i], currentSegments[i + length]]));
       }
       currentSegments = merged;
@@ -52454,7 +52233,7 @@ function requireForkContext() {
      * @type {CodePathSegment[]}
      */
     get head() {
-      var list = this.segmentsList;
+      const list = this.segmentsList;
       return list.length === 0 ? [] : list[list.length - 1];
     }
 
@@ -52471,7 +52250,7 @@ function requireForkContext() {
      * @type {boolean}
      */
     get reachable() {
-      var segments = this.head;
+      const segments = this.head;
       return segments.length > 0 && segments.some(isReachable);
     }
 
@@ -52537,8 +52316,8 @@ function requireForkContext() {
      */
     addAll(context) {
       assert(context.count === this.count);
-      var source = context.segmentsList;
-      for (var i = 0; i < source.length; ++i) {
+      const source = context.segmentsList;
+      for (let i = 0; i < source.length; ++i) {
         this.segmentsList.push(source[i]);
       }
     }
@@ -52557,7 +52336,7 @@ function requireForkContext() {
      * @returns {ForkContext} New fork context.
      */
     static newRoot(idGenerator) {
-      var context = new ForkContext(idGenerator, null, 1);
+      const context = new ForkContext(idGenerator, null, 1);
       context.add([CodePathSegment.newRoot(idGenerator.next())]);
       return context;
     }
@@ -52587,9 +52366,9 @@ function requireCodePathState() {
   //------------------------------------------------------------------------------
 
   // eslint-disable-next-line
-  var CodePathSegment = requireCodePathSegment();
+  const CodePathSegment = requireCodePathSegment();
   // eslint-disable-next-line
-  var ForkContext = requireForkContext();
+  const ForkContext = requireForkContext();
 
   //------------------------------------------------------------------------------
   // Helpers
@@ -52608,8 +52387,8 @@ function requireCodePathState() {
    * @returns {void}
    */
   function addToReturnedOrThrown(dest, others, all, segments) {
-    for (var i = 0; i < segments.length; ++i) {
-      var segment = segments[i];
+    for (let i = 0; i < segments.length; ++i) {
+      const segment = segments[i];
       dest.push(segment);
       if (!others.includes(segment)) {
         all.push(segment);
@@ -52627,7 +52406,7 @@ function requireCodePathState() {
     if (!label) {
       return state.loopContext;
     }
-    var context = state.loopContext;
+    let context = state.loopContext;
     while (context) {
       if (context.label === label) {
         return context;
@@ -52646,7 +52425,7 @@ function requireCodePathState() {
    * @returns {LoopContext|SwitchContext} A context for a `break` statement.
    */
   function getBreakContext(state, label) {
-    var context = state.breakContext;
+    let context = state.breakContext;
     while (context) {
       if (label ? context.label === label : context.breakable) {
         return context;
@@ -52664,7 +52443,7 @@ function requireCodePathState() {
    * @returns {TryContext|CodePathState} A context for a `return` statement.
    */
   function getReturnContext(state) {
-    var context = state.tryContext;
+    let context = state.tryContext;
     while (context) {
       if (context.hasFinalizer && context.position !== 'finally') {
         return context;
@@ -52680,7 +52459,7 @@ function requireCodePathState() {
    * @returns {TryContext|CodePathState} A context for a `throw` statement.
    */
   function getThrowContext(state) {
-    var context = state.tryContext;
+    let context = state.tryContext;
     while (context) {
       if (context.position === 'try' || context.hasFinalizer && context.position === 'catch') {
         return context;
@@ -52711,9 +52490,9 @@ function requireCodePathState() {
    * @returns {void}
    */
   function removeConnection(prevSegments, nextSegments) {
-    for (var i = 0; i < prevSegments.length; ++i) {
-      var prevSegment = prevSegments[i];
-      var nextSegment = nextSegments[i];
+    for (let i = 0; i < prevSegments.length; ++i) {
+      const prevSegment = prevSegments[i];
+      const nextSegment = nextSegments[i];
       remove(prevSegment.nextSegments, nextSegment);
       remove(prevSegment.allNextSegments, nextSegment);
       remove(nextSegment.prevSegments, prevSegment);
@@ -52729,12 +52508,12 @@ function requireCodePathState() {
    * @returns {void}
    */
   function makeLooped(state, unflattenedFromSegments, unflattenedToSegments) {
-    var fromSegments = CodePathSegment.flattenUnusedSegments(unflattenedFromSegments);
-    var toSegments = CodePathSegment.flattenUnusedSegments(unflattenedToSegments);
-    var end = Math.min(fromSegments.length, toSegments.length);
-    for (var i = 0; i < end; ++i) {
-      var fromSegment = fromSegments[i];
-      var toSegment = toSegments[i];
+    const fromSegments = CodePathSegment.flattenUnusedSegments(unflattenedFromSegments);
+    const toSegments = CodePathSegment.flattenUnusedSegments(unflattenedToSegments);
+    const end = Math.min(fromSegments.length, toSegments.length);
+    for (let i = 0; i < end; ++i) {
+      const fromSegment = fromSegments[i];
+      const toSegment = toSegments[i];
       if (toSegment.reachable) {
         fromSegment.nextSegments.push(toSegment);
       }
@@ -52799,9 +52578,9 @@ function requireCodePathState() {
       this.initialSegment = this.forkContext.head[0];
 
       // returnedSegments and thrownSegments push elements into finalSegments also.
-      var final = this.finalSegments = [];
-      var returned = this.returnedForkContext = [];
-      var thrown = this.thrownForkContext = [];
+      const final = this.finalSegments = [];
+      const returned = this.returnedForkContext = [];
+      const thrown = this.thrownForkContext = [];
       returned.add = addToReturnedOrThrown.bind(null, returned, thrown, final);
       thrown.add = addToReturnedOrThrown.bind(null, thrown, returned, final);
     }
@@ -52820,7 +52599,7 @@ function requireCodePathState() {
      * @type {ForkContext}
      */
     get parentForkContext() {
-      var current = this.forkContext;
+      const current = this.forkContext;
       return current && current.upper;
     }
 
@@ -52840,7 +52619,7 @@ function requireCodePathState() {
      * @returns {ForkContext} The last context.
      */
     popForkContext() {
-      var lastContext = this.forkContext;
+      const lastContext = this.forkContext;
       this.forkContext = lastContext.upper;
       this.forkContext.replaceHead(lastContext.makeNext(0, -1));
       return lastContext;
@@ -52900,8 +52679,8 @@ function requireCodePathState() {
     pushChoiceContext(kind, isForkingAsResult) {
       this.choiceContext = {
         upper: this.choiceContext,
-        kind: kind,
-        isForkingAsResult: isForkingAsResult,
+        kind,
+        isForkingAsResult,
         trueForkContext: ForkContext.newEmpty(this.forkContext),
         falseForkContext: ForkContext.newEmpty(this.forkContext),
         qqForkContext: ForkContext.newEmpty(this.forkContext),
@@ -52915,10 +52694,10 @@ function requireCodePathState() {
      * @returns {ChoiceContext} The popped context.
      */
     popChoiceContext() {
-      var context = this.choiceContext;
+      const context = this.choiceContext;
       this.choiceContext = context.upper;
-      var forkContext = this.forkContext;
-      var headSegments = forkContext.head;
+      const forkContext = this.forkContext;
+      const headSegments = forkContext.head;
       switch (context.kind) {
         case '&&':
         case '||':
@@ -52939,7 +52718,7 @@ function requireCodePathState() {
            * test chunk.
            */
           if (context.isForkingAsResult) {
-            var parentContext = this.choiceContext;
+            const parentContext = this.choiceContext;
             parentContext.trueForkContext.addAll(context.trueForkContext);
             parentContext.falseForkContext.addAll(context.falseForkContext);
             parentContext.qqForkContext.addAll(context.qqForkContext);
@@ -52978,7 +52757,7 @@ function requireCodePathState() {
       }
 
       // Merges all paths.
-      var prevForkContext = context.trueForkContext;
+      const prevForkContext = context.trueForkContext;
       prevForkContext.addAll(context.falseForkContext);
       forkContext.replaceHead(prevForkContext.makeNext(0, -1));
       return context;
@@ -52991,14 +52770,14 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeLogicalRight() {
-      var context = this.choiceContext;
-      var forkContext = this.forkContext;
+      const context = this.choiceContext;
+      const forkContext = this.forkContext;
       if (context.processed) {
         /*
          * This got segments already from the child choice context.
          * Creates the next path from own true/false fork context.
          */
-        var prevForkContext;
+        let prevForkContext;
         switch (context.kind) {
           case '&&':
             // if true then go to the right-hand side.
@@ -53050,8 +52829,8 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeIfConsequent() {
-      var context = this.choiceContext;
-      var forkContext = this.forkContext;
+      const context = this.choiceContext;
+      const forkContext = this.forkContext;
 
       /*
        * If any result were not transferred from child contexts,
@@ -53074,8 +52853,8 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeIfAlternate() {
-      var context = this.choiceContext;
-      var forkContext = this.forkContext;
+      const context = this.choiceContext;
+      const forkContext = this.forkContext;
 
       /*
        * The head segments are the path of the `if` block.
@@ -53113,11 +52892,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     popChainContext() {
-      var context = this.chainContext;
+      const context = this.chainContext;
       this.chainContext = context.upper;
 
       // pop all choice contexts of this.
-      for (var i = context.countChoiceContexts; i > 0; --i) {
+      for (let i = context.countChoiceContexts; i > 0; --i) {
         this.popChoiceContext();
       }
     }
@@ -53160,7 +52939,7 @@ function requireCodePathState() {
     pushSwitchContext(hasCase, label) {
       this.switchContext = {
         upper: this.switchContext,
-        hasCase: hasCase,
+        hasCase,
         defaultSegments: null,
         defaultBodySegments: null,
         foundDefault: false,
@@ -53180,10 +52959,10 @@ function requireCodePathState() {
      * @returns {void}
      */
     popSwitchContext() {
-      var context = this.switchContext;
+      const context = this.switchContext;
       this.switchContext = context.upper;
-      var forkContext = this.forkContext;
-      var brokenForkContext = this.popBreakContext().brokenForkContext;
+      const forkContext = this.forkContext;
+      const brokenForkContext = this.popBreakContext().brokenForkContext;
       if (context.countForks === 0) {
         /*
          * When there is only one `default` chunk and there is one or more
@@ -53196,9 +52975,9 @@ function requireCodePathState() {
         }
         return;
       }
-      var lastSegments = forkContext.head;
+      const lastSegments = forkContext.head;
       this.forkBypassPath();
-      var lastCaseSegments = forkContext.head;
+      const lastCaseSegments = forkContext.head;
 
       /*
        * `brokenForkContext` is used to make the next segment.
@@ -53228,7 +53007,7 @@ function requireCodePathState() {
       }
 
       // Pops the segment context stack until the entry segment.
-      for (var i = 0; i < context.countForks; ++i) {
+      for (let i = 0; i < context.countForks; ++i) {
         this.forkContext = this.forkContext.upper;
       }
 
@@ -53246,7 +53025,7 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeSwitchCaseBody(isEmpty, isDefault) {
-      var context = this.switchContext;
+      const context = this.switchContext;
       if (!context.hasCase) {
         return;
       }
@@ -53256,8 +53035,8 @@ function requireCodePathState() {
        * The parent fork context has two segments.
        * Those are from the current case and the body of the previous case.
        */
-      var parentForkContext = this.forkContext;
-      var forkContext = this.pushForkContext();
+      const parentForkContext = this.forkContext;
+      const forkContext = this.pushForkContext();
       forkContext.add(parentForkContext.makeNext(0, -1));
 
       /*
@@ -53296,7 +53075,7 @@ function requireCodePathState() {
       this.tryContext = {
         upper: this.tryContext,
         position: 'try',
-        hasFinalizer: hasFinalizer,
+        hasFinalizer,
         returnedForkContext: hasFinalizer ? ForkContext.newEmpty(this.forkContext) : null,
         thrownForkContext: ForkContext.newEmpty(this.forkContext),
         lastOfTryIsReachable: false,
@@ -53309,7 +53088,7 @@ function requireCodePathState() {
      * @returns {void}
      */
     popTryContext() {
-      var context = this.tryContext;
+      const context = this.tryContext;
       this.tryContext = context.upper;
       if (context.position === 'catch') {
         // Merges two paths from the `try` block and `catch` block merely.
@@ -53322,17 +53101,17 @@ function requireCodePathState() {
        * block.
        */
 
-      var returned = context.returnedForkContext;
-      var thrown = context.thrownForkContext;
+      const returned = context.returnedForkContext;
+      const thrown = context.thrownForkContext;
       if (returned.empty && thrown.empty) {
         return;
       }
 
       // Separate head to normal paths and leaving paths.
-      var headSegments = this.forkContext.head;
+      const headSegments = this.forkContext.head;
       this.forkContext = this.forkContext.upper;
-      var normalSegments = headSegments.slice(0, headSegments.length / 2 | 0);
-      var leavingSegments = headSegments.slice(headSegments.length / 2 | 0);
+      const normalSegments = headSegments.slice(0, headSegments.length / 2 | 0);
+      const leavingSegments = headSegments.slice(headSegments.length / 2 | 0);
 
       // Forwards the leaving path to upper contexts.
       if (!returned.empty) {
@@ -53359,9 +53138,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeCatchBlock() {
-      var context = this.tryContext;
-      var forkContext = this.forkContext;
-      var thrown = context.thrownForkContext;
+      const context = this.tryContext;
+      const forkContext = this.forkContext;
+      const thrown = context.thrownForkContext;
 
       // Update state.
       context.position = 'catch';
@@ -53370,7 +53149,7 @@ function requireCodePathState() {
 
       // Merge thrown paths.
       thrown.add(forkContext.head);
-      var thrownSegments = thrown.makeNext(0, -1);
+      const thrownSegments = thrown.makeNext(0, -1);
 
       // Fork to a bypass and the merged thrown path.
       this.pushForkContext();
@@ -53387,11 +53166,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeFinallyBlock() {
-      var context = this.tryContext;
-      var forkContext = this.forkContext;
-      var returned = context.returnedForkContext;
-      var thrown = context.thrownForkContext;
-      var headOfLeavingSegments = forkContext.head;
+      const context = this.tryContext;
+      let forkContext = this.forkContext;
+      const returned = context.returnedForkContext;
+      const thrown = context.thrownForkContext;
+      const headOfLeavingSegments = forkContext.head;
 
       // Update state.
       if (context.position === 'catch') {
@@ -53412,14 +53191,14 @@ function requireCodePathState() {
        * Create a parallel segment from merging returned and thrown.
        * This segment will leave at the end of this finally block.
        */
-      var segments = forkContext.makeNext(-1, -1);
-      for (var i = 0; i < forkContext.count; ++i) {
-        var prevSegsOfLeavingSegment = [headOfLeavingSegments[i]];
-        for (var j = 0; j < returned.segmentsList.length; ++j) {
+      const segments = forkContext.makeNext(-1, -1);
+      for (let i = 0; i < forkContext.count; ++i) {
+        const prevSegsOfLeavingSegment = [headOfLeavingSegments[i]];
+        for (let j = 0; j < returned.segmentsList.length; ++j) {
           prevSegsOfLeavingSegment.push(returned.segmentsList[j][i]);
         }
-        for (var _j = 0; _j < thrown.segmentsList.length; ++_j) {
-          prevSegsOfLeavingSegment.push(thrown.segmentsList[_j][i]);
+        for (let j = 0; j < thrown.segmentsList.length; ++j) {
+          prevSegsOfLeavingSegment.push(thrown.segmentsList[j][i]);
         }
         segments.push(CodePathSegment.newNext(this.idGenerator.next(), prevSegsOfLeavingSegment));
       }
@@ -53433,11 +53212,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeFirstThrowablePathInTryBlock() {
-      var forkContext = this.forkContext;
+      const forkContext = this.forkContext;
       if (!forkContext.reachable) {
         return;
       }
-      var context = getThrowContext(this);
+      const context = getThrowContext(this);
       if (context === this || context.position !== 'try' || !context.thrownForkContext.empty) {
         return;
       }
@@ -53459,15 +53238,15 @@ function requireCodePathState() {
      * @returns {void}
      */
     pushLoopContext(type, label) {
-      var forkContext = this.forkContext;
-      var breakContext = this.pushBreakContext(true, label);
+      const forkContext = this.forkContext;
+      const breakContext = this.pushBreakContext(true, label);
       switch (type) {
         case 'WhileStatement':
           this.pushChoiceContext('loop', false);
           this.loopContext = {
             upper: this.loopContext,
-            type: type,
-            label: label,
+            type,
+            label,
             test: void 0,
             continueDestSegments: null,
             brokenForkContext: breakContext.brokenForkContext
@@ -53477,8 +53256,8 @@ function requireCodePathState() {
           this.pushChoiceContext('loop', false);
           this.loopContext = {
             upper: this.loopContext,
-            type: type,
-            label: label,
+            type,
+            label,
             test: void 0,
             entrySegments: null,
             continueForkContext: ForkContext.newEmpty(forkContext),
@@ -53489,8 +53268,8 @@ function requireCodePathState() {
           this.pushChoiceContext('loop', false);
           this.loopContext = {
             upper: this.loopContext,
-            type: type,
-            label: label,
+            type,
+            label,
             test: void 0,
             endOfInitSegments: null,
             testSegments: null,
@@ -53505,8 +53284,8 @@ function requireCodePathState() {
         case 'ForOfStatement':
           this.loopContext = {
             upper: this.loopContext,
-            type: type,
-            label: label,
+            type,
+            label,
             prevSegments: null,
             leftSegments: null,
             endOfLeftSegments: null,
@@ -53527,10 +53306,10 @@ function requireCodePathState() {
      * @returns {void}
      */
     popLoopContext() {
-      var context = this.loopContext;
+      const context = this.loopContext;
       this.loopContext = context.upper;
-      var forkContext = this.forkContext;
-      var brokenForkContext = this.popBreakContext().brokenForkContext;
+      const forkContext = this.forkContext;
+      const brokenForkContext = this.popBreakContext().brokenForkContext;
 
       // Creates a looped path.
       switch (context.type) {
@@ -53541,7 +53320,7 @@ function requireCodePathState() {
           break;
         case 'DoWhileStatement':
           {
-            var choiceContext = this.popChoiceContext();
+            const choiceContext = this.popChoiceContext();
             if (!choiceContext.processed) {
               choiceContext.trueForkContext.add(forkContext.head);
               choiceContext.falseForkContext.add(forkContext.head);
@@ -53551,8 +53330,8 @@ function requireCodePathState() {
             }
 
             // `true` paths go to looping.
-            var segmentsList = choiceContext.trueForkContext.segmentsList;
-            for (var i = 0; i < segmentsList.length; ++i) {
+            const segmentsList = choiceContext.trueForkContext.segmentsList;
+            for (let i = 0; i < segmentsList.length; ++i) {
               makeLooped(this, segmentsList[i], context.entrySegments);
             }
             break;
@@ -53582,9 +53361,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeWhileTest(test) {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
-      var testSegments = forkContext.makeNext(0, -1);
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
+      const testSegments = forkContext.makeNext(0, -1);
 
       // Update state.
       context.test = test;
@@ -53597,9 +53376,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeWhileBody() {
-      var context = this.loopContext;
-      var choiceContext = this.choiceContext;
-      var forkContext = this.forkContext;
+      const context = this.loopContext;
+      const choiceContext = this.choiceContext;
+      const forkContext = this.forkContext;
       if (!choiceContext.processed) {
         choiceContext.trueForkContext.add(forkContext.head);
         choiceContext.falseForkContext.add(forkContext.head);
@@ -53617,9 +53396,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeDoWhileBody() {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
-      var bodySegments = forkContext.makeNext(-1, -1);
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
+      const bodySegments = forkContext.makeNext(-1, -1);
 
       // Update state.
       context.entrySegments = bodySegments;
@@ -53632,14 +53411,14 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeDoWhileTest(test) {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
       context.test = test;
 
       // Creates paths of `continue` statements.
       if (!context.continueForkContext.empty) {
         context.continueForkContext.add(forkContext.head);
-        var testSegments = context.continueForkContext.makeNext(0, -1);
+        const testSegments = context.continueForkContext.makeNext(0, -1);
         forkContext.replaceHead(testSegments);
       }
     }
@@ -53650,10 +53429,10 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeForTest(test) {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
-      var endOfInitSegments = forkContext.head;
-      var testSegments = forkContext.makeNext(-1, -1);
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
+      const endOfInitSegments = forkContext.head;
+      const testSegments = forkContext.makeNext(-1, -1);
 
       // Update state.
       context.test = test;
@@ -53667,9 +53446,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeForUpdate() {
-      var context = this.loopContext;
-      var choiceContext = this.choiceContext;
-      var forkContext = this.forkContext;
+      const context = this.loopContext;
+      const choiceContext = this.choiceContext;
+      const forkContext = this.forkContext;
 
       // Make the next paths of the test.
       if (context.testSegments) {
@@ -53679,7 +53458,7 @@ function requireCodePathState() {
       }
 
       // Update state.
-      var updateSegments = forkContext.makeDisconnected(-1, -1);
+      const updateSegments = forkContext.makeDisconnected(-1, -1);
       context.continueDestSegments = context.updateSegments = updateSegments;
       forkContext.replaceHead(updateSegments);
     }
@@ -53689,9 +53468,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeForBody() {
-      var context = this.loopContext;
-      var choiceContext = this.choiceContext;
-      var forkContext = this.forkContext;
+      const context = this.loopContext;
+      const choiceContext = this.choiceContext;
+      const forkContext = this.forkContext;
 
       // Update state.
       if (context.updateSegments) {
@@ -53706,13 +53485,13 @@ function requireCodePathState() {
       } else {
         context.endOfInitSegments = forkContext.head;
       }
-      var bodySegments = context.endOfTestSegments;
+      let bodySegments = context.endOfTestSegments;
       if (!bodySegments) {
         /*
          * If there is not the `test` part, the `body` path comes from the
          * `init` part and the `update` part.
          */
-        var prevForkContext = ForkContext.newEmpty(forkContext);
+        const prevForkContext = ForkContext.newEmpty(forkContext);
         prevForkContext.add(context.endOfInitSegments);
         if (context.endOfUpdateSegments) {
           prevForkContext.add(context.endOfUpdateSegments);
@@ -53729,9 +53508,9 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeForInOfLeft() {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
-      var leftSegments = forkContext.makeDisconnected(-1, -1);
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
+      const leftSegments = forkContext.makeDisconnected(-1, -1);
 
       // Update state.
       context.prevSegments = forkContext.head;
@@ -53745,11 +53524,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeForInOfRight() {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
-      var temp = ForkContext.newEmpty(forkContext);
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
+      const temp = ForkContext.newEmpty(forkContext);
       temp.add(context.prevSegments);
-      var rightSegments = temp.makeNext(-1, -1);
+      const rightSegments = temp.makeNext(-1, -1);
 
       // Update state.
       context.endOfLeftSegments = forkContext.head;
@@ -53762,11 +53541,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeForInOfBody() {
-      var context = this.loopContext;
-      var forkContext = this.forkContext;
-      var temp = ForkContext.newEmpty(forkContext);
+      const context = this.loopContext;
+      const forkContext = this.forkContext;
+      const temp = ForkContext.newEmpty(forkContext);
       temp.add(context.endOfLeftSegments);
-      var bodySegments = temp.makeNext(-1, -1);
+      const bodySegments = temp.makeNext(-1, -1);
 
       // Make a path: `right` -> `left`.
       makeLooped(this, forkContext.head, context.leftSegments);
@@ -53790,8 +53569,8 @@ function requireCodePathState() {
     pushBreakContext(breakable, label) {
       this.breakContext = {
         upper: this.breakContext,
-        breakable: breakable,
-        label: label,
+        breakable,
+        label,
         brokenForkContext: ForkContext.newEmpty(this.forkContext)
       };
       return this.breakContext;
@@ -53802,13 +53581,13 @@ function requireCodePathState() {
      * @returns {Object} The removed context.
      */
     popBreakContext() {
-      var context = this.breakContext;
-      var forkContext = this.forkContext;
+      const context = this.breakContext;
+      const forkContext = this.forkContext;
       this.breakContext = context.upper;
 
       // Process this context here for other than switches and loops.
       if (!context.breakable) {
-        var brokenForkContext = context.brokenForkContext;
+        const brokenForkContext = context.brokenForkContext;
         if (!brokenForkContext.empty) {
           brokenForkContext.add(forkContext.head);
           forkContext.replaceHead(brokenForkContext.makeNext(0, -1));
@@ -53826,11 +53605,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeBreak(label) {
-      var forkContext = this.forkContext;
+      const forkContext = this.forkContext;
       if (!forkContext.reachable) {
         return;
       }
-      var context = getBreakContext(this, label);
+      const context = getBreakContext(this, label);
       if (context) {
         context.brokenForkContext.add(forkContext.head);
       }
@@ -53848,11 +53627,11 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeContinue(label) {
-      var forkContext = this.forkContext;
+      const forkContext = this.forkContext;
       if (!forkContext.reachable) {
         return;
       }
-      var context = getContinueContext(this, label);
+      const context = getContinueContext(this, label);
       if (context) {
         if (context.continueDestSegments) {
           makeLooped(this, forkContext.head, context.continueDestSegments);
@@ -53876,7 +53655,7 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeReturn() {
-      var forkContext = this.forkContext;
+      const forkContext = this.forkContext;
       if (forkContext.reachable) {
         getReturnContext(this).returnedForkContext.add(forkContext.head);
         forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
@@ -53891,7 +53670,7 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeThrow() {
-      var forkContext = this.forkContext;
+      const forkContext = this.forkContext;
       if (forkContext.reachable) {
         getThrowContext(this).thrownForkContext.add(forkContext.head);
         forkContext.replaceHead(forkContext.makeUnreachable(-1, -1));
@@ -53903,7 +53682,7 @@ function requireCodePathState() {
      * @returns {void}
      */
     makeFinal() {
-      var segments = this.currentSegments;
+      const segments = this.currentSegments;
       if (segments.length > 0 && segments[0].reachable) {
         this.returnedForkContext.add(segments);
       }
@@ -53967,9 +53746,9 @@ function requireCodePath() {
   //------------------------------------------------------------------------------
 
   // eslint-disable-next-line
-  var CodePathState = requireCodePathState();
+  const CodePathState = requireCodePathState();
   // eslint-disable-next-line
-  var IdGenerator = requireIdGenerator();
+  const IdGenerator = requireIdGenerator();
 
   //------------------------------------------------------------------------------
   // Public Interface
@@ -53988,7 +53767,7 @@ function requireCodePath() {
      * @param {Function} options.onLooped A callback function to notify looping.
      */
     constructor(_ref) {
-      var id = _ref.id,
+      let id = _ref.id,
         origin = _ref.origin,
         upper = _ref.upper,
         onLooped = _ref.onLooped;
@@ -54101,8 +53880,8 @@ function requireCodePath() {
      * @returns {void}
      */
     traverseSegments(options, callback) {
-      var resolvedOptions;
-      var resolvedCallback;
+      let resolvedOptions;
+      let resolvedCallback;
       if (typeof options === 'function') {
         resolvedCallback = options;
         resolvedOptions = {};
@@ -54110,25 +53889,25 @@ function requireCodePath() {
         resolvedOptions = options || {};
         resolvedCallback = callback;
       }
-      var startSegment = resolvedOptions.first || this.internal.initialSegment;
-      var lastSegment = resolvedOptions.last;
-      var item = null;
-      var index = 0;
-      var end = 0;
-      var segment = null;
-      var visited = Object.create(null);
-      var stack = [[startSegment, 0]];
-      var skippedSegment = null;
-      var broken = false;
-      var controller = {
-        skip: function () {
+      const startSegment = resolvedOptions.first || this.internal.initialSegment;
+      const lastSegment = resolvedOptions.last;
+      let item = null;
+      let index = 0;
+      let end = 0;
+      let segment = null;
+      const visited = Object.create(null);
+      const stack = [[startSegment, 0]];
+      let skippedSegment = null;
+      let broken = false;
+      const controller = {
+        skip() {
           if (stack.length <= 1) {
             broken = true;
           } else {
             skippedSegment = stack[stack.length - 2][0];
           }
         },
-        break: function () {
+        break() {
           broken = true;
         }
       };
@@ -54207,14 +53986,14 @@ function requireCodePathAnalyzer() {
   //------------------------------------------------------------------------------
 
   // eslint-disable-next-line
-  var assert = requireAssert();
+  const assert = requireAssert();
   // eslint-disable-next-line
-  var CodePath = requireCodePath();
+  const CodePath = requireCodePath();
   // eslint-disable-next-line
-  var CodePathSegment = requireCodePathSegment();
+  const CodePathSegment = requireCodePathSegment();
   // eslint-disable-next-line
-  var IdGenerator = requireIdGenerator();
-  var breakableTypePattern = /^(?:(?:Do)?While|For(?:In|Of)?|Switch)Statement$/u;
+  const IdGenerator = requireIdGenerator();
+  const breakableTypePattern = /^(?:(?:Do)?While|For(?:In|Of)?|Switch)Statement$/u;
 
   //------------------------------------------------------------------------------
   // Helpers
@@ -54236,7 +54015,7 @@ function requireCodePathAnalyzer() {
    *      false if not.
    */
   function isPropertyDefinitionValue(node) {
-    var parent = node.parent;
+    const parent = node.parent;
     return parent && parent.type === 'PropertyDefinition' && parent.value === node;
   }
 
@@ -54280,7 +54059,7 @@ function requireCodePathAnalyzer() {
    * @returns {boolean} `true` if the node is a test of a choice statement.
    */
   function isForkingByTrueOrFalse(node) {
-    var parent = node.parent;
+    const parent = node.parent;
     switch (parent.type) {
       case 'ConditionalExpression':
       case 'IfStatement':
@@ -54322,7 +54101,7 @@ function requireCodePathAnalyzer() {
    * @returns {boolean} `true` if the node is a reference.
    */
   function isIdentifierReference(node) {
-    var parent = node.parent;
+    const parent = node.parent;
     switch (parent.type) {
       case 'LabeledStatement':
       case 'BreakStatement':
@@ -54367,12 +54146,12 @@ function requireCodePathAnalyzer() {
    * @returns {void}
    */
   function forwardCurrentToHead(analyzer, node) {
-    var codePath = analyzer.codePath;
-    var state = CodePath.getState(codePath);
-    var currentSegments = state.currentSegments;
-    var headSegments = state.headSegments;
-    var end = Math.max(currentSegments.length, headSegments.length);
-    var i, currentSegment, headSegment;
+    const codePath = analyzer.codePath;
+    const state = CodePath.getState(codePath);
+    const currentSegments = state.currentSegments;
+    const headSegments = state.headSegments;
+    const end = Math.max(currentSegments.length, headSegments.length);
+    let i, currentSegment, headSegment;
 
     // Fires leaving events.
     for (i = 0; i < end; ++i) {
@@ -54409,10 +54188,10 @@ function requireCodePathAnalyzer() {
    * @returns {void}
    */
   function leaveFromCurrentSegment(analyzer, node) {
-    var state = CodePath.getState(analyzer.codePath);
-    var currentSegments = state.currentSegments;
-    for (var i = 0; i < currentSegments.length; ++i) {
-      var currentSegment = currentSegments[i];
+    const state = CodePath.getState(analyzer.codePath);
+    const currentSegments = state.currentSegments;
+    for (let i = 0; i < currentSegments.length; ++i) {
+      const currentSegment = currentSegments[i];
       if (currentSegment.reachable) {
         analyzer.emitter.emit('onCodePathSegmentEnd', currentSegment, node);
       }
@@ -54431,9 +54210,9 @@ function requireCodePathAnalyzer() {
    * @returns {void}
    */
   function preprocess(analyzer, node) {
-    var codePath = analyzer.codePath;
-    var state = CodePath.getState(codePath);
-    var parent = node.parent;
+    const codePath = analyzer.codePath;
+    const state = CodePath.getState(codePath);
+    const parent = node.parent;
     switch (parent.type) {
       // The `arguments.length == 0` case is in `postprocess` function.
       case 'CallExpression':
@@ -54539,9 +54318,9 @@ function requireCodePathAnalyzer() {
    * @returns {void}
    */
   function processCodePathToEnter(analyzer, node) {
-    var codePath = analyzer.codePath;
-    var state = codePath && CodePath.getState(codePath);
-    var parent = node.parent;
+    let codePath = analyzer.codePath;
+    let state = codePath && CodePath.getState(codePath);
+    const parent = node.parent;
 
     /**
      * Creates a new code path and trigger the onCodePathStart event
@@ -54558,7 +54337,7 @@ function requireCodePathAnalyzer() {
       // Create the code path of this scope.
       codePath = analyzer.codePath = new CodePath({
         id: analyzer.idGenerator.next(),
-        origin: origin,
+        origin,
         upper: codePath,
         onLooped: analyzer.onLooped
       });
@@ -54671,9 +54450,9 @@ function requireCodePathAnalyzer() {
    * @returns {void}
    */
   function processCodePathToExit(analyzer, node) {
-    var codePath = analyzer.codePath;
-    var state = CodePath.getState(codePath);
-    var dontForward = false;
+    const codePath = analyzer.codePath;
+    const state = CodePath.getState(codePath);
+    let dontForward = false;
     switch (node.type) {
       case 'ChainExpression':
         state.popChainContext();
@@ -54779,7 +54558,7 @@ function requireCodePathAnalyzer() {
      * @returns {void}
      */
     function endCodePath() {
-      var codePath = analyzer.codePath;
+      let codePath = analyzer.codePath;
 
       // Mark the current path as the final node.
       CodePath.getState(codePath).makeFinal();
@@ -54848,7 +54627,7 @@ function requireCodePathAnalyzer() {
      */
     constructor(emitters) {
       this.emitter = {
-        emit: function (event) {
+        emit(event) {
           for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
             args[_key - 1] = arguments[_key];
           }
@@ -55479,5 +55258,3 @@ Object.assign(configs.flat, {
 });
 
 module.exports = plugin;
-  })();
-}
