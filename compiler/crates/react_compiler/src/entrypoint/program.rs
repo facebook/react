@@ -1523,6 +1523,10 @@ fn find_functions_to_compile<'a>(
                                                     queue.push(source);
                                                 }
                                             }
+                                            // In 'all' mode, also find nested function expressions
+                                            if opts.compilation_mode == "all" {
+                                                find_nested_functions_in_expr(other, opts, context, &mut queue);
+                                            }
                                         }
                                     }
                                 }
@@ -1940,6 +1944,9 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
                 None
             }
         }
+        Statement::ExpressionStatement(expr_stmt) => {
+            clone_original_expr_as_expression(&expr_stmt.expression, start)
+        }
         _ => None,
     }
 }
@@ -1966,6 +1973,52 @@ fn clone_original_expr_as_expression(expr: &Expression, start: u32) -> Option<Ex
                 }
             }
             None
+        }
+        Expression::ObjectExpression(obj) => {
+            for prop in &obj.properties {
+                match prop {
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        if let Some(e) = clone_original_expr_as_expression(&p.value, start) {
+                            return Some(e);
+                        }
+                    }
+                    ObjectExpressionProperty::SpreadElement(s) => {
+                        if let Some(e) = clone_original_expr_as_expression(&s.argument, start) {
+                            return Some(e);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            None
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in arr.elements.iter().flatten() {
+                if let Some(e) = clone_original_expr_as_expression(elem, start) {
+                    return Some(e);
+                }
+            }
+            None
+        }
+        Expression::AssignmentExpression(assign) => {
+            clone_original_expr_as_expression(&assign.right, start)
+        }
+        Expression::SequenceExpression(seq) => {
+            for e in &seq.expressions {
+                if let Some(e) = clone_original_expr_as_expression(e, start) {
+                    return Some(e);
+                }
+            }
+            None
+        }
+        Expression::ConditionalExpression(cond) => {
+            if let Some(e) = clone_original_expr_as_expression(&cond.consequent, start) {
+                return Some(e);
+            }
+            clone_original_expr_as_expression(&cond.alternate, start)
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            clone_original_expr_as_expression(&paren.expression, start)
         }
         _ => None,
     }
@@ -2391,6 +2444,11 @@ fn replace_fn_with_gated(
                 }
             }
         }
+        Statement::ExpressionStatement(expr_stmt) => {
+            if replace_gated_in_expression(&mut expr_stmt.expression, start, gating_expression) {
+                return true;
+            }
+        }
         _ => {}
     }
     false
@@ -2417,6 +2475,62 @@ fn replace_gated_in_expression(
         }
         Expression::CallExpression(call) => {
             for arg in call.arguments.iter_mut() {
+                if replace_gated_in_expression(arg, start, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        Expression::ObjectExpression(obj) => {
+            for prop in obj.properties.iter_mut() {
+                match prop {
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        if replace_gated_in_expression(&mut p.value, start, gating_expression) {
+                            return true;
+                        }
+                    }
+                    ObjectExpressionProperty::SpreadElement(s) => {
+                        if replace_gated_in_expression(&mut s.argument, start, gating_expression) {
+                            return true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in arr.elements.iter_mut().flatten() {
+                if replace_gated_in_expression(elem, start, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        Expression::AssignmentExpression(assign) => {
+            if replace_gated_in_expression(&mut assign.right, start, gating_expression) {
+                return true;
+            }
+        }
+        Expression::SequenceExpression(seq) => {
+            for e in seq.expressions.iter_mut() {
+                if replace_gated_in_expression(e, start, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        Expression::ConditionalExpression(cond) => {
+            if replace_gated_in_expression(&mut cond.consequent, start, gating_expression) {
+                return true;
+            }
+            if replace_gated_in_expression(&mut cond.alternate, start, gating_expression) {
+                return true;
+            }
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            if replace_gated_in_expression(&mut paren.expression, start, gating_expression) {
+                return true;
+            }
+        }
+        Expression::NewExpression(new) => {
+            for arg in new.arguments.iter_mut() {
                 if replace_gated_in_expression(arg, start, gating_expression) {
                     return true;
                 }
@@ -2723,6 +2837,9 @@ fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name
                 }
             }
         }
+        Statement::ExpressionStatement(expr_stmt) => {
+            rename_identifier_in_expression(&mut expr_stmt.expression, old_name, new_name);
+        }
         Statement::ExportDefaultDeclaration(export) => match export.declaration.as_mut() {
             ExportDefaultDecl::FunctionDeclaration(f) => {
                 rename_identifier_in_block(&mut f.body, old_name, new_name);
@@ -2786,6 +2903,55 @@ fn rename_identifier_in_expression(expr: &mut Expression, old_name: &str, new_na
             rename_identifier_in_expression(&mut cond.test, old_name, new_name);
             rename_identifier_in_expression(&mut cond.consequent, old_name, new_name);
             rename_identifier_in_expression(&mut cond.alternate, old_name, new_name);
+        }
+        Expression::ObjectExpression(obj) => {
+            for prop in obj.properties.iter_mut() {
+                match prop {
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        rename_identifier_in_expression(&mut p.value, old_name, new_name);
+                    }
+                    ObjectExpressionProperty::SpreadElement(s) => {
+                        rename_identifier_in_expression(&mut s.argument, old_name, new_name);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in arr.elements.iter_mut().flatten() {
+                rename_identifier_in_expression(elem, old_name, new_name);
+            }
+        }
+        Expression::AssignmentExpression(assign) => {
+            rename_identifier_in_expression(&mut assign.right, old_name, new_name);
+        }
+        Expression::SequenceExpression(seq) => {
+            for e in seq.expressions.iter_mut() {
+                rename_identifier_in_expression(e, old_name, new_name);
+            }
+        }
+        Expression::LogicalExpression(log) => {
+            rename_identifier_in_expression(&mut log.left, old_name, new_name);
+            rename_identifier_in_expression(&mut log.right, old_name, new_name);
+        }
+        Expression::BinaryExpression(bin) => {
+            rename_identifier_in_expression(&mut bin.left, old_name, new_name);
+            rename_identifier_in_expression(&mut bin.right, old_name, new_name);
+        }
+        Expression::NewExpression(new) => {
+            rename_identifier_in_expression(&mut new.callee, old_name, new_name);
+            for arg in new.arguments.iter_mut() {
+                rename_identifier_in_expression(arg, old_name, new_name);
+            }
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            rename_identifier_in_expression(&mut paren.expression, old_name, new_name);
+        }
+        Expression::OptionalCallExpression(call) => {
+            rename_identifier_in_expression(&mut call.callee, old_name, new_name);
+            for arg in call.arguments.iter_mut() {
+                rename_identifier_in_expression(arg, old_name, new_name);
+            }
         }
         _ => {}
     }
@@ -2955,6 +3121,11 @@ fn replace_fn_in_statement(
                 }
             }
         }
+        Statement::ExpressionStatement(expr_stmt) => {
+            if replace_fn_in_expression(&mut expr_stmt.expression, start, compiled) {
+                return true;
+            }
+        }
         _ => {}
     }
     false
@@ -3004,6 +3175,111 @@ fn replace_fn_in_expression(
                 if replace_fn_in_expression(arg, start, compiled) {
                     return true;
                 }
+            }
+        }
+        // Recurse into sub-expressions that may contain nested functions
+        Expression::ObjectExpression(obj) => {
+            for prop in obj.properties.iter_mut() {
+                match prop {
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        if replace_fn_in_expression(&mut p.value, start, compiled) {
+                            return true;
+                        }
+                    }
+                    ObjectExpressionProperty::SpreadElement(s) => {
+                        if replace_fn_in_expression(&mut s.argument, start, compiled) {
+                            return true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in arr.elements.iter_mut().flatten() {
+                if replace_fn_in_expression(elem, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Expression::AssignmentExpression(assign) => {
+            if replace_fn_in_expression(&mut assign.right, start, compiled) {
+                return true;
+            }
+        }
+        Expression::SequenceExpression(seq) => {
+            for e in seq.expressions.iter_mut() {
+                if replace_fn_in_expression(e, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Expression::ConditionalExpression(cond) => {
+            if replace_fn_in_expression(&mut cond.consequent, start, compiled) {
+                return true;
+            }
+            if replace_fn_in_expression(&mut cond.alternate, start, compiled) {
+                return true;
+            }
+        }
+        Expression::LogicalExpression(log) => {
+            if replace_fn_in_expression(&mut log.left, start, compiled) {
+                return true;
+            }
+            if replace_fn_in_expression(&mut log.right, start, compiled) {
+                return true;
+            }
+        }
+        Expression::BinaryExpression(bin) => {
+            if replace_fn_in_expression(&mut bin.left, start, compiled) {
+                return true;
+            }
+            if replace_fn_in_expression(&mut bin.right, start, compiled) {
+                return true;
+            }
+        }
+        Expression::UnaryExpression(unary) => {
+            if replace_fn_in_expression(&mut unary.argument, start, compiled) {
+                return true;
+            }
+        }
+        Expression::NewExpression(new) => {
+            for arg in new.arguments.iter_mut() {
+                if replace_fn_in_expression(arg, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            if replace_fn_in_expression(&mut paren.expression, start, compiled) {
+                return true;
+            }
+        }
+        Expression::OptionalCallExpression(call) => {
+            for arg in call.arguments.iter_mut() {
+                if replace_fn_in_expression(arg, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Expression::TSAsExpression(ts) => {
+            if replace_fn_in_expression(&mut ts.expression, start, compiled) {
+                return true;
+            }
+        }
+        Expression::TSSatisfiesExpression(ts) => {
+            if replace_fn_in_expression(&mut ts.expression, start, compiled) {
+                return true;
+            }
+        }
+        Expression::TSNonNullExpression(ts) => {
+            if replace_fn_in_expression(&mut ts.expression, start, compiled) {
+                return true;
+            }
+        }
+        Expression::TypeCastExpression(tc) => {
+            if replace_fn_in_expression(&mut tc.expression, start, compiled) {
+                return true;
             }
         }
         _ => {}
@@ -3127,6 +3403,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     for source in &queue {
         match process_fn(source, &scope, output_mode, &mut context) {
             Ok(Some(codegen_fn)) => {
+                // TODO: Re-compile outlined functions (JSX outlining, parallel agent).
                 compiled_fns.push(CompiledFunction {
                     kind: source.kind,
                     source,
