@@ -364,7 +364,7 @@ export function commitEnterViewTransitions(
     } else {
       commitAppearingPairViewTransitions(placement);
     }
-  } else if ((placement.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+  } else if ((placement.subtreeFlags & (ViewTransitionStatic | ViewTransitionNamedStatic)) !== NoFlags) {
     let child = placement.child;
     while (child !== null) {
       commitEnterViewTransitions(child, gesture);
@@ -493,7 +493,7 @@ export function commitExitViewTransitions(deletion: Fiber): void {
       // Look for more pairs deeper in the tree.
       commitDeletedPairViewTransitions(deletion);
     }
-  } else if ((deletion.subtreeFlags & ViewTransitionStatic) !== NoFlags) {
+  } else if ((deletion.subtreeFlags & (ViewTransitionStatic | ViewTransitionNamedStatic)) !== NoFlags) {
     let child = deletion.child;
     while (child !== null) {
       commitExitViewTransitions(child);
