@@ -52,7 +52,7 @@ StabilizeBlockIds: complete
 RenameVariables: complete
 PruneHoistedContexts: complete
 ValidatePreservedManualMemoization: complete
-Codegen: partial (1607/1717 code comparison, 110 remaining)
+Codegen: partial (1621/1717 code comparison, 96 remaining)
 
 # Logs
 
@@ -425,3 +425,15 @@ Fixed three categories of code comparison failures:
 - Script source type: implemented require() syntax for CJS modules in imports.rs using
   VariableDeclaration with ObjectPattern destructuring + require() CallExpression. Fixed 1 failure.
 Code comparison: 1586→1607 passing (93.6%). 110 remaining.
+
+## 20260324-214542 Implement gating codegen — 110→96 code failures
+
+Implemented function gating for the Rust compiler port:
+- Standard gating: wraps compiled functions in `gating() ? compiled : original` conditional
+- Hoisted gating: creates dispatcher function for functions referenced before declaration
+- Dynamic gating: supports `'use memo if(identifier)'` directive with @dynamicGating config
+- Export handling: export default/named function gating patterns
+- Import sorting: case-insensitive to match JS localeCompare behavior
+17 gating fixtures fixed (21/29 gating tests passing). 8 remaining are function discovery,
+error handling paths, and unimplemented instrumentation features.
+Code comparison: 1607→1621 passing (94.4%). 96 remaining.

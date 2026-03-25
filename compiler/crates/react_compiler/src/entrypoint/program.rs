@@ -14,9 +14,11 @@
 //! 5. Processing each function through the compilation pipeline
 //! 6. Applying compiled functions back to the AST
 
+use std::collections::{HashMap, HashSet};
+
 use react_compiler_ast::common::BaseNode;
 use react_compiler_ast::declarations::{
-    Declaration, ExportDefaultDecl, ImportSpecifier, ModuleExportName,
+    Declaration, ExportDefaultDecl, ExportDefaultDeclaration, ImportSpecifier, ModuleExportName,
 };
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
@@ -27,7 +29,6 @@ use react_compiler_diagnostics::{
     CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::ReactFunctionType;
-use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
@@ -40,7 +41,7 @@ use super::imports::{
     validate_restricted_imports,
 };
 use super::pipeline;
-use super::plugin_options::{CompilerOutputMode, PluginOptions};
+use super::plugin_options::{CompilerOutputMode, GatingConfig, PluginOptions};
 use super::suppression::{
     SuppressionRange, filter_suppressions_that_affect_function, find_program_suppressions,
     suppressions_to_compiler_error,
@@ -107,7 +108,7 @@ fn try_find_directive_enabling_memoization<'a>(
 
     // Check dynamic gating directives
     match find_directives_dynamic_gating(directives, opts) {
-        Ok(Some(directive)) => Ok(Some(directive)),
+        Ok(Some(result)) => Ok(Some(result.directive)),
         Ok(None) => Ok(None),
         Err(e) => Err(e),
     }
@@ -129,15 +130,23 @@ fn find_directive_disabling_memoization<'a>(
     }
 }
 
+/// Result of a dynamic gating directive parse.
+struct DynamicGatingResult<'a> {
+    #[allow(dead_code)]
+    directive: &'a Directive,
+    gating: GatingConfig,
+}
+
 /// Check for dynamic gating directives like `use memo if(identifier)`.
-/// Returns the directive if found, or an error if the directive is malformed.
+/// Returns the directive and gating config if found, or an error if malformed.
 fn find_directives_dynamic_gating<'a>(
     directives: &'a [Directive],
     opts: &PluginOptions,
-) -> Result<Option<&'a Directive>, CompilerError> {
-    if opts.dynamic_gating.is_none() {
-        return Ok(None);
-    }
+) -> Result<Option<DynamicGatingResult<'a>>, CompilerError> {
+    let dynamic_gating = match &opts.dynamic_gating {
+        Some(dg) => dg,
+        None => return Ok(None),
+    };
 
     let pattern = Regex::new(r"^use memo if\(([^\)]*)\)$").expect("Invalid dynamic gating regex");
 
@@ -188,7 +197,13 @@ fn find_directives_dynamic_gating<'a>(
     }
 
     if matches.len() == 1 {
-        Ok(Some(matches[0].0))
+        Ok(Some(DynamicGatingResult {
+            directive: matches[0].0,
+            gating: GatingConfig {
+                source: dynamic_gating.source.clone(),
+                import_specifier_name: matches[0].1.clone(),
+            },
+        }))
     } else {
         Ok(None)
     }
@@ -1687,6 +1702,298 @@ struct CompiledFnForReplacement {
     original_kind: OriginalFnKind,
     /// The compiled codegen output.
     codegen_fn: CodegenFunction,
+    /// Whether this is an original function (vs outlined). Gating only applies to original.
+    #[allow(dead_code)]
+    source_kind: CompileSourceKind,
+    /// The function name, if any.
+    fn_name: Option<String>,
+    /// Gating configuration (from dynamic gating or plugin options).
+    gating: Option<GatingConfig>,
+}
+
+/// Check if a compiled function is referenced before its declaration at the top level.
+/// This is needed for the gating rewrite: hoisted function declarations that are
+/// referenced before their declaration site need a special gating pattern.
+fn get_functions_referenced_before_declaration(
+    program: &Program,
+    compiled_fns: &[CompiledFnForReplacement],
+) -> HashSet<u32> {
+    // Collect function names and their start positions for compiled FunctionDeclarations
+    let mut fn_names: HashMap<String, u32> = HashMap::new();
+    for compiled in compiled_fns {
+        if compiled.original_kind == OriginalFnKind::FunctionDeclaration {
+            if let Some(ref name) = compiled.fn_name {
+                if let Some(start) = compiled.fn_start {
+                    fn_names.insert(name.clone(), start);
+                }
+            }
+        }
+    }
+
+    if fn_names.is_empty() {
+        return HashSet::new();
+    }
+
+    let mut referenced_before_decl: HashSet<u32> = HashSet::new();
+
+    // Walk through program body in order. For each statement, check if it references
+    // any of the function names before the function's declaration.
+    for stmt in &program.body {
+        // Check if this statement IS one of the function declarations
+        if let Statement::FunctionDeclaration(f) = stmt {
+            if let Some(ref id) = f.id {
+                fn_names.remove(&id.name);
+            }
+        }
+        // For all remaining tracked names, check if the statement references them
+        // at the top level (not inside nested functions)
+        for (name, start) in &fn_names {
+            if stmt_references_identifier_at_top_level(stmt, name) {
+                referenced_before_decl.insert(*start);
+            }
+        }
+    }
+
+    referenced_before_decl
+}
+
+/// Check if a statement references an identifier at the top level (not inside nested functions).
+fn stmt_references_identifier_at_top_level(stmt: &Statement, name: &str) -> bool {
+    match stmt {
+        Statement::FunctionDeclaration(_) => {
+            // Don't look inside function declarations (they create their own scope)
+            false
+        }
+        Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
+            ExportDefaultDecl::Expression(e) => expr_references_identifier_at_top_level(e, name),
+            _ => false,
+        },
+        Statement::ExportNamedDeclaration(export) => {
+            if let Some(ref decl) = export.declaration {
+                match decl.as_ref() {
+                    Declaration::VariableDeclaration(var_decl) => {
+                        var_decl.declarations.iter().any(|d| {
+                            d.init
+                                .as_ref()
+                                .map_or(false, |e| expr_references_identifier_at_top_level(e, name))
+                        })
+                    }
+                    _ => false,
+                }
+            } else {
+                // export { Name } - check specifiers
+                export.specifiers.iter().any(|s| {
+                    if let react_compiler_ast::declarations::ExportSpecifier::ExportSpecifier(spec) = s {
+                        match &spec.local {
+                            ModuleExportName::Identifier(id) => id.name == name,
+                            _ => false,
+                        }
+                    } else {
+                        false
+                    }
+                })
+            }
+        }
+        Statement::VariableDeclaration(var_decl) => var_decl.declarations.iter().any(|d| {
+            d.init
+                .as_ref()
+                .map_or(false, |e| expr_references_identifier_at_top_level(e, name))
+        }),
+        Statement::ExpressionStatement(expr_stmt) => {
+            expr_references_identifier_at_top_level(&expr_stmt.expression, name)
+        }
+        Statement::ReturnStatement(ret) => ret
+            .argument
+            .as_ref()
+            .map_or(false, |e| expr_references_identifier_at_top_level(e, name)),
+        _ => false,
+    }
+}
+
+/// Check if an expression references an identifier at the top level.
+fn expr_references_identifier_at_top_level(expr: &Expression, name: &str) -> bool {
+    match expr {
+        Expression::Identifier(id) => id.name == name,
+        Expression::CallExpression(call) => {
+            expr_references_identifier_at_top_level(&call.callee, name)
+                || call
+                    .arguments
+                    .iter()
+                    .any(|a| expr_references_identifier_at_top_level(a, name))
+        }
+        Expression::MemberExpression(member) => {
+            expr_references_identifier_at_top_level(&member.object, name)
+        }
+        Expression::ConditionalExpression(cond) => {
+            expr_references_identifier_at_top_level(&cond.test, name)
+                || expr_references_identifier_at_top_level(&cond.consequent, name)
+                || expr_references_identifier_at_top_level(&cond.alternate, name)
+        }
+        Expression::BinaryExpression(bin) => {
+            expr_references_identifier_at_top_level(&bin.left, name)
+                || expr_references_identifier_at_top_level(&bin.right, name)
+        }
+        Expression::LogicalExpression(log) => {
+            expr_references_identifier_at_top_level(&log.left, name)
+                || expr_references_identifier_at_top_level(&log.right, name)
+        }
+        // Don't recurse into function expressions/arrows (they create their own scope)
+        Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_) => false,
+        _ => false,
+    }
+}
+
+/// Build a function expression from a codegen function (compiled output).
+fn build_compiled_function_expression(codegen: &CodegenFunction) -> Expression {
+    Expression::FunctionExpression(FunctionExpression {
+        base: BaseNode::typed("FunctionExpression"),
+        id: codegen.id.clone(),
+        params: codegen.params.clone(),
+        body: codegen.body.clone(),
+        generator: codegen.generator,
+        is_async: codegen.is_async,
+        return_type: None,
+        type_parameters: None,
+    })
+}
+
+/// Build a function expression that preserves the original function's structure.
+/// For FunctionDeclarations, converts to FunctionExpression.
+/// For ArrowFunctionExpressions, keeps as-is.
+fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expression> {
+    match stmt {
+        Statement::FunctionDeclaration(f) => {
+            if f.base.start == Some(start) {
+                return Some(Expression::FunctionExpression(FunctionExpression {
+                    base: BaseNode::typed("FunctionExpression"),
+                    id: f.id.clone(),
+                    params: f.params.clone(),
+                    body: f.body.clone(),
+                    generator: f.generator,
+                    is_async: f.is_async,
+                    return_type: None,
+                    type_parameters: None,
+                }));
+            }
+            None
+        }
+        Statement::VariableDeclaration(var_decl) => {
+            for d in &var_decl.declarations {
+                if let Some(ref init) = d.init {
+                    if let Some(e) = clone_original_expr_as_expression(init, start) {
+                        return Some(e);
+                    }
+                }
+            }
+            None
+        }
+        Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
+            ExportDefaultDecl::FunctionDeclaration(f) => {
+                if f.base.start == Some(start) {
+                    return Some(Expression::FunctionExpression(FunctionExpression {
+                        base: BaseNode::typed("FunctionExpression"),
+                        id: f.id.clone(),
+                        params: f.params.clone(),
+                        body: f.body.clone(),
+                        generator: f.generator,
+                        is_async: f.is_async,
+                        return_type: None,
+                        type_parameters: None,
+                    }));
+                }
+                None
+            }
+            ExportDefaultDecl::Expression(e) => clone_original_expr_as_expression(e, start),
+            _ => None,
+        },
+        Statement::ExportNamedDeclaration(export) => {
+            if let Some(ref decl) = export.declaration {
+                match decl.as_ref() {
+                    Declaration::FunctionDeclaration(f) => {
+                        if f.base.start == Some(start) {
+                            return Some(Expression::FunctionExpression(FunctionExpression {
+                                base: BaseNode::typed("FunctionExpression"),
+                                id: f.id.clone(),
+                                params: f.params.clone(),
+                                body: f.body.clone(),
+                                generator: f.generator,
+                                is_async: f.is_async,
+                                return_type: None,
+                                type_parameters: None,
+                            }));
+                        }
+                        None
+                    }
+                    Declaration::VariableDeclaration(var_decl) => {
+                        for d in &var_decl.declarations {
+                            if let Some(ref init) = d.init {
+                                if let Some(e) = clone_original_expr_as_expression(init, start) {
+                                    return Some(e);
+                                }
+                            }
+                        }
+                        None
+                    }
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Clone an expression node for use as the original (fallback) in gating.
+fn clone_original_expr_as_expression(expr: &Expression, start: u32) -> Option<Expression> {
+    match expr {
+        Expression::FunctionExpression(f) => {
+            if f.base.start == Some(start) {
+                return Some(Expression::FunctionExpression(f.clone()));
+            }
+            None
+        }
+        Expression::ArrowFunctionExpression(f) => {
+            if f.base.start == Some(start) {
+                return Some(Expression::ArrowFunctionExpression(f.clone()));
+            }
+            None
+        }
+        Expression::CallExpression(call) => {
+            for arg in &call.arguments {
+                if let Some(e) = clone_original_expr_as_expression(arg, start) {
+                    return Some(e);
+                }
+            }
+            None
+        }
+        _ => None,
+    }
+}
+
+/// Build a compiled arrow/function expression from a codegen function,
+/// matching the original expression kind.
+fn build_compiled_expression_matching_kind(
+    codegen: &CodegenFunction,
+    original_kind: OriginalFnKind,
+) -> Expression {
+    match original_kind {
+        OriginalFnKind::ArrowFunctionExpression => {
+            Expression::ArrowFunctionExpression(ArrowFunctionExpression {
+                base: BaseNode::typed("ArrowFunctionExpression"),
+                params: codegen.params.clone(),
+                body: Box::new(ArrowFunctionBody::BlockStatement(codegen.body.clone())),
+                id: None,
+                generator: codegen.generator,
+                is_async: codegen.is_async,
+                expression: Some(false),
+                return_type: None,
+                type_parameters: None,
+                predicate: None,
+            })
+        }
+        _ => build_compiled_function_expression(codegen),
+    }
 }
 
 /// Apply compiled functions back to the AST by replacing original function nodes
@@ -1700,6 +2007,40 @@ fn apply_compiled_functions(
         return;
     }
 
+    // Check if any compiled functions have gating enabled
+    let has_gating = compiled_fns.iter().any(|cf| cf.gating.is_some());
+
+    // If gating is enabled, determine which functions are referenced before declaration
+    let referenced_before_decl = if has_gating {
+        get_functions_referenced_before_declaration(program, compiled_fns)
+    } else {
+        HashSet::new()
+    };
+
+    // For gated functions, we need to clone the original function expressions
+    // BEFORE we start mutating the AST.
+    let original_expressions: Vec<Option<Expression>> = if has_gating {
+        compiled_fns
+            .iter()
+            .map(|compiled| {
+                if compiled.gating.is_some() {
+                    if let Some(start) = compiled.fn_start {
+                        for stmt in program.body.iter() {
+                            if let Some(expr) = clone_original_fn_as_expression(stmt, start) {
+                                return Some(expr);
+                            }
+                        }
+                    }
+                    None
+                } else {
+                    None
+                }
+            })
+            .collect()
+    } else {
+        compiled_fns.iter().map(|_| None).collect()
+    };
+
     // Collect outlined functions to insert (as FunctionDeclarations).
     // For FunctionDeclarations: insert right after the parent (matching TS insertAfter behavior)
     // For FunctionExpression/ArrowFunctionExpression: append at end of program body
@@ -1707,7 +2048,7 @@ fn apply_compiled_functions(
     let mut outlined_decls: Vec<(Option<u32>, OriginalFnKind, FunctionDeclaration)> = Vec::new();
 
     // Replace each compiled function in the AST
-    for compiled in compiled_fns {
+    for (idx, compiled) in compiled_fns.iter().enumerate() {
         // Collect outlined functions for this compiled function
         for outlined in &compiled.codegen_fn.outlined {
             let outlined_decl = FunctionDeclaration {
@@ -1725,13 +2066,37 @@ fn apply_compiled_functions(
             outlined_decls.push((compiled.fn_start, compiled.original_kind, outlined_decl));
         }
 
-        // Find and replace the original function in the program body
-        replace_function_in_program(program, compiled);
+        if let Some(ref gating_config) = compiled.gating {
+            let is_ref_before_decl = compiled
+                .fn_start
+                .map_or(false, |s| referenced_before_decl.contains(&s));
+
+            if is_ref_before_decl && compiled.original_kind == OriginalFnKind::FunctionDeclaration {
+                // Use the hoisted function declaration gating pattern
+                apply_gated_function_hoisted(
+                    program,
+                    compiled,
+                    gating_config,
+                    context,
+                );
+            } else {
+                // Use the conditional expression gating pattern
+                let original_expr = original_expressions[idx].clone();
+                apply_gated_function_conditional(
+                    program,
+                    compiled,
+                    gating_config,
+                    original_expr,
+                    context,
+                );
+            }
+        } else {
+            // No gating: replace the function directly (original behavior)
+            replace_function_in_program(program, compiled);
+        }
     }
 
     // Insert outlined function declarations.
-    // Separate into two groups: those inserted at specific positions (FunctionDeclaration)
-    // and those appended at the end (FunctionExpression/ArrowFunctionExpression).
     let mut insert_decls: Vec<(Option<u32>, FunctionDeclaration)> = Vec::new();
     let mut push_decls: Vec<FunctionDeclaration> = Vec::new();
 
@@ -1746,10 +2111,6 @@ fn apply_compiled_functions(
         }
     }
 
-    // Insert-at-position decls in forward order: each insert goes right after the
-    // parent function, pushing previously inserted outlined functions down. This
-    // matches Babel's insertAfter() behavior where the last outlined function ends
-    // up closest to the parent.
     for (parent_start, outlined_decl) in insert_decls.into_iter() {
         let insert_idx = if let Some(start) = parent_start {
             program
@@ -1766,7 +2127,6 @@ fn apply_compiled_functions(
             .insert(insert_idx, Statement::FunctionDeclaration(outlined_decl));
     }
 
-    // Push-to-end decls in forward order (matching TS pushContainer behavior)
     for outlined_decl in push_decls {
         program
             .body
@@ -1774,24 +2134,580 @@ fn apply_compiled_functions(
     }
 
     // Register the memo cache import and rename useMemoCache references.
-    // Codegen produces `useMemoCache(N)` calls, but the actual import alias
-    // (e.g., `_c`) is determined by ProgramContext. We rename the identifier
-    // in the compiled function bodies before inserting them.
     let needs_memo_import = compiled_fns
         .iter()
         .any(|cf| cf.codegen_fn.memo_slots_used > 0);
     if needs_memo_import {
         let import_spec = context.add_memo_cache_import();
         let local_name = import_spec.name;
-        // Rename useMemoCache -> local_name in all function bodies in the program.
-        // The codegen only emits `useMemoCache` as the callee of the first statement
-        // in compiled functions, but we do a general rename for robustness.
         for stmt in program.body.iter_mut() {
             rename_identifier_in_statement(stmt, "useMemoCache", &local_name);
         }
     }
 
     add_imports_to_program(program, context);
+}
+
+/// Apply the conditional expression gating pattern.
+///
+/// For function declarations (non-export-default, non-hoisted):
+///   `function Foo(props) { ... }` -> `const Foo = gating() ? function Foo(...) { compiled } : function Foo(...) { original };`
+///
+/// For export default function with name:
+///   `export default function Foo(props) { ... }` -> `const Foo = gating() ? ... : ...; export default Foo;`
+///
+/// For export named function:
+///   `export function Foo(props) { ... }` -> `export const Foo = gating() ? ... : ...;`
+///
+/// For arrow/function expressions:
+///   Replace the expression inline with `gating() ? compiled : original`
+fn apply_gated_function_conditional(
+    program: &mut Program,
+    compiled: &CompiledFnForReplacement,
+    gating_config: &GatingConfig,
+    original_expr: Option<Expression>,
+    context: &mut ProgramContext,
+) {
+    let start = match compiled.fn_start {
+        Some(s) => s,
+        None => return,
+    };
+
+    // Add the gating import
+    let gating_import = context.add_import_specifier(
+        &gating_config.source,
+        &gating_config.import_specifier_name,
+        None,
+    );
+    let gating_callee_name = gating_import.name;
+
+    // Build the compiled expression
+    let compiled_expr =
+        build_compiled_expression_matching_kind(&compiled.codegen_fn, compiled.original_kind);
+
+    // Build the original (fallback) expression
+    let original_expr = match original_expr {
+        Some(e) => e,
+        None => return, // shouldn't happen
+    };
+
+    // Build: gating() ? compiled : original
+    let gating_expression = Expression::ConditionalExpression(ConditionalExpression {
+        base: BaseNode::typed("ConditionalExpression"),
+        test: Box::new(Expression::CallExpression(CallExpression {
+            base: BaseNode::typed("CallExpression"),
+            callee: Box::new(Expression::Identifier(Identifier {
+                base: BaseNode::typed("Identifier"),
+                name: gating_callee_name,
+                type_annotation: None,
+                optional: None,
+                decorators: None,
+            })),
+            arguments: vec![],
+            type_parameters: None,
+            type_arguments: None,
+            optional: None,
+        })),
+        consequent: Box::new(compiled_expr),
+        alternate: Box::new(original_expr),
+    });
+
+    // Find and replace the function in the program body.
+    // We need to track if this was an export default function with a name,
+    // because we need to insert `export default Name;` after the replacement.
+    let mut export_default_name: Option<(usize, String)> = None;
+
+    for (idx, stmt) in program.body.iter_mut().enumerate() {
+        // Check for export default function with a name (needs special handling)
+        if let Statement::ExportDefaultDeclaration(export) = stmt {
+            if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
+                if f.base.start == Some(start) {
+                    if let Some(ref fn_id) = f.id {
+                        export_default_name = Some((idx, fn_id.name.clone()));
+                    }
+                }
+            }
+        }
+        if replace_fn_with_gated(stmt, start, compiled, &gating_expression) {
+            break;
+        }
+    }
+
+    // If this was an export default function with a name, insert `export default Name;` after
+    if let Some((idx, name)) = export_default_name {
+        program.body.insert(
+            idx + 1,
+            Statement::ExportDefaultDeclaration(ExportDefaultDeclaration {
+                base: BaseNode::typed("ExportDefaultDeclaration"),
+                declaration: Box::new(ExportDefaultDecl::Expression(Box::new(
+                    Expression::Identifier(Identifier {
+                        base: BaseNode::typed("Identifier"),
+                        name,
+                        type_annotation: None,
+                        optional: None,
+                        decorators: None,
+                    }),
+                ))),
+                export_kind: None,
+            }),
+        );
+    }
+}
+
+/// Replace a function in a statement with a gated version (conditional expression).
+/// Returns true if the replacement was made.
+fn replace_fn_with_gated(
+    stmt: &mut Statement,
+    start: u32,
+    _compiled: &CompiledFnForReplacement,
+    gating_expression: &Expression,
+) -> bool {
+    match stmt {
+        Statement::FunctionDeclaration(f) => {
+            if f.base.start == Some(start) {
+                // Convert: `function Foo(props) { ... }`
+                // To: `const Foo = gating() ? ... : ...;`
+                let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
+                    base: BaseNode::typed("Identifier"),
+                    name: "anonymous".to_string(),
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                });
+                // Transfer comments from original function to the replacement
+                let mut base = BaseNode::typed("VariableDeclaration");
+                base.leading_comments = f.base.leading_comments.clone();
+                base.trailing_comments = f.base.trailing_comments.clone();
+                base.inner_comments = f.base.inner_comments.clone();
+                *stmt = Statement::VariableDeclaration(VariableDeclaration {
+                    base,
+                    kind: VariableDeclarationKind::Const,
+                    declarations: vec![VariableDeclarator {
+                        base: BaseNode::typed("VariableDeclarator"),
+                        id: PatternLike::Identifier(fn_name),
+                        init: Some(Box::new(gating_expression.clone())),
+                        definite: None,
+                    }],
+                    declare: None,
+                });
+                return true;
+            }
+        }
+        Statement::ExportDefaultDeclaration(export) => {
+            // Check if this is a FunctionDeclaration first
+            let is_fn_decl_match = matches!(
+                export.declaration.as_ref(),
+                ExportDefaultDecl::FunctionDeclaration(f) if f.base.start == Some(start)
+            );
+            if is_fn_decl_match {
+                if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
+                    let fn_name = f.id.clone();
+                    if let Some(fn_id) = fn_name {
+                        // `export default function Foo(props) { ... }`
+                        // -> `const Foo = gating() ? ... : ...; export default Foo;`
+                        // Transfer comments from the export statement
+                        let mut base = BaseNode::typed("VariableDeclaration");
+                        base.leading_comments = export.base.leading_comments.clone();
+                        base.trailing_comments = export.base.trailing_comments.clone();
+                        base.inner_comments = export.base.inner_comments.clone();
+                        let var_stmt = Statement::VariableDeclaration(VariableDeclaration {
+                            base,
+                            kind: VariableDeclarationKind::Const,
+                            declarations: vec![VariableDeclarator {
+                                base: BaseNode::typed("VariableDeclarator"),
+                                id: PatternLike::Identifier(fn_id.clone()),
+                                init: Some(Box::new(gating_expression.clone())),
+                                definite: None,
+                            }],
+                            declare: None,
+                        });
+                        *stmt = var_stmt;
+                        return true;
+                    } else {
+                        // `export default function(props) { ... }` (anonymous)
+                        // -> `export default gating() ? ... : ...`
+                        export.declaration =
+                            Box::new(ExportDefaultDecl::Expression(Box::new(gating_expression.clone())));
+                        return true;
+                    }
+                }
+            }
+            // Check Expression case
+            if let ExportDefaultDecl::Expression(e) = export.declaration.as_mut() {
+                if replace_gated_in_expression(e, start, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        Statement::ExportNamedDeclaration(export) => {
+            if let Some(ref mut decl) = export.declaration {
+                match decl.as_mut() {
+                    Declaration::FunctionDeclaration(f) => {
+                        if f.base.start == Some(start) {
+                            // `export function Foo(props) { ... }`
+                            // -> `export const Foo = gating() ? ... : ...;`
+                            let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
+                                base: BaseNode::typed("Identifier"),
+                                name: "anonymous".to_string(),
+                                type_annotation: None,
+                                optional: None,
+                                decorators: None,
+                            });
+                            *decl = Box::new(Declaration::VariableDeclaration(
+                                VariableDeclaration {
+                                    base: BaseNode::typed("VariableDeclaration"),
+                                    kind: VariableDeclarationKind::Const,
+                                    declarations: vec![VariableDeclarator {
+                                        base: BaseNode::typed("VariableDeclarator"),
+                                        id: PatternLike::Identifier(fn_name),
+                                        init: Some(Box::new(gating_expression.clone())),
+                                        definite: None,
+                                    }],
+                                    declare: None,
+                                },
+                            ));
+                            return true;
+                        }
+                    }
+                    Declaration::VariableDeclaration(var_decl) => {
+                        for d in var_decl.declarations.iter_mut() {
+                            if let Some(ref mut init) = d.init {
+                                if replace_gated_in_expression(init, start, gating_expression) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Statement::VariableDeclaration(var_decl) => {
+            for d in var_decl.declarations.iter_mut() {
+                if let Some(ref mut init) = d.init {
+                    if replace_gated_in_expression(init, start, gating_expression) {
+                        return true;
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    false
+}
+
+/// Replace a function in an expression with a gated conditional expression.
+fn replace_gated_in_expression(
+    expr: &mut Expression,
+    start: u32,
+    gating_expression: &Expression,
+) -> bool {
+    match expr {
+        Expression::FunctionExpression(f) => {
+            if f.base.start == Some(start) {
+                *expr = gating_expression.clone();
+                return true;
+            }
+        }
+        Expression::ArrowFunctionExpression(f) => {
+            if f.base.start == Some(start) {
+                *expr = gating_expression.clone();
+                return true;
+            }
+        }
+        Expression::CallExpression(call) => {
+            for arg in call.arguments.iter_mut() {
+                if replace_gated_in_expression(arg, start, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        _ => {}
+    }
+    false
+}
+
+/// Apply the hoisted function declaration gating pattern.
+///
+/// This is used when a function declaration is referenced before its declaration site.
+/// Instead of wrapping in a conditional expression (which would break hoisting), we:
+/// 1. Rename the original function to `Foo_unoptimized`
+/// 2. Insert a compiled function as `Foo_optimized`
+/// 3. Insert a `const gating_result = gating()` before
+/// 4. Insert a new `function Foo(arg0, ...) { if (gating_result) return Foo_optimized(...); else return Foo_unoptimized(...); }` after
+fn apply_gated_function_hoisted(
+    program: &mut Program,
+    compiled: &CompiledFnForReplacement,
+    gating_config: &GatingConfig,
+    context: &mut ProgramContext,
+) {
+    let start = match compiled.fn_start {
+        Some(s) => s,
+        None => return,
+    };
+
+    let original_fn_name = match &compiled.fn_name {
+        Some(name) => name.clone(),
+        None => return,
+    };
+
+    // Add the gating import
+    let gating_import = context.add_import_specifier(
+        &gating_config.source,
+        &gating_config.import_specifier_name,
+        None,
+    );
+    let gating_callee_name = gating_import.name.clone();
+
+    // Generate unique names
+    let gating_result_name = context.new_uid(&format!("{}_result", gating_callee_name));
+    let unoptimized_name = context.new_uid(&format!("{}_unoptimized", original_fn_name));
+    let optimized_name = context.new_uid(&format!("{}_optimized", original_fn_name));
+
+    // Find the original function declaration and determine its params
+    let mut original_params: Vec<PatternLike> = Vec::new();
+    let mut fn_stmt_idx: Option<usize> = None;
+
+    for (idx, stmt) in program.body.iter().enumerate() {
+        if let Statement::FunctionDeclaration(f) = stmt {
+            if f.base.start == Some(start) {
+                original_params = f.params.clone();
+                fn_stmt_idx = Some(idx);
+                break;
+            }
+        }
+    }
+
+    let fn_idx = match fn_stmt_idx {
+        Some(idx) => idx,
+        None => return,
+    };
+
+    // Rename the original function to `_unoptimized`
+    if let Statement::FunctionDeclaration(f) = &mut program.body[fn_idx] {
+        if let Some(ref mut id) = f.id {
+            id.name = unoptimized_name.clone();
+        }
+    }
+
+    // Build the optimized function declaration (compiled version with renamed id)
+    let compiled_fn_decl = FunctionDeclaration {
+        base: BaseNode::typed("FunctionDeclaration"),
+        id: Some(Identifier {
+            base: BaseNode::typed("Identifier"),
+            name: optimized_name.clone(),
+            type_annotation: None,
+            optional: None,
+            decorators: None,
+        }),
+        params: compiled.codegen_fn.params.clone(),
+        body: compiled.codegen_fn.body.clone(),
+        generator: compiled.codegen_fn.generator,
+        is_async: compiled.codegen_fn.is_async,
+        declare: None,
+        return_type: None,
+        type_parameters: None,
+        predicate: None,
+    };
+
+    // Build the gating result variable: `const gating_result = gating();`
+    let gating_result_stmt = Statement::VariableDeclaration(VariableDeclaration {
+        base: BaseNode::typed("VariableDeclaration"),
+        kind: VariableDeclarationKind::Const,
+        declarations: vec![VariableDeclarator {
+            base: BaseNode::typed("VariableDeclarator"),
+            id: PatternLike::Identifier(Identifier {
+                base: BaseNode::typed("Identifier"),
+                name: gating_result_name.clone(),
+                type_annotation: None,
+                optional: None,
+                decorators: None,
+            }),
+            init: Some(Box::new(Expression::CallExpression(CallExpression {
+                base: BaseNode::typed("CallExpression"),
+                callee: Box::new(Expression::Identifier(Identifier {
+                    base: BaseNode::typed("Identifier"),
+                    name: gating_callee_name,
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                })),
+                arguments: vec![],
+                type_parameters: None,
+                type_arguments: None,
+                optional: None,
+            }))),
+            definite: None,
+        }],
+        declare: None,
+    });
+
+    // Build new params and args for the dispatcher function
+    let num_params = original_params.len();
+    let mut new_params: Vec<PatternLike> = Vec::new();
+    let mut optimized_args: Vec<Expression> = Vec::new();
+    let mut unoptimized_args: Vec<Expression> = Vec::new();
+
+    for i in 0..num_params {
+        let arg_name = format!("arg{}", i);
+        let is_rest = matches!(&original_params[i], PatternLike::RestElement(_));
+
+        if is_rest {
+            new_params.push(PatternLike::RestElement(
+                react_compiler_ast::patterns::RestElement {
+                    base: BaseNode::typed("RestElement"),
+                    argument: Box::new(PatternLike::Identifier(Identifier {
+                        base: BaseNode::typed("Identifier"),
+                        name: arg_name.clone(),
+                        type_annotation: None,
+                        optional: None,
+                        decorators: None,
+                    })),
+                    type_annotation: None,
+                    decorators: None,
+                },
+            ));
+            optimized_args.push(Expression::SpreadElement(SpreadElement {
+                base: BaseNode::typed("SpreadElement"),
+                argument: Box::new(Expression::Identifier(Identifier {
+                    base: BaseNode::typed("Identifier"),
+                    name: arg_name.clone(),
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                })),
+            }));
+            unoptimized_args.push(Expression::SpreadElement(SpreadElement {
+                base: BaseNode::typed("SpreadElement"),
+                argument: Box::new(Expression::Identifier(Identifier {
+                    base: BaseNode::typed("Identifier"),
+                    name: arg_name,
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                })),
+            }));
+        } else {
+            new_params.push(PatternLike::Identifier(Identifier {
+                base: BaseNode::typed("Identifier"),
+                name: arg_name.clone(),
+                type_annotation: None,
+                optional: None,
+                decorators: None,
+            }));
+            optimized_args.push(Expression::Identifier(Identifier {
+                base: BaseNode::typed("Identifier"),
+                name: arg_name.clone(),
+                type_annotation: None,
+                optional: None,
+                decorators: None,
+            }));
+            unoptimized_args.push(Expression::Identifier(Identifier {
+                base: BaseNode::typed("Identifier"),
+                name: arg_name,
+                type_annotation: None,
+                optional: None,
+                decorators: None,
+            }));
+        }
+    }
+
+    // Build the dispatcher function:
+    // function Foo(arg0, ...) {
+    //   if (gating_result) return Foo_optimized(arg0, ...);
+    //   else return Foo_unoptimized(arg0, ...);
+    // }
+    let dispatcher_fn = Statement::FunctionDeclaration(FunctionDeclaration {
+        base: BaseNode::typed("FunctionDeclaration"),
+        id: Some(Identifier {
+            base: BaseNode::typed("Identifier"),
+            name: original_fn_name,
+            type_annotation: None,
+            optional: None,
+            decorators: None,
+        }),
+        params: new_params,
+        body: BlockStatement {
+            base: BaseNode::typed("BlockStatement"),
+            body: vec![Statement::IfStatement(IfStatement {
+                base: BaseNode::typed("IfStatement"),
+                test: Box::new(Expression::Identifier(Identifier {
+                    base: BaseNode::typed("Identifier"),
+                    name: gating_result_name,
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                })),
+                consequent: Box::new(Statement::ReturnStatement(ReturnStatement {
+                    base: BaseNode::typed("ReturnStatement"),
+                    argument: Some(Box::new(Expression::CallExpression(CallExpression {
+                        base: BaseNode::typed("CallExpression"),
+                        callee: Box::new(Expression::Identifier(Identifier {
+                            base: BaseNode::typed("Identifier"),
+                            name: optimized_name.clone(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        })),
+                        arguments: optimized_args,
+                        type_parameters: None,
+                        type_arguments: None,
+                        optional: None,
+                    }))),
+                })),
+                alternate: Some(Box::new(Statement::ReturnStatement(ReturnStatement {
+                    base: BaseNode::typed("ReturnStatement"),
+                    argument: Some(Box::new(Expression::CallExpression(CallExpression {
+                        base: BaseNode::typed("CallExpression"),
+                        callee: Box::new(Expression::Identifier(Identifier {
+                            base: BaseNode::typed("Identifier"),
+                            name: unoptimized_name,
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        })),
+                        arguments: unoptimized_args,
+                        type_parameters: None,
+                        type_arguments: None,
+                        optional: None,
+                    }))),
+                }))),
+            })],
+            directives: vec![],
+        },
+        generator: false,
+        is_async: false,
+        declare: None,
+        return_type: None,
+        type_parameters: None,
+        predicate: None,
+    });
+
+    // Insert nodes. The TS code uses insertBefore for the gating result and optimized fn,
+    // and insertAfter for the dispatcher. The order in the output should be:
+    //   ... (existing statements before fn_idx) ...
+    //   const gating_result = gating();       <- inserted before
+    //   function Foo_optimized() { ... }       <- inserted before
+    //   function Foo_unoptimized() { ... }     <- the original (renamed)
+    //   function Foo(arg0) { ... }             <- inserted after
+    //   ... (existing statements after fn_idx) ...
+    //
+    // insertBefore inserts before the target, and insertAfter inserts after.
+    // We insert in reverse order for insertAfter.
+
+    // Insert dispatcher after the original (now renamed) function
+    program
+        .body
+        .insert(fn_idx + 1, dispatcher_fn);
+
+    // Insert optimized function before the original
+    program.body.insert(
+        fn_idx,
+        Statement::FunctionDeclaration(compiled_fn_decl),
+    );
+
+    // Insert gating result before the optimized function
+    program.body.insert(fn_idx, gating_result_stmt);
 }
 
 /// Rename an identifier in a statement (recursive walk).
@@ -1865,6 +2781,11 @@ fn rename_identifier_in_expression(expr: &mut Expression, old_name: &str, new_na
             if let ArrowFunctionBody::BlockStatement(block) = f.body.as_mut() {
                 rename_identifier_in_block(block, old_name, new_name);
             }
+        }
+        Expression::ConditionalExpression(cond) => {
+            rename_identifier_in_expression(&mut cond.test, old_name, new_name);
+            rename_identifier_in_expression(&mut cond.consequent, old_name, new_name);
+            rename_identifier_in_expression(&mut cond.alternate, old_name, new_name);
         }
         _ => {}
     }
@@ -2178,6 +3099,9 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         has_module_scope_opt_out,
     );
 
+    // Initialize known referenced names from scope bindings for UID collision detection
+    context.init_from_scope(&scope);
+
     // Seed context with early debug logs
     context.debug_logs.extend(early_debug_logs);
 
@@ -2236,6 +3160,11 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         };
     }
 
+    // Determine gating for each compiled function.
+    // In the TS compiler, dynamic gating from directives takes precedence over plugin-level gating.
+    // Gating only applies to 'original' functions, not 'outlined' ones.
+    let function_gating_config = options.gating.clone();
+
     // Convert compiled functions to owned representations (dropping borrows)
     // so we can mutate the AST.
     let replacements: Vec<CompiledFnForReplacement> = compiled_fns
@@ -2246,10 +3175,28 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
                 FunctionNode::FunctionExpression(_) => OriginalFnKind::FunctionExpression,
                 FunctionNode::ArrowFunctionExpression(_) => OriginalFnKind::ArrowFunctionExpression,
             };
+            // Determine per-function gating: dynamic gating from directives OR plugin-level gating.
+            // Dynamic gating (from `use memo if(identifier)`) takes precedence.
+            let gating = if cf.kind == CompileSourceKind::Original {
+                // Check body directives for dynamic gating
+                let dynamic_gating = find_directives_dynamic_gating(
+                    &cf.source.body_directives,
+                    &options,
+                )
+                .ok()
+                .flatten()
+                .map(|r| r.gating);
+                dynamic_gating.or_else(|| function_gating_config.clone())
+            } else {
+                None
+            };
             CompiledFnForReplacement {
                 fn_start: cf.source.fn_start,
                 original_kind,
                 codegen_fn: cf.codegen_fn,
+                source_kind: cf.kind,
+                fn_name: cf.source.fn_name.clone(),
+                gating,
             }
         })
         .collect();

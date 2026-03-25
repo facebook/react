@@ -263,7 +263,7 @@ pub fn add_imports_to_program(program: &mut Program, context: &ProgramContext) {
 
     let mut stmts: Vec<Statement> = Vec::new();
     let mut sorted_modules: Vec<_> = context.imports.iter().collect();
-    sorted_modules.sort_by_key(|(k, _)| (*k).clone());
+    sorted_modules.sort_by(|(a, _), (b, _)| a.to_lowercase().cmp(&b.to_lowercase()));
 
     for (module_name, imports_map) in sorted_modules {
         let sorted_imports = {
