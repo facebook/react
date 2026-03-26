@@ -21,7 +21,7 @@ describe('useList', () => {
   });
 
   function renderHook(hook) {
-    const result = { current: null };
+    const result = {current: null};
     let rerender;
     function TestComponent() {
       const [, setTick] = React.useState(0);
@@ -35,21 +35,21 @@ describe('useList', () => {
     flushSync(() => {
       root.render(React.createElement(TestComponent));
     });
-    return { result, rerender };
+    return {result, rerender};
   }
 
   it('should initialize with provided list', () => {
-    const { result } = renderHook(() => useList([1, 2, 3]));
+    const {result} = renderHook(() => useList([1, 2, 3]));
     expect(result.current.list).toEqual([1, 2, 3]);
   });
 
   it('should initialize with empty list if none provided', () => {
-    const { result } = renderHook(() => useList());
+    const {result} = renderHook(() => useList());
     expect(result.current.list).toEqual([]);
   });
 
   it('should set list using setList', async () => {
-    const { result, rerender } = renderHook(() => useList([1, 2, 3]));
+    const {result, rerender} = renderHook(() => useList([1, 2, 3]));
     await act(() => {
       result.current.setList([4, 5, 6]);
       rerender();
@@ -58,7 +58,7 @@ describe('useList', () => {
   });
 
   it('should remove items using predicate', async () => {
-    const { result, rerender } = renderHook(() => useList([1, 2, 3, 4]));
+    const {result, rerender} = renderHook(() => useList([1, 2, 3, 4]));
     expect(result.current).not.toBe(null);
     await act(() => {
       result.current.remove(x => x % 2 === 0);
@@ -68,7 +68,7 @@ describe('useList', () => {
   });
 
   it('should not remove any items if predicate matches none', async () => {
-    const { result, rerender } = renderHook(() => useList([1, 2, 3]));
+    const {result, rerender} = renderHook(() => useList([1, 2, 3]));
     await act(() => {
       result.current.remove(x => x > 10);
       rerender();
@@ -77,7 +77,7 @@ describe('useList', () => {
   });
 
   it('should remove all items if predicate matches all', async () => {
-    const { result, rerender } = renderHook(() => useList([1, 2, 3]));
+    const {result, rerender} = renderHook(() => useList([1, 2, 3]));
     await act(() => {
       result.current.remove(() => true);
       rerender();
@@ -86,7 +86,7 @@ describe('useList', () => {
   });
 
   it('should remove item at given index', async () => {
-    const { result, rerender } = renderHook(() => useList(['a', 'b', 'c']));
+    const {result, rerender} = renderHook(() => useList(['a', 'b', 'c']));
     await act(() => {
       result.current.removeAt(1);
       rerender();
@@ -95,7 +95,7 @@ describe('useList', () => {
   });
 
   it('should do nothing if removeAt is called with invalid index', async () => {
-    const { result, rerender } = renderHook(() => useList(['a', 'b', 'c']));
+    const {result, rerender} = renderHook(() => useList(['a', 'b', 'c']));
     await act(() => {
       result.current.removeAt(10);
       rerender();
@@ -104,7 +104,7 @@ describe('useList', () => {
   });
 
   it('should handle removeAt on empty list', async () => {
-    const { result, rerender } = renderHook(() => useList([]));
+    const {result, rerender} = renderHook(() => useList([]));
     await act(() => {
       result.current.removeAt(0);
       rerender();

@@ -7,18 +7,18 @@
  * @emails react-core
  */
 
-import { useState, useCallback } from 'react';
+import {useState, useCallback} from 'react';
 
 export default function useList(initialList = []) {
   const [list, setList] = useState(initialList);
 
-  const remove = useCallback((predicate) => {
+  const remove = useCallback(predicate => {
     setList(prev => prev.filter(item => !predicate(item)));
   }, []);
 
-  const removeAt = useCallback((index) => {
+  const removeAt = useCallback(index => {
     setList(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  return { list, setList, remove, removeAt };
+  return {list, setList, remove, removeAt};
 }
