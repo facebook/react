@@ -52,7 +52,9 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - name: Download artifacts for base revision
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }}
+          GH_TOKEN=${GITHUB_TOKEN} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha || github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Display structure of build
         run: ls -R build
       - name: Archive build

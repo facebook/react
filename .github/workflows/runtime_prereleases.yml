@@ -74,7 +74,9 @@ jobs:
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
       - run: |
-          GH_TOKEN=${{ secrets.GH_TOKEN }} scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
+          GH_TOKEN=${GH_TOKEN} scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
       - name: Check prepared files
         run: ls -R build/node_modules
       - if: '${{ inputs.only_packages }}'
