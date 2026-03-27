@@ -218,15 +218,16 @@ function printOverhead(baseline, comparison) {
     ((comparison.mean - baseline.mean) / baseline.mean) * 100;
   const pctMedian =
     ((comparison.median - baseline.median) / baseline.median) * 100;
-  const sign = pctMedian >= 0 ? '+' : '';
+  const pctP95 =
+    ((comparison.p95 - baseline.p95) / baseline.p95) * 100;
+  const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
   console.log(
-    '  %s vs %s: %s%s%% (median), %s%s%% (trimmed mean)',
+    '  %s vs %s: %s (median), %s (p95), %s (trimmed mean)',
     comparison.name,
     baseline.name,
-    sign,
-    pctMedian.toFixed(1),
-    pctMean >= 0 ? '+' : '',
-    pctMean.toFixed(1)
+    fmt(pctMedian),
+    fmt(pctP95),
+    fmt(pctMean)
   );
 }
 
