@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<27f0c75794d776441e0a3f8cb70a7791>>
+ * @generated SignedSource<<4dec150011ecb366d3af3ea3e2051a95>>
  */
 
 'use strict';
@@ -38890,7 +38890,7 @@ function inferBlock(context, state, block) {
         const handlerParam = context.catchHandlers.get(terminal.handler);
         if (handlerParam != null) {
             CompilerError.invariant(state.kind(handlerParam) != null, {
-                reason: 'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
+                reason: 'Expected catch binding to be initialized with a DeclareLocal Catch instruction',
                 loc: terminal.loc,
             });
             const effects = [];

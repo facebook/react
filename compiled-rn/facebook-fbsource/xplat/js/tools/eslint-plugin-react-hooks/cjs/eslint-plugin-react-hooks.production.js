@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<206b54c22a94fb32f75b4b221a7cb411>>
+ * @generated SignedSource<<326dca1649d5332c957937db6c788ac5>>
  */
 
 'use strict';
@@ -38669,7 +38669,7 @@ function inferBlock(context, state, block) {
         const handlerParam = context.catchHandlers.get(terminal.handler);
         if (handlerParam != null) {
             CompilerError.invariant(state.kind(handlerParam) != null, {
-                reason: 'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
+                reason: 'Expected catch binding to be initialized with a DeclareLocal Catch instruction',
                 loc: terminal.loc,
             });
             const effects = [];
