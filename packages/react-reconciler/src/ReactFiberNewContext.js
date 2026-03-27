@@ -323,12 +323,23 @@ function propagateContextChanges<T>(
         renderLanes,
         workInProgress,
       );
-      if (!forcePropagateEntireTree) {
-        // During lazy propagation, we can defer propagating changes to
-        // the children, same as the consumer match above.
-        nextFiber = null;
+      // The primary children's fibers may not exist in the tree (they
+      // were discarded on initial mount if they suspended). However, the
+      // fallback children ARE in the committed tree and visible to the
+      // user. We need to continue propagating into the fallback subtree
+      // so that its context consumers are marked for re-render.
+      //
+      // The fiber structure is:
+      //   SuspenseComponent
+      //     → child: OffscreenComponent (primary, hidden)
+      //       → sibling: FallbackFragment
+      //
+      // Skip the primary (hidden) subtree and jump to the fallback.
+      const primaryChildFragment = fiber.child;
+      if (primaryChildFragment !== null) {
+        nextFiber = primaryChildFragment.sibling;
       } else {
-        nextFiber = fiber.child;
+        nextFiber = null;
       }
     } else {
       // Traverse down.
