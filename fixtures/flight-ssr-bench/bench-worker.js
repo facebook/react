@@ -39,13 +39,14 @@ let moduleIdx = 0;
 
 function registerClientModule(modulePath) {
   const id = String(moduleIdx++);
+  const chunkId = 'chunk-' + id;
   const absPath = path.resolve(__dirname, modulePath);
   const actualExports = require(absPath);
   clientModules[id] = actualExports;
 
   const href = url.pathToFileURL(absPath).href;
-  clientManifest[href] = {id, chunks: [], name: '*'};
-  ssrModuleMap[id] = {'*': {id, chunks: [], name: '*'}};
+  clientManifest[href] = {id, chunks: [chunkId, absPath], name: '*'};
+  ssrModuleMap[id] = {'*': {id, chunks: [chunkId, absPath], name: '*'}};
 }
 
 const srcDirs = [
@@ -73,8 +74,10 @@ global.__webpack_require__ = function (id) {
   }
   throw new Error('Unknown module: ' + id);
 };
-global.__webpack_chunk_load__ = function () {
-  return Promise.resolve();
+global.__webpack_chunk_load__ = function (chunkId) {
+  return new Promise(function (resolve) {
+    setImmediate(resolve);
+  });
 };
 
 const ssrManifest = {

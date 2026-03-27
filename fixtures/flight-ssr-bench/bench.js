@@ -21,19 +21,25 @@ const ISOLATE_MODE = process.argv.includes('--isolate');
 // ---------------------------------------------------------------------------
 
 const clientModules = {};
+const clientChunkModules = {};
 const clientManifest = {};
 const ssrModuleMap = {};
 let moduleIdx = 0;
 
 function registerClientModule(modulePath) {
   const id = String(moduleIdx++);
+  const chunkId = 'chunk-' + id;
   const absPath = path.resolve(__dirname, modulePath);
   const actualExports = require(absPath);
   clientModules[id] = actualExports;
+  // Pre-register the chunk so __webpack_chunk_load__ can find it.
+  clientChunkModules[chunkId] = absPath;
 
   const href = url.pathToFileURL(absPath).href;
-  clientManifest[href] = {id, chunks: [], name: '*'};
-  ssrModuleMap[id] = {'*': {id, chunks: [], name: '*'}};
+  // Provide chunk IDs like a real webpack build would. The chunks array
+  // format is [chunkId, chunkFilename, ...] in pairs.
+  clientManifest[href] = {id, chunks: [chunkId, absPath], name: '*'};
+  ssrModuleMap[id] = {'*': {id, chunks: [chunkId, absPath], name: '*'}};
 }
 
 // Auto-register all 'use client' components by scanning src/
@@ -59,8 +65,12 @@ global.__webpack_require__ = function (id) {
   }
   throw new Error('Unknown module: ' + id);
 };
-global.__webpack_chunk_load__ = function () {
-  return Promise.resolve();
+global.__webpack_chunk_load__ = function (chunkId) {
+  // Simulate SSR chunk loading: resolve asynchronously like a real
+  // webpack runtime loading a separate chunk file from disk.
+  return new Promise(function (resolve) {
+    setImmediate(resolve);
+  });
 };
 
 const ssrManifest = {
