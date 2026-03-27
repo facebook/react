@@ -330,11 +330,20 @@ pub trait ReactiveFunctionTransform {
     ) -> Result<(), CompilerError> {
         match value {
             ReactiveValue::OptionalExpression { value: inner, .. } => {
-                self.visit_value(id, inner, state)?;
+                let next = self.transform_value(id, inner, state)?;
+                if let TransformedValue::Replace(new_value) = next {
+                    **inner = new_value;
+                }
             }
             ReactiveValue::LogicalExpression { left, right, .. } => {
-                self.visit_value(id, left, state)?;
-                self.visit_value(id, right, state)?;
+                let next_left = self.transform_value(id, left, state)?;
+                if let TransformedValue::Replace(new_value) = next_left {
+                    **left = new_value;
+                }
+                let next_right = self.transform_value(id, right, state)?;
+                if let TransformedValue::Replace(new_value) = next_right {
+                    **right = new_value;
+                }
             }
             ReactiveValue::ConditionalExpression {
                 test,
@@ -342,9 +351,18 @@ pub trait ReactiveFunctionTransform {
                 alternate,
                 ..
             } => {
-                self.visit_value(id, test, state)?;
-                self.visit_value(id, consequent, state)?;
-                self.visit_value(id, alternate, state)?;
+                let next_test = self.transform_value(id, test, state)?;
+                if let TransformedValue::Replace(new_value) = next_test {
+                    **test = new_value;
+                }
+                let next_cons = self.transform_value(id, consequent, state)?;
+                if let TransformedValue::Replace(new_value) = next_cons {
+                    **consequent = new_value;
+                }
+                let next_alt = self.transform_value(id, alternate, state)?;
+                if let TransformedValue::Replace(new_value) = next_alt {
+                    **alternate = new_value;
+                }
             }
             ReactiveValue::SequenceExpression {
                 instructions,
@@ -356,7 +374,10 @@ pub trait ReactiveFunctionTransform {
                 for instr in instructions.iter_mut() {
                     self.visit_instruction(instr, state)?;
                 }
-                self.visit_value(seq_id, inner, state)?;
+                let next = self.transform_value(seq_id, inner, state)?;
+                if let TransformedValue::Replace(new_value) = next {
+                    **inner = new_value;
+                }
             }
             ReactiveValue::Instruction(instr_value) => {
                 for place in each_instruction_value_operand(instr_value) {
@@ -375,16 +396,35 @@ pub trait ReactiveFunctionTransform {
         self.traverse_instruction(instruction, state)
     }
 
+    fn transform_value(
+        &mut self,
+        id: EvaluationOrder,
+        value: &mut ReactiveValue,
+        state: &mut Self::State,
+    ) -> Result<TransformedValue, CompilerError> {
+        self.visit_value(id, value, state)?;
+        Ok(TransformedValue::Keep)
+    }
+
     fn traverse_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,
         state: &mut Self::State,
     ) -> Result<(), CompilerError> {
         self.visit_id(instruction.id, state)?;
+        // Visit instruction-level lvalue
         if let Some(lvalue) = &instruction.lvalue {
             self.visit_lvalue(instruction.id, lvalue, state)?;
         }
-        self.visit_value(instruction.id, &mut instruction.value, state)
+        // Visit value-level lvalues (TS: eachInstructionValueLValue)
+        for place in each_instruction_value_lvalue(&instruction.value) {
+            self.visit_lvalue(instruction.id, place, state)?;
+        }
+        let next_value = self.transform_value(instruction.id, &mut instruction.value, state)?;
+        if let TransformedValue::Replace(new_value) = next_value {
+            instruction.value = new_value;
+        }
+        Ok(())
     }
 
     fn visit_terminal(
@@ -420,11 +460,20 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, init, state)?;
-                self.visit_value(id, test, state)?;
+                let next_init = self.transform_value(id, init, state)?;
+                if let TransformedValue::Replace(new_value) = next_init {
+                    *init = new_value;
+                }
+                let next_test = self.transform_value(id, test, state)?;
+                if let TransformedValue::Replace(new_value) = next_test {
+                    *test = new_value;
+                }
                 self.visit_block(loop_block, state)?;
                 if let Some(update) = update {
-                    self.visit_value(id, update, state)?;
+                    let next_update = self.transform_value(id, update, state)?;
+                    if let TransformedValue::Replace(new_value) = next_update {
+                        *update = new_value;
+                    }
                 }
             }
             ReactiveTerminal::ForOf {
@@ -435,8 +484,14 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, init, state)?;
-                self.visit_value(id, test, state)?;
+                let next_init = self.transform_value(id, init, state)?;
+                if let TransformedValue::Replace(new_value) = next_init {
+                    *init = new_value;
+                }
+                let next_test = self.transform_value(id, test, state)?;
+                if let TransformedValue::Replace(new_value) = next_test {
+                    *test = new_value;
+                }
                 self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::ForIn {
@@ -446,7 +501,10 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, init, state)?;
+                let next_init = self.transform_value(id, init, state)?;
+                if let TransformedValue::Replace(new_value) = next_init {
+                    *init = new_value;
+                }
                 self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::DoWhile {
@@ -457,7 +515,10 @@ pub trait ReactiveFunctionTransform {
             } => {
                 let id = *id;
                 self.visit_block(loop_block, state)?;
-                self.visit_value(id, test, state)?;
+                let next_test = self.transform_value(id, test, state)?;
+                if let TransformedValue::Replace(new_value) = next_test {
+                    *test = new_value;
+                }
             }
             ReactiveTerminal::While {
                 test,
@@ -466,7 +527,10 @@ pub trait ReactiveFunctionTransform {
                 ..
             } => {
                 let id = *id;
-                self.visit_value(id, test, state)?;
+                let next_test = self.transform_value(id, test, state)?;
+                if let TransformedValue::Replace(new_value) = next_test {
+                    *test = new_value;
+                }
                 self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::If {
@@ -762,7 +826,11 @@ fn each_instruction_value_operand(value: &react_compiler_hir::InstructionValue) 
         LoadLocal { place, .. } | LoadContext { place, .. } => {
             operands.push(place);
         }
-        StoreLocal { value, .. } | StoreContext { value, .. } => {
+        StoreLocal { value, .. } => {
+            operands.push(value);
+        }
+        StoreContext { lvalue, value, .. } => {
+            operands.push(&lvalue.place);
             operands.push(value);
         }
         Destructure { value, .. } => {
@@ -910,9 +978,17 @@ fn each_instruction_value_operand(value: &react_compiler_hir::InstructionValue) 
             operands.push(iterator);
             operands.push(collection);
         }
-        PrefixUpdate { lvalue, value, .. } | PostfixUpdate { lvalue, value, .. } => {
-            operands.push(lvalue);
+        PrefixUpdate { value, .. } | PostfixUpdate { value, .. } => {
             operands.push(value);
+        }
+        StartMemoize { deps, .. } => {
+            if let Some(deps) = deps {
+                for dep in deps {
+                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal { value, .. } = &dep.root {
+                        operands.push(value);
+                    }
+                }
+            }
         }
         FinishMemoize { decl, .. } => {
             operands.push(decl);
@@ -926,7 +1002,6 @@ fn each_instruction_value_operand(value: &react_compiler_hir::InstructionValue) 
         | MetaProperty { .. }
         | LoadGlobal { .. }
         | Debugger { .. }
-        | StartMemoize { .. }
         | UnsupportedNode { .. }
         | ObjectMethod { .. }
         | FunctionExpression { .. } => {}
