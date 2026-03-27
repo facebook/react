@@ -21,6 +21,7 @@
     "build": "NODE_ENV=production node render.js",
     "start": "NODE_ENV=production node render.js && npx -y serve build",
     "bench": "NODE_ENV=production node --expose-gc bench.js",
-    "bench:profile": "NODE_ENV=production node --expose-gc bench.js --profile"
+    "bench:profile": "NODE_ENV=production node --expose-gc bench.js --profile",
+    "bench:isolate": "NODE_ENV=production node bench.js --isolate"
   }
 }

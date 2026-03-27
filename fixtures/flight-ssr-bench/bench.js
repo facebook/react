@@ -14,6 +14,7 @@ const {PassThrough, Writable} = require('stream');
 const inspector = require('node:inspector');
 
 const PROFILE_MODE = process.argv.includes('--profile');
+const ISOLATE_MODE = process.argv.includes('--isolate');
 
 // ---------------------------------------------------------------------------
 // Manifest setup (WebpackMock pattern)
@@ -319,6 +320,53 @@ async function profileRun(name, fn, warmup, iterations, outputPath) {
 }
 
 // ---------------------------------------------------------------------------
+// Isolated (per-process) runner
+// ---------------------------------------------------------------------------
+
+const {execFileSync} = require('child_process');
+
+function runIsolated(mode, app, items) {
+  const result = execFileSync(
+    process.execPath,
+    ['--expose-gc', path.resolve(__dirname, 'bench-worker.js'),
+     '--mode', mode, '--app', app, '--items', String(items)],
+    {
+      env: {...process.env, NODE_ENV: 'production'},
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 30000,
+    }
+  );
+  return parseFloat(result.trim());
+}
+
+async function runIsolatedBenchmark(name, mode, app, items, iterations, warmup) {
+  for (let i = 0; i < warmup; i++) {
+    runIsolated(mode, app, items);
+  }
+
+  const times = [];
+  for (let i = 0; i < iterations; i++) {
+    times.push(runIsolated(mode, app, items));
+  }
+
+  const sorted = [...times].sort((a, b) => a - b);
+  const trimCount = Math.floor(sorted.length * 0.05);
+  const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
+
+  const mean = trimmed.reduce((s, t) => s + t, 0) / trimmed.length;
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const stddev = Math.sqrt(
+    trimmed.reduce((s, t) => s + (t - mean) ** 2, 0) / trimmed.length
+  );
+  const p95 = sorted[Math.floor(sorted.length * 0.95)];
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+
+  return {name, mean, median, stddev, p95, min, max, iterations};
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -332,6 +380,44 @@ async function main() {
   const AppAsync = require('./src/AppAsync.js').default;
 
   const ITEM_COUNT = 200;
+
+  if (ISOLATE_MODE) {
+    const WARMUP = 10;
+    const ITERATIONS = 50;
+
+    console.log(
+      '\n--- Isolated Benchmark (%d warmup, %d iterations, %d items) ---\n',
+      WARMUP,
+      ITERATIONS,
+      ITEM_COUNT
+    );
+
+    const classicalSync = await runIsolatedBenchmark(
+      'Classical SSR (sync)', 'classical', 'sync', ITEM_COUNT, ITERATIONS, WARMUP
+    );
+    printResult(classicalSync);
+
+    const flightSync = await runIsolatedBenchmark(
+      'Flight SSR (sync)', 'flight', 'sync', ITEM_COUNT, ITERATIONS, WARMUP
+    );
+    printResult(flightSync);
+
+    const classicalAsync = await runIsolatedBenchmark(
+      'Classical SSR (async)', 'classical', 'async', ITEM_COUNT, ITERATIONS, WARMUP
+    );
+    printResult(classicalAsync);
+
+    const flightAsync = await runIsolatedBenchmark(
+      'Flight SSR (async)', 'flight', 'async', ITEM_COUNT, ITERATIONS, WARMUP
+    );
+    printResult(flightAsync);
+
+    console.log('\n--- Overhead ---\n');
+    printOverhead(classicalSync, flightSync);
+    printOverhead(classicalAsync, flightAsync);
+    return;
+  }
+
   const WARMUP = 50;
   const ITERATIONS = 200;
   const PROFILE_WARMUP = 20;
