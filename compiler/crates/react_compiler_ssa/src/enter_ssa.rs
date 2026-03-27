@@ -4,339 +4,7 @@ use indexmap::IndexMap;
 use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::*;
-use react_compiler_lowering::each_terminal_successor;
-
-// =============================================================================
-// Helper: map_instruction_operands
-// =============================================================================
-
-/// Maps all operand (read) Places in an instruction value via `f`.
-/// For FunctionExpression/ObjectMethod, also maps the context places of the
-/// inner function (accessed via env).
-fn map_instruction_operands(
-    instr: &mut Instruction,
-    env: &mut Environment,
-    f: &mut impl FnMut(&mut Place, &mut Environment),
-) {
-    match &mut instr.value {
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            f(left, env);
-            f(right, env);
-        }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::PropertyDelete { object, .. } => {
-            f(object, env);
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            f(object, env);
-            f(value, env);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        }
-        | InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            f(object, env);
-            f(property, env);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => {
-            f(object, env);
-            f(property, env);
-            f(value, env);
-        }
-        InstructionValue::DeclareContext { .. } | InstructionValue::DeclareLocal { .. } => {}
-        InstructionValue::LoadLocal { place, .. } | InstructionValue::LoadContext { place, .. } => {
-            f(place, env);
-        }
-        InstructionValue::StoreLocal { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::StoreContext { lvalue, value, .. } => {
-            f(&mut lvalue.place, env);
-            f(value, env);
-        }
-        InstructionValue::StoreGlobal { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::Destructure { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            f(callee, env);
-            for arg in args.iter_mut() {
-                match arg {
-                    PlaceOrSpread::Place(p) => f(p, env),
-                    PlaceOrSpread::Spread(s) => f(&mut s.place, env),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            f(receiver, env);
-            f(property, env);
-            for arg in args.iter_mut() {
-                match arg {
-                    PlaceOrSpread::Place(p) => f(p, env),
-                    PlaceOrSpread::Spread(s) => f(&mut s.place, env),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let JsxTag::Place(p) = tag {
-                f(p, env);
-            }
-            for attr in props.iter_mut() {
-                match attr {
-                    JsxAttribute::SpreadAttribute { argument } => f(argument, env),
-                    JsxAttribute::Attribute { place, .. } => f(place, env),
-                }
-            }
-            if let Some(children) = children {
-                for child in children.iter_mut() {
-                    f(child, env);
-                }
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties.iter_mut() {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => {
-                        if let ObjectPropertyKey::Computed { name } = &mut p.key {
-                            f(name, env);
-                        }
-                        f(&mut p.place, env);
-                    }
-                    ObjectPropertyOrSpread::Spread(s) => {
-                        f(&mut s.place, env);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for elem in elements.iter_mut() {
-                match elem {
-                    ArrayElement::Place(p) => f(p, env),
-                    ArrayElement::Spread(s) => f(&mut s.place, env),
-                    ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children.iter_mut() {
-                f(child, env);
-            }
-        }
-        InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. } => {
-            // Context places are mapped separately before this call
-            // (in enter_ssa_impl) to avoid borrow conflicts with env.functions.
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            f(tag, env);
-        }
-        InstructionValue::TypeCastExpression { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for expr in subexprs.iter_mut() {
-                f(expr, env);
-            }
-        }
-        InstructionValue::Await { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            f(collection, env);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            f(iterator, env);
-            f(collection, env);
-        }
-        InstructionValue::NextPropertyOf { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::PostfixUpdate { value, .. }
-        | InstructionValue::PrefixUpdate { value, .. } => {
-            f(value, env);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps.iter_mut() {
-                    if let ManualMemoDependencyRoot::NamedLocal { value, .. } = &mut dep.root {
-                        f(value, env);
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            f(decl, env);
-        }
-        InstructionValue::Debugger { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. } => {}
-    }
-}
-
-// =============================================================================
-// Helper: map_instruction_lvalues
-// =============================================================================
-
-fn map_instruction_lvalues(
-    instr: &mut Instruction,
-    f: &mut impl FnMut(&mut Place) -> Result<(), CompilerDiagnostic>,
-) -> Result<(), CompilerDiagnostic> {
-    match &mut instr.value {
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
-            f(&mut lvalue.place)?;
-        }
-        InstructionValue::DeclareContext { .. } | InstructionValue::StoreContext { .. } => {}
-        InstructionValue::Destructure { lvalue, .. } => {
-            map_pattern_lvalues(&mut lvalue.pattern, f)?;
-        }
-        InstructionValue::PostfixUpdate { lvalue, .. }
-        | InstructionValue::PrefixUpdate { lvalue, .. } => {
-            f(lvalue)?;
-        }
-        InstructionValue::BinaryExpression { .. }
-        | InstructionValue::PropertyLoad { .. }
-        | InstructionValue::PropertyDelete { .. }
-        | InstructionValue::PropertyStore { .. }
-        | InstructionValue::ComputedLoad { .. }
-        | InstructionValue::ComputedDelete { .. }
-        | InstructionValue::ComputedStore { .. }
-        | InstructionValue::LoadLocal { .. }
-        | InstructionValue::LoadContext { .. }
-        | InstructionValue::StoreGlobal { .. }
-        | InstructionValue::NewExpression { .. }
-        | InstructionValue::CallExpression { .. }
-        | InstructionValue::MethodCall { .. }
-        | InstructionValue::UnaryExpression { .. }
-        | InstructionValue::JsxExpression { .. }
-        | InstructionValue::ObjectExpression { .. }
-        | InstructionValue::ArrayExpression { .. }
-        | InstructionValue::JsxFragment { .. }
-        | InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. }
-        | InstructionValue::TaggedTemplateExpression { .. }
-        | InstructionValue::TypeCastExpression { .. }
-        | InstructionValue::TemplateLiteral { .. }
-        | InstructionValue::Await { .. }
-        | InstructionValue::GetIterator { .. }
-        | InstructionValue::IteratorNext { .. }
-        | InstructionValue::NextPropertyOf { .. }
-        | InstructionValue::StartMemoize { .. }
-        | InstructionValue::FinishMemoize { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. } => {}
-    }
-    f(&mut instr.lvalue)?;
-    Ok(())
-}
-
-fn map_pattern_lvalues(
-    pattern: &mut Pattern,
-    f: &mut impl FnMut(&mut Place) -> Result<(), CompilerDiagnostic>,
-) -> Result<(), CompilerDiagnostic> {
-    match pattern {
-        Pattern::Array(arr) => {
-            for item in arr.items.iter_mut() {
-                match item {
-                    ArrayPatternElement::Place(p) => f(p)?,
-                    ArrayPatternElement::Spread(s) => f(&mut s.place)?,
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj) => {
-            for prop in obj.properties.iter_mut() {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => f(&mut p.place)?,
-                    ObjectPropertyOrSpread::Spread(s) => f(&mut s.place)?,
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-// =============================================================================
-// Helper: map_terminal_operands
-// =============================================================================
-
-fn map_terminal_operands(terminal: &mut Terminal, mut f: impl FnMut(&mut Place)) {
-    match terminal {
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            f(test);
-        }
-        Terminal::Switch { test, cases, .. } => {
-            f(test);
-            for case in cases.iter_mut() {
-                if let Some(t) = &mut case.test {
-                    f(t);
-                }
-            }
-        }
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => {
-            f(value);
-        }
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            if let Some(binding) = handler_binding {
-                f(binding);
-            }
-        }
-        Terminal::Goto { .. }
-        | Terminal::DoWhile { .. }
-        | Terminal::While { .. }
-        | Terminal::For { .. }
-        | Terminal::ForOf { .. }
-        | Terminal::ForIn { .. }
-        | Terminal::Logical { .. }
-        | Terminal::Ternary { .. }
-        | Terminal::Optional { .. }
-        | Terminal::Label { .. }
-        | Terminal::Sequence { .. }
-        | Terminal::MaybeThrow { .. }
-        | Terminal::Scope { .. }
-        | Terminal::PrunedScope { .. }
-        | Terminal::Unreachable { .. }
-        | Terminal::Unsupported { .. } => {}
-    }
-}
+use react_compiler_hir::visitors;
 
 // =============================================================================
 // SSABuilder
@@ -708,16 +376,25 @@ fn enter_ssa_impl(
             }
 
             // Map non-context operands
-            map_instruction_operands(instr, env, &mut |place, env| {
+            visitors::for_each_instruction_value_operand_mut(&mut instr.value, &mut |place| {
                 *place = builder.get_place(place, env);
             });
 
-            // Map lvalues
+            // Map lvalues (skip DeclareContext/StoreContext — context variables
+            // don't participate in SSA renaming)
             let instr = &mut func.instructions[instr_idx];
-            map_instruction_lvalues(instr, &mut |place| {
-                *place = builder.define_place(place, env)?;
-                Ok(())
-            })?;
+            let mut lvalue_err: Option<CompilerDiagnostic> = None;
+            visitors::for_each_instruction_lvalue_mut(instr, &mut |place| {
+                if lvalue_err.is_none() {
+                    match builder.define_place(place, env) {
+                        Ok(new_place) => *place = new_place,
+                        Err(e) => lvalue_err = Some(e),
+                    }
+                }
+            });
+            if let Some(e) = lvalue_err {
+                return Err(e);
+            }
 
             // Handle inner function SSA
             if let Some(fid) = func_expr_id {
@@ -779,13 +456,13 @@ fn enter_ssa_impl(
 
         // Map terminal operands
         let terminal = &mut func.body.blocks.get_mut(&block_id).unwrap().terminal;
-        map_terminal_operands(terminal, |place| {
+        visitors::for_each_terminal_operand_mut(terminal, &mut |place| {
             *place = builder.get_place(place, env);
         });
 
         // Handle successors
         let terminal_ref = &func.body.blocks.get(&block_id).unwrap().terminal;
-        let successors = each_terminal_successor(terminal_ref);
+        let successors = visitors::each_terminal_successor(terminal_ref);
         for output_id in successors {
             let output_preds_len = builder
                 .block_preds

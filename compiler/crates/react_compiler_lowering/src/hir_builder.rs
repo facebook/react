@@ -5,6 +5,7 @@ use crate::identifier_loc_index::IdentifierLocIndex;
 use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::visitors::{each_terminal_successor, terminal_fallthrough};
 
 // ---------------------------------------------------------------------------
 // Reserved word check (matches TS isReservedWord)
@@ -893,85 +894,6 @@ impl<'a> HirBuilder<'a> {
     }
 }
 
-
-// ---------------------------------------------------------------------------
-// Terminal helper functions
-// ---------------------------------------------------------------------------
-
-/// Return all successor block IDs of a terminal (NOT fallthrough).
-pub fn each_terminal_successor(terminal: &Terminal) -> Vec<BlockId> {
-    match terminal {
-        Terminal::Goto { block, .. } => vec![*block],
-        Terminal::If {
-            consequent,
-            alternate,
-            ..
-        } => vec![*consequent, *alternate],
-        Terminal::Branch {
-            consequent,
-            alternate,
-            ..
-        } => vec![*consequent, *alternate],
-        Terminal::Switch { cases, .. } => cases.iter().map(|c| c.block).collect(),
-        Terminal::Logical { test, .. }
-        | Terminal::Ternary { test, .. }
-        | Terminal::Optional { test, .. } => vec![*test],
-        Terminal::Return { .. } => vec![],
-        Terminal::Throw { .. } => vec![],
-        Terminal::DoWhile { loop_block, .. } => vec![*loop_block],
-        Terminal::While { test, .. } => vec![*test],
-        Terminal::For { init, .. } => vec![*init],
-        Terminal::ForOf { init, .. } => vec![*init],
-        Terminal::ForIn { init, .. } => vec![*init],
-        Terminal::Label { block, .. } => vec![*block],
-        Terminal::Sequence { block, .. } => vec![*block],
-        Terminal::MaybeThrow {
-            continuation,
-            handler,
-            ..
-        } => {
-            let mut succs = vec![*continuation];
-            if let Some(h) = handler {
-                succs.push(*h);
-            }
-            succs
-        }
-        Terminal::Try { block, .. } => vec![*block],
-        Terminal::Scope { block, .. } | Terminal::PrunedScope { block, .. } => vec![*block],
-        Terminal::Unreachable { .. } | Terminal::Unsupported { .. } => vec![],
-    }
-}
-
-/// Return the fallthrough block of a terminal, if any.
-pub fn terminal_fallthrough(terminal: &Terminal) -> Option<BlockId> {
-    match terminal {
-        // Terminals WITH fallthrough
-        Terminal::If { fallthrough, .. }
-        | Terminal::Branch { fallthrough, .. }
-        | Terminal::Switch { fallthrough, .. }
-        | Terminal::DoWhile { fallthrough, .. }
-        | Terminal::While { fallthrough, .. }
-        | Terminal::For { fallthrough, .. }
-        | Terminal::ForOf { fallthrough, .. }
-        | Terminal::ForIn { fallthrough, .. }
-        | Terminal::Logical { fallthrough, .. }
-        | Terminal::Ternary { fallthrough, .. }
-        | Terminal::Optional { fallthrough, .. }
-        | Terminal::Label { fallthrough, .. }
-        | Terminal::Sequence { fallthrough, .. }
-        | Terminal::Try { fallthrough, .. }
-        | Terminal::Scope { fallthrough, .. }
-        | Terminal::PrunedScope { fallthrough, .. } => Some(*fallthrough),
-
-        // Terminals WITHOUT fallthrough
-        Terminal::Goto { .. }
-        | Terminal::Return { .. }
-        | Terminal::Throw { .. }
-        | Terminal::MaybeThrow { .. }
-        | Terminal::Unreachable { .. }
-        | Terminal::Unsupported { .. } => None,
-    }
-}
 
 // ---------------------------------------------------------------------------
 // Post-build helper functions

@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::visitors;
 use react_compiler_hir::*;
 
 use crate::enter_ssa::placeholder_function;
@@ -15,352 +16,6 @@ fn rewrite_place(place: &mut Place, rewrites: &HashMap<IdentifierId, IdentifierI
     }
 }
 
-// =============================================================================
-// Helper: rewrite_pattern_lvalues
-// =============================================================================
-
-fn rewrite_pattern_lvalues(
-    pattern: &mut Pattern,
-    rewrites: &HashMap<IdentifierId, IdentifierId>,
-) {
-    match pattern {
-        Pattern::Array(arr) => {
-            for item in arr.items.iter_mut() {
-                match item {
-                    ArrayPatternElement::Place(p) => rewrite_place(p, rewrites),
-                    ArrayPatternElement::Spread(s) => rewrite_place(&mut s.place, rewrites),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj) => {
-            for prop in obj.properties.iter_mut() {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => rewrite_place(&mut p.place, rewrites),
-                    ObjectPropertyOrSpread::Spread(s) => rewrite_place(&mut s.place, rewrites),
-                }
-            }
-        }
-    }
-}
-
-// =============================================================================
-// Helper: rewrite_instruction_lvalues
-// =============================================================================
-
-/// Rewrites ALL lvalue places in an instruction, including:
-/// - instr.lvalue (the instruction's main lvalue)
-/// - DeclareLocal/StoreLocal lvalue.place
-/// - DeclareContext/StoreContext lvalue.place (unlike map_instruction_lvalues in enter_ssa)
-/// - Destructure pattern places
-/// - PrefixUpdate/PostfixUpdate lvalue
-fn rewrite_instruction_lvalues(
-    instr: &mut Instruction,
-    rewrites: &HashMap<IdentifierId, IdentifierId>,
-) {
-    match &mut instr.value {
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
-            rewrite_place(&mut lvalue.place, rewrites);
-        }
-        InstructionValue::DeclareContext { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. } => {
-            rewrite_place(&mut lvalue.place, rewrites);
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            rewrite_pattern_lvalues(&mut lvalue.pattern, rewrites);
-        }
-        InstructionValue::PostfixUpdate { lvalue, .. }
-        | InstructionValue::PrefixUpdate { lvalue, .. } => {
-            rewrite_place(lvalue, rewrites);
-        }
-        InstructionValue::BinaryExpression { .. }
-        | InstructionValue::PropertyLoad { .. }
-        | InstructionValue::PropertyDelete { .. }
-        | InstructionValue::PropertyStore { .. }
-        | InstructionValue::ComputedLoad { .. }
-        | InstructionValue::ComputedDelete { .. }
-        | InstructionValue::ComputedStore { .. }
-        | InstructionValue::LoadLocal { .. }
-        | InstructionValue::LoadContext { .. }
-        | InstructionValue::StoreGlobal { .. }
-        | InstructionValue::NewExpression { .. }
-        | InstructionValue::CallExpression { .. }
-        | InstructionValue::MethodCall { .. }
-        | InstructionValue::UnaryExpression { .. }
-        | InstructionValue::JsxExpression { .. }
-        | InstructionValue::ObjectExpression { .. }
-        | InstructionValue::ArrayExpression { .. }
-        | InstructionValue::JsxFragment { .. }
-        | InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. }
-        | InstructionValue::TaggedTemplateExpression { .. }
-        | InstructionValue::TypeCastExpression { .. }
-        | InstructionValue::TemplateLiteral { .. }
-        | InstructionValue::Await { .. }
-        | InstructionValue::GetIterator { .. }
-        | InstructionValue::IteratorNext { .. }
-        | InstructionValue::NextPropertyOf { .. }
-        | InstructionValue::StartMemoize { .. }
-        | InstructionValue::FinishMemoize { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. } => {}
-    }
-    rewrite_place(&mut instr.lvalue, rewrites);
-}
-
-// =============================================================================
-// Helper: rewrite_instruction_operands
-// =============================================================================
-
-/// Rewrites all operand (read) Places in an instruction value.
-/// For FunctionExpression/ObjectMethod, context is handled separately
-/// in the main loop (not here).
-fn rewrite_instruction_operands(
-    instr: &mut Instruction,
-    rewrites: &HashMap<IdentifierId, IdentifierId>,
-) {
-    match &mut instr.value {
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            rewrite_place(left, rewrites);
-            rewrite_place(right, rewrites);
-        }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::PropertyDelete { object, .. } => {
-            rewrite_place(object, rewrites);
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            rewrite_place(object, rewrites);
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        }
-        | InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            rewrite_place(object, rewrites);
-            rewrite_place(property, rewrites);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => {
-            rewrite_place(object, rewrites);
-            rewrite_place(property, rewrites);
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::DeclareContext { .. } | InstructionValue::DeclareLocal { .. } => {}
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            rewrite_place(place, rewrites);
-        }
-        InstructionValue::StoreLocal { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::StoreContext { lvalue, value, .. } => {
-            rewrite_place(&mut lvalue.place, rewrites);
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::StoreGlobal { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::Destructure { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            rewrite_place(callee, rewrites);
-            for arg in args.iter_mut() {
-                match arg {
-                    PlaceOrSpread::Place(p) => rewrite_place(p, rewrites),
-                    PlaceOrSpread::Spread(s) => rewrite_place(&mut s.place, rewrites),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            rewrite_place(receiver, rewrites);
-            rewrite_place(property, rewrites);
-            for arg in args.iter_mut() {
-                match arg {
-                    PlaceOrSpread::Place(p) => rewrite_place(p, rewrites),
-                    PlaceOrSpread::Spread(s) => rewrite_place(&mut s.place, rewrites),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let JsxTag::Place(p) = tag {
-                rewrite_place(p, rewrites);
-            }
-            for attr in props.iter_mut() {
-                match attr {
-                    JsxAttribute::SpreadAttribute { argument } => {
-                        rewrite_place(argument, rewrites)
-                    }
-                    JsxAttribute::Attribute { place, .. } => rewrite_place(place, rewrites),
-                }
-            }
-            if let Some(children) = children {
-                for child in children.iter_mut() {
-                    rewrite_place(child, rewrites);
-                }
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties.iter_mut() {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => {
-                        if let ObjectPropertyKey::Computed { name } = &mut p.key {
-                            rewrite_place(name, rewrites);
-                        }
-                        rewrite_place(&mut p.place, rewrites);
-                    }
-                    ObjectPropertyOrSpread::Spread(s) => {
-                        rewrite_place(&mut s.place, rewrites);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for elem in elements.iter_mut() {
-                match elem {
-                    ArrayElement::Place(p) => rewrite_place(p, rewrites),
-                    ArrayElement::Spread(s) => rewrite_place(&mut s.place, rewrites),
-                    ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children.iter_mut() {
-                rewrite_place(child, rewrites);
-            }
-        }
-        InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. } => {
-            // Context places are handled separately in the main loop
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            rewrite_place(tag, rewrites);
-        }
-        InstructionValue::TypeCastExpression { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for expr in subexprs.iter_mut() {
-                rewrite_place(expr, rewrites);
-            }
-        }
-        InstructionValue::Await { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            rewrite_place(collection, rewrites);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            rewrite_place(iterator, rewrites);
-            rewrite_place(collection, rewrites);
-        }
-        InstructionValue::NextPropertyOf { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::PostfixUpdate { value, .. }
-        | InstructionValue::PrefixUpdate { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps.iter_mut() {
-                    if let ManualMemoDependencyRoot::NamedLocal { value, .. } = &mut dep.root {
-                        rewrite_place(value, rewrites);
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            rewrite_place(decl, rewrites);
-        }
-        InstructionValue::Debugger { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. } => {}
-    }
-}
-
-// =============================================================================
-// Helper: rewrite_terminal_operands
-// =============================================================================
-
-fn rewrite_terminal_operands(
-    terminal: &mut Terminal,
-    rewrites: &HashMap<IdentifierId, IdentifierId>,
-) {
-    match terminal {
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            rewrite_place(test, rewrites);
-        }
-        Terminal::Switch { test, cases, .. } => {
-            rewrite_place(test, rewrites);
-            for case in cases.iter_mut() {
-                if let Some(t) = &mut case.test {
-                    rewrite_place(t, rewrites);
-                }
-            }
-        }
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => {
-            rewrite_place(value, rewrites);
-        }
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            if let Some(binding) = handler_binding {
-                rewrite_place(binding, rewrites);
-            }
-        }
-        Terminal::Goto { .. }
-        | Terminal::DoWhile { .. }
-        | Terminal::While { .. }
-        | Terminal::For { .. }
-        | Terminal::ForOf { .. }
-        | Terminal::ForIn { .. }
-        | Terminal::Logical { .. }
-        | Terminal::Ternary { .. }
-        | Terminal::Optional { .. }
-        | Terminal::Label { .. }
-        | Terminal::Sequence { .. }
-        | Terminal::MaybeThrow { .. }
-        | Terminal::Scope { .. }
-        | Terminal::PrunedScope { .. }
-        | Terminal::Unreachable { .. }
-        | Terminal::Unsupported { .. } => {}
-    }
-}
 
 // =============================================================================
 // Public entry point
@@ -454,10 +109,26 @@ fn eliminate_redundant_phi_impl(
                 let instr_idx = instr_id.0 as usize;
                 let instr = &mut func.instructions[instr_idx];
 
-                rewrite_instruction_lvalues(instr, rewrites);
-                rewrite_instruction_operands(instr, rewrites);
+                // Rewrite lvalues using canonical visitor, plus DeclareContext/StoreContext
+                visitors::for_each_instruction_lvalue_mut(instr, &mut |place| {
+                    rewrite_place(place, rewrites);
+                });
+                // Also rewrite DeclareContext/StoreContext lvalues (not handled by for_each_instruction_lvalue_mut)
+                match &mut func.instructions[instr_idx].value {
+                    InstructionValue::DeclareContext { lvalue, .. }
+                    | InstructionValue::StoreContext { lvalue, .. } => {
+                        rewrite_place(&mut lvalue.place, rewrites);
+                    }
+                    _ => {}
+                }
+
+                // Rewrite operands using canonical visitor
+                visitors::for_each_instruction_value_operand_mut(&mut func.instructions[instr_idx].value, &mut |place| {
+                    rewrite_place(place, rewrites);
+                });
 
                 // Handle FunctionExpression/ObjectMethod context and recursion
+                let instr = &func.instructions[instr_idx];
                 let func_expr_id = match &instr.value {
                     InstructionValue::FunctionExpression { lowered_func, .. }
                     | InstructionValue::ObjectMethod { lowered_func, .. } => {
@@ -486,9 +157,11 @@ fn eliminate_redundant_phi_impl(
                 }
             }
 
-            // Rewrite terminal operands
+            // Rewrite terminal operands using canonical visitor
             let terminal = &mut ir.blocks.get_mut(&block_id).unwrap().terminal;
-            rewrite_terminal_operands(terminal, rewrites);
+            visitors::for_each_terminal_operand_mut(terminal, &mut |place| {
+                rewrite_place(place, rewrites);
+            });
         }
 
         if !(rewrites.len() > size && has_back_edge) {

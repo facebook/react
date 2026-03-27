@@ -43,10 +43,11 @@
 use std::collections::{HashMap, HashSet};
 
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::visitors;
 use react_compiler_hir::{
     BasicBlock, BlockId, BlockKind, EvaluationOrder, FunctionId, GENERATED_SOURCE, GotoVariant,
     HirFunction, IdentifierId, IdentifierName, Instruction, InstructionId, InstructionKind,
-    InstructionValue, LValue, ManualMemoDependencyRoot, Place, Terminal,
+    InstructionValue, LValue, Place, Terminal,
 };
 use react_compiler_lowering::{
     create_temporary_place, get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
@@ -280,7 +281,10 @@ pub fn inline_immediately_invoked_function_expressions(
                 }
                 _ => {
                     // Any other use of a function expression means it isn't an IIFE
-                    let operand_ids = each_instruction_value_operand_ids(&instr.value, env);
+                    let operand_ids: Vec<IdentifierId> = visitors::each_instruction_value_operand(&instr.value, env)
+                        .into_iter()
+                        .map(|p| p.identifier)
+                        .collect();
                     for id in operand_ids {
                         functions.remove(&id);
                     }
@@ -419,224 +423,3 @@ fn promote_temporary(env: &mut Environment, identifier_id: IdentifierId) {
         Some(IdentifierName::Promoted(format!("#t{}", decl_id.0)));
 }
 
-/// Collect all operand IdentifierIds from an InstructionValue.
-fn each_instruction_value_operand_ids(
-    value: &InstructionValue,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. } | InstructionValue::LoadContext { place, .. } => {
-            ids.push(place.identifier);
-        }
-        InstructionValue::StoreLocal { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::StoreContext {
-            lvalue, value: val, ..
-        } => {
-            ids.push(lvalue.place.identifier);
-            ids.push(val.identifier);
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            ids.push(left.identifier);
-            ids.push(right.identifier);
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::CallExpression { callee, args, .. } => {
-            ids.push(callee.identifier);
-            collect_place_or_spread_ids(args, &mut ids);
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            ids.push(receiver.identifier);
-            ids.push(property.identifier);
-            collect_place_or_spread_ids(args, &mut ids);
-        }
-        InstructionValue::NewExpression { callee, args, .. } => {
-            ids.push(callee.identifier);
-            collect_place_or_spread_ids(args, &mut ids);
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            ids.push(object.identifier);
-        }
-        InstructionValue::PropertyStore {
-            object, value: val, ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(val.identifier);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            ids.push(object.identifier);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(property.identifier);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value: val,
-            ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(property.identifier);
-            ids.push(val.identifier);
-        }
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(property.identifier);
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            ids.push(tag.identifier);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for place in subexprs {
-                ids.push(place.identifier);
-            }
-        }
-        InstructionValue::Await { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            ids.push(collection.identifier);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            ids.push(iterator.identifier);
-            ids.push(collection.identifier);
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::PostfixUpdate { value: val, .. }
-        | InstructionValue::PrefixUpdate { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            match tag {
-                react_compiler_hir::JsxTag::Place(p) => ids.push(p.identifier),
-                react_compiler_hir::JsxTag::Builtin(_) => {}
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        ids.push(place.identifier);
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        ids.push(argument.identifier);
-                    }
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    ids.push(child.identifier);
-                }
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(obj_prop) => {
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } =
-                            &obj_prop.key
-                        {
-                            ids.push(name.identifier);
-                        }
-                        ids.push(obj_prop.place.identifier);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        ids.push(spread.place.identifier);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for elem in elements {
-                match elem {
-                    react_compiler_hir::ArrayElement::Place(p) => {
-                        ids.push(p.identifier);
-                    }
-                    react_compiler_hir::ArrayElement::Spread(spread) => {
-                        ids.push(spread.place.identifier);
-                    }
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children {
-                ids.push(child.identifier);
-            }
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            let inner_func = &env.functions[lowered_func.func.0 as usize];
-            for ctx_place in &inner_func.context {
-                ids.push(ctx_place.identifier);
-            }
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let ManualMemoDependencyRoot::NamedLocal { value, .. } = &dep.root {
-                        ids.push(value.identifier);
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            ids.push(decl.identifier);
-        }
-        // Instructions with no operands
-        InstructionValue::Primitive { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::JSXText { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::UnsupportedNode { .. } => {}
-    }
-    ids
-}
-
-fn collect_place_or_spread_ids(
-    args: &[react_compiler_hir::PlaceOrSpread],
-    ids: &mut Vec<IdentifierId>,
-) {
-    for arg in args {
-        match arg {
-            react_compiler_hir::PlaceOrSpread::Place(p) => ids.push(p.identifier),
-            react_compiler_hir::PlaceOrSpread::Spread(spread) => ids.push(spread.place.identifier),
-        }
-    }
-}

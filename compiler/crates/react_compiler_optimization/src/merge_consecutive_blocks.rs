@@ -15,11 +15,12 @@
 
 use std::collections::{HashMap, HashSet};
 
+use react_compiler_hir::visitors;
 use react_compiler_hir::{
     AliasingEffect, BlockId, BlockKind, Effect, GENERATED_SOURCE, HirFunction, Instruction,
     InstructionId, InstructionValue, Place, Terminal,
 };
-use react_compiler_lowering::{mark_predecessors, terminal_fallthrough};
+use react_compiler_lowering::mark_predecessors;
 use react_compiler_ssa::enter_ssa::placeholder_function;
 
 /// Merge consecutive blocks in the function's CFG, including inner functions.
@@ -57,7 +58,7 @@ pub fn merge_consecutive_blocks(func: &mut HirFunction, functions: &mut [HirFunc
     // Build fallthrough set
     let mut fallthrough_blocks: HashSet<BlockId> = HashSet::new();
     for block in func.body.blocks.values() {
-        if let Some(ft) = terminal_fallthrough(&block.terminal) {
+        if let Some(ft) = visitors::terminal_fallthrough(&block.terminal) {
             fallthrough_blocks.insert(ft);
         }
     }
@@ -178,14 +179,11 @@ pub fn merge_consecutive_blocks(func: &mut HirFunction, functions: &mut [HirFunc
 
     mark_predecessors(&mut func.body);
 
-    // Update terminal fallthroughs
+    // Update terminal successors (including fallthroughs) for merged blocks
     for block in func.body.blocks.values_mut() {
-        if let Some(ft) = terminal_fallthrough(&block.terminal) {
-            let mapped = merged.get(ft);
-            if mapped != ft {
-                set_terminal_fallthrough(&mut block.terminal, mapped);
-            }
-        }
+        visitors::map_terminal_successors(&mut block.terminal, &mut |block_id| {
+            merged.get(block_id)
+        });
     }
 }
 
@@ -215,36 +213,5 @@ impl MergedBlocks {
             current = target;
         }
         current
-    }
-}
-
-/// Set the fallthrough block ID on a terminal.
-fn set_terminal_fallthrough(terminal: &mut Terminal, new_fallthrough: BlockId) {
-    match terminal {
-        Terminal::If { fallthrough, .. }
-        | Terminal::Branch { fallthrough, .. }
-        | Terminal::Switch { fallthrough, .. }
-        | Terminal::DoWhile { fallthrough, .. }
-        | Terminal::While { fallthrough, .. }
-        | Terminal::For { fallthrough, .. }
-        | Terminal::ForOf { fallthrough, .. }
-        | Terminal::ForIn { fallthrough, .. }
-        | Terminal::Logical { fallthrough, .. }
-        | Terminal::Ternary { fallthrough, .. }
-        | Terminal::Optional { fallthrough, .. }
-        | Terminal::Label { fallthrough, .. }
-        | Terminal::Sequence { fallthrough, .. }
-        | Terminal::Try { fallthrough, .. }
-        | Terminal::Scope { fallthrough, .. }
-        | Terminal::PrunedScope { fallthrough, .. } => {
-            *fallthrough = new_fallthrough;
-        }
-        // Terminals without a fallthrough field
-        Terminal::Unsupported { .. }
-        | Terminal::Unreachable { .. }
-        | Terminal::Throw { .. }
-        | Terminal::Return { .. }
-        | Terminal::Goto { .. }
-        | Terminal::MaybeThrow { .. } => {}
     }
 }

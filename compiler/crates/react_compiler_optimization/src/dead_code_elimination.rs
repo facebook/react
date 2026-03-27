@@ -15,10 +15,10 @@ use std::collections::HashSet;
 
 use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_hir::object_shape::HookKind;
+use react_compiler_hir::visitors;
 use react_compiler_hir::{
     ArrayPatternElement, BlockId, BlockKind, HirFunction, IdentifierId,
-    InstructionKind, InstructionValue, ObjectPropertyOrSpread, Pattern, Place,
-    Terminal,
+    InstructionKind, InstructionValue, ObjectPropertyOrSpread, Pattern,
 };
 
 /// Implements dead-code elimination, eliminating instructions whose values are unused.
@@ -141,7 +141,7 @@ fn find_referenced_identifiers(func: &HirFunction, env: &Environment) -> State {
             let block = &func.body.blocks[&block_id];
 
             // Mark terminal operands
-            for place in each_terminal_operands(&block.terminal) {
+            for place in visitors::each_terminal_operand(&block.terminal) {
                 reference(&mut state, &env.identifiers, place.identifier);
             }
 
@@ -157,7 +157,7 @@ fn find_referenced_identifiers(func: &HirFunction, env: &Environment) -> State {
                 if is_block_value {
                     // Last instr of a value block is never eligible for pruning
                     reference(&mut state, &env.identifiers, instr.lvalue.identifier);
-                    for place in each_instruction_value_operands(&instr.value, env, func) {
+                    for place in visitors::each_instruction_value_operand(&instr.value, env) {
                         reference(&mut state, &env.identifiers, place.identifier);
                     }
                 } else if is_id_or_name_used(&state, &env.identifiers, instr.lvalue.identifier)
@@ -174,7 +174,7 @@ fn find_referenced_identifiers(func: &HirFunction, env: &Environment) -> State {
                             reference(&mut state, &env.identifiers, value.identifier);
                         }
                     } else {
-                        for place in each_instruction_value_operands(&instr.value, env, func) {
+                        for place in visitors::each_instruction_value_operand(&instr.value, env) {
                             reference(&mut state, &env.identifiers, place.identifier);
                         }
                     }
@@ -312,7 +312,7 @@ fn pruneable_value(
         InstructionValue::Destructure { lvalue, .. } => {
             let mut is_id_or_name_used_flag = false;
             let mut is_id_used_flag = false;
-            for place in each_pattern_operands(&lvalue.pattern) {
+            for place in visitors::each_pattern_operand(&lvalue.pattern) {
                 if is_id_used(state, place.identifier) {
                     is_id_or_name_used_flag = true;
                     is_id_used_flag = true;
@@ -428,258 +428,3 @@ fn has_back_edge(func: &HirFunction) -> bool {
     false
 }
 
-/// Collect all operand places from an instruction value.
-/// Mirrors TS `eachInstructionValueOperand`.
-fn each_instruction_value_operands(
-    value: &InstructionValue,
-    env: &Environment,
-    _func: &HirFunction,
-) -> Vec<Place> {
-    let mut result = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            result.push(place.clone());
-        }
-        InstructionValue::StoreLocal { value, .. } => {
-            result.push(value.clone());
-        }
-        InstructionValue::StoreContext { lvalue, value, .. } => {
-            result.push(lvalue.place.clone());
-            result.push(value.clone());
-        }
-        InstructionValue::Destructure { value, .. } => {
-            result.push(value.clone());
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            result.push(left.clone());
-            result.push(right.clone());
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            result.push(callee.clone());
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => result.push(p.clone()),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            result.push(receiver.clone());
-            result.push(property.clone());
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => result.push(p.clone()),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value, .. }
-        | InstructionValue::TypeCastExpression { value, .. }
-        | InstructionValue::Await { value, .. } => {
-            result.push(value.clone());
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                result.push(p.clone());
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        result.push(place.clone())
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        result.push(argument.clone())
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    result.push(c.clone());
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                result.push(c.clone());
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            result.push(name.clone());
-                        }
-                        result.push(p.place.clone());
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.clone())
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => result.push(p.clone()),
-                    react_compiler_hir::ArrayElement::Spread(s) => result.push(s.place.clone()),
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            // Yield context variables (from the inner function)
-            let inner_func = &env.functions[lowered_func.func.0 as usize];
-            for ctx in &inner_func.context {
-                result.push(ctx.clone());
-            }
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            result.push(object.clone());
-            result.push(value.clone());
-        }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::PropertyDelete { object, .. } => {
-            result.push(object.clone());
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        }
-        | InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            result.push(object.clone());
-            result.push(property.clone());
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => {
-            result.push(object.clone());
-            result.push(property.clone());
-            result.push(value.clone());
-        }
-        InstructionValue::StoreGlobal { value, .. } => {
-            result.push(value.clone());
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            result.push(tag.clone());
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                result.push(s.clone());
-            }
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            result.push(collection.clone());
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            result.push(iterator.clone());
-            result.push(collection.clone());
-        }
-        InstructionValue::NextPropertyOf { value, .. } => {
-            result.push(value.clone());
-        }
-        InstructionValue::PrefixUpdate { value, .. }
-        | InstructionValue::PostfixUpdate { value, .. } => {
-            result.push(value.clone());
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
-                        value, ..
-                    } = &dep.root
-                    {
-                        result.push(value.clone());
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            result.push(decl.clone());
-        }
-        InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. } => {}
-    }
-    result
-}
-
-/// Collect operand places from a terminal.
-/// Mirrors TS `eachTerminalOperand`.
-fn each_terminal_operands(terminal: &Terminal) -> Vec<&Place> {
-    match terminal {
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
-        Terminal::Switch { test, cases, .. } => {
-            let mut places = vec![test];
-            for case in cases {
-                if let Some(ref test_place) = case.test {
-                    places.push(test_place);
-                }
-            }
-            places
-        }
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => vec![value],
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            let mut places = Vec::new();
-            if let Some(binding) = handler_binding {
-                places.push(binding);
-            }
-            places
-        }
-        _ => vec![],
-    }
-}
-
-/// Collect all operand places from a pattern (array or object destructuring).
-fn each_pattern_operands(pattern: &Pattern) -> Vec<Place> {
-    let mut result = Vec::new();
-    match pattern {
-        Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    ArrayPatternElement::Place(p) => result.push(p.clone()),
-                    ArrayPatternElement::Spread(s) => result.push(s.place.clone()),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => result.push(p.place.clone()),
-                    ObjectPropertyOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-    }
-    result
-}

@@ -11,11 +11,12 @@
 use std::collections::HashSet;
 
 use react_compiler_hir::{
-    ArrayPatternElement, DeclarationId, IdentifierId, IdentifierName,
-    InstructionKind, InstructionValue, LValue, ObjectPropertyOrSpread, ParamPattern, Pattern,
+    DeclarationId, IdentifierId, IdentifierName,
+    InstructionKind, InstructionValue, LValue, ParamPattern,
     Place, ReactiveFunction, ReactiveInstruction, ReactiveStatement,
     ReactiveValue, ReactiveScopeBlock,
     environment::Environment,
+    visitors,
 };
 
 use crate::visitors::{ReactiveFunctionTransform, Transformed, transform_reactive_function};
@@ -40,40 +41,29 @@ pub fn extract_scope_declarations_from_destructuring(
         let identifier = &env.identifiers[place.identifier.0 as usize];
         declared.insert(identifier.declaration_id);
     }
-    let mut transform = Transform;
-    let mut state = ExtractState { env_ptr: env as *mut Environment, declared };
+    let mut transform = Transform { env };
+    let mut state = ExtractState { declared };
     transform_reactive_function(func, &mut transform, &mut state)
 }
 
 struct ExtractState {
-    /// We need raw pointer to Environment since the transform trait gives us
-    /// &mut State and we need to call Environment methods. This is safe because
-    /// we only access env through this pointer during transform callbacks.
-    env_ptr: *mut Environment,
     declared: HashSet<DeclarationId>,
 }
 
-impl ExtractState {
-    fn env(&self) -> &Environment {
-        unsafe { &*self.env_ptr }
-    }
-    fn env_mut(&mut self) -> &mut Environment {
-        unsafe { &mut *self.env_ptr }
-    }
+struct Transform<'a> {
+    env: &'a mut Environment,
 }
 
-struct Transform;
-
-impl ReactiveFunctionTransform for Transform {
+impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = ExtractState;
 
     fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut ExtractState) -> Result<(), react_compiler_diagnostics::CompilerError> {
-        let scope_data = &state.env().scopes[scope.scope.0 as usize];
+        let scope_data = &self.env.scopes[scope.scope.0 as usize];
         let decl_ids: Vec<DeclarationId> = scope_data
             .declarations
             .iter()
             .map(|(_, d)| {
-                let identifier = &state.env().identifiers[d.identifier.0 as usize];
+                let identifier = &self.env.identifiers[d.identifier.0 as usize];
                 identifier.declaration_id
             })
             .collect();
@@ -102,8 +92,8 @@ impl ReactiveFunctionTransform for Transform {
             let mut reassigned: HashSet<IdentifierId> = HashSet::new();
             let mut has_declaration = false;
 
-            for place in each_pattern_operand(&lvalue.pattern) {
-                let identifier = &state.env().identifiers[place.identifier.0 as usize];
+            for place in visitors::each_pattern_operand(&lvalue.pattern) {
+                let identifier = &self.env.identifiers[place.identifier.0 as usize];
                 if state.declared.contains(&identifier.declaration_id) {
                     reassigned.insert(place.identifier);
                 } else {
@@ -120,22 +110,23 @@ impl ReactiveFunctionTransform for Transform {
                 let instr_loc = instruction.loc.clone();
                 let destr_loc = loc.clone();
 
-                map_pattern_operands(&mut lvalue.pattern, |place| {
+                let env = &mut *self.env; // reborrow
+                visitors::map_pattern_operands(&mut lvalue.pattern, &mut |place: Place| {
                     if !reassigned.contains(&place.identifier) {
-                        return;
+                        return place;
                     }
                     // Create a temporary place (matches TS clonePlaceToTemporary)
-                    let temp_id = state.env_mut().next_identifier_id();
+                    let temp_id = env.next_identifier_id();
                     let decl_id =
-                        state.env().identifiers[temp_id.0 as usize].declaration_id;
+                        env.identifiers[temp_id.0 as usize].declaration_id;
                     // Copy type from original identifier to temporary
-                    let original_type = state.env().identifiers[place.identifier.0 as usize].type_;
-                    state.env_mut().identifiers[temp_id.0 as usize].type_ = original_type;
+                    let original_type = env.identifiers[place.identifier.0 as usize].type_;
+                    env.identifiers[temp_id.0 as usize].type_ = original_type;
                     // Set identifier loc to the place's source location
                     // (matches TS makeTemporaryIdentifier which receives place.loc)
-                    state.env_mut().identifiers[temp_id.0 as usize].loc = place.loc.clone();
+                    env.identifiers[temp_id.0 as usize].loc = place.loc.clone();
                     // Promote the temporary
-                    state.env_mut().identifiers[temp_id.0 as usize].name =
+                    env.identifiers[temp_id.0 as usize].name =
                         Some(IdentifierName::Promoted(format!("#t{}", decl_id.0)));
                     let temporary = Place {
                         identifier: temp_id,
@@ -143,9 +134,9 @@ impl ReactiveFunctionTransform for Transform {
                         reactive: place.reactive,
                         loc: None, // GeneratedSource — matches TS createTemporaryPlace
                     };
-                    let original = place.clone();
-                    *place = temporary.clone();
-                    renamed.push((original, temporary));
+                    let original = place;
+                    renamed.push((original.clone(), temporary.clone()));
+                    temporary
                 });
 
                 // Build extra StoreLocal instructions for each renamed place
@@ -174,13 +165,13 @@ impl ReactiveFunctionTransform for Transform {
         // Update state.declared with declarations from the instruction(s)
         if let Some(ref extras) = extra_instructions {
             // Process the original instruction
-            update_declared_from_instruction(instruction, state);
+            update_declared_from_instruction(instruction, &self.env, state);
             // Process extra instructions
             for extra_instr in extras {
-                update_declared_from_instruction(extra_instr, state);
+                update_declared_from_instruction(extra_instr, &self.env, state);
             }
         } else {
-            update_declared_from_instruction(instruction, state);
+            update_declared_from_instruction(instruction, &self.env, state);
         }
 
         if let Some(extras) = extra_instructions {
@@ -197,7 +188,7 @@ impl ReactiveFunctionTransform for Transform {
     }
 }
 
-fn update_declared_from_instruction(instr: &ReactiveInstruction, state: &mut ExtractState) {
+fn update_declared_from_instruction(instr: &ReactiveInstruction, env: &Environment, state: &mut ExtractState) {
     if let ReactiveValue::Instruction(iv) = &instr.value {
         match iv {
             InstructionValue::DeclareContext { lvalue, .. }
@@ -205,67 +196,19 @@ fn update_declared_from_instruction(instr: &ReactiveInstruction, state: &mut Ext
             | InstructionValue::DeclareLocal { lvalue, .. }
             | InstructionValue::StoreLocal { lvalue, .. } => {
                 if lvalue.kind != InstructionKind::Reassign {
-                    let identifier = &state.env().identifiers[lvalue.place.identifier.0 as usize];
+                    let identifier = &env.identifiers[lvalue.place.identifier.0 as usize];
                     state.declared.insert(identifier.declaration_id);
                 }
             }
             InstructionValue::Destructure { lvalue, .. } => {
                 if lvalue.kind != InstructionKind::Reassign {
-                    for place in each_pattern_operand(&lvalue.pattern) {
-                        let identifier = &state.env().identifiers[place.identifier.0 as usize];
+                    for place in visitors::each_pattern_operand(&lvalue.pattern) {
+                        let identifier = &env.identifiers[place.identifier.0 as usize];
                         state.declared.insert(identifier.declaration_id);
                     }
                 }
             }
             _ => {}
-        }
-    }
-}
-
-/// Yields all Place operands from a destructuring pattern.
-fn each_pattern_operand(pattern: &Pattern) -> Vec<&Place> {
-    let mut operands = Vec::new();
-    match pattern {
-        Pattern::Array(array_pat) => {
-            for item in &array_pat.items {
-                match item {
-                    ArrayPatternElement::Place(place) => operands.push(place),
-                    ArrayPatternElement::Spread(spread) => operands.push(&spread.place),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj_pat) => {
-            for prop in &obj_pat.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => operands.push(&p.place),
-                    ObjectPropertyOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-        }
-    }
-    operands
-}
-
-/// Maps over pattern operands, allowing in-place mutation of Places.
-fn map_pattern_operands(pattern: &mut Pattern, mut f: impl FnMut(&mut Place)) {
-    match pattern {
-        Pattern::Array(array_pat) => {
-            for item in &mut array_pat.items {
-                match item {
-                    ArrayPatternElement::Place(place) => f(place),
-                    ArrayPatternElement::Spread(spread) => f(&mut spread.place),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj_pat) => {
-            for prop in &mut obj_pat.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => f(&mut p.place),
-                    ObjectPropertyOrSpread::Spread(spread) => f(&mut spread.place),
-                }
-            }
         }
     }
 }

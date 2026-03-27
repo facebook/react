@@ -19,15 +19,13 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::HookKind;
+use react_compiler_hir::visitors;
 use react_compiler_hir::{
-    BlockId, Effect, FunctionId, HirFunction, IdentifierId,
-    InstructionValue, JsxAttribute, JsxTag, ParamPattern,
-    Place, PlaceOrSpread, Terminal, Type,
+    BlockId, Effect, FunctionId, HirFunction, IdentifierId, InstructionValue, ParamPattern,
+    Terminal, Type,
 };
 
-use crate::infer_reactive_scope_variables::{
-    find_disjoint_mutable_values, is_mutable, DisjointSet,
-};
+use crate::infer_reactive_scope_variables::{find_disjoint_mutable_values, is_mutable, DisjointSet};
 
 // =============================================================================
 // Public API
@@ -36,7 +34,10 @@ use crate::infer_reactive_scope_variables::{
 /// Infer which places in a function are reactive.
 ///
 /// Corresponds to TS `inferReactivePlaces(fn: HIRFunction): void`.
-pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
+pub fn infer_reactive_places(
+    func: &mut HirFunction,
+    env: &mut Environment,
+) -> Result<(), CompilerDiagnostic> {
     let mut aliased_identifiers = find_disjoint_mutable_values(func, env);
     let mut reactive_map = ReactivityMap::new(&mut aliased_identifiers);
     let mut stable_sidemap = StableSidemap::new();
@@ -51,12 +52,11 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
     }
 
     // Compute control dominators
-    let post_dominators =
-        react_compiler_hir::dominator::compute_post_dominator_tree(
-            func,
-            env.next_block_id().0,
-            false,
-        )?;
+    let post_dominators = react_compiler_hir::dominator::compute_post_dominator_tree(
+        func,
+        env.next_block_id().0,
+        false,
+    )?;
 
     // Collect block IDs for iteration
     let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
@@ -66,8 +66,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
     // is already reactive, the TS `continue`s and skips operand processing.
     // We track which phi operand Places should be marked reactive.
     // Key: (block_id, phi_idx, operand_idx), Value: should be reactive
-    let mut phi_operand_reactive: HashMap<(BlockId, usize, usize), bool> =
-        HashMap::new();
+    let mut phi_operand_reactive: HashMap<(BlockId, usize, usize), bool> = HashMap::new();
 
     // Fixpoint iteration — compute reactive set
     loop {
@@ -127,7 +126,11 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
 
                 // Check if any operand is reactive
                 let mut has_reactive_input = false;
-                let operands = each_instruction_value_operand_ids(value, env);
+                let operands: Vec<IdentifierId> =
+                    visitors::each_instruction_value_operand(value, env)
+                        .into_iter()
+                        .map(|p| p.identifier)
+                        .collect();
                 for &op_id in &operands {
                     let reactive = reactive_map.is_reactive(op_id);
                     has_reactive_input = has_reactive_input || reactive;
@@ -158,7 +161,10 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
 
                 if has_reactive_input {
                     // Mark lvalues reactive (unless stable)
-                    let lvalue_ids = each_instruction_lvalue_ids(instr, env);
+                    let lvalue_ids: Vec<IdentifierId> = visitors::each_instruction_lvalue(instr)
+                        .into_iter()
+                        .map(|p| p.identifier)
+                        .collect();
                     for lvalue_id in lvalue_ids {
                         if stable_sidemap.is_stable(lvalue_id) {
                             continue;
@@ -169,8 +175,7 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
 
                 if has_reactive_input || has_reactive_control {
                     // Mark mutable operands reactive
-                    let operand_places =
-                        each_instruction_value_operand_places(value, env);
+                    let operand_places = visitors::each_instruction_value_operand(value, env);
                     for op_place in &operand_places {
                         match op_place.effect {
                             Effect::Capture
@@ -204,9 +209,8 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
             }
 
             // Process terminal operands (just to mark them reactive for output)
-            let terminal_op_ids = each_terminal_operand_ids(&block.terminal);
-            for op_id in terminal_op_ids {
-                reactive_map.is_reactive(op_id);
+            for op in visitors::each_terminal_operand(&block.terminal) {
+                reactive_map.is_reactive(op.identifier);
             }
         }
 
@@ -219,8 +223,13 @@ pub fn infer_reactive_places(func: &mut HirFunction, env: &mut Environment) -> R
     propagate_reactivity_to_inner_functions_outer(func, env, &mut reactive_map);
 
     // Now apply reactive flags by replaying the traversal pattern.
-    apply_reactive_flags_replay(func, env, &mut reactive_map, &mut stable_sidemap,
-                                &phi_operand_reactive);
+    apply_reactive_flags_replay(
+        func,
+        env,
+        &mut reactive_map,
+        &mut stable_sidemap,
+        &phi_operand_reactive,
+    );
 
     Ok(())
 }
@@ -245,15 +254,11 @@ impl<'a> ReactivityMap<'a> {
     }
 
     fn is_reactive(&mut self, id: IdentifierId) -> bool {
-        // Match TS behavior: use find_opt which returns None for items not in the
-        // disjoint set (never union'd). TS find() returns null for unknown items.
         let canonical = self.aliased_identifiers.find_opt(id).unwrap_or(id);
         self.reactive.contains(&canonical)
     }
 
     fn mark_reactive(&mut self, id: IdentifierId) {
-        // Match TS behavior: use find_opt which returns None for items not in the
-        // disjoint set. TS find() returns null for unknown items.
         let canonical = self.aliased_identifiers.find_opt(id).unwrap_or(id);
         if self.reactive.insert(canonical) {
             self.has_changes = true;
@@ -273,7 +278,7 @@ impl<'a> ReactivityMap<'a> {
 // =============================================================================
 
 struct StableSidemap {
-    map: HashMap<IdentifierId, bool>, // true = stable, false = container (not yet stable)
+    map: HashMap<IdentifierId, bool>,
 }
 
 impl StableSidemap {
@@ -333,8 +338,10 @@ impl StableSidemap {
             InstructionValue::Destructure { value: val, .. } => {
                 let source_id = val.identifier;
                 if self.map.contains_key(&source_id) {
-                    // For destructure, check all lvalues (pattern places)
-                    let lvalue_ids = each_instruction_lvalue_ids(instr, env);
+                    let lvalue_ids: Vec<IdentifierId> = visitors::each_instruction_lvalue(instr)
+                        .into_iter()
+                        .map(|p| p.identifier)
+                        .collect();
                     for lid in lvalue_ids {
                         let lid_ty =
                             &env.types[env.identifiers[lid.0 as usize].type_.0 as usize];
@@ -346,7 +353,9 @@ impl StableSidemap {
                     }
                 }
             }
-            InstructionValue::StoreLocal { lvalue, value: val, .. } => {
+            InstructionValue::StoreLocal {
+                lvalue, value: val, ..
+            } => {
                 if let Some(&entry) = self.map.get(&val.identifier) {
                     self.map.insert(lvalue_id, entry);
                     self.map.insert(lvalue.place.identifier, entry);
@@ -403,7 +412,6 @@ fn is_reactive_controlled_block(
     false
 }
 
-/// Compute the post-dominator frontier of a target block.
 fn post_dominator_frontier(
     func: &HirFunction,
     post_dominators: &react_compiler_hir::dominator::PostDominator,
@@ -431,7 +439,6 @@ fn post_dominator_frontier(
     frontier
 }
 
-/// Compute all blocks that post-dominate the target block.
 fn post_dominators_of(
     func: &HirFunction,
     post_dominators: &react_compiler_hir::dominator::PostDominator,
@@ -448,9 +455,7 @@ fn post_dominators_of(
         }
         if let Some(block) = func.body.blocks.get(&current_id) {
             for &pred in &block.preds {
-                let pred_post_dominator = post_dominators
-                    .get(pred)
-                    .unwrap_or(pred);
+                let pred_post_dominator = post_dominators.get(pred).unwrap_or(pred);
                 if pred_post_dominator == target_id || result.contains(&pred_post_dominator) {
                     result.insert(pred);
                 }
@@ -465,7 +470,10 @@ fn post_dominators_of(
 // Type helpers (ported from HIR.ts)
 // =============================================================================
 
-fn get_hook_kind_for_type<'a>(env: &'a Environment, ty: &Type) -> Result<Option<&'a HookKind>, CompilerDiagnostic> {
+fn get_hook_kind_for_type<'a>(
+    env: &'a Environment,
+    ty: &Type,
+) -> Result<Option<&'a HookKind>, CompilerDiagnostic> {
     env.get_hook_kind_for_type(ty)
 }
 
@@ -478,7 +486,9 @@ fn is_use_operator_type(ty: &Type) -> bool {
 
 fn is_stable_type(ty: &Type) -> bool {
     match ty {
-        Type::Function { shape_id: Some(id), .. } => {
+        Type::Function {
+            shape_id: Some(id), ..
+        } => {
             matches!(
                 id.as_str(),
                 "BuiltInSetState"
@@ -488,8 +498,9 @@ fn is_stable_type(ty: &Type) -> bool {
                     | "BuiltInSetOptimistic"
             )
         }
-        // useRef returns an Object type with BuiltInUseRefId shape
-        Type::Object { shape_id: Some(id) } => {
+        Type::Object {
+            shape_id: Some(id),
+        } => {
             matches!(id.as_str(), "BuiltInUseRefId")
         }
         _ => false,
@@ -498,7 +509,9 @@ fn is_stable_type(ty: &Type) -> bool {
 
 fn is_stable_type_container(ty: &Type) -> bool {
     match ty {
-        Type::Object { shape_id: Some(id) } => {
+        Type::Object {
+            shape_id: Some(id),
+        } => {
             matches!(
                 id.as_str(),
                 "BuiltInUseState"
@@ -537,7 +550,6 @@ fn propagate_reactivity_to_inner_functions_outer(
     env: &Environment,
     reactive_map: &mut ReactivityMap,
 ) {
-    // For the outermost function, we only recurse into inner FunctionExpression/ObjectMethod
     for (_block_id, block) in &func.body.blocks {
         for instr_id in &block.instructions {
             let instr = &func.instructions[instr_id.0 as usize];
@@ -567,13 +579,10 @@ fn propagate_reactivity_to_inner_functions_inner(
         for instr_id in &block.instructions {
             let instr = &inner_func.instructions[instr_id.0 as usize];
 
-            // Mark all operands (for inner functions, not outermost)
-            let operand_ids = each_instruction_operand_ids(instr, env);
-            for op_id in operand_ids {
-                reactive_map.is_reactive(op_id);
+            for op in visitors::each_instruction_value_operand(&instr.value, env) {
+                reactive_map.is_reactive(op.identifier);
             }
 
-            // Recurse into nested functions
             match &instr.value {
                 InstructionValue::FunctionExpression { lowered_func, .. }
                 | InstructionValue::ObjectMethod { lowered_func, .. } => {
@@ -587,10 +596,8 @@ fn propagate_reactivity_to_inner_functions_inner(
             }
         }
 
-        // Terminal operands (for inner functions)
-        let terminal_op_ids = each_terminal_operand_ids(&block.terminal);
-        for op_id in terminal_op_ids {
-            reactive_map.is_reactive(op_id);
+        for op in visitors::each_terminal_operand(&block.terminal) {
+            reactive_map.is_reactive(op.identifier);
         }
     }
 }
@@ -599,13 +606,6 @@ fn propagate_reactivity_to_inner_functions_inner(
 // Apply reactive flags to the HIR (replay pass)
 // =============================================================================
 
-/// Replay the traversal from the fixpoint loop, setting `place.reactive = true`
-/// on exactly the place occurrences that TS's side-effectful `isReactive()` and
-/// `markReactive()` would have set.
-///
-/// The reactive set is frozen after the fixpoint. We build a lookup set of all
-/// reactive identifiers (including non-canonical aliases) and then walk the HIR
-/// exactly as TS does, setting the flag on visited places whose canonical ID is reactive.
 fn apply_reactive_flags_replay(
     func: &mut HirFunction,
     env: &mut Environment,
@@ -621,40 +621,33 @@ fn apply_reactive_flags_replay(
             ParamPattern::Place(p) => p,
             ParamPattern::Spread(s) => &mut s.place,
         };
-        // markReactive is always called on params, so always set the flag
         place.reactive = true;
     }
 
-    // 2. Walk blocks — replay the fixpoint traversal pattern
+    // 2. Walk blocks
     let block_ids: Vec<BlockId> = func.body.blocks.keys().copied().collect();
 
     for block_id in &block_ids {
         let block = func.body.blocks.get(block_id).unwrap();
 
         // 2a. Phi nodes
-        // Use the phi_operand_reactive map to set operand reactive flags,
-        // matching the TS behavior where flags are set based on the reactive
-        // state at the time the phi was processed (not the final state).
         let phi_count = block.phis.len();
         for phi_idx in 0..phi_count {
             let block = func.body.blocks.get_mut(block_id).unwrap();
             let phi = &mut block.phis[phi_idx];
 
-            // isReactive is called on phi.place (uses final state)
             if reactive_ids.contains(&phi.place.identifier) {
                 phi.place.reactive = true;
             }
 
-            // Phi operand reactive flags use the tracked state from the fixpoint
             for (op_idx, (_pred, operand)) in phi.operands.iter_mut().enumerate() {
-                if let Some(&is_reactive) = phi_operand_reactive.get(&(*block_id, phi_idx, op_idx)) {
+                if let Some(&is_reactive) =
+                    phi_operand_reactive.get(&(*block_id, phi_idx, op_idx))
+                {
                     if is_reactive {
                         operand.reactive = true;
                     }
                 }
-                // If not in the map, the operand was never visited by isReactive
-                // (e.g., operands after the first reactive one were skipped due to break,
-                // or the phi was already reactive and all operands were skipped)
             }
         }
 
@@ -666,12 +659,15 @@ fn apply_reactive_flags_replay(
             let instr = &func.instructions[instr_id.0 as usize];
 
             // Compute hasReactiveInput by checking value operands
-            let value_operand_ids = each_instruction_value_operand_ids(&instr.value, env);
+            let value_operand_ids: Vec<IdentifierId> =
+                visitors::each_instruction_value_operand(&instr.value, env)
+                    .into_iter()
+                    .map(|p| p.identifier)
+                    .collect();
             let mut has_reactive_input = false;
             for &op_id in &value_operand_ids {
                 if reactive_ids.contains(&op_id) {
                     has_reactive_input = true;
-                    // Don't break — TS checks all operands, setting reactive on each
                 }
             }
 
@@ -689,7 +685,10 @@ fn apply_reactive_flags_replay(
                 InstructionValue::MethodCall { property, .. } => {
                     let property_ty = &env.types
                         [env.identifiers[property.identifier.0 as usize].type_.0 as usize];
-                    if get_hook_kind_for_type(env, property_ty).ok().flatten().is_some()
+                    if get_hook_kind_for_type(env, property_ty)
+                        .ok()
+                        .flatten()
+                        .is_some()
                         || is_use_operator_type(property_ty)
                     {
                         has_reactive_input = true;
@@ -698,11 +697,24 @@ fn apply_reactive_flags_replay(
                 _ => {}
             }
 
-            // Now set flags on places
-
-            // Value operands: isReactive is called, so set flag if reactive
+            // Value operands: set reactive flag using canonical visitor
             let instr = &mut func.instructions[instr_id.0 as usize];
-            set_reactive_on_value_operands(&mut instr.value, &reactive_ids, Some(env));
+            visitors::for_each_instruction_value_operand_mut(&mut instr.value, &mut |place| {
+                if reactive_ids.contains(&place.identifier) {
+                    place.reactive = true;
+                }
+            });
+            // FunctionExpression/ObjectMethod context variables require env access
+            if let InstructionValue::FunctionExpression { lowered_func, .. }
+            | InstructionValue::ObjectMethod { lowered_func, .. } = &mut instr.value
+            {
+                let inner_func = &mut env.functions[lowered_func.func.0 as usize];
+                for ctx in &mut inner_func.context {
+                    if reactive_ids.contains(&ctx.identifier) {
+                        ctx.reactive = true;
+                    }
+                }
+            }
 
             // Lvalues: markReactive is called only when hasReactiveInput
             if has_reactive_input {
@@ -710,17 +722,49 @@ fn apply_reactive_flags_replay(
                 if !stable_sidemap.is_stable(lvalue_id) && reactive_ids.contains(&lvalue_id) {
                     instr.lvalue.reactive = true;
                 }
-                set_reactive_on_value_lvalues(&mut instr.value, &reactive_ids, stable_sidemap);
+                // Handle value lvalues — includes DeclareContext/StoreContext which
+                // for_each_instruction_lvalue_mut skips, so we use a direct match.
+                match &mut instr.value {
+                    InstructionValue::DeclareLocal { lvalue, .. }
+                    | InstructionValue::DeclareContext { lvalue, .. }
+                    | InstructionValue::StoreLocal { lvalue, .. }
+                    | InstructionValue::StoreContext { lvalue, .. } => {
+                        let id = lvalue.place.identifier;
+                        if !stable_sidemap.is_stable(id) && reactive_ids.contains(&id) {
+                            lvalue.place.reactive = true;
+                        }
+                    }
+                    InstructionValue::Destructure { lvalue, .. } => {
+                        visitors::for_each_pattern_operand_mut(
+                            &mut lvalue.pattern,
+                            &mut |place| {
+                                if !stable_sidemap.is_stable(place.identifier)
+                                    && reactive_ids.contains(&place.identifier)
+                                {
+                                    place.reactive = true;
+                                }
+                            },
+                        );
+                    }
+                    InstructionValue::PrefixUpdate { lvalue, .. }
+                    | InstructionValue::PostfixUpdate { lvalue, .. } => {
+                        let id = lvalue.identifier;
+                        if !stable_sidemap.is_stable(id) && reactive_ids.contains(&id) {
+                            lvalue.reactive = true;
+                        }
+                    }
+                    _ => {}
+                }
             }
-
-            // Mutable operands: markReactive called when hasReactiveInput || hasReactiveControl
-            // (we're not recomputing hasReactiveControl here, but the flag would have been set
-            // in the isReactive call on value operands above if those operands are reactive)
         }
 
-        // 2c. Terminal operands: isReactive called
+        // 2c. Terminal operands
         let block = func.body.blocks.get_mut(block_id).unwrap();
-        set_reactive_on_terminal(&mut block.terminal, &reactive_ids);
+        visitors::for_each_terminal_operand_mut(&mut block.terminal, &mut |place| {
+            if reactive_ids.contains(&place.identifier) {
+                place.reactive = true;
+            }
+        });
     }
 
     // 3. Apply to inner functions
@@ -728,15 +772,16 @@ fn apply_reactive_flags_replay(
 }
 
 fn build_reactive_id_set(reactive_map: &mut ReactivityMap) -> HashSet<IdentifierId> {
-    // The reactive set contains canonical IDs. We need to expand to include
-    // all aliased IDs whose canonical form is reactive.
     let mut result = HashSet::new();
-    // All canonical reactive IDs
     for &id in &reactive_map.reactive {
         result.insert(id);
     }
-    // All IDs in the disjoint set whose canonical form is reactive
-    let keys: Vec<IdentifierId> = reactive_map.aliased_identifiers.entries.keys().copied().collect();
+    let keys: Vec<IdentifierId> = reactive_map
+        .aliased_identifiers
+        .entries
+        .keys()
+        .copied()
+        .collect();
     for id in keys {
         let canonical = reactive_map.aliased_identifiers.find(id);
         if reactive_map.reactive.contains(&canonical) {
@@ -744,372 +789,6 @@ fn build_reactive_id_set(reactive_map: &mut ReactivityMap) -> HashSet<Identifier
         }
     }
     result
-}
-
-fn is_id_reactive(id: IdentifierId, reactive_ids: &HashSet<IdentifierId>) -> bool {
-    reactive_ids.contains(&id)
-}
-
-fn set_reactive_on_place(place: &mut Place, reactive_ids: &HashSet<IdentifierId>) {
-    if is_id_reactive(place.identifier, reactive_ids) {
-        place.reactive = true;
-    }
-}
-
-
-/// Set reactive flags on value lvalues (from `eachInstructionValueLValue`).
-/// Only called when `hasReactiveInput` is true, matching TS behavior.
-fn set_reactive_on_value_lvalues(
-    value: &mut InstructionValue,
-    reactive_ids: &HashSet<IdentifierId>,
-    stable_sidemap: &StableSidemap,
-) {
-    match value {
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. } => {
-            let id = lvalue.place.identifier;
-            if !stable_sidemap.is_stable(id) && reactive_ids.contains(&id) {
-                lvalue.place.reactive = true;
-            }
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            set_reactive_on_pattern_with_stable(&mut lvalue.pattern, reactive_ids, stable_sidemap);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            let id = lvalue.identifier;
-            if !stable_sidemap.is_stable(id) && reactive_ids.contains(&id) {
-                lvalue.reactive = true;
-            }
-        }
-        _ => {}
-    }
-}
-
-fn set_reactive_on_pattern_with_stable(
-    pattern: &mut react_compiler_hir::Pattern,
-    reactive_ids: &HashSet<IdentifierId>,
-    stable_sidemap: &StableSidemap,
-) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(array) => {
-            for item in &mut array.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => {
-                        if !stable_sidemap.is_stable(p.identifier) && reactive_ids.contains(&p.identifier) {
-                            p.reactive = true;
-                        }
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        if !stable_sidemap.is_stable(s.place.identifier) && reactive_ids.contains(&s.place.identifier) {
-                            s.place.reactive = true;
-                        }
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &mut obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        if !stable_sidemap.is_stable(p.place.identifier) && reactive_ids.contains(&p.place.identifier) {
-                            p.place.reactive = true;
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        if !stable_sidemap.is_stable(s.place.identifier) && reactive_ids.contains(&s.place.identifier) {
-                            s.place.reactive = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn set_reactive_on_terminal(terminal: &mut Terminal, reactive_ids: &HashSet<IdentifierId>) {
-    match terminal {
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            set_reactive_on_place(test, reactive_ids);
-        }
-        Terminal::Switch { test, cases, .. } => {
-            set_reactive_on_place(test, reactive_ids);
-            for case in cases {
-                if let Some(ref mut case_test) = case.test {
-                    set_reactive_on_place(case_test, reactive_ids);
-                }
-            }
-        }
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => {
-            set_reactive_on_place(value, reactive_ids);
-        }
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            if let Some(binding) = handler_binding {
-                set_reactive_on_place(binding, reactive_ids);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn set_reactive_on_value_operands(
-    value: &mut InstructionValue,
-    reactive_ids: &HashSet<IdentifierId>,
-    env: Option<&mut Environment>,
-) {
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            set_reactive_on_place(place, reactive_ids);
-        }
-        InstructionValue::StoreLocal { value: val, .. } => {
-            // StoreLocal: TS eachInstructionValueOperand yields only the value
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::StoreContext { lvalue, value: val, .. } => {
-            // StoreContext: TS eachInstructionValueOperand yields lvalue.place AND value
-            set_reactive_on_place(&mut lvalue.place, reactive_ids);
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. } => {
-            // TS eachInstructionValueOperand yields nothing for DeclareLocal/DeclareContext
-            // lvalue.place reactive flag is set via set_reactive_on_value_lvalues when hasReactiveInput
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            // TS eachInstructionValueOperand yields only the value for Destructure
-            // Pattern places are lvalues, set via set_reactive_on_value_lvalues when hasReactiveInput
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            set_reactive_on_place(left, reactive_ids);
-            set_reactive_on_place(right, reactive_ids);
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            set_reactive_on_place(callee, reactive_ids);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => set_reactive_on_place(p, reactive_ids),
-                    PlaceOrSpread::Spread(s) => {
-                        set_reactive_on_place(&mut s.place, reactive_ids)
-                    }
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            set_reactive_on_place(receiver, reactive_ids);
-            set_reactive_on_place(property, reactive_ids);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => set_reactive_on_place(p, reactive_ids),
-                    PlaceOrSpread::Spread(s) => {
-                        set_reactive_on_place(&mut s.place, reactive_ids)
-                    }
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let JsxTag::Place(p) = tag {
-                set_reactive_on_place(p, reactive_ids);
-            }
-            for prop in props {
-                match prop {
-                    JsxAttribute::Attribute { place, .. } => {
-                        set_reactive_on_place(place, reactive_ids)
-                    }
-                    JsxAttribute::SpreadAttribute { argument } => {
-                        set_reactive_on_place(argument, reactive_ids)
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    set_reactive_on_place(c, reactive_ids);
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                set_reactive_on_place(c, reactive_ids);
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        set_reactive_on_place(&mut p.place, reactive_ids);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } =
-                            &mut p.key
-                        {
-                            set_reactive_on_place(name, reactive_ids);
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        set_reactive_on_place(&mut s.place, reactive_ids);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => {
-                        set_reactive_on_place(p, reactive_ids)
-                    }
-                    react_compiler_hir::ArrayElement::Spread(s) => {
-                        set_reactive_on_place(&mut s.place, reactive_ids)
-                    }
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyStore { object, value: val, .. } => {
-            set_reactive_on_place(object, reactive_ids);
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::ComputedStore { object, property, value: val, .. } => {
-            set_reactive_on_place(object, reactive_ids);
-            set_reactive_on_place(property, reactive_ids);
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            set_reactive_on_place(object, reactive_ids);
-        }
-        InstructionValue::ComputedLoad { object, property, .. } => {
-            set_reactive_on_place(object, reactive_ids);
-            set_reactive_on_place(property, reactive_ids);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            set_reactive_on_place(object, reactive_ids);
-        }
-        InstructionValue::ComputedDelete { object, property, .. } => {
-            set_reactive_on_place(object, reactive_ids);
-            set_reactive_on_place(property, reactive_ids);
-        }
-        InstructionValue::Await { value: val, .. } => {
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            set_reactive_on_place(collection, reactive_ids);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            set_reactive_on_place(iterator, reactive_ids);
-            set_reactive_on_place(collection, reactive_ids);
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::PrefixUpdate { value: val, .. }
-        | InstructionValue::PostfixUpdate { value: val, .. } => {
-            // TS eachInstructionValueOperand yields only the value for PrefixUpdate/PostfixUpdate
-            // lvalue reactive flag is set via set_reactive_on_value_lvalues when hasReactiveInput
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                set_reactive_on_place(s, reactive_ids);
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            set_reactive_on_place(tag, reactive_ids);
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            set_reactive_on_place(val, reactive_ids);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
-                        value: val,
-                        ..
-                    } = &mut dep.root
-                    {
-                        set_reactive_on_place(val, reactive_ids);
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            set_reactive_on_place(decl, reactive_ids);
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            // Set reactive on context variables (captured from outer scope)
-            if let Some(env) = env {
-                let inner_func = &mut env.functions[lowered_func.func.0 as usize];
-                for ctx in &mut inner_func.context {
-                    set_reactive_on_place(ctx, reactive_ids);
-                }
-            }
-        }
-        InstructionValue::Primitive { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::JSXText { .. }
-        | InstructionValue::UnsupportedNode { .. } => {}
-    }
-}
-
-#[allow(dead_code)]
-fn set_reactive_on_pattern(
-    pattern: &mut react_compiler_hir::Pattern,
-    reactive_ids: &HashSet<IdentifierId>,
-) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(array) => {
-            for item in &mut array.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => {
-                        set_reactive_on_place(p, reactive_ids);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        set_reactive_on_place(&mut s.place, reactive_ids);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &mut obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        set_reactive_on_place(&mut p.place, reactive_ids);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        set_reactive_on_place(&mut s.place, reactive_ids);
-                    }
-                }
-            }
-        }
-    }
 }
 
 fn apply_reactive_flags_to_inner_functions(
@@ -1131,9 +810,6 @@ fn apply_reactive_flags_to_inner_functions(
     }
 }
 
-/// Apply reactive flags to an inner function.
-/// For inner functions, TS calls `eachInstructionOperand` (value operands only)
-/// and `eachTerminalOperand`, setting reactive on each.
 fn apply_reactive_flags_to_inner_func(
     func_id: FunctionId,
     env: &mut Environment,
@@ -1158,329 +834,32 @@ fn apply_reactive_flags_to_inner_func(
         ids
     };
 
-    // Apply reactive flags: set reactive on value operands and terminal operands
+    // Apply reactive flags using canonical visitors
     let inner_func = &mut env.functions[func_id.0 as usize];
     for (_block_id, block) in &mut inner_func.body.blocks {
         for instr_id in &block.instructions {
             let instr = &mut inner_func.instructions[instr_id.0 as usize];
-            // Pass None for env since we can't borrow env mutably again here.
-            // Context variables for nested FunctionExpression/ObjectMethod will be
-            // handled when we recurse into them below.
-            set_reactive_on_value_operands(&mut instr.value, reactive_ids, None);
+            visitors::for_each_instruction_value_operand_mut(&mut instr.value, &mut |place| {
+                if reactive_ids.contains(&place.identifier) {
+                    place.reactive = true;
+                }
+            });
         }
-        set_reactive_on_terminal(&mut block.terminal, reactive_ids);
+        visitors::for_each_terminal_operand_mut(&mut block.terminal, &mut |place| {
+            if reactive_ids.contains(&place.identifier) {
+                place.reactive = true;
+            }
+        });
     }
 
     // Recurse into nested functions, and set reactive on their context variables
     for nested_id in nested_func_ids {
-        // Set reactive on the nested function's context variables
         let nested_func = &mut env.functions[nested_id.0 as usize];
         for ctx in &mut nested_func.context {
-            set_reactive_on_place(ctx, reactive_ids);
+            if reactive_ids.contains(&ctx.identifier) {
+                ctx.reactive = true;
+            }
         }
         apply_reactive_flags_to_inner_func(nested_id, env, reactive_ids);
-    }
-}
-
-// =============================================================================
-// Operand iterators
-// =============================================================================
-
-/// Collect all value-operand IdentifierIds from an instruction value.
-fn each_instruction_value_operand_ids(
-    value: &InstructionValue,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    each_instruction_value_operand_places(value, env)
-        .iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-/// Collect all value-operand Places from an instruction value.
-fn each_instruction_value_operand_places(
-    value: &InstructionValue,
-    _env: &Environment,
-) -> Vec<Place> {
-    let mut result = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            result.push(place.clone());
-        }
-        InstructionValue::StoreLocal { value: val, .. } => {
-            // TS: StoreLocal yields only the value
-            result.push(val.clone());
-        }
-        InstructionValue::StoreContext { lvalue, value: val, .. } => {
-            // TS: StoreContext yields lvalue.place AND value
-            result.push(lvalue.place.clone());
-            result.push(val.clone());
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            result.push(left.clone());
-            result.push(right.clone());
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            result.push(callee.clone());
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => result.push(p.clone()),
-                    PlaceOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            result.push(receiver.clone());
-            result.push(property.clone());
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => result.push(p.clone()),
-                    PlaceOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::JsxExpression {
-            tag, props, children, ..
-        } => {
-            if let JsxTag::Place(p) = tag {
-                result.push(p.clone());
-            }
-            for prop in props {
-                match prop {
-                    JsxAttribute::Attribute { place, .. } => result.push(place.clone()),
-                    JsxAttribute::SpreadAttribute { argument } => result.push(argument.clone()),
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    result.push(c.clone());
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                result.push(c.clone());
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            result.push(name.clone());
-                        }
-                        result.push(p.place.clone());
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.clone())
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => result.push(p.clone()),
-                    react_compiler_hir::ArrayElement::Spread(s) => {
-                        result.push(s.place.clone())
-                    }
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyStore { object, value: val, .. } => {
-            result.push(object.clone());
-            result.push(val.clone());
-        }
-        InstructionValue::ComputedStore { object, property, value: val, .. } => {
-            result.push(object.clone());
-            result.push(property.clone());
-            result.push(val.clone());
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            result.push(object.clone());
-        }
-        InstructionValue::ComputedLoad { object, property, .. } => {
-            result.push(object.clone());
-            result.push(property.clone());
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            result.push(object.clone());
-        }
-        InstructionValue::ComputedDelete { object, property, .. } => {
-            result.push(object.clone());
-            result.push(property.clone());
-        }
-        InstructionValue::Await { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            result.push(collection.clone());
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            result.push(iterator.clone());
-            result.push(collection.clone());
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::PrefixUpdate { value: val, .. }
-        | InstructionValue::PostfixUpdate { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                result.push(s.clone());
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            result.push(tag.clone());
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
-                        value: val,
-                        ..
-                    } = &dep.root
-                    {
-                        result.push(val.clone());
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            result.push(decl.clone());
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            // Yield context variables (captured from outer scope)
-            let inner_func = &_env.functions[lowered_func.func.0 as usize];
-            for ctx in &inner_func.context {
-                result.push(ctx.clone());
-            }
-        }
-        _ => {}
-    }
-    result
-}
-
-/// Collect lvalue IdentifierIds from an instruction (lvalue + value lvalues).
-fn each_instruction_lvalue_ids(
-    instr: &react_compiler_hir::Instruction,
-    _env: &Environment,
-) -> Vec<IdentifierId> {
-    let mut result = vec![instr.lvalue.identifier];
-    match &instr.value {
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. } => {
-            result.push(lvalue.place.identifier);
-        }
-        InstructionValue::StoreLocal { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. } => {
-            result.push(lvalue.place.identifier);
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            collect_pattern_ids(&lvalue.pattern, &mut result);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            result.push(lvalue.identifier);
-        }
-        _ => {}
-    }
-    result
-}
-
-fn collect_pattern_ids(pattern: &react_compiler_hir::Pattern, result: &mut Vec<IdentifierId>) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(array) => {
-            for item in &array.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => {
-                        result.push(p.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        result.push(s.place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.identifier);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.identifier);
-                    }
-                }
-            }
-        }
-    }
-}
-
-/// Collect all operand IdentifierIds from an instruction (value operands only).
-/// Corresponds to TS `eachInstructionOperand(instr)` which yields
-/// `eachInstructionValueOperand(instr.value)` — does NOT include lvalue.
-fn each_instruction_operand_ids(
-    instr: &react_compiler_hir::Instruction,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    each_instruction_value_operand_ids(&instr.value, env)
-}
-
-/// Collect operand IdentifierIds from a terminal.
-fn each_terminal_operand_ids(terminal: &Terminal) -> Vec<IdentifierId> {
-    match terminal {
-        Terminal::Throw { value, .. } => vec![value.identifier],
-        Terminal::Return { value, .. } => vec![value.identifier],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            vec![test.identifier]
-        }
-        Terminal::Switch { test, cases, .. } => {
-            let mut ids = vec![test.identifier];
-            for case in cases {
-                if let Some(ref case_test) = case.test {
-                    ids.push(case_test.identifier);
-                }
-            }
-            ids
-        }
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            if let Some(binding) = handler_binding {
-                vec![binding.identifier]
-            } else {
-                vec![]
-            }
-        }
-        _ => vec![],
     }
 }

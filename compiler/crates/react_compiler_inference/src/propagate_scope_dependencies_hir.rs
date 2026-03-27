@@ -21,7 +21,7 @@ use react_compiler_hir::{
     FunctionId, GotoVariant, HirFunction, IdentifierId, Instruction, InstructionId,
     InstructionKind, InstructionValue, MutableRange, ParamPattern,
     Place, PlaceOrSpread, PropertyLiteral, ReactFunctionType, ReactiveScopeDependency,
-    ScopeId, Terminal, Type,
+    ScopeId, Terminal, Type, visitors,
 };
 
 // =============================================================================
@@ -157,7 +157,7 @@ fn find_temporaries_used_outside_declaring_scope(
         for &instr_id in &block.instructions {
             let instr = &func.instructions[instr_id.0 as usize];
             // Handle operands
-            for op_id in each_instruction_operand_ids(instr, env) {
+            for op_id in visitors::each_instruction_operand(instr, env).into_iter().map(|p| p.identifier).collect::<Vec<_>>() {
                 handle_place(
                     op_id,
                     &declarations,
@@ -185,7 +185,7 @@ fn find_temporaries_used_outside_declaring_scope(
         }
 
         // Terminal operands
-        for op_id in each_terminal_operand_ids(&block.terminal) {
+        for op_id in visitors::each_terminal_operand(&block.terminal).into_iter().map(|p| p.identifier).collect::<Vec<_>>() {
             handle_place(
                 op_id,
                 &declarations,
@@ -2139,7 +2139,7 @@ fn visit_inner_function_blocks(
         }
 
         if !ctx.is_deferred_dependency_terminal(*inner_bid) {
-            let terminal_ops = each_terminal_operand_places(inner_terminal);
+            let terminal_ops = visitors::each_terminal_operand(inner_terminal);
             for op in &terminal_ops {
                 ctx.visit_operand(op, env);
             }
@@ -2215,7 +2215,7 @@ fn handle_instruction(
             ..
         } => {
             ctx.visit_operand(val, env);
-            let pattern_places = each_pattern_operand_places(&lvalue.pattern);
+            let pattern_places = visitors::each_pattern_operand(&lvalue.pattern);
             for place in &pattern_places {
                 if lvalue.kind == InstructionKind::Reassign {
                     ctx.visit_reassignment(place, env);
@@ -2255,7 +2255,7 @@ fn handle_instruction(
         }
         _ => {
             // Visit all value operands
-            let operands = each_instruction_value_operand_places(&instr.value, env);
+            let operands = visitors::each_instruction_value_operand(&instr.value, env);
             for operand in &operands {
                 ctx.visit_operand(operand, env);
             }
@@ -2375,7 +2375,7 @@ fn handle_function_deps(
 
         // Terminal operands
         if !ctx.is_deferred_dependency_terminal(*block_id) {
-            let terminal_ops = each_terminal_operand_places(&block.terminal);
+            let terminal_ops = visitors::each_terminal_operand(&block.terminal);
             for op in &terminal_ops {
                 ctx.visit_operand(op, env);
             }
@@ -2383,249 +2383,3 @@ fn handle_function_deps(
     }
 }
 
-// =============================================================================
-// Instruction/Terminal operand helpers
-// =============================================================================
-
-fn each_instruction_operand_ids(
-    instr: &Instruction,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    each_instruction_value_operand_places(&instr.value, env)
-        .iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-fn each_instruction_value_operand_places(
-    value: &InstructionValue,
-    env: &Environment,
-) -> Vec<Place> {
-    let mut result = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            result.push(place.clone());
-        }
-        InstructionValue::StoreLocal { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::StoreContext { lvalue, value: val, .. } => {
-            result.push(lvalue.place.clone());
-            result.push(val.clone());
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            result.push(left.clone());
-            result.push(right.clone());
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            result.push(callee.clone());
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => result.push(p.clone()),
-                    PlaceOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver, property, args, ..
-        } => {
-            result.push(receiver.clone());
-            result.push(property.clone());
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => result.push(p.clone()),
-                    PlaceOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value: val, .. }
-        | InstructionValue::TypeCastExpression { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::JsxExpression { tag, props, children, .. } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                result.push(p.clone());
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        result.push(place.clone())
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        result.push(argument.clone())
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    result.push(c.clone());
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                result.push(c.clone());
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            result.push(name.clone());
-                        }
-                        result.push(p.place.clone());
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.clone());
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => result.push(p.clone()),
-                    react_compiler_hir::ArrayElement::Spread(s) => result.push(s.place.clone()),
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyStore { object, value: val, .. } => {
-            result.push(object.clone());
-            result.push(val.clone());
-        }
-        InstructionValue::ComputedStore { object, property, value: val, .. } => {
-            result.push(object.clone());
-            result.push(property.clone());
-            result.push(val.clone());
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            result.push(object.clone());
-        }
-        InstructionValue::ComputedLoad { object, property, .. } => {
-            result.push(object.clone());
-            result.push(property.clone());
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            result.push(object.clone());
-        }
-        InstructionValue::ComputedDelete { object, property, .. } => {
-            result.push(object.clone());
-            result.push(property.clone());
-        }
-        InstructionValue::Await { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            result.push(collection.clone());
-        }
-        InstructionValue::IteratorNext { iterator, collection, .. } => {
-            result.push(iterator.clone());
-            result.push(collection.clone());
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::PrefixUpdate { value: val, .. }
-        | InstructionValue::PostfixUpdate { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                result.push(s.clone());
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            result.push(tag.clone());
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            result.push(val.clone());
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal { value: val, .. } =
-                        &dep.root
-                    {
-                        result.push(val.clone());
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            result.push(decl.clone());
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            let inner_func = &env.functions[lowered_func.func.0 as usize];
-            for ctx_var in &inner_func.context {
-                result.push(ctx_var.clone());
-            }
-        }
-        _ => {}
-    }
-    result
-}
-
-fn each_terminal_operand_ids(terminal: &Terminal) -> Vec<IdentifierId> {
-    each_terminal_operand_places(terminal)
-        .iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-fn each_terminal_operand_places(terminal: &Terminal) -> Vec<Place> {
-    match terminal {
-        Terminal::Throw { value, .. } => vec![value.clone()],
-        Terminal::Return { value, .. } => vec![value.clone()],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            vec![test.clone()]
-        }
-        Terminal::Switch { test, cases, .. } => {
-            let mut result = vec![test.clone()];
-            for case in cases {
-                if let Some(ref case_test) = case.test {
-                    result.push(case_test.clone());
-                }
-            }
-            result
-        }
-        _ => vec![],
-    }
-}
-
-fn each_pattern_operand_places(pattern: &react_compiler_hir::Pattern) -> Vec<Place> {
-    let mut result = Vec::new();
-    match pattern {
-        react_compiler_hir::Pattern::Array(array) => {
-            for item in &array.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => result.push(p.clone()),
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        result.push(s.place.clone())
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.clone())
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.clone())
-                    }
-                }
-            }
-        }
-    }
-    result
-}

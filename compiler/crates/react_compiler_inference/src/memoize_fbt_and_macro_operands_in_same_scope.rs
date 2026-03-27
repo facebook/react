@@ -15,11 +15,12 @@
 
 use std::collections::{HashMap, HashSet};
 
+use react_compiler_hir::environment::Environment;
+use react_compiler_hir::visitors;
 use react_compiler_hir::{
     HirFunction, IdentifierId, InstructionValue, JsxTag, Place,
     PlaceOrSpread, PrimitiveValue, PropertyLiteral, ScopeId,
 };
-use react_compiler_hir::environment::Environment;
 
 /// Whether a macro requires its arguments to be transitively inlined (e.g., fbt)
 /// or just avoids having the top-level values be converted to variables (e.g., fbt.param).
@@ -430,7 +431,7 @@ fn visit_operands_value(
 ) {
     macro_values.insert(lvalue_id);
 
-    let operand_ids = collect_instruction_value_operand_ids(value, env);
+    let operand_ids: Vec<IdentifierId> = visitors::each_instruction_value_operand(value, env).into_iter().map(|p| p.identifier).collect();
     for operand_id in operand_ids {
         process_operand(macro_def, scope_id, operand_id, env, macro_values, macro_tags);
     }
@@ -453,197 +454,3 @@ fn process_operand(
     macro_values.insert(operand_id);
 }
 
-/// Collect all operand IdentifierIds from an InstructionValue.
-/// This mirrors the TS `eachInstructionValueOperand` function.
-fn collect_instruction_value_operand_ids(
-    value: &InstructionValue,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    let mut result = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            result.push(place.identifier);
-        }
-        InstructionValue::StoreLocal { value, .. } => {
-            result.push(value.identifier);
-        }
-        InstructionValue::StoreContext { value, .. } => {
-            result.push(value.identifier);
-        }
-        InstructionValue::Destructure { value, .. } => {
-            result.push(value.identifier);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            result.push(left.identifier);
-            result.push(right.identifier);
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            result.push(callee.identifier);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => result.push(p.identifier),
-                    PlaceOrSpread::Spread(s) => result.push(s.place.identifier),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            result.push(receiver.identifier);
-            result.push(property.identifier);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => result.push(p.identifier),
-                    PlaceOrSpread::Spread(s) => result.push(s.place.identifier),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value, .. }
-        | InstructionValue::TypeCastExpression { value, .. }
-        | InstructionValue::Await { value, .. } => {
-            result.push(value.identifier);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let JsxTag::Place(p) = tag {
-                result.push(p.identifier);
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        result.push(place.identifier);
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        result.push(argument.identifier);
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    result.push(c.identifier);
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                result.push(c.identifier);
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.identifier);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            result.push(name.identifier);
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.identifier);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => result.push(p.identifier),
-                    react_compiler_hir::ArrayElement::Spread(s) => result.push(s.place.identifier),
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            result.push(object.identifier);
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            result.push(object.identifier);
-            result.push(value.identifier);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            result.push(object.identifier);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => {
-            result.push(object.identifier);
-            result.push(property.identifier);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => {
-            result.push(object.identifier);
-            result.push(property.identifier);
-            result.push(value.identifier);
-        }
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            result.push(object.identifier);
-            result.push(property.identifier);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                result.push(s.identifier);
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            result.push(tag.identifier);
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            // Inner function captures — iterate context of the lowered function
-            let inner_func = &env.functions[lowered_func.func.0 as usize];
-            for ctx in &inner_func.context {
-                result.push(ctx.identifier);
-            }
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            result.push(collection.identifier);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            result.push(iterator.identifier);
-            result.push(collection.identifier);
-        }
-        InstructionValue::NextPropertyOf { value, .. } => {
-            result.push(value.identifier);
-        }
-        InstructionValue::StoreGlobal { value, .. } => {
-            result.push(value.identifier);
-        }
-        InstructionValue::PrefixUpdate { lvalue, value, .. }
-        | InstructionValue::PostfixUpdate { lvalue, value, .. } => {
-            result.push(lvalue.identifier);
-            result.push(value.identifier);
-        }
-        // These have no operands
-        InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::StartMemoize { .. }
-        | InstructionValue::FinishMemoize { .. } => {}
-    }
-    result
-}

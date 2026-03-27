@@ -17,7 +17,7 @@ use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     BasicBlock, BlockId, EvaluationOrder, GotoVariant, HirFunction, IdentifierId,
-    InstructionValue, ScopeId, Terminal,
+    ScopeId, Terminal, visitors,
 };
 use react_compiler_lowering::{
     get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
@@ -405,299 +405,29 @@ fn fix_scope_and_identifier_ranges(func: &HirFunction, env: &mut Environment) {
 }
 
 // =============================================================================
-// Instruction visitor helpers (duplicated from merge_overlapping pass)
+// Instruction visitor helpers (delegating to canonical visitors)
 // =============================================================================
 
 fn each_instruction_lvalue_ids(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    let mut result = vec![instr.lvalue.identifier];
-    match &instr.value {
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. } => {
-            result.push(lvalue.place.identifier);
-        }
-        InstructionValue::StoreLocal { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. } => {
-            result.push(lvalue.place.identifier);
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            collect_pattern_ids(&lvalue.pattern, &mut result);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            result.push(lvalue.identifier);
-        }
-        _ => {}
-    }
-    result
-}
-
-fn collect_pattern_ids(
-    pattern: &react_compiler_hir::Pattern,
-    result: &mut Vec<IdentifierId>,
-) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(array) => {
-            for item in &array.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => {
-                        result.push(p.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        result.push(s.place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.identifier);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.identifier);
-                    }
-                }
-            }
-        }
-    }
+    visitors::each_instruction_lvalue(instr)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 fn each_instruction_operand_ids(
     instr: &react_compiler_hir::Instruction,
     env: &Environment,
 ) -> Vec<IdentifierId> {
-    each_instruction_value_operand_ids(&instr.value, env)
-}
-
-fn each_instruction_value_operand_ids(
-    value: &InstructionValue,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    let mut result = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            result.push(place.identifier);
-        }
-        InstructionValue::StoreLocal { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::StoreContext {
-            lvalue,
-            value: val,
-            ..
-        } => {
-            result.push(lvalue.place.identifier);
-            result.push(val.identifier);
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            result.push(left.identifier);
-            result.push(right.identifier);
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            result.push(callee.identifier);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => result.push(p.identifier),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => {
-                        result.push(s.place.identifier)
-                    }
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            result.push(receiver.identifier);
-            result.push(property.identifier);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => result.push(p.identifier),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => {
-                        result.push(s.place.identifier)
-                    }
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                result.push(p.identifier);
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        result.push(place.identifier)
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        result.push(argument.identifier)
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    result.push(c.identifier);
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                result.push(c.identifier);
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        result.push(p.place.identifier);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            result.push(name.identifier);
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        result.push(s.place.identifier)
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => result.push(p.identifier),
-                    react_compiler_hir::ArrayElement::Spread(s) => {
-                        result.push(s.place.identifier)
-                    }
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyStore {
-            object, value: val, ..
-        } => {
-            result.push(object.identifier);
-            result.push(val.identifier);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value: val,
-            ..
-        } => {
-            result.push(object.identifier);
-            result.push(property.identifier);
-            result.push(val.identifier);
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            result.push(object.identifier);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => {
-            result.push(object.identifier);
-            result.push(property.identifier);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            result.push(object.identifier);
-        }
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            result.push(object.identifier);
-            result.push(property.identifier);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for sub in subexprs {
-                result.push(sub.identifier);
-            }
-        }
-        InstructionValue::TaggedTemplateExpression {
-            tag,
-            ..
-        } => {
-            result.push(tag.identifier);
-        }
-        InstructionValue::PrefixUpdate { value: val, .. }
-        | InstructionValue::PostfixUpdate { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            // FunctionExpression/ObjectMethod operands come from the inner function's
-            // context (captured variables). Access via the function arena.
-            let inner_func = &env.functions[lowered_func.func.0 as usize];
-            for ctx_place in &inner_func.context {
-                result.push(ctx_place.identifier);
-            }
-        }
-        InstructionValue::IteratorNext { iterator, .. } => {
-            result.push(iterator.identifier);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            result.push(collection.identifier);
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::Await { value: val, .. } => {
-            result.push(val.identifier);
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            result.push(decl.identifier);
-        }
-        // Instructions with no operands
-        InstructionValue::Primitive { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::StartMemoize { .. }
-        | InstructionValue::UnsupportedNode { .. }
-        | InstructionValue::JSXText { .. } => {}
-    }
-    result
+    visitors::each_instruction_operand(instr, env)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 fn each_terminal_operand_ids(terminal: &react_compiler_hir::Terminal) -> Vec<IdentifierId> {
-    use react_compiler_hir::Terminal;
-    match terminal {
-        Terminal::Throw { value, .. } => vec![value.identifier],
-        Terminal::Return { value, .. } => vec![value.identifier],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            vec![test.identifier]
-        }
-        Terminal::Switch { test, cases, .. } => {
-            let mut ids = vec![test.identifier];
-            for case in cases {
-                if let Some(ref case_test) = case.test {
-                    ids.push(case_test.identifier);
-                }
-            }
-            ids
-        }
-        _ => vec![],
-    }
+    visitors::each_terminal_operand(terminal)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }

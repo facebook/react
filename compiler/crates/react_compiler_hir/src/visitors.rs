@@ -578,7 +578,9 @@ pub fn each_terminal_operand(terminal: &Terminal) -> Vec<Place> {
 pub fn map_instruction_lvalues(instr: &mut Instruction, f: &mut impl FnMut(Place) -> Place) {
     match &mut instr.value {
         InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
+        | InstructionValue::StoreLocal { lvalue, .. }
+        | InstructionValue::DeclareContext { lvalue, .. }
+        | InstructionValue::StoreContext { lvalue, .. } => {
             lvalue.place = f(lvalue.place.clone());
         }
         InstructionValue::Destructure { lvalue, .. } => {
@@ -1075,6 +1077,167 @@ pub fn map_terminal_operands(terminal: &mut Terminal, f: &mut impl FnMut(Place) 
     }
 }
 
+/// Yields ALL block IDs referenced by a terminal (successors + fallthroughs + internal blocks).
+/// Unlike `each_terminal_successor` which yields only standard control flow successors,
+/// this function yields every block ID that `map_terminal_successors` would visit.
+pub fn each_terminal_all_successors(terminal: &Terminal) -> Vec<BlockId> {
+    let mut result = Vec::new();
+    match terminal {
+        Terminal::Goto { block, .. } => {
+            result.push(*block);
+        }
+        Terminal::If {
+            consequent,
+            alternate,
+            fallthrough,
+            ..
+        } => {
+            result.push(*consequent);
+            result.push(*alternate);
+            result.push(*fallthrough);
+        }
+        Terminal::Branch {
+            consequent,
+            alternate,
+            fallthrough,
+            ..
+        } => {
+            result.push(*consequent);
+            result.push(*alternate);
+            result.push(*fallthrough);
+        }
+        Terminal::Switch {
+            cases,
+            fallthrough,
+            ..
+        } => {
+            for case in cases {
+                result.push(case.block);
+            }
+            result.push(*fallthrough);
+        }
+        Terminal::Logical {
+            test, fallthrough, ..
+        }
+        | Terminal::Ternary {
+            test, fallthrough, ..
+        }
+        | Terminal::Optional {
+            test, fallthrough, ..
+        } => {
+            result.push(*test);
+            result.push(*fallthrough);
+        }
+        Terminal::Return { .. } | Terminal::Throw { .. } => {}
+        Terminal::DoWhile {
+            loop_block,
+            test,
+            fallthrough,
+            ..
+        } => {
+            result.push(*loop_block);
+            result.push(*test);
+            result.push(*fallthrough);
+        }
+        Terminal::While {
+            test,
+            loop_block,
+            fallthrough,
+            ..
+        } => {
+            result.push(*test);
+            result.push(*loop_block);
+            result.push(*fallthrough);
+        }
+        Terminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            fallthrough,
+            ..
+        } => {
+            result.push(*init);
+            result.push(*test);
+            if let Some(update) = update {
+                result.push(*update);
+            }
+            result.push(*loop_block);
+            result.push(*fallthrough);
+        }
+        Terminal::ForOf {
+            init,
+            test,
+            loop_block,
+            fallthrough,
+            ..
+        } => {
+            result.push(*init);
+            result.push(*test);
+            result.push(*loop_block);
+            result.push(*fallthrough);
+        }
+        Terminal::ForIn {
+            init,
+            loop_block,
+            fallthrough,
+            ..
+        } => {
+            result.push(*init);
+            result.push(*loop_block);
+            result.push(*fallthrough);
+        }
+        Terminal::Label {
+            block,
+            fallthrough,
+            ..
+        }
+        | Terminal::Sequence {
+            block,
+            fallthrough,
+            ..
+        } => {
+            result.push(*block);
+            result.push(*fallthrough);
+        }
+        Terminal::MaybeThrow {
+            continuation,
+            handler,
+            ..
+        } => {
+            result.push(*continuation);
+            if let Some(handler) = handler {
+                result.push(*handler);
+            }
+        }
+        Terminal::Try {
+            block,
+            handler,
+            fallthrough,
+            ..
+        } => {
+            result.push(*block);
+            result.push(*handler);
+            result.push(*fallthrough);
+        }
+        Terminal::Scope {
+            block,
+            fallthrough,
+            ..
+        }
+        | Terminal::PrunedScope {
+            block,
+            fallthrough,
+            ..
+        } => {
+            result.push(*block);
+            result.push(*fallthrough);
+        }
+        Terminal::Unreachable { .. } | Terminal::Unsupported { .. } => {}
+    }
+    result
+}
+
 // =============================================================================
 // Terminal fallthrough functions
 // =============================================================================
@@ -1246,5 +1409,307 @@ impl ScopeBlockTraversal {
 impl Default for ScopeBlockTraversal {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+// =============================================================================
+// In-place mutation variants (f(&mut Place) callbacks)
+// =============================================================================
+//
+// These variants use `f(&mut Place)` instead of `f(Place) -> Place`, which is
+// more natural for Rust in-place mutation patterns. They do NOT handle
+// FunctionExpression/ObjectMethod context (since that requires env access).
+// Callers that need to process inner function context should handle it
+// separately, e.g.:
+//
+//   for_each_instruction_value_operand_mut(&mut instr.value, &mut |place| { ... });
+//   if let InstructionValue::FunctionExpression { lowered_func, .. }
+//       | InstructionValue::ObjectMethod { lowered_func, .. } = &mut instr.value {
+//       let func = &mut env.functions[lowered_func.func.0 as usize];
+//       for ctx in func.context.iter_mut() { ... }
+//   }
+//
+
+/// In-place mutation of all operand places in an InstructionValue.
+/// Does NOT handle FunctionExpression/ObjectMethod context — callers handle those separately.
+pub fn for_each_instruction_value_operand_mut(
+    value: &mut InstructionValue,
+    f: &mut impl FnMut(&mut Place),
+) {
+    match value {
+        InstructionValue::BinaryExpression { left, right, .. } => {
+            f(left);
+            f(right);
+        }
+        InstructionValue::PropertyLoad { object, .. }
+        | InstructionValue::PropertyDelete { object, .. } => {
+            f(object);
+        }
+        InstructionValue::PropertyStore {
+            object,
+            value: val,
+            ..
+        } => {
+            f(object);
+            f(val);
+        }
+        InstructionValue::ComputedLoad {
+            object, property, ..
+        }
+        | InstructionValue::ComputedDelete {
+            object, property, ..
+        } => {
+            f(object);
+            f(property);
+        }
+        InstructionValue::ComputedStore {
+            object,
+            property,
+            value: val,
+            ..
+        } => {
+            f(object);
+            f(property);
+            f(val);
+        }
+        InstructionValue::DeclareContext { .. } | InstructionValue::DeclareLocal { .. } => {}
+        InstructionValue::LoadLocal { place, .. }
+        | InstructionValue::LoadContext { place, .. } => {
+            f(place);
+        }
+        InstructionValue::StoreLocal { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::StoreContext {
+            lvalue, value: val, ..
+        } => {
+            f(&mut lvalue.place);
+            f(val);
+        }
+        InstructionValue::StoreGlobal { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::Destructure { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::NewExpression { callee, args, .. }
+        | InstructionValue::CallExpression { callee, args, .. } => {
+            f(callee);
+            for_each_call_argument_mut(args, f);
+        }
+        InstructionValue::MethodCall {
+            receiver,
+            property,
+            args,
+            ..
+        } => {
+            f(receiver);
+            f(property);
+            for_each_call_argument_mut(args, f);
+        }
+        InstructionValue::UnaryExpression { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::JsxExpression {
+            tag,
+            props,
+            children,
+            ..
+        } => {
+            if let JsxTag::Place(place) = tag {
+                f(place);
+            }
+            for attribute in props.iter_mut() {
+                match attribute {
+                    JsxAttribute::Attribute { place, .. } => f(place),
+                    JsxAttribute::SpreadAttribute { argument, .. } => f(argument),
+                }
+            }
+            if let Some(children) = children {
+                for child in children.iter_mut() {
+                    f(child);
+                }
+            }
+        }
+        InstructionValue::ObjectExpression { properties, .. } => {
+            for property in properties.iter_mut() {
+                match property {
+                    ObjectPropertyOrSpread::Property(prop) => {
+                        if let ObjectPropertyKey::Computed { name } = &mut prop.key {
+                            f(name);
+                        }
+                        f(&mut prop.place);
+                    }
+                    ObjectPropertyOrSpread::Spread(spread) => {
+                        f(&mut spread.place);
+                    }
+                }
+            }
+        }
+        InstructionValue::ArrayExpression { elements, .. } => {
+            for elem in elements.iter_mut() {
+                match elem {
+                    ArrayElement::Place(p) => f(p),
+                    ArrayElement::Spread(s) => f(&mut s.place),
+                    ArrayElement::Hole => {}
+                }
+            }
+        }
+        InstructionValue::JsxFragment { children, .. } => {
+            for child in children.iter_mut() {
+                f(child);
+            }
+        }
+        InstructionValue::FunctionExpression { .. }
+        | InstructionValue::ObjectMethod { .. } => {
+            // Context places require env access — callers handle separately.
+        }
+        InstructionValue::TaggedTemplateExpression { tag, .. } => {
+            f(tag);
+        }
+        InstructionValue::TypeCastExpression { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::TemplateLiteral { subexprs, .. } => {
+            for expr in subexprs.iter_mut() {
+                f(expr);
+            }
+        }
+        InstructionValue::Await { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::GetIterator { collection, .. } => {
+            f(collection);
+        }
+        InstructionValue::IteratorNext {
+            iterator,
+            collection,
+            ..
+        } => {
+            f(iterator);
+            f(collection);
+        }
+        InstructionValue::NextPropertyOf { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::PostfixUpdate { value: val, .. }
+        | InstructionValue::PrefixUpdate { value: val, .. } => {
+            f(val);
+        }
+        InstructionValue::StartMemoize { deps, .. } => {
+            if let Some(deps) = deps {
+                for dep in deps.iter_mut() {
+                    if let ManualMemoDependencyRoot::NamedLocal { value, .. } = &mut dep.root {
+                        f(value);
+                    }
+                }
+            }
+        }
+        InstructionValue::FinishMemoize { decl, .. } => {
+            f(decl);
+        }
+        InstructionValue::Debugger { .. }
+        | InstructionValue::RegExpLiteral { .. }
+        | InstructionValue::MetaProperty { .. }
+        | InstructionValue::LoadGlobal { .. }
+        | InstructionValue::UnsupportedNode { .. }
+        | InstructionValue::Primitive { .. }
+        | InstructionValue::JSXText { .. } => {}
+    }
+}
+
+/// In-place mutation of call arguments.
+pub fn for_each_call_argument_mut(args: &mut [PlaceOrSpread], f: &mut impl FnMut(&mut Place)) {
+    for arg in args.iter_mut() {
+        match arg {
+            PlaceOrSpread::Place(place) => f(place),
+            PlaceOrSpread::Spread(spread) => f(&mut spread.place),
+        }
+    }
+}
+
+/// In-place mutation of the instruction's lvalue and value's lvalues.
+/// Matches the same variants as TS `mapInstructionLValues` (skips DeclareContext/StoreContext).
+pub fn for_each_instruction_lvalue_mut(instr: &mut Instruction, f: &mut impl FnMut(&mut Place)) {
+    match &mut instr.value {
+        InstructionValue::DeclareLocal { lvalue, .. }
+        | InstructionValue::StoreLocal { lvalue, .. } => {
+            f(&mut lvalue.place);
+        }
+        InstructionValue::Destructure { lvalue, .. } => {
+            for_each_pattern_operand_mut(&mut lvalue.pattern, f);
+        }
+        InstructionValue::PostfixUpdate { lvalue, .. }
+        | InstructionValue::PrefixUpdate { lvalue, .. } => {
+            f(lvalue);
+        }
+        _ => {}
+    }
+    f(&mut instr.lvalue);
+}
+
+/// In-place mutation of pattern operands.
+pub fn for_each_pattern_operand_mut(pattern: &mut Pattern, f: &mut impl FnMut(&mut Place)) {
+    match pattern {
+        Pattern::Array(arr) => {
+            for item in arr.items.iter_mut() {
+                match item {
+                    ArrayPatternElement::Place(p) => f(p),
+                    ArrayPatternElement::Spread(s) => f(&mut s.place),
+                    ArrayPatternElement::Hole => {}
+                }
+            }
+        }
+        Pattern::Object(obj) => {
+            for property in obj.properties.iter_mut() {
+                match property {
+                    ObjectPropertyOrSpread::Property(prop) => f(&mut prop.place),
+                    ObjectPropertyOrSpread::Spread(spread) => f(&mut spread.place),
+                }
+            }
+        }
+    }
+}
+
+/// In-place mutation of terminal operand places.
+pub fn for_each_terminal_operand_mut(terminal: &mut Terminal, f: &mut impl FnMut(&mut Place)) {
+    match terminal {
+        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
+            f(test);
+        }
+        Terminal::Switch { test, cases, .. } => {
+            f(test);
+            for case in cases.iter_mut() {
+                if let Some(t) = &mut case.test {
+                    f(t);
+                }
+            }
+        }
+        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => {
+            f(value);
+        }
+        Terminal::Try {
+            handler_binding, ..
+        } => {
+            if let Some(binding) = handler_binding {
+                f(binding);
+            }
+        }
+        Terminal::MaybeThrow { .. }
+        | Terminal::Sequence { .. }
+        | Terminal::Label { .. }
+        | Terminal::Optional { .. }
+        | Terminal::Ternary { .. }
+        | Terminal::Logical { .. }
+        | Terminal::DoWhile { .. }
+        | Terminal::While { .. }
+        | Terminal::For { .. }
+        | Terminal::ForOf { .. }
+        | Terminal::ForIn { .. }
+        | Terminal::Goto { .. }
+        | Terminal::Unreachable { .. }
+        | Terminal::Unsupported { .. }
+        | Terminal::Scope { .. }
+        | Terminal::PrunedScope { .. } => {}
     }
 }

@@ -23,9 +23,9 @@ use react_compiler_diagnostics::{
 };
 use react_compiler_hir::{
     BlockKind, DeclarationId, HirFunction, InstructionKind, InstructionValue, ParamPattern,
-    Pattern, Place,
-    ArrayPatternElement, ObjectPropertyOrSpread,
+    Place,
 };
+use react_compiler_hir::visitors::each_pattern_operand;
 
 use react_compiler_hir::environment::Environment;
 
@@ -212,7 +212,7 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                 }
                 InstructionValue::Destructure { lvalue, .. } => {
                     let mut kind: Option<InstructionKind> = None;
-                    for place in each_pattern_operands(&lvalue.pattern) {
+                    for place in each_pattern_operand(&lvalue.pattern) {
                         let ident = &env.identifiers[place.identifier.0 as usize];
                         if ident.name.is_none() {
                             if !(kind.is_none() || kind == Some(InstructionKind::Const)) {
@@ -386,27 +386,3 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
     Ok(())
 }
 
-/// Collect all operand places from a pattern (array or object destructuring).
-fn each_pattern_operands(pattern: &Pattern) -> Vec<Place> {
-    let mut result = Vec::new();
-    match pattern {
-        Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    ArrayPatternElement::Place(p) => result.push(p.clone()),
-                    ArrayPatternElement::Spread(s) => result.push(s.place.clone()),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => result.push(p.place.clone()),
-                    ObjectPropertyOrSpread::Spread(s) => result.push(s.place.clone()),
-                }
-            }
-        }
-    }
-    result
-}

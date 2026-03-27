@@ -13,6 +13,7 @@ use std::collections::{HashMap, HashSet};
 
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 
+use crate::visitors::each_terminal_successor;
 use crate::{BlockId, HirFunction, Terminal};
 
 // =============================================================================
@@ -62,44 +63,6 @@ impl Graph {
     fn get_node(&self, id: BlockId) -> &Node {
         let idx = self.node_index[&id];
         &self.nodes[idx]
-    }
-}
-
-// =============================================================================
-// Terminal successor iteration
-// =============================================================================
-
-/// Yield all successor block IDs of a terminal.
-/// Port of TS `eachTerminalSuccessor`.
-pub fn each_terminal_successor(terminal: &Terminal) -> Vec<BlockId> {
-    match terminal {
-        Terminal::Goto { block, .. } => vec![*block],
-        Terminal::If { consequent, alternate, .. } => vec![*consequent, *alternate],
-        Terminal::Branch { consequent, alternate, .. } => vec![*consequent, *alternate],
-        Terminal::Switch { cases, .. } => {
-            cases.iter().map(|c| c.block).collect()
-        }
-        Terminal::Optional { test, .. }
-        | Terminal::Ternary { test, .. }
-        | Terminal::Logical { test, .. } => vec![*test],
-        Terminal::Return { .. } | Terminal::Throw { .. } => vec![],
-        Terminal::DoWhile { loop_block, .. } => vec![*loop_block],
-        Terminal::While { test, .. } => vec![*test],
-        Terminal::For { init, .. } => vec![*init],
-        Terminal::ForOf { init, .. } => vec![*init],
-        Terminal::ForIn { init, .. } => vec![*init],
-        Terminal::Label { block, .. } => vec![*block],
-        Terminal::Sequence { block, .. } => vec![*block],
-        Terminal::MaybeThrow { continuation, handler, .. } => {
-            let mut succs = vec![*continuation];
-            if let Some(h) = handler {
-                succs.push(*h);
-            }
-            succs
-        }
-        Terminal::Try { block, .. } => vec![*block],
-        Terminal::Scope { block, .. } | Terminal::PrunedScope { block, .. } => vec![*block],
-        Terminal::Unreachable { .. } | Terminal::Unsupported { .. } => vec![],
     }
 }
 

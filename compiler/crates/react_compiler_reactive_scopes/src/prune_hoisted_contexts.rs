@@ -27,8 +27,8 @@ use crate::visitors::{ReactiveFunctionTransform, Transformed, transform_reactive
 /// Prunes DeclareContexts lowered for HoistedConsts and transforms any
 /// references back to their original instruction kind.
 /// TS: `pruneHoistedContexts`
-pub fn prune_hoisted_contexts(func: &mut ReactiveFunction, env: &mut Environment) -> Result<(), CompilerError> {
-    let mut transform = Transform { env_ptr: env as *mut Environment };
+pub fn prune_hoisted_contexts(func: &mut ReactiveFunction, env: &Environment) -> Result<(), CompilerError> {
+    let mut transform = Transform { env };
     let mut state = VisitorState {
         active_scopes: Vec::new(),
         uninitialized: HashMap::new(),
@@ -62,25 +62,15 @@ impl VisitorState {
     }
 }
 
-struct Transform {
-    env_ptr: *mut Environment,
+struct Transform<'a> {
+    env: &'a Environment,
 }
 
-impl Transform {
-    fn env(&self) -> &Environment {
-        unsafe { &*self.env_ptr }
-    }
-    #[allow(dead_code)]
-    fn env_mut(&mut self) -> &mut Environment {
-        unsafe { &mut *self.env_ptr }
-    }
-}
-
-impl ReactiveFunctionTransform for Transform {
+impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = VisitorState;
 
     fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut VisitorState) -> Result<(), CompilerError> {
-        let scope_data = &self.env().scopes[scope.scope.0 as usize];
+        let scope_data = &self.env.scopes[scope.scope.0 as usize];
         let decl_ids: std::collections::HashSet<IdentifierId> = scope_data
             .declarations
             .iter()
@@ -99,7 +89,7 @@ impl ReactiveFunctionTransform for Transform {
         state.active_scopes.pop();
 
         // Clean up uninitialized after scope
-        let scope_data = &self.env().scopes[scope.scope.0 as usize];
+        let scope_data = &self.env.scopes[scope.scope.0 as usize];
         for (_, decl) in &scope_data.declarations {
             state.uninitialized.remove(&decl.identifier);
         }
@@ -120,7 +110,7 @@ impl ReactiveFunctionTransform for Transform {
             match iv {
                 InstructionValue::FunctionExpression { lowered_func, .. }
                 | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                    let func = &self.env().functions[lowered_func.func.0 as usize];
+                    let func = &self.env.functions[lowered_func.func.0 as usize];
                     let ctx_places: Vec<Place> = func.context.clone();
                     for ctx_place in &ctx_places {
                         self.visit_place(id, ctx_place, state)?;
