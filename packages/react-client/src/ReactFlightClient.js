@@ -3525,7 +3525,8 @@ function resolveErrorDev(
 
   let error;
   const errorOptions =
-    'cause' in errorInfo
+    // We don't serialize Error.cause in prod so we never need to deserialize
+    __DEV__ && 'cause' in errorInfo
       ? {
           cause: reviveModel(
             response,
