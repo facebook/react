@@ -125,8 +125,16 @@ function renderFlight(rscBundle, AppComponent, itemCount) {
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
 
   const {pipe: rscPipe} = rscBundle(clientManifest, AppComponent, itemCount);
+  const rscStream = new PassThrough();
   const flightStream = new PassThrough();
-  rscPipe(flightStream);
+  const rscPayloadChunks = [];
+
+  rscStream.on('data', function (chunk) {
+    rscPayloadChunks.push(chunk);
+  });
+
+  rscPipe(rscStream);
+  rscStream.pipe(flightStream);
 
   return new Promise(function (resolve, reject) {
     let cachedResult;
@@ -139,14 +147,17 @@ function renderFlight(rscBundle, AppComponent, itemCount) {
 
     const {pipe} = renderToPipeableStream(React.createElement(Root), {
       onAllReady() {
-        const chunks = [];
+        const htmlChunks = [];
         const writable = new Writable({
           write(chunk, _encoding, cb) {
-            chunks.push(chunk);
+            htmlChunks.push(chunk);
             cb();
           },
           final(cb) {
-            resolve(Buffer.concat(chunks).toString('utf-8'));
+            resolve({
+              html: Buffer.concat(htmlChunks).toString('utf-8'),
+              rscPayload: Buffer.concat(rscPayloadChunks).toString('utf-8'),
+            });
             cb();
           },
         });
@@ -192,10 +203,19 @@ async function main() {
   ];
 
   for (const {name, render} of variants) {
-    const html = await render();
+    const result = await render();
+    const isFlight = typeof result === 'object' && result.rscPayload;
+    const html = isFlight ? result.html : result;
+
     const outPath = path.join(outputDir, name + '.html');
     fs.writeFileSync(outPath, html);
     console.log('%s: %d bytes → %s', name, html.length, outPath);
+
+    if (isFlight) {
+      const rscPath = path.join(outputDir, name + '.rsc');
+      fs.writeFileSync(rscPath, result.rscPayload);
+      console.log('%s: %d bytes → %s', name + ' (rsc)', result.rscPayload.length, rscPath);
+    }
   }
 }
 

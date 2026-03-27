@@ -168,6 +168,8 @@ function renderFlight(rscBundle, AppComponent, itemCount) {
 // Benchmarking
 // ---------------------------------------------------------------------------
 
+const canGC = typeof globalThis.gc === 'function';
+
 async function runBenchmark(name, fn, iterations, warmup) {
   // Warmup
   for (let i = 0; i < warmup; i++) {
@@ -177,16 +179,21 @@ async function runBenchmark(name, fn, iterations, warmup) {
   // Timed iterations
   const times = [];
   for (let i = 0; i < iterations; i++) {
+    if (canGC) globalThis.gc();
     const start = performance.now();
     await fn();
     times.push(performance.now() - start);
   }
 
+  // Trim top/bottom 5% to remove outliers
   const sorted = [...times].sort((a, b) => a - b);
-  const mean = times.reduce((s, t) => s + t, 0) / times.length;
+  const trimCount = Math.floor(sorted.length * 0.05);
+  const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
+
+  const mean = trimmed.reduce((s, t) => s + t, 0) / trimmed.length;
   const median = sorted[Math.floor(sorted.length / 2)];
   const stddev = Math.sqrt(
-    times.reduce((s, t) => s + (t - mean) ** 2, 0) / times.length
+    trimmed.reduce((s, t) => s + (t - mean) ** 2, 0) / trimmed.length
   );
   const p95 = sorted[Math.floor(sorted.length * 0.95)];
   const min = sorted[0];
@@ -206,14 +213,19 @@ function printResult(result) {
 }
 
 function printOverhead(baseline, comparison) {
-  const pct = ((comparison.mean - baseline.mean) / baseline.mean) * 100;
-  const sign = pct >= 0 ? '+' : '';
+  const pctMean =
+    ((comparison.mean - baseline.mean) / baseline.mean) * 100;
+  const pctMedian =
+    ((comparison.median - baseline.median) / baseline.median) * 100;
+  const sign = pctMedian >= 0 ? '+' : '';
   console.log(
-    '  %s vs %s: %s%s%%',
+    '  %s vs %s: %s%s%% (median), %s%s%% (trimmed mean)',
     comparison.name,
     baseline.name,
     sign,
-    pct.toFixed(1)
+    pctMedian.toFixed(1),
+    pctMean >= 0 ? '+' : '',
+    pctMean.toFixed(1)
   );
 }
 
