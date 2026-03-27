@@ -1246,7 +1246,8 @@ module.exports = function ($$$config) {
               renderLanes,
               workInProgress
             ),
-            (nextFiber = forcePropagateEntireTree ? fiber.child : null))
+            (nextFiber = fiber.child),
+            (nextFiber = null !== nextFiber ? nextFiber.sibling : null))
           : (nextFiber = fiber.child);
       if (null !== nextFiber) nextFiber.return = fiber;
       else
@@ -14460,7 +14461,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-2233b7d7-20260327"
+      reconcilerVersion: "19.3.0-www-classic-9627b5a1-20260327"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
