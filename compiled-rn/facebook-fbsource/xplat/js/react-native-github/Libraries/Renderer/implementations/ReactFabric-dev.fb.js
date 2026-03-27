@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2ccca32718a08bbb422ae71fee4de363>>
+ * @generated SignedSource<<f67b4889867c2f4eb5fe8337218574d9>>
  */
 
 "use strict";
@@ -3529,7 +3529,8 @@ __DEV__ &&
                 renderLanes,
                 workInProgress
               ),
-              (nextFiber = forcePropagateEntireTree ? fiber.child : null))
+              (nextFiber = fiber.child),
+              (nextFiber = null !== nextFiber ? nextFiber.sibling : null))
             : (nextFiber = fiber.child);
         if (null !== nextFiber) nextFiber.return = fiber;
         else
@@ -21222,10 +21223,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-2233b7d7-20260327",
+        version: "19.3.0-native-fb-9627b5a1-20260327",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-2233b7d7-20260327"
+        reconcilerVersion: "19.3.0-native-fb-9627b5a1-20260327"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
