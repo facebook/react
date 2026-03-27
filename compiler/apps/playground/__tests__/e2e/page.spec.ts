@@ -260,11 +260,9 @@ test('error is displayed when config has syntax error', async ({page}) => {
 test('error is displayed when config has validation error', async ({page}) => {
   const store: Store = {
     source: TEST_SOURCE,
-    config: `import type { PluginOptions } from 'babel-plugin-react-compiler/dist';
-
-({
+    config: `{
   compilationMode: "123"
-} satisfies PluginOptions);`,
+}`,
     showInternals: false,
   };
   const hash = encodeStore(store);
