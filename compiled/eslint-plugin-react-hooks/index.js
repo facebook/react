@@ -38891,7 +38891,7 @@ function inferBlock(context, state, block) {
         const handlerParam = context.catchHandlers.get(terminal.handler);
         if (handlerParam != null) {
             CompilerError.invariant(state.kind(handlerParam) != null, {
-                reason: 'Expected catch binding to be intialized with a DeclareLocal Catch instruction',
+                reason: 'Expected catch binding to be initialized with a DeclareLocal Catch instruction',
                 loc: terminal.loc,
             });
             const effects = [];
