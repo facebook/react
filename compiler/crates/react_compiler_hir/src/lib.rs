@@ -6,6 +6,7 @@ pub mod globals;
 pub mod object_shape;
 pub mod reactive;
 pub mod type_config;
+pub mod visitors;
 
 pub use reactive::*;
 
