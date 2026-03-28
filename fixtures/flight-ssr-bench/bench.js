@@ -285,20 +285,38 @@ function printResult(result) {
   console.log('    Max:    %s ms', result.max.toFixed(2));
 }
 
-function printOverhead(baseline, comparison) {
-  const pctMean = ((comparison.mean - baseline.mean) / baseline.mean) * 100;
+function getOverhead(baseline, comparison) {
   const pctMedian =
     ((comparison.median - baseline.median) / baseline.median) * 100;
-  const pctP95 = ((comparison.p95 - baseline.p95) / baseline.p95) * 100;
-  const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+  return {baseline: baseline.name, comparison: comparison.name, median: pctMedian};
+}
+
+function printOverheadTable(rows) {
+  const baselineWidth = Math.max(...rows.filter(Boolean).map(r => r.baseline.length));
+  const comparisonWidth = Math.max(...rows.filter(Boolean).map(r => r.comparison.length));
+  const fmt = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
   console.log(
-    '  %s vs %s: %s (median), %s (p95), %s (trimmed mean)',
-    comparison.name,
-    baseline.name,
-    fmt(pctMedian),
-    fmt(pctP95),
-    fmt(pctMean)
+    '  ' +
+      'Baseline'.padEnd(baselineWidth) +
+      '  ' +
+      'Comparison'.padEnd(comparisonWidth) +
+      '    Median'
   );
+  console.log('  ' + '-'.repeat(baselineWidth + comparisonWidth + 14));
+  for (const row of rows) {
+    if (!row) {
+      console.log('');
+      continue;
+    }
+    console.log(
+      '  ' +
+        row.baseline.padEnd(baselineWidth) +
+        '  ' +
+        row.comparison.padEnd(comparisonWidth) +
+        '  ' +
+        fmt(row.median)
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -513,8 +531,11 @@ async function main() {
     printResult(flightFizzNodeAsync);
 
     console.log('\n--- Overhead ---\n');
-    printOverhead(fizzNodeSync, flightFizzNodeSync);
-    printOverhead(fizzNodeAsync, flightFizzNodeAsync);
+    printOverheadTable([
+      getOverhead(fizzNodeSync, flightFizzNodeSync),
+      getOverhead(fizzNodeAsync, flightFizzNodeAsync),
+    ]);
+
     return;
   }
 
@@ -650,17 +671,18 @@ async function main() {
   );
   printResult(flightFizzEdgeAsync);
 
-  console.log('\n--- Overhead (Flight + Fizz vs Fizz) ---\n');
-  printOverhead(fizzNodeSync, flightFizzNodeSync);
-  printOverhead(fizzNodeAsync, flightFizzNodeAsync);
-  printOverhead(fizzEdgeSync, flightFizzEdgeSync);
-  printOverhead(fizzEdgeAsync, flightFizzEdgeAsync);
-
-  console.log('\n--- Overhead (Edge vs Node) ---\n');
-  printOverhead(fizzNodeSync, fizzEdgeSync);
-  printOverhead(fizzNodeAsync, fizzEdgeAsync);
-  printOverhead(flightFizzNodeSync, flightFizzEdgeSync);
-  printOverhead(flightFizzNodeAsync, flightFizzEdgeAsync);
+  console.log('\n--- Overhead ---\n');
+  printOverheadTable([
+    getOverhead(fizzNodeSync, flightFizzNodeSync),
+    getOverhead(fizzNodeAsync, flightFizzNodeAsync),
+    getOverhead(fizzEdgeSync, flightFizzEdgeSync),
+    getOverhead(fizzEdgeAsync, flightFizzEdgeAsync),
+    null,
+    getOverhead(fizzNodeSync, fizzEdgeSync),
+    getOverhead(fizzNodeAsync, fizzEdgeAsync),
+    getOverhead(flightFizzNodeSync, flightFizzEdgeSync),
+    getOverhead(flightFizzNodeAsync, flightFizzEdgeAsync),
+  ]);
 
   // --- CPU Profiling ---
   if (PROFILE_MODE) {
