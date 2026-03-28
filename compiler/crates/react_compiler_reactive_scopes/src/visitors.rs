@@ -12,6 +12,7 @@ use react_compiler_hir::{
     EvaluationOrder, Place, PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction,
     ReactiveInstruction, ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement,
     ReactiveValue, ReactiveScopeBlock,
+    environment::Environment,
 };
 
 // =============================================================================
@@ -26,6 +27,13 @@ use react_compiler_hir::{
 /// TS: `class ReactiveFunctionVisitor<TState>`
 pub trait ReactiveFunctionVisitor {
     type State;
+
+    /// Override to provide Environment access. When Some, the default traversal
+    /// will include FunctionExpression/ObjectMethod context places as operands
+    /// (matching the TS `eachInstructionValueOperand` behavior).
+    fn env(&self) -> Option<&Environment> {
+        None
+    }
 
     fn visit_id(&self, _id: EvaluationOrder, _state: &mut Self::State) {}
 
@@ -68,7 +76,7 @@ pub trait ReactiveFunctionVisitor {
                 self.visit_value(*seq_id, inner, state);
             }
             ReactiveValue::Instruction(instr_value) => {
-                for place in each_instruction_value_operand(instr_value) {
+                for place in each_instruction_value_operand_env(instr_value, self.env()) {
                     self.visit_place(id, place, state);
                 }
             }
@@ -307,6 +315,13 @@ pub enum TransformedValue {
 pub trait ReactiveFunctionTransform {
     type State;
 
+    /// Override to provide Environment access. When Some, the default traversal
+    /// will include FunctionExpression/ObjectMethod context places as operands
+    /// (matching the TS `eachInstructionValueOperand` behavior).
+    fn env(&self) -> Option<&Environment> {
+        None
+    }
+
     fn visit_id(&mut self, _id: EvaluationOrder, _state: &mut Self::State) -> Result<(), CompilerError> { Ok(()) }
 
     fn visit_place(&mut self, _id: EvaluationOrder, _place: &Place, _state: &mut Self::State) -> Result<(), CompilerError> { Ok(()) }
@@ -380,7 +395,13 @@ pub trait ReactiveFunctionTransform {
                 }
             }
             ReactiveValue::Instruction(instr_value) => {
-                for place in each_instruction_value_operand(instr_value) {
+                // Collect operands before visiting to avoid borrow conflict
+                // (self.env() borrows self immutably, self.visit_place() needs &mut self).
+                let operands: Vec<Place> = each_instruction_value_operand_env(instr_value, self.env())
+                    .into_iter()
+                    .cloned()
+                    .collect();
+                for place in &operands {
                     self.visit_place(id, place, state)?;
                 }
             }
@@ -813,12 +834,39 @@ fn each_pattern_operand_places(pattern: &react_compiler_hir::Pattern) -> Vec<&Pl
 }
 
 /// Public wrapper for `each_instruction_value_operand`.
+/// Does NOT include FunctionExpression/ObjectMethod context (no env access).
 pub fn each_instruction_value_operand_public(value: &react_compiler_hir::InstructionValue) -> Vec<&Place> {
     each_instruction_value_operand(value)
 }
 
+/// Like `each_instruction_value_operand`, but when `env` is provided, also yields
+/// context places for FunctionExpression/ObjectMethod (matching TS `eachInstructionValueOperand`
+/// which has inline access to `loweredFunc.func.context`).
+fn each_instruction_value_operand_env<'a>(
+    value: &'a react_compiler_hir::InstructionValue,
+    env: Option<&'a Environment>,
+) -> Vec<&'a Place> {
+    let mut operands = each_instruction_value_operand(value);
+    if let Some(env) = env {
+        use react_compiler_hir::InstructionValue::*;
+        match value {
+            FunctionExpression { lowered_func, .. }
+            | ObjectMethod { lowered_func, .. } => {
+                let func = &env.functions[lowered_func.func.0 as usize];
+                for ctx in &func.context {
+                    operands.push(ctx);
+                }
+            }
+            _ => {}
+        }
+    }
+    operands
+}
+
 /// Yields all Place operands (read positions) of an InstructionValue.
-/// TS: `eachInstructionValueOperand`
+/// Does NOT include FunctionExpression/ObjectMethod context — use
+/// `each_instruction_value_operand_env` with an env for that.
+/// TS: `eachInstructionValueOperand` (partial — context requires env)
 fn each_instruction_value_operand(value: &react_compiler_hir::InstructionValue) -> Vec<&Place> {
     use react_compiler_hir::InstructionValue::*;
     let mut operands = Vec::new();

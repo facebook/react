@@ -42,6 +42,10 @@ struct CollectVisitor<'a> {
 impl<'a> ReactiveFunctionVisitor for CollectVisitor<'a> {
     type State = HashSet<IdentifierId>;
 
+    fn env(&self) -> Option<&Environment> {
+        Some(self.env)
+    }
+
     fn visit_lvalue(&self, id: EvaluationOrder, lvalue: &Place, state: &mut Self::State) {
         // Visitors don't visit lvalues as places by default, but we want to visit all places
         self.visit_place(id, lvalue, state);
@@ -50,24 +54,6 @@ impl<'a> ReactiveFunctionVisitor for CollectVisitor<'a> {
     fn visit_place(&self, _id: EvaluationOrder, place: &Place, state: &mut Self::State) {
         if place.reactive {
             state.insert(place.identifier);
-        }
-    }
-
-    fn visit_value(&self, id: EvaluationOrder, value: &ReactiveValue, state: &mut Self::State) {
-        self.traverse_value(id, value, state);
-        // Also visit context (captured variables) of inner function expressions
-        // TS: eachInstructionValueOperand yields loweredFunc.func.context for FunctionExpression/ObjectMethod
-        if let ReactiveValue::Instruction(iv) = value {
-            match iv {
-                InstructionValue::FunctionExpression { lowered_func, .. }
-                | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                    let inner_func = &self.env.functions[lowered_func.func.0 as usize];
-                    for place in &inner_func.context {
-                        self.visit_place(id, place, state);
-                    }
-                }
-                _ => {}
-            }
         }
     }
 

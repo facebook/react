@@ -69,6 +69,10 @@ struct Transform<'a> {
 impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = VisitorState;
 
+    fn env(&self) -> Option<&Environment> {
+        Some(self.env)
+    }
+
     fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut VisitorState) -> Result<(), CompilerError> {
         let scope_data = &self.env.scopes[scope.scope.0 as usize];
         let decl_ids: std::collections::HashSet<IdentifierId> = scope_data
@@ -92,32 +96,6 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
         let scope_data = &self.env.scopes[scope.scope.0 as usize];
         for (_, decl) in &scope_data.declarations {
             state.uninitialized.remove(&decl.identifier);
-        }
-        Ok(())
-    }
-
-    fn visit_value(
-        &mut self,
-        id: EvaluationOrder,
-        value: &mut ReactiveValue,
-        state: &mut VisitorState,
-    ) -> Result<(), CompilerError> {
-        // Default traversal for all value types
-        self.traverse_value(id, value, state)?;
-        // Additionally, visit FunctionExpression/ObjectMethod context places
-        // (TS eachInstructionValueOperand yields loweredFunc.func.context)
-        if let ReactiveValue::Instruction(iv) = value {
-            match iv {
-                InstructionValue::FunctionExpression { lowered_func, .. }
-                | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                    let func = &self.env.functions[lowered_func.func.0 as usize];
-                    let ctx_places: Vec<Place> = func.context.clone();
-                    for ctx_place in &ctx_places {
-                        self.visit_place(id, ctx_place, state)?;
-                    }
-                }
-                _ => {}
-            }
         }
         Ok(())
     }
