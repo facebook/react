@@ -7,7 +7,9 @@ import Skeleton from './Skeleton';
 import {generateProducts, generateActivities, generateStats} from './data';
 
 function fetchData(generator, ...args) {
-  return Promise.resolve(generator(...args));
+  return new Promise(resolve => {
+    setTimeout(() => resolve(generator(...args)), 1);
+  });
 }
 
 async function AsyncStatsSection() {
