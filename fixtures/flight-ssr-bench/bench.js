@@ -53,7 +53,10 @@ for (const dir of srcDirs) {
     if (!file.endsWith('.js')) continue;
     const filePath = path.join(dir, file);
     const source = fs.readFileSync(filePath, 'utf-8');
-    if (source.trimStart().startsWith("'use client'") || source.trimStart().startsWith('"use client"')) {
+    if (
+      source.trimStart().startsWith("'use client'") ||
+      source.trimStart().startsWith('"use client"')
+    ) {
       registerClientModule(filePath);
     }
   }
@@ -107,8 +110,8 @@ function build() {
 // Render helpers
 // ---------------------------------------------------------------------------
 
-// Classical SSR — renders App directly with react-dom/server.
-function renderClassical(AppComponent, itemCount) {
+// Fizz (Node) — renders App directly via Node streams.
+function renderFizzNode(AppComponent, itemCount) {
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
 
@@ -134,8 +137,8 @@ function renderClassical(AppComponent, itemCount) {
   });
 }
 
-// Flight SSR — RSC render → Flight stream → SSR render.
-function renderFlight(rscBundle, AppComponent, itemCount) {
+// Flight + Fizz (Node) — RSC render → Node stream → Fizz via Node streams.
+function renderFlightFizzNode(rscBundle, AppComponent, itemCount) {
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
@@ -173,6 +176,65 @@ function renderFlight(rscBundle, AppComponent, itemCount) {
       onError: reject,
     });
   });
+}
+
+// Fizz (Edge) — renders App directly via web streams.
+async function renderFizzEdge(AppComponent, itemCount) {
+  const React = require('react');
+  const {renderToReadableStream} = require('react-dom/server');
+
+  const stream = await renderToReadableStream(
+    React.createElement(AppComponent, {itemCount})
+  );
+  const reader = stream.getReader();
+  const chunks = [];
+  for (;;) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks).toString('utf-8');
+}
+
+// Flight + Fizz (Edge) — RSC render → ReadableStream → Fizz via web streams.
+function renderFlightFizzEdge(rscBundle, AppComponent, itemCount) {
+  const React = require('react');
+  const {renderToReadableStream} = require('react-dom/server');
+  const {
+    createFromReadableStream,
+  } = require('react-server-dom-webpack/client.edge');
+  const {Readable} = require('stream');
+
+  // Phase 1: RSC → Node stream → Web ReadableStream
+  const {pipe: rscPipe} = rscBundle(clientManifest, AppComponent, itemCount);
+  const nodeStream = new PassThrough();
+  rscPipe(nodeStream);
+  const webStream = Readable.toWeb(nodeStream);
+
+  // Phase 2: ReadableStream → React tree → HTML
+  const cachedResult = createFromReadableStream(webStream, {
+    serverConsumerManifest: ssrManifest,
+  });
+  function Root() {
+    return React.use(cachedResult);
+  }
+
+  return renderToReadableStream(React.createElement(Root)).then(
+    function (stream) {
+      const reader = stream.getReader();
+      const chunks = [];
+      function read() {
+        return reader.read().then(function ({done, value}) {
+          if (done) {
+            return Buffer.concat(chunks).toString('utf-8');
+          }
+          chunks.push(Buffer.from(value));
+          return read();
+        });
+      }
+      return read();
+    }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -224,13 +286,11 @@ function printResult(result) {
 }
 
 function printOverhead(baseline, comparison) {
-  const pctMean =
-    ((comparison.mean - baseline.mean) / baseline.mean) * 100;
+  const pctMean = ((comparison.mean - baseline.mean) / baseline.mean) * 100;
   const pctMedian =
     ((comparison.median - baseline.median) / baseline.median) * 100;
-  const pctP95 =
-    ((comparison.p95 - baseline.p95) / baseline.p95) * 100;
-  const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+  const pctP95 = ((comparison.p95 - baseline.p95) / baseline.p95) * 100;
+  const fmt = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
   console.log(
     '  %s vs %s: %s (median), %s (p95), %s (trimmed mean)',
     comparison.name,
@@ -285,12 +345,9 @@ function printTopFunctions(profile, topN) {
   // Aggregate self-time per function from the profile nodes.
   const selfTimes = new Map();
   for (const node of profile.nodes) {
-    const name =
-      node.callFrame.functionName || '(anonymous)';
+    const name = node.callFrame.functionName || '(anonymous)';
     const loc = node.callFrame.url
-      ? node.callFrame.url.replace(/.*\//, '') +
-        ':' +
-        node.callFrame.lineNumber
+      ? node.callFrame.url.replace(/.*\//, '') + ':' + node.callFrame.lineNumber
       : '(native)';
     const key = name + ' @ ' + loc;
     const hitCount = node.hitCount || 0;
@@ -301,10 +358,7 @@ function printTopFunctions(profile, topN) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, topN);
 
-  const totalSamples = profile.nodes.reduce(
-    (s, n) => s + (n.hitCount || 0),
-    0
-  );
+  const totalSamples = profile.nodes.reduce((s, n) => s + (n.hitCount || 0), 0);
 
   console.log('    Top %d functions by self-time:', topN);
   for (const [key, hits] of sorted) {
@@ -339,8 +393,16 @@ const {execFileSync} = require('child_process');
 function runIsolated(mode, app, items) {
   const result = execFileSync(
     process.execPath,
-    ['--expose-gc', path.resolve(__dirname, 'bench-worker.js'),
-     '--mode', mode, '--app', app, '--items', String(items)],
+    [
+      '--expose-gc',
+      path.resolve(__dirname, 'bench-worker.js'),
+      '--mode',
+      mode,
+      '--app',
+      app,
+      '--items',
+      String(items),
+    ],
     {
       env: {...process.env, NODE_ENV: 'production'},
       encoding: 'utf-8',
@@ -351,7 +413,14 @@ function runIsolated(mode, app, items) {
   return parseFloat(result.trim());
 }
 
-async function runIsolatedBenchmark(name, mode, app, items, iterations, warmup) {
+async function runIsolatedBenchmark(
+  name,
+  mode,
+  app,
+  items,
+  iterations,
+  warmup
+) {
   for (let i = 0; i < warmup; i++) {
     runIsolated(mode, app, items);
   }
@@ -403,29 +472,49 @@ async function main() {
       ITEM_COUNT
     );
 
-    const classicalSync = await runIsolatedBenchmark(
-      'Classical SSR (sync)', 'classical', 'sync', ITEM_COUNT, ITERATIONS, WARMUP
+    const fizzNodeSync = await runIsolatedBenchmark(
+      'Fizz (Node, sync)',
+      'classical',
+      'sync',
+      ITEM_COUNT,
+      ITERATIONS,
+      WARMUP
     );
-    printResult(classicalSync);
+    printResult(fizzNodeSync);
 
-    const flightSync = await runIsolatedBenchmark(
-      'Flight SSR (sync)', 'flight', 'sync', ITEM_COUNT, ITERATIONS, WARMUP
+    const flightFizzNodeSync = await runIsolatedBenchmark(
+      'Flight + Fizz (Node, sync)',
+      'flight',
+      'sync',
+      ITEM_COUNT,
+      ITERATIONS,
+      WARMUP
     );
-    printResult(flightSync);
+    printResult(flightFizzNodeSync);
 
-    const classicalAsync = await runIsolatedBenchmark(
-      'Classical SSR (async)', 'classical', 'async', ITEM_COUNT, ITERATIONS, WARMUP
+    const fizzNodeAsync = await runIsolatedBenchmark(
+      'Fizz (Node, async)',
+      'classical',
+      'async',
+      ITEM_COUNT,
+      ITERATIONS,
+      WARMUP
     );
-    printResult(classicalAsync);
+    printResult(fizzNodeAsync);
 
-    const flightAsync = await runIsolatedBenchmark(
-      'Flight SSR (async)', 'flight', 'async', ITEM_COUNT, ITERATIONS, WARMUP
+    const flightFizzNodeAsync = await runIsolatedBenchmark(
+      'Flight + Fizz (Node, async)',
+      'flight',
+      'async',
+      ITEM_COUNT,
+      ITERATIONS,
+      WARMUP
     );
-    printResult(flightAsync);
+    printResult(flightFizzNodeAsync);
 
     console.log('\n--- Overhead ---\n');
-    printOverhead(classicalSync, flightSync);
-    printOverhead(classicalAsync, flightAsync);
+    printOverhead(fizzNodeSync, flightFizzNodeSync);
+    printOverhead(fizzNodeAsync, flightFizzNodeAsync);
     return;
   }
 
@@ -437,21 +526,57 @@ async function main() {
   // --- Verify renders ---
   console.log('\n--- Verifying renders ---\n');
 
-  const classicalHtml = await renderClassical(App, ITEM_COUNT);
-  console.log('Classical SSR (sync):  %d bytes', classicalHtml.length);
+  const fizzNodeHtml = await renderFizzNode(App, ITEM_COUNT);
+  console.log('Fizz (Node, sync):          %d bytes', fizzNodeHtml.length);
 
-  const flightHtml = await renderFlight(rscBundle, rscApps.App, ITEM_COUNT);
-  console.log('Flight SSR (sync):     %d bytes', flightHtml.length);
+  const flightFizzNodeHtml = await renderFlightFizzNode(
+    rscBundle,
+    rscApps.App,
+    ITEM_COUNT
+  );
+  console.log(
+    'Flight + Fizz (Node, sync): %d bytes',
+    flightFizzNodeHtml.length
+  );
 
-  const classicalAsyncHtml = await renderClassical(AppAsync, ITEM_COUNT);
-  console.log('Classical SSR (async): %d bytes', classicalAsyncHtml.length);
+  const fizzNodeAsyncHtml = await renderFizzNode(AppAsync, ITEM_COUNT);
+  console.log('Fizz (Node, async):         %d bytes', fizzNodeAsyncHtml.length);
 
-  const flightAsyncHtml = await renderFlight(
+  const flightFizzNodeAsyncHtml = await renderFlightFizzNode(
     rscBundle,
     rscApps.AppAsync,
     ITEM_COUNT
   );
-  console.log('Flight SSR (async):    %d bytes', flightAsyncHtml.length);
+  console.log(
+    'Flight + Fizz (Node, async):%d bytes',
+    flightFizzNodeAsyncHtml.length
+  );
+
+  const fizzEdgeHtml = await renderFizzEdge(App, ITEM_COUNT);
+  console.log('Fizz (Edge, sync):          %d bytes', fizzEdgeHtml.length);
+
+  const fizzEdgeAsyncHtml = await renderFizzEdge(AppAsync, ITEM_COUNT);
+  console.log('Fizz (Edge, async):         %d bytes', fizzEdgeAsyncHtml.length);
+
+  const flightFizzEdgeHtml = await renderFlightFizzEdge(
+    rscBundle,
+    rscApps.App,
+    ITEM_COUNT
+  );
+  console.log(
+    'Flight + Fizz (Edge, sync): %d bytes',
+    flightFizzEdgeHtml.length
+  );
+
+  const flightFizzEdgeAsyncHtml = await renderFlightFizzEdge(
+    rscBundle,
+    rscApps.AppAsync,
+    ITEM_COUNT
+  );
+  console.log(
+    'Flight + Fizz (Edge, async):%d bytes',
+    flightFizzEdgeAsyncHtml.length
+  );
 
   // --- Benchmark ---
   console.log(
@@ -461,41 +586,75 @@ async function main() {
     ITEM_COUNT
   );
 
-  const classicalSync = await runBenchmark(
-    'Classical SSR (sync)',
-    () => renderClassical(App, ITEM_COUNT),
+  const fizzNodeSync = await runBenchmark(
+    'Fizz (Node, sync)',
+    () => renderFizzNode(App, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
-  printResult(classicalSync);
+  printResult(fizzNodeSync);
 
-  const flightSync = await runBenchmark(
-    'Flight SSR (sync)',
-    () => renderFlight(rscBundle, rscApps.App, ITEM_COUNT),
+  const flightFizzNodeSync = await runBenchmark(
+    'Flight + Fizz (Node, sync)',
+    () => renderFlightFizzNode(rscBundle, rscApps.App, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
-  printResult(flightSync);
+  printResult(flightFizzNodeSync);
 
-  const classicalAsync = await runBenchmark(
-    'Classical SSR (async)',
-    () => renderClassical(AppAsync, ITEM_COUNT),
+  const fizzNodeAsync = await runBenchmark(
+    'Fizz (Node, async)',
+    () => renderFizzNode(AppAsync, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
-  printResult(classicalAsync);
+  printResult(fizzNodeAsync);
 
-  const flightAsync = await runBenchmark(
-    'Flight SSR (async)',
-    () => renderFlight(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+  const flightFizzNodeAsync = await runBenchmark(
+    'Flight + Fizz (Node, async)',
+    () => renderFlightFizzNode(rscBundle, rscApps.AppAsync, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
-  printResult(flightAsync);
+  printResult(flightFizzNodeAsync);
+
+  const fizzEdgeSync = await runBenchmark(
+    'Fizz (Edge, sync)',
+    () => renderFizzEdge(App, ITEM_COUNT),
+    ITERATIONS,
+    WARMUP
+  );
+  printResult(fizzEdgeSync);
+
+  const flightFizzEdgeSync = await runBenchmark(
+    'Flight + Fizz (Edge, sync)',
+    () => renderFlightFizzEdge(rscBundle, rscApps.App, ITEM_COUNT),
+    ITERATIONS,
+    WARMUP
+  );
+  printResult(flightFizzEdgeSync);
+
+  const fizzEdgeAsync = await runBenchmark(
+    'Fizz (Edge, async)',
+    () => renderFizzEdge(AppAsync, ITEM_COUNT),
+    ITERATIONS,
+    WARMUP
+  );
+  printResult(fizzEdgeAsync);
+
+  const flightFizzEdgeAsync = await runBenchmark(
+    'Flight + Fizz (Edge, async)',
+    () => renderFlightFizzEdge(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+    ITERATIONS,
+    WARMUP
+  );
+  printResult(flightFizzEdgeAsync);
 
   console.log('\n--- Overhead ---\n');
-  printOverhead(classicalSync, flightSync);
-  printOverhead(classicalAsync, flightAsync);
+  printOverhead(fizzNodeSync, flightFizzNodeSync);
+  printOverhead(fizzNodeAsync, flightFizzNodeAsync);
+  printOverhead(fizzEdgeSync, flightFizzEdgeSync);
+  printOverhead(fizzEdgeAsync, flightFizzEdgeAsync);
 
   // --- CPU Profiling ---
   if (PROFILE_MODE) {
@@ -508,35 +667,35 @@ async function main() {
     const profileDir = path.resolve(__dirname, 'build/profiles');
 
     await profileRun(
-      'Classical SSR (sync)',
-      () => renderClassical(App, ITEM_COUNT),
+      'Fizz (Node, sync)',
+      () => renderFizzNode(App, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
-      path.join(profileDir, 'sync-classical.cpuprofile')
+      path.join(profileDir, 'fizz-node-sync.cpuprofile')
     );
 
     await profileRun(
-      'Flight SSR (sync)',
-      () => renderFlight(rscBundle, rscApps.App, ITEM_COUNT),
+      'Flight + Fizz (Node, sync)',
+      () => renderFlightFizzNode(rscBundle, rscApps.App, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
-      path.join(profileDir, 'sync-flight.cpuprofile')
+      path.join(profileDir, 'flight-fizz-node-sync.cpuprofile')
     );
 
     await profileRun(
-      'Classical SSR (async)',
-      () => renderClassical(AppAsync, ITEM_COUNT),
+      'Fizz (Node, async)',
+      () => renderFizzNode(AppAsync, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
-      path.join(profileDir, 'async-classical.cpuprofile')
+      path.join(profileDir, 'fizz-node-async.cpuprofile')
     );
 
     await profileRun(
-      'Flight SSR (async)',
-      () => renderFlight(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+      'Flight + Fizz (Node, async)',
+      () => renderFlightFizzNode(rscBundle, rscApps.AppAsync, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
-      path.join(profileDir, 'async-flight.cpuprofile')
+      path.join(profileDir, 'flight-fizz-node-async.cpuprofile')
     );
 
     console.log(
