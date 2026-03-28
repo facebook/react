@@ -98,6 +98,8 @@ export const disableLegacyMode: boolean = true;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
+export const enableViewTransitionForPersistenceMode: boolean = false;
+
 export const enableGestureTransition: boolean = false;
 
 export const enableSuspenseyImages: boolean = false;
@@ -111,6 +113,14 @@ export const ownerStackLimit = 1e4;
 export const enableFragmentRefsInstanceHandles: boolean = true;
 
 export const enableOptimisticKey: boolean = false;
+
+export const eprh_enableUseKeyedStateCompilerLint: boolean = true;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = true;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'extra-only';
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

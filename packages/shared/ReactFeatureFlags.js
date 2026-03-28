@@ -80,6 +80,8 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enableViewTransition: boolean = true;
 
+export const enableViewTransitionForPersistenceMode: boolean = false;
+
 export const enableGestureTransition = __EXPERIMENTAL__;
 
 export const enableScrollEndPolyfill = __EXPERIMENTAL__;
@@ -250,3 +252,14 @@ export const enableAsyncDebugInfo: boolean = true;
 export const enableUpdaterTracking = __PROFILE__;
 
 export const ownerStackLimit = 1e4;
+
+// -----------------------------------------------------------------------------
+// eslint-plugin-react-hooks
+// -----------------------------------------------------------------------------
+export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'off';
