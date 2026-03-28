@@ -11,21 +11,26 @@ use std::collections::HashSet;
 
 use react_compiler_hir::{
     BlockId, ReactiveFunction, ReactiveTerminal, ReactiveTerminalStatement,
+    environment::Environment,
 };
 
 use crate::visitors::{visit_reactive_function, ReactiveFunctionVisitor};
 
 /// Assert that all break/continue targets reference existent labels.
-pub fn assert_well_formed_break_targets(func: &ReactiveFunction) {
-    let visitor = Visitor;
+pub fn assert_well_formed_break_targets(func: &ReactiveFunction, env: &Environment) {
+    let visitor = Visitor { env };
     let mut state: HashSet<BlockId> = HashSet::new();
     visit_reactive_function(func, &visitor, &mut state);
 }
 
-struct Visitor;
+struct Visitor<'a> {
+    env: &'a Environment,
+}
 
-impl ReactiveFunctionVisitor for Visitor {
+impl<'a> ReactiveFunctionVisitor for Visitor<'a> {
     type State = HashSet<BlockId>;
+
+    fn env(&self) -> &Environment { self.env }
 
     fn visit_terminal(
         &self,

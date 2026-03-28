@@ -88,13 +88,13 @@ fn find_last_usage_in_value(
 ) {
     match value {
         ReactiveValue::Instruction(instr_value) => {
-            for place in crate::visitors::each_instruction_value_operand_public(instr_value) {
-                record_place_usage(id, place, last_usage, env);
+            for place in crate::visitors::each_instruction_value_operand_public(instr_value, env) {
+                record_place_usage(id, &place, last_usage, env);
             }
             // Also visit lvalues within instruction values (StoreLocal, DeclareLocal, etc.)
             // TS: eachInstructionLValue yields both instr.lvalue and eachInstructionValueLValue
-            for place in crate::visitors::each_instruction_value_lvalue(value) {
-                record_place_usage(id, place, last_usage, env);
+            for place in react_compiler_hir::visitors::each_instruction_value_lvalue(instr_value) {
+                record_place_usage(id, &place, last_usage, env);
             }
         }
         ReactiveValue::OptionalExpression { value: inner, .. } => {

@@ -52,6 +52,8 @@ struct CollectReferencedLabels<'a> {
 impl<'a> ReactiveFunctionVisitor for CollectReferencedLabels<'a> {
     type State = IndexSet<BlockId>;
 
+    fn env(&self) -> &Environment { self.env }
+
     fn visit_scope(
         &self,
         scope: &ReactiveScopeBlock,

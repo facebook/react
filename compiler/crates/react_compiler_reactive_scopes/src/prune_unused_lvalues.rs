@@ -97,8 +97,8 @@ fn walk_value_phase1(
 ) {
     match value {
         ReactiveValue::Instruction(instr_value) => {
-            for place in crate::visitors::each_instruction_value_operand_public(instr_value) {
-                visit_place_phase1(place, env, unused);
+            for place in crate::visitors::each_instruction_value_operand_public(instr_value, env) {
+                visit_place_phase1(&place, env, unused);
             }
         }
         ReactiveValue::SequenceExpression {

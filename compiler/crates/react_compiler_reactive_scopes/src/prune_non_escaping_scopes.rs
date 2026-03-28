@@ -503,7 +503,7 @@ impl CollectDependenciesVisitor {
             | InstructionValue::UnaryExpression { .. } => {
                 if options.force_memoize_primitives {
                     let level = MemoizationLevel::Conditional;
-                    let operands = each_instruction_value_operand_public(value);
+                    let operands = each_instruction_value_operand_public(value, env);
                     let rvalues: Vec<(IdentifierId, EvaluationOrder)> =
                         operands.iter().map(|p| (p.identifier, id)).collect();
                     let lvalues = if let Some(lv) = lvalue {
@@ -749,7 +749,7 @@ impl CollectDependenciesVisitor {
                 if no_alias {
                     return (lvalues, vec![]);
                 }
-                let operands = each_instruction_value_operand_public(value);
+                let operands = each_instruction_value_operand_public(value, env);
                 for op in &operands {
                     if is_mutable_effect(op.effect) {
                         lvalues.push(LValueMemoization {
@@ -774,7 +774,7 @@ impl CollectDependenciesVisitor {
                 if no_alias {
                     return (lvalues, vec![]);
                 }
-                let operands = each_instruction_value_operand_public(value);
+                let operands = each_instruction_value_operand_public(value, env);
                 for op in &operands {
                     if is_mutable_effect(op.effect) {
                         lvalues.push(LValueMemoization {
@@ -799,7 +799,7 @@ impl CollectDependenciesVisitor {
                 if no_alias {
                     return (lvalues, vec![]);
                 }
-                let operands = each_instruction_value_operand_public(value);
+                let operands = each_instruction_value_operand_public(value, env);
                 for op in &operands {
                     if is_mutable_effect(op.effect) {
                         lvalues.push(LValueMemoization {
@@ -817,7 +817,7 @@ impl CollectDependenciesVisitor {
             | InstructionValue::NewExpression { .. }
             | InstructionValue::ObjectExpression { .. }
             | InstructionValue::PropertyStore { .. } => {
-                let operands = each_instruction_value_operand_public(value);
+                let operands = each_instruction_value_operand_public(value, env);
                 let mut lvalues: Vec<LValueMemoization> = operands
                     .iter()
                     .filter(|op| is_mutable_effect(op.effect))
@@ -836,15 +836,11 @@ impl CollectDependenciesVisitor {
                     operands.iter().map(|p| (p.identifier, id)).collect();
                 (lvalues, rvalues)
             }
-            InstructionValue::ObjectMethod { lowered_func, .. }
-            | InstructionValue::FunctionExpression { lowered_func, .. } => {
-                // For FunctionExpression/ObjectMethod, the operands include context
-                // (captured variables). In TS, eachInstructionValueOperand yields
-                // loweredFunc.func.context. In Rust, context is stored separately
-                // in env.functions, so we need to include it explicitly.
-                let mut operands: Vec<&Place> = each_instruction_value_operand_public(value);
-                let context: &Vec<Place> = &env.functions[lowered_func.func.0 as usize].context;
-                operands.extend(context.iter());
+            InstructionValue::ObjectMethod { .. }
+            | InstructionValue::FunctionExpression { .. } => {
+                // The canonical each_instruction_value_operand already includes context
+                // (captured variables) for FunctionExpression/ObjectMethod.
+                let operands = each_instruction_value_operand_public(value, env);
                 let mut lvalues: Vec<LValueMemoization> = operands
                     .iter()
                     .filter(|op| is_mutable_effect(op.effect))
@@ -1337,6 +1333,8 @@ struct PruneScopesTransform<'a> {
 
 impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
     type State = HashSet<DeclarationId>;
+
+    fn env(&self) -> &Environment { self.env }
 
     fn transform_scope(
         &mut self,

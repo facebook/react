@@ -28,12 +28,10 @@ use react_compiler_hir::{
 pub trait ReactiveFunctionVisitor {
     type State;
 
-    /// Override to provide Environment access. When Some, the default traversal
-    /// will include FunctionExpression/ObjectMethod context places as operands
-    /// (matching the TS `eachInstructionValueOperand` behavior).
-    fn env(&self) -> Option<&Environment> {
-        None
-    }
+    /// Provide Environment access. The default traversal uses this to include
+    /// FunctionExpression/ObjectMethod context places as operands (matching the
+    /// TS `eachInstructionValueOperand` behavior).
+    fn env(&self) -> &Environment;
 
     fn visit_id(&self, _id: EvaluationOrder, _state: &mut Self::State) {}
 
@@ -76,7 +74,8 @@ pub trait ReactiveFunctionVisitor {
                 self.visit_value(*seq_id, inner, state);
             }
             ReactiveValue::Instruction(instr_value) => {
-                for place in each_instruction_value_operand_env(instr_value, self.env()) {
+                let operands = react_compiler_hir::visitors::each_instruction_value_operand(instr_value, self.env());
+                for place in &operands {
                     self.visit_place(id, place, state);
                 }
             }
@@ -94,8 +93,10 @@ pub trait ReactiveFunctionVisitor {
             self.visit_lvalue(instruction.id, lvalue, state);
         }
         // Visit value-level lvalues (TS: eachInstructionValueLValue)
-        for place in each_instruction_value_lvalue(&instruction.value) {
-            self.visit_lvalue(instruction.id, place, state);
+        if let ReactiveValue::Instruction(iv) = &instruction.value {
+            for place in react_compiler_hir::visitors::each_instruction_value_lvalue(iv) {
+                self.visit_lvalue(instruction.id, &place, state);
+            }
         }
         self.visit_value(instruction.id, &instruction.value, state);
     }
@@ -315,12 +316,10 @@ pub enum TransformedValue {
 pub trait ReactiveFunctionTransform {
     type State;
 
-    /// Override to provide Environment access. When Some, the default traversal
-    /// will include FunctionExpression/ObjectMethod context places as operands
-    /// (matching the TS `eachInstructionValueOperand` behavior).
-    fn env(&self) -> Option<&Environment> {
-        None
-    }
+    /// Provide Environment access. The default traversal uses this to include
+    /// FunctionExpression/ObjectMethod context places as operands (matching the
+    /// TS `eachInstructionValueOperand` behavior).
+    fn env(&self) -> &Environment;
 
     fn visit_id(&mut self, _id: EvaluationOrder, _state: &mut Self::State) -> Result<(), CompilerError> { Ok(()) }
 
@@ -397,10 +396,7 @@ pub trait ReactiveFunctionTransform {
             ReactiveValue::Instruction(instr_value) => {
                 // Collect operands before visiting to avoid borrow conflict
                 // (self.env() borrows self immutably, self.visit_place() needs &mut self).
-                let operands: Vec<Place> = each_instruction_value_operand_env(instr_value, self.env())
-                    .into_iter()
-                    .cloned()
-                    .collect();
+                let operands = react_compiler_hir::visitors::each_instruction_value_operand(instr_value, self.env());
                 for place in &operands {
                     self.visit_place(id, place, state)?;
                 }
@@ -438,8 +434,10 @@ pub trait ReactiveFunctionTransform {
             self.visit_lvalue(instruction.id, lvalue, state)?;
         }
         // Visit value-level lvalues (TS: eachInstructionValueLValue)
-        for place in each_instruction_value_lvalue(&instruction.value) {
-            self.visit_lvalue(instruction.id, place, state)?;
+        if let ReactiveValue::Instruction(iv) = &instruction.value {
+            for place in react_compiler_hir::visitors::each_instruction_value_lvalue(iv) {
+                self.visit_lvalue(instruction.id, &place, state)?;
+            }
         }
         let next_value = self.transform_value(instruction.id, &mut instruction.value, state)?;
         if let TransformedValue::Replace(new_value) = next_value {
@@ -769,290 +767,8 @@ fn terminal_id(terminal: &ReactiveTerminal) -> EvaluationOrder {
 // Helper: iterate operands of an InstructionValue (readonly)
 // =============================================================================
 
-/// Yields all lvalue Places from inside a ReactiveValue.
-/// Corresponds to TS `eachInstructionValueLValue`.
-pub fn each_instruction_value_lvalue(value: &ReactiveValue) -> Vec<&Place> {
-    match value {
-        ReactiveValue::Instruction(iv) => {
-            each_hir_instruction_value_lvalue(iv)
-        }
-        _ => vec![],
-    }
-}
-
-/// Yields all lvalue Places from inside an InstructionValue.
-fn each_hir_instruction_value_lvalue(iv: &react_compiler_hir::InstructionValue) -> Vec<&Place> {
-    use react_compiler_hir::InstructionValue::*;
-    match iv {
-        DeclareLocal { lvalue, .. } | StoreLocal { lvalue, .. } => {
-            vec![&lvalue.place]
-        }
-        DeclareContext { lvalue, .. } | StoreContext { lvalue, .. } => {
-            vec![&lvalue.place]
-        }
-        Destructure { lvalue, .. } => {
-            each_pattern_operand_places(&lvalue.pattern)
-        }
-        PostfixUpdate { lvalue, .. } | PrefixUpdate { lvalue, .. } => {
-            vec![lvalue]
-        }
-        _ => vec![],
-    }
-}
-
-/// Yields all Place operands from a destructuring pattern.
-fn each_pattern_operand_places(pattern: &react_compiler_hir::Pattern) -> Vec<&Place> {
-    let mut places = Vec::new();
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(place) => {
-                        places.push(place);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(spread) => {
-                        places.push(&spread.place);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        places.push(&p.place);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        places.push(&spread.place);
-                    }
-                }
-            }
-        }
-    }
-    places
-}
-
-/// Public wrapper for `each_instruction_value_operand`.
-/// Does NOT include FunctionExpression/ObjectMethod context (no env access).
-pub fn each_instruction_value_operand_public(value: &react_compiler_hir::InstructionValue) -> Vec<&Place> {
-    each_instruction_value_operand(value)
-}
-
-/// Like `each_instruction_value_operand`, but when `env` is provided, also yields
-/// context places for FunctionExpression/ObjectMethod (matching TS `eachInstructionValueOperand`
-/// which has inline access to `loweredFunc.func.context`).
-fn each_instruction_value_operand_env<'a>(
-    value: &'a react_compiler_hir::InstructionValue,
-    env: Option<&'a Environment>,
-) -> Vec<&'a Place> {
-    let mut operands = each_instruction_value_operand(value);
-    if let Some(env) = env {
-        use react_compiler_hir::InstructionValue::*;
-        match value {
-            FunctionExpression { lowered_func, .. }
-            | ObjectMethod { lowered_func, .. } => {
-                let func = &env.functions[lowered_func.func.0 as usize];
-                for ctx in &func.context {
-                    operands.push(ctx);
-                }
-            }
-            _ => {}
-        }
-    }
-    operands
-}
-
-/// Yields all Place operands (read positions) of an InstructionValue.
-/// Does NOT include FunctionExpression/ObjectMethod context — use
-/// `each_instruction_value_operand_env` with an env for that.
-/// TS: `eachInstructionValueOperand` (partial — context requires env)
-fn each_instruction_value_operand(value: &react_compiler_hir::InstructionValue) -> Vec<&Place> {
-    use react_compiler_hir::InstructionValue::*;
-    let mut operands = Vec::new();
-    match value {
-        LoadLocal { place, .. } | LoadContext { place, .. } => {
-            operands.push(place);
-        }
-        StoreLocal { value, .. } => {
-            operands.push(value);
-        }
-        StoreContext { lvalue, value, .. } => {
-            operands.push(&lvalue.place);
-            operands.push(value);
-        }
-        Destructure { value, .. } => {
-            operands.push(value);
-        }
-        BinaryExpression { left, right, .. } => {
-            operands.push(left);
-            operands.push(right);
-        }
-        NewExpression { callee, args, .. } | CallExpression { callee, args, .. } => {
-            operands.push(callee);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(place) => operands.push(place),
-                    react_compiler_hir::PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-        }
-        MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            operands.push(receiver);
-            operands.push(property);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(place) => operands.push(place),
-                    react_compiler_hir::PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-        }
-        UnaryExpression { value, .. } => {
-            operands.push(value);
-        }
-        TypeCastExpression { value, .. } => {
-            operands.push(value);
-        }
-        JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let react_compiler_hir::JsxTag::Place(place) = tag {
-                operands.push(place);
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        operands.push(place);
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument, .. } => {
-                        operands.push(argument);
-                    }
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    operands.push(child);
-                }
-            }
-        }
-        ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(obj_prop) => {
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &obj_prop.key {
-                            operands.push(name);
-                        }
-                        operands.push(&obj_prop.place);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        operands.push(&spread.place);
-                    }
-                }
-            }
-        }
-        ArrayExpression { elements, .. } => {
-            for elem in elements {
-                match elem {
-                    react_compiler_hir::ArrayElement::Place(place) => {
-                        operands.push(place);
-                    }
-                    react_compiler_hir::ArrayElement::Spread(spread) => {
-                        operands.push(&spread.place);
-                    }
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        JsxFragment { children, .. } => {
-            for child in children {
-                operands.push(child);
-            }
-        }
-        PropertyStore { object, value, .. } => {
-            operands.push(object);
-            operands.push(value);
-        }
-        PropertyLoad { object, .. } | PropertyDelete { object, .. } => {
-            operands.push(object);
-        }
-        ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => {
-            operands.push(object);
-            operands.push(property);
-            operands.push(value);
-        }
-        ComputedLoad {
-            object, property, ..
-        }
-        | ComputedDelete {
-            object, property, ..
-        } => {
-            operands.push(object);
-            operands.push(property);
-        }
-        StoreGlobal { value, .. } => {
-            operands.push(value);
-        }
-        TaggedTemplateExpression { tag, .. } => {
-            operands.push(tag);
-        }
-        TemplateLiteral { subexprs, .. } => {
-            for expr in subexprs {
-                operands.push(expr);
-            }
-        }
-        Await { value, .. }
-        | GetIterator { collection: value, .. }
-        | NextPropertyOf { value, .. } => {
-            operands.push(value);
-        }
-        IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            operands.push(iterator);
-            operands.push(collection);
-        }
-        PrefixUpdate { value, .. } | PostfixUpdate { value, .. } => {
-            operands.push(value);
-        }
-        StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal { value, .. } = &dep.root {
-                        operands.push(value);
-                    }
-                }
-            }
-        }
-        FinishMemoize { decl, .. } => {
-            operands.push(decl);
-        }
-        // These have no operands
-        DeclareLocal { .. }
-        | DeclareContext { .. }
-        | Primitive { .. }
-        | JSXText { .. }
-        | RegExpLiteral { .. }
-        | MetaProperty { .. }
-        | LoadGlobal { .. }
-        | Debugger { .. }
-        | UnsupportedNode { .. }
-        | ObjectMethod { .. }
-        | FunctionExpression { .. } => {}
-    }
-    operands
+/// Public wrapper that delegates to `react_compiler_hir::visitors::each_instruction_value_operand`.
+/// Callers that don't have an env can use this (it won't include FunctionExpression/ObjectMethod context).
+pub fn each_instruction_value_operand_public(value: &react_compiler_hir::InstructionValue, env: &Environment) -> Vec<Place> {
+    react_compiler_hir::visitors::each_instruction_value_operand(value, env)
 }

@@ -57,6 +57,8 @@ struct Transform<'a> {
 impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = ExtractState;
 
+    fn env(&self) -> &Environment { self.env }
+
     fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut ExtractState) -> Result<(), react_compiler_diagnostics::CompilerError> {
         let scope_data = &self.env.scopes[scope.scope.0 as usize];
         let decl_ids: Vec<DeclarationId> = scope_data

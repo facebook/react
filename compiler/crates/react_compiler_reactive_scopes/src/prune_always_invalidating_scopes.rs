@@ -45,6 +45,8 @@ struct Transform<'a> {
 impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = bool; // withinScope
 
+    fn env(&self) -> &Environment { self.env }
+
     fn transform_instruction(
         &mut self,
         instruction: &mut ReactiveInstruction,

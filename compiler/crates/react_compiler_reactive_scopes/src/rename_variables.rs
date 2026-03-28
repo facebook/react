@@ -305,32 +305,25 @@ fn visit_hir_function(
 
         for instr_id in &instr_ids {
             // Collect all IDs to visit from this instruction in one pass
-            let (lvalue_id, value_lvalue_ids, operand_ids, context_ids, nested_func) = {
+            let (lvalue_id, value_lvalue_ids, operand_ids, nested_func) = {
                 let inner_func = &env.functions[func_id.0 as usize];
                 let instr = &inner_func.instructions[instr_id.0 as usize];
                 let lvalue_id = instr.lvalue.identifier;
                 let value_lvalue_ids = each_hir_value_lvalue(&instr.value);
+                // The canonical function already includes FunctionExpression/ObjectMethod context
                 let operand_ids: Vec<IdentifierId> =
-                    crate::visitors::each_instruction_value_operand_public(&instr.value)
+                    crate::visitors::each_instruction_value_operand_public(&instr.value, env)
                         .iter()
                         .map(|p| p.identifier)
                         .collect();
-                // For FunctionExpression/ObjectMethod, also collect context (captured variables)
-                // TS: eachInstructionValueOperand yields loweredFunc.func.context
-                let (context_ids, nested_func) = match &instr.value {
+                let nested_func = match &instr.value {
                     InstructionValue::FunctionExpression { lowered_func, .. }
                     | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                        let nested_func_id = lowered_func.func;
-                        let nested_func_data = &env.functions[nested_func_id.0 as usize];
-                        let ctx_ids: Vec<IdentifierId> = nested_func_data.context
-                            .iter()
-                            .map(|p| p.identifier)
-                            .collect();
-                        (ctx_ids, Some(nested_func_id))
+                        Some(lowered_func.func)
                     }
-                    _ => (vec![], None),
+                    _ => None,
                 };
-                (lvalue_id, value_lvalue_ids, operand_ids, context_ids, nested_func)
+                (lvalue_id, value_lvalue_ids, operand_ids, nested_func)
             };
 
             // Visit lvalue
@@ -339,12 +332,8 @@ fn visit_hir_function(
             for id in value_lvalue_ids {
                 scopes.visit(id, env);
             }
-            // Visit operands
+            // Visit operands (includes FunctionExpression/ObjectMethod context)
             for id in operand_ids {
-                scopes.visit(id, env);
-            }
-            // Visit context (captured variables)
-            for id in context_ids {
                 scopes.visit(id, env);
             }
             // Recurse into inner functions
@@ -419,27 +408,14 @@ fn visit_value(
 ) {
     match value {
         ReactiveValue::Instruction(iv) => {
-            // Visit operands (including context for FunctionExpression/ObjectMethod)
+            // Visit operands (canonical function includes FunctionExpression/ObjectMethod context)
             let operand_ids: Vec<IdentifierId> =
-                crate::visitors::each_instruction_value_operand_public(iv)
+                crate::visitors::each_instruction_value_operand_public(iv, env)
                     .iter()
                     .map(|p| p.identifier)
                     .collect();
             for id in operand_ids {
                 scopes.visit(id, env);
-            }
-            // Visit context (captured variables) for function expressions
-            // TS: eachInstructionValueOperand yields loweredFunc.func.context
-            match iv {
-                InstructionValue::FunctionExpression { lowered_func, .. }
-                | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                    let context_ids: Vec<IdentifierId> = env.functions[lowered_func.func.0 as usize]
-                        .context.iter().map(|p| p.identifier).collect();
-                    for id in context_ids {
-                        scopes.visit(id, env);
-                    }
-                }
-                _ => {}
             }
             // Visit inner functions (TS: visitHirFunction)
             match iv {

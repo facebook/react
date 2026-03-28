@@ -69,8 +69,8 @@ struct Transform<'a> {
 impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = VisitorState;
 
-    fn env(&self) -> Option<&Environment> {
-        Some(self.env)
+    fn env(&self) -> &Environment {
+        self.env
     }
 
     fn visit_scope(&mut self, scope: &mut ReactiveScopeBlock, state: &mut VisitorState) -> Result<(), CompilerError> {

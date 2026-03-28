@@ -388,10 +388,10 @@ pub fn compile_fn(
     );
     context.log_debug(DebugLogEntry::new("BuildReactiveFunction", debug_reactive));
 
-    react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn);
+    react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn, &env);
     context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
 
-    react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn)?;
+    react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn, &env)?;
     let debug_prune_labels_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),
     );
@@ -1137,9 +1137,9 @@ fn run_pipeline_passes(
     let mut reactive_fn = react_compiler_reactive_scopes::build_reactive_function(hir, env)?;
     eprintln!("[DEBUG run_pipeline] codegen");
 
-    react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn);
+    react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn, env);
 
-    react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn)?;
+    react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn, env)?;
 
     react_compiler_reactive_scopes::assert_scope_instructions_within_scopes(&reactive_fn, env)?;
 

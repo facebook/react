@@ -389,7 +389,7 @@ pub fn codegen_function(
     for entry in outlined_entries {
         let reactive_fn = build_reactive_function(&entry.func, cx.env)?;
         let mut reactive_fn_mut = reactive_fn;
-        prune_unused_labels(&mut reactive_fn_mut)?;
+        prune_unused_labels(&mut reactive_fn_mut, cx.env)?;
         prune_unused_lvalues(&mut reactive_fn_mut, cx.env);
         prune_hoisted_contexts(&mut reactive_fn_mut, cx.env)?;
 
@@ -2318,7 +2318,7 @@ fn codegen_function_expression(
     let func = &cx.env.functions[lowered_func.func.0 as usize];
     let reactive_fn = build_reactive_function(func, cx.env)?;
     let mut reactive_fn_mut = reactive_fn;
-    prune_unused_labels(&mut reactive_fn_mut)?;
+    prune_unused_labels(&mut reactive_fn_mut, cx.env)?;
     prune_unused_lvalues(&mut reactive_fn_mut, cx.env);
     prune_hoisted_contexts(&mut reactive_fn_mut, cx.env)?;
 
@@ -2453,7 +2453,7 @@ fn codegen_object_expression(
                         let func = &cx.env.functions[lowered_func.func.0 as usize];
                         let reactive_fn = build_reactive_function(func, cx.env)?;
                         let mut reactive_fn_mut = reactive_fn;
-                        prune_unused_labels(&mut reactive_fn_mut)?;
+                        prune_unused_labels(&mut reactive_fn_mut, cx.env)?;
                         prune_unused_lvalues(&mut reactive_fn_mut, cx.env);
 
                         let mut inner_cx = Context::new(

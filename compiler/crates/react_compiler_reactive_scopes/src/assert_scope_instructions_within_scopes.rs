@@ -25,7 +25,7 @@ use crate::visitors::{visit_reactive_function, ReactiveFunctionVisitor};
 pub fn assert_scope_instructions_within_scopes(func: &ReactiveFunction, env: &Environment) -> Result<(), CompilerDiagnostic> {
     // Pass 1: Collect all scope IDs
     let mut existing_scopes: HashSet<ScopeId> = HashSet::new();
-    let find_visitor = FindAllScopesVisitor;
+    let find_visitor = FindAllScopesVisitor { env };
     visit_reactive_function(func, &find_visitor, &mut existing_scopes);
 
     // Pass 2: Check instructions against scopes
@@ -46,10 +46,14 @@ pub fn assert_scope_instructions_within_scopes(func: &ReactiveFunction, env: &En
 // Pass 1: Find all scopes
 // =============================================================================
 
-struct FindAllScopesVisitor;
+struct FindAllScopesVisitor<'a> {
+    env: &'a Environment,
+}
 
-impl ReactiveFunctionVisitor for FindAllScopesVisitor {
+impl<'a> ReactiveFunctionVisitor for FindAllScopesVisitor<'a> {
     type State = HashSet<ScopeId>;
+
+    fn env(&self) -> &Environment { self.env }
 
     fn visit_scope(&self, scope: &ReactiveScopeBlock, state: &mut HashSet<ScopeId>) {
         self.traverse_scope(scope, state);
@@ -73,6 +77,8 @@ struct CheckInstructionsAgainstScopesVisitor<'a> {
 
 impl<'a> ReactiveFunctionVisitor for CheckInstructionsAgainstScopesVisitor<'a> {
     type State = CheckState;
+
+    fn env(&self) -> &Environment { self.env }
 
     fn visit_place(&self, id: EvaluationOrder, place: &Place, state: &mut CheckState) {
         // getPlaceScope: check if the place's identifier has a scope that is active at this id

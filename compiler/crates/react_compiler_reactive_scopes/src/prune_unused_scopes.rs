@@ -38,6 +38,8 @@ struct Transform<'a> {
 impl<'a> ReactiveFunctionTransform for Transform<'a> {
     type State = State;
 
+    fn env(&self) -> &Environment { self.env }
+
     fn visit_terminal(
         &mut self,
         stmt: &mut ReactiveTerminalStatement,

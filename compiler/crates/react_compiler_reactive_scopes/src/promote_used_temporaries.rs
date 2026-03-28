@@ -157,8 +157,8 @@ fn collect_promotable_value(
     match value {
         ReactiveValue::Instruction(instr_value) => {
             // Visit operands
-            for place in crate::visitors::each_instruction_value_operand_public(instr_value) {
-                collect_promotable_place(place, state, active_scopes, env);
+            for place in crate::visitors::each_instruction_value_operand_public(instr_value, env) {
+                collect_promotable_place(&place, state, active_scopes, env);
             }
             // Check for JSX tag
             if let InstructionValue::JsxExpression { tag: JsxTag::Place(place), .. } = instr_value {
@@ -520,8 +520,8 @@ fn promote_interposed_instruction(
                     }
 
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                        promote_interposed_place(place, state, inter_state, consts, env);
+                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                        promote_interposed_place(&place, state, inter_state, consts, env);
                     }
 
                     if !const_store
@@ -553,8 +553,8 @@ fn promote_interposed_instruction(
                         consts.insert(lvalue.place.identifier);
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                        promote_interposed_place(place, state, inter_state, consts, env);
+                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                        promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
                 InstructionValue::LoadContext { place: load_place, .. }
@@ -569,8 +569,8 @@ fn promote_interposed_instruction(
                         }
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                        promote_interposed_place(place, state, inter_state, consts, env);
+                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                        promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
                 InstructionValue::PropertyLoad { object, .. }
@@ -586,8 +586,8 @@ fn promote_interposed_instruction(
                         }
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                        promote_interposed_place(place, state, inter_state, consts, env);
+                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                        promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
                 InstructionValue::LoadGlobal { .. } => {
@@ -595,14 +595,14 @@ fn promote_interposed_instruction(
                         globals.insert(lvalue.identifier);
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                        promote_interposed_place(place, state, inter_state, consts, env);
+                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                        promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
                 _ => {
                     // Default: visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                        promote_interposed_place(place, state, inter_state, consts, env);
+                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                        promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
             }
@@ -638,8 +638,8 @@ fn promote_interposed_value(
 ) {
     match value {
         ReactiveValue::Instruction(iv) => {
-            for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                promote_interposed_place(place, state, inter_state, consts, env);
+            for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                promote_interposed_place(&place, state, inter_state, consts, env);
             }
         }
         ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
@@ -843,8 +843,8 @@ fn promote_all_instances_value(
 ) {
     match value {
         ReactiveValue::Instruction(iv) => {
-            for place in crate::visitors::each_instruction_value_operand_public(iv) {
-                promote_all_instances_place(place, state, env);
+            for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                promote_all_instances_place(&place, state, env);
             }
             // Visit inner functions
             match iv {

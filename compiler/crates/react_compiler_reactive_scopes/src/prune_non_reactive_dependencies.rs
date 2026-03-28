@@ -42,8 +42,8 @@ struct CollectVisitor<'a> {
 impl<'a> ReactiveFunctionVisitor for CollectVisitor<'a> {
     type State = HashSet<IdentifierId>;
 
-    fn env(&self) -> Option<&Environment> {
-        Some(self.env)
+    fn env(&self) -> &Environment {
+        self.env
     }
 
     fn visit_lvalue(&self, id: EvaluationOrder, lvalue: &Place, state: &mut Self::State) {
