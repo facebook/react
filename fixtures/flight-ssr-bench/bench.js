@@ -650,11 +650,17 @@ async function main() {
   );
   printResult(flightFizzEdgeAsync);
 
-  console.log('\n--- Overhead ---\n');
+  console.log('\n--- Overhead (Flight + Fizz vs Fizz) ---\n');
   printOverhead(fizzNodeSync, flightFizzNodeSync);
   printOverhead(fizzNodeAsync, flightFizzNodeAsync);
   printOverhead(fizzEdgeSync, flightFizzEdgeSync);
   printOverhead(fizzEdgeAsync, flightFizzEdgeAsync);
+
+  console.log('\n--- Overhead (Edge vs Node) ---\n');
+  printOverhead(fizzNodeSync, fizzEdgeSync);
+  printOverhead(fizzNodeAsync, fizzEdgeAsync);
+  printOverhead(flightFizzNodeSync, flightFizzEdgeSync);
+  printOverhead(flightFizzNodeAsync, flightFizzEdgeAsync);
 
   // --- CPU Profiling ---
   if (PROFILE_MODE) {
