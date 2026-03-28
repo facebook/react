@@ -2,7 +2,7 @@ import * as React from 'react';
 import {renderToReadableStream} from 'react-server-dom-unbundled/server';
 import {createFromReadableStream} from 'react-server-dom-webpack/client';
 import {PassThrough, Readable} from 'stream';
-
+import {ClientContext, ClientReadContext} from './ClientContext.js';
 import Container from './Container.js';
 
 import {Counter} from './Counter.js';
@@ -235,6 +235,11 @@ export default async function App({prerender, noCache}) {
           <Foo>{dedupedChild}</Foo>
           <Bar>{Promise.resolve([dedupedChild])}</Bar>
           <Navigate />
+          <ClientContext value="from server">
+            <div>
+              <ClientReadContext />
+            </div>
+          </ClientContext>
           {prerender ? null : ( // TODO: prerender is broken for large content for some reason.
             <React.Suspense fallback={null}>
               <LargeContent />

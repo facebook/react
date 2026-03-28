@@ -79,6 +79,18 @@ function normalizeIOInfo(config: DebugInfoConfig, ioInfo) {
         status: promise.status,
       };
     }
+  } else if ('value' in ioInfo) {
+    // If value exists in ioInfo but is undefined (e.g., WeakRef was GC'd),
+    // ensure we still include it in the normalized output for consistency
+    copy.value = {
+      value: undefined,
+    };
+  } else if (ioInfo.name && ioInfo.name !== 'rsc stream') {
+    // For non-rsc-stream IO that doesn't have a value field, add a default.
+    // This handles the case where the server doesn't send the field when WeakRef is GC'd.
+    copy.value = {
+      value: undefined,
+    };
   }
   return copy;
 }

@@ -143,7 +143,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
   }
 
   /*
-   * Validate that all scopes have properly intialized, valid mutable ranges
+   * Validate that all scopes have properly initialized, valid mutable ranges
    * within the span of instructions for this function, ie from 1 to 1 past
    * the last instruction id.
    */
@@ -162,16 +162,10 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       });
       CompilerError.invariant(false, {
         reason: `Invalid mutable range for scope`,
-        details: [
-          {
-            kind: 'error',
-            loc: GeneratedSource,
-            message: null,
-          },
-        ],
         description: `Scope @${scope.id} has range [${scope.range.start}:${
           scope.range.end
         }] but the valid range is [1:${maxInstruction + 1}]`,
+        loc: GeneratedSource,
       });
     }
   }

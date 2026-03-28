@@ -19,7 +19,7 @@ import {getOrInsertWith} from '../Utils/utils';
 import {ExternalFunction, isHookName} from '../HIR/Environment';
 import {Err, Ok, Result} from '../Utils/Result';
 import {LoggerEvent, ParsedPluginOptions} from './Options';
-import {BabelFn, getReactCompilerRuntimeModule} from './Program';
+import {getReactCompilerRuntimeModule} from './Program';
 import {SuppressionRange} from './Suppression';
 
 export function validateRestrictedImports(
@@ -84,12 +84,6 @@ export class ProgramContext {
   // generated imports
   imports: Map<string, Map<string, NonLocalImportSpecifier>> = new Map();
 
-  /**
-   * Metadata from compilation
-   */
-  retryErrors: Array<{fn: BabelFn; error: CompilerError}> = [];
-  inferredEffectLocations: Set<t.SourceLocation> = new Set();
-
   constructor({
     program,
     suppressions,
@@ -108,14 +102,7 @@ export class ProgramContext {
   }
 
   isHookName(name: string): boolean {
-    if (this.opts.environment.hookPattern == null) {
-      return isHookName(name);
-    } else {
-      const match = new RegExp(this.opts.environment.hookPattern).exec(name);
-      return (
-        match != null && typeof match[1] === 'string' && isHookName(match[1])
-      );
-    }
+    return isHookName(name);
   }
 
   hasReference(name: string): boolean {
@@ -257,14 +244,7 @@ export function addImportsToProgram(
           reason:
             'Encountered conflicting import specifiers in generated program',
           description: `Conflict from import ${loweredImport.module}:(${loweredImport.imported} as ${loweredImport.name})`,
-          details: [
-            {
-              kind: 'error',
-              loc: GeneratedSource,
-              message: null,
-            },
-          ],
-          suggestions: null,
+          loc: GeneratedSource,
         },
       );
       CompilerError.invariant(
@@ -274,13 +254,7 @@ export function addImportsToProgram(
           reason:
             'Found inconsistent import specifier. This is an internal bug.',
           description: `Expected import ${moduleName}:${specifierName} but found ${loweredImport.module}:${loweredImport.imported}`,
-          details: [
-            {
-              kind: 'error',
-              loc: GeneratedSource,
-              message: null,
-            },
-          ],
+          loc: GeneratedSource,
         },
       );
     }

@@ -45,6 +45,7 @@ function Component(props) {
 
     x = object[y];
   }
+
   return x;
 }
 

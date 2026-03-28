@@ -178,14 +178,8 @@ export function optimizeForSSR(fn: HIRFunction): void {
               {
                 reason:
                   'Expected a valid destructuring pattern for inlined state',
-                description: null,
-                details: [
-                  {
-                    kind: 'error',
-                    message: 'Expected a valid destructuring pattern',
-                    loc: value.loc,
-                  },
-                ],
+                message: 'Expected a valid destructuring pattern',
+                loc: value.loc,
               },
             );
             const store: StoreLocal = {

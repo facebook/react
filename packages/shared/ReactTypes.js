@@ -228,6 +228,14 @@ export type ReactErrorInfoProd = {
   +digest: string,
 };
 
+export type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
 export type ReactErrorInfoDev = {
   +digest?: string,
   +name: string,
@@ -235,6 +243,7 @@ export type ReactErrorInfoDev = {
   +stack: ReactStackTrace,
   +env: string,
   +owner?: null | string,
+  cause?: JSONValue,
 };
 
 export type ReactErrorInfo = ReactErrorInfoProd | ReactErrorInfoDev;
@@ -290,6 +299,11 @@ export type ViewTransitionClass =
   | string
   | ViewTransitionClassPerType;
 
+export type GestureOptionsRequired = {
+  rangeStart: number,
+  rangeEnd: number,
+};
+
 export type ViewTransitionProps = {
   name?: string,
   children?: ReactNodeList,
@@ -298,10 +312,46 @@ export type ViewTransitionProps = {
   exit?: ViewTransitionClass,
   share?: ViewTransitionClass,
   update?: ViewTransitionClass,
-  onEnter?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onExit?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onShare?: (instance: ViewTransitionInstance, types: Array<string>) => void,
-  onUpdate?: (instance: ViewTransitionInstance, types: Array<string>) => void,
+  onEnter?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onExit?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onShare?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onUpdate?: (
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureEnter?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureExit?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureShare?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
+  onGestureUpdate?: (
+    timeline: GestureProvider,
+    options: GestureOptionsRequired,
+    instance: ViewTransitionInstance,
+    types: Array<string>,
+  ) => void | (() => void),
 };
 
 export type ActivityProps = {

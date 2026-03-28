@@ -242,7 +242,10 @@ export function writeCompletedRoot(
   return true;
 }
 
-export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
+export function hasSuspenseyContent(
+  hoistableState: HoistableState,
+  flushingInShell: boolean,
+): boolean {
   // Never outline.
   return false;
 }
