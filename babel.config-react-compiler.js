@@ -15,5 +15,5 @@
 const baseConfig = require('./babel.config-ts');
 
 module.exports = {
-  plugins: baseConfig.plugins,
+  plugins: Array.isArray(baseConfig.plugins) ? baseConfig.plugins : [],
 };
