@@ -94,14 +94,13 @@ impl<'a> ReactiveFunctionVisitor for CheckInstructionsAgainstScopesVisitor<'a> {
             {
                 state.error = Some(CompilerDiagnostic::new(
                     ErrorCategory::Invariant,
-                    format!(
-                        "Encountered an instruction that should be part of a scope, \
-                         but where that scope has already completed. \
-                         Instruction [{:?}] is part of scope @{:?}, \
+                    "Encountered an instruction that should be part of a scope, \
+                     but where that scope has already completed",
+                    Some(format!(
+                        "Instruction [{:?}] is part of scope @{:?}, \
                          but that scope has already completed",
                         id, scope_id
-                    ),
-                    None,
+                    )),
                 ));
             }
         }
