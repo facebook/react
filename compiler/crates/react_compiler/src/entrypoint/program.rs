@@ -1035,6 +1035,7 @@ fn handle_error(
             events: context.events.clone(),
             debug_logs: context.debug_logs.clone(),
             ordered_log: context.ordered_log.clone(),
+            timing: Vec::new(),
         })
     } else {
         None
@@ -3336,6 +3337,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             debug_logs: early_debug_logs,
             ordered_log: Vec::new(),
             renames: Vec::new(),
+            timing: Vec::new(),
         };
     }
 
@@ -3349,6 +3351,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             debug_logs: early_debug_logs,
             ordered_log: Vec::new(),
             renames: Vec::new(),
+            timing: Vec::new(),
         };
     }
 
@@ -3409,6 +3412,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
             renames: convert_renames(&context.renames),
+            timing: Vec::new(),
         };
     }
 
@@ -3490,6 +3494,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
             renames: convert_renames(&context.renames),
+            timing: Vec::new(),
         };
     }
 
@@ -3547,6 +3552,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
             renames: convert_renames(&context.renames),
+            timing: Vec::new(),
         };
     }
 
@@ -3564,12 +3570,15 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         }
     };
 
+    let timing_entries = context.timing.into_entries();
+
     CompileResult::Success {
         ast,
         events: context.events,
         debug_logs: context.debug_logs,
         ordered_log: context.ordered_log,
         renames: convert_renames(&context.renames),
+        timing: timing_entries,
     }
 }
 

@@ -41,6 +41,7 @@ export default function BabelPluginReactCompilerRust(
           }
 
           // Step 4: Extract scope info
+          const logger = (pass.opts as PluginOptions).logger;
           let scopeInfo;
           try {
             scopeInfo = extractScopeInfo(prog);
@@ -48,7 +49,6 @@ export default function BabelPluginReactCompilerRust(
             // Scope extraction can fail on unsupported syntax (e.g., `this` parameters).
             // Report as CompileUnexpectedThrow + CompileError, matching TS compiler behavior
             // when compilation throws unexpectedly.
-            const logger = (pass.opts as PluginOptions).logger;
             const errMsg = e instanceof Error ? e.message : String(e);
             if (logger) {
               logger.logEvent(filename, {
@@ -98,17 +98,20 @@ export default function BabelPluginReactCompilerRust(
           }
 
           // Step 5: Call Rust compiler
+          const optsForRust =
+            (logger as any)?.debugLogIRs != null
+              ? {...opts, __debug: true}
+              : opts;
           const result = compileWithRust(
             pass.file.ast,
             scopeInfo,
-            opts,
+            optsForRust,
             pass.file.code ?? null,
           );
 
           // Step 6: Forward logger events and debug logs
           // Use orderedLog when available to maintain correct interleaving
           // of events and debug entries (matching TS compiler behavior).
-          const logger = (pass.opts as PluginOptions).logger;
           if (logger && result.orderedLog && result.orderedLog.length > 0) {
             for (const item of result.orderedLog) {
               if (item.type === 'event') {

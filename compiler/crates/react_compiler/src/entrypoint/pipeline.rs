@@ -47,7 +47,9 @@ pub fn compile_fn(
     env.instrument_gating_name = context.instrument_gating_name.clone();
     env.hook_guard_name = context.hook_guard_name.clone();
 
+    context.timing.start("lower");
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
+    context.timing.stop();
 
     // Collect any renames from lowering and pass to context
     if !env.renames.is_empty() {
@@ -62,60 +64,91 @@ pub fn compile_fn(
         return Err(env.take_invariant_errors());
     }
 
-    let debug_hir = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("HIR", debug_hir));
+    if context.debug_enabled {
+        context.timing.start("debug_print:HIR");
+        let debug_hir = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("HIR", debug_hir));
+        context.timing.stop();
+    }
 
+    context.timing.start("PruneMaybeThrows");
     react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions)?;
+    context.timing.stop();
 
-    let debug_prune = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneMaybeThrows");
+        let debug_prune = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune));
+        context.timing.stop();
+    }
 
-    // Validate context variable lvalues (matches TS Pipeline.ts: validateContextVariableLValues(hir))
-    // In TS, this calls env.recordError() which accumulates on env.errors.
-    // Invariant violations are propagated as Err.
+    context.timing.start("ValidateContextVariableLValues");
     react_compiler_validation::validate_context_variable_lvalues(&hir, &mut env)?;
-    context.log_debug(DebugLogEntry::new("ValidateContextVariableLValues", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("ValidateContextVariableLValues", "ok".to_string()));
+    }
+    context.timing.stop();
 
+    context.timing.start("ValidateUseMemo");
     let void_memo_errors = react_compiler_validation::validate_use_memo(&hir, &mut env);
-    // Log VoidUseMemo errors as CompileError events (matching TS env.logErrors behavior).
-    // In TS these are logged via env.logErrors() for telemetry, not accumulated as compile errors.
     log_errors_as_events(&void_memo_errors, context);
-    context.log_debug(DebugLogEntry::new("ValidateUseMemo", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("ValidateUseMemo", "ok".to_string()));
+    }
+    context.timing.stop();
 
-    // Note: TS gates this on `enableDropManualMemoization`, but it returns true for all
-    // output modes, so we run it unconditionally.
+    context.timing.start("DropManualMemoization");
     react_compiler_optimization::drop_manual_memoization(&mut hir, &mut env)?;
+    context.timing.stop();
 
-    let debug_drop_memo = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("DropManualMemoization", debug_drop_memo));
+    if context.debug_enabled {
+        context.timing.start("debug_print:DropManualMemoization");
+        let debug_drop_memo = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("DropManualMemoization", debug_drop_memo));
+        context.timing.stop();
+    }
 
+    context.timing.start("InlineImmediatelyInvokedFunctionExpressions");
     react_compiler_optimization::inline_immediately_invoked_function_expressions(
         &mut hir, &mut env,
     );
+    context.timing.stop();
 
-    let debug_inline_iifes = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new(
-        "InlineImmediatelyInvokedFunctionExpressions",
-        debug_inline_iifes,
-    ));
+    if context.debug_enabled {
+        context.timing.start("debug_print:InlineImmediatelyInvokedFunctionExpressions");
+        let debug_inline_iifes = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new(
+            "InlineImmediatelyInvokedFunctionExpressions",
+            debug_inline_iifes,
+        ));
+        context.timing.stop();
+    }
 
-    // Standalone merge pass (TS pipeline calls this unconditionally after IIFE inlining)
+    context.timing.start("MergeConsecutiveBlocks");
     react_compiler_optimization::merge_consecutive_blocks::merge_consecutive_blocks(
         &mut hir,
         &mut env.functions,
     );
+    context.timing.stop();
 
-    let debug_merge = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
+    if context.debug_enabled {
+        context.timing.start("debug_print:MergeConsecutiveBlocks");
+        let debug_merge = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("MergeConsecutiveBlocks", debug_merge));
+        context.timing.stop();
+    }
 
     // TODO: port assertConsistentIdentifiers
-    context.log_debug(DebugLogEntry::new("AssertConsistentIdentifiers", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertConsistentIdentifiers", "ok".to_string()));
+    }
     // TODO: port assertTerminalSuccessorsExist
-    context.log_debug(DebugLogEntry::new("AssertTerminalSuccessorsExist", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertTerminalSuccessorsExist", "ok".to_string()));
+    }
 
+    context.timing.start("EnterSSA");
     react_compiler_ssa::enter_ssa(&mut hir, &mut env).map_err(|diag| {
-        // In TS, EnterSSA uses CompilerError.throwTodo() which creates a CompilerErrorDetail
-        // (not a CompilerDiagnostic). We convert here to match the TS event format.
         let loc = diag.primary_location().cloned();
         let mut err = CompilerError::new();
         err.push_error_detail(react_compiler_diagnostics::CompilerErrorDetail {
@@ -127,369 +160,683 @@ pub fn compile_fn(
         });
         err
     })?;
+    context.timing.stop();
 
-    let debug_ssa = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("SSA", debug_ssa));
+    if context.debug_enabled {
+        context.timing.start("debug_print:SSA");
+        let debug_ssa = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("SSA", debug_ssa));
+        context.timing.stop();
+    }
 
+    context.timing.start("EliminateRedundantPhi");
     react_compiler_ssa::eliminate_redundant_phi(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_eliminate_phi = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("EliminateRedundantPhi", debug_eliminate_phi));
+    if context.debug_enabled {
+        context.timing.start("debug_print:EliminateRedundantPhi");
+        let debug_eliminate_phi = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("EliminateRedundantPhi", debug_eliminate_phi));
+        context.timing.stop();
+    }
 
     // TODO: port assertConsistentIdentifiers
-    context.log_debug(DebugLogEntry::new("AssertConsistentIdentifiers", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertConsistentIdentifiers", "ok".to_string()));
+    }
 
+    context.timing.start("ConstantPropagation");
     react_compiler_optimization::constant_propagation(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_const_prop = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("ConstantPropagation", debug_const_prop));
+    if context.debug_enabled {
+        context.timing.start("debug_print:ConstantPropagation");
+        let debug_const_prop = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("ConstantPropagation", debug_const_prop));
+        context.timing.stop();
+    }
 
+    context.timing.start("InferTypes");
     react_compiler_typeinference::infer_types(&mut hir, &mut env)?;
+    context.timing.stop();
 
-    let debug_infer_types = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("InferTypes", debug_infer_types));
+    if context.debug_enabled {
+        context.timing.start("debug_print:InferTypes");
+        let debug_infer_types = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("InferTypes", debug_infer_types));
+        context.timing.stop();
+    }
 
     if env.enable_validations() {
         if env.config.validate_hooks_usage {
+            context.timing.start("ValidateHooksUsage");
             react_compiler_validation::validate_hooks_usage(&hir, &mut env)?;
-            context.log_debug(DebugLogEntry::new("ValidateHooksUsage", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateHooksUsage", "ok".to_string()));
+            }
+            context.timing.stop();
         }
 
         if env.config.validate_no_capitalized_calls.is_some() {
+            context.timing.start("ValidateNoCapitalizedCalls");
             react_compiler_validation::validate_no_capitalized_calls(&hir, &mut env);
-            context.log_debug(DebugLogEntry::new("ValidateNoCapitalizedCalls", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoCapitalizedCalls", "ok".to_string()));
+            }
+            context.timing.stop();
         }
     }
 
+    context.timing.start("OptimizePropsMethodCalls");
     react_compiler_optimization::optimize_props_method_calls(&mut hir, &env);
+    context.timing.stop();
 
-    let debug_optimize_props = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("OptimizePropsMethodCalls", debug_optimize_props));
+    if context.debug_enabled {
+        context.timing.start("debug_print:OptimizePropsMethodCalls");
+        let debug_optimize_props = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("OptimizePropsMethodCalls", debug_optimize_props));
+        context.timing.stop();
+    }
 
-    // AnalyseFunctions logs inner function state from within the pass
-    // (mirrors TS: fn.env.logger?.debugLogIRs({ name: 'AnalyseFunction (inner)', ... }))
+    context.timing.start("AnalyseFunctions");
     let mut inner_logs: Vec<String> = Vec::new();
+    let debug_inner = context.debug_enabled;
     react_compiler_inference::analyse_functions(&mut hir, &mut env, &mut |inner_func, inner_env| {
-        inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
+        if debug_inner {
+            inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
+        }
     })?;
-    // Check for invariant errors recorded during AnalyseFunctions (e.g., uninitialized
-    // identifiers in InferMutationAliasingEffects for inner functions).
+    context.timing.stop();
+
     if env.has_invariant_errors() {
-        // Emit any inner function logs that were captured before the error
-        for inner_log in &inner_logs {
-            context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log.clone()));
+        if context.debug_enabled {
+            for inner_log in &inner_logs {
+                context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log.clone()));
+            }
         }
         return Err(env.take_invariant_errors());
     }
-    for inner_log in inner_logs {
-        context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log));
+    if context.debug_enabled {
+        for inner_log in inner_logs {
+            context.log_debug(DebugLogEntry::new("AnalyseFunction (inner)", inner_log));
+        }
     }
 
-    let debug_analyse_functions = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("AnalyseFunctions", debug_analyse_functions));
+    if context.debug_enabled {
+        context.timing.start("debug_print:AnalyseFunctions");
+        let debug_analyse_functions = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("AnalyseFunctions", debug_analyse_functions));
+        context.timing.stop();
+    }
 
+    context.timing.start("InferMutationAliasingEffects");
     let errors_before = env.error_count();
     react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false)?;
+    context.timing.stop();
 
-    // Check for errors recorded during InferMutationAliasingEffects
-    // (e.g., uninitialized value kind, Todo for unsupported patterns).
-    // In TS, these throw from within the pass, aborting before the log entry.
-    // We detect new errors by comparing error counts before and after the pass.
     if env.error_count() > errors_before {
         return Err(env.take_errors_since(errors_before));
     }
 
-    let debug_infer_effects = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("InferMutationAliasingEffects", debug_infer_effects));
+    if context.debug_enabled {
+        context.timing.start("debug_print:InferMutationAliasingEffects");
+        let debug_infer_effects = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("InferMutationAliasingEffects", debug_infer_effects));
+        context.timing.stop();
+    }
 
+    context.timing.start("DeadCodeElimination");
     react_compiler_optimization::dead_code_elimination(&mut hir, &env);
+    context.timing.stop();
 
-    let debug_dce = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("DeadCodeElimination", debug_dce));
+    if context.debug_enabled {
+        context.timing.start("debug_print:DeadCodeElimination");
+        let debug_dce = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("DeadCodeElimination", debug_dce));
+        context.timing.stop();
+    }
 
-    // Second PruneMaybeThrows call (matches TS Pipeline.ts position #15)
+    context.timing.start("PruneMaybeThrows2");
     react_compiler_optimization::prune_maybe_throws(&mut hir, &mut env.functions)?;
+    context.timing.stop();
 
-    let debug_prune2 = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune2));
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneMaybeThrows2");
+        let debug_prune2 = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("PruneMaybeThrows", debug_prune2));
+        context.timing.stop();
+    }
 
+    context.timing.start("InferMutationAliasingRanges");
     react_compiler_inference::infer_mutation_aliasing_ranges(&mut hir, &mut env, false)?;
+    context.timing.stop();
 
-    let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
+    if context.debug_enabled {
+        context.timing.start("debug_print:InferMutationAliasingRanges");
+        let debug_infer_ranges = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("InferMutationAliasingRanges", debug_infer_ranges));
+        context.timing.stop();
+    }
 
     if env.enable_validations() {
+        context.timing.start("ValidateLocalsNotReassignedAfterRender");
         react_compiler_validation::validate_locals_not_reassigned_after_render(&hir, &mut env);
-        context.log_debug(DebugLogEntry::new("ValidateLocalsNotReassignedAfterRender", "ok".to_string()));
-
-        // assertValidMutableRanges is gated on config.assertValidMutableRanges (default false)
+        if context.debug_enabled {
+            context.log_debug(DebugLogEntry::new("ValidateLocalsNotReassignedAfterRender", "ok".to_string()));
+        }
+        context.timing.stop();
 
         if env.config.validate_ref_access_during_render {
+            context.timing.start("ValidateNoRefAccessInRender");
             react_compiler_validation::validate_no_ref_access_in_render(&hir, &mut env);
-            context.log_debug(DebugLogEntry::new("ValidateNoRefAccessInRender", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoRefAccessInRender", "ok".to_string()));
+            }
+            context.timing.stop();
         }
 
         if env.config.validate_no_set_state_in_render {
+            context.timing.start("ValidateNoSetStateInRender");
             react_compiler_validation::validate_no_set_state_in_render(&hir, &mut env)?;
-            context.log_debug(DebugLogEntry::new("ValidateNoSetStateInRender", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoSetStateInRender", "ok".to_string()));
+            }
+            context.timing.stop();
         }
 
         if env.config.validate_no_derived_computations_in_effects_exp
             && env.output_mode == OutputMode::Lint
         {
+            context.timing.start("ValidateNoDerivedComputationsInEffects");
             let errors = react_compiler_validation::validate_no_derived_computations_in_effects_exp(&hir, &env)?;
             log_errors_as_events(&errors, context);
-            context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
+            }
+            context.timing.stop();
         } else if env.config.validate_no_derived_computations_in_effects {
+            context.timing.start("ValidateNoDerivedComputationsInEffects");
             react_compiler_validation::validate_no_derived_computations_in_effects(&hir, &mut env);
-            context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
+            }
+            context.timing.stop();
         }
 
         if env.config.validate_no_set_state_in_effects
             && env.output_mode == OutputMode::Lint
         {
+            context.timing.start("ValidateNoSetStateInEffects");
             let errors = react_compiler_validation::validate_no_set_state_in_effects(&hir, &env)?;
             log_errors_as_events(&errors, context);
-            context.log_debug(DebugLogEntry::new("ValidateNoSetStateInEffects", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoSetStateInEffects", "ok".to_string()));
+            }
+            context.timing.stop();
         }
 
         if env.config.validate_no_jsx_in_try_statements
             && env.output_mode == OutputMode::Lint
         {
+            context.timing.start("ValidateNoJSXInTryStatement");
             let errors = react_compiler_validation::validate_no_jsx_in_try_statement(&hir);
             log_errors_as_events(&errors, context);
-            context.log_debug(DebugLogEntry::new("ValidateNoJSXInTryStatement", "ok".to_string()));
+            if context.debug_enabled {
+                context.log_debug(DebugLogEntry::new("ValidateNoJSXInTryStatement", "ok".to_string()));
+            }
+            context.timing.stop();
         }
 
+        context.timing.start("ValidateNoFreezingKnownMutableFunctions");
         react_compiler_validation::validate_no_freezing_known_mutable_functions(&hir, &mut env);
-        context.log_debug(DebugLogEntry::new("ValidateNoFreezingKnownMutableFunctions", "ok".to_string()));
+        if context.debug_enabled {
+            context.log_debug(DebugLogEntry::new("ValidateNoFreezingKnownMutableFunctions", "ok".to_string()));
+        }
+        context.timing.stop();
     }
 
+    context.timing.start("InferReactivePlaces");
     react_compiler_inference::infer_reactive_places(&mut hir, &mut env)?;
+    context.timing.stop();
 
-    let debug_reactive_places = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("InferReactivePlaces", debug_reactive_places));
+    if context.debug_enabled {
+        context.timing.start("debug_print:InferReactivePlaces");
+        let debug_reactive_places = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("InferReactivePlaces", debug_reactive_places));
+        context.timing.stop();
+    }
 
     if env.enable_validations() {
-        // Always enter this block — in TS, the guard checks a truthy string ('off' is truthy),
-        // so it always runs. The internal checks inside VED handle the config flags properly.
+        context.timing.start("ValidateExhaustiveDependencies");
         react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env)?;
-        context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
+        if context.debug_enabled {
+            context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
+        }
+        context.timing.stop();
     }
 
+    context.timing.start("RewriteInstructionKindsBasedOnReassignment");
     react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(&mut hir, &env)?;
+    context.timing.stop();
 
-    let debug_rewrite = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("RewriteInstructionKindsBasedOnReassignment", debug_rewrite));
+    if context.debug_enabled {
+        context.timing.start("debug_print:RewriteInstructionKindsBasedOnReassignment");
+        let debug_rewrite = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("RewriteInstructionKindsBasedOnReassignment", debug_rewrite));
+        context.timing.stop();
+    }
 
     if env.enable_validations()
         && env.config.validate_static_components
         && env.output_mode == OutputMode::Lint
     {
+        context.timing.start("ValidateStaticComponents");
         let errors = react_compiler_validation::validate_static_components(&hir);
         log_errors_as_events(&errors, context);
-        context.log_debug(DebugLogEntry::new("ValidateStaticComponents", "ok".to_string()));
+        if context.debug_enabled {
+            context.log_debug(DebugLogEntry::new("ValidateStaticComponents", "ok".to_string()));
+        }
+        context.timing.stop();
     }
 
     if env.enable_memoization() {
+        context.timing.start("InferReactiveScopeVariables");
         react_compiler_inference::infer_reactive_scope_variables(&mut hir, &mut env)?;
+        context.timing.stop();
 
-        let debug_infer_scopes = debug_print::debug_hir(&hir, &env);
-        context.log_debug(DebugLogEntry::new("InferReactiveScopeVariables", debug_infer_scopes));
+        if context.debug_enabled {
+            context.timing.start("debug_print:InferReactiveScopeVariables");
+            let debug_infer_scopes = debug_print::debug_hir(&hir, &env);
+            context.log_debug(DebugLogEntry::new("InferReactiveScopeVariables", debug_infer_scopes));
+            context.timing.stop();
+        }
     }
 
+    context.timing.start("MemoizeFbtAndMacroOperandsInSameScope");
     let fbt_operands =
         react_compiler_inference::memoize_fbt_and_macro_operands_in_same_scope(&hir, &mut env);
+    context.timing.stop();
 
-    let debug_fbt = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("MemoizeFbtAndMacroOperandsInSameScope", debug_fbt));
+    if context.debug_enabled {
+        context.timing.start("debug_print:MemoizeFbtAndMacroOperandsInSameScope");
+        let debug_fbt = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("MemoizeFbtAndMacroOperandsInSameScope", debug_fbt));
+        context.timing.stop();
+    }
 
     if env.config.enable_jsx_outlining {
+        context.timing.start("OutlineJsx");
         react_compiler_optimization::outline_jsx(&mut hir, &mut env);
+        context.timing.stop();
     }
 
     if env.config.enable_name_anonymous_functions {
+        context.timing.start("NameAnonymousFunctions");
         react_compiler_optimization::name_anonymous_functions(&mut hir, &mut env);
+        context.timing.stop();
 
-        let debug_name_anon = debug_print::debug_hir(&hir, &env);
-        context.log_debug(DebugLogEntry::new("NameAnonymousFunctions", debug_name_anon));
+        if context.debug_enabled {
+            context.timing.start("debug_print:NameAnonymousFunctions");
+            let debug_name_anon = debug_print::debug_hir(&hir, &env);
+            context.log_debug(DebugLogEntry::new("NameAnonymousFunctions", debug_name_anon));
+            context.timing.stop();
+        }
     }
 
     if env.config.enable_function_outlining {
+        context.timing.start("OutlineFunctions");
         react_compiler_optimization::outline_functions(&mut hir, &mut env, &fbt_operands);
+        context.timing.stop();
 
-        let debug_outline = debug_print::debug_hir(&hir, &env);
-        context.log_debug(DebugLogEntry::new("OutlineFunctions", debug_outline));
+        if context.debug_enabled {
+            context.timing.start("debug_print:OutlineFunctions");
+            let debug_outline = debug_print::debug_hir(&hir, &env);
+            context.log_debug(DebugLogEntry::new("OutlineFunctions", debug_outline));
+            context.timing.stop();
+        }
     }
 
+    context.timing.start("AlignMethodCallScopes");
     react_compiler_inference::align_method_call_scopes(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_align = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("AlignMethodCallScopes", debug_align));
+    if context.debug_enabled {
+        context.timing.start("debug_print:AlignMethodCallScopes");
+        let debug_align = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("AlignMethodCallScopes", debug_align));
+        context.timing.stop();
+    }
 
+    context.timing.start("AlignObjectMethodScopes");
     react_compiler_inference::align_object_method_scopes(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_align_obj = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("AlignObjectMethodScopes", debug_align_obj));
+    if context.debug_enabled {
+        context.timing.start("debug_print:AlignObjectMethodScopes");
+        let debug_align_obj = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("AlignObjectMethodScopes", debug_align_obj));
+        context.timing.stop();
+    }
 
+    context.timing.start("PruneUnusedLabelsHIR");
     react_compiler_optimization::prune_unused_labels_hir(&mut hir);
+    context.timing.stop();
 
-    let debug_prune_labels = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("PruneUnusedLabelsHIR", debug_prune_labels));
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneUnusedLabelsHIR");
+        let debug_prune_labels = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("PruneUnusedLabelsHIR", debug_prune_labels));
+        context.timing.stop();
+    }
 
+    context.timing.start("AlignReactiveScopesToBlockScopesHIR");
     react_compiler_inference::align_reactive_scopes_to_block_scopes_hir(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_align_block_scopes = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("AlignReactiveScopesToBlockScopesHIR", debug_align_block_scopes));
+    if context.debug_enabled {
+        context.timing.start("debug_print:AlignReactiveScopesToBlockScopesHIR");
+        let debug_align_block_scopes = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("AlignReactiveScopesToBlockScopesHIR", debug_align_block_scopes));
+        context.timing.stop();
+    }
 
+    context.timing.start("MergeOverlappingReactiveScopesHIR");
     react_compiler_inference::merge_overlapping_reactive_scopes_hir(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_merge_overlapping = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("MergeOverlappingReactiveScopesHIR", debug_merge_overlapping));
+    if context.debug_enabled {
+        context.timing.start("debug_print:MergeOverlappingReactiveScopesHIR");
+        let debug_merge_overlapping = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("MergeOverlappingReactiveScopesHIR", debug_merge_overlapping));
+        context.timing.stop();
+    }
 
     // TODO: port assertValidBlockNesting
-    context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
+    }
 
+    context.timing.start("BuildReactiveScopeTerminalsHIR");
     react_compiler_inference::build_reactive_scope_terminals_hir(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_build_scope_terminals = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("BuildReactiveScopeTerminalsHIR", debug_build_scope_terminals));
+    if context.debug_enabled {
+        context.timing.start("debug_print:BuildReactiveScopeTerminalsHIR");
+        let debug_build_scope_terminals = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("BuildReactiveScopeTerminalsHIR", debug_build_scope_terminals));
+        context.timing.stop();
+    }
 
     // TODO: port assertValidBlockNesting
-    context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertValidBlockNesting", "ok".to_string()));
+    }
 
+    context.timing.start("FlattenReactiveLoopsHIR");
     react_compiler_inference::flatten_reactive_loops_hir(&mut hir);
+    context.timing.stop();
 
-    let debug_flatten_loops = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("FlattenReactiveLoopsHIR", debug_flatten_loops));
+    if context.debug_enabled {
+        context.timing.start("debug_print:FlattenReactiveLoopsHIR");
+        let debug_flatten_loops = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("FlattenReactiveLoopsHIR", debug_flatten_loops));
+        context.timing.stop();
+    }
 
+    context.timing.start("FlattenScopesWithHooksOrUseHIR");
     react_compiler_inference::flatten_scopes_with_hooks_or_use_hir(&mut hir, &env)?;
+    context.timing.stop();
 
-    let debug_flatten_hooks = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("FlattenScopesWithHooksOrUseHIR", debug_flatten_hooks));
+    if context.debug_enabled {
+        context.timing.start("debug_print:FlattenScopesWithHooksOrUseHIR");
+        let debug_flatten_hooks = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("FlattenScopesWithHooksOrUseHIR", debug_flatten_hooks));
+        context.timing.stop();
+    }
 
     // TODO: port assertTerminalSuccessorsExist
-    context.log_debug(DebugLogEntry::new("AssertTerminalSuccessorsExist", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertTerminalSuccessorsExist", "ok".to_string()));
+    }
     // TODO: port assertTerminalPredsExist
-    context.log_debug(DebugLogEntry::new("AssertTerminalPredsExist", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertTerminalPredsExist", "ok".to_string()));
+    }
 
+    context.timing.start("PropagateScopeDependenciesHIR");
     react_compiler_inference::propagate_scope_dependencies_hir(&mut hir, &mut env);
+    context.timing.stop();
 
-    let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
-    context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
+    if context.debug_enabled {
+        context.timing.start("debug_print:PropagateScopeDependenciesHIR");
+        let debug_propagate_deps = debug_print::debug_hir(&hir, &env);
+        context.log_debug(DebugLogEntry::new("PropagateScopeDependenciesHIR", debug_propagate_deps));
+        context.timing.stop();
+    }
 
+    context.timing.start("BuildReactiveFunction");
     let mut reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env)?;
+    context.timing.stop();
 
     let hir_formatter = |fmt: &mut react_compiler_hir::print::PrintFormatter, func: &react_compiler_hir::HirFunction| {
         debug_print::format_hir_function_into(fmt, func);
     };
-    let debug_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("BuildReactiveFunction", debug_reactive));
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:BuildReactiveFunction");
+        let debug_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("BuildReactiveFunction", debug_reactive));
+        context.timing.stop();
+    }
+
+    context.timing.start("AssertWellFormedBreakTargets");
     react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn, &env);
-    context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertWellFormedBreakTargets", "ok".to_string()));
+    }
+    context.timing.stop();
 
+    context.timing.start("PruneUnusedLabels");
     react_compiler_reactive_scopes::prune_unused_labels(&mut reactive_fn, &env)?;
-    let debug_prune_labels_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneUnusedLabels", debug_prune_labels_reactive));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneUnusedLabels");
+        let debug_prune_labels_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneUnusedLabels", debug_prune_labels_reactive));
+        context.timing.stop();
+    }
+
+    context.timing.start("AssertScopeInstructionsWithinScopes");
     react_compiler_reactive_scopes::assert_scope_instructions_within_scopes(&reactive_fn, &env)?;
-    context.log_debug(DebugLogEntry::new("AssertScopeInstructionsWithinScopes", "ok".to_string()));
+    if context.debug_enabled {
+        context.log_debug(DebugLogEntry::new("AssertScopeInstructionsWithinScopes", "ok".to_string()));
+    }
+    context.timing.stop();
 
+    context.timing.start("PruneNonEscapingScopes");
     react_compiler_reactive_scopes::prune_non_escaping_scopes(&mut reactive_fn, &mut env)?;
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneNonEscapingScopes", debug));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneNonEscapingScopes");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneNonEscapingScopes", debug));
+        context.timing.stop();
+    }
+
+    context.timing.start("PruneNonReactiveDependencies");
     react_compiler_reactive_scopes::prune_non_reactive_dependencies(&mut reactive_fn, &mut env);
-    let debug_prune_non_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneNonReactiveDependencies", debug_prune_non_reactive));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneNonReactiveDependencies");
+        let debug_prune_non_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneNonReactiveDependencies", debug_prune_non_reactive));
+        context.timing.stop();
+    }
+
+    context.timing.start("PruneUnusedScopes");
     react_compiler_reactive_scopes::prune_unused_scopes(&mut reactive_fn, &env)?;
-    let debug_prune_unused_scopes = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneUnusedScopes", debug_prune_unused_scopes));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneUnusedScopes");
+        let debug_prune_unused_scopes = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneUnusedScopes", debug_prune_unused_scopes));
+        context.timing.stop();
+    }
+
+    context.timing.start("MergeReactiveScopesThatInvalidateTogether");
     react_compiler_reactive_scopes::merge_reactive_scopes_that_invalidate_together(&mut reactive_fn, &mut env)?;
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("MergeReactiveScopesThatInvalidateTogether", debug));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:MergeReactiveScopesThatInvalidateTogether");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("MergeReactiveScopesThatInvalidateTogether", debug));
+        context.timing.stop();
+    }
+
+    context.timing.start("PruneAlwaysInvalidatingScopes");
     react_compiler_reactive_scopes::prune_always_invalidating_scopes(&mut reactive_fn, &env)?;
-    let debug_prune_always_inv = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneAlwaysInvalidatingScopes", debug_prune_always_inv));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneAlwaysInvalidatingScopes");
+        let debug_prune_always_inv = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneAlwaysInvalidatingScopes", debug_prune_always_inv));
+        context.timing.stop();
+    }
+
+    context.timing.start("PropagateEarlyReturns");
     react_compiler_reactive_scopes::propagate_early_returns(&mut reactive_fn, &mut env);
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PropagateEarlyReturns", debug));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PropagateEarlyReturns");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PropagateEarlyReturns", debug));
+        context.timing.stop();
+    }
+
+    context.timing.start("PruneUnusedLValues");
     react_compiler_reactive_scopes::prune_unused_lvalues(&mut reactive_fn, &env);
-    let debug_prune_lvalues = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneUnusedLValues", debug_prune_lvalues));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneUnusedLValues");
+        let debug_prune_lvalues = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneUnusedLValues", debug_prune_lvalues));
+        context.timing.stop();
+    }
+
+    context.timing.start("PromoteUsedTemporaries");
     react_compiler_reactive_scopes::promote_used_temporaries(&mut reactive_fn, &mut env);
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PromoteUsedTemporaries", debug));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:PromoteUsedTemporaries");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PromoteUsedTemporaries", debug));
+        context.timing.stop();
+    }
+
+    context.timing.start("ExtractScopeDeclarationsFromDestructuring");
     react_compiler_reactive_scopes::extract_scope_declarations_from_destructuring(&mut reactive_fn, &mut env)?;
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("ExtractScopeDeclarationsFromDestructuring", debug));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:ExtractScopeDeclarationsFromDestructuring");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("ExtractScopeDeclarationsFromDestructuring", debug));
+        context.timing.stop();
+    }
+
+    context.timing.start("StabilizeBlockIds");
     react_compiler_reactive_scopes::stabilize_block_ids(&mut reactive_fn, &mut env);
-    let debug_stabilize = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("StabilizeBlockIds", debug_stabilize));
+    context.timing.stop();
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:StabilizeBlockIds");
+        let debug_stabilize = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("StabilizeBlockIds", debug_stabilize));
+        context.timing.stop();
+    }
+
+    context.timing.start("RenameVariables");
     let unique_identifiers = react_compiler_reactive_scopes::rename_variables(&mut reactive_fn, &mut env);
-    // Register all renamed variables with ProgramContext so future compilations
-    // in the same program avoid naming conflicts (matches TS programContext.addNewReference).
+    context.timing.stop();
+
     for name in &unique_identifiers {
         context.add_new_reference(name.clone());
     }
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("RenameVariables", debug));
 
+    if context.debug_enabled {
+        context.timing.start("debug_print:RenameVariables");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("RenameVariables", debug));
+        context.timing.stop();
+    }
+
+    context.timing.start("PruneHoistedContexts");
     react_compiler_reactive_scopes::prune_hoisted_contexts(&mut reactive_fn, &mut env)?;
-    let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
-        &reactive_fn, &env, Some(&hir_formatter),
-    );
-    context.log_debug(DebugLogEntry::new("PruneHoistedContexts", debug));
+    context.timing.stop();
+
+    if context.debug_enabled {
+        context.timing.start("debug_print:PruneHoistedContexts");
+        let debug = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
+            &reactive_fn, &env, Some(&hir_formatter),
+        );
+        context.log_debug(DebugLogEntry::new("PruneHoistedContexts", debug));
+        context.timing.stop();
+    }
 
     if env.config.enable_preserve_existing_memoization_guarantees
         || env.config.validate_preserve_existing_memoization_guarantees
     {
+        context.timing.start("ValidatePreservedManualMemoization");
         react_compiler_validation::validate_preserved_manual_memoization(&reactive_fn, &mut env);
-        context.log_debug(DebugLogEntry::new("ValidatePreservedManualMemoization", "ok".to_string()));
+        if context.debug_enabled {
+            context.log_debug(DebugLogEntry::new("ValidatePreservedManualMemoization", "ok".to_string()));
+        }
+        context.timing.stop();
     }
 
+    context.timing.start("codegen");
     let codegen_result = react_compiler_reactive_scopes::codegen_function(
         &reactive_fn,
         &mut env,
         unique_identifiers,
         fbt_operands,
     )?;
+    context.timing.stop();
 
     // Register the memo cache import as a side effect of codegen, matching TS behavior
     // where addMemoCacheImport() is called during codegenReactiveFunction. This must happen

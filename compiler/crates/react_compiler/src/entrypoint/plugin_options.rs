@@ -70,6 +70,15 @@ pub struct PluginOptions {
     /// Source code of the file being compiled (passed from Babel plugin for fast refresh hash).
     #[serde(default, rename = "__sourceCode")]
     pub source_code: Option<String>,
+
+    /// Enable profiling timing data collection.
+    #[serde(default, rename = "__profiling")]
+    pub profiling: bool,
+
+    /// Enable debug logging (HIR formatting after each pass).
+    /// Only set to true when a logger with debugLogIRs is configured on the JS side.
+    #[serde(default, rename = "__debug")]
+    pub debug: bool,
 }
 
 fn default_compilation_mode() -> String {

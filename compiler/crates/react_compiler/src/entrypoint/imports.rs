@@ -23,6 +23,7 @@ use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCatego
 use super::compile_result::{DebugLogEntry, LoggerEvent, OrderedLogItem};
 use super::plugin_options::{CompilerTarget, PluginOptions};
 use super::suppression::SuppressionRange;
+use crate::timing::TimingData;
 
 /// An import specifier tracked by ProgramContext.
 /// Corresponds to NonLocalImportSpecifier in the TS compiler.
@@ -57,6 +58,12 @@ pub struct ProgramContext {
     // Variable renames from lowering, to be applied back to the Babel AST
     pub renames: Vec<react_compiler_hir::environment::BindingRename>,
 
+    /// Timing data for profiling. Accumulates across all function compilations.
+    pub timing: TimingData,
+
+    /// Whether debug logging is enabled (HIR formatting after each pass).
+    pub debug_enabled: bool,
+
     // Internal state
     already_compiled: HashSet<u32>,
     known_referenced_names: HashSet<String>,
@@ -72,6 +79,8 @@ impl ProgramContext {
         has_module_scope_opt_out: bool,
     ) -> Self {
         let react_runtime_module = get_react_compiler_runtime_module(&opts.target);
+        let profiling = opts.profiling;
+        let debug_enabled = opts.debug;
         Self {
             opts,
             filename,
@@ -86,6 +95,8 @@ impl ProgramContext {
             instrument_gating_name: None,
             hook_guard_name: None,
             renames: Vec::new(),
+            timing: TimingData::new(profiling),
+            debug_enabled,
             already_compiled: HashSet::new(),
             known_referenced_names: HashSet::new(),
             imports: HashMap::new(),

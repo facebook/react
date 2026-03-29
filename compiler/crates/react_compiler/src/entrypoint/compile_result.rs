@@ -5,6 +5,8 @@ use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
 use serde::Serialize;
 
+use crate::timing::TimingEntry;
+
 /// A variable rename from lowering, serialized for the JS shim.
 #[derive(Debug, Clone, Serialize)]
 pub struct BindingRenameInfo {
@@ -35,6 +37,9 @@ pub enum CompileResult {
         /// identified by the binding's declaration start position in the source.
         #[serde(skip_serializing_if = "Vec::is_empty")]
         renames: Vec<BindingRenameInfo>,
+        /// Timing data for profiling. Only populated when __profiling is enabled.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        timing: Vec<TimingEntry>,
     },
     /// A fatal error occurred and panicThreshold dictates it should throw.
     Error {
@@ -44,6 +49,9 @@ pub enum CompileResult {
         debug_logs: Vec<DebugLogEntry>,
         #[serde(rename = "orderedLog", skip_serializing_if = "Vec::is_empty")]
         ordered_log: Vec<OrderedLogItem>,
+        /// Timing data for profiling. Only populated when __profiling is enabled.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        timing: Vec<TimingEntry>,
     },
 }
 
