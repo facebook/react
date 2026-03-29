@@ -1061,11 +1061,9 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
         scope_nodes: &mut HashMap<ScopeId, (Vec<DeclarationId>, bool)>,
         memoized: &mut HashSet<DeclarationId>,
     ) -> bool {
-        let node = identifier_nodes.get(&id);
-        if node.is_none() {
-            return false;
-        }
-        let (level, _, _, _, seen) = *identifier_nodes.get(&id).unwrap();
+        let (level, _, _, _, seen) = *identifier_nodes
+            .get(&id)
+            .expect("Expected a node for all identifiers");
         if seen {
             return identifier_nodes.get(&id).unwrap().1;
         }
@@ -1103,11 +1101,10 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
         scope_nodes: &mut HashMap<ScopeId, (Vec<DeclarationId>, bool)>,
         memoized: &mut HashSet<DeclarationId>,
     ) {
-        let node = scope_nodes.get(&id);
-        if node.is_none() {
-            return;
-        }
-        let seen = scope_nodes.get(&id).unwrap().1;
+        let seen = scope_nodes
+            .get(&id)
+            .expect("Expected a node for all scopes")
+            .1;
         if seen {
             return;
         }
