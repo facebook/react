@@ -22,7 +22,8 @@ use react_compiler_hir::{
 use react_compiler_hir::visitors::each_instruction_value_operand;
 
 use crate::visitors::{
-    ReactiveFunctionTransform, Transformed, transform_reactive_function,
+    ReactiveFunctionTransform, ReactiveFunctionVisitor, Transformed,
+    transform_reactive_function, visit_reactive_function,
 };
 
 // =============================================================================
@@ -45,7 +46,7 @@ pub fn prune_non_escaping_scopes(func: &mut ReactiveFunction, env: &mut Environm
     }
     let visitor = CollectDependenciesVisitor::new(env);
     let mut visitor_state = (state, Vec::<ScopeId>::new());
-    visit_reactive_function_collect(func, &visitor, env, &mut visitor_state);
+    visit_reactive_function(func, &visitor, &mut visitor_state);
     let (state, _) = visitor_state;
 
     // Then walk outward from the returned values and find all captured operands.
@@ -279,13 +280,15 @@ fn compute_pattern_lvalues(pattern: &Pattern) -> Vec<LValueMemoization> {
 // CollectDependenciesVisitor
 // =============================================================================
 
-struct CollectDependenciesVisitor {
+struct CollectDependenciesVisitor<'a> {
+    env: &'a Environment,
     options: MemoizationOptions,
 }
 
-impl CollectDependenciesVisitor {
-    fn new(env: &Environment) -> Self {
+impl<'a> CollectDependenciesVisitor<'a> {
+    fn new(env: &'a Environment) -> Self {
         CollectDependenciesVisitor {
+            env,
             options: MemoizationOptions {
                 memoize_jsx_elements: !env.config.enable_forest,
                 force_memoize_primitives: env.config.enable_forest
@@ -297,7 +300,6 @@ impl CollectDependenciesVisitor {
     /// Given a value, returns a description of how it should be memoized.
     fn compute_memoization_inputs(
         &self,
-        env: &Environment,
         id: EvaluationOrder,
         value: &ReactiveValue,
         lvalue: Option<IdentifierId>,
@@ -310,9 +312,9 @@ impl CollectDependenciesVisitor {
                 ..
             } => {
                 let (_, cons_rvalues) =
-                    self.compute_memoization_inputs(env, id, consequent, None, state);
+                    self.compute_memoization_inputs(id, consequent, None, state);
                 let (_, alt_rvalues) =
-                    self.compute_memoization_inputs(env, id, alternate, None, state);
+                    self.compute_memoization_inputs(id, alternate, None, state);
                 let mut rvalues = cons_rvalues;
                 rvalues.extend(alt_rvalues);
                 let lvalues = if let Some(lv) = lvalue {
@@ -327,9 +329,9 @@ impl CollectDependenciesVisitor {
             }
             ReactiveValue::LogicalExpression { left, right, .. } => {
                 let (_, left_rvalues) =
-                    self.compute_memoization_inputs(env, id, left, None, state);
+                    self.compute_memoization_inputs(id, left, None, state);
                 let (_, right_rvalues) =
-                    self.compute_memoization_inputs(env, id, right, None, state);
+                    self.compute_memoization_inputs(id, right, None, state);
                 let mut rvalues = left_rvalues;
                 rvalues.extend(right_rvalues);
                 let lvalues = if let Some(lv) = lvalue {
@@ -349,7 +351,6 @@ impl CollectDependenciesVisitor {
             } => {
                 for instr in instructions {
                     self.visit_value_for_memoization(
-                        env,
                         instr.id,
                         &instr.value,
                         instr.lvalue.as_ref().map(|lv| lv.identifier),
@@ -357,7 +358,7 @@ impl CollectDependenciesVisitor {
                     );
                 }
                 let (_, rvalues) =
-                    self.compute_memoization_inputs(env, id, inner, None, state);
+                    self.compute_memoization_inputs(id, inner, None, state);
                 let lvalues = if let Some(lv) = lvalue {
                     vec![LValueMemoization {
                         place_identifier: lv,
@@ -370,7 +371,7 @@ impl CollectDependenciesVisitor {
             }
             ReactiveValue::OptionalExpression { value: inner, .. } => {
                 let (_, rvalues) =
-                    self.compute_memoization_inputs(env, id, inner, None, state);
+                    self.compute_memoization_inputs(id, inner, None, state);
                 let lvalues = if let Some(lv) = lvalue {
                     vec![LValueMemoization {
                         place_identifier: lv,
@@ -382,7 +383,7 @@ impl CollectDependenciesVisitor {
                 (lvalues, rvalues)
             }
             ReactiveValue::Instruction(instr_value) => {
-                self.compute_instruction_memoization_inputs(env, id, instr_value, lvalue)
+                self.compute_instruction_memoization_inputs(id, instr_value, lvalue)
             }
         }
     }
@@ -390,11 +391,11 @@ impl CollectDependenciesVisitor {
     /// Compute memoization inputs for an InstructionValue.
     fn compute_instruction_memoization_inputs(
         &self,
-        env: &Environment,
         id: EvaluationOrder,
         value: &InstructionValue,
         lvalue: Option<IdentifierId>,
     ) -> (Vec<LValueMemoization>, Vec<(IdentifierId, EvaluationOrder)>) {
+        let env = self.env;
         let options = &self.options;
 
         match value {
@@ -843,15 +844,15 @@ impl CollectDependenciesVisitor {
 
     fn visit_value_for_memoization(
         &self,
-        env: &Environment,
         id: EvaluationOrder,
         value: &ReactiveValue,
         lvalue: Option<IdentifierId>,
         state: &mut CollectState,
     ) {
+        let env = self.env;
         // Determine the level of memoization for this value and the lvalues/rvalues
         let (aliasing_lvalues, aliasing_rvalues) =
-            self.compute_memoization_inputs(env, id, value, lvalue, state);
+            self.compute_memoization_inputs(id, value, lvalue, state);
 
         // Associate all the rvalues with the instruction's scope if it has one
         // We need to collect rvalue data first to avoid borrow issues
@@ -955,246 +956,84 @@ impl CollectDependenciesVisitor {
 }
 
 // =============================================================================
-// Manual recursive visit (since visitor traits don't pass env easily)
+// ReactiveFunctionVisitor impl for CollectDependenciesVisitor
 // =============================================================================
 
-/// Visit a reactive function to collect dependencies.
-/// We manually recurse since the visitor trait doesn't easily pass env + state together.
-fn visit_reactive_function_collect(
-    func: &ReactiveFunction,
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    visit_block_collect(&func.body, visitor, env, state);
-}
+impl<'a> ReactiveFunctionVisitor for CollectDependenciesVisitor<'a> {
+    type State = (CollectState, Vec<ScopeId>);
 
-fn visit_block_collect(
-    block: &[ReactiveStatement],
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    for stmt in block {
-        match stmt {
-            ReactiveStatement::Instruction(instr) => {
-                visit_instruction_collect(instr, visitor, env, state);
-            }
-            ReactiveStatement::Scope(scope) => {
-                visit_scope_collect(scope, visitor, env, state);
-            }
-            ReactiveStatement::PrunedScope(scope) => {
-                visit_block_collect(&scope.instructions, visitor, env, state);
-            }
-            ReactiveStatement::Terminal(terminal) => {
-                visit_terminal_collect(terminal, visitor, env, state);
+    fn env(&self) -> &Environment {
+        self.env
+    }
+
+    fn visit_instruction(
+        &self,
+        instruction: &ReactiveInstruction,
+        state: &mut Self::State,
+    ) {
+        self.visit_value_for_memoization(
+            instruction.id,
+            &instruction.value,
+            instruction.lvalue.as_ref().map(|lv| lv.identifier),
+            &mut state.0,
+        );
+    }
+
+    fn visit_terminal(
+        &self,
+        stmt: &ReactiveTerminalStatement,
+        state: &mut Self::State,
+    ) {
+        // Traverse terminal blocks first (TS: this.traverseTerminal(stmt, scopes))
+        self.traverse_terminal(stmt, state);
+
+        // Handle return terminals
+        if let ReactiveTerminal::Return { value, .. } = &stmt.terminal {
+            let env = self.env;
+            let decl = env.identifiers[value.identifier.0 as usize].declaration_id;
+            state.0.escaping_values.insert(decl);
+
+            // If the return is within a scope, associate those scopes with the returned value
+            let identifier_node = state
+                .0
+                .identifiers
+                .get_mut(&decl)
+                .expect("Expected identifier to be initialized");
+            for scope_id in &state.1 {
+                identifier_node.scopes.insert(*scope_id);
             }
         }
     }
-}
 
-fn visit_instruction_collect(
-    instruction: &ReactiveInstruction,
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    visitor.visit_value_for_memoization(
-        env,
-        instruction.id,
-        &instruction.value,
-        instruction.lvalue.as_ref().map(|lv| lv.identifier),
-        &mut state.0,
-    );
-}
+    fn visit_scope(
+        &self,
+        scope: &ReactiveScopeBlock,
+        state: &mut Self::State,
+    ) {
+        let env = self.env;
+        let scope_id = scope.scope;
+        let scope_data = &env.scopes[scope_id.0 as usize];
 
-fn visit_terminal_collect(
-    stmt: &ReactiveTerminalStatement,
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    // Traverse terminal blocks first
-    traverse_terminal_collect(stmt, visitor, env, state);
-
-    // Handle return terminals
-    if let ReactiveTerminal::Return { value, .. } = &stmt.terminal {
-        let decl = env.identifiers[value.identifier.0 as usize].declaration_id;
-        state.0.escaping_values.insert(decl);
-
-        // If the return is within a scope, associate those scopes with the returned value
-        let identifier_node = state
-            .0
-            .identifiers
-            .get_mut(&decl)
-            .expect("Expected identifier to be initialized");
-        for scope_id in &state.1 {
-            identifier_node.scopes.insert(*scope_id);
-        }
-    }
-}
-
-fn traverse_terminal_collect(
-    stmt: &ReactiveTerminalStatement,
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    match &stmt.terminal {
-        ReactiveTerminal::Break { .. } | ReactiveTerminal::Continue { .. } => {}
-        ReactiveTerminal::Return { .. } | ReactiveTerminal::Throw { .. } => {}
-        ReactiveTerminal::For {
-            init,
-            test,
-            update,
-            loop_block,
-            id,
-            ..
-        } => {
-            visit_value_collect(*id, init, visitor, env, state);
-            visit_value_collect(*id, test, visitor, env, state);
-            visit_block_collect(loop_block, visitor, env, state);
-            if let Some(update) = update {
-                visit_value_collect(*id, update, visitor, env, state);
+        // If a scope reassigns any variables, set the chain of active scopes as a dependency
+        // of those variables.
+        for reassignment_id in &scope_data.reassignments {
+            let decl = env.identifiers[reassignment_id.0 as usize].declaration_id;
+            let identifier_node = state
+                .0
+                .identifiers
+                .get_mut(&decl)
+                .expect("Expected identifier to be initialized");
+            for s in &state.1 {
+                identifier_node.scopes.insert(*s);
             }
+            identifier_node.scopes.insert(scope_id);
         }
-        ReactiveTerminal::ForOf {
-            init,
-            test,
-            loop_block,
-            id,
-            ..
-        } => {
-            visit_value_collect(*id, init, visitor, env, state);
-            visit_value_collect(*id, test, visitor, env, state);
-            visit_block_collect(loop_block, visitor, env, state);
-        }
-        ReactiveTerminal::ForIn {
-            init,
-            loop_block,
-            id,
-            ..
-        } => {
-            visit_value_collect(*id, init, visitor, env, state);
-            visit_block_collect(loop_block, visitor, env, state);
-        }
-        ReactiveTerminal::DoWhile {
-            loop_block,
-            test,
-            id,
-            ..
-        } => {
-            visit_block_collect(loop_block, visitor, env, state);
-            visit_value_collect(*id, test, visitor, env, state);
-        }
-        ReactiveTerminal::While {
-            test,
-            loop_block,
-            id,
-            ..
-        } => {
-            visit_value_collect(*id, test, visitor, env, state);
-            visit_block_collect(loop_block, visitor, env, state);
-        }
-        ReactiveTerminal::If {
-            consequent,
-            alternate,
-            ..
-        } => {
-            visit_block_collect(consequent, visitor, env, state);
-            if let Some(alt) = alternate {
-                visit_block_collect(alt, visitor, env, state);
-            }
-        }
-        ReactiveTerminal::Switch { cases, .. } => {
-            for case in cases {
-                if let Some(block) = &case.block {
-                    visit_block_collect(block, visitor, env, state);
-                }
-            }
-        }
-        ReactiveTerminal::Label { block, .. } => {
-            visit_block_collect(block, visitor, env, state);
-        }
-        ReactiveTerminal::Try {
-            block, handler, ..
-        } => {
-            visit_block_collect(block, visitor, env, state);
-            visit_block_collect(handler, visitor, env, state);
-        }
+
+        // TS: this.traverseScope(scope, [...scopes, scope.scope])
+        state.1.push(scope_id);
+        self.traverse_scope(scope, state);
+        state.1.pop();
     }
-}
-
-fn visit_value_collect(
-    id: EvaluationOrder,
-    value: &ReactiveValue,
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    // For nested values inside terminals, we need to treat them as instructions
-    // so their memoization inputs are processed
-    match value {
-        ReactiveValue::SequenceExpression {
-            instructions,
-            value: inner,
-            ..
-        } => {
-            for instr in instructions {
-                visit_instruction_collect(instr, visitor, env, state);
-            }
-            visit_value_collect(id, inner, visitor, env, state);
-        }
-        ReactiveValue::LogicalExpression { left, right, .. } => {
-            visit_value_collect(id, left, visitor, env, state);
-            visit_value_collect(id, right, visitor, env, state);
-        }
-        ReactiveValue::ConditionalExpression {
-            test,
-            consequent,
-            alternate,
-            ..
-        } => {
-            visit_value_collect(id, test, visitor, env, state);
-            visit_value_collect(id, consequent, visitor, env, state);
-            visit_value_collect(id, alternate, visitor, env, state);
-        }
-        ReactiveValue::OptionalExpression { value: inner, .. } => {
-            visit_value_collect(id, inner, visitor, env, state);
-        }
-        ReactiveValue::Instruction(_) => {
-            // Instruction values in terminals are handled directly
-        }
-    }
-}
-
-fn visit_scope_collect(
-    scope: &ReactiveScopeBlock,
-    visitor: &CollectDependenciesVisitor,
-    env: &Environment,
-    state: &mut (CollectState, Vec<ScopeId>),
-) {
-    let scope_id = scope.scope;
-    let scope_data = &env.scopes[scope_id.0 as usize];
-
-    // If a scope reassigns any variables, set the chain of active scopes as a dependency
-    // of those variables.
-    for reassignment_id in &scope_data.reassignments {
-        let decl = env.identifiers[reassignment_id.0 as usize].declaration_id;
-        let identifier_node = state
-            .0
-            .identifiers
-            .get_mut(&decl)
-            .expect("Expected identifier to be initialized");
-        for s in &state.1 {
-            identifier_node.scopes.insert(*s);
-        }
-        identifier_node.scopes.insert(scope_id);
-    }
-
-    state.1.push(scope_id);
-    visit_block_collect(&scope.instructions, visitor, env, state);
-    state.1.pop();
 }
 
 // =============================================================================
