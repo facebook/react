@@ -9,7 +9,6 @@
 //!
 //! Ported from TypeScript `src/ReactiveScopes/AlignMethodCallScopes.ts`.
 
-use std::cmp;
 use std::collections::HashMap;
 
 use react_compiler_hir::environment::Environment;
@@ -77,9 +76,10 @@ pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
         }
     }
 
-    // Phase 2: Merge scope ranges for unioned scopes
-    // Collect the merged range updates first, then apply them
-    let mut range_updates: Vec<(ScopeId, EvaluationOrder, EvaluationOrder)> = Vec::new();
+    // Phase 2: Merge scope ranges for unioned scopes.
+    // Use a HashMap to accumulate min/max across all scopes mapping to the same root,
+    // matching TS behavior where root.range is updated in-place during iteration.
+    let mut range_updates: HashMap<ScopeId, (EvaluationOrder, EvaluationOrder)> = HashMap::new();
 
     merged_scopes.for_each(|scope_id, root_id| {
         if scope_id == root_id {
@@ -88,13 +88,14 @@ pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
         let scope_range = env.scopes[scope_id.0 as usize].range.clone();
         let root_range = env.scopes[root_id.0 as usize].range.clone();
 
-        let new_start = EvaluationOrder(cmp::min(scope_range.start.0, root_range.start.0));
-        let new_end = EvaluationOrder(cmp::max(scope_range.end.0, root_range.end.0));
-
-        range_updates.push((root_id, new_start, new_end));
+        let entry = range_updates
+            .entry(root_id)
+            .or_insert_with(|| (root_range.start, root_range.end));
+        entry.0 = EvaluationOrder(std::cmp::min(entry.0 .0, scope_range.start.0));
+        entry.1 = EvaluationOrder(std::cmp::max(entry.1 .0, scope_range.end.0));
     });
 
-    for (root_id, new_start, new_end) in range_updates {
+    for (root_id, (new_start, new_end)) in range_updates {
         env.scopes[root_id.0 as usize].range.start = new_start;
         env.scopes[root_id.0 as usize].range.end = new_end;
     }
@@ -109,9 +110,8 @@ pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
             } else if let Some(current_scope) =
                 env.identifiers[lvalue_id.0 as usize].scope
             {
-                let merged = merged_scopes.find(current_scope);
-                // find() always returns a root; update if it was in the set
-                if merged != current_scope {
+                // TS: mergedScopes.find() returns null if not in the set
+                if let Some(merged) = merged_scopes.find_opt(current_scope) {
                     env.identifiers[lvalue_id.0 as usize].scope = Some(merged);
                 }
             }
