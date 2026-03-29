@@ -25,7 +25,6 @@ export interface CompileSuccess {
   kind: 'success';
   ast: t.File | null;
   events: Array<LoggerEvent>;
-  debugLogs?: Array<DebugLogEntry>;
   renames?: Array<BindingRenameInfo>;
 }
 
@@ -37,7 +36,6 @@ export interface CompileError {
     details: Array<unknown>;
   };
   events: Array<LoggerEvent>;
-  debugLogs?: Array<DebugLogEntry>;
 }
 
 export type CompileResult = CompileSuccess | CompileError;
