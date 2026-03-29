@@ -249,14 +249,25 @@ async function runBenchmark(name, fn, iterations, warmup) {
     await fn();
   }
 
+  // Collect GC pauses during timed iterations.
+  let gcCount = 0;
+  let gcTotalMs = 0;
+  const gcObs = new PerformanceObserver(list => {
+    for (const entry of list.getEntries()) {
+      gcCount++;
+      gcTotalMs += entry.duration;
+    }
+  });
+  gcObs.observe({entryTypes: ['gc']});
+
   // Timed iterations
   const times = [];
   for (let i = 0; i < iterations; i++) {
-    if (canGC) globalThis.gc();
     const start = performance.now();
     await fn();
     times.push(performance.now() - start);
   }
+  gcObs.disconnect();
 
   // Trim top/bottom 5% to remove outliers
   const sorted = [...times].sort((a, b) => a - b);
@@ -272,7 +283,7 @@ async function runBenchmark(name, fn, iterations, warmup) {
   const min = sorted[0];
   const max = sorted[sorted.length - 1];
 
-  return {name, mean, median, stddev, p95, min, max, iterations};
+  return {name, mean, median, stddev, p95, min, max, iterations, gcCount, gcTotalMs};
 }
 
 function printResult(result) {
@@ -283,6 +294,12 @@ function printResult(result) {
   console.log('    P95:    %s ms', result.p95.toFixed(2));
   console.log('    Min:    %s ms', result.min.toFixed(2));
   console.log('    Max:    %s ms', result.max.toFixed(2));
+  console.log(
+    '    GC:     %d pauses, %s ms total (%s ms/iter)',
+    result.gcCount,
+    result.gcTotalMs.toFixed(1),
+    (result.gcTotalMs / result.iterations).toFixed(2)
+  );
 }
 
 function getOverhead(baseline, comparison) {
@@ -394,10 +411,21 @@ function printTopFunctions(profile, topN) {
 }
 
 async function profileRun(name, fn, warmup, iterations, outputPath) {
-  // Warmup (unprofilied)
+  // Warmup (unprofiled)
   for (let i = 0; i < warmup; i++) {
     await fn();
   }
+
+  // Collect GC pauses during the profiled run.
+  let gcCount = 0;
+  let gcTotalMs = 0;
+  const gcObs = new PerformanceObserver(list => {
+    for (const entry of list.getEntries()) {
+      gcCount++;
+      gcTotalMs += entry.duration;
+    }
+  });
+  gcObs.observe({entryTypes: ['gc']});
 
   // Profiled run
   const session = await startProfiler();
@@ -405,9 +433,16 @@ async function profileRun(name, fn, warmup, iterations, outputPath) {
     await fn();
   }
   const profile = await stopProfiler(session, outputPath);
+  gcObs.disconnect();
 
   console.log('  %s → %s', name, outputPath);
   printTopFunctions(profile, 10);
+  console.log(
+    '    GC: %d pauses, %s ms total (%s ms/iter)',
+    gcCount,
+    gcTotalMs.toFixed(1),
+    (gcTotalMs / iterations).toFixed(2)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -549,8 +584,8 @@ async function main() {
 
   const WARMUP = 50;
   const ITERATIONS = 200;
-  const PROFILE_WARMUP = 20;
-  const PROFILE_ITERATIONS = 100;
+  const PROFILE_WARMUP = 50;
+  const PROFILE_ITERATIONS = 500;
 
   // --- Verify renders ---
   console.log('\n--- Verifying renders ---\n');
