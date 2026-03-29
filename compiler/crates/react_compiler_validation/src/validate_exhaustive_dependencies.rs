@@ -1268,55 +1268,56 @@ fn validate_dependencies(
     });
 
     // Remove redundant inferred dependencies
-    // retainWhere logic: keep dep[ix] only if no earlier entry is equal or a subpath
-    let inferred_copy = inferred.clone();
-    inferred.retain(|dep| {
-        let ix = inferred_copy
-            .iter()
-            .position(|d| std::ptr::eq(d as *const _, dep as *const _));
-        // Fallback: find by key matching
-        let ix = ix.unwrap_or_else(|| {
-            let key = dep_to_key(dep);
-            inferred_copy
-                .iter()
-                .position(|d| dep_to_key(d) == key)
-                .unwrap_or(0)
-        });
+    // retainWhere logic: keep dep[ix] only if no earlier entry is equal or a subpath prefix
+    // Mirrors TS: retainWhere(inferred, (dep, ix) => {
+    //   const match = inferred.findIndex(prevDep => isEqualTemporary(prevDep, dep) || ...);
+    //   return match === -1 || match >= ix;
+    // })
+    {
+        let snapshot = inferred.clone();
+        let mut write_index = 0;
+        for ix in 0..snapshot.len() {
+            let dep = &snapshot[ix];
+            let first_match = snapshot.iter().position(|prev_dep| {
+                is_equal_temporary(prev_dep, dep)
+                    || (matches!(
+                        (prev_dep, dep),
+                        (
+                            InferredDependency::Local { .. },
+                            InferredDependency::Local { .. }
+                        )
+                    ) && {
+                        if let (
+                            InferredDependency::Local {
+                                identifier: prev_id,
+                                path: prev_path,
+                                ..
+                            },
+                            InferredDependency::Local {
+                                identifier: dep_id,
+                                path: dep_path,
+                                ..
+                            },
+                        ) = (prev_dep, dep)
+                        {
+                            prev_id == dep_id && is_sub_path(prev_path, dep_path)
+                        } else {
+                            false
+                        }
+                    })
+            });
 
-        let first_match = inferred_copy.iter().position(|prev_dep| {
-            is_equal_dep(prev_dep, dep)
-                || (matches!(
-                    (prev_dep, dep),
-                    (
-                        InferredDependency::Local { .. },
-                        InferredDependency::Local { .. }
-                    )
-                ) && {
-                    if let (
-                        InferredDependency::Local {
-                            identifier: prev_id,
-                            path: prev_path,
-                            ..
-                        },
-                        InferredDependency::Local {
-                            identifier: dep_id,
-                            path: dep_path,
-                            ..
-                        },
-                    ) = (prev_dep, dep)
-                    {
-                        prev_id == dep_id && is_sub_path(prev_path, dep_path)
-                    } else {
-                        false
-                    }
-                })
-        });
-
-        match first_match {
-            None => true,
-            Some(m) => m == usize::MAX || m >= ix,
+            let keep = match first_match {
+                None => true,
+                Some(m) => m >= ix,
+            };
+            if keep {
+                inferred[write_index] = snapshot[ix].clone();
+                write_index += 1;
+            }
         }
-    });
+        inferred.truncate(write_index);
+    }
 
     // Validate manual deps
     let mut matched: HashSet<usize> = HashSet::new(); // indices into manual_dependencies
@@ -1615,7 +1616,7 @@ fn is_optional_dependency_inferred(
 // Equality check for temporaries
 // =============================================================================
 
-fn is_equal_dep(a: &InferredDependency, b: &InferredDependency) -> bool {
+fn is_equal_temporary(a: &InferredDependency, b: &InferredDependency) -> bool {
     match (a, b) {
         (InferredDependency::Global { binding: ab }, InferredDependency::Global { binding: bb }) => {
             ab.name() == bb.name()
