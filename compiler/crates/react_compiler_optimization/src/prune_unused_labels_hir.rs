@@ -94,7 +94,7 @@ pub fn prune_unused_labels_hir(func: &mut HirFunction) {
             .filter_map(|pred| rewrites.get(pred).map(|rewritten| (*pred, *rewritten)))
             .collect();
         for (old, new) in preds_to_rewrite {
-            block.preds.swap_remove(&old);
+            block.preds.shift_remove(&old);
             block.preds.insert(new);
         }
     }
