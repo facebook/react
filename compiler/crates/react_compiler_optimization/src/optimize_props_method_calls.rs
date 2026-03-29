@@ -14,14 +14,7 @@
 //! Analogous to TS `Optimization/OptimizePropsMethodCalls.ts`.
 
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::object_shape::BUILT_IN_PROPS_ID;
-use react_compiler_hir::{HirFunction, IdentifierId, InstructionValue, Type};
-
-fn is_props_type(identifier_id: IdentifierId, env: &Environment) -> bool {
-    let identifier = &env.identifiers[identifier_id.0 as usize];
-    let ty = &env.types[identifier.type_.0 as usize];
-    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_PROPS_ID)
-}
+use react_compiler_hir::{is_props_type, HirFunction, InstructionValue};
 
 pub fn optimize_props_method_calls(func: &mut HirFunction, env: &Environment) {
     for (_block_id, block) in &func.body.blocks {
@@ -31,7 +24,11 @@ pub fn optimize_props_method_calls(func: &mut HirFunction, env: &Environment) {
             let should_replace = matches!(
                 &instr.value,
                 InstructionValue::MethodCall { receiver, .. }
-                    if is_props_type(receiver.identifier, env)
+                    if {
+                        let identifier = &env.identifiers[receiver.identifier.0 as usize];
+                        let ty = &env.types[identifier.type_.0 as usize];
+                        is_props_type(ty)
+                    }
             );
             if should_replace {
                 // Take the old value out, replacing with a temporary.

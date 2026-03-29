@@ -1442,13 +1442,18 @@ pub struct AliasingSignature {
 // =============================================================================
 
 use crate::object_shape::{
-    BUILT_IN_ARRAY_ID, BUILT_IN_JSX_ID, BUILT_IN_MAP_ID, BUILT_IN_REF_VALUE_ID,
-    BUILT_IN_SET_ID, BUILT_IN_USE_OPERATOR_ID, BUILT_IN_USE_REF_ID,
+    BUILT_IN_ARRAY_ID, BUILT_IN_JSX_ID, BUILT_IN_MAP_ID, BUILT_IN_PROPS_ID,
+    BUILT_IN_REF_VALUE_ID, BUILT_IN_SET_ID, BUILT_IN_USE_OPERATOR_ID, BUILT_IN_USE_REF_ID,
 };
 
 /// Returns true if the type (looked up via identifier) is primitive.
 pub fn is_primitive_type(ty: &Type) -> bool {
     matches!(ty, Type::Primitive)
+}
+
+/// Returns true if the type is the props object.
+pub fn is_props_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == BUILT_IN_PROPS_ID)
 }
 
 /// Returns true if the type is an array.
