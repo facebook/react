@@ -23,8 +23,9 @@ Arguments:
    - `yarn test` — test full compiler
    - `yarn workspace babel-plugin-react-compiler lint` — lint compiler source
 
-3. **If Rust changed**, run:
+3. **If Rust changed**, run these sequentially (stop on failure):
    - `bash compiler/scripts/test-babel-ast.sh` — Babel AST round-trip tests
+   - `bash compiler/scripts/test-rust-port.sh` — full Rust port test suite (must stay at 1717/1717 pass + code, 0 failures — do not regress)
 
 4. **Always run** (from the repo root):
    - `yarn prettier-all` — format all changed files
