@@ -163,13 +163,8 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
                                 matches!(kind, UninitializedKind::Func { .. }),
                                 "[PruneHoistedContexts] Unexpected hoisted function"
                             );
-                            // Mark as having a definition — references are now safe
-                            state.uninitialized.insert(
-                                lvalue_id,
-                                UninitializedKind::Func {
-                                    definition: Some(lvalue.place.identifier),
-                                },
-                            );
+                            // References to hoisted functions are now "safe" as
+                            // variable assignments have finished.
                             state.uninitialized.remove(&lvalue_id);
                         }
                     } else {

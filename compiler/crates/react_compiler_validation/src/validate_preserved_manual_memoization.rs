@@ -33,7 +33,6 @@ struct ManualMemoBlockState {
     /// Normalized deps from source (useMemo/useCallback dep array).
     deps_from_source: Option<Vec<ManualMemoDependency>>,
     /// Manual memo id from StartMemoize.
-    #[allow(dead_code)]
     manual_memo_id: u32,
 }
 
@@ -194,8 +193,14 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
             deps,
             ..
         }) => {
-            // Get operands (deps) of StartMemoize
-            let operand_places = start_memoize_operands(deps);
+            // TS: CompilerError.invariant(state.manualMemoState == null, ...)
+            assert!(
+                state.manual_memo_state.is_none(),
+                "Unexpected nested StartMemoize instructions"
+            );
+
+            // TODO: check hasInvalidDeps when the field is added to the Rust HIR.
+            // TS: if (value.hasInvalidDeps === true) { return; }
 
             let deps_from_source = deps.clone();
 
@@ -208,6 +213,8 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
             });
 
             // Check that each dependency's scope has completed before the memo
+            // TS: for (const {identifier, loc} of eachInstructionValueOperand(value))
+            let operand_places = start_memoize_operands(deps);
             for place in &operand_places {
                 let ident = &state.env.identifiers[place.identifier.0 as usize];
                 if let Some(scope_id) = ident.scope {
@@ -236,15 +243,21 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
         ReactiveValue::Instruction(InstructionValue::FinishMemoize {
             decl,
             pruned,
+            manual_memo_id,
             ..
         }) => {
-            let memo_state = match state.manual_memo_state.take() {
-                Some(s) => s,
-                None => {
-                    // StartMemoize had invalid deps or was skipped
-                    return;
-                }
-            };
+            if state.manual_memo_state.is_none() {
+                // StartMemoize had invalid deps, skip validation
+                return;
+            }
+
+            // TS: CompilerError.invariant(state.manualMemoState.manualMemoId === value.manualMemoId, ...)
+            assert!(
+                state.manual_memo_state.as_ref().unwrap().manual_memo_id == *manual_memo_id,
+                "Unexpected mismatch between StartMemoize and FinishMemoize"
+            );
+
+            let memo_state = state.manual_memo_state.take().unwrap();
 
             if !pruned {
                 // Check if the declared value is unmemoized
@@ -327,40 +340,50 @@ fn record_unmemoized_error(loc: Option<SourceLocation>, env: &mut Environment) {
     env.record_diagnostic(diag);
 }
 
-/// Record temporaries from an instruction (simplified version of TS recordTemporaries).
+/// Record temporaries from an instruction.
+/// TS: `recordTemporaries`
 fn record_temporaries(instr: &ReactiveInstruction, state: &mut VisitorState) {
-    if let Some(ref lvalue) = instr.lvalue {
-        let lv_id = lvalue.identifier;
-        if state.temporaries.contains_key(&lv_id) {
+    let lvalue = &instr.lvalue;
+    let lv_id = lvalue.as_ref().map(|lv| lv.identifier);
+    if let Some(id) = lv_id {
+        if state.temporaries.contains_key(&id) {
             return;
-        }
-
-        let lv_ident = &state.env.identifiers[lv_id.0 as usize];
-
-        if is_named(lv_ident) {
-            if let Some(ref mut memo_state) = state.manual_memo_state {
-                memo_state.decls.insert(lv_ident.declaration_id);
-            }
-
-            state.temporaries.insert(
-                lv_id,
-                ManualMemoDependency {
-                    root: ManualMemoDependencyRoot::NamedLocal {
-                        value: lvalue.clone(),
-                        constant: false,
-                    },
-                    path: Vec::new(),
-                    loc: lvalue.loc,
-                },
-            );
         }
     }
 
-    // Also record deps from the instruction value
+    if let Some(ref lvalue) = instr.lvalue {
+        let lv_ident = &state.env.identifiers[lvalue.identifier.0 as usize];
+        if is_named(lv_ident) && state.manual_memo_state.is_some() {
+            state
+                .manual_memo_state
+                .as_mut()
+                .unwrap()
+                .decls
+                .insert(lv_ident.declaration_id);
+        }
+    }
+
+    // Record deps from the instruction value first (before setting lvalue temporary)
     record_deps_in_value(&instr.value, state);
+
+    // Then set the lvalue temporary (TS always sets this, even for unnamed lvalues)
+    if let Some(ref lvalue) = instr.lvalue {
+        state.temporaries.insert(
+            lvalue.identifier,
+            ManualMemoDependency {
+                root: ManualMemoDependencyRoot::NamedLocal {
+                    value: lvalue.clone(),
+                    constant: false,
+                },
+                path: Vec::new(),
+                loc: lvalue.loc,
+            },
+        );
+    }
 }
 
-/// Record dependencies from a reactive value (simplified version of TS recordDepsInValue).
+/// Record dependencies from a reactive value.
+/// TS: `recordDepsInValue`
 fn record_deps_in_value(value: &ReactiveValue, state: &mut VisitorState) {
     match value {
         ReactiveValue::SequenceExpression {
@@ -391,7 +414,15 @@ fn record_deps_in_value(value: &ReactiveValue, state: &mut VisitorState) {
             record_deps_in_value(right, state);
         }
         ReactiveValue::Instruction(iv) => {
+            // TS: collectMaybeMemoDependencies(value, this.temporaries, false)
+            // Called for side-effect of building up the dependency chain through
+            // LoadGlobal -> PropertyLoad -> ... The return value is discarded here
+            // (only used in DropManualMemoization's caller), but we need to store
+            // the result in temporaries for the lvalue of the enclosing instruction.
+            // That storage is handled by record_temporaries after this function returns.
+
             // Track store targets within manual memo blocks
+            // TS: if (value.kind === 'StoreLocal' || value.kind === 'StoreContext' || value.kind === 'Destructure')
             match iv {
                 InstructionValue::StoreLocal { lvalue, .. }
                 | InstructionValue::StoreContext { lvalue, .. } => {
@@ -434,23 +465,6 @@ fn record_deps_in_value(value: &ReactiveValue, state: &mut VisitorState) {
                                 );
                             }
                         }
-                    }
-                }
-                InstructionValue::LoadLocal { place, .. }
-                | InstructionValue::LoadContext { place, .. } => {
-                    let ident = &state.env.identifiers[place.identifier.0 as usize];
-                    if is_named(ident) {
-                        state
-                            .temporaries
-                            .entry(place.identifier)
-                            .or_insert_with(|| ManualMemoDependency {
-                                root: ManualMemoDependencyRoot::NamedLocal {
-                                    value: place.clone(),
-                                    constant: false,
-                                },
-                                path: Vec::new(),
-                                loc: place.loc,
-                            });
                     }
                 }
                 _ => {}
@@ -620,6 +634,11 @@ fn validate_inferred_dep(
         }
     } else {
         let ident = &env.identifiers[dep_id.0 as usize];
+        // TS: CompilerError.invariant(dep.identifier.name?.kind === 'named', ...)
+        assert!(
+            is_named(ident),
+            "ValidatePreservedManualMemoization: expected scope dependency to be named"
+        );
         ManualMemoDependency {
             root: ManualMemoDependencyRoot::NamedLocal {
                 value: Place {
