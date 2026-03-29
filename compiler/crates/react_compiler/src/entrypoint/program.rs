@@ -29,6 +29,7 @@ use react_compiler_diagnostics::{
     CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::ReactFunctionType;
+use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
@@ -1090,6 +1091,7 @@ fn try_compile_function(
     source: &CompileSource<'_>,
     scope_info: &ScopeInfo,
     output_mode: CompilerOutputMode,
+    env_config: &EnvironmentConfig,
     context: &mut ProgramContext,
 ) -> Result<CodegenFunction, CompilerError> {
     // Check for suppressions that affect this function
@@ -1102,14 +1104,13 @@ fn try_compile_function(
     }
 
     // Run the compilation pipeline
-    let env_config = context.opts.environment.clone();
     pipeline::compile_fn(
         &source.fn_node,
         source.fn_name.as_deref(),
         scope_info,
         source.fn_type,
         output_mode,
-        &env_config,
+        env_config,
         context,
     )
 }
@@ -1123,6 +1124,7 @@ fn process_fn(
     source: &CompileSource<'_>,
     scope_info: &ScopeInfo,
     output_mode: CompilerOutputMode,
+    env_config: &EnvironmentConfig,
     context: &mut ProgramContext,
 ) -> Result<Option<CodegenFunction>, CompileResult> {
     // Parse directives from the function body
@@ -1143,7 +1145,7 @@ fn process_fn(
     };
 
     // Attempt compilation
-    let compile_result = try_compile_function(source, scope_info, output_mode, context);
+    let compile_result = try_compile_function(source, scope_info, output_mode, env_config, context);
 
     match compile_result {
         Err(err) => {
@@ -3457,11 +3459,15 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     // Find all functions to compile
     let queue = find_functions_to_compile(program, &options, &mut context);
 
+    // Clone env_config once for all function compilations (avoids per-function clone
+    // while satisfying the borrow checker — compile_fn needs &mut context + &env_config)
+    let env_config = options.environment.clone();
+
     // Process each function and collect compiled results
     let mut compiled_fns: Vec<CompiledFunction<'_>> = Vec::new();
 
     for source in &queue {
-        match process_fn(source, &scope, output_mode, &mut context) {
+        match process_fn(source, &scope, output_mode, &env_config, &mut context) {
             Ok(Some(codegen_fn)) => {
                 compiled_fns.push(CompiledFunction {
                     kind: source.kind,
