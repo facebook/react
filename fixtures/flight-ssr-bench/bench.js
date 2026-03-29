@@ -684,6 +684,38 @@ async function main() {
       path.join(profileDir, 'flight-fizz-node-async.cpuprofile')
     );
 
+    await profileRun(
+      'Fizz (Edge, sync)',
+      () => renderFizzEdge(App, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'fizz-edge-sync.cpuprofile')
+    );
+
+    await profileRun(
+      'Flight + Fizz (Edge, sync)',
+      () => renderFlightFizzEdge(rscBundle, rscApps.App, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'flight-fizz-edge-sync.cpuprofile')
+    );
+
+    await profileRun(
+      'Fizz (Edge, async)',
+      () => renderFizzEdge(AppAsync, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'fizz-edge-async.cpuprofile')
+    );
+
+    await profileRun(
+      'Flight + Fizz (Edge, async)',
+      () => renderFlightFizzEdge(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'flight-fizz-edge-async.cpuprofile')
+    );
+
     console.log(
       '\nProfiles saved to build/profiles/. Open in Chrome DevTools or speedscope.app.'
     );
