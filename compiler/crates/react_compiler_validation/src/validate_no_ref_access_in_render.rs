@@ -1235,5 +1235,8 @@ fn validate_no_ref_access_in_render_impl(
         }
     }
 
+    // Note: the TS asserts convergence here, but the Rust fixpoint loop
+    // may not converge within MAX_ITERATIONS for some inputs yet.
+
     join_ref_access_types_many(&return_values)
 }

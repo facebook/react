@@ -176,8 +176,7 @@ fn get_context_reassignment(
                     }
                 }
 
-                InstructionValue::LoadLocal { place, .. }
-                | InstructionValue::LoadContext { place, .. } => {
+                InstructionValue::LoadLocal { place, .. } => {
                     if let Some(reassignment_place) =
                         reassigning_functions.get(&place.identifier)
                     {

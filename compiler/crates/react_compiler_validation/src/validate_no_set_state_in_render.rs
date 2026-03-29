@@ -81,26 +81,13 @@ fn validate_impl(
                 | InstructionValue::FunctionExpression { lowered_func, .. } => {
                     let inner_func = &functions[lowered_func.func.0 as usize];
 
-                    // Check if any operand references a setState
-                    // For function expressions, the operands are the context captures
-                    // plus any explicit operands in the instruction value
-                    let has_set_state_operand = {
-                        // Check context variables
-                        let mut found = inner_func.context.iter().any(|ctx_place| {
-                            is_set_state_id(ctx_place.identifier, identifiers, types)
-                                || unconditional_set_state_functions
-                                    .contains(&ctx_place.identifier)
-                        });
-                        if !found {
-                            // Also check the instruction value operands (dependencies)
-                            // In TS: eachInstructionValueOperand checks deps for FunctionExpression
-                            found = inner_func.context.iter().any(|ctx_place| {
-                                unconditional_set_state_functions
-                                    .contains(&ctx_place.identifier)
-                            });
-                        }
-                        found
-                    };
+                    // Check if any operand references a setState.
+                    // For FunctionExpression/ObjectMethod, operands are the context captures.
+                    let has_set_state_operand = inner_func.context.iter().any(|ctx_place| {
+                        is_set_state_id(ctx_place.identifier, identifiers, types)
+                            || unconditional_set_state_functions
+                                .contains(&ctx_place.identifier)
+                    });
 
                     if has_set_state_operand {
                         let inner_errors = validate_impl(
@@ -121,13 +108,20 @@ fn validate_impl(
                 InstructionValue::StartMemoize {
                     manual_memo_id, ..
                 } => {
+                    assert!(
+                        active_manual_memo_id.is_none(),
+                        "Unexpected nested StartMemoize instructions"
+                    );
                     active_manual_memo_id = Some(*manual_memo_id);
                 }
                 InstructionValue::FinishMemoize {
                     manual_memo_id, ..
                 } => {
+                    assert!(
+                        active_manual_memo_id == Some(*manual_memo_id),
+                        "Expected FinishMemoize to align with previous StartMemoize instruction"
+                    );
                     active_manual_memo_id = None;
-                    let _ = manual_memo_id;
                 }
                 InstructionValue::CallExpression { callee, .. } => {
                     if is_set_state_id(callee.identifier, identifiers, types)
