@@ -65,6 +65,7 @@ use crate::prune_hoisted_contexts::prune_hoisted_contexts;
 use crate::prune_unused_labels::prune_unused_labels;
 use crate::prune_unused_lvalues::prune_unused_lvalues;
 use crate::rename_variables::rename_variables;
+use crate::visitors::{ReactiveFunctionVisitor, visit_reactive_function};
 
 // =============================================================================
 // Public API
@@ -3067,117 +3068,66 @@ fn codegen_dependency(
 }
 
 // =============================================================================
-// Counting helpers
+// CountMemoBlockVisitor — uses ReactiveFunctionVisitor trait
 // =============================================================================
+
+/// Counts memo blocks and pruned memo blocks in a reactive function.
+/// TS: `class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void>`
+struct CountMemoBlockVisitor<'a> {
+    env: &'a Environment,
+}
+
+struct CountMemoBlockState {
+    memo_blocks: u32,
+    memo_values: u32,
+    pruned_memo_blocks: u32,
+    pruned_memo_values: u32,
+}
+
+impl<'a> ReactiveFunctionVisitor for CountMemoBlockVisitor<'a> {
+    type State = CountMemoBlockState;
+
+    fn env(&self) -> &Environment {
+        self.env
+    }
+
+    fn visit_scope(&self, scope_block: &ReactiveScopeBlock, state: &mut CountMemoBlockState) {
+        state.memo_blocks += 1;
+        let scope = &self.env.scopes[scope_block.scope.0 as usize];
+        state.memo_values += scope.declarations.len() as u32;
+        self.traverse_scope(scope_block, state);
+    }
+
+    fn visit_pruned_scope(
+        &self,
+        scope_block: &PrunedReactiveScopeBlock,
+        state: &mut CountMemoBlockState,
+    ) {
+        state.pruned_memo_blocks += 1;
+        let scope = &self.env.scopes[scope_block.scope.0 as usize];
+        state.pruned_memo_values += scope.declarations.len() as u32;
+        self.traverse_pruned_scope(scope_block, state);
+    }
+}
 
 fn count_memo_blocks(
     func: &ReactiveFunction,
     env: &Environment,
 ) -> (u32, u32, u32, u32) {
-    let mut memo_blocks = 0u32;
-    let mut memo_values = 0u32;
-    let mut pruned_memo_blocks = 0u32;
-    let mut pruned_memo_values = 0u32;
-    count_memo_blocks_in_block(
-        &func.body,
-        env,
-        &mut memo_blocks,
-        &mut memo_values,
-        &mut pruned_memo_blocks,
-        &mut pruned_memo_values,
-    );
-    (memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values)
-}
-
-fn count_memo_blocks_in_block(
-    block: &ReactiveBlock,
-    env: &Environment,
-    memo_blocks: &mut u32,
-    memo_values: &mut u32,
-    pruned_memo_blocks: &mut u32,
-    pruned_memo_values: &mut u32,
-) {
-    for item in block {
-        match item {
-            ReactiveStatement::Scope(scope_block) => {
-                *memo_blocks += 1;
-                let scope = &env.scopes[scope_block.scope.0 as usize];
-                *memo_values += scope.declarations.len() as u32;
-                count_memo_blocks_in_block(
-                    &scope_block.instructions,
-                    env,
-                    memo_blocks,
-                    memo_values,
-                    pruned_memo_blocks,
-                    pruned_memo_values,
-                );
-            }
-            ReactiveStatement::PrunedScope(pruned) => {
-                *pruned_memo_blocks += 1;
-                let scope = &env.scopes[pruned.scope.0 as usize];
-                *pruned_memo_values += scope.declarations.len() as u32;
-                count_memo_blocks_in_block(
-                    &pruned.instructions,
-                    env,
-                    memo_blocks,
-                    memo_values,
-                    pruned_memo_blocks,
-                    pruned_memo_values,
-                );
-            }
-            ReactiveStatement::Terminal(term) => {
-                count_memo_blocks_in_terminal(
-                    &term.terminal,
-                    env,
-                    memo_blocks,
-                    memo_values,
-                    pruned_memo_blocks,
-                    pruned_memo_values,
-                );
-            }
-            ReactiveStatement::Instruction(_) => {}
-        }
-    }
-}
-
-fn count_memo_blocks_in_terminal(
-    terminal: &ReactiveTerminal,
-    env: &Environment,
-    memo_blocks: &mut u32,
-    memo_values: &mut u32,
-    pruned_memo_blocks: &mut u32,
-    pruned_memo_values: &mut u32,
-) {
-    match terminal {
-        ReactiveTerminal::If { consequent, alternate, .. } => {
-            count_memo_blocks_in_block(consequent, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-            if let Some(alt) = alternate {
-                count_memo_blocks_in_block(alt, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-            }
-        }
-        ReactiveTerminal::Switch { cases, .. } => {
-            for case in cases {
-                if let Some(ref block) = case.block {
-                    count_memo_blocks_in_block(block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-                }
-            }
-        }
-        ReactiveTerminal::For { loop_block, .. }
-        | ReactiveTerminal::ForOf { loop_block, .. }
-        | ReactiveTerminal::ForIn { loop_block, .. }
-        | ReactiveTerminal::While { loop_block, .. }
-        | ReactiveTerminal::DoWhile { loop_block, .. } => {
-            count_memo_blocks_in_block(loop_block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-        }
-        ReactiveTerminal::Try { block, handler, .. } => {
-            count_memo_blocks_in_block(block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-            count_memo_blocks_in_block(handler, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-        }
-        ReactiveTerminal::Label { block, .. } => {
-            count_memo_blocks_in_block(block, env, memo_blocks, memo_values, pruned_memo_blocks, pruned_memo_values);
-        }
-        _ => {}
-    }
+    let visitor = CountMemoBlockVisitor { env };
+    let mut state = CountMemoBlockState {
+        memo_blocks: 0,
+        memo_values: 0,
+        pruned_memo_blocks: 0,
+        pruned_memo_values: 0,
+    };
+    visit_reactive_function(func, &visitor, &mut state);
+    (
+        state.memo_blocks,
+        state.memo_values,
+        state.pruned_memo_blocks,
+        state.pruned_memo_values,
+    )
 }
 
 // =============================================================================
