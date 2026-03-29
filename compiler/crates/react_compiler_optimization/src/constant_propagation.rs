@@ -598,10 +598,11 @@ fn evaluate_instruction(
 
                 let expression_str = match sub_prim {
                     PrimitiveValue::Null => "null".to_string(),
-                    PrimitiveValue::Undefined => "undefined".to_string(),
                     PrimitiveValue::Boolean(b) => b.to_string(),
                     PrimitiveValue::Number(n) => js_number_to_string(n.value()),
                     PrimitiveValue::String(s) => s.clone(),
+                    // TS rejects undefined subexpression values
+                    PrimitiveValue::Undefined => return None,
                 };
 
                 let suffix = match &quasis[quasi_index].cooked {
