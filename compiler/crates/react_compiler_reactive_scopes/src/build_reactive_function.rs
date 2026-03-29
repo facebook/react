@@ -388,7 +388,11 @@ impl<'a, 'b> Driver<'a, 'b> {
 
                 let alternate_block = if let Some(alt) = alternate_id {
                     if self.cx.is_scheduled(alt) {
-                        None
+                        return Err(CompilerDiagnostic::new(
+                            ErrorCategory::Invariant,
+                            format!("Unexpected 'if' where the alternate is already scheduled (bb{})", alt.0),
+                            None,
+                        ));
                     } else {
                         Some(self.traverse_block(alt)?)
                     }
@@ -536,9 +540,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value)?;
-                    }
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -598,9 +600,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value)?;
-                    }
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -672,9 +672,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value)?;
-                    }
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -739,9 +737,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value)?;
-                    }
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -800,9 +796,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
 
                 if let Some(ft) = fallthrough_id {
-                    if !self.cx.emitted.contains(&ft) {
-                        self.visit_block(ft, block_value)?;
-                    }
+                    self.visit_block(ft, block_value)?;
                 }
             }
 
@@ -1065,12 +1059,43 @@ impl<'a, 'b> Driver<'a, 'b> {
                 ));
             }
 
-            Terminal::Branch { .. } => {
-                return Err(CompilerDiagnostic::new(
-                    ErrorCategory::Invariant,
-                    "Unexpected branch terminal in visit_block",
-                    None,
-                ));
+            Terminal::Branch {
+                test,
+                consequent,
+                alternate,
+                id,
+                loc,
+                ..
+            } => {
+                let consequent_block = if self.cx.is_scheduled(*consequent) {
+                    if let Some(stmt) = self.visit_break(*consequent, *id, *loc)? {
+                        vec![stmt]
+                    } else {
+                        Vec::new()
+                    }
+                } else {
+                    self.traverse_block(*consequent)?
+                };
+
+                if self.cx.is_scheduled(*alternate) {
+                    return Err(CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        "Unexpected 'branch' where the alternate is already scheduled".to_string(),
+                        None,
+                    ));
+                }
+                let alternate_block = self.traverse_block(*alternate)?;
+
+                block_value.push(ReactiveStatement::Terminal(ReactiveTerminalStatement {
+                    terminal: ReactiveTerminal::If {
+                        test: test.clone(),
+                        consequent: consequent_block,
+                        alternate: Some(alternate_block),
+                        id: *id,
+                        loc: *loc,
+                    },
+                    label: None,
+                }));
             }
         }
         Ok(())
