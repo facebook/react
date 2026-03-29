@@ -12,13 +12,12 @@ use std::collections::HashSet;
 
 use react_compiler_hir::{
     EvaluationOrder, IdentifierId, InstructionValue, Place, PrunedReactiveScopeBlock,
-    ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveStatement, ReactiveTerminal,
-    ReactiveTerminalStatement, ReactiveValue, ReactiveScopeBlock,
+    ReactiveFunction, ReactiveInstruction, ReactiveValue, ReactiveScopeBlock,
     environment::Environment, is_primitive_type, is_use_ref_type, object_shape,
     visitors as hir_visitors,
 };
 
-use crate::visitors::ReactiveFunctionVisitor;
+use crate::visitors::{self, ReactiveFunctionVisitor, ReactiveFunctionTransform};
 
 // =============================================================================
 // CollectReactiveIdentifiers
@@ -126,271 +125,126 @@ fn is_set_optimistic_type(ty: &react_compiler_hir::Type) -> bool {
 /// Prunes dependencies that are guaranteed to be non-reactive.
 /// TS: `pruneNonReactiveDependencies`
 pub fn prune_non_reactive_dependencies(func: &mut ReactiveFunction, env: &mut Environment) {
-    let mut reactive_ids = collect_reactive_identifiers(func, env);
-    // Use direct recursion since we need to mutate both the reactive_ids set and env.scopes
-    visit_block_for_prune(&mut func.body, &mut reactive_ids, env);
+    let reactive_ids = collect_reactive_identifiers(func, env);
+    let mut visitor = PruneVisitor { env };
+    let mut state = reactive_ids;
+    visitors::transform_reactive_function(func, &mut visitor, &mut state)
+        .expect("PruneNonReactiveDependencies should not fail");
 }
 
-fn visit_block_for_prune(
-    block: &mut ReactiveBlock,
-    reactive_ids: &mut HashSet<IdentifierId>,
-    env: &mut Environment,
-) {
-    for stmt in block.iter_mut() {
-        match stmt {
-            ReactiveStatement::Instruction(instr) => {
-                visit_instruction_for_prune(instr, reactive_ids, env);
-            }
-            ReactiveStatement::Scope(scope) => {
-                visit_scope_for_prune(scope, reactive_ids, env);
-            }
-            ReactiveStatement::PrunedScope(scope) => {
-                visit_block_for_prune(&mut scope.instructions, reactive_ids, env);
-            }
-            ReactiveStatement::Terminal(stmt) => {
-                visit_terminal_for_prune(stmt, reactive_ids, env);
-            }
-        }
+struct PruneVisitor<'a> {
+    env: &'a mut Environment,
+}
+
+impl<'a> ReactiveFunctionTransform for PruneVisitor<'a> {
+    type State = HashSet<IdentifierId>;
+
+    fn env(&self) -> &Environment {
+        self.env
     }
-}
 
-fn visit_instruction_for_prune(
-    instruction: &mut ReactiveInstruction,
-    reactive_ids: &mut HashSet<IdentifierId>,
-    env: &mut Environment,
-) {
-    // First traverse the value (for nested values like SequenceExpression)
-    visit_value_for_prune(&mut instruction.value, instruction.id, reactive_ids, env);
+    fn visit_instruction(
+        &mut self,
+        instruction: &mut ReactiveInstruction,
+        state: &mut Self::State,
+    ) -> Result<(), react_compiler_diagnostics::CompilerError> {
+        self.traverse_instruction(instruction, state)?;
 
-    let lvalue = &instruction.lvalue;
-    match &instruction.value {
-        ReactiveValue::Instruction(InstructionValue::LoadLocal { place, .. }) => {
-            if let Some(lv) = lvalue {
-                if reactive_ids.contains(&place.identifier) {
-                    reactive_ids.insert(lv.identifier);
-                }
-            }
-        }
-        ReactiveValue::Instruction(InstructionValue::StoreLocal {
-            value: store_value,
-            lvalue: store_lvalue,
-            ..
-        }) => {
-            if reactive_ids.contains(&store_value.identifier) {
-                reactive_ids.insert(store_lvalue.place.identifier);
+        let lvalue = &instruction.lvalue;
+        match &instruction.value {
+            ReactiveValue::Instruction(InstructionValue::LoadLocal { place, .. }) => {
                 if let Some(lv) = lvalue {
-                    reactive_ids.insert(lv.identifier);
-                }
-            }
-        }
-        ReactiveValue::Instruction(InstructionValue::Destructure {
-            value: destr_value,
-            lvalue: destr_lvalue,
-            ..
-        }) => {
-            if reactive_ids.contains(&destr_value.identifier) {
-                for operand in hir_visitors::each_pattern_operand(&destr_lvalue.pattern) {
-                    let ident = &env.identifiers[operand.identifier.0 as usize];
-                    let ty = &env.types[ident.type_.0 as usize];
-                    if is_stable_type(ty) {
-                        continue;
+                    if state.contains(&place.identifier) {
+                        state.insert(lv.identifier);
                     }
-                    reactive_ids.insert(operand.identifier);
                 }
+            }
+            ReactiveValue::Instruction(InstructionValue::StoreLocal {
+                value: store_value,
+                lvalue: store_lvalue,
+                ..
+            }) => {
+                if state.contains(&store_value.identifier) {
+                    state.insert(store_lvalue.place.identifier);
+                    if let Some(lv) = lvalue {
+                        state.insert(lv.identifier);
+                    }
+                }
+            }
+            ReactiveValue::Instruction(InstructionValue::Destructure {
+                value: destr_value,
+                lvalue: destr_lvalue,
+                ..
+            }) => {
+                if state.contains(&destr_value.identifier) {
+                    for operand in hir_visitors::each_pattern_operand(&destr_lvalue.pattern) {
+                        let ident = &self.env.identifiers[operand.identifier.0 as usize];
+                        let ty = &self.env.types[ident.type_.0 as usize];
+                        if is_stable_type(ty) {
+                            continue;
+                        }
+                        state.insert(operand.identifier);
+                    }
+                    if let Some(lv) = lvalue {
+                        state.insert(lv.identifier);
+                    }
+                }
+            }
+            ReactiveValue::Instruction(InstructionValue::PropertyLoad { object, .. }) => {
                 if let Some(lv) = lvalue {
-                    reactive_ids.insert(lv.identifier);
+                    let ident = &self.env.identifiers[lv.identifier.0 as usize];
+                    let ty = &self.env.types[ident.type_.0 as usize];
+                    if state.contains(&object.identifier) && !is_stable_type(ty) {
+                        state.insert(lv.identifier);
+                    }
                 }
             }
-        }
-        ReactiveValue::Instruction(InstructionValue::PropertyLoad { object, .. }) => {
-            if let Some(lv) = lvalue {
-                let ident = &env.identifiers[lv.identifier.0 as usize];
-                let ty = &env.types[ident.type_.0 as usize];
-                if reactive_ids.contains(&object.identifier) && !is_stable_type(ty) {
-                    reactive_ids.insert(lv.identifier);
+            ReactiveValue::Instruction(InstructionValue::ComputedLoad {
+                object, property, ..
+            }) => {
+                if let Some(lv) = lvalue {
+                    if state.contains(&object.identifier)
+                        || state.contains(&property.identifier)
+                    {
+                        state.insert(lv.identifier);
+                    }
                 }
             }
+            _ => {}
         }
-        ReactiveValue::Instruction(InstructionValue::ComputedLoad {
-            object, property, ..
-        }) => {
-            if let Some(lv) = lvalue {
-                if reactive_ids.contains(&object.identifier)
-                    || reactive_ids.contains(&property.identifier)
-                {
-                    reactive_ids.insert(lv.identifier);
-                }
-            }
-        }
-        _ => {}
+        Ok(())
     }
-}
 
-fn visit_value_for_prune(
-    value: &mut ReactiveValue,
-    id: EvaluationOrder,
-    reactive_ids: &mut HashSet<IdentifierId>,
-    env: &mut Environment,
-) {
-    match value {
-        ReactiveValue::SequenceExpression {
-            instructions,
-            id: seq_id,
-            value: inner,
-            ..
-        } => {
-            let seq_id = *seq_id;
-            for instr in instructions.iter_mut() {
-                visit_instruction_for_prune(instr, reactive_ids, env);
+    fn visit_scope(
+        &mut self,
+        scope: &mut ReactiveScopeBlock,
+        state: &mut Self::State,
+    ) -> Result<(), react_compiler_diagnostics::CompilerError> {
+        self.traverse_scope(scope, state)?;
+
+        let scope_id = scope.scope;
+        let scope_data = &mut self.env.scopes[scope_id.0 as usize];
+
+        // Remove non-reactive dependencies
+        scope_data
+            .dependencies
+            .retain(|dep| state.contains(&dep.identifier));
+
+        // If any deps remain, mark all declarations and reassignments as reactive
+        if !scope_data.dependencies.is_empty() {
+            let decl_ids: Vec<IdentifierId> = scope_data
+                .declarations
+                .iter()
+                .map(|(_, decl)| decl.identifier)
+                .collect();
+            for id in decl_ids {
+                state.insert(id);
             }
-            visit_value_for_prune(inner, seq_id, reactive_ids, env);
-        }
-        ReactiveValue::LogicalExpression { left, right, .. } => {
-            visit_value_for_prune(left, id, reactive_ids, env);
-            visit_value_for_prune(right, id, reactive_ids, env);
-        }
-        ReactiveValue::ConditionalExpression {
-            test,
-            consequent,
-            alternate,
-            ..
-        } => {
-            visit_value_for_prune(test, id, reactive_ids, env);
-            visit_value_for_prune(consequent, id, reactive_ids, env);
-            visit_value_for_prune(alternate, id, reactive_ids, env);
-        }
-        ReactiveValue::OptionalExpression { value: inner, .. } => {
-            visit_value_for_prune(inner, id, reactive_ids, env);
-        }
-        ReactiveValue::Instruction(_) => {
-            // leaf — no recursion needed for operands in this pass
-        }
-    }
-}
-
-fn visit_scope_for_prune(
-    scope: &mut ReactiveScopeBlock,
-    reactive_ids: &mut HashSet<IdentifierId>,
-    env: &mut Environment,
-) {
-    visit_block_for_prune(&mut scope.instructions, reactive_ids, env);
-
-    let scope_id = scope.scope;
-    let scope_data = &mut env.scopes[scope_id.0 as usize];
-
-    // Remove non-reactive dependencies
-    scope_data
-        .dependencies
-        .retain(|dep| reactive_ids.contains(&dep.identifier));
-
-    // If any deps remain, mark all declarations and reassignments as reactive
-    if !scope_data.dependencies.is_empty() {
-        let decl_ids: Vec<IdentifierId> = scope_data
-            .declarations
-            .iter()
-            .map(|(_, decl)| decl.identifier)
-            .collect();
-        for id in decl_ids {
-            reactive_ids.insert(id);
-        }
-        let reassign_ids: Vec<IdentifierId> = scope_data.reassignments.clone();
-        for id in reassign_ids {
-            reactive_ids.insert(id);
-        }
-    }
-}
-
-fn visit_terminal_for_prune(
-    stmt: &mut ReactiveTerminalStatement,
-    reactive_ids: &mut HashSet<IdentifierId>,
-    env: &mut Environment,
-) {
-    match &mut stmt.terminal {
-        ReactiveTerminal::Break { .. } | ReactiveTerminal::Continue { .. } => {}
-        ReactiveTerminal::Return { .. } | ReactiveTerminal::Throw { .. } => {}
-        ReactiveTerminal::For {
-            init,
-            test,
-            update,
-            loop_block,
-            id,
-            ..
-        } => {
-            let id = *id;
-            visit_value_for_prune(init, id, reactive_ids, env);
-            visit_value_for_prune(test, id, reactive_ids, env);
-            visit_block_for_prune(loop_block, reactive_ids, env);
-            if let Some(update) = update {
-                visit_value_for_prune(update, id, reactive_ids, env);
+            let reassign_ids: Vec<IdentifierId> = scope_data.reassignments.clone();
+            for id in reassign_ids {
+                state.insert(id);
             }
         }
-        ReactiveTerminal::ForOf {
-            init,
-            test,
-            loop_block,
-            id,
-            ..
-        } => {
-            let id = *id;
-            visit_value_for_prune(init, id, reactive_ids, env);
-            visit_value_for_prune(test, id, reactive_ids, env);
-            visit_block_for_prune(loop_block, reactive_ids, env);
-        }
-        ReactiveTerminal::ForIn {
-            init,
-            loop_block,
-            id,
-            ..
-        } => {
-            let id = *id;
-            visit_value_for_prune(init, id, reactive_ids, env);
-            visit_block_for_prune(loop_block, reactive_ids, env);
-        }
-        ReactiveTerminal::DoWhile {
-            loop_block,
-            test,
-            id,
-            ..
-        } => {
-            let id = *id;
-            visit_block_for_prune(loop_block, reactive_ids, env);
-            visit_value_for_prune(test, id, reactive_ids, env);
-        }
-        ReactiveTerminal::While {
-            test,
-            loop_block,
-            id,
-            ..
-        } => {
-            let id = *id;
-            visit_value_for_prune(test, id, reactive_ids, env);
-            visit_block_for_prune(loop_block, reactive_ids, env);
-        }
-        ReactiveTerminal::If {
-            consequent,
-            alternate,
-            ..
-        } => {
-            visit_block_for_prune(consequent, reactive_ids, env);
-            if let Some(alt) = alternate {
-                visit_block_for_prune(alt, reactive_ids, env);
-            }
-        }
-        ReactiveTerminal::Switch { cases, .. } => {
-            for case in cases.iter_mut() {
-                if let Some(block) = &mut case.block {
-                    visit_block_for_prune(block, reactive_ids, env);
-                }
-            }
-        }
-        ReactiveTerminal::Label { block, .. } => {
-            visit_block_for_prune(block, reactive_ids, env);
-        }
-        ReactiveTerminal::Try {
-            block, handler, ..
-        } => {
-            visit_block_for_prune(block, reactive_ids, env);
-            visit_block_for_prune(handler, reactive_ids, env);
-        }
+        Ok(())
     }
 }
