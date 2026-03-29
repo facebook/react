@@ -1029,15 +1029,16 @@ fn apply_signature(
         apply_effect(context, state, effect.clone(), &mut initialized, &mut effects, env, func);
     }
 
-    // Verify lvalue is defined - if not, define it with a default value
+    // If lvalue is not yet defined, initialize it with a default value.
+    // The TS version asserts this as an invariant, but the Rust port may have
+    // edge cases where effects don't cover the lvalue (e.g. missing signature entries).
     if !state.is_defined(instr.lvalue.identifier) {
-        let cache_key = format!("__lvalue_fallback_{}", instr_idx);
-        let value_id = *context.effect_value_id_cache.entry(cache_key).or_insert_with(ValueId::new);
-        state.initialize(value_id, AbstractValue {
+        let vid = ValueId(instr.lvalue.identifier.0 | 0x80000000);
+        state.initialize(vid, AbstractValue {
             kind: ValueKind::Mutable,
             reason: hashset_of(ValueReason::Other),
         });
-        state.define(instr.lvalue.identifier, value_id);
+        state.define(instr.lvalue.identifier, vid);
     }
 
     if effects.is_empty() { None } else { Some(effects) }
@@ -1086,7 +1087,11 @@ fn apply_effect(
             }
         }
         AliasingEffect::Create { ref into, value: kind, reason } => {
-            initialized.insert(into.identifier); // may already be initialized, that's OK
+            assert!(
+                !initialized.contains(&into.identifier),
+                "[InferMutationAliasingEffects] Cannot re-initialize variable within an instruction"
+            );
+            initialized.insert(into.identifier);
             let value_id = context.get_or_create_value_id(&effect);
             state.initialize(value_id, AbstractValue {
                 kind,
@@ -1107,6 +1112,10 @@ fn apply_effect(
             }
         }
         AliasingEffect::CreateFrom { ref from, ref into } => {
+            assert!(
+                !initialized.contains(&into.identifier),
+                "[InferMutationAliasingEffects] Cannot re-initialize variable within an instruction"
+            );
             initialized.insert(into.identifier);
             let from_value = state.kind(from.identifier);
             let value_id = context.get_or_create_value_id(&effect);
@@ -1142,6 +1151,10 @@ fn apply_effect(
             }
         }
         AliasingEffect::CreateFunction { ref captures, function_id, ref into } => {
+            assert!(
+                !initialized.contains(&into.identifier),
+                "[InferMutationAliasingEffects] Cannot re-initialize variable within an instruction"
+            );
             initialized.insert(into.identifier);
             effects.push(effect.clone());
 
@@ -1209,8 +1222,13 @@ fn apply_effect(
         AliasingEffect::MaybeAlias { ref from, ref into }
         | AliasingEffect::Alias { ref from, ref into }
         | AliasingEffect::Capture { ref from, ref into } => {
-            let _is_capture = matches!(effect, AliasingEffect::Capture { .. });
+            let is_capture = matches!(effect, AliasingEffect::Capture { .. });
             let is_maybe_alias = matches!(effect, AliasingEffect::MaybeAlias { .. });
+            // For Alias, destination must already be initialized (Capture/MaybeAlias are exempt)
+            assert!(
+                is_capture || is_maybe_alias || initialized.contains(&into.identifier),
+                "[InferMutationAliasingEffects] Expected destination to already be initialized within this instruction"
+            );
 
             // Check destination kind
             let into_kind = state.kind_with_loc(into.identifier, into.loc).kind;
@@ -1247,6 +1265,10 @@ fn apply_effect(
             }
         }
         AliasingEffect::Assign { ref from, ref into } => {
+            assert!(
+                !initialized.contains(&into.identifier),
+                "[InferMutationAliasingEffects] Cannot re-initialize variable within an instruction"
+            );
             initialized.insert(into.identifier);
             let from_value = state.kind_with_loc(from.identifier, from.loc);
             match from_value.kind {
@@ -1329,7 +1351,7 @@ fn apply_effect(
                 // Legacy signature
                 let mut todo_errors: Vec<react_compiler_diagnostics::CompilerErrorDetail> = Vec::new();
                 let legacy_effects = compute_effects_for_legacy_signature(
-                    state, sig, into, receiver, args, loc.as_ref(), env, &mut todo_errors,
+                    state, sig, into, receiver, args, loc.as_ref(), env, &context.function_values, &mut todo_errors,
                 );
                 for err_detail in todo_errors {
                     env.record_error(err_detail);
@@ -2013,6 +2035,7 @@ fn compute_effects_for_legacy_signature(
     args: &[PlaceOrSpreadOrHole],
     _loc: Option<&SourceLocation>,
     env: &Environment,
+    function_values: &HashMap<ValueId, FunctionId>,
     todo_errors: &mut Vec<react_compiler_diagnostics::CompilerErrorDetail>,
 ) -> Vec<AliasingEffect> {
     let return_value_reason = signature.return_value_reason.unwrap_or(ValueReason::Other);
@@ -2044,10 +2067,13 @@ fn compute_effects_for_legacy_signature(
         });
     }
 
+    // TODO: check signature.known_incompatible and throw (TS line 2351-2370)
+    // This requires threading Result through apply_effect/apply_signature.
+
     // If the function is mutable only if operands are mutable, and all
     // arguments are immutable/non-mutating, short-circuit with simple aliasing.
     if signature.mutable_only_if_operands_are_mutable
-        && are_arguments_immutable_and_non_mutating(state, args, env)
+        && are_arguments_immutable_and_non_mutating(state, args, env, function_values)
     {
         effects.push(AliasingEffect::Alias {
             from: receiver.clone(),
@@ -2200,6 +2226,7 @@ fn are_arguments_immutable_and_non_mutating(
     state: &InferenceState,
     args: &[PlaceOrSpreadOrHole],
     env: &Environment,
+    function_values: &HashMap<ValueId, FunctionId>,
 ) -> bool {
     for arg in args {
         match arg {
@@ -2231,6 +2258,26 @@ fn are_arguments_immutable_and_non_mutating(
                         return false;
                     }
                 }
+
+                // Check if any value for this place is a function expression
+                // that mutates its parameters (TS lines 2545-2557)
+                let value_ids = state.values_for(place.identifier);
+                for vid in &value_ids {
+                    if let Some(&func_id) = function_values.get(vid) {
+                        let inner_func = &env.functions[func_id.0 as usize];
+                        let mutates_params = inner_func.params.iter().any(|param| {
+                            let param_id = match param {
+                                ParamPattern::Place(p) => p.identifier,
+                                ParamPattern::Spread(s) => s.place.identifier,
+                            };
+                            let ident = &env.identifiers[param_id.0 as usize];
+                            ident.mutable_range.end.0 > ident.mutable_range.start.0 + 1
+                        });
+                        if mutates_params {
+                            return false;
+                        }
+                    }
+                }
             }
         }
     }
@@ -2240,7 +2287,7 @@ fn are_arguments_immutable_and_non_mutating(
 fn is_known_mutable_effect(effect: Effect) -> bool {
     matches!(
         effect,
-        Effect::Store | Effect::Mutate | Effect::ConditionallyMutate
+        Effect::Store | Effect::Mutate | Effect::ConditionallyMutate | Effect::ConditionallyMutateIterator
     )
 }
 
@@ -2836,16 +2883,12 @@ fn create_temp_place(env: &mut Environment, loc: Option<SourceLocation>) -> Plac
 // Terminal successor helper
 // =============================================================================
 
-/// Returns the successor blocks used for BFS traversal in mutation/aliasing inference.
+/// Returns the successor blocks used for traversal in mutation/aliasing inference.
 ///
-/// NOTE: This cannot use `visitors::each_terminal_successor` or
-/// `visitors::each_terminal_all_successors` because it has intentionally different
-/// semantics:
-/// - For Logical/Ternary/Optional: includes fallthrough (like `each_terminal_all_successors`)
-/// - For Try/Scope/PrunedScope: excludes fallthrough (like `each_terminal_successor`)
-/// This hybrid behavior matches the TS `inferMutationAliasingEffects` traversal pattern
-/// where blocks are visited in map-insertion order (topological), and fallthroughs for
-/// Try/Scope/PrunedScope are visited naturally by iteration order.
+/// Matches the TS `eachTerminalSuccessor` which yields standard control-flow
+/// successors but NOT pseudo-successors (fallthroughs). Fallthroughs for
+/// Logical/Ternary/Optional and Try/Scope/PrunedScope are reached naturally
+/// via the block iteration order (blocks are stored in topological order).
 fn terminal_successors(terminal: &react_compiler_hir::Terminal) -> Vec<BlockId> {
     use react_compiler_hir::Terminal;
     match terminal {
@@ -2858,7 +2901,7 @@ fn terminal_successors(terminal: &react_compiler_hir::Terminal) -> Vec<BlockId> 
         Terminal::DoWhile { loop_block, .. } => vec![*loop_block],
         Terminal::While { test, .. } => vec![*test],
         Terminal::Return { .. } | Terminal::Throw { .. } | Terminal::Unreachable { .. } | Terminal::Unsupported { .. } => vec![],
-        Terminal::Try { block, handler, .. } => vec![*block, *handler],
+        Terminal::Try { block, .. } => vec![*block],
         Terminal::MaybeThrow { continuation, handler, .. } => {
             let mut v = vec![*continuation];
             if let Some(h) = handler {
@@ -2867,8 +2910,8 @@ fn terminal_successors(terminal: &react_compiler_hir::Terminal) -> Vec<BlockId> 
             v
         }
         Terminal::Label { block, .. } | Terminal::Sequence { block, .. } => vec![*block],
-        Terminal::Logical { test, fallthrough, .. } | Terminal::Ternary { test, fallthrough, .. } => vec![*test, *fallthrough],
-        Terminal::Optional { test, fallthrough, .. } => vec![*test, *fallthrough],
+        Terminal::Logical { test, .. } | Terminal::Ternary { test, .. } => vec![*test],
+        Terminal::Optional { test, .. } => vec![*test],
         Terminal::Scope { block, .. } | Terminal::PrunedScope { block, .. } => vec![*block],
     }
 }
