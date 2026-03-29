@@ -153,12 +153,13 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                 InstructionValue::DeclareLocal { lvalue, .. } => {
                     let decl_id = env.identifiers[lvalue.place.identifier.0 as usize].declaration_id;
                     if declarations.contains_key(&decl_id) {
-                        return Err(invariant_error(
+                        return Err(invariant_error_with_loc(
                             "Expected variable not to be defined prior to declaration",
                             Some(format!(
                                 "{} was already defined",
                                 format_place(&lvalue.place, env),
                             )),
+                            lvalue.place.loc,
                         ));
                     }
                     declarations.insert(
@@ -191,12 +192,13 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                             // First store — mark as Const
                             // Mirrors TS: CompilerError.invariant(!declarations.has(...))
                             if declarations.contains_key(&decl_id) {
-                                return Err(invariant_error(
+                                return Err(invariant_error_with_loc(
                                     "Expected variable not to be defined prior to declaration",
                                     Some(format!(
                                         "{} was already defined",
                                         format_place(&lvalue.place, env),
                                     )),
+                                    lvalue.place.loc,
                                 ));
                             }
                             declarations.insert(
@@ -296,12 +298,13 @@ pub fn rewrite_instruction_kinds_based_on_reassignment(
                     let ident = &env.identifiers[lvalue.identifier.0 as usize];
                     let decl_id = ident.declaration_id;
                     let Some(existing) = declarations.get(&decl_id) else {
-                        return Err(invariant_error(
+                        return Err(invariant_error_with_loc(
                             "Expected variable to have been defined",
                             Some(format!(
                                 "No declaration for {}",
                                 format_place(lvalue, env),
                             )),
+                            lvalue.loc,
                         ));
                     };
                     match existing {
