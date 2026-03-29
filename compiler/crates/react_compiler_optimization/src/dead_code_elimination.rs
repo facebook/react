@@ -161,7 +161,7 @@ fn find_referenced_identifiers(func: &HirFunction, env: &Environment) -> State {
                         reference(&mut state, &env.identifiers, place.identifier);
                     }
                 } else if is_id_or_name_used(&state, &env.identifiers, instr.lvalue.identifier)
-                    || !pruneable_value(&instr.value, &state, env, func)
+                    || !pruneable_value(&instr.value, &state, env)
                 {
                     reference(&mut state, &env.identifiers, instr.lvalue.identifier);
 
@@ -293,7 +293,6 @@ fn pruneable_value(
     value: &InstructionValue,
     state: &State,
     env: &Environment,
-    _func: &HirFunction,
 ) -> bool {
     match value {
         InstructionValue::DeclareLocal { lvalue, .. } => {
