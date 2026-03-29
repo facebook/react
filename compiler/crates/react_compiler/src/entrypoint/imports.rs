@@ -45,7 +45,6 @@ pub struct ProgramContext {
     pub suppressions: Vec<SuppressionRange>,
     pub has_module_scope_opt_out: bool,
     pub events: Vec<LoggerEvent>,
-    pub debug_logs: Vec<DebugLogEntry>,
     /// Unified ordered log that interleaves events and debug entries
     /// in the order they were emitted during compilation.
     pub ordered_log: Vec<OrderedLogItem>,
@@ -89,7 +88,6 @@ impl ProgramContext {
             suppressions,
             has_module_scope_opt_out,
             events: Vec::new(),
-            debug_logs: Vec::new(),
             ordered_log: Vec::new(),
             instrument_fn_name: None,
             instrument_gating_name: None,
@@ -215,8 +213,7 @@ impl ProgramContext {
 
     /// Log a debug entry (for debugLogIRs support).
     pub fn log_debug(&mut self, entry: DebugLogEntry) {
-        self.ordered_log.push(OrderedLogItem::Debug { entry: entry.clone() });
-        self.debug_logs.push(entry);
+        self.ordered_log.push(OrderedLogItem::Debug { entry });
     }
 
     /// Check if there are any pending imports to add to the program.

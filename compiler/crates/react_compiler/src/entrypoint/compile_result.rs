@@ -28,10 +28,10 @@ pub enum CompileResult {
     Success {
         ast: Option<Box<serde_json::value::RawValue>>,
         events: Vec<LoggerEvent>,
-        #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
-        debug_logs: Vec<DebugLogEntry>,
         /// Unified ordered log interleaving events and debug entries.
         /// Items appear in the order they were emitted during compilation.
+        /// The JS side uses this as the single source of truth (preferred over
+        /// separate events/debugLogs arrays).
         #[serde(rename = "orderedLog", skip_serializing_if = "Vec::is_empty")]
         ordered_log: Vec<OrderedLogItem>,
         /// Variable renames from lowering, for applying back to the Babel AST.
@@ -47,8 +47,6 @@ pub enum CompileResult {
     Error {
         error: CompilerErrorInfo,
         events: Vec<LoggerEvent>,
-        #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
-        debug_logs: Vec<DebugLogEntry>,
         #[serde(rename = "orderedLog", skip_serializing_if = "Vec::is_empty")]
         ordered_log: Vec<OrderedLogItem>,
         /// Timing data for profiling. Only populated when __profiling is enabled.

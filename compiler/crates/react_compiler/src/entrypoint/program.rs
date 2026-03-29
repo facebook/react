@@ -34,7 +34,7 @@ use regex::Regex;
 
 use super::compile_result::{
     BindingRenameInfo, CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo,
-    CompilerErrorItemInfo, DebugLogEntry, LoggerEvent,
+    CompilerErrorItemInfo, DebugLogEntry, LoggerEvent, OrderedLogItem,
 };
 use super::imports::{
     ProgramContext, add_imports_to_program, get_react_compiler_runtime_module,
@@ -1033,7 +1033,6 @@ fn handle_error(
         Some(CompileResult::Error {
             error: error_info,
             events: context.events.clone(),
-            debug_logs: context.debug_logs.clone(),
             ordered_log: context.ordered_log.clone(),
             timing: Vec::new(),
         })
@@ -3321,21 +3320,24 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
 
     // Create a temporary context for early-return paths (before full context is set up)
     let early_events: Vec<LoggerEvent> = Vec::new();
-    let mut early_debug_logs: Vec<DebugLogEntry> = Vec::new();
+    let mut early_ordered_log: Vec<OrderedLogItem> = Vec::new();
 
     // Log environment config for debugLogIRs
-    early_debug_logs.push(DebugLogEntry::new(
-        "EnvironmentConfig",
-        serde_json::to_string_pretty(&options.environment).unwrap_or_default(),
-    ));
+    if options.debug {
+        early_ordered_log.push(OrderedLogItem::Debug {
+            entry: DebugLogEntry::new(
+                "EnvironmentConfig",
+                serde_json::to_string_pretty(&options.environment).unwrap_or_default(),
+            ),
+        });
+    }
 
     // Check if we should compile this file at all (pre-resolved by JS shim)
     if !options.should_compile {
         return CompileResult::Success {
             ast: None,
             events: early_events,
-            debug_logs: early_debug_logs,
-            ordered_log: Vec::new(),
+            ordered_log: early_ordered_log,
             renames: Vec::new(),
             timing: Vec::new(),
         };
@@ -3348,8 +3350,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         return CompileResult::Success {
             ast: None,
             events: early_events,
-            debug_logs: early_debug_logs,
-            ordered_log: Vec::new(),
+            ordered_log: early_ordered_log,
             renames: Vec::new(),
             timing: Vec::new(),
         };
@@ -3398,8 +3399,8 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     // Initialize known referenced names from scope bindings for UID collision detection
     context.init_from_scope(&scope);
 
-    // Seed context with early debug logs
-    context.debug_logs.extend(early_debug_logs);
+    // Seed context with early ordered log entries
+    context.ordered_log.extend(early_ordered_log);
 
     // Validate restricted imports (needs context for handle_error)
     if let Some(err) = validate_restricted_imports(program, &restricted_imports) {
@@ -3409,7 +3410,6 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         return CompileResult::Success {
             ast: None,
             events: context.events,
-            debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
             renames: convert_renames(&context.renames),
             timing: Vec::new(),
@@ -3491,7 +3491,6 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         return CompileResult::Success {
             ast: None,
             events: context.events,
-            debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
             renames: convert_renames(&context.renames),
             timing: Vec::new(),
@@ -3549,7 +3548,6 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         return CompileResult::Success {
             ast: None,
             events: context.events,
-            debug_logs: context.debug_logs,
             ordered_log: context.ordered_log,
             renames: convert_renames(&context.renames),
             timing: Vec::new(),
@@ -3581,7 +3579,6 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     CompileResult::Success {
         ast,
         events: context.events,
-        debug_logs: context.debug_logs,
         ordered_log: context.ordered_log,
         renames: convert_renames(&context.renames),
         timing: timing_entries,
