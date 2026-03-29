@@ -58,19 +58,17 @@ fn eliminate_redundant_phi_impl(
             }
             visited.insert(block_id);
 
-            // Find any redundant phis: rewrite operands, identify redundant phis, remove them
+            // Find any redundant phis: rewrite operands, identify redundant phis, remove them.
+            // Matches TS behavior: each phi's operands are rewritten before checking redundancy,
+            // so that rewrites from earlier phis in the same block are visible to later phis.
             let block = ir.blocks.get_mut(&block_id).unwrap();
-
-            // Rewrite phi operands
-            for phi in block.phis.iter_mut() {
+            block.phis.retain_mut(|phi| {
+                // Remap phis in case operands are from eliminated phis
                 for (_, operand) in phi.operands.iter_mut() {
                     rewrite_place(operand, rewrites);
                 }
-            }
 
-            // Identify redundant phis
-            let mut phis_to_remove: Vec<usize> = Vec::new();
-            for (idx, phi) in block.phis.iter().enumerate() {
+                // Find if the phi can be eliminated
                 let mut same: Option<IdentifierId> = None;
                 let mut is_redundant = true;
                 for (_, operand) in &phi.operands {
@@ -88,14 +86,11 @@ fn eliminate_redundant_phi_impl(
                 if is_redundant {
                     let same = same.expect("Expected phis to be non-empty");
                     rewrites.insert(phi.place.identifier, same);
-                    phis_to_remove.push(idx);
+                    false // remove this phi
+                } else {
+                    true // keep this phi
                 }
-            }
-
-            // Remove redundant phis in reverse order to preserve indices
-            for idx in phis_to_remove.into_iter().rev() {
-                block.phis.remove(idx);
-            }
+            });
 
             // Rewrite instructions
             let instruction_ids: Vec<InstructionId> = ir
@@ -109,18 +104,11 @@ fn eliminate_redundant_phi_impl(
                 let instr_idx = instr_id.0 as usize;
                 let instr = &mut func.instructions[instr_idx];
 
-                // Rewrite lvalues using canonical visitor, plus DeclareContext/StoreContext
-                visitors::for_each_instruction_lvalue_mut(instr, &mut |place| {
+                // Rewrite all lvalues (matches TS eachInstructionLValue)
+                rewrite_place(&mut instr.lvalue, rewrites);
+                visitors::for_each_instruction_value_lvalue_mut(&mut instr.value, &mut |place| {
                     rewrite_place(place, rewrites);
                 });
-                // Also rewrite DeclareContext/StoreContext lvalues (not handled by for_each_instruction_lvalue_mut)
-                match &mut func.instructions[instr_idx].value {
-                    InstructionValue::DeclareContext { lvalue, .. }
-                    | InstructionValue::StoreContext { lvalue, .. } => {
-                        rewrite_place(&mut lvalue.place, rewrites);
-                    }
-                    _ => {}
-                }
 
                 // Rewrite operands using canonical visitor
                 visitors::for_each_instruction_value_operand_mut(&mut func.instructions[instr_idx].value, &mut |place| {
