@@ -32,6 +32,7 @@ export interface ResolvedOptions {
 
 export interface Logger {
   logEvent(filename: string | null, event: unknown): void;
+  debugLogIRs?(value: unknown): void;
 }
 
 export type PluginOptions = Partial<ResolvedOptions> & {

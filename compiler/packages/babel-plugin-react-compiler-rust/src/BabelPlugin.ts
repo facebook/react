@@ -201,7 +201,9 @@ function applyRenames(
   prog.traverse({
     Scope(path: BabelCore.NodePath) {
       const scope = path.scope;
-      for (const [name, binding] of Object.entries(scope.bindings)) {
+      for (const [name, binding] of Object.entries(
+        scope.bindings as Record<string, any>,
+      )) {
         const start = binding.identifier.start;
         if (start != null) {
           const rename = renamesByPos.get(start);
@@ -212,7 +214,7 @@ function applyRenames(
         }
       }
     },
-  });
+  } as BabelCore.Visitor);
 }
 
 function deduplicateComments(node: any): void {

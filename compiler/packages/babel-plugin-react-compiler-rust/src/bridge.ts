@@ -21,10 +21,17 @@ export interface BindingRenameInfo {
   declarationStart: number;
 }
 
+export interface OrderedLogItem {
+  type: 'event' | 'debug';
+  event?: LoggerEvent;
+  entry?: DebugLogEntry;
+}
+
 export interface CompileSuccess {
   kind: 'success';
   ast: t.File | null;
   events: Array<LoggerEvent>;
+  orderedLog?: Array<OrderedLogItem>;
   renames?: Array<BindingRenameInfo>;
 }
 
@@ -36,6 +43,7 @@ export interface CompileError {
     details: Array<unknown>;
   };
   events: Array<LoggerEvent>;
+  orderedLog?: Array<OrderedLogItem>;
 }
 
 export type CompileResult = CompileSuccess | CompileError;
@@ -70,7 +78,7 @@ function getRustCompile(): (
       );
     }
   }
-  return rustCompile;
+  return rustCompile!;
 }
 
 export function compileWithRust(

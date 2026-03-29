@@ -1356,19 +1356,15 @@ fn run_pipeline_passes(
 ) -> Result<CodegenFunction, CompilerError> {
     react_compiler_optimization::prune_maybe_throws(hir, &mut env.functions)?;
 
-    eprintln!("[DEBUG run_pipeline] drop_manual_memoization");
     react_compiler_optimization::drop_manual_memoization(hir, env)?;
 
-    eprintln!("[DEBUG run_pipeline] inline_iifes");
     react_compiler_optimization::inline_immediately_invoked_function_expressions(hir, env);
 
-    eprintln!("[DEBUG run_pipeline] merge_consecutive_blocks");
     react_compiler_optimization::merge_consecutive_blocks::merge_consecutive_blocks(
         hir,
         &mut env.functions,
     );
 
-    eprintln!("[DEBUG run_pipeline] enter_ssa");
     react_compiler_ssa::enter_ssa(hir, env).map_err(|diag| {
         let loc = diag.primary_location().cloned();
         let mut err = CompilerError::new();
@@ -1382,13 +1378,10 @@ fn run_pipeline_passes(
         err
     })?;
 
-    eprintln!("[DEBUG run_pipeline] eliminate_redundant_phi");
     react_compiler_ssa::eliminate_redundant_phi(hir, env);
 
-    eprintln!("[DEBUG run_pipeline] constant_propagation");
     react_compiler_optimization::constant_propagation(hir, env);
 
-    eprintln!("[DEBUG run_pipeline] infer_types");
     react_compiler_typeinference::infer_types(hir, env)?;
 
     if env.enable_validations() {
@@ -1397,29 +1390,22 @@ fn run_pipeline_passes(
         }
     }
 
-    eprintln!("[DEBUG run_pipeline] optimize_props_method_calls");
     react_compiler_optimization::optimize_props_method_calls(hir, env);
 
-    eprintln!("[DEBUG run_pipeline] analyse_functions");
     react_compiler_inference::analyse_functions(hir, env, &mut |_inner_func, _inner_env| {})?;
 
     if env.has_invariant_errors() {
         return Err(env.take_invariant_errors());
     }
 
-    eprintln!("[DEBUG run_pipeline] infer_mutation_aliasing_effects");
     react_compiler_inference::infer_mutation_aliasing_effects(hir, env, false)?;
 
-    eprintln!("[DEBUG run_pipeline] dead_code_elimination");
     react_compiler_optimization::dead_code_elimination(hir, env);
 
-    eprintln!("[DEBUG run_pipeline] prune_maybe_throws (2)");
     react_compiler_optimization::prune_maybe_throws(hir, &mut env.functions)?;
 
-    eprintln!("[DEBUG run_pipeline] infer_mutation_aliasing_ranges");
     react_compiler_inference::infer_mutation_aliasing_ranges(hir, env, false)?;
 
-    eprintln!("[DEBUG run_pipeline] validations block");
     if env.enable_validations() {
         react_compiler_validation::validate_locals_not_reassigned_after_render(hir, env);
 
@@ -1434,23 +1420,18 @@ fn run_pipeline_passes(
         react_compiler_validation::validate_no_freezing_known_mutable_functions(hir, env);
     }
 
-    eprintln!("[DEBUG run_pipeline] infer_reactive_places (blocks={}, instrs={})", hir.body.blocks.len(), hir.instructions.len());
     react_compiler_inference::infer_reactive_places(hir, env)?;
-    eprintln!("[DEBUG run_pipeline] infer_reactive_places done");
 
     if env.enable_validations() {
         react_compiler_validation::validate_exhaustive_dependencies(hir, env)?;
     }
 
-    eprintln!("[DEBUG run_pipeline] rewrite_instruction_kinds");
     react_compiler_ssa::rewrite_instruction_kinds_based_on_reassignment(hir, env)?;
 
     if env.enable_memoization() {
-        eprintln!("[DEBUG run_pipeline] infer_reactive_scope_variables");
         react_compiler_inference::infer_reactive_scope_variables(hir, env)?;
     }
 
-    eprintln!("[DEBUG run_pipeline] memoize_fbt");
     let fbt_operands =
         react_compiler_inference::memoize_fbt_and_macro_operands_in_same_scope(hir, env);
 
@@ -1464,7 +1445,6 @@ fn run_pipeline_passes(
         react_compiler_optimization::outline_functions(hir, env, &fbt_operands);
     }
 
-    eprintln!("[DEBUG run_pipeline] align passes");
     react_compiler_inference::align_method_call_scopes(hir, env);
     react_compiler_inference::align_object_method_scopes(hir, env);
 
@@ -1473,16 +1453,11 @@ fn run_pipeline_passes(
     react_compiler_inference::align_reactive_scopes_to_block_scopes_hir(hir, env);
     react_compiler_inference::merge_overlapping_reactive_scopes_hir(hir, env);
 
-    eprintln!("[DEBUG run_pipeline] build_reactive_scope_terminals");
     react_compiler_inference::build_reactive_scope_terminals_hir(hir, env);
-    eprintln!("[DEBUG run_pipeline] flatten");
     react_compiler_inference::flatten_reactive_loops_hir(hir);
     react_compiler_inference::flatten_scopes_with_hooks_or_use_hir(hir, env)?;
-    eprintln!("[DEBUG run_pipeline] propagate_scope_dependencies");
     react_compiler_inference::propagate_scope_dependencies_hir(hir, env);
-    eprintln!("[DEBUG run_pipeline] build_reactive_function");
     let mut reactive_fn = react_compiler_reactive_scopes::build_reactive_function(hir, env)?;
-    eprintln!("[DEBUG run_pipeline] codegen");
 
     react_compiler_reactive_scopes::assert_well_formed_break_targets(&reactive_fn, env);
 

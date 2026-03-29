@@ -30,7 +30,7 @@ export function printDebugReactiveFunction(fn: ReactiveFunction): string {
     // (have an array body, not a HIR body with blocks)
     if (Array.isArray(outlinedFn.body)) {
       printer.line('');
-      printer.formatReactiveFunction(outlinedFn);
+      printer.formatReactiveFunction(outlinedFn as unknown as ReactiveFunction);
     }
   }
 

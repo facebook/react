@@ -137,7 +137,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
 
   // Helper to register a scope and its bindings
   function registerScope(
-    babelScope: ReturnType<NodePath['scope']['constructor']> & {
+    babelScope: {
       uid: number;
       parent: {uid: number} | null;
       bindings: Record<string, any>;
@@ -281,7 +281,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   });
 
   // Program scope should always be id 0
-  const programScopeUid = String(program.scope.uid);
+  const programScopeUid = String((program.scope as any).uid);
   const programScopeId = scopeUidToId.get(programScopeUid) ?? 0;
 
   return {
