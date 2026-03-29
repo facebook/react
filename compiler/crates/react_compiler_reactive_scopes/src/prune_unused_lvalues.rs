@@ -9,7 +9,7 @@
 //!
 //! Corresponds to `src/ReactiveScopes/PruneTemporaryLValues.ts`.
 
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use react_compiler_hir::{
     DeclarationId, EvaluationOrder, Place, ReactiveFunction, ReactiveInstruction, ReactiveValue,
@@ -35,7 +35,7 @@ pub fn prune_unused_lvalues(func: &mut ReactiveFunction, env: &Environment) {
     // When we see an unnamed lvalue on an instruction, we add its DeclarationId.
     // When we see a place reference (operand), we remove its DeclarationId.
     let visitor = Visitor { env };
-    let mut lvalues: HashMap<DeclarationId, ()> = HashMap::new();
+    let mut lvalues: HashSet<DeclarationId> = HashSet::new();
     visitors::visit_reactive_function(func, &visitor, &mut lvalues);
 
     // Phase 2: Null out lvalues whose DeclarationId remains in the map.
@@ -47,7 +47,9 @@ pub fn prune_unused_lvalues(func: &mut ReactiveFunction, env: &Environment) {
 }
 
 /// TS: `type LValues = Map<DeclarationId, ReactiveInstruction>`
-type LValues = HashMap<DeclarationId, ()>;
+/// In Rust, we only need the set of DeclarationIds (not the instruction refs)
+/// because we apply changes in a separate pass.
+type LValues = HashSet<DeclarationId>;
 
 /// TS: `class Visitor extends ReactiveFunctionVisitor<LValues>`
 struct Visitor<'a> {
@@ -75,7 +77,7 @@ impl ReactiveFunctionVisitor for Visitor<'_> {
         if let Some(lv) = &instruction.lvalue {
             let ident = &self.env.identifiers[lv.identifier.0 as usize];
             if ident.name.is_none() {
-                state.insert(ident.declaration_id, ());
+                state.insert(ident.declaration_id);
             }
         }
     }
@@ -86,7 +88,7 @@ impl ReactiveFunctionVisitor for Visitor<'_> {
 fn null_unused_lvalues(
     block: &mut Vec<ReactiveStatement>,
     env: &Environment,
-    unused: &HashMap<DeclarationId, ()>,
+    unused: &HashSet<DeclarationId>,
 ) {
     for stmt in block.iter_mut() {
         match stmt {
@@ -109,11 +111,11 @@ fn null_unused_lvalues(
 fn null_unused_in_instruction(
     instr: &mut ReactiveInstruction,
     env: &Environment,
-    unused: &HashMap<DeclarationId, ()>,
+    unused: &HashSet<DeclarationId>,
 ) {
     if let Some(lv) = &instr.lvalue {
         let ident = &env.identifiers[lv.identifier.0 as usize];
-        if unused.contains_key(&ident.declaration_id) {
+        if unused.contains(&ident.declaration_id) {
             instr.lvalue = None;
         }
     }
@@ -123,7 +125,7 @@ fn null_unused_in_instruction(
 fn null_unused_in_value(
     value: &mut ReactiveValue,
     env: &Environment,
-    unused: &HashMap<DeclarationId, ()>,
+    unused: &HashSet<DeclarationId>,
 ) {
     match value {
         ReactiveValue::SequenceExpression {
@@ -160,7 +162,7 @@ fn null_unused_in_value(
 fn null_unused_in_terminal(
     terminal: &mut react_compiler_hir::ReactiveTerminal,
     env: &Environment,
-    unused: &HashMap<DeclarationId, ()>,
+    unused: &HashSet<DeclarationId>,
 ) {
     use react_compiler_hir::ReactiveTerminal;
     match terminal {
