@@ -9,6 +9,7 @@
 //! (global variable types including React hooks and JS built-ins).
 
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use crate::object_shape::*;
 use crate::type_config::{
@@ -23,7 +24,108 @@ use crate::Type;
 pub type Global = Type;
 
 /// Registry mapping global names to their types.
-pub type GlobalRegistry = HashMap<String, Global>;
+///
+/// Supports two modes:
+/// - **Builder mode** (`base=None`): wraps a single HashMap, used during
+///   `build_default_globals` to construct the static base.
+/// - **Overlay mode** (`base=Some`): holds a `&'static HashMap` base plus a small
+///   extras HashMap. Lookups check extras first, then base. Inserts go into extras.
+///   Cloning only copies the extras map (the base pointer is shared).
+pub struct GlobalRegistry {
+    base: Option<&'static HashMap<String, Global>>,
+    entries: HashMap<String, Global>,
+}
+
+impl GlobalRegistry {
+    /// Create an empty builder-mode registry.
+    pub fn new() -> Self {
+        Self {
+            base: None,
+            entries: HashMap::new(),
+        }
+    }
+
+    /// Create an overlay-mode registry backed by a static base.
+    pub fn with_base(base: &'static HashMap<String, Global>) -> Self {
+        Self {
+            base: Some(base),
+            entries: HashMap::new(),
+        }
+    }
+
+    pub fn get(&self, key: &str) -> Option<&Global> {
+        self.entries
+            .get(key)
+            .or_else(|| self.base.and_then(|b| b.get(key)))
+    }
+
+    pub fn insert(&mut self, key: String, value: Global) {
+        self.entries.insert(key, value);
+    }
+
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.entries.contains_key(key)
+            || self.base.map_or(false, |b| b.contains_key(key))
+    }
+
+    /// Iterate over all keys in the registry (base + extras).
+    /// Keys in extras that shadow base keys appear only once.
+    pub fn keys(&self) -> impl Iterator<Item = &String> {
+        let base_keys = self
+            .base
+            .into_iter()
+            .flat_map(|b| b.keys())
+            .filter(|k| !self.entries.contains_key(k.as_str()));
+        self.entries.keys().chain(base_keys)
+    }
+
+    /// Consume the registry and return the inner HashMap.
+    /// Only valid in builder mode (no base).
+    pub fn into_inner(self) -> HashMap<String, Global> {
+        debug_assert!(
+            self.base.is_none(),
+            "into_inner() called on overlay-mode GlobalRegistry"
+        );
+        self.entries
+    }
+}
+
+impl Clone for GlobalRegistry {
+    fn clone(&self) -> Self {
+        Self {
+            base: self.base,
+            entries: self.entries.clone(),
+        }
+    }
+}
+
+// =============================================================================
+// Static base registries (initialized once, shared across all Environments)
+// =============================================================================
+
+struct BaseRegistries {
+    shapes: HashMap<String, ObjectShape>,
+    globals: HashMap<String, Global>,
+}
+
+static BASE: LazyLock<BaseRegistries> = LazyLock::new(|| {
+    let mut shapes = build_builtin_shapes();
+    let globals = build_default_globals(&mut shapes);
+    BaseRegistries {
+        shapes: shapes.into_inner(),
+        globals: globals.into_inner(),
+    }
+});
+
+/// Get a reference to the static base shapes registry.
+pub fn base_shapes() -> &'static HashMap<String, ObjectShape> {
+    &BASE.shapes
+}
+
+/// Get a reference to the static base globals registry.
+pub fn base_globals() -> &'static HashMap<String, Global> {
+    &BASE.globals
+}
 
 // =============================================================================
 // installTypeConfig — converts TypeConfig to internal Type

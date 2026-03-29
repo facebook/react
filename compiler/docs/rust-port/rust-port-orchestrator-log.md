@@ -56,6 +56,16 @@ Codegen: complete (1717/1717 code comparison)
 
 # Logs
 
+## 20260329-120000 Static base registries for ShapeRegistry and GlobalRegistry
+
+Replaced ShapeRegistry and GlobalRegistry type aliases (HashMap) with newtype structs
+supporting a base+overlay pattern. Built-in shapes and globals are now initialized once
+via LazyLock and shared across all Environment instances. Environment::with_config creates
+lightweight overlay registries that point to the static base; custom hooks and lazily-resolved
+module types go into the overlay's extras map. Cloning registries (e.g. for_outlined_fn) now
+copies only the small extras map. ~18% overall Rust compiler speedup (1263ms → 1031ms across
+1717 fixtures). No test regressions.
+
 ## 20260328-180000 Consolidate duplicated helper logic across Rust crates
 
 Eliminated ~3,700 lines of duplicated helper code across 30 files. Created canonical

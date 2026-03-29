@@ -124,7 +124,64 @@ pub struct ObjectShape {
 }
 
 /// Registry mapping shape IDs to their ObjectShape definitions.
-pub type ShapeRegistry = HashMap<String, ObjectShape>;
+///
+/// Supports two modes:
+/// - **Builder mode** (`base=None`): wraps a single HashMap, used during
+///   `build_builtin_shapes` / `build_default_globals` to construct the static base.
+/// - **Overlay mode** (`base=Some`): holds a `&'static HashMap` base plus a small
+///   extras HashMap. Lookups check extras first, then base. Inserts go into extras.
+///   Cloning only copies the extras map (the base pointer is shared).
+pub struct ShapeRegistry {
+    base: Option<&'static HashMap<String, ObjectShape>>,
+    entries: HashMap<String, ObjectShape>,
+}
+
+impl ShapeRegistry {
+    /// Create an empty builder-mode registry.
+    pub fn new() -> Self {
+        Self {
+            base: None,
+            entries: HashMap::new(),
+        }
+    }
+
+    /// Create an overlay-mode registry backed by a static base.
+    pub fn with_base(base: &'static HashMap<String, ObjectShape>) -> Self {
+        Self {
+            base: Some(base),
+            entries: HashMap::new(),
+        }
+    }
+
+    pub fn get(&self, key: &str) -> Option<&ObjectShape> {
+        self.entries
+            .get(key)
+            .or_else(|| self.base.and_then(|b| b.get(key)))
+    }
+
+    pub fn insert(&mut self, key: String, value: ObjectShape) {
+        self.entries.insert(key, value);
+    }
+
+    /// Consume the registry and return the inner HashMap.
+    /// Only valid in builder mode (no base).
+    pub fn into_inner(self) -> HashMap<String, ObjectShape> {
+        debug_assert!(
+            self.base.is_none(),
+            "into_inner() called on overlay-mode ShapeRegistry"
+        );
+        self.entries
+    }
+}
+
+impl Clone for ShapeRegistry {
+    fn clone(&self) -> Self {
+        Self {
+            base: self.base,
+            entries: self.entries.clone(),
+        }
+    }
+}
 
 // =============================================================================
 // Counter for anonymous shape IDs

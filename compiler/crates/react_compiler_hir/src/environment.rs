@@ -113,8 +113,8 @@ impl Environment {
     /// Initializes the shape and global registries, registers custom hooks,
     /// and sets up the module type cache.
     pub fn with_config(config: EnvironmentConfig) -> Self {
-        let mut shapes = globals::build_builtin_shapes();
-        let mut global_registry = globals::build_default_globals(&mut shapes);
+        let mut shapes = ShapeRegistry::with_base(globals::base_shapes());
+        let mut global_registry = GlobalRegistry::with_base(globals::base_globals());
 
         // Register custom hooks from config
         for (hook_name, hook) in &config.custom_hooks {
