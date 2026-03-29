@@ -155,12 +155,10 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 
     let result = react_compiler_oxc::transform(&parsed.program, &semantic, source, options);
 
-    match result.program_json {
-        Some(json) => {
-            let file: react_compiler_ast::File = serde_json::from_value(json)
-                .map_err(|e| format!("Failed to deserialize compiler output: {e}"))?;
+    match result.file {
+        Some(ref file) => {
             let emit_allocator = oxc_allocator::Allocator::default();
-            Ok(react_compiler_oxc::emit(&file, &emit_allocator))
+            Ok(react_compiler_oxc::emit(file, &emit_allocator))
         }
         None => {
             // No changes — emit the original parsed program

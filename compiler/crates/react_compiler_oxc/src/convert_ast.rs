@@ -113,21 +113,24 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_comments(&self, comments: &oxc::Comment) -> Vec<Comment> {
+    fn convert_comments(&self, comments: &[oxc::Comment]) -> Vec<Comment> {
         comments
             .iter()
-            .map(|(kind, span)| {
-                let base = self.make_base_node(*span);
-                let value = &self.source_text[span.start as usize..span.end as usize];
+            .map(|comment| {
+                let base = self.make_base_node(comment.span);
+                let value =
+                    &self.source_text[comment.span.start as usize..comment.span.end as usize];
                 let comment_data = CommentData {
                     value: value.to_string(),
                     start: base.start,
                     end: base.end,
                     loc: base.loc.clone(),
                 };
-                match kind {
+                match comment.kind {
                     oxc::CommentKind::Line => Comment::CommentLine(comment_data),
-                    oxc::CommentKind::Block => Comment::CommentBlock(comment_data),
+                    oxc::CommentKind::SingleLineBlock | oxc::CommentKind::MultiLineBlock => {
+                        Comment::CommentBlock(comment_data)
+                    }
                 }
             })
             .collect()
@@ -204,6 +207,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::Statement::WithStatement(s) => {
                 Statement::WithStatement(self.convert_with_statement(s))
             }
+            // Declaration variants (inherited)
             oxc::Statement::VariableDeclaration(v) => {
                 Statement::VariableDeclaration(self.convert_variable_declaration(v))
             }
@@ -213,7 +217,6 @@ impl<'a> ConvertCtx<'a> {
             oxc::Statement::ClassDeclaration(c) => {
                 Statement::ClassDeclaration(self.convert_class_declaration(c))
             }
-            oxc::Statement::ModuleDeclaration(m) => self.convert_module_declaration(m),
             oxc::Statement::TSTypeAliasDeclaration(t) => {
                 Statement::TSTypeAliasDeclaration(self.convert_ts_type_alias_declaration(t))
             }
@@ -230,6 +233,28 @@ impl<'a> ConvertCtx<'a> {
                 // Pass through as opaque JSON for now
                 todo!("TSImportEqualsDeclaration")
             }
+            // ModuleDeclaration variants (inherited directly into Statement)
+            oxc::Statement::ImportDeclaration(i) => {
+                Statement::ImportDeclaration(self.convert_import_declaration(i))
+            }
+            oxc::Statement::ExportAllDeclaration(e) => {
+                Statement::ExportAllDeclaration(self.convert_export_all_declaration(e))
+            }
+            oxc::Statement::ExportDefaultDeclaration(e) => {
+                Statement::ExportDefaultDeclaration(self.convert_export_default_declaration(e))
+            }
+            oxc::Statement::ExportNamedDeclaration(e) => {
+                Statement::ExportNamedDeclaration(self.convert_export_named_declaration(e))
+            }
+            oxc::Statement::TSExportAssignment(_) => {
+                todo!("TSExportAssignment")
+            }
+            oxc::Statement::TSNamespaceExportDeclaration(_) => {
+                todo!("TSNamespaceExportDeclaration")
+            }
+            oxc::Statement::TSGlobalDeclaration(_) => {
+                todo!("TSGlobalDeclaration")
+            }
         }
     }
 
@@ -240,22 +265,20 @@ impl<'a> ConvertCtx<'a> {
             .iter()
             .map(|s| self.convert_statement(s))
             .collect();
-        let directives = block
-            .directives
-            .iter()
-            .map(|d| self.convert_directive(d))
-            .collect();
         BlockStatement {
             base,
             body,
-            directives,
+            directives: vec![],
         }
     }
 
     fn convert_return_statement(&self, ret: &oxc::ReturnStatement) -> ReturnStatement {
         ReturnStatement {
             base: self.make_base_node(ret.span),
-            argument: ret.argument.as_ref().map(|e| Box::new(self.convert_expression(e))),
+            argument: ret
+                .argument
+                .as_ref()
+                .map(|e| Box::new(self.convert_expression(e))),
         }
     }
 
@@ -279,49 +302,10 @@ impl<'a> ConvertCtx<'a> {
                     oxc::ForStatementInit::VariableDeclaration(v) => {
                         ForInit::VariableDeclaration(self.convert_variable_declaration(v))
                     }
-                    oxc::ForStatementInit::BooleanLiteral(e)
-                    | oxc::ForStatementInit::NullLiteral(e)
-                    | oxc::ForStatementInit::NumericLiteral(e)
-                    | oxc::ForStatementInit::BigIntLiteral(e)
-                    | oxc::ForStatementInit::RegExpLiteral(e)
-                    | oxc::ForStatementInit::StringLiteral(e)
-                    | oxc::ForStatementInit::TemplateLiteral(e)
-                    | oxc::ForStatementInit::Identifier(e)
-                    | oxc::ForStatementInit::MetaProperty(e)
-                    | oxc::ForStatementInit::Super(e)
-                    | oxc::ForStatementInit::ArrayExpression(e)
-                    | oxc::ForStatementInit::ArrowFunctionExpression(e)
-                    | oxc::ForStatementInit::AssignmentExpression(e)
-                    | oxc::ForStatementInit::AwaitExpression(e)
-                    | oxc::ForStatementInit::BinaryExpression(e)
-                    | oxc::ForStatementInit::CallExpression(e)
-                    | oxc::ForStatementInit::ChainExpression(e)
-                    | oxc::ForStatementInit::ClassExpression(e)
-                    | oxc::ForStatementInit::ConditionalExpression(e)
-                    | oxc::ForStatementInit::FunctionExpression(e)
-                    | oxc::ForStatementInit::ImportExpression(e)
-                    | oxc::ForStatementInit::LogicalExpression(e)
-                    | oxc::ForStatementInit::NewExpression(e)
-                    | oxc::ForStatementInit::ObjectExpression(e)
-                    | oxc::ForStatementInit::ParenthesizedExpression(e)
-                    | oxc::ForStatementInit::SequenceExpression(e)
-                    | oxc::ForStatementInit::TaggedTemplateExpression(e)
-                    | oxc::ForStatementInit::ThisExpression(e)
-                    | oxc::ForStatementInit::UnaryExpression(e)
-                    | oxc::ForStatementInit::UpdateExpression(e)
-                    | oxc::ForStatementInit::YieldExpression(e)
-                    | oxc::ForStatementInit::PrivateInExpression(e)
-                    | oxc::ForStatementInit::JSXElement(e)
-                    | oxc::ForStatementInit::JSXFragment(e)
-                    | oxc::ForStatementInit::TSAsExpression(e)
-                    | oxc::ForStatementInit::TSSatisfiesExpression(e)
-                    | oxc::ForStatementInit::TSTypeAssertion(e)
-                    | oxc::ForStatementInit::TSNonNullExpression(e)
-                    | oxc::ForStatementInit::TSInstantiationExpression(e)
-                    | oxc::ForStatementInit::ComputedMemberExpression(e)
-                    | oxc::ForStatementInit::StaticMemberExpression(e)
-                    | oxc::ForStatementInit::PrivateFieldExpression(e) => {
-                        ForInit::Expression(Box::new(self.convert_expression(e)))
+                    _ => {
+                        ForInit::Expression(Box::new(
+                            self.convert_expression_like(init),
+                        ))
                     }
                 })
             }),
@@ -392,21 +376,48 @@ impl<'a> ConvertCtx<'a> {
             oxc::ForStatementLeft::ObjectAssignmentTarget(o) => {
                 ForInOfLeft::Pattern(Box::new(self.convert_object_assignment_target(o)))
             }
-            oxc::ForStatementLeft::ComputedMemberExpression(m)
-            | oxc::ForStatementLeft::StaticMemberExpression(m)
-            | oxc::ForStatementLeft::PrivateFieldExpression(m) => {
-                let expr = self.convert_expression(m);
-                if let Expression::MemberExpression(mem) = expr {
-                    ForInOfLeft::Pattern(Box::new(PatternLike::MemberExpression(mem)))
-                } else {
-                    panic!("Expected MemberExpression");
-                }
+            oxc::ForStatementLeft::ComputedMemberExpression(m) => {
+                let mem = MemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression(&m.object)),
+                    property: Box::new(self.convert_expression(&m.expression)),
+                    computed: true,
+                };
+                ForInOfLeft::Pattern(Box::new(PatternLike::MemberExpression(mem)))
+            }
+            oxc::ForStatementLeft::StaticMemberExpression(m) => {
+                let mem = MemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression(&m.object)),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
+                    computed: false,
+                };
+                ForInOfLeft::Pattern(Box::new(PatternLike::MemberExpression(mem)))
+            }
+            oxc::ForStatementLeft::PrivateFieldExpression(p) => {
+                let mem = MemberExpression {
+                    base: self.make_base_node(p.span),
+                    object: Box::new(self.convert_expression(&p.object)),
+                    property: Box::new(Expression::PrivateName(PrivateName {
+                        base: self.make_base_node(p.field.span),
+                        id: Identifier {
+                            base: self.make_base_node(p.field.span),
+                            name: p.field.name.to_string(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        },
+                    })),
+                    computed: false,
+                };
+                ForInOfLeft::Pattern(Box::new(PatternLike::MemberExpression(mem)))
             }
             oxc::ForStatementLeft::TSAsExpression(_)
             | oxc::ForStatementLeft::TSSatisfiesExpression(_)
             | oxc::ForStatementLeft::TSNonNullExpression(_)
-            | oxc::ForStatementLeft::TSTypeAssertion(_)
-            | oxc::ForStatementLeft::TSInstantiationExpression(_) => {
+            | oxc::ForStatementLeft::TSTypeAssertion(_) => {
                 todo!("TypeScript expression in for-in/of left")
             }
         }
@@ -478,7 +489,7 @@ impl<'a> ConvertCtx<'a> {
             label: brk
                 .label
                 .as_ref()
-                .map(|l| self.convert_identifier_reference(l)),
+                .map(|l| self.convert_label_identifier(l)),
         }
     }
 
@@ -488,14 +499,14 @@ impl<'a> ConvertCtx<'a> {
             label: cont
                 .label
                 .as_ref()
-                .map(|l| self.convert_identifier_reference(l)),
+                .map(|l| self.convert_label_identifier(l)),
         }
     }
 
     fn convert_labeled_statement(&self, labeled: &oxc::LabeledStatement) -> LabeledStatement {
         LabeledStatement {
             base: self.make_base_node(labeled.span),
-            label: self.convert_identifier_name(&labeled.label),
+            label: self.convert_label_identifier(&labeled.label),
             body: Box::new(self.convert_statement(&labeled.body)),
         }
     }
@@ -518,7 +529,10 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_variable_declaration(&self, var: &oxc::VariableDeclaration) -> VariableDeclaration {
+    fn convert_variable_declaration(
+        &self,
+        var: &oxc::VariableDeclaration,
+    ) -> VariableDeclaration {
         VariableDeclaration {
             base: self.make_base_node(var.span),
             declarations: var
@@ -540,7 +554,10 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_variable_declarator(&self, declarator: &oxc::VariableDeclarator) -> VariableDeclarator {
+    fn convert_variable_declarator(
+        &self,
+        declarator: &oxc::VariableDeclarator,
+    ) -> VariableDeclarator {
         VariableDeclarator {
             base: self.make_base_node(declarator.span),
             id: self.convert_binding_pattern(&declarator.id),
@@ -548,14 +565,21 @@ impl<'a> ConvertCtx<'a> {
                 .init
                 .as_ref()
                 .map(|i| Box::new(self.convert_expression(i))),
-            definite: if declarator.definite { Some(true) } else { None },
+            definite: if declarator.definite {
+                Some(true)
+            } else {
+                None
+            },
         }
     }
 
     fn convert_function_declaration(&self, func: &oxc::Function) -> FunctionDeclaration {
         FunctionDeclaration {
             base: self.make_base_node(func.span),
-            id: func.id.as_ref().map(|id| self.convert_binding_identifier(id)),
+            id: func
+                .id
+                .as_ref()
+                .map(|id| self.convert_binding_identifier(id)),
             params: func
                 .params
                 .items
@@ -566,11 +590,11 @@ impl<'a> ConvertCtx<'a> {
             generator: func.generator,
             is_async: func.r#async,
             declare: if func.declare { Some(true) } else { None },
-            return_type: func.return_type.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            return_type: func.return_type.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            type_parameters: func.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: func.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
             predicate: None,
         }
@@ -579,7 +603,10 @@ impl<'a> ConvertCtx<'a> {
     fn convert_class_declaration(&self, class: &oxc::Class) -> ClassDeclaration {
         ClassDeclaration {
             base: self.make_base_node(class.span),
-            id: class.id.as_ref().map(|id| self.convert_binding_identifier(id)),
+            id: class
+                .id
+                .as_ref()
+                .map(|id| self.convert_binding_identifier(id)),
             super_class: class
                 .super_class
                 .as_ref()
@@ -590,7 +617,7 @@ impl<'a> ConvertCtx<'a> {
                     .body
                     .body
                     .iter()
-                    .map(|item| serde_json::to_value(item).unwrap_or(serde_json::Value::Null))
+                    .map(|_item| serde_json::Value::Null)
                     .collect(),
             },
             decorators: if class.decorators.is_empty() {
@@ -600,55 +627,30 @@ impl<'a> ConvertCtx<'a> {
                     class
                         .decorators
                         .iter()
-                        .map(|d| serde_json::to_value(d).unwrap_or(serde_json::Value::Null))
+                        .map(|_d| serde_json::Value::Null)
                         .collect(),
                 )
             },
             is_abstract: if class.r#abstract { Some(true) } else { None },
             declare: if class.declare { Some(true) } else { None },
-            implements: if class.implements.is_some() && !class.implements.as_ref().unwrap().is_empty() {
+            implements: if class.implements.is_empty() {
+                None
+            } else {
                 Some(
                     class
                         .implements
-                        .as_ref()
-                        .unwrap()
                         .iter()
-                        .map(|i| serde_json::to_value(i).unwrap_or(serde_json::Value::Null))
+                        .map(|_i| serde_json::Value::Null)
                         .collect(),
                 )
-            } else {
-                None
             },
-            super_type_parameters: class.super_type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            super_type_parameters: class.super_type_arguments.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            type_parameters: class.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: class.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
             mixins: None,
-        }
-    }
-
-    fn convert_module_declaration(&self, module: &oxc::ModuleDeclaration) -> Statement {
-        match module {
-            oxc::ModuleDeclaration::ImportDeclaration(i) => {
-                Statement::ImportDeclaration(self.convert_import_declaration(i))
-            }
-            oxc::ModuleDeclaration::ExportAllDeclaration(e) => {
-                Statement::ExportAllDeclaration(self.convert_export_all_declaration(e))
-            }
-            oxc::ModuleDeclaration::ExportDefaultDeclaration(e) => {
-                Statement::ExportDefaultDeclaration(self.convert_export_default_declaration(e))
-            }
-            oxc::ModuleDeclaration::ExportNamedDeclaration(e) => {
-                Statement::ExportNamedDeclaration(self.convert_export_named_declaration(e))
-            }
-            oxc::ModuleDeclaration::TSExportAssignment(_) => {
-                todo!("TSExportAssignment")
-            }
-            oxc::ModuleDeclaration::TSNamespaceExportDeclaration(_) => {
-                todo!("TSNamespaceExportDeclaration")
-            }
         }
     }
 
@@ -657,9 +659,14 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(import.span),
             specifiers: import
                 .specifiers
-                .iter()
-                .flat_map(|s| self.convert_import_declaration_specifier(s))
-                .collect(),
+                .as_ref()
+                .map(|specs| {
+                    specs
+                        .iter()
+                        .flat_map(|s| self.convert_import_declaration_specifier(s))
+                        .collect()
+                })
+                .unwrap_or_default(),
             source: StringLiteral {
                 base: self.make_base_node(import.source.span),
                 value: import.source.value.to_string(),
@@ -817,7 +824,7 @@ impl<'a> ConvertCtx<'a> {
             _ => {
                 // All expression variants
                 ExportDefaultDecl::Expression(Box::new(
-                    self.convert_export_default_declaration_kind(&export.declaration),
+                    self.convert_export_default_expr(&export.declaration),
                 ))
             }
         };
@@ -829,7 +836,7 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_export_default_declaration_kind(
+    fn convert_export_default_expr(
         &self,
         kind: &oxc::ExportDefaultDeclarationKind,
     ) -> Expression {
@@ -839,48 +846,7 @@ impl<'a> ConvertCtx<'a> {
             | oxc::ExportDefaultDeclarationKind::TSInterfaceDeclaration(_) => {
                 panic!("Should be handled separately")
             }
-            oxc::ExportDefaultDeclarationKind::BooleanLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::NullLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::NumericLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::BigIntLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::RegExpLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::StringLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::TemplateLiteral(e)
-            | oxc::ExportDefaultDeclarationKind::Identifier(e)
-            | oxc::ExportDefaultDeclarationKind::MetaProperty(e)
-            | oxc::ExportDefaultDeclarationKind::Super(e)
-            | oxc::ExportDefaultDeclarationKind::ArrayExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ArrowFunctionExpression(e)
-            | oxc::ExportDefaultDeclarationKind::AssignmentExpression(e)
-            | oxc::ExportDefaultDeclarationKind::AwaitExpression(e)
-            | oxc::ExportDefaultDeclarationKind::BinaryExpression(e)
-            | oxc::ExportDefaultDeclarationKind::CallExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ChainExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ClassExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ConditionalExpression(e)
-            | oxc::ExportDefaultDeclarationKind::LogicalExpression(e)
-            | oxc::ExportDefaultDeclarationKind::NewExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ObjectExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ParenthesizedExpression(e)
-            | oxc::ExportDefaultDeclarationKind::SequenceExpression(e)
-            | oxc::ExportDefaultDeclarationKind::TaggedTemplateExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ThisExpression(e)
-            | oxc::ExportDefaultDeclarationKind::UnaryExpression(e)
-            | oxc::ExportDefaultDeclarationKind::UpdateExpression(e)
-            | oxc::ExportDefaultDeclarationKind::YieldExpression(e)
-            | oxc::ExportDefaultDeclarationKind::PrivateInExpression(e)
-            | oxc::ExportDefaultDeclarationKind::JSXElement(e)
-            | oxc::ExportDefaultDeclarationKind::JSXFragment(e)
-            | oxc::ExportDefaultDeclarationKind::TSAsExpression(e)
-            | oxc::ExportDefaultDeclarationKind::TSSatisfiesExpression(e)
-            | oxc::ExportDefaultDeclarationKind::TSTypeAssertion(e)
-            | oxc::ExportDefaultDeclarationKind::TSNonNullExpression(e)
-            | oxc::ExportDefaultDeclarationKind::TSInstantiationExpression(e)
-            | oxc::ExportDefaultDeclarationKind::ComputedMemberExpression(e)
-            | oxc::ExportDefaultDeclarationKind::StaticMemberExpression(e)
-            | oxc::ExportDefaultDeclarationKind::PrivateFieldExpression(e) => {
-                self.convert_expression(e)
-            }
+            other => self.convert_expression_from_export_default(other),
         }
     }
 
@@ -920,6 +886,9 @@ impl<'a> ConvertCtx<'a> {
                     oxc::Declaration::TSImportEqualsDeclaration(_) => {
                         todo!("TSImportEqualsDeclaration")
                     }
+                    oxc::Declaration::TSGlobalDeclaration(_) => {
+                        todo!("TSGlobalDeclaration")
+                    }
                 })
             }),
             specifiers: export
@@ -954,31 +923,16 @@ impl<'a> ConvertCtx<'a> {
     }
 
     fn convert_export_specifier(&self, spec: &oxc::ExportSpecifier) -> ExportSpecifier {
-        match spec {
-            oxc::ExportSpecifier::ExportSpecifier(s) => {
-                ExportSpecifier::ExportSpecifier(ExportSpecifierData {
-                    base: self.make_base_node(s.span),
-                    local: self.convert_module_export_name(&s.local),
-                    exported: self.convert_module_export_name(&s.exported),
-                    export_kind: match s.export_kind {
-                        oxc::ImportOrExportKind::Value => None,
-                        oxc::ImportOrExportKind::Type => Some(ExportKind::Type),
-                    },
-                })
-            }
-            oxc::ExportSpecifier::ExportDefaultSpecifier(s) => {
-                ExportSpecifier::ExportDefaultSpecifier(ExportDefaultSpecifierData {
-                    base: self.make_base_node(s.span),
-                    exported: self.convert_identifier_name(&s.exported),
-                })
-            }
-            oxc::ExportSpecifier::ExportNamespaceSpecifier(s) => {
-                ExportSpecifier::ExportNamespaceSpecifier(ExportNamespaceSpecifierData {
-                    base: self.make_base_node(s.span),
-                    exported: self.convert_module_export_name(&s.exported),
-                })
-            }
-        }
+        // ExportSpecifier is now a struct in OXC v0.121, not an enum
+        ExportSpecifier::ExportSpecifier(ExportSpecifierData {
+            base: self.make_base_node(spec.span),
+            local: self.convert_module_export_name(&spec.local),
+            exported: self.convert_module_export_name(&spec.exported),
+            export_kind: match spec.export_kind {
+                oxc::ImportOrExportKind::Value => None,
+                oxc::ImportOrExportKind::Type => Some(ExportKind::Type),
+            },
+        })
     }
 
     fn convert_ts_type_alias_declaration(
@@ -988,14 +942,15 @@ impl<'a> ConvertCtx<'a> {
         TSTypeAliasDeclaration {
             base: self.make_base_node(type_alias.span),
             id: self.convert_binding_identifier(&type_alias.id),
-            type_annotation: Box::new(
-                serde_json::to_value(&type_alias.type_annotation)
-                    .unwrap_or(serde_json::Value::Null),
-            ),
-            type_parameters: type_alias.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_annotation: Box::new(serde_json::Value::Null),
+            type_parameters: type_alias.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            declare: if type_alias.declare { Some(true) } else { None },
+            declare: if type_alias.declare {
+                Some(true)
+            } else {
+                None
+            },
         }
     }
 
@@ -1006,40 +961,48 @@ impl<'a> ConvertCtx<'a> {
         TSInterfaceDeclaration {
             base: self.make_base_node(interface.span),
             id: self.convert_binding_identifier(&interface.id),
-            body: Box::new(
-                serde_json::to_value(&interface.body).unwrap_or(serde_json::Value::Null),
-            ),
-            type_parameters: interface.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            body: Box::new(serde_json::Value::Null),
+            type_parameters: interface.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            extends: if interface.extends.is_some() && !interface.extends.as_ref().unwrap().is_empty() {
+            extends: if interface.extends.is_empty() {
+                None
+            } else {
                 Some(
                     interface
                         .extends
-                        .as_ref()
-                        .unwrap()
                         .iter()
-                        .map(|e| serde_json::to_value(e).unwrap_or(serde_json::Value::Null))
+                        .map(|_e| serde_json::Value::Null)
                         .collect(),
                 )
+            },
+            declare: if interface.declare {
+                Some(true)
             } else {
                 None
             },
-            declare: if interface.declare { Some(true) } else { None },
         }
     }
 
-    fn convert_ts_enum_declaration(&self, ts_enum: &oxc::TSEnumDeclaration) -> TSEnumDeclaration {
+    fn convert_ts_enum_declaration(
+        &self,
+        ts_enum: &oxc::TSEnumDeclaration,
+    ) -> TSEnumDeclaration {
         TSEnumDeclaration {
             base: self.make_base_node(ts_enum.span),
             id: self.convert_binding_identifier(&ts_enum.id),
             members: ts_enum
+                .body
                 .members
                 .iter()
-                .map(|m| serde_json::to_value(m).unwrap_or(serde_json::Value::Null))
+                .map(|_m| serde_json::Value::Null)
                 .collect(),
             declare: if ts_enum.declare { Some(true) } else { None },
-            is_const: if ts_enum.r#const { Some(true) } else { None },
+            is_const: if ts_enum.r#const {
+                Some(true)
+            } else {
+                None
+            },
         }
     }
 
@@ -1049,14 +1012,10 @@ impl<'a> ConvertCtx<'a> {
     ) -> TSModuleDeclaration {
         TSModuleDeclaration {
             base: self.make_base_node(module.span),
-            id: Box::new(serde_json::to_value(&module.id).unwrap_or(serde_json::Value::Null)),
-            body: Box::new(serde_json::to_value(&module.body).unwrap_or(serde_json::Value::Null)),
+            id: Box::new(serde_json::Value::Null),
+            body: Box::new(serde_json::Value::Null),
             declare: if module.declare { Some(true) } else { None },
-            global: if module.kind == oxc::TSModuleDeclarationKind::Global {
-                Some(true)
-            } else {
-                None
-            },
+            global: None,
         }
     }
 
@@ -1075,11 +1034,11 @@ impl<'a> ConvertCtx<'a> {
             }),
             oxc::Expression::BigIntLiteral(b) => Expression::BigIntLiteral(BigIntLiteral {
                 base: self.make_base_node(b.span),
-                value: b.raw.to_string(),
+                value: b.raw.as_ref().map(|r| r.to_string()).unwrap_or_default(),
             }),
             oxc::Expression::RegExpLiteral(r) => Expression::RegExpLiteral(RegExpLiteral {
                 base: self.make_base_node(r.span),
-                pattern: r.regex.pattern.to_string(),
+                pattern: r.regex.pattern.text.to_string(),
                 flags: r.regex.flags.to_string(),
             }),
             oxc::Expression::StringLiteral(s) => Expression::StringLiteral(StringLiteral {
@@ -1195,9 +1154,9 @@ impl<'a> ConvertCtx<'a> {
                 Expression::MemberExpression(MemberExpression {
                     base: self.make_base_node(m.span),
                     object: Box::new(self.convert_expression(&m.object)),
-                    property: Box::new(Expression::Identifier(self.convert_identifier_name(
-                        &m.property,
-                    ))),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
                     computed: false,
                 })
             }
@@ -1217,6 +1176,9 @@ impl<'a> ConvertCtx<'a> {
                     })),
                     computed: false,
                 })
+            }
+            oxc::Expression::V8IntrinsicExpression(_) => {
+                todo!("V8IntrinsicExpression")
             }
         }
     }
@@ -1270,50 +1232,7 @@ impl<'a> ConvertCtx<'a> {
                         }))
                     }
                     oxc::ArrayExpressionElement::Elision(_) => None,
-                    oxc::ArrayExpressionElement::BooleanLiteral(e)
-                    | oxc::ArrayExpressionElement::NullLiteral(e)
-                    | oxc::ArrayExpressionElement::NumericLiteral(e)
-                    | oxc::ArrayExpressionElement::BigIntLiteral(e)
-                    | oxc::ArrayExpressionElement::RegExpLiteral(e)
-                    | oxc::ArrayExpressionElement::StringLiteral(e)
-                    | oxc::ArrayExpressionElement::TemplateLiteral(e)
-                    | oxc::ArrayExpressionElement::Identifier(e)
-                    | oxc::ArrayExpressionElement::MetaProperty(e)
-                    | oxc::ArrayExpressionElement::Super(e)
-                    | oxc::ArrayExpressionElement::ArrayExpression(e)
-                    | oxc::ArrayExpressionElement::ArrowFunctionExpression(e)
-                    | oxc::ArrayExpressionElement::AssignmentExpression(e)
-                    | oxc::ArrayExpressionElement::AwaitExpression(e)
-                    | oxc::ArrayExpressionElement::BinaryExpression(e)
-                    | oxc::ArrayExpressionElement::CallExpression(e)
-                    | oxc::ArrayExpressionElement::ChainExpression(e)
-                    | oxc::ArrayExpressionElement::ClassExpression(e)
-                    | oxc::ArrayExpressionElement::ConditionalExpression(e)
-                    | oxc::ArrayExpressionElement::FunctionExpression(e)
-                    | oxc::ArrayExpressionElement::ImportExpression(e)
-                    | oxc::ArrayExpressionElement::LogicalExpression(e)
-                    | oxc::ArrayExpressionElement::NewExpression(e)
-                    | oxc::ArrayExpressionElement::ObjectExpression(e)
-                    | oxc::ArrayExpressionElement::ParenthesizedExpression(e)
-                    | oxc::ArrayExpressionElement::SequenceExpression(e)
-                    | oxc::ArrayExpressionElement::TaggedTemplateExpression(e)
-                    | oxc::ArrayExpressionElement::ThisExpression(e)
-                    | oxc::ArrayExpressionElement::UnaryExpression(e)
-                    | oxc::ArrayExpressionElement::UpdateExpression(e)
-                    | oxc::ArrayExpressionElement::YieldExpression(e)
-                    | oxc::ArrayExpressionElement::PrivateInExpression(e)
-                    | oxc::ArrayExpressionElement::JSXElement(e)
-                    | oxc::ArrayExpressionElement::JSXFragment(e)
-                    | oxc::ArrayExpressionElement::TSAsExpression(e)
-                    | oxc::ArrayExpressionElement::TSSatisfiesExpression(e)
-                    | oxc::ArrayExpressionElement::TSTypeAssertion(e)
-                    | oxc::ArrayExpressionElement::TSNonNullExpression(e)
-                    | oxc::ArrayExpressionElement::TSInstantiationExpression(e)
-                    | oxc::ArrayExpressionElement::ComputedMemberExpression(e)
-                    | oxc::ArrayExpressionElement::StaticMemberExpression(e)
-                    | oxc::ArrayExpressionElement::PrivateFieldExpression(e) => {
-                        Some(self.convert_expression(e))
-                    }
+                    other => Some(self.convert_expression_from_array_element(other)),
                 })
                 .collect(),
         }
@@ -1324,7 +1243,14 @@ impl<'a> ConvertCtx<'a> {
         arrow: &oxc::ArrowFunctionExpression,
     ) -> ArrowFunctionExpression {
         let body = if arrow.expression {
-            ArrowFunctionBody::Expression(Box::new(self.convert_expression(&arrow.body.statements[0].as_expression_statement().unwrap().expression)))
+            // When expression is true, the body contains a single expression statement
+            let expr = match &arrow.body.statements[0] {
+                oxc::Statement::ExpressionStatement(es) => {
+                    self.convert_expression(&es.expression)
+                }
+                _ => panic!("Expected ExpressionStatement in arrow expression body"),
+            };
+            ArrowFunctionBody::Expression(Box::new(expr))
         } else {
             ArrowFunctionBody::BlockStatement(self.convert_function_body(&arrow.body))
         };
@@ -1341,12 +1267,16 @@ impl<'a> ConvertCtx<'a> {
             id: None,
             generator: false,
             is_async: arrow.r#async,
-            expression: if arrow.expression { Some(true) } else { None },
-            return_type: arrow.return_type.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            expression: if arrow.expression {
+                Some(true)
+            } else {
+                None
+            },
+            return_type: arrow.return_type.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            type_parameters: arrow.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: arrow.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
             predicate: None,
         }
@@ -1397,35 +1327,25 @@ impl<'a> ConvertCtx<'a> {
                 })
             }
             oxc::AssignmentTarget::ComputedMemberExpression(m) => {
-                let expr = Expression::MemberExpression(MemberExpression {
+                PatternLike::MemberExpression(MemberExpression {
                     base: self.make_base_node(m.span),
                     object: Box::new(self.convert_expression(&m.object)),
                     property: Box::new(self.convert_expression(&m.expression)),
                     computed: true,
-                });
-                if let Expression::MemberExpression(mem) = expr {
-                    PatternLike::MemberExpression(mem)
-                } else {
-                    unreachable!()
-                }
+                })
             }
             oxc::AssignmentTarget::StaticMemberExpression(m) => {
-                let expr = Expression::MemberExpression(MemberExpression {
+                PatternLike::MemberExpression(MemberExpression {
                     base: self.make_base_node(m.span),
                     object: Box::new(self.convert_expression(&m.object)),
-                    property: Box::new(Expression::Identifier(self.convert_identifier_name(
-                        &m.property,
-                    ))),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
                     computed: false,
-                });
-                if let Expression::MemberExpression(mem) = expr {
-                    PatternLike::MemberExpression(mem)
-                } else {
-                    unreachable!()
-                }
+                })
             }
             oxc::AssignmentTarget::PrivateFieldExpression(p) => {
-                let expr = Expression::MemberExpression(MemberExpression {
+                PatternLike::MemberExpression(MemberExpression {
                     base: self.make_base_node(p.span),
                     object: Box::new(self.convert_expression(&p.object)),
                     property: Box::new(Expression::PrivateName(PrivateName {
@@ -1439,12 +1359,7 @@ impl<'a> ConvertCtx<'a> {
                         },
                     })),
                     computed: false,
-                });
-                if let Expression::MemberExpression(mem) = expr {
-                    PatternLike::MemberExpression(mem)
-                } else {
-                    unreachable!()
-                }
+                })
             }
             oxc::AssignmentTarget::ArrayAssignmentTarget(a) => {
                 self.convert_array_assignment_target(a)
@@ -1455,8 +1370,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::AssignmentTarget::TSAsExpression(_)
             | oxc::AssignmentTarget::TSSatisfiesExpression(_)
             | oxc::AssignmentTarget::TSNonNullExpression(_)
-            | oxc::AssignmentTarget::TSTypeAssertion(_)
-            | oxc::AssignmentTarget::TSInstantiationExpression(_) => {
+            | oxc::AssignmentTarget::TSTypeAssertion(_) => {
                 todo!("TypeScript expression in assignment target")
             }
         }
@@ -1478,19 +1392,9 @@ impl<'a> ConvertCtx<'a> {
                             decorators: None,
                         }))
                     }
-                    Some(
-                        oxc::AssignmentTargetMaybeDefault::AssignmentTargetIdentifier(t)
-                        | oxc::AssignmentTargetMaybeDefault::ComputedMemberExpression(t)
-                        | oxc::AssignmentTargetMaybeDefault::StaticMemberExpression(t)
-                        | oxc::AssignmentTargetMaybeDefault::PrivateFieldExpression(t)
-                        | oxc::AssignmentTargetMaybeDefault::ArrayAssignmentTarget(t)
-                        | oxc::AssignmentTargetMaybeDefault::ObjectAssignmentTarget(t)
-                        | oxc::AssignmentTargetMaybeDefault::TSAsExpression(t)
-                        | oxc::AssignmentTargetMaybeDefault::TSSatisfiesExpression(t)
-                        | oxc::AssignmentTargetMaybeDefault::TSNonNullExpression(t)
-                        | oxc::AssignmentTargetMaybeDefault::TSTypeAssertion(t)
-                        | oxc::AssignmentTargetMaybeDefault::TSInstantiationExpression(t),
-                    ) => Some(self.convert_assignment_target(t)),
+                    Some(other) => {
+                        Some(self.convert_assignment_target_maybe_default_as_target(other))
+                    }
                     None => None,
                 })
                 .collect(),
@@ -1499,81 +1403,156 @@ impl<'a> ConvertCtx<'a> {
         })
     }
 
+    /// Convert an AssignmentTargetMaybeDefault that is NOT an AssignmentTargetWithDefault
+    /// to a PatternLike by extracting the underlying AssignmentTarget
+    fn convert_assignment_target_maybe_default_as_target(
+        &self,
+        target: &oxc::AssignmentTargetMaybeDefault,
+    ) -> PatternLike {
+        match target {
+            oxc::AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(_) => {
+                unreachable!("handled separately")
+            }
+            oxc::AssignmentTargetMaybeDefault::AssignmentTargetIdentifier(id) => {
+                PatternLike::Identifier(Identifier {
+                    base: self.make_base_node(id.span),
+                    name: id.name.to_string(),
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                })
+            }
+            oxc::AssignmentTargetMaybeDefault::ComputedMemberExpression(m) => {
+                PatternLike::MemberExpression(MemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression(&m.object)),
+                    property: Box::new(self.convert_expression(&m.expression)),
+                    computed: true,
+                })
+            }
+            oxc::AssignmentTargetMaybeDefault::StaticMemberExpression(m) => {
+                PatternLike::MemberExpression(MemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression(&m.object)),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
+                    computed: false,
+                })
+            }
+            oxc::AssignmentTargetMaybeDefault::PrivateFieldExpression(p) => {
+                PatternLike::MemberExpression(MemberExpression {
+                    base: self.make_base_node(p.span),
+                    object: Box::new(self.convert_expression(&p.object)),
+                    property: Box::new(Expression::PrivateName(PrivateName {
+                        base: self.make_base_node(p.field.span),
+                        id: Identifier {
+                            base: self.make_base_node(p.field.span),
+                            name: p.field.name.to_string(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        },
+                    })),
+                    computed: false,
+                })
+            }
+            oxc::AssignmentTargetMaybeDefault::ArrayAssignmentTarget(a) => {
+                self.convert_array_assignment_target(a)
+            }
+            oxc::AssignmentTargetMaybeDefault::ObjectAssignmentTarget(o) => {
+                self.convert_object_assignment_target(o)
+            }
+            oxc::AssignmentTargetMaybeDefault::TSAsExpression(_)
+            | oxc::AssignmentTargetMaybeDefault::TSSatisfiesExpression(_)
+            | oxc::AssignmentTargetMaybeDefault::TSNonNullExpression(_)
+            | oxc::AssignmentTargetMaybeDefault::TSTypeAssertion(_) => {
+                todo!("TypeScript expression in assignment target")
+            }
+        }
+    }
+
     fn convert_object_assignment_target(&self, obj: &oxc::ObjectAssignmentTarget) -> PatternLike {
-        PatternLike::ObjectPattern(ObjectPattern {
-            base: self.make_base_node(obj.span),
-            properties: obj
-                .properties
-                .iter()
-                .map(|p| match p {
-                    oxc::AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(id) => {
-                        let ident = PatternLike::Identifier(Identifier {
+        let mut properties: Vec<ObjectPatternProperty> = obj
+            .properties
+            .iter()
+            .map(|p| match p {
+                oxc::AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(id) => {
+                    let ident = PatternLike::Identifier(Identifier {
+                        base: self.make_base_node(id.binding.span),
+                        name: id.binding.name.to_string(),
+                        type_annotation: None,
+                        optional: None,
+                        decorators: None,
+                    });
+                    let value = if let Some(init) = &id.init {
+                        Box::new(PatternLike::AssignmentPattern(AssignmentPattern {
+                            base: self.make_base_node(id.span),
+                            left: Box::new(ident),
+                            right: Box::new(self.convert_expression(init)),
+                            type_annotation: None,
+                            decorators: None,
+                        }))
+                    } else {
+                        Box::new(ident)
+                    };
+                    ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
+                        base: self.make_base_node(id.span),
+                        key: Box::new(Expression::Identifier(Identifier {
                             base: self.make_base_node(id.binding.span),
                             name: id.binding.name.to_string(),
                             type_annotation: None,
                             optional: None,
                             decorators: None,
-                        });
-                        let value = if let Some(init) = &id.init {
+                        })),
+                        value,
+                        computed: false,
+                        shorthand: true,
+                        decorators: None,
+                        method: None,
+                    })
+                }
+                oxc::AssignmentTargetProperty::AssignmentTargetPropertyProperty(prop) => {
+                    let value = match &prop.binding {
+                        oxc::AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(d) => {
                             Box::new(PatternLike::AssignmentPattern(AssignmentPattern {
-                                base: self.make_base_node(id.span),
-                                left: Box::new(ident),
-                                right: Box::new(self.convert_expression(init)),
+                                base: self.make_base_node(d.span),
+                                left: Box::new(self.convert_assignment_target(&d.binding)),
+                                right: Box::new(self.convert_expression(&d.init)),
                                 type_annotation: None,
                                 decorators: None,
                             }))
-                        } else {
-                            Box::new(ident)
-                        };
-                        ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
-                            base: self.make_base_node(id.span),
-                            key: Box::new(Expression::Identifier(Identifier {
-                                base: self.make_base_node(id.binding.span),
-                                name: id.binding.name.to_string(),
-                                type_annotation: None,
-                                optional: None,
-                                decorators: None,
-                            })),
-                            value,
-                            computed: false,
-                            shorthand: true,
-                            decorators: None,
-                            method: None,
-                        })
-                    }
-                    oxc::AssignmentTargetProperty::AssignmentTargetPropertyProperty(prop) => {
-                        let value = match &prop.binding {
-                            oxc::AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(d) => {
-                                Box::new(PatternLike::AssignmentPattern(AssignmentPattern {
-                                    base: self.make_base_node(d.span),
-                                    left: Box::new(self.convert_assignment_target(&d.binding)),
-                                    right: Box::new(self.convert_expression(&d.init)),
-                                    type_annotation: None,
-                                    decorators: None,
-                                }))
-                            }
-                            _ => Box::new(self.convert_assignment_target(&prop.binding)),
-                        };
-                        ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
-                            base: self.make_base_node(prop.span),
-                            key: Box::new(self.convert_property_key(&prop.name)),
-                            value,
-                            computed: matches!(prop.name, oxc::PropertyKey::PrivateIdentifier(_) | oxc::PropertyKey::BooleanLiteral(_) | oxc::PropertyKey::NullLiteral(_) | oxc::PropertyKey::NumericLiteral(_) | oxc::PropertyKey::BigIntLiteral(_) | oxc::PropertyKey::RegExpLiteral(_) | oxc::PropertyKey::StringLiteral(_) | oxc::PropertyKey::TemplateLiteral(_) | oxc::PropertyKey::Identifier(_) | oxc::PropertyKey::MetaProperty(_) | oxc::PropertyKey::Super(_) | oxc::PropertyKey::ArrayExpression(_) | oxc::PropertyKey::ArrowFunctionExpression(_) | oxc::PropertyKey::AssignmentExpression(_) | oxc::PropertyKey::AwaitExpression(_) | oxc::PropertyKey::BinaryExpression(_) | oxc::PropertyKey::CallExpression(_) | oxc::PropertyKey::ChainExpression(_) | oxc::PropertyKey::ClassExpression(_) | oxc::PropertyKey::ConditionalExpression(_) | oxc::PropertyKey::FunctionExpression(_) | oxc::PropertyKey::ImportExpression(_) | oxc::PropertyKey::LogicalExpression(_) | oxc::PropertyKey::NewExpression(_) | oxc::PropertyKey::ObjectExpression(_) | oxc::PropertyKey::ParenthesizedExpression(_) | oxc::PropertyKey::SequenceExpression(_) | oxc::PropertyKey::TaggedTemplateExpression(_) | oxc::PropertyKey::ThisExpression(_) | oxc::PropertyKey::UnaryExpression(_) | oxc::PropertyKey::UpdateExpression(_) | oxc::PropertyKey::YieldExpression(_) | oxc::PropertyKey::PrivateInExpression(_) | oxc::PropertyKey::JSXElement(_) | oxc::PropertyKey::JSXFragment(_) | oxc::PropertyKey::TSAsExpression(_) | oxc::PropertyKey::TSSatisfiesExpression(_) | oxc::PropertyKey::TSTypeAssertion(_) | oxc::PropertyKey::TSNonNullExpression(_) | oxc::PropertyKey::TSInstantiationExpression(_) | oxc::PropertyKey::ComputedMemberExpression(_) | oxc::PropertyKey::StaticMemberExpression(_) | oxc::PropertyKey::PrivateFieldExpression(_)),
-                            shorthand: false,
-                            decorators: None,
-                            method: None,
-                        })
-                    }
-                    oxc::AssignmentTargetProperty::AssignmentTargetRest(rest) => {
-                        ObjectPatternProperty::RestElement(RestElement {
-                            base: self.make_base_node(rest.span),
-                            argument: Box::new(self.convert_assignment_target(&rest.target)),
-                            type_annotation: None,
-                            decorators: None,
-                        })
-                    }
-                })
-                .collect(),
+                        }
+                        other => Box::new(
+                            self.convert_assignment_target_maybe_default_as_target(other),
+                        ),
+                    };
+                    ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
+                        base: self.make_base_node(prop.span),
+                        key: Box::new(self.convert_property_key(&prop.name)),
+                        value,
+                        computed: prop.computed,
+                        shorthand: false,
+                        decorators: None,
+                        method: None,
+                    })
+                }
+            })
+            .collect();
+
+        // Handle rest element separately (it's now a separate field)
+        if let Some(rest) = &obj.rest {
+            properties.push(ObjectPatternProperty::RestElement(RestElement {
+                base: self.make_base_node(rest.span),
+                argument: Box::new(self.convert_assignment_target(&rest.target)),
+                type_annotation: None,
+                decorators: None,
+            }));
+        }
+
+        PatternLike::ObjectPattern(ObjectPattern {
+            base: self.make_base_node(obj.span),
+            properties,
             type_annotation: None,
             decorators: None,
         })
@@ -1631,8 +1610,8 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|a| self.convert_argument(a))
                 .collect(),
-            type_parameters: call.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: call.type_arguments.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
             type_arguments: None,
             optional: if call.optional { Some(true) } else { None },
@@ -1645,48 +1624,7 @@ impl<'a> ConvertCtx<'a> {
                 base: self.make_base_node(s.span),
                 argument: Box::new(self.convert_expression(&s.argument)),
             }),
-            oxc::Argument::BooleanLiteral(e)
-            | oxc::Argument::NullLiteral(e)
-            | oxc::Argument::NumericLiteral(e)
-            | oxc::Argument::BigIntLiteral(e)
-            | oxc::Argument::RegExpLiteral(e)
-            | oxc::Argument::StringLiteral(e)
-            | oxc::Argument::TemplateLiteral(e)
-            | oxc::Argument::Identifier(e)
-            | oxc::Argument::MetaProperty(e)
-            | oxc::Argument::Super(e)
-            | oxc::Argument::ArrayExpression(e)
-            | oxc::Argument::ArrowFunctionExpression(e)
-            | oxc::Argument::AssignmentExpression(e)
-            | oxc::Argument::AwaitExpression(e)
-            | oxc::Argument::BinaryExpression(e)
-            | oxc::Argument::CallExpression(e)
-            | oxc::Argument::ChainExpression(e)
-            | oxc::Argument::ClassExpression(e)
-            | oxc::Argument::ConditionalExpression(e)
-            | oxc::Argument::FunctionExpression(e)
-            | oxc::Argument::ImportExpression(e)
-            | oxc::Argument::LogicalExpression(e)
-            | oxc::Argument::NewExpression(e)
-            | oxc::Argument::ObjectExpression(e)
-            | oxc::Argument::ParenthesizedExpression(e)
-            | oxc::Argument::SequenceExpression(e)
-            | oxc::Argument::TaggedTemplateExpression(e)
-            | oxc::Argument::ThisExpression(e)
-            | oxc::Argument::UnaryExpression(e)
-            | oxc::Argument::UpdateExpression(e)
-            | oxc::Argument::YieldExpression(e)
-            | oxc::Argument::PrivateInExpression(e)
-            | oxc::Argument::JSXElement(e)
-            | oxc::Argument::JSXFragment(e)
-            | oxc::Argument::TSAsExpression(e)
-            | oxc::Argument::TSSatisfiesExpression(e)
-            | oxc::Argument::TSTypeAssertion(e)
-            | oxc::Argument::TSNonNullExpression(e)
-            | oxc::Argument::TSInstantiationExpression(e)
-            | oxc::Argument::ComputedMemberExpression(e)
-            | oxc::Argument::StaticMemberExpression(e)
-            | oxc::Argument::PrivateFieldExpression(e) => self.convert_expression(e),
+            other => self.convert_expression_from_argument(other),
         }
     }
 
@@ -1703,8 +1641,8 @@ impl<'a> ConvertCtx<'a> {
                         .map(|a| self.convert_argument(a))
                         .collect(),
                     optional: c.optional,
-                    type_parameters: c.type_parameters.as_ref().map(|t| {
-                        Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+                    type_parameters: c.type_arguments.as_ref().map(|_t| {
+                        Box::new(serde_json::Value::Null)
                     }),
                     type_arguments: None,
                 })
@@ -1722,9 +1660,9 @@ impl<'a> ConvertCtx<'a> {
                 Expression::OptionalMemberExpression(OptionalMemberExpression {
                     base: self.make_base_node(m.span),
                     object: Box::new(self.convert_expression(&m.object)),
-                    property: Box::new(Expression::Identifier(self.convert_identifier_name(
-                        &m.property,
-                    ))),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
                     computed: false,
                     optional: m.optional,
                 })
@@ -1747,13 +1685,19 @@ impl<'a> ConvertCtx<'a> {
                     optional: p.optional,
                 })
             }
+            oxc::ChainElement::TSNonNullExpression(_) => {
+                todo!("TSNonNullExpression in chain expression")
+            }
         }
     }
 
     fn convert_class_expression(&self, class: &oxc::Class) -> ClassExpression {
         ClassExpression {
             base: self.make_base_node(class.span),
-            id: class.id.as_ref().map(|id| self.convert_binding_identifier(id)),
+            id: class
+                .id
+                .as_ref()
+                .map(|id| self.convert_binding_identifier(id)),
             super_class: class
                 .super_class
                 .as_ref()
@@ -1764,7 +1708,7 @@ impl<'a> ConvertCtx<'a> {
                     .body
                     .body
                     .iter()
-                    .map(|item| serde_json::to_value(item).unwrap_or(serde_json::Value::Null))
+                    .map(|_item| serde_json::Value::Null)
                     .collect(),
             },
             decorators: if class.decorators.is_empty() {
@@ -1774,28 +1718,26 @@ impl<'a> ConvertCtx<'a> {
                     class
                         .decorators
                         .iter()
-                        .map(|d| serde_json::to_value(d).unwrap_or(serde_json::Value::Null))
+                        .map(|_d| serde_json::Value::Null)
                         .collect(),
                 )
             },
-            implements: if class.implements.is_some() && !class.implements.as_ref().unwrap().is_empty() {
+            implements: if class.implements.is_empty() {
+                None
+            } else {
                 Some(
                     class
                         .implements
-                        .as_ref()
-                        .unwrap()
                         .iter()
-                        .map(|i| serde_json::to_value(i).unwrap_or(serde_json::Value::Null))
+                        .map(|_i| serde_json::Value::Null)
                         .collect(),
                 )
-            } else {
-                None
             },
-            super_type_parameters: class.super_type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            super_type_parameters: class.super_type_arguments.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            type_parameters: class.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: class.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
         }
     }
@@ -1815,7 +1757,10 @@ impl<'a> ConvertCtx<'a> {
     fn convert_function_expression(&self, func: &oxc::Function) -> FunctionExpression {
         FunctionExpression {
             base: self.make_base_node(func.span),
-            id: func.id.as_ref().map(|id| self.convert_binding_identifier(id)),
+            id: func
+                .id
+                .as_ref()
+                .map(|id| self.convert_binding_identifier(id)),
             params: func
                 .params
                 .items
@@ -1825,11 +1770,11 @@ impl<'a> ConvertCtx<'a> {
             body: self.convert_function_body(func.body.as_ref().unwrap()),
             generator: func.generator,
             is_async: func.r#async,
-            return_type: func.return_type.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            return_type: func.return_type.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
-            type_parameters: func.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: func.type_parameters.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
         }
     }
@@ -1860,8 +1805,8 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|a| self.convert_argument(a))
                 .collect(),
-            type_parameters: new.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: new.type_arguments.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
             type_arguments: None,
         }
@@ -1878,7 +1823,10 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_object_property_kind(&self, prop: &oxc::ObjectPropertyKind) -> ObjectExpressionProperty {
+    fn convert_object_property_kind(
+        &self,
+        prop: &oxc::ObjectPropertyKind,
+    ) -> ObjectExpressionProperty {
         match prop {
             oxc::ObjectPropertyKind::ObjectProperty(p) => {
                 ObjectExpressionProperty::ObjectProperty(self.convert_object_property(p))
@@ -1921,48 +1869,7 @@ impl<'a> ConvertCtx<'a> {
                     },
                 })
             }
-            oxc::PropertyKey::BooleanLiteral(e)
-            | oxc::PropertyKey::NullLiteral(e)
-            | oxc::PropertyKey::NumericLiteral(e)
-            | oxc::PropertyKey::BigIntLiteral(e)
-            | oxc::PropertyKey::RegExpLiteral(e)
-            | oxc::PropertyKey::StringLiteral(e)
-            | oxc::PropertyKey::TemplateLiteral(e)
-            | oxc::PropertyKey::Identifier(e)
-            | oxc::PropertyKey::MetaProperty(e)
-            | oxc::PropertyKey::Super(e)
-            | oxc::PropertyKey::ArrayExpression(e)
-            | oxc::PropertyKey::ArrowFunctionExpression(e)
-            | oxc::PropertyKey::AssignmentExpression(e)
-            | oxc::PropertyKey::AwaitExpression(e)
-            | oxc::PropertyKey::BinaryExpression(e)
-            | oxc::PropertyKey::CallExpression(e)
-            | oxc::PropertyKey::ChainExpression(e)
-            | oxc::PropertyKey::ClassExpression(e)
-            | oxc::PropertyKey::ConditionalExpression(e)
-            | oxc::PropertyKey::FunctionExpression(e)
-            | oxc::PropertyKey::ImportExpression(e)
-            | oxc::PropertyKey::LogicalExpression(e)
-            | oxc::PropertyKey::NewExpression(e)
-            | oxc::PropertyKey::ObjectExpression(e)
-            | oxc::PropertyKey::ParenthesizedExpression(e)
-            | oxc::PropertyKey::SequenceExpression(e)
-            | oxc::PropertyKey::TaggedTemplateExpression(e)
-            | oxc::PropertyKey::ThisExpression(e)
-            | oxc::PropertyKey::UnaryExpression(e)
-            | oxc::PropertyKey::UpdateExpression(e)
-            | oxc::PropertyKey::YieldExpression(e)
-            | oxc::PropertyKey::PrivateInExpression(e)
-            | oxc::PropertyKey::JSXElement(e)
-            | oxc::PropertyKey::JSXFragment(e)
-            | oxc::PropertyKey::TSAsExpression(e)
-            | oxc::PropertyKey::TSSatisfiesExpression(e)
-            | oxc::PropertyKey::TSTypeAssertion(e)
-            | oxc::PropertyKey::TSNonNullExpression(e)
-            | oxc::PropertyKey::TSInstantiationExpression(e)
-            | oxc::PropertyKey::ComputedMemberExpression(e)
-            | oxc::PropertyKey::StaticMemberExpression(e)
-            | oxc::PropertyKey::PrivateFieldExpression(e) => self.convert_expression(e),
+            other => self.convert_expression_from_property_key(other),
         }
     }
 
@@ -1976,7 +1883,10 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_sequence_expression(&self, seq: &oxc::SequenceExpression) -> SequenceExpression {
+    fn convert_sequence_expression(
+        &self,
+        seq: &oxc::SequenceExpression,
+    ) -> SequenceExpression {
         SequenceExpression {
             base: self.make_base_node(seq.span),
             expressions: seq
@@ -1995,8 +1905,8 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(tagged.span),
             tag: Box::new(self.convert_expression(&tagged.tag)),
             quasi: self.convert_template_literal(&tagged.quasi),
-            type_parameters: tagged.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            type_parameters: tagged.type_arguments.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
         }
     }
@@ -2026,8 +1936,72 @@ impl<'a> ConvertCtx<'a> {
         UpdateExpression {
             base: self.make_base_node(update.span),
             operator: self.convert_update_operator(update.operator),
-            argument: Box::new(self.convert_expression(&update.argument)),
+            argument: Box::new(self.convert_simple_assignment_target_as_expression(&update.argument)),
             prefix: update.prefix,
+        }
+    }
+
+    fn convert_simple_assignment_target_as_expression(
+        &self,
+        target: &oxc::SimpleAssignmentTarget,
+    ) -> Expression {
+        match target {
+            oxc::SimpleAssignmentTarget::AssignmentTargetIdentifier(id) => {
+                Expression::Identifier(Identifier {
+                    base: self.make_base_node(id.span),
+                    name: id.name.to_string(),
+                    type_annotation: None,
+                    optional: None,
+                    decorators: None,
+                })
+            }
+            oxc::SimpleAssignmentTarget::ComputedMemberExpression(m) => {
+                Expression::MemberExpression(MemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression(&m.object)),
+                    property: Box::new(self.convert_expression(&m.expression)),
+                    computed: true,
+                })
+            }
+            oxc::SimpleAssignmentTarget::StaticMemberExpression(m) => {
+                Expression::MemberExpression(MemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression(&m.object)),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
+                    computed: false,
+                })
+            }
+            oxc::SimpleAssignmentTarget::PrivateFieldExpression(p) => {
+                Expression::MemberExpression(MemberExpression {
+                    base: self.make_base_node(p.span),
+                    object: Box::new(self.convert_expression(&p.object)),
+                    property: Box::new(Expression::PrivateName(PrivateName {
+                        base: self.make_base_node(p.field.span),
+                        id: Identifier {
+                            base: self.make_base_node(p.field.span),
+                            name: p.field.name.to_string(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        },
+                    })),
+                    computed: false,
+                })
+            }
+            oxc::SimpleAssignmentTarget::TSAsExpression(t) => {
+                self.convert_expression(&t.expression)
+            }
+            oxc::SimpleAssignmentTarget::TSSatisfiesExpression(t) => {
+                self.convert_expression(&t.expression)
+            }
+            oxc::SimpleAssignmentTarget::TSNonNullExpression(t) => {
+                self.convert_expression(&t.expression)
+            }
+            oxc::SimpleAssignmentTarget::TSTypeAssertion(t) => {
+                self.convert_expression(&t.expression)
+            }
         }
     }
 
@@ -2038,7 +2012,10 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_yield_expression(&self, yield_expr: &oxc::YieldExpression) -> YieldExpression {
+    fn convert_yield_expression(
+        &self,
+        yield_expr: &oxc::YieldExpression,
+    ) -> YieldExpression {
         YieldExpression {
             base: self.make_base_node(yield_expr.span),
             argument: yield_expr
@@ -2053,9 +2030,7 @@ impl<'a> ConvertCtx<'a> {
         TSAsExpression {
             base: self.make_base_node(ts_as.span),
             expression: Box::new(self.convert_expression(&ts_as.expression)),
-            type_annotation: Box::new(
-                serde_json::to_value(&ts_as.type_annotation).unwrap_or(serde_json::Value::Null),
-            ),
+            type_annotation: Box::new(serde_json::Value::Null),
         }
     }
 
@@ -2066,20 +2041,18 @@ impl<'a> ConvertCtx<'a> {
         TSSatisfiesExpression {
             base: self.make_base_node(ts_sat.span),
             expression: Box::new(self.convert_expression(&ts_sat.expression)),
-            type_annotation: Box::new(
-                serde_json::to_value(&ts_sat.type_annotation).unwrap_or(serde_json::Value::Null),
-            ),
+            type_annotation: Box::new(serde_json::Value::Null),
         }
     }
 
-    fn convert_ts_type_assertion(&self, ts_assert: &oxc::TSTypeAssertion) -> TSTypeAssertion {
+    fn convert_ts_type_assertion(
+        &self,
+        ts_assert: &oxc::TSTypeAssertion,
+    ) -> TSTypeAssertion {
         TSTypeAssertion {
             base: self.make_base_node(ts_assert.span),
             expression: Box::new(self.convert_expression(&ts_assert.expression)),
-            type_annotation: Box::new(
-                serde_json::to_value(&ts_assert.type_annotation)
-                    .unwrap_or(serde_json::Value::Null),
-            ),
+            type_annotation: Box::new(serde_json::Value::Null),
         }
     }
 
@@ -2100,10 +2073,7 @@ impl<'a> ConvertCtx<'a> {
         TSInstantiationExpression {
             base: self.make_base_node(ts_inst.span),
             expression: Box::new(self.convert_expression(&ts_inst.expression)),
-            type_parameters: Box::new(
-                serde_json::to_value(&ts_inst.type_parameters)
-                    .unwrap_or(serde_json::Value::Null),
-            ),
+            type_parameters: Box::new(serde_json::Value::Null),
         }
     }
 
@@ -2141,7 +2111,12 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    fn convert_jsx_opening_element(&self, opening: &oxc::JSXOpeningElement) -> JSXOpeningElement {
+    fn convert_jsx_opening_element(
+        &self,
+        opening: &oxc::JSXOpeningElement,
+    ) -> JSXOpeningElement {
+        // In OXC v0.121, self_closing is computed (not a field), and type_parameters -> type_arguments
+        // Determine self_closing from absence of closing element (handled at JSXElement level)
         JSXOpeningElement {
             base: self.make_base_node(opening.span),
             name: self.convert_jsx_element_name(&opening.name),
@@ -2150,14 +2125,17 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|a| self.convert_jsx_attribute_item(a))
                 .collect(),
-            self_closing: opening.self_closing,
-            type_parameters: opening.type_parameters.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
+            self_closing: false, // Will be set properly at JSXElement level if needed
+            type_parameters: opening.type_arguments.as_ref().map(|_t| {
+                Box::new(serde_json::Value::Null)
             }),
         }
     }
 
-    fn convert_jsx_closing_element(&self, closing: &oxc::JSXClosingElement) -> JSXClosingElement {
+    fn convert_jsx_closing_element(
+        &self,
+        closing: &oxc::JSXClosingElement,
+    ) -> JSXClosingElement {
         JSXClosingElement {
             base: self.make_base_node(closing.span),
             name: self.convert_jsx_element_name(&closing.name),
@@ -2172,6 +2150,12 @@ impl<'a> ConvertCtx<'a> {
                     name: id.name.to_string(),
                 })
             }
+            oxc::JSXElementName::IdentifierReference(id) => {
+                JSXElementName::JSXIdentifier(JSXIdentifier {
+                    base: self.make_base_node(id.span),
+                    name: id.name.to_string(),
+                })
+            }
             oxc::JSXElementName::NamespacedName(ns) => {
                 JSXElementName::JSXNamespacedName(JSXNamespacedName {
                     base: self.make_base_node(ns.span),
@@ -2180,18 +2164,27 @@ impl<'a> ConvertCtx<'a> {
                         name: ns.namespace.name.to_string(),
                     },
                     name: JSXIdentifier {
-                        base: self.make_base_node(ns.property.span),
-                        name: ns.property.name.to_string(),
+                        base: self.make_base_node(ns.name.span),
+                        name: ns.name.name.to_string(),
                     },
                 })
             }
             oxc::JSXElementName::MemberExpression(mem) => {
                 JSXElementName::JSXMemberExpression(self.convert_jsx_member_expression(mem))
             }
+            oxc::JSXElementName::ThisExpression(t) => {
+                JSXElementName::JSXIdentifier(JSXIdentifier {
+                    base: self.make_base_node(t.span),
+                    name: "this".to_string(),
+                })
+            }
         }
     }
 
-    fn convert_jsx_member_expression(&self, mem: &oxc::JSXMemberExpression) -> JSXMemberExpression {
+    fn convert_jsx_member_expression(
+        &self,
+        mem: &oxc::JSXMemberExpression,
+    ) -> JSXMemberExpression {
         JSXMemberExpression {
             base: self.make_base_node(mem.span),
             object: Box::new(self.convert_jsx_member_expression_object(&mem.object)),
@@ -2207,7 +2200,7 @@ impl<'a> ConvertCtx<'a> {
         obj: &oxc::JSXMemberExpressionObject,
     ) -> JSXMemberExprObject {
         match obj {
-            oxc::JSXMemberExpressionObject::Identifier(id) => {
+            oxc::JSXMemberExpressionObject::IdentifierReference(id) => {
                 JSXMemberExprObject::JSXIdentifier(JSXIdentifier {
                     base: self.make_base_node(id.span),
                     name: id.name.to_string(),
@@ -2217,6 +2210,13 @@ impl<'a> ConvertCtx<'a> {
                 JSXMemberExprObject::JSXMemberExpression(Box::new(
                     self.convert_jsx_member_expression(mem),
                 ))
+            }
+            oxc::JSXMemberExpressionObject::ThisExpression(t) => {
+                // JSX `<this.Foo />` - convert to identifier
+                JSXMemberExprObject::JSXIdentifier(JSXIdentifier {
+                    base: self.make_base_node(t.span),
+                    name: "this".to_string(),
+                })
             }
         }
     }
@@ -2262,15 +2262,18 @@ impl<'a> ConvertCtx<'a> {
                         name: ns.namespace.name.to_string(),
                     },
                     name: JSXIdentifier {
-                        base: self.make_base_node(ns.property.span),
-                        name: ns.property.name.to_string(),
+                        base: self.make_base_node(ns.name.span),
+                        name: ns.name.name.to_string(),
                     },
                 })
             }
         }
     }
 
-    fn convert_jsx_attribute_value(&self, value: &oxc::JSXAttributeValue) -> JSXAttributeValue {
+    fn convert_jsx_attribute_value(
+        &self,
+        value: &oxc::JSXAttributeValue,
+    ) -> JSXAttributeValue {
         match value {
             oxc::JSXAttributeValue::StringLiteral(s) => {
                 JSXAttributeValue::StringLiteral(StringLiteral {
@@ -2279,7 +2282,9 @@ impl<'a> ConvertCtx<'a> {
                 })
             }
             oxc::JSXAttributeValue::ExpressionContainer(e) => {
-                JSXAttributeValue::JSXExpressionContainer(self.convert_jsx_expression_container(e))
+                JSXAttributeValue::JSXExpressionContainer(
+                    self.convert_jsx_expression_container(e),
+                )
             }
             oxc::JSXAttributeValue::Element(e) => {
                 JSXAttributeValue::JSXElement(Box::new(self.convert_jsx_element(e)))
@@ -2302,57 +2307,18 @@ impl<'a> ConvertCtx<'a> {
                         base: self.make_base_node(e.span),
                     })
                 }
-                oxc::JSXExpression::BooleanLiteral(e)
-                | oxc::JSXExpression::NullLiteral(e)
-                | oxc::JSXExpression::NumericLiteral(e)
-                | oxc::JSXExpression::BigIntLiteral(e)
-                | oxc::JSXExpression::RegExpLiteral(e)
-                | oxc::JSXExpression::StringLiteral(e)
-                | oxc::JSXExpression::TemplateLiteral(e)
-                | oxc::JSXExpression::Identifier(e)
-                | oxc::JSXExpression::MetaProperty(e)
-                | oxc::JSXExpression::Super(e)
-                | oxc::JSXExpression::ArrayExpression(e)
-                | oxc::JSXExpression::ArrowFunctionExpression(e)
-                | oxc::JSXExpression::AssignmentExpression(e)
-                | oxc::JSXExpression::AwaitExpression(e)
-                | oxc::JSXExpression::BinaryExpression(e)
-                | oxc::JSXExpression::CallExpression(e)
-                | oxc::JSXExpression::ChainExpression(e)
-                | oxc::JSXExpression::ClassExpression(e)
-                | oxc::JSXExpression::ConditionalExpression(e)
-                | oxc::JSXExpression::FunctionExpression(e)
-                | oxc::JSXExpression::ImportExpression(e)
-                | oxc::JSXExpression::LogicalExpression(e)
-                | oxc::JSXExpression::NewExpression(e)
-                | oxc::JSXExpression::ObjectExpression(e)
-                | oxc::JSXExpression::ParenthesizedExpression(e)
-                | oxc::JSXExpression::SequenceExpression(e)
-                | oxc::JSXExpression::TaggedTemplateExpression(e)
-                | oxc::JSXExpression::ThisExpression(e)
-                | oxc::JSXExpression::UnaryExpression(e)
-                | oxc::JSXExpression::UpdateExpression(e)
-                | oxc::JSXExpression::YieldExpression(e)
-                | oxc::JSXExpression::PrivateInExpression(e)
-                | oxc::JSXExpression::JSXElement(e)
-                | oxc::JSXExpression::JSXFragment(e)
-                | oxc::JSXExpression::TSAsExpression(e)
-                | oxc::JSXExpression::TSSatisfiesExpression(e)
-                | oxc::JSXExpression::TSTypeAssertion(e)
-                | oxc::JSXExpression::TSNonNullExpression(e)
-                | oxc::JSXExpression::TSInstantiationExpression(e)
-                | oxc::JSXExpression::ComputedMemberExpression(e)
-                | oxc::JSXExpression::StaticMemberExpression(e)
-                | oxc::JSXExpression::PrivateFieldExpression(e) => {
-                    JSXExpressionContainerExpr::Expression(Box::new(self.convert_expression(e)))
-                }
+                other => JSXExpressionContainerExpr::Expression(Box::new(
+                    self.convert_expression_from_jsx_expression(other),
+                )),
             },
         }
     }
 
     fn convert_jsx_child(&self, child: &oxc::JSXChild) -> JSXChild {
         match child {
-            oxc::JSXChild::Element(e) => JSXChild::JSXElement(Box::new(self.convert_jsx_element(e))),
+            oxc::JSXChild::Element(e) => {
+                JSXChild::JSXElement(Box::new(self.convert_jsx_element(e)))
+            }
             oxc::JSXChild::Fragment(f) => JSXChild::JSXFragment(self.convert_jsx_fragment(f)),
             oxc::JSXChild::ExpressionContainer(e) => {
                 JSXChild::JSXExpressionContainer(self.convert_jsx_expression_container(e))
@@ -2369,17 +2335,17 @@ impl<'a> ConvertCtx<'a> {
     }
 
     fn convert_binding_pattern(&self, pattern: &oxc::BindingPattern) -> PatternLike {
-        match &pattern.kind {
-            oxc::BindingPatternKind::BindingIdentifier(id) => {
+        match pattern {
+            oxc::BindingPattern::BindingIdentifier(id) => {
                 PatternLike::Identifier(self.convert_binding_identifier(id))
             }
-            oxc::BindingPatternKind::ObjectPattern(obj) => {
+            oxc::BindingPattern::ObjectPattern(obj) => {
                 PatternLike::ObjectPattern(self.convert_object_pattern(obj))
             }
-            oxc::BindingPatternKind::ArrayPattern(arr) => {
+            oxc::BindingPattern::ArrayPattern(arr) => {
                 PatternLike::ArrayPattern(self.convert_array_pattern(arr))
             }
-            oxc::BindingPatternKind::AssignmentPattern(assign) => {
+            oxc::BindingPattern::AssignmentPattern(assign) => {
                 PatternLike::AssignmentPattern(self.convert_assignment_pattern(assign))
             }
         }
@@ -2405,6 +2371,16 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
+    fn convert_label_identifier(&self, id: &oxc::LabelIdentifier) -> Identifier {
+        Identifier {
+            base: self.make_base_node(id.span),
+            name: id.name.to_string(),
+            type_annotation: None,
+            optional: None,
+            decorators: None,
+        }
+    }
+
     fn convert_identifier_reference(&self, id: &oxc::IdentifierReference) -> Identifier {
         Identifier {
             base: self.make_base_node(id.span),
@@ -2416,55 +2392,66 @@ impl<'a> ConvertCtx<'a> {
     }
 
     fn convert_object_pattern(&self, obj: &oxc::ObjectPattern) -> ObjectPattern {
+        let mut properties: Vec<ObjectPatternProperty> = obj
+            .properties
+            .iter()
+            .map(|p| self.convert_binding_property(p))
+            .collect();
+
+        // Handle rest element (separate field in OXC v0.121)
+        if let Some(rest) = &obj.rest {
+            properties.push(ObjectPatternProperty::RestElement(
+                self.convert_binding_rest_element(rest),
+            ));
+        }
+
         ObjectPattern {
             base: self.make_base_node(obj.span),
-            properties: obj
-                .properties
-                .iter()
-                .map(|p| self.convert_binding_property(p))
-                .collect(),
-            type_annotation: obj.type_annotation.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
-            }),
+            properties,
+            type_annotation: None,
             decorators: None,
         }
     }
 
     fn convert_binding_property(&self, prop: &oxc::BindingProperty) -> ObjectPatternProperty {
-        match prop {
-            oxc::BindingProperty::BindingProperty(p) => {
-                ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
-                    base: self.make_base_node(p.span),
-                    key: Box::new(self.convert_property_key(&p.key)),
-                    value: Box::new(self.convert_binding_pattern(&p.value)),
-                    computed: p.computed,
-                    shorthand: p.shorthand,
-                    decorators: None,
-                    method: None,
-                })
-            }
-            oxc::BindingProperty::BindingRestElement(r) => {
-                ObjectPatternProperty::RestElement(self.convert_binding_rest_element(r))
-            }
-        }
+        // BindingProperty is now a struct (not an enum) in OXC v0.121
+        ObjectPatternProperty::ObjectProperty(ObjectPatternProp {
+            base: self.make_base_node(prop.span),
+            key: Box::new(self.convert_property_key(&prop.key)),
+            value: Box::new(self.convert_binding_pattern(&prop.value)),
+            computed: prop.computed,
+            shorthand: prop.shorthand,
+            decorators: None,
+            method: None,
+        })
     }
 
     fn convert_array_pattern(&self, arr: &oxc::ArrayPattern) -> ArrayPattern {
+        let mut elements: Vec<Option<PatternLike>> = arr
+            .elements
+            .iter()
+            .map(|e| e.as_ref().map(|p| self.convert_binding_pattern(p)))
+            .collect();
+
+        // Handle rest element (separate field in OXC v0.121)
+        if let Some(rest) = &arr.rest {
+            elements.push(Some(PatternLike::RestElement(
+                self.convert_binding_rest_element(rest),
+            )));
+        }
+
         ArrayPattern {
             base: self.make_base_node(arr.span),
-            elements: arr
-                .elements
-                .iter()
-                .map(|e| e.as_ref().map(|p| self.convert_binding_pattern(p)))
-                .collect(),
-            type_annotation: arr.type_annotation.as_ref().map(|t| {
-                Box::new(serde_json::to_value(t).unwrap_or(serde_json::Value::Null))
-            }),
+            elements,
+            type_annotation: None,
             decorators: None,
         }
     }
 
-    fn convert_assignment_pattern(&self, assign: &oxc::AssignmentPattern) -> AssignmentPattern {
+    fn convert_assignment_pattern(
+        &self,
+        assign: &oxc::AssignmentPattern,
+    ) -> AssignmentPattern {
         AssignmentPattern {
             base: self.make_base_node(assign.span),
             left: Box::new(self.convert_binding_pattern(&assign.left)),
@@ -2486,11 +2473,9 @@ impl<'a> ConvertCtx<'a> {
     fn convert_formal_parameter(&self, param: &oxc::FormalParameter) -> PatternLike {
         let mut pattern = self.convert_binding_pattern(&param.pattern);
 
-        // Add type annotation if present
-        if let Some(type_annotation) = &param.pattern.type_annotation {
-            let type_json = Box::new(
-                serde_json::to_value(type_annotation).unwrap_or(serde_json::Value::Null),
-            );
+        // Add type annotation if present (now on FormalParameter, not BindingPattern)
+        if let Some(_type_annotation) = &param.type_annotation {
+            let type_json = Box::new(serde_json::Value::Null);
             match &mut pattern {
                 PatternLike::Identifier(id) => {
                     id.type_annotation = Some(type_json);
@@ -2529,4 +2514,193 @@ impl<'a> ConvertCtx<'a> {
                 .collect(),
         }
     }
+
+    // ============================================================
+    // Helper methods for converting Expression-inheriting enums
+    // These handle the case where OXC enums inherit from Expression
+    // via @inherit and each variant has a differently-typed Box.
+    // ============================================================
+
+    /// Convert Argument expression variants (not SpreadElement) to Expression
+    fn convert_expression_from_argument(&self, arg: &oxc::Argument) -> Expression {
+        self.convert_expression_like(arg)
+    }
+
+    /// Convert ArrayExpressionElement expression variants to Expression
+    fn convert_expression_from_array_element(
+        &self,
+        elem: &oxc::ArrayExpressionElement,
+    ) -> Expression {
+        self.convert_expression_like(elem)
+    }
+
+    /// Convert ExportDefaultDeclarationKind expression variants to Expression
+    fn convert_expression_from_export_default(
+        &self,
+        kind: &oxc::ExportDefaultDeclarationKind,
+    ) -> Expression {
+        self.convert_expression_like(kind)
+    }
+
+    /// Convert PropertyKey expression variants to Expression
+    fn convert_expression_from_property_key(&self, key: &oxc::PropertyKey) -> Expression {
+        self.convert_expression_like(key)
+    }
+
+    /// Convert JSXExpression expression variants to Expression
+    fn convert_expression_from_jsx_expression(
+        &self,
+        expr: &oxc::JSXExpression,
+    ) -> Expression {
+        self.convert_expression_like(expr)
+    }
+
+    /// Generic helper to convert any enum that inherits Expression variants.
+    /// Uses the ExpressionLike trait.
+    fn convert_expression_like<T: ExpressionLike>(&self, value: &T) -> Expression {
+        value.convert_with(self)
+    }
 }
+
+/// Trait for enums that inherit Expression variants.
+/// Each implementing type matches its Expression-inherited variants and
+/// delegates to ConvertCtx::convert_expression by constructing the equivalent
+/// Expression variant.
+trait ExpressionLike {
+    fn convert_with(&self, ctx: &ConvertCtx) -> Expression;
+}
+
+/// Macro to implement ExpressionLike for enums that @inherit Expression.
+/// Each variant name matches the Expression variant name, so we can
+/// deref the inner Box and call the appropriate convert method.
+macro_rules! impl_expression_like {
+    ($enum_ty:ty, [$($non_expr_variant:pat => $non_expr_handler:expr),*]) => {
+        impl<'a> ExpressionLike for $enum_ty {
+            fn convert_with(&self, ctx: &ConvertCtx) -> Expression {
+                match self {
+                    $($non_expr_variant => $non_expr_handler,)*
+                    // Expression-inherited variants
+                    Self::BooleanLiteral(e) => Expression::BooleanLiteral(BooleanLiteral {
+                        base: ctx.make_base_node(e.span),
+                        value: e.value,
+                    }),
+                    Self::NullLiteral(e) => Expression::NullLiteral(NullLiteral {
+                        base: ctx.make_base_node(e.span),
+                    }),
+                    Self::NumericLiteral(e) => Expression::NumericLiteral(NumericLiteral {
+                        base: ctx.make_base_node(e.span),
+                        value: e.value,
+                    }),
+                    Self::BigIntLiteral(e) => Expression::BigIntLiteral(BigIntLiteral {
+                        base: ctx.make_base_node(e.span),
+                        value: e.raw.as_ref().map(|r| r.to_string()).unwrap_or_default(),
+                    }),
+                    Self::RegExpLiteral(e) => Expression::RegExpLiteral(RegExpLiteral {
+                        base: ctx.make_base_node(e.span),
+                        pattern: e.regex.pattern.text.to_string(),
+                        flags: e.regex.flags.to_string(),
+                    }),
+                    Self::StringLiteral(e) => Expression::StringLiteral(StringLiteral {
+                        base: ctx.make_base_node(e.span),
+                        value: e.value.to_string(),
+                    }),
+                    Self::TemplateLiteral(e) => Expression::TemplateLiteral(ctx.convert_template_literal(e)),
+                    Self::Identifier(e) => Expression::Identifier(ctx.convert_identifier_reference(e)),
+                    Self::MetaProperty(e) => Expression::MetaProperty(ctx.convert_meta_property(e)),
+                    Self::Super(e) => Expression::Super(Super { base: ctx.make_base_node(e.span) }),
+                    Self::ArrayExpression(e) => Expression::ArrayExpression(ctx.convert_array_expression(e)),
+                    Self::ArrowFunctionExpression(e) => Expression::ArrowFunctionExpression(ctx.convert_arrow_function_expression(e)),
+                    Self::AssignmentExpression(e) => Expression::AssignmentExpression(ctx.convert_assignment_expression(e)),
+                    Self::AwaitExpression(e) => Expression::AwaitExpression(ctx.convert_await_expression(e)),
+                    Self::BinaryExpression(e) => Expression::BinaryExpression(ctx.convert_binary_expression(e)),
+                    Self::CallExpression(e) => Expression::CallExpression(ctx.convert_call_expression(e)),
+                    Self::ChainExpression(e) => ctx.convert_chain_expression(e),
+                    Self::ClassExpression(e) => Expression::ClassExpression(ctx.convert_class_expression(e)),
+                    Self::ConditionalExpression(e) => Expression::ConditionalExpression(ctx.convert_conditional_expression(e)),
+                    Self::FunctionExpression(e) => Expression::FunctionExpression(ctx.convert_function_expression(e)),
+                    Self::ImportExpression(_) => todo!("ImportExpression"),
+                    Self::LogicalExpression(e) => Expression::LogicalExpression(ctx.convert_logical_expression(e)),
+                    Self::NewExpression(e) => Expression::NewExpression(ctx.convert_new_expression(e)),
+                    Self::ObjectExpression(e) => Expression::ObjectExpression(ctx.convert_object_expression(e)),
+                    Self::ParenthesizedExpression(e) => Expression::ParenthesizedExpression(ctx.convert_parenthesized_expression(e)),
+                    Self::SequenceExpression(e) => Expression::SequenceExpression(ctx.convert_sequence_expression(e)),
+                    Self::TaggedTemplateExpression(e) => Expression::TaggedTemplateExpression(ctx.convert_tagged_template_expression(e)),
+                    Self::ThisExpression(e) => Expression::ThisExpression(ThisExpression { base: ctx.make_base_node(e.span) }),
+                    Self::UnaryExpression(e) => Expression::UnaryExpression(ctx.convert_unary_expression(e)),
+                    Self::UpdateExpression(e) => Expression::UpdateExpression(ctx.convert_update_expression(e)),
+                    Self::YieldExpression(e) => Expression::YieldExpression(ctx.convert_yield_expression(e)),
+                    Self::PrivateInExpression(_) => todo!("PrivateInExpression"),
+                    Self::JSXElement(e) => Expression::JSXElement(Box::new(ctx.convert_jsx_element(e))),
+                    Self::JSXFragment(e) => Expression::JSXFragment(ctx.convert_jsx_fragment(e)),
+                    Self::TSAsExpression(e) => Expression::TSAsExpression(ctx.convert_ts_as_expression(e)),
+                    Self::TSSatisfiesExpression(e) => Expression::TSSatisfiesExpression(ctx.convert_ts_satisfies_expression(e)),
+                    Self::TSTypeAssertion(e) => Expression::TSTypeAssertion(ctx.convert_ts_type_assertion(e)),
+                    Self::TSNonNullExpression(e) => Expression::TSNonNullExpression(ctx.convert_ts_non_null_expression(e)),
+                    Self::TSInstantiationExpression(e) => Expression::TSInstantiationExpression(ctx.convert_ts_instantiation_expression(e)),
+                    Self::ComputedMemberExpression(e) => Expression::MemberExpression(MemberExpression {
+                        base: ctx.make_base_node(e.span),
+                        object: Box::new(ctx.convert_expression(&e.object)),
+                        property: Box::new(ctx.convert_expression(&e.expression)),
+                        computed: true,
+                    }),
+                    Self::StaticMemberExpression(e) => Expression::MemberExpression(MemberExpression {
+                        base: ctx.make_base_node(e.span),
+                        object: Box::new(ctx.convert_expression(&e.object)),
+                        property: Box::new(Expression::Identifier(ctx.convert_identifier_name(&e.property))),
+                        computed: false,
+                    }),
+                    Self::PrivateFieldExpression(e) => Expression::MemberExpression(MemberExpression {
+                        base: ctx.make_base_node(e.span),
+                        object: Box::new(ctx.convert_expression(&e.object)),
+                        property: Box::new(Expression::PrivateName(PrivateName {
+                            base: ctx.make_base_node(e.field.span),
+                            id: Identifier {
+                                base: ctx.make_base_node(e.field.span),
+                                name: e.field.name.to_string(),
+                                type_annotation: None,
+                                optional: None,
+                                decorators: None,
+                            },
+                        })),
+                        computed: false,
+                    }),
+                    Self::V8IntrinsicExpression(_) => todo!("V8IntrinsicExpression"),
+                }
+            }
+        }
+    };
+}
+
+// ForStatementInit: VariableDeclaration + @inherit Expression
+impl_expression_like!(oxc::ForStatementInit<'a>, [
+    Self::VariableDeclaration(_) => unreachable!("handled separately")
+]);
+
+// Argument: SpreadElement + @inherit Expression
+impl_expression_like!(oxc::Argument<'a>, [
+    Self::SpreadElement(_) => unreachable!("handled separately")
+]);
+
+// ArrayExpressionElement: SpreadElement + Elision + @inherit Expression
+impl_expression_like!(oxc::ArrayExpressionElement<'a>, [
+    Self::SpreadElement(_) => unreachable!("handled separately"),
+    Self::Elision(_) => unreachable!("handled separately")
+]);
+
+// ExportDefaultDeclarationKind: FunctionDeclaration + ClassDeclaration + TSInterfaceDeclaration + @inherit Expression
+impl_expression_like!(oxc::ExportDefaultDeclarationKind<'a>, [
+    Self::FunctionDeclaration(_) => unreachable!("handled separately"),
+    Self::ClassDeclaration(_) => unreachable!("handled separately"),
+    Self::TSInterfaceDeclaration(_) => unreachable!("handled separately")
+]);
+
+// PropertyKey: StaticIdentifier + PrivateIdentifier + @inherit Expression
+impl_expression_like!(oxc::PropertyKey<'a>, [
+    Self::StaticIdentifier(_) => unreachable!("handled separately"),
+    Self::PrivateIdentifier(_) => unreachable!("handled separately")
+]);
+
+// JSXExpression: EmptyExpression + @inherit Expression
+impl_expression_like!(oxc::JSXExpression<'a>, [
+    Self::EmptyExpression(_) => unreachable!("handled separately")
+]);

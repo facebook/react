@@ -11,9 +11,11 @@
 
 use swc_atoms::{Atom, Wtf8Atom};
 use swc_common::{BytePos, Span, SyntaxContext, DUMMY_SP};
+use swc_common::comments::{Comment as SwcComment, CommentKind, SingleThreadedComments, Comments};
 use swc_ecma_ast::*;
 
 use react_compiler_ast::{
+    common::{BaseNode, Comment as BabelComment},
     declarations::{
         ExportAllDeclaration, ExportDefaultDecl as BabelExportDefaultDecl,
         ExportDefaultDeclaration, ExportKind, ExportNamedDeclaration,
@@ -26,20 +28,81 @@ use react_compiler_ast::{
     statements::{self as babel_stmt, Statement as BabelStmt},
 };
 
-/// Convert a `react_compiler_ast::File` into an SWC `Module`.
-pub fn convert_program_to_swc(file: &react_compiler_ast::File) -> Module {
-    let ctx = ReverseCtx;
-    ctx.convert_program(&file.program)
+/// Result of converting a Babel AST back to SWC, including extracted comments.
+pub struct SwcConversionResult {
+    pub module: Module,
+    pub comments: SingleThreadedComments,
 }
 
-struct ReverseCtx;
+/// Convert a `react_compiler_ast::File` into an SWC `Module` and extracted comments.
+pub fn convert_program_to_swc(file: &react_compiler_ast::File) -> SwcConversionResult {
+    let ctx = ReverseCtx {
+        comments: SingleThreadedComments::default(),
+    };
+    let module = ctx.convert_program(&file.program);
+    SwcConversionResult {
+        module,
+        comments: ctx.comments,
+    }
+}
+
+struct ReverseCtx {
+    comments: SingleThreadedComments,
+}
 
 impl ReverseCtx {
-    /// Convert a BaseNode's start/end to an SWC Span.
-    fn span(&self, base: &react_compiler_ast::common::BaseNode) -> Span {
+    /// Convert a BaseNode's start/end to an SWC Span, and extract any comments.
+    fn span(&self, base: &BaseNode) -> Span {
+        let span = match (base.start, base.end) {
+            (Some(start), Some(end)) => Span::new(BytePos(start), BytePos(end)),
+            _ => DUMMY_SP,
+        };
+        self.extract_comments(base, span);
+        span
+    }
+
+    /// Convert a BaseNode's start/end to an SWC Span without extracting comments.
+    /// Use this for sub-nodes where comments should not be duplicated.
+    fn span_no_comments(&self, base: &BaseNode) -> Span {
         match (base.start, base.end) {
             (Some(start), Some(end)) => Span::new(BytePos(start), BytePos(end)),
             _ => DUMMY_SP,
+        }
+    }
+
+    /// Convert a Babel comment to an SWC comment.
+    fn convert_babel_comment(babel_comment: &BabelComment) -> SwcComment {
+        let (kind, text) = match babel_comment {
+            BabelComment::CommentBlock(data) => (CommentKind::Block, &data.value),
+            BabelComment::CommentLine(data) => (CommentKind::Line, &data.value),
+        };
+        SwcComment {
+            kind,
+            span: DUMMY_SP,
+            text: Atom::from(text.as_str()),
+        }
+    }
+
+    /// Extract comments from a BaseNode and register them with the SWC comments store.
+    fn extract_comments(&self, base: &BaseNode, span: Span) {
+        if let Some(ref leading) = base.leading_comments {
+            let pos = span.lo;
+            for c in leading {
+                self.comments.add_leading(pos, Self::convert_babel_comment(c));
+            }
+        }
+        if let Some(ref trailing) = base.trailing_comments {
+            let pos = span.hi;
+            for c in trailing {
+                self.comments.add_trailing(pos, Self::convert_babel_comment(c));
+            }
+        }
+        if let Some(ref inner) = base.inner_comments {
+            // Inner comments are typically leading comments of the next token
+            let pos = span.lo;
+            for c in inner {
+                self.comments.add_leading(pos, Self::convert_babel_comment(c));
+            }
         }
     }
 
@@ -120,10 +183,32 @@ impl ReverseCtx {
                     .as_ref()
                     .map(|a| Box::new(self.convert_expression(a))),
             }),
-            BabelStmt::ExpressionStatement(s) => Stmt::Expr(ExprStmt {
-                span: self.span(&s.base),
-                expr: Box::new(self.convert_expression(&s.expression)),
-            }),
+            BabelStmt::ExpressionStatement(s) => {
+                let expr = self.convert_expression(&s.expression);
+                // Wrap in parens if the expression starts with `{` (object pattern
+                // in assignment) or `function` (IIFE), which would be ambiguous
+                // with a block statement or function declaration.
+                let needs_paren = match &expr {
+                    Expr::Assign(a) => matches!(&a.left, AssignTarget::Pat(AssignTargetPat::Object(_))),
+                    Expr::Call(c) => match &c.callee {
+                        Callee::Expr(e) => matches!(e.as_ref(), Expr::Fn(_)),
+                        _ => false,
+                    },
+                    _ => false,
+                };
+                let expr = if needs_paren {
+                    Expr::Paren(ParenExpr {
+                        span: self.span_no_comments(&s.base),
+                        expr: Box::new(expr),
+                    })
+                } else {
+                    expr
+                };
+                Stmt::Expr(ExprStmt {
+                    span: self.span(&s.base),
+                    expr: Box::new(expr),
+                })
+            }
             BabelStmt::IfStatement(s) => Stmt::If(IfStmt {
                 span: self.span(&s.base),
                 test: Box::new(self.convert_expression(&s.test)),
@@ -1481,7 +1566,19 @@ impl ReverseCtx {
         match spec {
             react_compiler_ast::declarations::ImportSpecifier::ImportSpecifier(s) => {
                 let local = self.ident(&s.local.name, self.span(&s.local.base));
-                let imported = Some(self.convert_module_export_name(&s.imported));
+                // Only set `imported` if it differs from `local` — otherwise
+                // SWC emits `foo as foo` instead of just `foo`.
+                let imported_name = match &s.imported {
+                    react_compiler_ast::declarations::ModuleExportName::Identifier(id) => {
+                        Some(&id.name)
+                    }
+                    react_compiler_ast::declarations::ModuleExportName::StringLiteral(_) => None,
+                };
+                let imported = if imported_name == Some(&s.local.name) {
+                    None
+                } else {
+                    Some(self.convert_module_export_name(&s.imported))
+                };
                 let is_type_only = matches!(s.import_kind.as_ref(), Some(ImportKind::Type));
                 swc_ecma_ast::ImportSpecifier::Named(ImportNamedSpecifier {
                     span: self.span(&s.base),
@@ -1623,7 +1720,24 @@ impl ReverseCtx {
         match spec {
             react_compiler_ast::declarations::ExportSpecifier::ExportSpecifier(s) => {
                 let orig = self.convert_module_export_name(&s.local);
-                let exported = Some(self.convert_module_export_name(&s.exported));
+                // Only set `exported` if it differs from `local`
+                let local_name = match &s.local {
+                    react_compiler_ast::declarations::ModuleExportName::Identifier(id) => {
+                        Some(&id.name)
+                    }
+                    _ => None,
+                };
+                let exported_name = match &s.exported {
+                    react_compiler_ast::declarations::ModuleExportName::Identifier(id) => {
+                        Some(&id.name)
+                    }
+                    _ => None,
+                };
+                let exported = if local_name.is_some() && local_name == exported_name {
+                    None
+                } else {
+                    Some(self.convert_module_export_name(&s.exported))
+                };
                 let is_type_only = matches!(s.export_kind.as_ref(), Some(ExportKind::Type));
                 swc_ecma_ast::ExportSpecifier::Named(ExportNamedSpecifier {
                     span: self.span(&s.base),
