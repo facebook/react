@@ -44,7 +44,6 @@ import {
 } from '../Optimization';
 import {
   CodegenFunction,
-  alignObjectMethodScopes,
   assertScopeInstructionsWithinScopes,
   assertWellFormedBreakTargets,
   buildReactiveFunction,
@@ -330,13 +329,6 @@ function runWithEnvironment(
   log({
     kind: 'hir',
     name: 'AlignMethodCallScopes',
-    value: hir,
-  });
-
-  alignObjectMethodScopes(hir);
-  log({
-    kind: 'hir',
-    name: 'AlignObjectMethodScopes',
     value: hir,
   });
 

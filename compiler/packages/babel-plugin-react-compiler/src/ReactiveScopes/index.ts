@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export {alignObjectMethodScopes} from './AlignObjectMethodScopes';
 export {assertScopeInstructionsWithinScopes} from './AssertScopeInstructionsWithinScope';
 export {assertWellFormedBreakTargets} from './AssertWellFormedBreakTargets';
 export {buildReactiveFunction} from './BuildReactiveFunction';
