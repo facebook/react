@@ -18,8 +18,8 @@ use std::collections::{HashMap, HashSet};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
 use react_compiler_hir::{
-    HirFunction, IdentifierId, InstructionValue, JsxTag, Place,
-    PlaceOrSpread, PrimitiveValue, PropertyLiteral, ScopeId,
+    HirFunction, IdentifierId, InstructionValue, JsxTag,
+    PrimitiveValue, PropertyLiteral, ScopeId,
 };
 
 /// Whether a macro requires its arguments to be transitively inlined (e.g., fbt)
@@ -206,57 +206,26 @@ fn merge_macro_arguments(
                     // Skip these
                 }
 
-                InstructionValue::CallExpression { callee, args, .. } => {
-                    let scope_id = match env.identifiers[lvalue_id.0 as usize].scope {
-                        Some(s) => s,
-                        None => continue,
-                    };
-
-                    // For CallExpression, callee is the function being called
-                    let macro_def = macro_tags
-                        .get(&callee.identifier)
-                        .or_else(|| macro_tags.get(&lvalue_id))
-                        .cloned();
-
-                    if let Some(macro_def) = macro_def {
-                        visit_operands_call(
-                            &macro_def,
-                            scope_id,
-                            lvalue_id,
-                            callee,
-                            args,
-                            env,
-                            &mut macro_values,
-                            macro_tags,
-                        );
-                    }
-                }
-
-                InstructionValue::MethodCall {
-                    receiver,
-                    property,
-                    args,
-                    ..
+                InstructionValue::CallExpression { callee, .. }
+                | InstructionValue::MethodCall {
+                    property: callee, ..
                 } => {
                     let scope_id = match env.identifiers[lvalue_id.0 as usize].scope {
                         Some(s) => s,
                         None => continue,
                     };
 
-                    // For MethodCall, property is the callee
                     let macro_def = macro_tags
-                        .get(&property.identifier)
+                        .get(&callee.identifier)
                         .or_else(|| macro_tags.get(&lvalue_id))
                         .cloned();
 
                     if let Some(macro_def) = macro_def {
-                        visit_operands_method(
+                        visit_operands(
                             &macro_def,
                             scope_id,
                             lvalue_id,
-                            receiver,
-                            property,
-                            args,
+                            &instr.value,
                             env,
                             &mut macro_values,
                             macro_tags,
@@ -283,7 +252,7 @@ fn merge_macro_arguments(
                         .or_else(|| macro_tags.get(&lvalue_id).cloned());
 
                     if let Some(macro_def) = macro_def {
-                        visit_operands_value(
+                        visit_operands(
                             &macro_def,
                             scope_id,
                             lvalue_id,
@@ -304,7 +273,7 @@ fn merge_macro_arguments(
 
                     let macro_def = macro_tags.get(&lvalue_id).cloned();
                     if let Some(macro_def) = macro_def {
-                        visit_operands_value(
+                        visit_operands(
                             &macro_def,
                             scope_id,
                             lvalue_id,
@@ -346,7 +315,7 @@ fn merge_macro_arguments(
 
             for (operand_id, def) in operand_updates {
                 env.identifiers[operand_id.0 as usize].scope = Some(scope_id);
-                expand_fbt_scope_range_on_env(env, scope_id, operand_id);
+                expand_fbt_scope_range(env, scope_id, operand_id);
                 macro_tags.insert(operand_id, def);
                 macro_values.insert(operand_id);
             }
@@ -358,7 +327,7 @@ fn merge_macro_arguments(
 
 /// Expand the scope range on the environment, reading from identifier's mutable_range.
 /// Equivalent to TS `expandFbtScopeRange`.
-fn expand_fbt_scope_range_on_env(env: &mut Environment, scope_id: ScopeId, operand_id: IdentifierId) {
+fn expand_fbt_scope_range(env: &mut Environment, scope_id: ScopeId, operand_id: IdentifierId) {
     let extend_start = env.identifiers[operand_id.0 as usize].mutable_range.start;
     if extend_start.0 != 0 {
         let scope = &mut env.scopes[scope_id.0 as usize];
@@ -366,61 +335,9 @@ fn expand_fbt_scope_range_on_env(env: &mut Environment, scope_id: ScopeId, opera
     }
 }
 
-/// Visit operands for a CallExpression.
-fn visit_operands_call(
-    macro_def: &MacroDefinition,
-    scope_id: ScopeId,
-    lvalue_id: IdentifierId,
-    callee: &Place,
-    args: &[PlaceOrSpread],
-    env: &mut Environment,
-    macro_values: &mut HashSet<IdentifierId>,
-    macro_tags: &mut HashMap<IdentifierId, MacroDefinition>,
-) {
-    macro_values.insert(lvalue_id);
-
-    // Process callee
-    process_operand(macro_def, scope_id, callee.identifier, env, macro_values, macro_tags);
-
-    // Process args
-    for arg in args {
-        let operand_id = match arg {
-            PlaceOrSpread::Place(p) => p.identifier,
-            PlaceOrSpread::Spread(s) => s.place.identifier,
-        };
-        process_operand(macro_def, scope_id, operand_id, env, macro_values, macro_tags);
-    }
-}
-
-/// Visit operands for a MethodCall.
-fn visit_operands_method(
-    macro_def: &MacroDefinition,
-    scope_id: ScopeId,
-    lvalue_id: IdentifierId,
-    receiver: &Place,
-    property: &Place,
-    args: &[PlaceOrSpread],
-    env: &mut Environment,
-    macro_values: &mut HashSet<IdentifierId>,
-    macro_tags: &mut HashMap<IdentifierId, MacroDefinition>,
-) {
-    macro_values.insert(lvalue_id);
-
-    // Process receiver, property, and args
-    process_operand(macro_def, scope_id, receiver.identifier, env, macro_values, macro_tags);
-    process_operand(macro_def, scope_id, property.identifier, env, macro_values, macro_tags);
-
-    for arg in args {
-        let operand_id = match arg {
-            PlaceOrSpread::Place(p) => p.identifier,
-            PlaceOrSpread::Spread(s) => s.place.identifier,
-        };
-        process_operand(macro_def, scope_id, operand_id, env, macro_values, macro_tags);
-    }
-}
-
-/// Visit operands for a generic InstructionValue using each_instruction_value_operand logic.
-fn visit_operands_value(
+/// Visit operands for an instruction value, merging them into the same scope
+/// if the macro definition requires transitive inlining.
+fn visit_operands(
     macro_def: &MacroDefinition,
     scope_id: ScopeId,
     lvalue_id: IdentifierId,
@@ -431,26 +348,19 @@ fn visit_operands_value(
 ) {
     macro_values.insert(lvalue_id);
 
-    let operand_ids: Vec<IdentifierId> = visitors::each_instruction_value_operand(value, env).into_iter().map(|p| p.identifier).collect();
+    // Collect operand IDs first to avoid borrow issues with env
+    let operand_ids: Vec<IdentifierId> =
+        visitors::each_instruction_value_operand_with_functions(value, &env.functions)
+            .into_iter()
+            .map(|p| p.identifier)
+            .collect();
     for operand_id in operand_ids {
-        process_operand(macro_def, scope_id, operand_id, env, macro_values, macro_tags);
+        if matches!(macro_def.level, InlineLevel::Transitive) {
+            env.identifiers[operand_id.0 as usize].scope = Some(scope_id);
+            expand_fbt_scope_range(env, scope_id, operand_id);
+            macro_tags.insert(operand_id, macro_def.clone());
+        }
+        macro_values.insert(operand_id);
     }
-}
-
-/// Process a single operand: if transitive, merge its scope; always add to macro_values.
-fn process_operand(
-    macro_def: &MacroDefinition,
-    scope_id: ScopeId,
-    operand_id: IdentifierId,
-    env: &mut Environment,
-    macro_values: &mut HashSet<IdentifierId>,
-    macro_tags: &mut HashMap<IdentifierId, MacroDefinition>,
-) {
-    if matches!(macro_def.level, InlineLevel::Transitive) {
-        env.identifiers[operand_id.0 as usize].scope = Some(scope_id);
-        expand_fbt_scope_range_on_env(env, scope_id, operand_id);
-        macro_tags.insert(operand_id, macro_def.clone());
-    }
-    macro_values.insert(operand_id);
 }
 
