@@ -182,7 +182,19 @@ fn resolve_property_type(
             return None;
         }
     };
-    let shape_id = shape_id?;
+    let shape_id = match shape_id {
+        Some(id) => id,
+        None => {
+            // Object/Function with no shapeId: TS getPropertyType falls through
+            // to hook-name check, TS getFallthroughPropertyType returns null
+            if let PropertyNameKind::Literal { value: PropertyLiteral::String(s) } = property_name {
+                if is_hook_name(s) {
+                    return custom_hook_type.cloned();
+                }
+            }
+            return None;
+        }
+    };
     let shape = shapes.get(shape_id)?;
 
     match property_name {
