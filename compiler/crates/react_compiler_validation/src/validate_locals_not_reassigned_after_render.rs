@@ -12,9 +12,10 @@ use react_compiler_diagnostics::{
 };
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
-    ArrayElement, Effect, HirFunction, Identifier, IdentifierId, IdentifierName, InstructionValue,
-    JsxAttribute, JsxTag, ObjectPropertyOrSpread, Place, PlaceOrSpread, Terminal, Type,
+    Effect, HirFunction, Identifier, IdentifierId, IdentifierName, InstructionValue,
+    Place, Type,
 };
+use react_compiler_hir::visitors::{each_instruction_lvalue, each_instruction_value_operand, each_terminal_operand};
 
 /// Validates that local variables cannot be reassigned after render.
 /// This prevents a category of bugs in which a closure captures a
@@ -234,7 +235,7 @@ fn get_context_reassignment(
                     // For calls with noAlias signatures, only check the callee/receiver
                     // (not args) to avoid false positives from callbacks that reassign
                     // context variables.
-                    let operands: Vec<&Place> = match &instr.value {
+                    let operands: Vec<Place> = match &instr.value {
                         InstructionValue::CallExpression { callee, .. } => {
                             if has_no_alias_signature(
                                 env,
@@ -242,9 +243,9 @@ fn get_context_reassignment(
                                 identifiers,
                                 types,
                             ) {
-                                vec![callee]
+                                vec![callee.clone()]
                             } else {
-                                each_instruction_value_operand_places(&instr.value)
+                                each_instruction_value_operand(&instr.value, env)
                             }
                         }
                         InstructionValue::MethodCall {
@@ -256,9 +257,9 @@ fn get_context_reassignment(
                                 identifiers,
                                 types,
                             ) {
-                                vec![receiver, property]
+                                vec![receiver.clone(), property.clone()]
                             } else {
-                                each_instruction_value_operand_places(&instr.value)
+                                each_instruction_value_operand(&instr.value, env)
                             }
                         }
                         InstructionValue::TaggedTemplateExpression { tag, .. } => {
@@ -268,12 +269,12 @@ fn get_context_reassignment(
                                 identifiers,
                                 types,
                             ) {
-                                vec![tag]
+                                vec![tag.clone()]
                             } else {
-                                each_instruction_value_operand_places(&instr.value)
+                                each_instruction_value_operand(&instr.value, env)
                             }
                         }
-                        _ => each_instruction_value_operand_places(&instr.value),
+                        _ => each_instruction_value_operand(&instr.value, env),
                     };
 
                     for operand in &operands {
@@ -306,7 +307,7 @@ fn get_context_reassignment(
         }
 
         // Check terminal operands for reassigning functions
-        for operand in each_terminal_operand_places(&block.terminal) {
+        for operand in each_terminal_operand(&block.terminal) {
             if let Some(reassignment_place) = reassigning_functions.get(&operand.identifier) {
                 return Some(reassignment_place.clone());
             }
@@ -316,177 +317,11 @@ fn get_context_reassignment(
     None
 }
 
-/// Collect all lvalue identifier IDs from an instruction (the primary lvalue
-/// plus any additional lvalues from StoreLocal, Destructure, etc.).
+/// Collect all lvalue identifier IDs from an instruction.
+/// Thin wrapper around canonical `each_instruction_lvalue` that maps to ids.
 fn each_instruction_lvalue_ids(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    let mut lvalue_ids = vec![instr.lvalue.identifier];
-    match &instr.value {
-        InstructionValue::StoreLocal { lvalue, .. }
-        | InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. } => {
-            lvalue_ids.push(lvalue.place.identifier);
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            collect_destructure_pattern_ids(&lvalue.pattern, &mut lvalue_ids);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            lvalue_ids.push(lvalue.identifier);
-        }
-        _ => {}
-    }
-    lvalue_ids
-}
-
-/// Recursively collect identifier IDs from a destructure pattern.
-fn collect_destructure_pattern_ids(
-    pattern: &react_compiler_hir::Pattern,
-    out: &mut Vec<IdentifierId>,
-) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(place) => {
-                        out.push(place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(spread) => {
-                        out.push(spread.place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(prop) => {
-                        out.push(prop.place.identifier);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        out.push(spread.place.identifier);
-                    }
-                }
-            }
-        }
-    }
-}
-
-/// Collect all operand places from an instruction value.
-fn each_instruction_value_operand_places(value: &InstructionValue) -> Vec<&Place> {
-    match value {
-        InstructionValue::CallExpression { callee, args, .. } => {
-            let mut operands = vec![callee];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(place) => operands.push(place),
-                    PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            let mut operands = vec![receiver, property];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(place) => operands.push(place),
-                    PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => vec![tag],
-        InstructionValue::BinaryExpression { left, right, .. } => vec![left, right],
-        InstructionValue::UnaryExpression { value, .. } => vec![value],
-        InstructionValue::PropertyLoad { object, .. } => vec![object],
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => vec![object, property],
-        InstructionValue::PropertyStore { object, value, .. } => vec![object, value],
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => vec![object, property, value],
-        InstructionValue::PropertyDelete { object, .. } => vec![object],
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => vec![object, property],
-        InstructionValue::TypeCastExpression { value, .. } => vec![value],
-        InstructionValue::NewExpression { callee, args, .. } => {
-            let mut operands = vec![callee];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(place) => operands.push(place),
-                    PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::Destructure { value, .. } => vec![value],
-        InstructionValue::ObjectExpression { properties, .. } => {
-            let mut operands = Vec::new();
-            for prop in properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(prop) => operands.push(&prop.place),
-                    ObjectPropertyOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            let mut operands = Vec::new();
-            for element in elements {
-                match element {
-                    ArrayElement::Place(place) => operands.push(place),
-                    ArrayElement::Spread(spread) => operands.push(&spread.place),
-                    ArrayElement::Hole => {}
-                }
-            }
-            operands
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            let mut operands = Vec::new();
-            if let JsxTag::Place(place) = tag {
-                operands.push(place);
-            }
-            for prop in props {
-                match prop {
-                    JsxAttribute::Attribute { place, .. } => operands.push(place),
-                    JsxAttribute::SpreadAttribute { argument } => operands.push(argument),
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    operands.push(child);
-                }
-            }
-            operands
-        }
-        InstructionValue::JsxFragment { children, .. } => children.iter().collect(),
-        InstructionValue::TemplateLiteral { subexprs, .. } => subexprs.iter().collect(),
-        _ => Vec::new(),
-    }
-}
-
-/// Collect all operand places from a terminal.
-fn each_terminal_operand_places(terminal: &Terminal) -> Vec<&Place> {
-    match terminal {
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => vec![value],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
-        Terminal::Switch { test, .. } => vec![test],
-        _ => Vec::new(),
-    }
+    each_instruction_lvalue(instr)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }

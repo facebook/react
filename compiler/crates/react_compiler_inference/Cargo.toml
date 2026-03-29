@@ -9,4 +9,5 @@ react_compiler_diagnostics = { path = "../react_compiler_diagnostics" }
 react_compiler_lowering = { path = "../react_compiler_lowering" }
 react_compiler_optimization = { path = "../react_compiler_optimization" }
 react_compiler_ssa = { path = "../react_compiler_ssa" }
+react_compiler_utils = { path = "../react_compiler_utils" }
 indexmap = "2"

@@ -25,7 +25,9 @@ use react_compiler_hir::{
     Terminal, Type,
 };
 
-use crate::infer_reactive_scope_variables::{find_disjoint_mutable_values, is_mutable, DisjointSet};
+use react_compiler_utils::DisjointSet;
+
+use crate::infer_reactive_scope_variables::{find_disjoint_mutable_values, is_mutable};
 
 // =============================================================================
 // Public API
@@ -241,11 +243,11 @@ pub fn infer_reactive_places(
 struct ReactivityMap<'a> {
     has_changes: bool,
     reactive: HashSet<IdentifierId>,
-    aliased_identifiers: &'a mut DisjointSet,
+    aliased_identifiers: &'a mut DisjointSet<IdentifierId>,
 }
 
 impl<'a> ReactivityMap<'a> {
-    fn new(aliased_identifiers: &'a mut DisjointSet) -> Self {
+    fn new(aliased_identifiers: &'a mut DisjointSet<IdentifierId>) -> Self {
         ReactivityMap {
             has_changes: false,
             reactive: HashSet::new(),
@@ -776,18 +778,12 @@ fn build_reactive_id_set(reactive_map: &mut ReactivityMap) -> HashSet<Identifier
     for &id in &reactive_map.reactive {
         result.insert(id);
     }
-    let keys: Vec<IdentifierId> = reactive_map
-        .aliased_identifiers
-        .entries
-        .keys()
-        .copied()
-        .collect();
-    for id in keys {
-        let canonical = reactive_map.aliased_identifiers.find(id);
-        if reactive_map.reactive.contains(&canonical) {
+    let reactive = &reactive_map.reactive;
+    reactive_map.aliased_identifiers.for_each(|id, canonical| {
+        if reactive.contains(&canonical) {
             result.insert(id);
         }
-    }
+    });
     result
 }
 

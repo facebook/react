@@ -15,6 +15,7 @@ use react_compiler_hir::{
     ParamPattern, ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveStatement,
     ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue, Terminal,
     environment::Environment,
+    visitors as hir_visitors,
 };
 
 // =============================================================================
@@ -215,61 +216,13 @@ fn visit_instruction(
 fn each_instruction_value_lvalue(value: &ReactiveValue) -> Vec<IdentifierId> {
     match value {
         ReactiveValue::Instruction(iv) => {
-            match iv {
-                InstructionValue::DeclareLocal { lvalue, .. }
-                | InstructionValue::StoreLocal { lvalue, .. } => {
-                    vec![lvalue.place.identifier]
-                }
-                InstructionValue::DeclareContext { lvalue, .. }
-                | InstructionValue::StoreContext { lvalue, .. } => {
-                    vec![lvalue.place.identifier]
-                }
-                InstructionValue::Destructure { lvalue, .. } => {
-                    each_pattern_operand_ids(&lvalue.pattern)
-                }
-                InstructionValue::PostfixUpdate { lvalue, .. }
-                | InstructionValue::PrefixUpdate { lvalue, .. } => {
-                    vec![lvalue.identifier]
-                }
-                _ => vec![],
-            }
+            hir_visitors::each_instruction_value_lvalue(iv)
+                .into_iter()
+                .map(|p| p.identifier)
+                .collect()
         }
         _ => vec![],
     }
-}
-
-/// Collects IdentifierIds from a destructuring pattern.
-/// Corresponds to TS `eachPatternOperand`.
-fn each_pattern_operand_ids(pattern: &react_compiler_hir::Pattern) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(place) => {
-                        ids.push(place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(spread) => {
-                        ids.push(spread.place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        ids.push(p.place.identifier);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        ids.push(spread.place.identifier);
-                    }
-                }
-            }
-        }
-    }
-    ids
 }
 
 /// Traverses an inner HIR function, visiting params, instructions (with lvalues,
@@ -351,54 +304,19 @@ fn visit_hir_function(
 
 /// Collects lvalue IdentifierIds from inside an HIR InstructionValue.
 fn each_hir_value_lvalue(value: &InstructionValue) -> Vec<IdentifierId> {
-    match value {
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
-            vec![lvalue.place.identifier]
-        }
-        InstructionValue::DeclareContext { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. } => {
-            vec![lvalue.place.identifier]
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            each_pattern_operand_ids(&lvalue.pattern)
-        }
-        InstructionValue::PostfixUpdate { lvalue, .. }
-        | InstructionValue::PrefixUpdate { lvalue, .. } => {
-            vec![lvalue.identifier]
-        }
-        _ => vec![],
-    }
+    hir_visitors::each_instruction_value_lvalue(value)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 /// Collects operand IdentifierIds from an HIR terminal.
 /// Corresponds to TS `eachTerminalOperand`.
 fn each_terminal_operand(terminal: &Terminal) -> Vec<IdentifierId> {
-    match terminal {
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            vec![test.identifier]
-        }
-        Terminal::Switch { test, cases, .. } => {
-            let mut ids = vec![test.identifier];
-            for case in cases {
-                if let Some(t) = &case.test {
-                    ids.push(t.identifier);
-                }
-            }
-            ids
-        }
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => {
-            vec![value.identifier]
-        }
-        Terminal::Try { handler_binding, .. } => {
-            if let Some(binding) = handler_binding {
-                vec![binding.identifier]
-            } else {
-                vec![]
-            }
-        }
-        _ => vec![],
-    }
+    hir_visitors::each_terminal_operand(terminal)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 fn visit_value(

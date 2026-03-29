@@ -18,70 +18,12 @@
 use std::cmp;
 use std::collections::HashMap;
 
-use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
 use react_compiler_hir::{
     EvaluationOrder, HirFunction, IdentifierId, InstructionValue, ScopeId, Type,
 };
-
-// =============================================================================
-// DisjointSet<ScopeId>
-// =============================================================================
-
-/// A Union-Find data structure for grouping ScopeIds into disjoint sets.
-struct ScopeDisjointSet {
-    entries: IndexMap<ScopeId, ScopeId>,
-}
-
-impl ScopeDisjointSet {
-    fn new() -> Self {
-        ScopeDisjointSet {
-            entries: IndexMap::new(),
-        }
-    }
-
-    fn find(&mut self, item: ScopeId) -> ScopeId {
-        let parent = match self.entries.get(&item) {
-            Some(&p) => p,
-            None => {
-                self.entries.insert(item, item);
-                return item;
-            }
-        };
-        if parent == item {
-            return item;
-        }
-        let root = self.find(parent);
-        self.entries.insert(item, root);
-        root
-    }
-
-    /// Union multiple scope IDs into one set (first element becomes root).
-    fn union(&mut self, items: &[ScopeId]) {
-        if items.len() < 2 {
-            return;
-        }
-        let root = self.find(items[0]);
-        for &item in &items[1..] {
-            let item_root = self.find(item);
-            if item_root != root {
-                self.entries.insert(item_root, root);
-            }
-        }
-    }
-
-    fn for_each<F>(&mut self, mut f: F)
-    where
-        F: FnMut(ScopeId, ScopeId),
-    {
-        let keys: Vec<ScopeId> = self.entries.keys().copied().collect();
-        for item in keys {
-            let group = self.find(item);
-            f(item, group);
-        }
-    }
-}
+use react_compiler_utils::DisjointSet;
 
 // =============================================================================
 // ScopeInfo
@@ -111,7 +53,7 @@ struct ScopeInfo {
 // =============================================================================
 
 struct TraversalState {
-    joined: ScopeDisjointSet,
+    joined: DisjointSet<ScopeId>,
     active_scopes: Vec<ScopeId>,
 }
 
@@ -336,9 +278,9 @@ fn get_overlapping_reactive_scopes(
     func: &HirFunction,
     env: &Environment,
     mut scope_info: ScopeInfo,
-) -> ScopeDisjointSet {
+) -> DisjointSet<ScopeId> {
     let mut state = TraversalState {
-        joined: ScopeDisjointSet::new(),
+        joined: DisjointSet::<ScopeId>::new(),
         active_scopes: Vec::new(),
     };
 

@@ -17,7 +17,6 @@
 
 use std::collections::HashMap;
 
-use indexmap::IndexMap;
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
@@ -25,81 +24,7 @@ use react_compiler_hir::{
     DeclarationId, EvaluationOrder, HirFunction, IdentifierId,
     InstructionValue, MutableRange, Pattern, Position, SourceLocation,
 };
-
-// =============================================================================
-// DisjointSet<IdentifierId>
-// =============================================================================
-
-/// A Union-Find data structure for grouping IdentifierIds into disjoint sets.
-///
-/// Corresponds to TS `DisjointSet<Identifier>` in `src/Utils/DisjointSet.ts`.
-/// Uses IdentifierId (Copy) as the key instead of reference identity.
-pub(crate) struct DisjointSet {
-    /// Maps each item to its parent. A root points to itself.
-    /// Uses IndexMap to preserve insertion order (matching TS Map behavior).
-    pub(crate) entries: IndexMap<IdentifierId, IdentifierId>,
-}
-
-impl DisjointSet {
-    pub(crate) fn new() -> Self {
-        DisjointSet {
-            entries: IndexMap::new(),
-        }
-    }
-
-    /// Find the root of the set containing `item`, with path compression.
-    pub(crate) fn find(&mut self, item: IdentifierId) -> IdentifierId {
-        let parent = match self.entries.get(&item) {
-            Some(&p) => p,
-            None => {
-                self.entries.insert(item, item);
-                return item;
-            }
-        };
-        if parent == item {
-            return item;
-        }
-        let root = self.find(parent);
-        self.entries.insert(item, root);
-        root
-    }
-
-    /// Find the root of the set containing `item`, returning None if the item
-    /// was never added to the set. Matches TS DisjointSet.find() behavior.
-    pub(crate) fn find_opt(&mut self, item: IdentifierId) -> Option<IdentifierId> {
-        if !self.entries.contains_key(&item) {
-            return None;
-        }
-        Some(self.find(item))
-    }
-
-    /// Union all items into one set.
-    pub(crate) fn union(&mut self, items: &[IdentifierId]) {
-        if items.is_empty() {
-            return;
-        }
-        let root = self.find(items[0]);
-        for &item in &items[1..] {
-            let item_root = self.find(item);
-            if item_root != root {
-                self.entries.insert(item_root, root);
-            }
-        }
-    }
-
-    /// Iterate over all (item, group_root) pairs.
-    fn for_each<F>(&mut self, mut f: F)
-    where
-        F: FnMut(IdentifierId, IdentifierId),
-    {
-        // Collect keys first to avoid borrow issues during find()
-        let keys: Vec<IdentifierId> = self.entries.keys().copied().collect();
-        for item in keys {
-            let group = self.find(item);
-            f(item, group);
-        }
-    }
-}
+use react_compiler_utils::DisjointSet;
 
 // =============================================================================
 // Public API
@@ -339,8 +264,8 @@ fn each_instruction_value_operand(
 /// Find disjoint sets of co-mutating identifier IDs.
 ///
 /// Corresponds to TS `findDisjointMutableValues(fn: HIRFunction): DisjointSet<Identifier>`.
-pub(crate) fn find_disjoint_mutable_values(func: &HirFunction, env: &Environment) -> DisjointSet {
-    let mut scope_identifiers = DisjointSet::new();
+pub(crate) fn find_disjoint_mutable_values(func: &HirFunction, env: &Environment) -> DisjointSet<IdentifierId> {
+    let mut scope_identifiers = DisjointSet::<IdentifierId>::new();
     let mut declarations: HashMap<DeclarationId, IdentifierId> = HashMap::new();
 
     let enable_forest = env.config.enable_forest;

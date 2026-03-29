@@ -483,3 +483,11 @@ Fixed final 14 code failures + 1 pass-level failure:
 - Variable renaming: surface BindingRename from HIR to BabelPlugin for scope.rename() (2 fixtures)
 - Use-no-forget: add memo cache import before error check in pipeline (1 fixture)
 ALL TESTS PASSING: Pass 1717/1717, Code 1717/1717.
+
+## 20260328-235900 Remove local visitor copies — use canonical react_compiler_hir::visitors
+
+Replaced ~1,800 lines of duplicated visitor/iterator match logic across 21 files with
+calls to canonical `react_compiler_hir::visitors` functions. Remaining local functions are
+thin wrappers (e.g., calling canonical and mapping `Place` → `IdentifierId`).
+Added `each_instruction_value_operand_with_functions` to canonical visitors for split-borrow cases.
+All 1717 tests still passing. Pass 1717/1717, Code 1717/1717.

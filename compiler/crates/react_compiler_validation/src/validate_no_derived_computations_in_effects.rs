@@ -22,6 +22,10 @@ use react_compiler_hir::{
     IdentifierId, IdentifierName, InstructionValue, ParamPattern, PlaceOrSpread,
     ReactFunctionType, ReturnVariant, SourceLocation, Type,
 };
+use react_compiler_hir::visitors::{
+    each_instruction_lvalue as canonical_each_instruction_lvalue,
+    each_instruction_operand as canonical_each_instruction_operand,
+};
 
 const MAX_FIXPOINT_ITERATIONS: usize = 100;
 
@@ -247,62 +251,13 @@ fn get_root_set_state(
 /// Collects all lvalue IdentifierIds for an instruction.
 /// This corresponds to TS eachInstructionLValue, which yields:
 /// - The instruction's own lvalue
-/// - For StoreLocal/DeclareLocal/StoreContext/DeclareContext: the value.lvalue.place
-/// - For Destructure: all pattern places
-/// - For PrefixUpdate/PostfixUpdate: value.lvalue
+/// Collect all lvalue identifier IDs from an instruction.
+/// Thin wrapper around canonical `each_instruction_lvalue` that maps to ids.
 fn each_instruction_lvalue(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    let mut lvalues = vec![instr.lvalue.identifier];
-    match &instr.value {
-        InstructionValue::StoreLocal { lvalue, .. }
-        | InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. } => {
-            lvalues.push(lvalue.place.identifier);
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            collect_pattern_places(&lvalue.pattern, &mut lvalues);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            lvalues.push(lvalue.identifier);
-        }
-        _ => {}
-    }
-    lvalues
-}
-
-/// Collect all Place identifiers from a destructure pattern.
-fn collect_pattern_places(
-    pattern: &react_compiler_hir::Pattern,
-    out: &mut Vec<IdentifierId>,
-) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => {
-                        out.push(p.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        out.push(s.place.identifier);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        out.push(p.place.identifier);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        out.push(s.place.identifier);
-                    }
-                }
-            }
-        }
-    }
+    canonical_each_instruction_lvalue(instr)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 fn maybe_record_set_state_for_instr(
@@ -488,7 +443,7 @@ fn record_instruction_derivations(
     instr: &react_compiler_hir::Instruction,
     context: &mut ValidationContext,
     is_first_pass: bool,
-    outer_func: &HirFunction,
+    _outer_func: &HirFunction,
     env: &Environment,
 ) -> Result<(), CompilerDiagnostic> {
     let identifiers = &env.identifiers;
@@ -614,7 +569,7 @@ fn record_instruction_derivations(
     }
 
     // Collect operand derivations
-    for (operand_id, operand_loc) in each_instruction_operand(instr, outer_func, env) {
+    for (operand_id, operand_loc) in each_instruction_operand(instr, env) {
         // Track setState usages
         if context.set_state_loads.contains_key(&operand_id) {
             let root = get_root_set_state(operand_id, &context.set_state_loads, &mut HashSet::new());
@@ -653,7 +608,7 @@ fn record_instruction_derivations(
     }
 
     // Handle mutable operands
-    for operand in each_instruction_operand_with_effect(instr, outer_func, env) {
+    for operand in each_instruction_operand_with_effect(instr, env) {
         match operand.effect {
             Effect::Capture
             | Effect::Store
@@ -694,199 +649,31 @@ struct OperandWithEffect {
     effect: Effect,
 }
 
-/// Collects operand (IdentifierId, loc) pairs from an instruction (simplified eachInstructionOperand).
+/// Collects operand (IdentifierId, loc) pairs from an instruction.
+/// Thin wrapper around canonical `each_instruction_operand` that maps Places to (id, loc) pairs.
 fn each_instruction_operand(
     instr: &react_compiler_hir::Instruction,
-    _func: &HirFunction,
     env: &Environment,
 ) -> Vec<(IdentifierId, Option<SourceLocation>)> {
-    let mut operands = Vec::new();
-    match &instr.value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            operands.push((place.identifier, place.loc));
-        }
-        InstructionValue::StoreLocal { value, .. }
-        | InstructionValue::StoreContext { value, .. } => {
-            operands.push((value.identifier, value.loc));
-        }
-        InstructionValue::Destructure { value, .. } => {
-            operands.push((value.identifier, value.loc));
-        }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::ComputedLoad { object, .. } => {
-            operands.push((object.identifier, object.loc));
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            operands.push((object.identifier, object.loc));
-            operands.push((value.identifier, value.loc));
-        }
-        InstructionValue::ComputedStore { object, property, value, .. } => {
-            operands.push((object.identifier, object.loc));
-            operands.push((property.identifier, property.loc));
-            operands.push((value.identifier, value.loc));
-        }
-        InstructionValue::CallExpression { callee, args, .. } => {
-            operands.push((callee.identifier, callee.loc));
-            for arg in args {
-                if let react_compiler_hir::PlaceOrSpread::Place(p) = arg {
-                    operands.push((p.identifier, p.loc));
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver, property, args, ..
-        } => {
-            operands.push((receiver.identifier, receiver.loc));
-            operands.push((property.identifier, property.loc));
-            for arg in args {
-                if let react_compiler_hir::PlaceOrSpread::Place(p) = arg {
-                    operands.push((p.identifier, p.loc));
-                }
-            }
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            operands.push((left.identifier, left.loc));
-            operands.push((right.identifier, right.loc));
-        }
-        InstructionValue::UnaryExpression { value, .. } => {
-            operands.push((value.identifier, value.loc));
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        operands.push((p.place.identifier, p.place.loc));
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        operands.push((s.place.identifier, s.place.loc));
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    ArrayElement::Place(p) => operands.push((p.identifier, p.loc)),
-                    ArrayElement::Spread(s) => operands.push((s.place.identifier, s.place.loc)),
-                    ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for sub in subexprs {
-                operands.push((sub.identifier, sub.loc));
-            }
-        }
-        InstructionValue::JsxExpression { tag, props, children, .. } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                operands.push((p.identifier, p.loc));
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        operands.push((place.identifier, place.loc));
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        operands.push((argument.identifier, argument.loc));
-                    }
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    operands.push((child.identifier, child.loc));
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children {
-                operands.push((child.identifier, child.loc));
-            }
-        }
-        InstructionValue::TypeCastExpression { value, .. } => {
-            operands.push((value.identifier, value.loc));
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. } => {
-            let inner = &env.functions[lowered_func.func.0 as usize];
-            for ctx in &inner.context {
-                operands.push((ctx.identifier, ctx.loc));
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            operands.push((tag.identifier, tag.loc));
-        }
-        _ => {}
-    }
-    operands
+    canonical_each_instruction_operand(instr, env)
+        .into_iter()
+        .map(|place| (place.identifier, place.loc))
+        .collect()
 }
 
-/// Collects operands with their effects
+/// Collects operands with their effects.
+/// Thin wrapper around canonical `each_instruction_operand` that maps Places to OperandWithEffect.
 fn each_instruction_operand_with_effect(
     instr: &react_compiler_hir::Instruction,
-    _func: &HirFunction,
     env: &Environment,
 ) -> Vec<OperandWithEffect> {
-    let mut operands = Vec::new();
-    match &instr.value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            operands.push(OperandWithEffect { id: place.identifier, effect: place.effect });
-        }
-        InstructionValue::StoreLocal { value, .. }
-        | InstructionValue::StoreContext { value, .. } => {
-            operands.push(OperandWithEffect { id: value.identifier, effect: value.effect });
-        }
-        InstructionValue::Destructure { value, .. } => {
-            operands.push(OperandWithEffect { id: value.identifier, effect: value.effect });
-        }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::ComputedLoad { object, .. } => {
-            operands.push(OperandWithEffect { id: object.identifier, effect: object.effect });
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            operands.push(OperandWithEffect { id: object.identifier, effect: object.effect });
-            operands.push(OperandWithEffect { id: value.identifier, effect: value.effect });
-        }
-        InstructionValue::ComputedStore { object, property, value, .. } => {
-            operands.push(OperandWithEffect { id: object.identifier, effect: object.effect });
-            operands.push(OperandWithEffect { id: property.identifier, effect: property.effect });
-            operands.push(OperandWithEffect { id: value.identifier, effect: value.effect });
-        }
-        InstructionValue::CallExpression { callee, args, .. } => {
-            operands.push(OperandWithEffect { id: callee.identifier, effect: callee.effect });
-            for arg in args {
-                if let react_compiler_hir::PlaceOrSpread::Place(p) = arg {
-                    operands.push(OperandWithEffect { id: p.identifier, effect: p.effect });
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver, property, args, ..
-        } => {
-            operands.push(OperandWithEffect { id: receiver.identifier, effect: receiver.effect });
-            operands.push(OperandWithEffect { id: property.identifier, effect: property.effect });
-            for arg in args {
-                if let react_compiler_hir::PlaceOrSpread::Place(p) = arg {
-                    operands.push(OperandWithEffect { id: p.identifier, effect: p.effect });
-                }
-            }
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            operands.push(OperandWithEffect { id: left.identifier, effect: left.effect });
-            operands.push(OperandWithEffect { id: right.identifier, effect: right.effect });
-        }
-        InstructionValue::UnaryExpression { value, .. } => {
-            operands.push(OperandWithEffect { id: value.identifier, effect: value.effect });
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. } => {
-            let inner = &env.functions[lowered_func.func.0 as usize];
-            for ctx in &inner.context {
-                operands.push(OperandWithEffect { id: ctx.identifier, effect: ctx.effect });
-            }
-        }
-        _ => {}
-    }
-    operands
+    canonical_each_instruction_operand(instr, env)
+        .into_iter()
+        .map(|place| OperandWithEffect {
+            id: place.identifier,
+            effect: place.effect,
+        })
+        .collect()
 }
 
 // =============================================================================
@@ -1096,7 +883,7 @@ fn validate_effect(
             );
 
             // Track setState usages for operands
-            for (operand_id, operand_loc) in each_instruction_operand(instr, effect_function, env) {
+            for (operand_id, operand_loc) in each_instruction_operand(instr, env) {
                 if context.set_state_loads.contains_key(&operand_id) {
                     let root = get_root_set_state(
                         operand_id,
@@ -1160,7 +947,7 @@ fn validate_effect(
                 }
                 InstructionValue::LoadGlobal { .. } => {
                     globals.insert(instr.lvalue.identifier);
-                    for (operand_id, _) in each_instruction_operand(instr, effect_function, env) {
+                    for (operand_id, _) in each_instruction_operand(instr, env) {
                         globals.insert(operand_id);
                     }
                 }

@@ -12,10 +12,10 @@ use react_compiler_diagnostics::{
 };
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
-    AliasingEffect, ArrayElement, Effect, HirFunction, Identifier, IdentifierId, IdentifierName,
-    InstructionValue, JsxAttribute, JsxTag, ObjectPropertyOrSpread, Place, PlaceOrSpread,
-    Terminal, Type,
+    AliasingEffect, Effect, HirFunction, Identifier, IdentifierId, IdentifierName,
+    InstructionValue, Place, Type,
 };
+use react_compiler_hir::visitors::{each_instruction_value_operand, each_terminal_operand};
 
 /// Information about a known mutation effect: which identifier is mutated, and
 /// the source location of the mutation.
@@ -38,6 +38,7 @@ pub fn validate_no_freezing_known_mutable_functions(func: &HirFunction, env: &mu
         &env.identifiers,
         &env.types,
         &env.functions,
+        env,
     );
     for diagnostic in diagnostics {
         env.record_diagnostic(diagnostic);
@@ -49,6 +50,7 @@ fn check_no_freezing_known_mutable_functions(
     identifiers: &[Identifier],
     types: &[Type],
     functions: &[HirFunction],
+    env: &Environment,
 ) -> Vec<CompilerDiagnostic> {
     // Maps an identifier to the mutation effect that makes it "known mutable"
     let mut context_mutation_effects: HashMap<IdentifierId, MutationInfo> = HashMap::new();
@@ -142,9 +144,9 @@ fn check_no_freezing_known_mutable_functions(
 
                 _ => {
                     // For all other instruction kinds, check operands for freeze violations
-                    for operand in each_instruction_value_operand_places(&instr.value) {
+                    for operand in each_instruction_value_operand(&instr.value, env) {
                         check_operand_for_freeze_violation(
-                            operand,
+                            &operand,
                             &context_mutation_effects,
                             identifiers,
                             &mut diagnostics,
@@ -155,9 +157,9 @@ fn check_no_freezing_known_mutable_functions(
         }
 
         // Also check terminal operands
-        for operand in each_terminal_operand_places(&block.terminal) {
+        for operand in each_terminal_operand(&block.terminal) {
             check_operand_for_freeze_violation(
-                operand,
+                &operand,
                 &context_mutation_effects,
                 identifiers,
                 &mut diagnostics,
@@ -218,122 +220,4 @@ fn is_ref_or_ref_like_mutable_type(
 ) -> bool {
     let identifier = &identifiers[identifier_id.0 as usize];
     react_compiler_hir::is_ref_or_ref_like_mutable_type(&types[identifier.type_.0 as usize])
-}
-
-/// Collect all operand places from an instruction value.
-fn each_instruction_value_operand_places(value: &InstructionValue) -> Vec<&Place> {
-    match value {
-        InstructionValue::CallExpression { callee, args, .. } => {
-            let mut operands = vec![callee];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(place) => operands.push(place),
-                    PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            let mut operands = vec![receiver, property];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(place) => operands.push(place),
-                    PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => vec![left, right],
-        InstructionValue::UnaryExpression { value, .. } => vec![value],
-        InstructionValue::PropertyLoad { object, .. } => vec![object],
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => vec![object, property],
-        InstructionValue::PropertyStore { object, value, .. } => vec![object, value],
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => vec![object, property, value],
-        InstructionValue::PropertyDelete { object, .. } => vec![object],
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => vec![object, property],
-        InstructionValue::TypeCastExpression { value, .. } => vec![value],
-        InstructionValue::Destructure { value, .. } => vec![value],
-        InstructionValue::NewExpression { callee, args, .. } => {
-            let mut operands = vec![callee];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(place) => operands.push(place),
-                    PlaceOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            let mut operands = Vec::new();
-            for prop in properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(prop) => operands.push(&prop.place),
-                    ObjectPropertyOrSpread::Spread(spread) => operands.push(&spread.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            let mut operands = Vec::new();
-            for element in elements {
-                match element {
-                    ArrayElement::Place(place) => operands.push(place),
-                    ArrayElement::Spread(spread) => operands.push(&spread.place),
-                    ArrayElement::Hole => {}
-                }
-            }
-            operands
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            let mut operands = Vec::new();
-            if let JsxTag::Place(place) = tag {
-                operands.push(place);
-            }
-            for prop in props {
-                match prop {
-                    JsxAttribute::Attribute { place, .. } => operands.push(place),
-                    JsxAttribute::SpreadAttribute { argument } => operands.push(argument),
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    operands.push(child);
-                }
-            }
-            operands
-        }
-        InstructionValue::JsxFragment { children, .. } => children.iter().collect(),
-        InstructionValue::TemplateLiteral { subexprs, .. } => subexprs.iter().collect(),
-        InstructionValue::TaggedTemplateExpression { tag, .. } => vec![tag],
-        _ => Vec::new(),
-    }
-}
-
-/// Collect all operand places from a terminal.
-fn each_terminal_operand_places(terminal: &Terminal) -> Vec<&Place> {
-    match terminal {
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => vec![value],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
-        Terminal::Switch { test, .. } => vec![test],
-        _ => Vec::new(),
-    }
 }

@@ -10,7 +10,10 @@ use react_compiler_hir::{
     ArrayElement, BlockId, DependencyPathEntry, HirFunction, Identifier, IdentifierId,
     InstructionKind, InstructionValue, ManualMemoDependency, ManualMemoDependencyRoot,
     NonLocalBinding, ParamPattern, Place, PlaceOrSpread, PropertyLiteral, Terminal, Type,
-    ArrayPatternElement, ObjectPropertyOrSpread, Pattern,
+};
+use react_compiler_hir::visitors::{
+    each_instruction_value_lvalue, each_instruction_value_operand_with_functions,
+    each_terminal_operand,
 };
 
 /// Port of ValidateExhaustiveDependencies.ts
@@ -19,7 +22,7 @@ use react_compiler_hir::{
 /// have extraneous dependencies. The goal is to ensure auto-memoization
 /// will not substantially change program behavior.
 pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
-    let reactive = collect_reactive_identifiers(func);
+    let reactive = collect_reactive_identifiers(func, &env.functions);
     let validate_memo = env.config.validate_exhaustive_memoization_dependencies;
     let validate_effect = env.config.validate_exhaustive_effect_dependencies.clone();
 
@@ -259,7 +262,7 @@ fn is_sub_path_ignoring_optionals(
 // Collect reactive identifiers
 // =============================================================================
 
-fn collect_reactive_identifiers(func: &HirFunction) -> HashSet<IdentifierId> {
+fn collect_reactive_identifiers(func: &HirFunction, functions: &[HirFunction]) -> HashSet<IdentifierId> {
     let mut reactive = HashSet::new();
     for (_block_id, block) in &func.body.blocks {
         for &instr_id in &block.instructions {
@@ -271,18 +274,18 @@ fn collect_reactive_identifiers(func: &HirFunction) -> HashSet<IdentifierId> {
             // Check inner lvalues (Destructure patterns, StoreLocal, DeclareLocal, etc.)
             // Matches TS eachInstructionLValue which yields both instr.lvalue and
             // eachInstructionValueLValue(instr.value)
-            for lvalue in each_instruction_value_lvalue_places(&instr.value) {
+            for lvalue in each_instruction_value_lvalue(&instr.value) {
                 if lvalue.reactive {
                     reactive.insert(lvalue.identifier);
                 }
             }
-            for operand in each_instruction_value_operand_places(&instr.value) {
+            for operand in each_instruction_value_operand_with_functions(&instr.value, functions) {
                 if operand.reactive {
                     reactive.insert(operand.identifier);
                 }
             }
         }
-        for operand in each_terminal_operand_places(&block.terminal) {
+        for operand in each_terminal_operand(&block.terminal) {
             if operand.reactive {
                 reactive.insert(operand.identifier);
             }
@@ -707,7 +710,7 @@ fn collect_dependencies(
                         &locals,
                     );
                     if destr_lv.kind != InstructionKind::Reassign {
-                        for lv_place in each_instruction_value_lvalue_places(&instr.value) {
+                        for lv_place in each_instruction_value_lvalue(&instr.value) {
                             temporaries.insert(
                                 lv_place.identifier,
                                 Temporary::Local {
@@ -1011,9 +1014,9 @@ fn collect_dependencies(
                     }
 
                     // Visit all operands except for MethodCall's property
-                    for operand in each_instruction_value_operand_places(&instr.value) {
+                    for operand in each_instruction_value_operand_with_functions(&instr.value, functions) {
                         visit_candidate_dependency(
-                            operand,
+                            &operand,
                             temporaries,
                             &mut dependencies,
                             &mut dep_keys,
@@ -1148,9 +1151,9 @@ fn collect_dependencies(
                 }
                 _ => {
                     // Default: visit all operands
-                    for operand in each_instruction_value_operand_places(&instr.value) {
+                    for operand in each_instruction_value_operand_with_functions(&instr.value, functions) {
                         visit_candidate_dependency(
-                            operand,
+                            &operand,
                             temporaries,
                             &mut dependencies,
                             &mut dep_keys,
@@ -1166,7 +1169,7 @@ fn collect_dependencies(
         }
 
         // Terminal operands
-        for operand in each_terminal_operand_places(&block.terminal) {
+        for operand in &each_terminal_operand(&block.terminal) {
             if optionals.contains_key(&operand.identifier) {
                 continue;
             }
@@ -1724,306 +1727,16 @@ fn create_diagnostic(
     })
 }
 
-// =============================================================================
-// Visitor helpers
-// =============================================================================
-
-/// Collect all operand Places from an instruction value
-fn each_instruction_value_operand_places(value: &InstructionValue) -> Vec<&Place> {
-    let mut places = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            places.push(place);
-        }
-        InstructionValue::StoreLocal { value: val, .. }
-        | InstructionValue::StoreContext { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            places.push(left);
-            places.push(right);
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::CallExpression { callee, args, .. } => {
-            places.push(callee);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => places.push(p),
-                    PlaceOrSpread::Spread(s) => places.push(&s.place),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            places.push(receiver);
-            places.push(property);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => places.push(p),
-                    PlaceOrSpread::Spread(s) => places.push(&s.place),
-                }
-            }
-        }
-        InstructionValue::NewExpression { callee, args, .. } => {
-            places.push(callee);
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => places.push(p),
-                    PlaceOrSpread::Spread(s) => places.push(&s.place),
-                }
-            }
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            places.push(object);
-        }
-        InstructionValue::PropertyStore { object, value: val, .. } => {
-            places.push(object);
-            places.push(val);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            places.push(object);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => {
-            places.push(object);
-            places.push(property);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value: val,
-            ..
-        } => {
-            places.push(object);
-            places.push(property);
-            places.push(val);
-        }
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            places.push(object);
-            places.push(property);
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            places.push(tag);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for p in subexprs {
-                places.push(p);
-            }
-        }
-        InstructionValue::Await { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            places.push(collection);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            places.push(iterator);
-            places.push(collection);
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::PostfixUpdate { value: val, .. }
-        | InstructionValue::PrefixUpdate { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            places.push(val);
-        }
-        InstructionValue::JsxExpression {
-            tag, props, children, ..
-        } => {
-            match tag {
-                react_compiler_hir::JsxTag::Place(p) => places.push(p),
-                react_compiler_hir::JsxTag::Builtin(_) => {}
-            }
-            for attr in props {
-                match attr {
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        places.push(argument)
-                    }
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        places.push(place)
-                    }
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    places.push(child);
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children {
-                places.push(child);
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        places.push(&p.place);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            places.push(name);
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        places.push(&s.place);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for elem in elements {
-                match elem {
-                    ArrayElement::Place(p) => places.push(p),
-                    ArrayElement::Spread(s) => places.push(&s.place),
-                    ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            places.push(decl);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let ManualMemoDependencyRoot::NamedLocal { value, .. } = &dep.root {
-                        places.push(value);
-                    }
-                }
-            }
-        }
-        // No operands
-        InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::UnsupportedNode { .. } => {}
-    }
-    places
-}
-
-/// Collect lvalue identifier ids from instruction value (for the default branch)
+/// Collect lvalue identifier ids from instruction value (for the default branch).
+/// Thin wrapper around canonical `each_instruction_value_lvalue` that maps to ids.
 fn each_instruction_lvalue_ids(
     value: &InstructionValue,
     lvalue_id: IdentifierId,
 ) -> Vec<IdentifierId> {
     let mut ids = vec![lvalue_id];
-    match value {
-        InstructionValue::Destructure { .. } => {
-            for place in each_instruction_value_lvalue_places(value) {
-                ids.push(place.identifier);
-            }
-        }
-        _ => {}
+    for place in each_instruction_value_lvalue(value) {
+        ids.push(place.identifier);
     }
     ids
 }
 
-/// Collect lvalue places from destructuring patterns
-fn each_instruction_value_lvalue_places(value: &InstructionValue) -> Vec<&Place> {
-    let mut places = Vec::new();
-    match value {
-        InstructionValue::Destructure { lvalue, .. } => {
-            collect_pattern_lvalues(&lvalue.pattern, &mut places);
-        }
-        InstructionValue::StoreLocal { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. } => {
-            places.push(&lvalue.place);
-        }
-        InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::DeclareContext { lvalue, .. } => {
-            places.push(&lvalue.place);
-        }
-        _ => {}
-    }
-    places
-}
-
-fn collect_pattern_lvalues<'a>(
-    pattern: &'a Pattern,
-    places: &mut Vec<&'a Place>,
-) {
-    match pattern {
-        Pattern::Array(array_pat) => {
-            for item in &array_pat.items {
-                match item {
-                    ArrayPatternElement::Hole => {}
-                    ArrayPatternElement::Place(place) => {
-                        places.push(place);
-                    }
-                    ArrayPatternElement::Spread(spread) => {
-                        places.push(&spread.place);
-                    }
-                }
-            }
-        }
-        Pattern::Object(obj_pat) => {
-            for item in &obj_pat.properties {
-                match item {
-                    ObjectPropertyOrSpread::Property(prop) => {
-                        places.push(&prop.place);
-                    }
-                    ObjectPropertyOrSpread::Spread(spread) => {
-                        places.push(&spread.place);
-                    }
-                }
-            }
-        }
-    }
-}
-
-/// Collect terminal operand places
-fn each_terminal_operand_places(terminal: &Terminal) -> Vec<&Place> {
-    match terminal {
-        Terminal::Throw { value, .. } => vec![value],
-        Terminal::Return { value, .. } => vec![value],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
-        Terminal::Switch { test, cases, .. } => {
-            let mut places = vec![test];
-            for case in cases {
-                if let Some(ref test_place) = case.test {
-                    places.push(test_place);
-                }
-            }
-            places
-        }
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            let mut places = Vec::new();
-            if let Some(binding) = handler_binding {
-                places.push(binding);
-            }
-            places
-        }
-        _ => vec![],
-    }
-}

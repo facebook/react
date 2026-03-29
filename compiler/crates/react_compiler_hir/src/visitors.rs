@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use crate::environment::Environment;
 use crate::{
-    ArrayElement, ArrayPatternElement, BasicBlock, BlockId, Instruction,
+    ArrayElement, ArrayPatternElement, BasicBlock, BlockId, HirFunction, Instruction,
     InstructionKind, InstructionValue, JsxAttribute, JsxTag,
     ManualMemoDependencyRoot, ObjectPropertyKey, ObjectPropertyOrSpread, Pattern, Place,
     PlaceOrSpread, ScopeId, Terminal,
@@ -157,11 +157,29 @@ pub fn each_instruction_operand(instr: &Instruction, env: &Environment) -> Vec<P
     each_instruction_value_operand(&instr.value, env)
 }
 
+/// Like `each_instruction_operand` but takes `functions` directly instead of `env`.
+/// Useful when borrow splitting prevents passing the full `Environment`.
+pub fn each_instruction_operand_with_functions(
+    instr: &Instruction,
+    functions: &[HirFunction],
+) -> Vec<Place> {
+    each_instruction_value_operand_with_functions(&instr.value, functions)
+}
+
 /// Yields operand places from an InstructionValue.
 /// Equivalent to TS `eachInstructionValueOperand`.
 pub fn each_instruction_value_operand(
     value: &InstructionValue,
     env: &Environment,
+) -> Vec<Place> {
+    each_instruction_value_operand_with_functions(value, &env.functions)
+}
+
+/// Like `each_instruction_value_operand` but takes `functions` directly instead of `env`.
+/// Useful when borrow splitting prevents passing the full `Environment`.
+pub fn each_instruction_value_operand_with_functions(
+    value: &InstructionValue,
+    functions: &[HirFunction],
 ) -> Vec<Place> {
     let mut result = Vec::new();
     match value {
@@ -305,7 +323,7 @@ pub fn each_instruction_value_operand(
         }
         InstructionValue::ObjectMethod { lowered_func, .. }
         | InstructionValue::FunctionExpression { lowered_func, .. } => {
-            let func = &env.functions[lowered_func.func.0 as usize];
+            let func = &functions[lowered_func.func.0 as usize];
             for ctx_place in &func.context {
                 result.push(ctx_place.clone());
             }

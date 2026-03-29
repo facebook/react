@@ -4,10 +4,11 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, ErrorCategory,
 };
 use react_compiler_hir::{
-    ArrayPatternElement, FunctionId, HirFunction, Identifier, IdentifierId, InstructionValue,
-    ObjectPropertyOrSpread, Pattern, Place,
+    FunctionId, HirFunction, Identifier, IdentifierId, InstructionValue,
+    Place,
 };
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::visitors::each_pattern_operand;
 
 /// Variable reference kind: local, context, or destructure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,7 +88,7 @@ fn validate_context_variable_lvalues_impl(
                 }
                 InstructionValue::Destructure { lvalue, .. } => {
                     for place in each_pattern_operand(&lvalue.pattern) {
-                        visit(identifier_kinds, place, VarRefKind::Destructure, identifiers, errors)?;
+                        visit(identifier_kinds, &place, VarRefKind::Destructure, identifiers, errors)?;
                     }
                 }
                 InstructionValue::FunctionExpression { lowered_func, .. }
@@ -109,35 +110,6 @@ fn validate_context_variable_lvalues_impl(
     }
 
     Ok(())
-}
-
-/// Iterate all Place references in a destructuring pattern.
-fn each_pattern_operand(pattern: &Pattern) -> Vec<&Place> {
-    let mut places = Vec::new();
-    collect_pattern_operands(pattern, &mut places);
-    places
-}
-
-fn collect_pattern_operands<'a>(pattern: &'a Pattern, places: &mut Vec<&'a Place>) {
-    match pattern {
-        Pattern::Array(array_pattern) => {
-            for item in &array_pattern.items {
-                match item {
-                    ArrayPatternElement::Place(place) => places.push(place),
-                    ArrayPatternElement::Spread(spread) => places.push(&spread.place),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(object_pattern) => {
-            for prop in &object_pattern.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(prop) => places.push(&prop.place),
-                    ObjectPropertyOrSpread::Spread(spread) => places.push(&spread.place),
-                }
-            }
-        }
-    }
 }
 
 /// Format a place like TS `printPlace()`: `<effect> <name>$<id>`

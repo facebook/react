@@ -12,65 +12,9 @@
 use std::cmp;
 use std::collections::HashMap;
 
-use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{EvaluationOrder, HirFunction, IdentifierId, InstructionValue, ScopeId};
-
-// =============================================================================
-// DisjointSet<ScopeId>
-// =============================================================================
-
-/// A Union-Find data structure for grouping ScopeIds into disjoint sets.
-/// Mirrors the TS `DisjointSet<ReactiveScope>` used in the original pass.
-struct ScopeDisjointSet {
-    entries: IndexMap<ScopeId, ScopeId>,
-}
-
-impl ScopeDisjointSet {
-    fn new() -> Self {
-        ScopeDisjointSet {
-            entries: IndexMap::new(),
-        }
-    }
-
-    /// Find the root of the set containing `item`, with path compression.
-    fn find(&mut self, item: ScopeId) -> ScopeId {
-        let parent = match self.entries.get(&item) {
-            Some(&p) => p,
-            None => {
-                self.entries.insert(item, item);
-                return item;
-            }
-        };
-        if parent == item {
-            return item;
-        }
-        let root = self.find(parent);
-        self.entries.insert(item, root);
-        root
-    }
-
-    /// Union two scope IDs into one set.
-    fn union(&mut self, items: [ScopeId; 2]) {
-        let root = self.find(items[0]);
-        let item_root = self.find(items[1]);
-        if item_root != root {
-            self.entries.insert(item_root, root);
-        }
-    }
-
-    /// Iterate over all (item, group_root) pairs.
-    fn for_each<F>(&mut self, mut f: F)
-    where
-        F: FnMut(ScopeId, ScopeId),
-    {
-        let keys: Vec<ScopeId> = self.entries.keys().copied().collect();
-        for item in keys {
-            let group = self.find(item);
-            f(item, group);
-        }
-    }
-}
+use react_compiler_utils::DisjointSet;
 
 // =============================================================================
 // Public API
@@ -83,7 +27,7 @@ impl ScopeDisjointSet {
 pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
     // Maps an identifier to the scope it should be assigned to (or None to remove scope)
     let mut scope_mapping: HashMap<IdentifierId, Option<ScopeId>> = HashMap::new();
-    let mut merged_scopes = ScopeDisjointSet::new();
+    let mut merged_scopes = DisjointSet::<ScopeId>::new();
 
     // Phase 1: Walk instructions and collect scope relationships
     for (_block_id, block) in &func.body.blocks {
@@ -99,7 +43,7 @@ pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
                     match (lvalue_scope, property_scope) {
                         (Some(lvalue_sid), Some(property_sid)) => {
                             // Both have a scope: merge the scopes
-                            merged_scopes.union([lvalue_sid, property_sid]);
+                            merged_scopes.union(&[lvalue_sid, property_sid]);
                         }
                         (Some(lvalue_sid), None) => {
                             // Call has a scope but not the property:

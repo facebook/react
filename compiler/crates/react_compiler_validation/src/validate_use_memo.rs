@@ -4,10 +4,13 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
-    ArrayElement, FunctionId, HirFunction, IdentifierId, InstructionValue, JsxAttribute, JsxTag,
-    ManualMemoDependencyRoot, ParamPattern, PlaceOrSpread, Place, ReturnVariant, Terminal,
+    FunctionId, HirFunction, IdentifierId, InstructionValue,
+    ParamPattern, PlaceOrSpread, Place, ReturnVariant, Terminal,
 };
 use react_compiler_hir::environment::Environment;
+use react_compiler_hir::visitors::{
+    each_instruction_value_operand_with_functions, each_terminal_operand,
+};
 
 /// Validates useMemo() usage patterns.
 ///
@@ -43,7 +46,7 @@ fn validate_use_memo_impl(
 
             // Remove used operands from unused_use_memos
             if !unused_use_memos.is_empty() {
-                for operand_id in each_instruction_value_operand_ids(value) {
+                for operand_id in each_instruction_value_operand_ids(value, functions) {
                     unused_use_memos.remove(&operand_id);
                 }
             }
@@ -286,240 +289,22 @@ fn has_non_void_return(func: &HirFunction) -> bool {
 }
 
 /// Collect all operand IdentifierIds from an InstructionValue.
-fn each_instruction_value_operand_ids(value: &InstructionValue) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            ids.push(place.identifier);
-        }
-        InstructionValue::StoreLocal { value: val, .. }
-        | InstructionValue::StoreContext { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::Destructure { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            ids.push(left.identifier);
-            ids.push(right.identifier);
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::CallExpression { callee, args, .. } => {
-            ids.push(callee.identifier);
-            collect_place_or_spread_ids(args, &mut ids);
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            ids.push(receiver.identifier);
-            ids.push(property.identifier);
-            collect_place_or_spread_ids(args, &mut ids);
-        }
-        InstructionValue::NewExpression { callee, args, .. } => {
-            ids.push(callee.identifier);
-            collect_place_or_spread_ids(args, &mut ids);
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            ids.push(object.identifier);
-        }
-        InstructionValue::PropertyStore { object, value: val, .. } => {
-            ids.push(object.identifier);
-            ids.push(val.identifier);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            ids.push(object.identifier);
-        }
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(property.identifier);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value: val,
-            ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(property.identifier);
-            ids.push(val.identifier);
-        }
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            ids.push(object.identifier);
-            ids.push(property.identifier);
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            ids.push(tag.identifier);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for place in subexprs {
-                ids.push(place.identifier);
-            }
-        }
-        InstructionValue::Await { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            ids.push(collection.identifier);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            ids.push(iterator.identifier);
-            ids.push(collection.identifier);
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::PostfixUpdate { value: val, .. }
-        | InstructionValue::PrefixUpdate { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            ids.push(val.identifier);
-        }
-        InstructionValue::JsxExpression {
-            tag, props, children, ..
-        } => {
-            match tag {
-                JsxTag::Place(place) => ids.push(place.identifier),
-                JsxTag::Builtin(_) => {}
-            }
-            for attr in props {
-                match attr {
-                    JsxAttribute::SpreadAttribute { argument } => ids.push(argument.identifier),
-                    JsxAttribute::Attribute { place, .. } => ids.push(place.identifier),
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    ids.push(child.identifier);
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children {
-                ids.push(child.identifier);
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        ids.push(p.place.identifier);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            ids.push(name.identifier);
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        ids.push(s.place.identifier);
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for elem in elements {
-                match elem {
-                    ArrayElement::Place(place) => ids.push(place.identifier),
-                    ArrayElement::Spread(spread) => ids.push(spread.place.identifier),
-                    ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            ids.push(decl.identifier);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let ManualMemoDependencyRoot::NamedLocal { value, .. } = &dep.root {
-                        ids.push(value.identifier);
-                    }
-                }
-            }
-        }
-        // These have no operands
-        InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::UnsupportedNode { .. } => {}
-    }
-    ids
-}
-
-fn collect_place_or_spread_ids(args: &[PlaceOrSpread], ids: &mut Vec<IdentifierId>) {
-    for arg in args {
-        match arg {
-            PlaceOrSpread::Place(place) => ids.push(place.identifier),
-            PlaceOrSpread::Spread(spread) => ids.push(spread.place.identifier),
-        }
-    }
+/// Thin wrapper around canonical `each_instruction_value_operand_with_functions` that maps to ids.
+fn each_instruction_value_operand_ids(
+    value: &InstructionValue,
+    functions: &[HirFunction],
+) -> Vec<IdentifierId> {
+    each_instruction_value_operand_with_functions(value, functions)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 /// Collect all operand IdentifierIds from a Terminal.
+/// Thin wrapper around canonical `each_terminal_operand` that maps to ids.
 fn each_terminal_operand_ids(terminal: &Terminal) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    match terminal {
-        Terminal::Throw { value, .. } => {
-            ids.push(value.identifier);
-        }
-        Terminal::Return { value, .. } => {
-            ids.push(value.identifier);
-        }
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => {
-            ids.push(test.identifier);
-        }
-        Terminal::Switch { test, cases, .. } => {
-            ids.push(test.identifier);
-            for case in cases {
-                if let Some(test_place) = &case.test {
-                    ids.push(test_place.identifier);
-                }
-            }
-        }
-        Terminal::Try { handler_binding, .. } => {
-            if let Some(binding) = handler_binding {
-                ids.push(binding.identifier);
-            }
-        }
-        // Terminals with no operand places
-        Terminal::Unsupported { .. }
-        | Terminal::Unreachable { .. }
-        | Terminal::Goto { .. }
-        | Terminal::DoWhile { .. }
-        | Terminal::While { .. }
-        | Terminal::For { .. }
-        | Terminal::ForOf { .. }
-        | Terminal::ForIn { .. }
-        | Terminal::Logical { .. }
-        | Terminal::Ternary { .. }
-        | Terminal::Optional { .. }
-        | Terminal::Label { .. }
-        | Terminal::Sequence { .. }
-        | Terminal::MaybeThrow { .. }
-        | Terminal::Scope { .. }
-        | Terminal::PrunedScope { .. } => {}
-    }
-    ids
+    each_terminal_operand(terminal)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }

@@ -509,7 +509,7 @@ fn promote_interposed_instruction(
                         if lvalue.kind == InstructionKind::Const
                             || lvalue.kind == InstructionKind::HoistedConst
                         {
-                            for operand in each_pattern_operand(&lvalue.pattern) {
+                            for operand in react_compiler_hir::visitors::each_pattern_operand(&lvalue.pattern) {
                                 consts.insert(operand.identifier);
                             }
                             const_store = true;
@@ -981,35 +981,3 @@ fn promote_identifier(
     state.promoted.insert(decl_id);
 }
 
-/// Yields all Place operands from a destructuring pattern.
-fn each_pattern_operand(pattern: &react_compiler_hir::Pattern) -> Vec<&Place> {
-    let mut operands = Vec::new();
-    match pattern {
-        react_compiler_hir::Pattern::Array(array_pat) => {
-            for item in &array_pat.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(place) => {
-                        operands.push(place);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(spread) => {
-                        operands.push(&spread.place);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj_pat) => {
-            for prop in &obj_pat.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        operands.push(&p.place);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        operands.push(&spread.place);
-                    }
-                }
-            }
-        }
-    }
-    operands
-}

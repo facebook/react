@@ -6,9 +6,14 @@ use react_compiler_diagnostics::{
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::HookKind;
 use react_compiler_hir::{
-    AliasingEffect, ArrayElement, BlockId, HirFunction, Identifier, IdentifierId,
-    InstructionValue, JsxAttribute, JsxTag, ObjectPropertyOrSpread, Place, PlaceOrSpread,
-    PrimitiveValue, PropertyLiteral, Terminal, Type, UnaryOperator,
+    AliasingEffect, BlockId, HirFunction, Identifier, IdentifierId,
+    InstructionValue, Place, Terminal,
+    PrimitiveValue, PropertyLiteral, Type, UnaryOperator,
+};
+use react_compiler_hir::visitors::{
+    each_instruction_value_operand as canonical_each_instruction_value_operand,
+    each_terminal_operand,
+    each_pattern_operand,
 };
 
 const ERROR_DESCRIPTION: &str = "React refs are values that are not needed for rendering. \
@@ -485,158 +490,6 @@ fn guard_check(errors: &mut Vec<CompilerDiagnostic>, operand: &Place, env: &Env)
     }
 }
 
-// --- Operand extraction helpers ---
-
-fn each_instruction_value_operand(value: &InstructionValue) -> Vec<&Place> {
-    match value {
-        InstructionValue::CallExpression { callee, args, .. } => {
-            let mut operands = vec![callee];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => operands.push(p),
-                    PlaceOrSpread::Spread(s) => operands.push(&s.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            let mut operands = vec![receiver, property];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => operands.push(p),
-                    PlaceOrSpread::Spread(s) => operands.push(&s.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => vec![left, right],
-        InstructionValue::UnaryExpression { value, .. } => vec![value],
-        InstructionValue::PropertyLoad { object, .. } => vec![object],
-        InstructionValue::ComputedLoad {
-            object, property, ..
-        } => vec![object, property],
-        InstructionValue::PropertyStore { object, value, .. } => vec![object, value],
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value,
-            ..
-        } => vec![object, property, value],
-        InstructionValue::PropertyDelete { object, .. } => vec![object],
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => vec![object, property],
-        InstructionValue::TypeCastExpression { value, .. } => vec![value],
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => vec![place],
-        InstructionValue::StoreLocal { value, .. }
-        | InstructionValue::StoreContext { value, .. } => vec![value],
-        InstructionValue::Destructure { value, .. } => vec![value],
-        InstructionValue::NewExpression { callee, args, .. } => {
-            let mut operands = vec![callee];
-            for arg in args {
-                match arg {
-                    PlaceOrSpread::Place(p) => operands.push(p),
-                    PlaceOrSpread::Spread(s) => operands.push(&s.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            let mut operands = Vec::new();
-            for prop in properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => operands.push(&p.place),
-                    ObjectPropertyOrSpread::Spread(p) => operands.push(&p.place),
-                }
-            }
-            operands
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            let mut operands = Vec::new();
-            for element in elements {
-                match element {
-                    ArrayElement::Place(p) => operands.push(p),
-                    ArrayElement::Spread(s) => operands.push(&s.place),
-                    ArrayElement::Hole => {}
-                }
-            }
-            operands
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            let mut operands = Vec::new();
-            if let JsxTag::Place(p) = tag {
-                operands.push(p);
-            }
-            for prop in props {
-                match prop {
-                    JsxAttribute::Attribute { place, .. } => operands.push(place),
-                    JsxAttribute::SpreadAttribute { argument } => operands.push(argument),
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    operands.push(child);
-                }
-            }
-            operands
-        }
-        InstructionValue::JsxFragment { children, .. } => children.iter().collect(),
-        InstructionValue::TemplateLiteral { subexprs, .. } => subexprs.iter().collect(),
-        InstructionValue::TaggedTemplateExpression { tag, .. } => vec![tag],
-        InstructionValue::IteratorNext { iterator, .. } => vec![iterator],
-        InstructionValue::NextPropertyOf { value, .. } => vec![value],
-        InstructionValue::GetIterator { collection, .. } => vec![collection],
-        InstructionValue::Await { value, .. } => vec![value],
-        _ => Vec::new(),
-    }
-}
-
-fn each_terminal_operand(terminal: &Terminal) -> Vec<&Place> {
-    match terminal {
-        Terminal::Return { value, .. } | Terminal::Throw { value, .. } => vec![value],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
-        Terminal::Switch { test, .. } => vec![test],
-        _ => Vec::new(),
-    }
-}
-
-fn each_pattern_operand(pattern: &react_compiler_hir::Pattern) -> Vec<&Place> {
-    let mut result = Vec::new();
-    match pattern {
-        react_compiler_hir::Pattern::Array(array) => {
-            for item in &array.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => result.push(p),
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        result.push(&s.place)
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(object) => {
-            for prop in &object.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => result.push(&p.place),
-                    ObjectPropertyOrSpread::Spread(s) => result.push(&s.place),
-                }
-            }
-        }
-    }
-    result
-}
-
 // --- Main entry point ---
 
 pub fn validate_no_ref_access_in_render(func: &HirFunction, env: &mut Environment) {
@@ -785,7 +638,7 @@ fn validate_no_ref_access_in_render_impl(
                 match &instr.value {
                     InstructionValue::JsxExpression { .. }
                     | InstructionValue::JsxFragment { .. } => {
-                        for operand in each_instruction_value_operand(&instr.value) {
+                        for operand in &canonical_each_instruction_value_operand(&instr.value, env) {
                             validate_no_direct_ref_value_access(errors, operand, ref_env);
                         }
                     }
@@ -985,7 +838,7 @@ fn validate_no_ref_access_in_render_impl(
                                     && !matches!(hook_kind, Some(&HookKind::UseState))
                                     && !matches!(hook_kind, Some(&HookKind::UseReducer)))
                             {
-                                for operand in each_instruction_value_operand(&instr.value)
+                                for operand in &canonical_each_instruction_value_operand(&instr.value, env)
                                 {
                                     /*
                                      * Allow passing refs or ref-accessing functions when:
@@ -999,7 +852,7 @@ fn validate_no_ref_access_in_render_impl(
                             } else if interpolated_as_jsx
                                 .contains(&instr.lvalue.identifier)
                             {
-                                for operand in each_instruction_value_operand(&instr.value)
+                                for operand in &canonical_each_instruction_value_operand(&instr.value, env)
                                 {
                                     /*
                                      * Special case: the lvalue is passed as a jsx child
@@ -1090,7 +943,7 @@ fn validate_no_ref_access_in_render_impl(
                                     }
                                 } else {
                                     for operand in
-                                        each_instruction_value_operand(&instr.value)
+                                        &canonical_each_instruction_value_operand(&instr.value, env)
                                     {
                                         validate_no_ref_passed_to_function(
                                             errors,
@@ -1102,7 +955,7 @@ fn validate_no_ref_access_in_render_impl(
                                 }
                             } else {
                                 for operand in
-                                    each_instruction_value_operand(&instr.value)
+                                    &canonical_each_instruction_value_operand(&instr.value, env)
                                 {
                                     validate_no_ref_passed_to_function(
                                         errors,
@@ -1117,7 +970,7 @@ fn validate_no_ref_access_in_render_impl(
                     }
                     InstructionValue::ObjectExpression { .. }
                     | InstructionValue::ArrayExpression { .. } => {
-                        let operands = each_instruction_value_operand(&instr.value);
+                        let operands = canonical_each_instruction_value_operand(&instr.value, env);
                         let mut types_vec: Vec<RefAccessType> = Vec::new();
                         for operand in &operands {
                             validate_no_direct_ref_value_access(errors, operand, ref_env);
@@ -1291,7 +1144,7 @@ fn validate_no_ref_access_in_render_impl(
                         }
                     }
                     _ => {
-                        for operand in each_instruction_value_operand(&instr.value) {
+                        for operand in &canonical_each_instruction_value_operand(&instr.value, env) {
                             validate_no_ref_value_access(errors, ref_env, operand);
                         }
                     }
@@ -1299,7 +1152,7 @@ fn validate_no_ref_access_in_render_impl(
 
                 // Guard values are derived from ref.current, so they can only be used
                 // in if statement targets
-                for operand in each_instruction_value_operand(&instr.value) {
+                for operand in &canonical_each_instruction_value_operand(&instr.value, env) {
                     guard_check(errors, operand, ref_env);
                 }
 
@@ -1360,7 +1213,7 @@ fn validate_no_ref_access_in_render_impl(
             }
 
             // Process terminal operands
-            for operand in each_terminal_operand(&block.terminal) {
+            for operand in &each_terminal_operand(&block.terminal) {
                 if !matches!(&block.terminal, Terminal::Return { .. }) {
                     validate_no_ref_value_access(errors, ref_env, operand);
                     if !matches!(&block.terminal, Terminal::If { .. }) {

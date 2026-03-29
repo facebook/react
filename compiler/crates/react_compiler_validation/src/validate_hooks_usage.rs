@@ -17,10 +17,11 @@ use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerErrorDetail, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
-    ArrayPatternElement, FunctionId, HirFunction, Identifier, IdentifierId,
-    InstructionValue, ObjectPropertyOrSpread, ParamPattern, Pattern, Place, PropertyLiteral,
-    Terminal, Type,
+    FunctionId, HirFunction, Identifier, IdentifierId,
+    InstructionValue, ObjectPropertyOrSpread, ParamPattern, Place, PropertyLiteral,
+    Type,
 };
+use react_compiler_hir::visitors::{each_pattern_operand, each_terminal_operand};
 use react_compiler_hir::dominator::compute_unconditional_blocks;
 use react_compiler_hir::environment::{is_hook_name, Environment};
 use react_compiler_hir::object_shape::HookKind;
@@ -357,7 +358,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                     visit_place(value, &value_kinds, &mut errors_by_loc, env);
                     let object_kind =
                         get_kind_for_place(value, &value_kinds, &env.identifiers);
-                    for place in each_pattern_places(&lvalue.pattern) {
+                    for place in each_pattern_operand(&lvalue.pattern) {
                         let is_hook_property =
                             ident_is_hook_name(place.identifier, &env.identifiers);
                         let kind = match object_kind {
@@ -402,8 +403,8 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
         }
 
         // Visit terminal operands
-        for place in each_terminal_operand_places(&block.terminal) {
-            visit_place(place, &value_kinds, &mut errors_by_loc, env);
+        for place in each_terminal_operand(&block.terminal) {
+            visit_place(&place, &value_kinds, &mut errors_by_loc, env);
         }
     }
 
@@ -500,35 +501,6 @@ fn hook_kind_display(kind: &HookKind) -> &'static str {
     }
 }
 
-/// Collect all Place references from a destructure pattern.
-fn each_pattern_places(pattern: &Pattern) -> Vec<&Place> {
-    let mut places = Vec::new();
-    collect_pattern_places(pattern, &mut places);
-    places
-}
-
-fn collect_pattern_places<'a>(pattern: &'a Pattern, places: &mut Vec<&'a Place>) {
-    match pattern {
-        Pattern::Array(array) => {
-            for item in &array.items {
-                match item {
-                    ArrayPatternElement::Place(p) => places.push(p),
-                    ArrayPatternElement::Spread(s) => places.push(&s.place),
-                    ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(object) => {
-            for prop in &object.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => places.push(&p.place),
-                    ObjectPropertyOrSpread::Spread(s) => places.push(&s.place),
-                }
-            }
-        }
-    }
-}
-
 /// Visit all operands of an instruction value (generic fallback).
 fn visit_all_operands(
     value: &InstructionValue,
@@ -589,7 +561,7 @@ fn visit_all_operands(
                     ObjectPropertyOrSpread::Property(p) => {
                         visit(&p.place);
                         if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            visit(name);
+                            visit(&name);
                         }
                     }
                     ObjectPropertyOrSpread::Spread(s) => visit(&s.place),
@@ -709,30 +681,3 @@ fn visit_all_operands(
     }
 }
 
-/// Collect terminal operand places for visiting.
-fn each_terminal_operand_places(terminal: &Terminal) -> Vec<&Place> {
-    match terminal {
-        Terminal::Throw { value, .. } => vec![value],
-        Terminal::Return { value, .. } => vec![value],
-        Terminal::If { test, .. } | Terminal::Branch { test, .. } => vec![test],
-        Terminal::Switch { test, cases, .. } => {
-            let mut places = vec![test];
-            for case in cases {
-                if let Some(ref test_place) = case.test {
-                    places.push(test_place);
-                }
-            }
-            places
-        }
-        Terminal::Try {
-            handler_binding, ..
-        } => {
-            let mut places = Vec::new();
-            if let Some(binding) = handler_binding {
-                places.push(binding);
-            }
-            places
-        }
-        _ => vec![],
-    }
-}

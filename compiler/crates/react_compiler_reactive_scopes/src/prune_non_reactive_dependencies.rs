@@ -15,6 +15,7 @@ use react_compiler_hir::{
     ReactiveBlock, ReactiveFunction, ReactiveInstruction, ReactiveStatement, ReactiveTerminal,
     ReactiveTerminalStatement, ReactiveValue, ReactiveScopeBlock,
     environment::Environment, is_primitive_type, is_use_ref_type, object_shape,
+    visitors as hir_visitors,
 };
 
 use crate::visitors::ReactiveFunctionVisitor;
@@ -119,44 +120,6 @@ fn is_set_optimistic_type(ty: &react_compiler_hir::Type) -> bool {
 }
 
 // =============================================================================
-// eachPatternOperand helper
-// =============================================================================
-
-/// Yields all Place operands from a destructuring pattern.
-/// TS: `eachPatternOperand`
-fn each_pattern_operand(pattern: &react_compiler_hir::Pattern) -> Vec<&Place> {
-    let mut operands = Vec::new();
-    match pattern {
-        react_compiler_hir::Pattern::Array(array_pat) => {
-            for item in &array_pat.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(place) => {
-                        operands.push(place);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(spread) => {
-                        operands.push(&spread.place);
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj_pat) => {
-            for prop in &obj_pat.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        operands.push(&p.place);
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(spread) => {
-                        operands.push(&spread.place);
-                    }
-                }
-            }
-        }
-    }
-    operands
-}
-
-// =============================================================================
 // PruneNonReactiveDependencies
 // =============================================================================
 
@@ -226,7 +189,7 @@ fn visit_instruction_for_prune(
             ..
         }) => {
             if reactive_ids.contains(&destr_value.identifier) {
-                for operand in each_pattern_operand(&destr_lvalue.pattern) {
+                for operand in hir_visitors::each_pattern_operand(&destr_lvalue.pattern) {
                     let ident = &env.identifiers[operand.identifier.0 as usize];
                     let ty = &env.types[ident.type_.0 as usize];
                     if is_stable_type(ty) {

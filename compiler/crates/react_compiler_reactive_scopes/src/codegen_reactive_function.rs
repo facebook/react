@@ -1448,7 +1448,7 @@ fn codegen_store_or_declare(
         InstructionValue::Destructure { lvalue, value: val, .. } => {
             let kind = lvalue.kind;
             // Register temporaries for unnamed pattern operands
-            for place in each_pattern_operand(&lvalue.pattern) {
+            for place in react_compiler_hir::visitors::each_pattern_operand(&lvalue.pattern) {
                 let ident = &cx.env.identifiers[place.identifier.0 as usize];
                 if kind != InstructionKind::Reassign && ident.name.is_none() {
                     cx.temp.insert(ident.declaration_id, None);
@@ -3376,31 +3376,6 @@ fn invariant_err(reason: &str, loc: Option<DiagSourceLocation>) -> CompilerError
     err
 }
 
-fn each_pattern_operand(pattern: &Pattern) -> Vec<&Place> {
-    let mut operands = Vec::new();
-    match pattern {
-        Pattern::Array(arr) => {
-            for item in &arr.items {
-                match item {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => operands.push(p),
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        operands.push(&s.place)
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => operands.push(&p.place),
-                    ObjectPropertyOrSpread::Spread(s) => operands.push(&s.place),
-                }
-            }
-        }
-    }
-    operands
-}
 
 fn compare_scope_dependency(
     a: &react_compiler_hir::ReactiveScopeDependency,

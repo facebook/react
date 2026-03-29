@@ -487,13 +487,13 @@ pub trait ReactiveFunctionTransform {
                 if let TransformedValue::Replace(new_value) = next_test {
                     *test = new_value;
                 }
-                self.visit_block(loop_block, state)?;
                 if let Some(update) = update {
                     let next_update = self.transform_value(id, update, state)?;
                     if let TransformedValue::Replace(new_value) = next_update {
                         *update = new_value;
                     }
                 }
+                self.visit_block(loop_block, state)?;
             }
             ReactiveTerminal::ForOf {
                 init,
@@ -767,8 +767,8 @@ fn terminal_id(terminal: &ReactiveTerminal) -> EvaluationOrder {
 // Helper: iterate operands of an InstructionValue (readonly)
 // =============================================================================
 
-/// Public wrapper that delegates to `react_compiler_hir::visitors::each_instruction_value_operand`.
-/// Callers that don't have an env can use this (it won't include FunctionExpression/ObjectMethod context).
+///// Public wrapper that delegates to `react_compiler_hir::visitors::each_instruction_value_operand`.
+/// Includes all operands including FunctionExpression/ObjectMethod context.
 pub fn each_instruction_value_operand_public(value: &react_compiler_hir::InstructionValue, env: &Environment) -> Vec<Place> {
     react_compiler_hir::visitors::each_instruction_value_operand(value, env)
 }
