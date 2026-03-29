@@ -20,7 +20,6 @@ import type {
   LValue,
   ManualMemoDependency,
   MutableRange,
-  ObjectMethod,
   ObjectPropertyKey,
   Pattern,
   Phi,
@@ -547,10 +546,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       )}]`;
       break;
     }
-    case 'ObjectMethod':
     case 'FunctionExpression': {
-      const kind =
-        instrValue.kind === 'FunctionExpression' ? 'Function' : 'ObjectMethod';
+      const kind = 'Function';
       const name = getFunctionName(instrValue, '');
       const fn = printFunction(instrValue.loweredFunc.func)
         .split('\n')
@@ -917,15 +914,10 @@ export function printAliases(aliases: DisjointSet<Identifier>): string {
 }
 
 function getFunctionName(
-  instrValue: ObjectMethod | FunctionExpression,
+  instrValue: FunctionExpression,
   defaultValue: string,
 ): string {
-  switch (instrValue.kind) {
-    case 'FunctionExpression':
-      return instrValue.name ?? defaultValue;
-    case 'ObjectMethod':
-      return defaultValue;
-  }
+  return instrValue.name ?? defaultValue;
 }
 
 export function printAliasingEffect(effect: AliasingEffect): string {

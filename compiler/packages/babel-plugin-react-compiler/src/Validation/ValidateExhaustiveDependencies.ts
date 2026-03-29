@@ -763,8 +763,7 @@ function collectDependencies(
           }
           break;
         }
-        case 'FunctionExpression':
-        case 'ObjectMethod': {
+        case 'FunctionExpression': {
           const functionDeps = collectDependencies(
             value.loweredFunc.func,
             temporaries,

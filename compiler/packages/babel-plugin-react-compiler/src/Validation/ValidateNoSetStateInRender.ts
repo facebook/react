@@ -82,7 +82,6 @@ function validateNoSetStateInRenderImpl(
           }
           break;
         }
-        case 'ObjectMethod':
         case 'FunctionExpression': {
           if (
             // faster-path to check if the function expression references a setState

@@ -81,7 +81,7 @@ class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
     state: State,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
+    if (value.kind === 'FunctionExpression') {
       this.visitHirFunction(value.loweredFunc.func, state);
     }
   }

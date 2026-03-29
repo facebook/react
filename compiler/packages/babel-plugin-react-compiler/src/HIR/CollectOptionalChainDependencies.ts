@@ -132,10 +132,7 @@ function traverseFunction(
 ): void {
   for (const [_, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      if (
-        instr.value.kind === 'FunctionExpression' ||
-        instr.value.kind === 'ObjectMethod'
-      ) {
+      if (instr.value.kind === 'FunctionExpression') {
         traverseFunction(instr.value.loweredFunc.func, {
           ...context,
           currFn: instr.value.loweredFunc.func,

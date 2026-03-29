@@ -37,10 +37,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     }
 
     for (const instr of block.instructions) {
-      if (
-        instr.value.kind === 'FunctionExpression' ||
-        instr.value.kind === 'ObjectMethod'
-      ) {
+      if (instr.value.kind === 'FunctionExpression') {
         mergeConsecutiveBlocks(instr.value.loweredFunc.func);
       }
     }

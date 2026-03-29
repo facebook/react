@@ -107,7 +107,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     state: Scopes,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
+    if (value.kind === 'FunctionExpression') {
       this.visitHirFunction(value.loweredFunc.func, state);
     }
   }

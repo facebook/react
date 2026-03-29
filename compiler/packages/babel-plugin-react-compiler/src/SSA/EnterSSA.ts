@@ -280,10 +280,7 @@ function enterSSAImpl(
       mapInstructionOperands(instr, place => builder.getPlace(place));
       mapInstructionLValues(instr, lvalue => builder.definePlace(lvalue));
 
-      if (
-        instr.value.kind === 'FunctionExpression' ||
-        instr.value.kind === 'ObjectMethod'
-      ) {
+      if (instr.value.kind === 'FunctionExpression') {
         const loweredFunc = instr.value.loweredFunc.func;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
         CompilerError.invariant(entry.preds.size === 0, {

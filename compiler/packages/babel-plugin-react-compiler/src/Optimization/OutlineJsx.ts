@@ -133,7 +133,6 @@ function outlineJsxImpl(
         case 'NewExpression':
         case 'NextPropertyOf':
         case 'ObjectExpression':
-        case 'ObjectMethod':
         case 'PostfixUpdate':
         case 'PrefixUpdate':
         case 'Primitive':

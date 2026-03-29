@@ -291,8 +291,7 @@ function getOverlappingReactiveScopes(
       visitInstructionId(instr.id, context, state);
       for (const place of eachInstructionOperand(instr)) {
         if (
-          (instr.value.kind === 'FunctionExpression' ||
-            instr.value.kind === 'ObjectMethod') &&
+          instr.value.kind === 'FunctionExpression' &&
           place.identifier.type.kind === 'Primitive'
         ) {
           continue;

@@ -238,10 +238,7 @@ export class ReactiveFunctionVisitor<TState = void> {
     for (const [, block] of fn.body.blocks) {
       for (const instr of block.instructions) {
         this.visitInstruction(instr, state);
-        if (
-          instr.value.kind === 'FunctionExpression' ||
-          instr.value.kind === 'ObjectMethod'
-        ) {
+        if (instr.value.kind === 'FunctionExpression') {
           this.visitHirFunction(instr.value.loweredFunc.func, state);
         }
       }

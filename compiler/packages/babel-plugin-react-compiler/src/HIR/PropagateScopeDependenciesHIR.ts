@@ -13,7 +13,6 @@ import {
   ReactiveScopeDependency,
   Identifier,
   ReactiveScope,
-  isObjectMethodType,
   isRefValueType,
   isUseRefType,
   makeInstructionId,
@@ -28,7 +27,6 @@ import {
   LoadContext,
   TInstruction,
   FunctionExpression,
-  ObjectMethod,
   PropertyLiteral,
   convertHoistedLValueKind,
   SourceLocation,
@@ -323,10 +321,7 @@ function collectTemporariesSidemapImpl(
             loc: value.loc,
           });
         }
-      } else if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
+      } else if (value.kind === 'FunctionExpression') {
         collectTemporariesSidemapImpl(
           value.loweredFunc.func,
           usedOutsideDeclaringScope,
@@ -501,14 +496,6 @@ export class DependencyCollectionContext {
       return false;
     }
 
-    /*
-     * object methods are not deps because they will be codegen'ed back in to
-     * the object literal.
-     */
-    if (isObjectMethodType(maybeDependency.identifier)) {
-      return false;
-    }
-
     const identifier = maybeDependency.identifier;
     /*
      * If this operand is used in a scope, has a dynamic value, and was defined
@@ -646,7 +633,7 @@ export class DependencyCollectionContext {
     }
   }
   enterInnerFn<T>(
-    innerFn: TInstruction<FunctionExpression> | TInstruction<ObjectMethod>,
+    innerFn: TInstruction<FunctionExpression>,
     cb: () => T,
   ): T {
     const prevContext = this.#innerFnContext;
@@ -805,10 +792,7 @@ function collectDependencies(
         }
       }
       for (const instr of block.instructions) {
-        if (
-          instr.value.kind === 'FunctionExpression' ||
-          instr.value.kind === 'ObjectMethod'
-        ) {
+        if (instr.value.kind === 'FunctionExpression') {
           context.declare(instr.lvalue.identifier, {
             id: instr.id,
             scope: context.currentScope,
@@ -818,9 +802,7 @@ function collectDependencies(
            */
           const innerFn = instr.value.loweredFunc.func;
           context.enterInnerFn(
-            instr as
-              | TInstruction<FunctionExpression>
-              | TInstruction<ObjectMethod>,
+            instr as TInstruction<FunctionExpression>,
             () => {
               handleFunction(innerFn);
             },

@@ -60,7 +60,6 @@ function validateContextVariableLValuesImpl(
           }
           break;
         }
-        case 'ObjectMethod':
         case 'FunctionExpression': {
           validateContextVariableLValuesImpl(
             value.loweredFunc.func,

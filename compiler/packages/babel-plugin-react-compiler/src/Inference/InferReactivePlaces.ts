@@ -340,10 +340,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
             reactiveIdentifiers.isReactive(operand);
           }
         }
-        if (
-          instr.value.kind === 'ObjectMethod' ||
-          instr.value.kind === 'FunctionExpression'
-        ) {
+        if (instr.value.kind === 'FunctionExpression') {
           propagateReactivityToInnerFunctions(
             instr.value.loweredFunc.func,
             false,

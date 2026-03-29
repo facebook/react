@@ -18,7 +18,6 @@ export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case 'ObjectMethod':
         case 'FunctionExpression': {
           lowerWithMutationAliasing(instr.value.loweredFunc.func);
 

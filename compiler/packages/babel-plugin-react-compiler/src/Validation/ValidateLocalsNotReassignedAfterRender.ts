@@ -62,8 +62,7 @@ function getContextReassignment(
     for (const instr of block.instructions) {
       const {lvalue, value} = instr;
       switch (value.kind) {
-        case 'FunctionExpression':
-        case 'ObjectMethod': {
+        case 'FunctionExpression': {
           let reassignment = getContextReassignment(
             value.loweredFunc.func,
             contextVariables,

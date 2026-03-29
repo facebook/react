@@ -15,10 +15,7 @@ export function outlineFunctions(
     for (const instr of block.instructions) {
       const {value, lvalue} = instr;
 
-      if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
+      if (value.kind === 'FunctionExpression') {
         // Recurse in case there are inner functions which can be outlined
         outlineFunctions(value.loweredFunc.func, fbtOperands);
       }

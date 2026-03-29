@@ -389,7 +389,6 @@ export function validateHooksUsage(fn: HIRFunction): void {
           }
           break;
         }
-        case 'ObjectMethod':
         case 'FunctionExpression': {
           visitFunctionExpression(fn.env, instr.value.loweredFunc.func);
           break;
@@ -424,7 +423,6 @@ function visitFunctionExpression(env: Environment, fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case 'ObjectMethod':
         case 'FunctionExpression': {
           visitFunctionExpression(env, instr.value.loweredFunc.func);
           break;

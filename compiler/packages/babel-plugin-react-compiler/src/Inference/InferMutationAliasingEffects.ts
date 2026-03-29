@@ -583,10 +583,7 @@ function applySignature(
    * TODO: make sure we're also validating against global mutations somewhere, but
    * account for this being allowed in effects/event handlers.
    */
-  if (
-    instruction.value.kind === 'FunctionExpression' ||
-    instruction.value.kind === 'ObjectMethod'
-  ) {
+  if (instruction.value.kind === 'FunctionExpression') {
     const aliasingEffects =
       instruction.value.loweredFunc.func.aliasingEffects ?? [];
     const context = new Set(
@@ -1903,7 +1900,6 @@ function computeSignatureForInstruction(
       });
       break;
     }
-    case 'ObjectMethod':
     case 'FunctionExpression': {
       /**
        * We've already analyzed the function expression in AnalyzeFunctions. There, we assign

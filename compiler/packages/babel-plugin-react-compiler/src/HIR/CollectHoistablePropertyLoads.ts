@@ -709,7 +709,7 @@ function getAssumedInvokedFunctions(
     for (const {lvalue, value} of block.instructions) {
       /**
        * Conservatively only match function expressions which can have guaranteed ssa.
-       * ObjectMethods and ObjectProperties do not.
+       * ObjectProperties do not.
        */
       if (value.kind === 'FunctionExpression') {
         temporaries.set(lvalue.identifier.id, {

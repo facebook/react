@@ -84,10 +84,7 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       const {lvalue, value} = instr;
       lvalue.identifier.type = unifier.get(lvalue.identifier.type);
 
-      if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
+      if (value.kind === 'FunctionExpression') {
         apply(value.loweredFunc.func, unifier);
       }
     }
@@ -435,12 +432,6 @@ function* generateInstructionTypes(
       break;
     }
 
-    case 'ObjectMethod': {
-      yield* generate(value.loweredFunc.func);
-      yield equation(left, {kind: 'ObjectMethod'});
-      break;
-    }
-
     case 'JsxExpression':
     case 'JsxFragment': {
       if (env.config.enableTreatRefLikeIdentifiersAsRefs) {
@@ -726,7 +717,6 @@ class Unifier {
           isConstructor: type.isConstructor,
         };
       }
-      case 'ObjectMethod':
       case 'Object':
       case 'Primitive':
       case 'Poly': {

@@ -218,7 +218,6 @@ export function* eachInstructionValueOperand(
       }
       break;
     }
-    case 'ObjectMethod':
     case 'FunctionExpression': {
       yield* instrValue.loweredFunc.func.context;
       break;
@@ -587,7 +586,6 @@ export function mapInstructionValueOperands(
       instrValue.children = instrValue.children.map(e => fn(e));
       break;
     }
-    case 'ObjectMethod':
     case 'FunctionExpression': {
       instrValue.loweredFunc.func.context =
         instrValue.loweredFunc.func.context.map(d => fn(d));

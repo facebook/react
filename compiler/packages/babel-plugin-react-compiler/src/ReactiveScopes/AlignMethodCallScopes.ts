@@ -43,10 +43,7 @@ export function alignMethodCallScopes(fn: HIRFunction): void {
           // else this property does not need a scope
           scopeMapping.set(value.property.identifier.id, null);
         }
-      } else if (
-        value.kind === 'FunctionExpression' ||
-        value.kind === 'ObjectMethod'
-      ) {
+      } else if (value.kind === 'FunctionExpression') {
         alignMethodCallScopes(value.loweredFunc.func);
       }
     }

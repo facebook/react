@@ -589,7 +589,6 @@ function evaluateInstruction(
       }
       return placeValue;
     }
-    case 'ObjectMethod':
     case 'FunctionExpression': {
       constantPropagationImpl(value.loweredFunc.func, constants);
       return null;

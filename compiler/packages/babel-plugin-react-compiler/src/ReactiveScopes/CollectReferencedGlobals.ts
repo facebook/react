@@ -25,7 +25,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
     state: Set<string>,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
+    if (value.kind === 'FunctionExpression') {
       this.visitHirFunction(value.loweredFunc.func, state);
     } else if (value.kind === 'LoadGlobal') {
       state.add(value.binding.name);

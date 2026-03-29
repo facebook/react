@@ -11,7 +11,6 @@ import {
   GeneratedSource,
   Hole,
   IdentifierId,
-  ObjectMethod,
   Place,
   SourceLocation,
   SpreadPattern,
@@ -144,7 +143,7 @@ export type AliasingEffect =
   | {
       kind: 'CreateFunction';
       captures: Array<Place>;
-      function: FunctionExpression | ObjectMethod;
+      function: FunctionExpression;
       into: Place;
     }
   /**

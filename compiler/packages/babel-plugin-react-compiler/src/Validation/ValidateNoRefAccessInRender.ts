@@ -429,7 +429,6 @@ function validateNoRefAccessInRenderImpl(
             }
             break;
           }
-          case 'ObjectMethod':
           case 'FunctionExpression': {
             let returnType: RefAccessType = {kind: 'None'};
             let readRefEffect = false;

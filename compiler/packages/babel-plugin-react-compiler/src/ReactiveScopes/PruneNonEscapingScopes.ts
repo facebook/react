@@ -816,7 +816,6 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<
         };
       }
       case 'RegExpLiteral':
-      case 'ObjectMethod':
       case 'FunctionExpression':
       case 'ArrayExpression':
       case 'NewExpression':
