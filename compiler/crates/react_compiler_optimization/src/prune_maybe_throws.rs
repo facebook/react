@@ -19,8 +19,8 @@ use react_compiler_hir::{
     BlockId, HirFunction, Instruction, InstructionValue, Terminal,
 };
 use react_compiler_lowering::{
-    get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
-    remove_dead_do_while_statements, remove_unnecessary_try_catch, remove_unreachable_for_updates,
+    get_reverse_postordered_blocks, mark_instruction_ids, remove_dead_do_while_statements,
+    remove_unnecessary_try_catch, remove_unreachable_for_updates,
 };
 
 use crate::merge_consecutive_blocks::merge_consecutive_blocks;
@@ -84,7 +84,6 @@ pub fn prune_maybe_throws(
             }
         }
 
-        mark_predecessors(&mut func.body);
     }
     Ok(())
 }
