@@ -512,17 +512,25 @@ fn emit_updated_jsx(
         {
             let mut new_props = Vec::new();
             for prop in props {
-                if let JsxAttribute::Attribute { name, place } = prop {
-                    if name == "key" {
-                        continue;
+                // TS: invariant(prop.kind === 'JsxAttribute', ...)
+                // Spread attributes would have caused collectProps to return null earlier
+                let (name, place) = match prop {
+                    JsxAttribute::Attribute { name, place } => (name, place),
+                    JsxAttribute::SpreadAttribute { .. } => {
+                        unreachable!("Expected only JsxAttribute, not spread")
                     }
-                    if let Some(new_prop) = old_to_new_props.get(&place.identifier) {
-                        new_props.push(JsxAttribute::Attribute {
-                            name: new_prop.original_name.clone(),
-                            place: new_prop.place.clone(),
-                        });
-                    }
+                };
+                if name == "key" {
+                    continue;
                 }
+                // TS: invariant(newProp !== undefined, ...)
+                let new_prop = old_to_new_props
+                    .get(&place.identifier)
+                    .expect("Expected a new property for identifier");
+                new_props.push(JsxAttribute::Attribute {
+                    name: new_prop.original_name.clone(),
+                    place: new_prop.place.clone(),
+                });
             }
 
             let new_children = children.as_ref().map(|kids| {
@@ -530,10 +538,12 @@ fn emit_updated_jsx(
                     .map(|child| {
                         if jsx_ids.contains(&child.identifier) {
                             child.clone()
-                        } else if let Some(new_prop) = old_to_new_props.get(&child.identifier) {
-                            new_prop.place.clone()
                         } else {
-                            child.clone()
+                            // TS: invariant(newChild !== undefined, ...)
+                            let new_prop = old_to_new_props
+                                .get(&child.identifier)
+                                .expect("Expected a new prop for child identifier");
+                            new_prop.place.clone()
                         }
                     })
                     .collect()

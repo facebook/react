@@ -17,6 +17,7 @@ use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     FunctionId, HirFunction, IdentifierId, InstructionValue, NonLocalBinding,
 };
+use react_compiler_ssa::enter_ssa::placeholder_function;
 
 /// Outline anonymous function expressions that have no captured context variables.
 ///
@@ -82,7 +83,10 @@ pub fn outline_functions(
     for action in actions {
         match action {
             Action::Recurse(function_id) => {
-                let mut inner_func = env.functions[function_id.0 as usize].clone();
+                let mut inner_func = std::mem::replace(
+                    &mut env.functions[function_id.0 as usize],
+                    placeholder_function(),
+                );
                 outline_functions(&mut inner_func, env, fbt_operands);
                 env.functions[function_id.0 as usize] = inner_func;
             }
@@ -91,7 +95,10 @@ pub fn outline_functions(
                 function_id,
             } => {
                 // First recurse into the inner function (depth-first)
-                let mut inner_func = env.functions[function_id.0 as usize].clone();
+                let mut inner_func = std::mem::replace(
+                    &mut env.functions[function_id.0 as usize],
+                    placeholder_function(),
+                );
                 outline_functions(&mut inner_func, env, fbt_operands);
                 env.functions[function_id.0 as usize] = inner_func;
 
