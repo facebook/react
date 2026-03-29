@@ -9,9 +9,10 @@
 
 use react_compiler_diagnostics::CompilerError;
 use react_compiler_hir::{
-    EvaluationOrder, Place, PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction,
-    ReactiveInstruction, ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement,
-    ReactiveValue, ReactiveScopeBlock,
+    EvaluationOrder, FunctionId, InstructionValue, ParamPattern, Place,
+    PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction, ReactiveInstruction,
+    ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue,
+    ReactiveScopeBlock,
     environment::Environment,
 };
 
@@ -38,6 +39,56 @@ pub trait ReactiveFunctionVisitor {
     fn visit_place(&self, _id: EvaluationOrder, _place: &Place, _state: &mut Self::State) {}
 
     fn visit_lvalue(&self, _id: EvaluationOrder, _lvalue: &Place, _state: &mut Self::State) {}
+
+    fn visit_param(&self, _place: &Place, _state: &mut Self::State) {}
+
+    /// Walk an inner HIR function, visiting params, instructions (with lvalues,
+    /// value-lvalues, operands, and nested functions), and terminal operands.
+    /// TS: `visitHirFunction`
+    fn visit_hir_function(&self, func_id: FunctionId, state: &mut Self::State) {
+        let inner_func = &self.env().functions[func_id.0 as usize];
+        for param in &inner_func.params {
+            let place = match param {
+                ParamPattern::Place(p) => p,
+                ParamPattern::Spread(s) => &s.place,
+            };
+            self.visit_param(place, state);
+        }
+        let block_ids: Vec<_> = inner_func.body.blocks.keys().copied().collect();
+        for block_id in block_ids {
+            let inner_func = &self.env().functions[func_id.0 as usize];
+            let block = &inner_func.body.blocks[&block_id];
+            let instr_ids: Vec<_> = block.instructions.clone();
+            let terminal_operands: Vec<Place> =
+                react_compiler_hir::visitors::each_terminal_operand(&block.terminal);
+            let terminal_id = block.terminal.evaluation_order();
+
+            for instr_id in &instr_ids {
+                let inner_func = &self.env().functions[func_id.0 as usize];
+                let instr = &inner_func.instructions[instr_id.0 as usize];
+                // Build a temporary ReactiveInstruction for the visitor
+                let reactive_instr = ReactiveInstruction {
+                    id: instr.id,
+                    lvalue: Some(instr.lvalue.clone()),
+                    value: ReactiveValue::Instruction(instr.value.clone()),
+                    effects: None,
+                    loc: instr.loc,
+                };
+                self.visit_instruction(&reactive_instr, state);
+                // Recurse into nested functions
+                match &instr.value {
+                    InstructionValue::FunctionExpression { lowered_func, .. }
+                    | InstructionValue::ObjectMethod { lowered_func, .. } => {
+                        self.visit_hir_function(lowered_func.func, state);
+                    }
+                    _ => {}
+                }
+            }
+            for operand in &terminal_operands {
+                self.visit_place(terminal_id, operand, state);
+            }
+        }
+    }
 
     fn visit_value(&self, id: EvaluationOrder, value: &ReactiveValue, state: &mut Self::State) {
         self.traverse_value(id, value, state);
