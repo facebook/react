@@ -18,13 +18,15 @@ pub struct BindingRenameInfo {
 
 /// Main result type returned by the compile function.
 /// Serialized to JSON and returned to the JS shim.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
 pub enum CompileResult {
     /// Compilation succeeded (or no functions needed compilation).
     /// `ast` is None if no changes were made to the program.
+    /// The AST is stored as a pre-serialized JSON string (RawValue) to avoid
+    /// double-serialization: File→Value→String becomes File→String directly.
     Success {
-        ast: Option<serde_json::Value>,
+        ast: Option<Box<serde_json::value::RawValue>>,
         events: Vec<LoggerEvent>,
         #[serde(rename = "debugLogs", skip_serializing_if = "Vec::is_empty")]
         debug_logs: Vec<DebugLogEntry>,
