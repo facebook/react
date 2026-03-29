@@ -34,7 +34,7 @@ fn validate_use_memo_impl(
 ) -> CompilerError {
     let mut void_memo_errors = CompilerError::new();
     let mut use_memos: HashSet<IdentifierId> = HashSet::new();
-    let mut react_ids: HashSet<IdentifierId> = HashSet::new();
+    let mut react: HashSet<IdentifierId> = HashSet::new();
     let mut func_exprs: HashMap<IdentifierId, FuncExprInfo> = HashMap::new();
     let mut unused_use_memos: HashMap<IdentifierId, SourceLocation> = HashMap::new();
 
@@ -57,13 +57,13 @@ fn validate_use_memo_impl(
                     if name == "useMemo" {
                         use_memos.insert(lvalue.identifier);
                     } else if name == "React" {
-                        react_ids.insert(lvalue.identifier);
+                        react.insert(lvalue.identifier);
                     }
                 }
                 InstructionValue::PropertyLoad {
                     object, property, ..
                 } => {
-                    if react_ids.contains(&object.identifier) {
+                    if react.contains(&object.identifier) {
                         if let react_compiler_hir::PropertyLiteral::String(prop_name) = property {
                             if prop_name == "useMemo" {
                                 use_memos.insert(lvalue.identifier);
@@ -82,7 +82,6 @@ fn validate_use_memo_impl(
                 }
                 InstructionValue::CallExpression { callee, args, .. } => {
                     handle_possible_use_memo_call(
-                        func,
                         functions,
                         errors,
                         &mut void_memo_errors,
@@ -99,7 +98,6 @@ fn validate_use_memo_impl(
                     property, args, ..
                 } => {
                     handle_possible_use_memo_call(
-                        func,
                         functions,
                         errors,
                         &mut void_memo_errors,
@@ -149,7 +147,6 @@ fn validate_use_memo_impl(
 
 #[allow(clippy::too_many_arguments)]
 fn handle_possible_use_memo_call(
-    _func: &HirFunction,
     functions: &[HirFunction],
     errors: &mut CompilerError,
     void_memo_errors: &mut CompilerError,
@@ -220,7 +217,7 @@ fn handle_possible_use_memo_call(
     }
 
     // Validate no context variable assignment
-    validate_no_context_variable_assignment(body_func, functions, errors);
+    validate_no_context_variable_assignment(body_func, errors);
 
     if validate_no_void_use_memo && !has_non_void_return(body_func) {
         void_memo_errors.push_diagnostic(
@@ -246,7 +243,6 @@ fn handle_possible_use_memo_call(
 
 fn validate_no_context_variable_assignment(
     func: &HirFunction,
-    _functions: &[HirFunction],
     errors: &mut CompilerError,
 ) {
     let context: HashSet<IdentifierId> =
