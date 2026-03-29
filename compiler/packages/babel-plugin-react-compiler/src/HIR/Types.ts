@@ -15,8 +15,7 @@ export type Type =
   | PhiType
   | TypeVar
   | PolyType
-  | PropType
-  | ObjectMethod;
+  | PropType;
 export type PrimitiveType = {kind: 'Primitive'};
 
 /*
@@ -72,10 +71,6 @@ export type PropType = {
       };
 };
 
-export type ObjectMethod = {
-  kind: 'ObjectMethod';
-};
-
 /*
  * Simulated opaque type for TypeId to prevent using normal numbers as ids
  * accidentally.
@@ -116,9 +111,6 @@ export function duplicateType(type: Type): Type {
     case 'Object': {
       return {kind: 'Object', shapeId: type.shapeId};
     }
-    case 'ObjectMethod': {
-      return {kind: 'ObjectMethod'};
-    }
     case 'Phi': {
       return {
         kind: 'Phi',
@@ -154,8 +146,7 @@ export function typeEquals(tA: Type, tB: Type): boolean {
     primitiveTypeEquals(tA, tB) ||
     polyTypeEquals(tA, tB) ||
     phiTypeEquals(tA, tB) ||
-    propTypeEquals(tA, tB) ||
-    objectMethodTypeEquals(tA, tB)
+    propTypeEquals(tA, tB)
   );
 }
 
@@ -168,10 +159,6 @@ function typeVarEquals(tA: Type, tB: Type): boolean {
 
 function typeKindCheck(tA: Type, tb: Type, type: string): boolean {
   return tA.kind === type && tb.kind === type;
-}
-
-function objectMethodTypeEquals(tA: Type, tB: Type): boolean {
-  return typeKindCheck(tA, tB, 'ObjectMethod');
 }
 
 function propTypeEquals(tA: Type, tB: Type): boolean {

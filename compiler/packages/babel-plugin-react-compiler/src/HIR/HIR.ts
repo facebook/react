@@ -724,18 +724,12 @@ export type ObjectPropertyKey =
 export type ObjectProperty = {
   kind: 'ObjectProperty';
   key: ObjectPropertyKey;
-  type: 'property' | 'method';
+  type: 'property';
   place: Place;
 };
 
 export type LoweredFunction = {
   func: HIRFunction;
-};
-
-export type ObjectMethod = {
-  kind: 'ObjectMethod';
-  loc: SourceLocation;
-  loweredFunc: LoweredFunction;
 };
 
 export enum InstructionKind {
@@ -984,7 +978,6 @@ export type InstructionValue =
       properties: Array<ObjectProperty | SpreadPattern>;
       loc: SourceLocation;
     }
-  | ObjectMethod
   | ArrayExpression
   | {kind: 'JsxFragment'; children: Array<Place>; loc: SourceLocation}
   | {
@@ -1783,9 +1776,6 @@ export function makeInstructionId(id: number): InstructionId {
   return id as InstructionId;
 }
 
-export function isObjectMethodType(id: Identifier): boolean {
-  return id.type.kind == 'ObjectMethod';
-}
 
 export function isObjectType(id: Identifier): boolean {
   return id.type.kind === 'Object';
