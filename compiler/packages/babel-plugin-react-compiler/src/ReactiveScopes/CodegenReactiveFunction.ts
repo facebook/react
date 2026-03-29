@@ -28,7 +28,6 @@ import {
   IdentifierId,
   InstructionKind,
   JsxAttribute,
-  ObjectMethod,
   ObjectPropertyKey,
   Pattern,
   Place,
@@ -420,7 +419,6 @@ class Context {
    */
   #declarations: Set<DeclarationId> = new Set();
   temp: Temporaries;
-  objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
   uniqueIdentifiers: Set<string>;
   fbtOperands: Set<IdentifierId>;
   synthesizedNames: Map<string, ValidIdentifierName> = new Map();
@@ -1174,13 +1172,6 @@ function codegenInstructionNullable(
     return null;
   } else if (instr.value.kind === 'Debugger') {
     return t.debuggerStatement();
-  } else if (instr.value.kind === 'ObjectMethod') {
-    CompilerError.invariant(instr.lvalue, {
-      reason: 'Expected object methods to have a temp lvalue',
-      loc: GeneratedSource,
-    });
-    cx.objectMethods.set(instr.lvalue.identifier.id, instr.value);
-    return null;
   } else {
     const value = codegenInstructionValue(cx, instr.value);
     const statement = codegenInstruction(cx, instr, value);
@@ -1655,43 +1646,6 @@ function codegenInstructionValue(
               );
               break;
             }
-            case 'method': {
-              const method = cx.objectMethods.get(property.place.identifier.id);
-              CompilerError.invariant(method, {
-                reason: 'Expected ObjectMethod instruction',
-                loc: GeneratedSource,
-              });
-              const loweredFunc = method.loweredFunc;
-              const reactiveFunction = buildReactiveFunction(loweredFunc.func);
-              pruneUnusedLabels(reactiveFunction);
-              pruneUnusedLValues(reactiveFunction);
-              const fn = codegenReactiveFunction(
-                new Context(
-                  cx.env,
-                  reactiveFunction.id ?? '[[ anonymous ]]',
-                  cx.uniqueIdentifiers,
-                  cx.fbtOperands,
-                  cx.temp,
-                ),
-                reactiveFunction,
-              );
-
-              /*
-               * ObjectMethod builder must be backwards compatible with older versions of babel.
-               * https://github.com/babel/babel/blob/v7.7.4/packages/babel-types/src/definitions/core.js#L599-L603
-               */
-              const babelNode = t.objectMethod(
-                'method',
-                key,
-                fn.params,
-                fn.body,
-                false,
-              );
-              babelNode.async = fn.async;
-              babelNode.generator = fn.generator;
-              properties.push(babelNode);
-              break;
-            }
             default:
               assertExhaustive(
                 property.type,
@@ -2087,7 +2041,6 @@ function codegenInstructionValue(
     case 'DeclareLocal':
     case 'DeclareContext':
     case 'Destructure':
-    case 'ObjectMethod':
     case 'StoreContext': {
       CompilerError.invariant(false, {
         reason: `Unexpected ${instrValue.kind} in codegenInstructionValue`,
