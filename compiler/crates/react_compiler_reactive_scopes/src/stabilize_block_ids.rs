@@ -14,13 +14,16 @@ use std::collections::HashMap;
 
 use indexmap::IndexSet;
 use react_compiler_hir::{
-    BlockId, ReactiveBlock, ReactiveFunction,
-    ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue,
+    BlockId, ReactiveFunction,
+    ReactiveTerminal, ReactiveTerminalStatement,
     ReactiveScopeBlock,
     environment::Environment,
 };
 
-use crate::visitors::{ReactiveFunctionVisitor, visit_reactive_function};
+use crate::visitors::{
+    ReactiveFunctionVisitor, visit_reactive_function,
+    ReactiveFunctionTransform, transform_reactive_function,
+};
 
 /// Rewrites block IDs to sequential values.
 /// TS: `stabilizeBlockIds`
@@ -37,8 +40,9 @@ pub fn stabilize_block_ids(func: &mut ReactiveFunction, env: &mut Environment) {
         mappings.entry(*block_id).or_insert(BlockId(len));
     }
 
-    // Pass 2: Rewrite block IDs using direct recursion (need mutable access)
-    rewrite_block(&mut func.body, &mut mappings, env);
+    // Pass 2: Rewrite block IDs using ReactiveFunctionTransform
+    let mut rewriter = RewriteBlockIds { env };
+    let _ = transform_reactive_function(func, &mut rewriter, &mut mappings);
 }
 
 // =============================================================================
@@ -81,7 +85,7 @@ impl<'a> ReactiveFunctionVisitor for CollectReferencedLabels<'a> {
 }
 
 // =============================================================================
-// Pass 2: Rewrite block IDs
+// Pass 2: RewriteBlockIds
 // =============================================================================
 
 fn get_or_insert_mapping(mappings: &mut HashMap<BlockId, BlockId>, id: BlockId) -> BlockId {
@@ -89,159 +93,44 @@ fn get_or_insert_mapping(mappings: &mut HashMap<BlockId, BlockId>, id: BlockId) 
     *mappings.entry(id).or_insert(BlockId(len))
 }
 
-fn rewrite_block(
-    block: &mut ReactiveBlock,
-    mappings: &mut HashMap<BlockId, BlockId>,
-    env: &mut Environment,
-) {
-    for stmt in block.iter_mut() {
-        match stmt {
-            ReactiveStatement::Instruction(instr) => {
-                rewrite_value(&mut instr.value, mappings, env);
-            }
-            ReactiveStatement::Scope(scope) => {
-                rewrite_scope(scope, mappings, env);
-            }
-            ReactiveStatement::PrunedScope(scope) => {
-                rewrite_block(&mut scope.instructions, mappings, env);
-            }
-            ReactiveStatement::Terminal(stmt) => {
-                rewrite_terminal(stmt, mappings, env);
-            }
-        }
-    }
+/// TS: `class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>>`
+struct RewriteBlockIds<'a> {
+    env: &'a mut Environment,
 }
 
-fn rewrite_scope(
-    scope: &mut ReactiveScopeBlock,
-    mappings: &mut HashMap<BlockId, BlockId>,
-    env: &mut Environment,
-) {
-    let scope_data = &mut env.scopes[scope.scope.0 as usize];
-    if let Some(ref mut early_return) = scope_data.early_return_value {
-        early_return.label = get_or_insert_mapping(mappings, early_return.label);
-    }
-    rewrite_block(&mut scope.instructions, mappings, env);
-}
+impl<'a> ReactiveFunctionTransform for RewriteBlockIds<'a> {
+    type State = HashMap<BlockId, BlockId>;
 
-fn rewrite_terminal(
-    stmt: &mut ReactiveTerminalStatement,
-    mappings: &mut HashMap<BlockId, BlockId>,
-    env: &mut Environment,
-) {
-    if let Some(ref mut label) = stmt.label {
-        label.id = get_or_insert_mapping(mappings, label.id);
+    fn env(&self) -> &Environment { self.env }
+
+    fn visit_scope(
+        &mut self,
+        scope: &mut ReactiveScopeBlock,
+        state: &mut Self::State,
+    ) -> Result<(), react_compiler_diagnostics::CompilerError> {
+        let scope_data = &mut self.env.scopes[scope.scope.0 as usize];
+        if let Some(ref mut early_return) = scope_data.early_return_value {
+            early_return.label = get_or_insert_mapping(state, early_return.label);
+        }
+        self.traverse_scope(scope, state)
     }
 
-    match &mut stmt.terminal {
-        ReactiveTerminal::Break { target, .. } | ReactiveTerminal::Continue { target, .. } => {
-            *target = get_or_insert_mapping(mappings, *target);
+    fn visit_terminal(
+        &mut self,
+        stmt: &mut ReactiveTerminalStatement,
+        state: &mut Self::State,
+    ) -> Result<(), react_compiler_diagnostics::CompilerError> {
+        if let Some(ref mut label) = stmt.label {
+            label.id = get_or_insert_mapping(state, label.id);
         }
-        ReactiveTerminal::For {
-            init,
-            test,
-            update,
-            loop_block,
-            ..
-        } => {
-            rewrite_value(init, mappings, env);
-            rewrite_value(test, mappings, env);
-            rewrite_block(loop_block, mappings, env);
-            if let Some(update) = update {
-                rewrite_value(update, mappings, env);
-            }
-        }
-        ReactiveTerminal::ForOf {
-            init,
-            test,
-            loop_block,
-            ..
-        } => {
-            rewrite_value(init, mappings, env);
-            rewrite_value(test, mappings, env);
-            rewrite_block(loop_block, mappings, env);
-        }
-        ReactiveTerminal::ForIn {
-            init, loop_block, ..
-        } => {
-            rewrite_value(init, mappings, env);
-            rewrite_block(loop_block, mappings, env);
-        }
-        ReactiveTerminal::DoWhile {
-            loop_block, test, ..
-        } => {
-            rewrite_block(loop_block, mappings, env);
-            rewrite_value(test, mappings, env);
-        }
-        ReactiveTerminal::While {
-            test, loop_block, ..
-        } => {
-            rewrite_value(test, mappings, env);
-            rewrite_block(loop_block, mappings, env);
-        }
-        ReactiveTerminal::If {
-            consequent,
-            alternate,
-            ..
-        } => {
-            rewrite_block(consequent, mappings, env);
-            if let Some(alt) = alternate {
-                rewrite_block(alt, mappings, env);
-            }
-        }
-        ReactiveTerminal::Switch { cases, .. } => {
-            for case in cases.iter_mut() {
-                if let Some(block) = &mut case.block {
-                    rewrite_block(block, mappings, env);
-                }
-            }
-        }
-        ReactiveTerminal::Label { block, .. } => {
-            rewrite_block(block, mappings, env);
-        }
-        ReactiveTerminal::Try {
-            block, handler, ..
-        } => {
-            rewrite_block(block, mappings, env);
-            rewrite_block(handler, mappings, env);
-        }
-        ReactiveTerminal::Return { .. } | ReactiveTerminal::Throw { .. } => {}
-    }
-}
 
-fn rewrite_value(
-    value: &mut ReactiveValue,
-    mappings: &mut HashMap<BlockId, BlockId>,
-    env: &mut Environment,
-) {
-    match value {
-        ReactiveValue::SequenceExpression {
-            instructions,
-            value: inner,
-            ..
-        } => {
-            for instr in instructions.iter_mut() {
-                rewrite_value(&mut instr.value, mappings, env);
+        match &mut stmt.terminal {
+            ReactiveTerminal::Break { target, .. } | ReactiveTerminal::Continue { target, .. } => {
+                *target = get_or_insert_mapping(state, *target);
             }
-            rewrite_value(inner, mappings, env);
+            _ => {}
         }
-        ReactiveValue::LogicalExpression { left, right, .. } => {
-            rewrite_value(left, mappings, env);
-            rewrite_value(right, mappings, env);
-        }
-        ReactiveValue::ConditionalExpression {
-            test,
-            consequent,
-            alternate,
-            ..
-        } => {
-            rewrite_value(test, mappings, env);
-            rewrite_value(consequent, mappings, env);
-            rewrite_value(alternate, mappings, env);
-        }
-        ReactiveValue::OptionalExpression { value: inner, .. } => {
-            rewrite_value(inner, mappings, env);
-        }
-        ReactiveValue::Instruction(_) => {}
+
+        self.traverse_terminal(stmt, state)
     }
 }
