@@ -358,7 +358,11 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                     visit_place(value, &value_kinds, &mut errors_by_loc, env);
                     let object_kind =
                         get_kind_for_place(value, &value_kinds, &env.identifiers);
-                    for place in each_pattern_operand(&lvalue.pattern) {
+                    // Process instr.lvalue and all pattern operands (matching TS eachInstructionLValue)
+                    let pattern_places = each_pattern_operand(&lvalue.pattern);
+                    let all_lvalues = std::iter::once(instr.lvalue.clone())
+                        .chain(pattern_places.into_iter());
+                    for place in all_lvalues {
                         let is_hook_property =
                             ident_is_hook_name(place.identifier, &env.identifiers);
                         let kind = match object_kind {
@@ -388,16 +392,24 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                     visit_function_expression(env, lowered_func.func);
                 }
                 _ => {
-                    // For all other instructions: visit operands, set lvalue kind
+                    // For all other instructions: visit operands, set lvalue kinds
+                    // Matches TS which uses eachInstructionOperand + eachInstructionLValue
                     visit_all_operands(
                         &instr.value,
                         &value_kinds,
                         &mut errors_by_loc,
                         env,
                     );
+                    // Set kind for instr.lvalue
                     let kind =
                         get_kind_for_place(&instr.lvalue, &value_kinds, &env.identifiers);
                     value_kinds.insert(lvalue_id, kind);
+                    // Also set kind for value-level lvalues (e.g. DeclareLocal, PrefixUpdate, PostfixUpdate)
+                    for lv in visitors::each_instruction_value_lvalue(&instr.value) {
+                        let lv_kind =
+                            get_kind_for_place(&lv, &value_kinds, &env.identifiers);
+                        value_kinds.insert(lv.identifier, lv_kind);
+                    }
                 }
             }
         }
