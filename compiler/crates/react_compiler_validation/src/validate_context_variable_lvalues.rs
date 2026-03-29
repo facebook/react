@@ -8,7 +8,7 @@ use react_compiler_hir::{
     Place,
 };
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::visitors::each_pattern_operand;
+use react_compiler_hir::visitors::{each_instruction_value_lvalue, each_pattern_operand};
 
 /// Variable reference kind: local, context, or destructure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -96,8 +96,19 @@ fn validate_context_variable_lvalues_impl(
                     inner_function_ids.push(lowered_func.func);
                 }
                 _ => {
-                    // All lvalue-bearing instruction kinds are handled above.
-                    // The default case is a no-op for current variants.
+                    for _ in each_instruction_value_lvalue(value) {
+                        errors.push_diagnostic(
+                            CompilerDiagnostic::new(
+                                ErrorCategory::Todo,
+                                "ValidateContextVariableLValues: unhandled instruction variant",
+                                None,
+                            )
+                            .with_detail(CompilerDiagnosticDetail::Error {
+                                loc: value.loc().copied(),
+                                message: None,
+                            }),
+                        );
+                    }
                 }
             }
         }
