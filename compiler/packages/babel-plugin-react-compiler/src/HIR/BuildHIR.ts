@@ -1564,19 +1564,6 @@ function lowerStatement(
   }
 }
 
-function lowerObjectMethod(
-  builder: HIRBuilder,
-  property: NodePath<t.ObjectMethod>,
-): InstructionValue {
-  const loc = property.node.loc ?? GeneratedSource;
-  const loweredFunc = lowerFunction(builder, property);
-
-  return {
-    kind: 'ObjectMethod',
-    loc,
-    loweredFunc,
-  };
-}
 
 function lowerObjectPropertyKey(
   builder: HIRBuilder,
@@ -1703,15 +1690,24 @@ function lowerExpression(
             );
             continue;
           }
-          const method = lowerObjectMethod(builder, propertyPath);
-          const place = lowerValueToTemporary(builder, method);
           const loweredKey = lowerObjectPropertyKey(builder, propertyPath);
           if (!loweredKey) {
             continue;
           }
+          const loc = propertyPath.node.loc ?? GeneratedSource;
+          const loweredFunc = lowerFunction(builder, propertyPath);
+          const fnValue: InstructionValue = {
+            kind: 'FunctionExpression',
+            name: loweredFunc.func.id,
+            nameHint: null,
+            type: 'FunctionExpression',
+            loc,
+            loweredFunc,
+          };
+          const place = lowerValueToTemporary(builder, fnValue);
           properties.push({
             kind: 'ObjectProperty',
-            type: 'method',
+            type: 'property',
             place,
             key: loweredKey,
           });
