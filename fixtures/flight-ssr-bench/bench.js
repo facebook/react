@@ -288,12 +288,20 @@ function printResult(result) {
 function getOverhead(baseline, comparison) {
   const pctMedian =
     ((comparison.median - baseline.median) / baseline.median) * 100;
-  return {baseline: baseline.name, comparison: comparison.name, median: pctMedian};
+  return {
+    baseline: baseline.name,
+    comparison: comparison.name,
+    median: pctMedian,
+  };
 }
 
 function printOverheadTable(rows) {
-  const baselineWidth = Math.max(...rows.filter(Boolean).map(r => r.baseline.length));
-  const comparisonWidth = Math.max(...rows.filter(Boolean).map(r => r.comparison.length));
+  const baselineWidth = Math.max(
+    ...rows.filter(Boolean).map(r => r.baseline.length)
+  );
+  const comparisonWidth = Math.max(
+    ...rows.filter(Boolean).map(r => r.comparison.length)
+  );
   const fmt = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
   console.log(
     '  ' +
@@ -599,6 +607,55 @@ async function main() {
     flightFizzEdgeAsyncHtml.length
   );
 
+  // --- CPU Profiling ---
+  if (PROFILE_MODE) {
+    console.log(
+      '\n--- CPU Profiling (%d warmup, %d iterations) ---\n',
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS
+    );
+
+    const profileDir = path.resolve(__dirname, 'build/profiles');
+
+    await profileRun(
+      'Fizz (Node, sync)',
+      () => renderFizzNode(App, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'fizz-node-sync.cpuprofile')
+    );
+
+    await profileRun(
+      'Flight + Fizz (Node, sync)',
+      () => renderFlightFizzNode(rscBundle, rscApps.App, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'flight-fizz-node-sync.cpuprofile')
+    );
+
+    await profileRun(
+      'Fizz (Node, async)',
+      () => renderFizzNode(AppAsync, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'fizz-node-async.cpuprofile')
+    );
+
+    await profileRun(
+      'Flight + Fizz (Node, async)',
+      () => renderFlightFizzNode(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+      PROFILE_WARMUP,
+      PROFILE_ITERATIONS,
+      path.join(profileDir, 'flight-fizz-node-async.cpuprofile')
+    );
+
+    console.log(
+      '\nProfiles saved to build/profiles/. Open in Chrome DevTools or speedscope.app.'
+    );
+
+    return;
+  }
+
   // --- Benchmark ---
   console.log(
     '\n--- Benchmark (%d warmup, %d iterations, %d items) ---\n',
@@ -683,53 +740,6 @@ async function main() {
     getOverhead(flightFizzNodeSync, flightFizzEdgeSync),
     getOverhead(flightFizzNodeAsync, flightFizzEdgeAsync),
   ]);
-
-  // --- CPU Profiling ---
-  if (PROFILE_MODE) {
-    console.log(
-      '\n--- CPU Profiling (%d warmup, %d iterations) ---\n',
-      PROFILE_WARMUP,
-      PROFILE_ITERATIONS
-    );
-
-    const profileDir = path.resolve(__dirname, 'build/profiles');
-
-    await profileRun(
-      'Fizz (Node, sync)',
-      () => renderFizzNode(App, ITEM_COUNT),
-      PROFILE_WARMUP,
-      PROFILE_ITERATIONS,
-      path.join(profileDir, 'fizz-node-sync.cpuprofile')
-    );
-
-    await profileRun(
-      'Flight + Fizz (Node, sync)',
-      () => renderFlightFizzNode(rscBundle, rscApps.App, ITEM_COUNT),
-      PROFILE_WARMUP,
-      PROFILE_ITERATIONS,
-      path.join(profileDir, 'flight-fizz-node-sync.cpuprofile')
-    );
-
-    await profileRun(
-      'Fizz (Node, async)',
-      () => renderFizzNode(AppAsync, ITEM_COUNT),
-      PROFILE_WARMUP,
-      PROFILE_ITERATIONS,
-      path.join(profileDir, 'fizz-node-async.cpuprofile')
-    );
-
-    await profileRun(
-      'Flight + Fizz (Node, async)',
-      () => renderFlightFizzNode(rscBundle, rscApps.AppAsync, ITEM_COUNT),
-      PROFILE_WARMUP,
-      PROFILE_ITERATIONS,
-      path.join(profileDir, 'flight-fizz-node-async.cpuprofile')
-    );
-
-    console.log(
-      '\nProfiles saved to build/profiles/. Open in Chrome DevTools or speedscope.app.'
-    );
-  }
 }
 
 main().catch(function (err) {
