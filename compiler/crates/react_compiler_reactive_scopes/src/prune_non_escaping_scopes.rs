@@ -19,9 +19,10 @@ use react_compiler_hir::{
     environment::Environment,
 };
 
+use react_compiler_hir::visitors::each_instruction_value_operand;
+
 use crate::visitors::{
     ReactiveFunctionTransform, Transformed, transform_reactive_function,
-    each_instruction_value_operand_public,
 };
 
 // =============================================================================
@@ -205,21 +206,6 @@ struct LValueMemoization {
 }
 
 // =============================================================================
-// Helper: is_mutable_effect
-// =============================================================================
-
-fn is_mutable_effect(effect: Effect) -> bool {
-    matches!(
-        effect,
-        Effect::Capture
-            | Effect::Store
-            | Effect::ConditionallyMutate
-            | Effect::ConditionallyMutateIterator
-            | Effect::Mutate
-    )
-}
-
-// =============================================================================
 // Helper: get_place_scope
 // =============================================================================
 
@@ -229,8 +215,7 @@ fn get_place_scope(
     identifier_id: IdentifierId,
 ) -> Option<ScopeId> {
     let scope_id = env.identifiers[identifier_id.0 as usize].scope?;
-    let scope = &env.scopes[scope_id.0 as usize];
-    if id >= scope.range.start && id < scope.range.end {
+    if env.scopes[scope_id.0 as usize].range.contains(id) {
         Some(scope_id)
     } else {
         None
@@ -241,23 +226,6 @@ fn get_place_scope(
 // Helper: get_function_call_signature (for noAlias check)
 // =============================================================================
 
-fn get_function_call_signature_no_alias(env: &Environment, identifier_id: IdentifierId) -> bool {
-    let ty = &env.types[env.identifiers[identifier_id.0 as usize].type_.0 as usize];
-    env.get_function_signature(ty)
-        .ok()
-        .flatten()
-        .map(|sig| sig.no_alias)
-        .unwrap_or(false)
-}
-
-// =============================================================================
-// Helper: get_hook_kind for an identifier
-// =============================================================================
-
-fn is_hook_call(env: &Environment, identifier_id: IdentifierId) -> bool {
-    let ty = &env.types[env.identifiers[identifier_id.0 as usize].type_.0 as usize];
-    env.get_hook_kind_for_type(ty).ok().flatten().is_some()
-}
 
 // =============================================================================
 // Helper: compute pattern lvalues
@@ -503,7 +471,7 @@ impl CollectDependenciesVisitor {
             | InstructionValue::UnaryExpression { .. } => {
                 if options.force_memoize_primitives {
                     let level = MemoizationLevel::Conditional;
-                    let operands = each_instruction_value_operand_public(value, env);
+                    let operands = each_instruction_value_operand(value, env);
                     let rvalues: Vec<(IdentifierId, EvaluationOrder)> =
                         operands.iter().map(|p| (p.identifier, id)).collect();
                     let lvalues = if let Some(lv) = lvalue {
@@ -738,7 +706,7 @@ impl CollectDependenciesVisitor {
                 (lvalues, vec![(store_value.identifier, id)])
             }
             InstructionValue::TaggedTemplateExpression { tag, .. } => {
-                let no_alias = get_function_call_signature_no_alias(env, tag.identifier);
+                let no_alias = env.has_no_alias_signature(tag.identifier);
                 let mut lvalues = Vec::new();
                 if let Some(lv) = lvalue {
                     lvalues.push(LValueMemoization {
@@ -749,9 +717,9 @@ impl CollectDependenciesVisitor {
                 if no_alias {
                     return (lvalues, vec![]);
                 }
-                let operands = each_instruction_value_operand_public(value, env);
+                let operands = each_instruction_value_operand(value, env);
                 for op in &operands {
-                    if is_mutable_effect(op.effect) {
+                    if op.effect.is_mutable() {
                         lvalues.push(LValueMemoization {
                             place_identifier: op.identifier,
                             level: MemoizationLevel::Memoized,
@@ -763,7 +731,7 @@ impl CollectDependenciesVisitor {
                 (lvalues, rvalues)
             }
             InstructionValue::CallExpression { callee, .. } => {
-                let no_alias = get_function_call_signature_no_alias(env, callee.identifier);
+                let no_alias = env.has_no_alias_signature(callee.identifier);
                 let mut lvalues = Vec::new();
                 if let Some(lv) = lvalue {
                     lvalues.push(LValueMemoization {
@@ -774,9 +742,9 @@ impl CollectDependenciesVisitor {
                 if no_alias {
                     return (lvalues, vec![]);
                 }
-                let operands = each_instruction_value_operand_public(value, env);
+                let operands = each_instruction_value_operand(value, env);
                 for op in &operands {
-                    if is_mutable_effect(op.effect) {
+                    if op.effect.is_mutable() {
                         lvalues.push(LValueMemoization {
                             place_identifier: op.identifier,
                             level: MemoizationLevel::Memoized,
@@ -788,7 +756,7 @@ impl CollectDependenciesVisitor {
                 (lvalues, rvalues)
             }
             InstructionValue::MethodCall { property, .. } => {
-                let no_alias = get_function_call_signature_no_alias(env, property.identifier);
+                let no_alias = env.has_no_alias_signature(property.identifier);
                 let mut lvalues = Vec::new();
                 if let Some(lv) = lvalue {
                     lvalues.push(LValueMemoization {
@@ -799,9 +767,9 @@ impl CollectDependenciesVisitor {
                 if no_alias {
                     return (lvalues, vec![]);
                 }
-                let operands = each_instruction_value_operand_public(value, env);
+                let operands = each_instruction_value_operand(value, env);
                 for op in &operands {
-                    if is_mutable_effect(op.effect) {
+                    if op.effect.is_mutable() {
                         lvalues.push(LValueMemoization {
                             place_identifier: op.identifier,
                             level: MemoizationLevel::Memoized,
@@ -817,10 +785,10 @@ impl CollectDependenciesVisitor {
             | InstructionValue::NewExpression { .. }
             | InstructionValue::ObjectExpression { .. }
             | InstructionValue::PropertyStore { .. } => {
-                let operands = each_instruction_value_operand_public(value, env);
+                let operands = each_instruction_value_operand(value, env);
                 let mut lvalues: Vec<LValueMemoization> = operands
                     .iter()
-                    .filter(|op| is_mutable_effect(op.effect))
+                    .filter(|op| op.effect.is_mutable())
                     .map(|op| LValueMemoization {
                         place_identifier: op.identifier,
                         level: MemoizationLevel::Memoized,
@@ -840,10 +808,10 @@ impl CollectDependenciesVisitor {
             | InstructionValue::FunctionExpression { .. } => {
                 // The canonical each_instruction_value_operand already includes context
                 // (captured variables) for FunctionExpression/ObjectMethod.
-                let operands = each_instruction_value_operand_public(value, env);
+                let operands = each_instruction_value_operand(value, env);
                 let mut lvalues: Vec<LValueMemoization> = operands
                     .iter()
-                    .filter(|op| is_mutable_effect(op.effect))
+                    .filter(|op| op.effect.is_mutable())
                     .map(|op| LValueMemoization {
                         place_identifier: op.identifier,
                         level: MemoizationLevel::Memoized,
@@ -947,9 +915,9 @@ impl CollectDependenciesVisitor {
                     state.definitions.insert(lv_decl, place_decl);
                 }
             } else if let InstructionValue::CallExpression { callee, args, .. } = instr_value {
-                if is_hook_call(env, callee.identifier) {
+                if env.get_hook_kind_for_id(callee.identifier).ok().flatten().is_some() {
                     let no_alias =
-                        get_function_call_signature_no_alias(env, callee.identifier);
+                        env.has_no_alias_signature(callee.identifier);
                     if !no_alias {
                         for arg in args {
                             let place = match arg {
@@ -966,9 +934,9 @@ impl CollectDependenciesVisitor {
                 property, args, ..
             } = instr_value
             {
-                if is_hook_call(env, property.identifier) {
+                if env.get_hook_kind_for_id(property.identifier).ok().flatten().is_some() {
                     let no_alias =
-                        get_function_call_signature_no_alias(env, property.identifier);
+                        env.has_no_alias_signature(property.identifier);
                     if !no_alias {
                         for arg in args {
                             let place = match arg {

@@ -698,13 +698,13 @@ fn find_hoisted_context_declarations(
                     }
                 }
                 _ => {
-                    for operand in each_instruction_value_operands(&instr.value, env) {
+                    for operand in visitors::each_instruction_value_operand(&instr.value, env) {
                         visit(&mut hoisted, &operand, env);
                     }
                 }
             }
         }
-        for operand in each_terminal_operands(&block.terminal) {
+        for operand in visitors::each_terminal_operand(&block.terminal) {
             visit(&mut hoisted, &operand, env);
         }
     }
@@ -788,7 +788,7 @@ fn find_non_mutated_destructure_spreads(
                             known_frozen.insert(lvalue_id);
                         }
                     } else if !candidate_non_mutating_spreads.is_empty() {
-                        for operand in each_instruction_value_operands(&instr.value, env) {
+                        for operand in visitors::each_instruction_value_operand(&instr.value, env) {
                             if let Some(spread) = candidate_non_mutating_spreads.get(&operand.identifier).copied() {
                                 candidate_non_mutating_spreads.remove(&spread);
                             }
@@ -797,7 +797,7 @@ fn find_non_mutated_destructure_spreads(
                 }
                 _ => {
                     if !candidate_non_mutating_spreads.is_empty() {
-                        for operand in each_instruction_value_operands(&instr.value, env) {
+                        for operand in visitors::each_instruction_value_operand(&instr.value, env) {
                             if let Some(spread) = candidate_non_mutating_spreads.get(&operand.identifier).copied() {
                                 candidate_non_mutating_spreads.remove(&spread);
                             }
@@ -1741,7 +1741,7 @@ fn compute_signature_for_instruction(
                 value: ValueKind::Frozen,
                 reason: ValueReason::JsxCaptured,
             });
-            for operand in each_instruction_value_operands(value, env) {
+            for operand in visitors::each_instruction_value_operand(value, env) {
                 effects.push(AliasingEffect::Freeze {
                     value: operand.clone(),
                     reason: ValueReason::JsxCaptured,
@@ -1782,7 +1782,7 @@ fn compute_signature_for_instruction(
                 value: ValueKind::Frozen,
                 reason: ValueReason::JsxCaptured,
             });
-            for operand in each_instruction_value_operands(value, env) {
+            for operand in visitors::each_instruction_value_operand(value, env) {
                 effects.push(AliasingEffect::Freeze {
                     value: operand.clone(),
                     reason: ValueReason::JsxCaptured,
@@ -1966,7 +1966,7 @@ fn compute_signature_for_instruction(
         }
         InstructionValue::StartMemoize { .. } | InstructionValue::FinishMemoize { .. } => {
             if env.config.enable_preserve_existing_memoization_guarantees {
-                for operand in each_instruction_value_operands(value, env) {
+                for operand in visitors::each_instruction_value_operand(value, env) {
                     effects.push(AliasingEffect::Freeze {
                         value: operand.clone(),
                         reason: ValueReason::HookCaptured,
@@ -2836,6 +2836,16 @@ fn create_temp_place(env: &mut Environment, loc: Option<SourceLocation>) -> Plac
 // Terminal successor helper
 // =============================================================================
 
+/// Returns the successor blocks used for BFS traversal in mutation/aliasing inference.
+///
+/// NOTE: This cannot use `visitors::each_terminal_successor` or
+/// `visitors::each_terminal_all_successors` because it has intentionally different
+/// semantics:
+/// - For Logical/Ternary/Optional: includes fallthrough (like `each_terminal_all_successors`)
+/// - For Try/Scope/PrunedScope: excludes fallthrough (like `each_terminal_successor`)
+/// This hybrid behavior matches the TS `inferMutationAliasingEffects` traversal pattern
+/// where blocks are visited in map-insertion order (topological), and fallthroughs for
+/// Try/Scope/PrunedScope are visited naturally by iteration order.
 fn terminal_successors(terminal: &react_compiler_hir::Terminal) -> Vec<BlockId> {
     use react_compiler_hir::Terminal;
     match terminal {
@@ -2863,19 +2873,11 @@ fn terminal_successors(terminal: &react_compiler_hir::Terminal) -> Vec<BlockId> 
     }
 }
 
-// =============================================================================
-// Operand iterators
-// =============================================================================
-
-fn each_instruction_value_operands(value: &InstructionValue, env: &Environment) -> Vec<Place> {
-    visitors::each_instruction_value_operand(value, env)
-}
-
-fn each_terminal_operands(terminal: &react_compiler_hir::Terminal) -> Vec<Place> {
-    visitors::each_terminal_operand(terminal)
-}
-
-/// Pattern item helper for Destructure
+/// Pattern item helper for Destructure.
+///
+/// NOTE: This cannot use `visitors::each_pattern_operand` because callers need
+/// to distinguish Place from Spread elements — Spread elements get different
+/// aliasing effects (Create + Capture) vs Place elements (Create or CreateFrom).
 enum PatternItem<'a> {
     Place(&'a Place),
     Spread(&'a Place),

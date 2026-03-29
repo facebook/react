@@ -380,8 +380,8 @@ pub fn compile_fn(
 
     let mut reactive_fn = react_compiler_reactive_scopes::build_reactive_function(&hir, &env)?;
 
-    let hir_formatter = |printer: &mut react_compiler_reactive_scopes::print_reactive_function::DebugPrinter, func: &react_compiler_hir::HirFunction| {
-        debug_print::format_hir_function_into(printer, func);
+    let hir_formatter = |fmt: &mut react_compiler_hir::print::PrintFormatter, func: &react_compiler_hir::HirFunction| {
+        debug_print::format_hir_function_into(fmt, func);
     };
     let debug_reactive = react_compiler_reactive_scopes::print_reactive_function::debug_reactive_function_with_formatter(
         &reactive_fn, &env, Some(&hir_formatter),

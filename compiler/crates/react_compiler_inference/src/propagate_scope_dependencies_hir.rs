@@ -23,6 +23,7 @@ use react_compiler_hir::{
     Place, PlaceOrSpread, PropertyLiteral, ReactFunctionType, ReactiveScopeDependency,
     ScopeId, Terminal, Type, visitors,
 };
+use react_compiler_hir::visitors::{ScopeBlockTraversal, ScopeBlockInfo};
 
 // =============================================================================
 // Public entry point
@@ -127,19 +128,18 @@ fn find_temporaries_used_outside_declaring_scope(
 ) -> HashSet<DeclarationId> {
     let mut declarations: HashMap<DeclarationId, ScopeId> = HashMap::new();
     let mut pruned_scopes: HashSet<ScopeId> = HashSet::new();
-    let mut active_scopes: Vec<ScopeId> = Vec::new();
-    let mut block_infos: HashMap<BlockId, ScopeBlockInfo> = HashMap::new();
+    let mut traversal = ScopeBlockTraversal::new();
     let mut used_outside_declaring_scope: HashSet<DeclarationId> = HashSet::new();
 
     let handle_place = |place_id: IdentifierId,
                         declarations: &HashMap<DeclarationId, ScopeId>,
-                        active_scopes: &[ScopeId],
+                        traversal: &ScopeBlockTraversal,
                         pruned_scopes: &HashSet<ScopeId>,
                         used_outside: &mut HashSet<DeclarationId>,
                         env: &Environment| {
         let decl_id = env.identifiers[place_id.0 as usize].declaration_id;
         if let Some(&declaring_scope) = declarations.get(&decl_id) {
-            if !active_scopes.contains(&declaring_scope) && !pruned_scopes.contains(&declaring_scope) {
+            if !traversal.is_scope_active(declaring_scope) && !pruned_scopes.contains(&declaring_scope) {
                 used_outside.insert(decl_id);
             }
         }
@@ -147,11 +147,11 @@ fn find_temporaries_used_outside_declaring_scope(
 
     for (block_id, block) in &func.body.blocks {
         // recordScopes
-        record_scopes_into(block, &mut block_infos, &mut active_scopes, env);
+        traversal.record_scopes(block);
 
-        let scope_start_info = block_infos.get(block_id);
-        if let Some(ScopeBlockInfo::Begin { scope_id, pruned: true, .. }) = scope_start_info {
-            pruned_scopes.insert(*scope_id);
+        let scope_start_info = traversal.block_infos.get(block_id);
+        if let Some(ScopeBlockInfo::Begin { scope, pruned: true, .. }) = scope_start_info {
+            pruned_scopes.insert(*scope);
         }
 
         for &instr_id in &block.instructions {
@@ -161,14 +161,14 @@ fn find_temporaries_used_outside_declaring_scope(
                 handle_place(
                     op_id,
                     &declarations,
-                    &active_scopes,
+                    &traversal,
                     &pruned_scopes,
                     &mut used_outside_declaring_scope,
                     env,
                 );
             }
             // Handle instruction (track declarations)
-            let current_scope = active_scopes.last().copied();
+            let current_scope = traversal.current_scope();
             if let Some(scope) = current_scope {
                 if !pruned_scopes.contains(&scope) {
                     match &instr.value {
@@ -189,7 +189,7 @@ fn find_temporaries_used_outside_declaring_scope(
             handle_place(
                 op_id,
                 &declarations,
-                &active_scopes,
+                &traversal,
                 &pruned_scopes,
                 &mut used_outside_declaring_scope,
                 env,
@@ -198,96 +198,6 @@ fn find_temporaries_used_outside_declaring_scope(
     }
 
     used_outside_declaring_scope
-}
-
-// =============================================================================
-// ScopeBlockTraversal helpers
-// =============================================================================
-
-#[derive(Debug, Clone)]
-enum ScopeBlockInfo {
-    Begin {
-        scope_id: ScopeId,
-        pruned: bool,
-        #[allow(dead_code)]
-        fallthrough: BlockId,
-    },
-    End {
-        scope_id: ScopeId,
-        #[allow(dead_code)]
-        pruned: bool,
-    },
-}
-
-/// Record scope begin/end info from block terminals, and maintain active scope stack.
-fn record_scopes_into(
-    block: &BasicBlock,
-    block_infos: &mut HashMap<BlockId, ScopeBlockInfo>,
-    active_scopes: &mut Vec<ScopeId>,
-    _env: &Environment,
-) {
-    // Check if this block is a scope begin or end
-    if let Some(info) = block_infos.get(&block.id) {
-        match info {
-            ScopeBlockInfo::Begin { scope_id, .. } => {
-                active_scopes.push(*scope_id);
-            }
-            ScopeBlockInfo::End { scope_id, .. } => {
-                if let Some(pos) = active_scopes.iter().rposition(|s| s == scope_id) {
-                    active_scopes.remove(pos);
-                }
-            }
-        }
-    }
-
-    // Record scope/pruned-scope terminals
-    match &block.terminal {
-        Terminal::Scope {
-            block: inner_block,
-            fallthrough,
-            scope: scope_id,
-            ..
-        } => {
-            block_infos.insert(
-                *inner_block,
-                ScopeBlockInfo::Begin {
-                    scope_id: *scope_id,
-                    pruned: false,
-                    fallthrough: *fallthrough,
-                },
-            );
-            block_infos.insert(
-                *fallthrough,
-                ScopeBlockInfo::End {
-                    scope_id: *scope_id,
-                    pruned: false,
-                },
-            );
-        }
-        Terminal::PrunedScope {
-            block: inner_block,
-            fallthrough,
-            scope: scope_id,
-            ..
-        } => {
-            block_infos.insert(
-                *inner_block,
-                ScopeBlockInfo::Begin {
-                    scope_id: *scope_id,
-                    pruned: true,
-                    fallthrough: *fallthrough,
-                },
-            );
-            block_infos.insert(
-                *fallthrough,
-                ScopeBlockInfo::End {
-                    scope_id: *scope_id,
-                    pruned: true,
-                },
-            );
-        }
-        _ => {}
-    }
 }
 
 // =============================================================================
@@ -2302,10 +2212,9 @@ fn collect_dependencies(
         }
     }
 
-    let mut block_infos: HashMap<BlockId, ScopeBlockInfo> = HashMap::new();
-    let mut active_scopes: Vec<ScopeId> = Vec::new();
+    let mut traversal = ScopeBlockTraversal::new();
 
-    handle_function_deps(func, env, &mut ctx, &mut block_infos, &mut active_scopes);
+    handle_function_deps(func, env, &mut ctx, &mut traversal);
 
     ctx.deps
 }
@@ -2314,20 +2223,19 @@ fn handle_function_deps(
     func: &HirFunction,
     env: &mut Environment,
     ctx: &mut DependencyCollectionContext,
-    block_infos: &mut HashMap<BlockId, ScopeBlockInfo>,
-    active_scopes: &mut Vec<ScopeId>,
+    traversal: &mut ScopeBlockTraversal,
 ) {
     for (block_id, block) in &func.body.blocks {
         // Record scopes
-        record_scopes_into(block, block_infos, active_scopes, env);
+        traversal.record_scopes(block);
 
-        let scope_block_info = block_infos.get(block_id).cloned();
+        let scope_block_info = traversal.block_infos.get(block_id).cloned();
         match &scope_block_info {
-            Some(ScopeBlockInfo::Begin { scope_id, .. }) => {
-                ctx.enter_scope(*scope_id);
+            Some(ScopeBlockInfo::Begin { scope, .. }) => {
+                ctx.enter_scope(*scope);
             }
-            Some(ScopeBlockInfo::End { scope_id, pruned, .. }) => {
-                ctx.exit_scope(*scope_id, *pruned, env);
+            Some(ScopeBlockInfo::End { scope, pruned, .. }) => {
+                ctx.exit_scope(*scope, *pruned, env);
             }
             None => {}
         }

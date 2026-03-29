@@ -17,7 +17,10 @@ use indexmap::IndexMap;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     BasicBlock, BlockId, EvaluationOrder, GotoVariant, HirFunction, IdentifierId,
-    ScopeId, Terminal, visitors,
+    ScopeId, Terminal,
+};
+use react_compiler_hir::visitors::{
+    each_instruction_lvalue_ids, each_instruction_operand_ids, each_terminal_operand_ids,
 };
 use react_compiler_lowering::{
     get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
@@ -404,30 +407,3 @@ fn fix_scope_and_identifier_ranges(func: &HirFunction, env: &mut Environment) {
     }
 }
 
-// =============================================================================
-// Instruction visitor helpers (delegating to canonical visitors)
-// =============================================================================
-
-fn each_instruction_lvalue_ids(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    visitors::each_instruction_lvalue(instr)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-fn each_instruction_operand_ids(
-    instr: &react_compiler_hir::Instruction,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    visitors::each_instruction_operand(instr, env)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-fn each_terminal_operand_ids(terminal: &react_compiler_hir::Terminal) -> Vec<IdentifierId> {
-    visitors::each_terminal_operand(terminal)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}

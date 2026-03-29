@@ -20,6 +20,7 @@ use std::collections::HashMap;
 
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
+use react_compiler_hir::visitors::{each_instruction_lvalue_ids, each_terminal_operand_ids};
 use react_compiler_hir::{
     EvaluationOrder, HirFunction, IdentifierId, InstructionValue, ScopeId, Type,
 };
@@ -64,8 +65,7 @@ struct TraversalState {
 /// Check if a scope is active at the given instruction id.
 /// Corresponds to TS `isScopeActive(scope, id)`.
 fn is_scope_active(env: &Environment, scope_id: ScopeId, id: EvaluationOrder) -> bool {
-    let range = &env.scopes[scope_id.0 as usize].range;
-    id >= range.start && id < range.end
+    env.scopes[scope_id.0 as usize].range.contains(id)
 }
 
 /// Get the scope for a place if it's active at the given instruction.
@@ -87,7 +87,7 @@ fn get_place_scope(
 /// Corresponds to TS `isMutable({id}, place)`.
 fn is_mutable(env: &Environment, id: EvaluationOrder, identifier_id: IdentifierId) -> bool {
     let range = &env.identifiers[identifier_id.0 as usize].mutable_range;
-    id >= range.start && id < range.end
+    range.contains(id)
 }
 
 // =============================================================================
@@ -402,14 +402,6 @@ pub fn merge_overlapping_reactive_scopes_hir(func: &mut HirFunction, env: &mut E
 // Instruction visitor helpers (delegating to canonical visitors)
 // =============================================================================
 
-/// Collect lvalue IdentifierIds from an instruction.
-fn each_instruction_lvalue_ids(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    visitors::each_instruction_lvalue(instr)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
 /// Collect operand IdentifierIds with their types from an instruction value.
 /// Used to check for Primitive type on FunctionExpression/ObjectMethod operands.
 fn each_instruction_operand_ids_with_types(
@@ -425,10 +417,3 @@ fn each_instruction_operand_ids_with_types(
         .collect()
 }
 
-/// Collect operand IdentifierIds from a terminal.
-fn each_terminal_operand_ids(terminal: &react_compiler_hir::Terminal) -> Vec<IdentifierId> {
-    visitors::each_terminal_operand(terminal)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}

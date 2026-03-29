@@ -15,7 +15,7 @@ use react_compiler_hir::{
     Effect, HirFunction, Identifier, IdentifierId, IdentifierName, InstructionValue,
     Place, Type,
 };
-use react_compiler_hir::visitors::{each_instruction_lvalue, each_instruction_value_operand, each_terminal_operand};
+use react_compiler_hir::visitors::{each_instruction_lvalue_ids, each_instruction_value_operand, each_terminal_operand};
 
 /// Validates that local variables cannot be reassigned after render.
 /// This prevents a category of bugs in which a closure captures a
@@ -75,19 +75,6 @@ fn format_variable_name(place: &Place, identifiers: &[Identifier]) -> String {
     }
 }
 
-/// Check whether a function type has a noAlias signature.
-fn has_no_alias_signature(
-    env: &Environment,
-    identifier_id: IdentifierId,
-    identifiers: &[Identifier],
-    types: &[Type],
-) -> bool {
-    let ty = &types[identifiers[identifier_id.0 as usize].type_.0 as usize];
-    env.get_function_signature(ty)
-        .ok()
-        .flatten()
-        .map_or(false, |sig| sig.no_alias)
-}
 
 /// Recursively checks whether a function (or its dependencies) reassigns a
 /// context variable. Returns the reassigned place if found, or None.
@@ -237,12 +224,7 @@ fn get_context_reassignment(
                     // context variables.
                     let operands: Vec<Place> = match &instr.value {
                         InstructionValue::CallExpression { callee, .. } => {
-                            if has_no_alias_signature(
-                                env,
-                                callee.identifier,
-                                identifiers,
-                                types,
-                            ) {
+                            if env.has_no_alias_signature(callee.identifier) {
                                 vec![callee.clone()]
                             } else {
                                 each_instruction_value_operand(&instr.value, env)
@@ -251,24 +233,14 @@ fn get_context_reassignment(
                         InstructionValue::MethodCall {
                             receiver, property, ..
                         } => {
-                            if has_no_alias_signature(
-                                env,
-                                property.identifier,
-                                identifiers,
-                                types,
-                            ) {
+                            if env.has_no_alias_signature(property.identifier) {
                                 vec![receiver.clone(), property.clone()]
                             } else {
                                 each_instruction_value_operand(&instr.value, env)
                             }
                         }
                         InstructionValue::TaggedTemplateExpression { tag, .. } => {
-                            if has_no_alias_signature(
-                                env,
-                                tag.identifier,
-                                identifiers,
-                                types,
-                            ) {
+                            if env.has_no_alias_signature(tag.identifier) {
                                 vec![tag.clone()]
                             } else {
                                 each_instruction_value_operand(&instr.value, env)
@@ -317,11 +289,3 @@ fn get_context_reassignment(
     None
 }
 
-/// Collect all lvalue identifier IDs from an instruction.
-/// Thin wrapper around canonical `each_instruction_lvalue` that maps to ids.
-fn each_instruction_lvalue_ids(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    each_instruction_lvalue(instr)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}

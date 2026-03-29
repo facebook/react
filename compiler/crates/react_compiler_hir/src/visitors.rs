@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use crate::environment::Environment;
 use crate::{
-    ArrayElement, ArrayPatternElement, BasicBlock, BlockId, HirFunction, Instruction,
+    ArrayElement, ArrayPatternElement, BasicBlock, BlockId, HirFunction, IdentifierId, Instruction,
     InstructionKind, InstructionValue, JsxAttribute, JsxTag,
     ManualMemoDependencyRoot, ObjectPropertyKey, ObjectPropertyOrSpread, Pattern, Place,
     PlaceOrSpread, ScopeId, Terminal,
@@ -1431,6 +1431,55 @@ impl Default for ScopeBlockTraversal {
 }
 
 // =============================================================================
+// Convenience wrappers: extract IdentifierIds from Places
+// =============================================================================
+
+/// Collect all lvalue IdentifierIds from an instruction.
+/// Convenience wrapper around `each_instruction_lvalue` that maps to ids.
+pub fn each_instruction_lvalue_ids(instr: &Instruction) -> Vec<IdentifierId> {
+    each_instruction_lvalue(instr)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
+}
+
+/// Collect all operand IdentifierIds from an instruction.
+/// Convenience wrapper around `each_instruction_operand` that maps to ids.
+pub fn each_instruction_operand_ids(instr: &Instruction, env: &Environment) -> Vec<IdentifierId> {
+    each_instruction_operand(instr, env)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
+}
+
+/// Collect all operand IdentifierIds from an instruction value.
+/// Convenience wrapper around `each_instruction_value_operand` that maps to ids.
+pub fn each_instruction_value_operand_ids(value: &InstructionValue, env: &Environment) -> Vec<IdentifierId> {
+    each_instruction_value_operand(value, env)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
+}
+
+/// Collect all operand IdentifierIds from a terminal.
+/// Convenience wrapper around `each_terminal_operand` that maps to ids.
+pub fn each_terminal_operand_ids(terminal: &Terminal) -> Vec<IdentifierId> {
+    each_terminal_operand(terminal)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
+}
+
+/// Collect all IdentifierIds from a pattern.
+/// Convenience wrapper around `each_pattern_operand` that maps to ids.
+pub fn each_pattern_operand_ids(pattern: &Pattern) -> Vec<IdentifierId> {
+    each_pattern_operand(pattern)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
+}
+
+// =============================================================================
 // In-place mutation variants (f(&mut Place) callbacks)
 // =============================================================================
 //
@@ -1643,6 +1692,31 @@ pub fn for_each_call_argument_mut(args: &mut [PlaceOrSpread], f: &mut impl FnMut
             PlaceOrSpread::Place(place) => f(place),
             PlaceOrSpread::Spread(spread) => f(&mut spread.place),
         }
+    }
+}
+
+/// In-place mutation of an InstructionValue's lvalues (DeclareLocal, StoreLocal, DeclareContext,
+/// StoreContext, Destructure, PostfixUpdate, PrefixUpdate). Does NOT include the instruction's
+/// top-level lvalue — use `for_each_instruction_lvalue_mut` for that.
+pub fn for_each_instruction_value_lvalue_mut(
+    value: &mut InstructionValue,
+    f: &mut impl FnMut(&mut Place),
+) {
+    match value {
+        InstructionValue::DeclareContext { lvalue, .. }
+        | InstructionValue::StoreContext { lvalue, .. }
+        | InstructionValue::DeclareLocal { lvalue, .. }
+        | InstructionValue::StoreLocal { lvalue, .. } => {
+            f(&mut lvalue.place);
+        }
+        InstructionValue::Destructure { lvalue, .. } => {
+            for_each_pattern_operand_mut(&mut lvalue.pattern, f);
+        }
+        InstructionValue::PostfixUpdate { lvalue, .. }
+        | InstructionValue::PrefixUpdate { lvalue, .. } => {
+            f(lvalue);
+        }
+        _ => {}
     }
 }
 

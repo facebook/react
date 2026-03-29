@@ -23,7 +23,7 @@ use react_compiler_hir::{
     ReactFunctionType, ReturnVariant, SourceLocation, Type,
 };
 use react_compiler_hir::visitors::{
-    each_instruction_lvalue as canonical_each_instruction_lvalue,
+    each_instruction_lvalue_ids,
     each_instruction_operand as canonical_each_instruction_operand,
 };
 
@@ -248,18 +248,6 @@ fn get_root_set_state(
     }
 }
 
-/// Collects all lvalue IdentifierIds for an instruction.
-/// This corresponds to TS eachInstructionLValue, which yields:
-/// - The instruction's own lvalue
-/// Collect all lvalue identifier IDs from an instruction.
-/// Thin wrapper around canonical `each_instruction_lvalue` that maps to ids.
-fn each_instruction_lvalue(instr: &react_compiler_hir::Instruction) -> Vec<IdentifierId> {
-    canonical_each_instruction_lvalue(instr)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
 fn maybe_record_set_state_for_instr(
     instr: &react_compiler_hir::Instruction,
     env: &Environment,
@@ -269,7 +257,7 @@ fn maybe_record_set_state_for_instr(
     let identifiers = &env.identifiers;
     let types = &env.types;
 
-    let all_lvalues = each_instruction_lvalue(instr);
+    let all_lvalues = each_instruction_lvalue_ids(instr);
     for &lvalue_id in &all_lvalues {
         // Check if this is a LoadLocal from a known setState
         if let InstructionValue::LoadLocal { place, .. } = &instr.value {
@@ -306,8 +294,7 @@ fn maybe_record_set_state_for_instr(
 }
 
 fn is_mutable_at(env: &Environment, eval_order: EvaluationOrder, identifier_id: IdentifierId) -> bool {
-    let range = &env.identifiers[identifier_id.0 as usize].mutable_range;
-    eval_order >= range.start && eval_order < range.end
+    env.identifiers[identifier_id.0 as usize].mutable_range.contains(eval_order)
 }
 
 pub fn validate_no_derived_computations_in_effects_exp(
@@ -591,7 +578,7 @@ fn record_instruction_derivations(
     }
 
     // Record derivation for ALL lvalue places (including destructured variables)
-    for &lv_id in &each_instruction_lvalue(instr) {
+    for &lv_id in &each_instruction_lvalue_ids(instr) {
         let name = identifiers[lv_id.0 as usize].name.clone();
         context.derivation_cache.add_derivation_entry(
             lv_id,
@@ -609,37 +596,30 @@ fn record_instruction_derivations(
 
     // Handle mutable operands
     for operand in each_instruction_operand_with_effect(instr, env) {
-        match operand.effect {
-            Effect::Capture
-            | Effect::Store
-            | Effect::ConditionallyMutate
-            | Effect::ConditionallyMutateIterator
-            | Effect::Mutate => {
-                if is_mutable_at(env, instr.id, operand.id) {
-                    if let Some(existing) = context.derivation_cache.cache.get_mut(&operand.id) {
-                        existing.type_of_value =
-                            join_value(type_of_value, existing.type_of_value);
-                    } else {
-                        let name = identifiers[operand.id.0 as usize].name.clone();
-                        context.derivation_cache.add_derivation_entry(
-                            operand.id,
-                            name,
-                            sources.clone(),
-                            type_of_value,
-                            false,
-                        );
-                    }
+        if operand.effect.is_mutable() {
+            if is_mutable_at(env, instr.id, operand.id) {
+                if let Some(existing) = context.derivation_cache.cache.get_mut(&operand.id) {
+                    existing.type_of_value =
+                        join_value(type_of_value, existing.type_of_value);
+                } else {
+                    let name = identifiers[operand.id.0 as usize].name.clone();
+                    context.derivation_cache.add_derivation_entry(
+                        operand.id,
+                        name,
+                        sources.clone(),
+                        type_of_value,
+                        false,
+                    );
                 }
             }
-            Effect::Freeze | Effect::Read => {}
-            Effect::Unknown => {
-                return Err(CompilerDiagnostic::new(
-                    ErrorCategory::Invariant,
-                    "Unexpected unknown effect",
-                    None,
-                ));
-            }
+        } else if matches!(operand.effect, Effect::Unknown) {
+            return Err(CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "Unexpected unknown effect",
+                None,
+            ));
         }
+        // Freeze | Read => no-op
     }
     Ok(())
 }
@@ -1315,6 +1295,15 @@ fn validate_effect_non_exp(
         .collect()
 }
 
+/// Collects operand IdentifierIds for a subset of instruction variants used
+/// by `validate_effect_non_exp`.
+///
+/// NOTE: This intentionally does NOT use the canonical `each_instruction_value_operand`
+/// because: (1) `validate_effect_non_exp` only matches specific variants
+/// (ComputedLoad, PropertyLoad, BinaryExpression, TemplateLiteral, CallExpression,
+/// MethodCall), so FunctionExpression/ObjectMethod context handling is unnecessary;
+/// and (2) the caller does not have access to `env` which the canonical function requires
+/// for resolving function expression context captures.
 fn non_exp_value_operands(value: &InstructionValue) -> Vec<IdentifierId> {
     match value {
         InstructionValue::ComputedLoad { object, property, .. } => {

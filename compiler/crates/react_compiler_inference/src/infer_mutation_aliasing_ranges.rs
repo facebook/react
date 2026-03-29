@@ -19,6 +19,10 @@ use std::collections::{HashMap, HashSet};
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::type_config::{ValueKind, ValueReason};
+use react_compiler_hir::visitors::{
+    each_instruction_value_lvalue, for_each_instruction_value_lvalue_mut,
+    for_each_instruction_value_operand_mut, for_each_terminal_operand_mut,
+};
 use react_compiler_hir::{
     AliasingEffect, BlockId, Effect, EvaluationOrder, FunctionId, HirFunction, IdentifierId,
     InstructionValue, MutationReason, Place, SourceLocation, is_jsx_type, is_primitive_type,
@@ -770,7 +774,7 @@ pub fn infer_mutation_aliasing_ranges(
                     .instructions
                     .first()
                     .map(|id| func.instructions[id.0 as usize].id)
-                    .unwrap_or_else(|| terminal_id(&block.terminal));
+                    .unwrap_or_else(|| block.terminal.evaluation_order());
 
                 let is_mutated_after_creation = env.identifiers[phi.place.identifier.0 as usize]
                     .mutable_range
@@ -837,7 +841,10 @@ pub fn infer_mutation_aliasing_ranges(
             func.instructions[instr_id.0 as usize].lvalue.effect = Effect::ConditionallyMutate;
 
             // Also handle value-level lvalues (DeclareLocal, StoreLocal, etc.)
-            let value_lvalue_ids = collect_value_lvalue_ids(&func.instructions[instr_id.0 as usize].value);
+            let value_lvalue_ids: Vec<IdentifierId> = each_instruction_value_lvalue(&func.instructions[instr_id.0 as usize].value)
+                .into_iter()
+                .map(|p| p.identifier)
+                .collect();
             for vlid in &value_lvalue_ids {
                 let ident = &mut env.identifiers[vlid.0 as usize];
                 if ident.mutable_range.start == EvaluationOrder(0) {
@@ -849,10 +856,14 @@ pub fn infer_mutation_aliasing_ranges(
                     );
                 }
             }
-            set_value_lvalue_effects(&mut func.instructions[instr_id.0 as usize].value, Effect::ConditionallyMutate);
+            for_each_instruction_value_lvalue_mut(&mut func.instructions[instr_id.0 as usize].value, &mut |place| {
+                place.effect = Effect::ConditionallyMutate;
+            });
 
             // Set operand effects to Read
-            set_operand_effects_read(&mut func.instructions[instr_id.0 as usize]);
+            for_each_instruction_value_operand_mut(&mut func.instructions[instr_id.0 as usize].value, &mut |place| {
+                place.effect = Effect::Read;
+            });
 
             let instr = &func.instructions[instr_id.0 as usize];
             if instr.effects.is_none() {
@@ -925,10 +936,58 @@ pub fn infer_mutation_aliasing_ranges(
                 instr.lvalue.effect = effect;
             }
             // Apply operand effects to value-level lvalues
-            apply_value_lvalue_effects(&mut instr.value, &operand_effects);
+            for_each_instruction_value_lvalue_mut(&mut instr.value, &mut |place| {
+                if let Some(&effect) = operand_effects.get(&place.identifier) {
+                    place.effect = effect;
+                }
+            });
 
             // Apply operand effects to value operands and fix up mutable ranges
-            apply_operand_effects(instr, &operand_effects, env, eval_order);
+            {
+                let mut apply = |place: &mut Place| {
+                    // Fix up mutable range start
+                    let ident = &env.identifiers[place.identifier.0 as usize];
+                    if ident.mutable_range.end > eval_order
+                        && ident.mutable_range.start == EvaluationOrder(0)
+                    {
+                        env.identifiers[place.identifier.0 as usize].mutable_range.start =
+                            eval_order;
+                    }
+                    // Apply effect
+                    if let Some(&effect) = operand_effects.get(&place.identifier) {
+                        place.effect = effect;
+                    }
+                };
+                for_each_instruction_value_operand_mut(&mut instr.value, &mut apply);
+
+                // FunctionExpression/ObjectMethod context variables are operands that
+                // require env access (they live in env.functions[func_id].context).
+                if let InstructionValue::FunctionExpression { lowered_func, .. }
+                | InstructionValue::ObjectMethod { lowered_func, .. } = &instr.value
+                {
+                    let func_id = lowered_func.func;
+                    let ctx_ids: Vec<IdentifierId> = env.functions[func_id.0 as usize]
+                        .context
+                        .iter()
+                        .map(|c| c.identifier)
+                        .collect();
+                    for ctx_id in &ctx_ids {
+                        let ident = &env.identifiers[ctx_id.0 as usize];
+                        if ident.mutable_range.end > eval_order
+                            && ident.mutable_range.start == EvaluationOrder(0)
+                        {
+                            env.identifiers[ctx_id.0 as usize].mutable_range.start = eval_order;
+                        }
+                        let effect = operand_effects.get(ctx_id).copied().unwrap_or(Effect::Read);
+                        let inner_func = &mut env.functions[func_id.0 as usize];
+                        for ctx_place in &mut inner_func.context {
+                            if ctx_place.identifier == *ctx_id {
+                                ctx_place.effect = effect;
+                            }
+                        }
+                    }
+                }
+            }
 
             // Handle StoreContext case: extend rvalue range if needed
             let instr = &func.instructions[instr_id.0 as usize];
@@ -953,7 +1012,9 @@ pub fn infer_mutation_aliasing_ranges(
                 };
             }
             terminal => {
-                set_terminal_operand_effects_read(terminal);
+                for_each_terminal_operand_mut(terminal, &mut |place| {
+                    place.effect = Effect::Read;
+                });
             }
         }
     }
@@ -1105,639 +1166,3 @@ fn collect_param_effects(
     }
 }
 
-// =============================================================================
-// Helper: get terminal EvaluationOrder
-// =============================================================================
-
-fn terminal_id(terminal: &react_compiler_hir::Terminal) -> EvaluationOrder {
-    match terminal {
-        react_compiler_hir::Terminal::Unsupported { id, .. }
-        | react_compiler_hir::Terminal::Unreachable { id, .. }
-        | react_compiler_hir::Terminal::Throw { id, .. }
-        | react_compiler_hir::Terminal::Return { id, .. }
-        | react_compiler_hir::Terminal::Goto { id, .. }
-        | react_compiler_hir::Terminal::If { id, .. }
-        | react_compiler_hir::Terminal::Branch { id, .. }
-        | react_compiler_hir::Terminal::Switch { id, .. }
-        | react_compiler_hir::Terminal::DoWhile { id, .. }
-        | react_compiler_hir::Terminal::While { id, .. }
-        | react_compiler_hir::Terminal::For { id, .. }
-        | react_compiler_hir::Terminal::ForOf { id, .. }
-        | react_compiler_hir::Terminal::ForIn { id, .. }
-        | react_compiler_hir::Terminal::Logical { id, .. }
-        | react_compiler_hir::Terminal::Ternary { id, .. }
-        | react_compiler_hir::Terminal::Optional { id, .. }
-        | react_compiler_hir::Terminal::Label { id, .. }
-        | react_compiler_hir::Terminal::Sequence { id, .. }
-        | react_compiler_hir::Terminal::MaybeThrow { id, .. }
-        | react_compiler_hir::Terminal::Try { id, .. }
-        | react_compiler_hir::Terminal::Scope { id, .. }
-        | react_compiler_hir::Terminal::PrunedScope { id, .. } => *id,
-    }
-}
-
-// =============================================================================
-// Helper: set operand effects to Read on instruction value
-// =============================================================================
-
-fn set_operand_effects_read(instr: &mut react_compiler_hir::Instruction) {
-    match &mut instr.value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            place.effect = Effect::Read;
-        }
-        InstructionValue::StoreLocal { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::StoreContext { lvalue, value, .. } => {
-            lvalue.place.effect = Effect::Read;
-            value.effect = Effect::Read;
-        }
-        InstructionValue::Destructure { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            left.effect = Effect::Read;
-            right.effect = Effect::Read;
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            callee.effect = Effect::Read;
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => p.effect = Effect::Read,
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => s.place.effect = Effect::Read,
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            receiver.effect = Effect::Read;
-            property.effect = Effect::Read;
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => p.effect = Effect::Read,
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => s.place.effect = Effect::Read,
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::TypeCastExpression { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                p.effect = Effect::Read;
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        place.effect = Effect::Read
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        argument.effect = Effect::Read
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    c.effect = Effect::Read;
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                c.effect = Effect::Read;
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        p.place.effect = Effect::Read;
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &mut p.key
-                        {
-                            name.effect = Effect::Read;
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        s.place.effect = Effect::Read
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => p.effect = Effect::Read,
-                    react_compiler_hir::ArrayElement::Spread(s) => s.place.effect = Effect::Read,
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            object.effect = Effect::Read;
-            value.effect = Effect::Read;
-        }
-        InstructionValue::ComputedStore { object, property, value, .. } => {
-            object.effect = Effect::Read;
-            property.effect = Effect::Read;
-            value.effect = Effect::Read;
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            object.effect = Effect::Read;
-        }
-        InstructionValue::ComputedLoad { object, property, .. } => {
-            object.effect = Effect::Read;
-            property.effect = Effect::Read;
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            object.effect = Effect::Read;
-        }
-        InstructionValue::ComputedDelete { object, property, .. } => {
-            object.effect = Effect::Read;
-            property.effect = Effect::Read;
-        }
-        InstructionValue::Await { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            collection.effect = Effect::Read;
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            iterator.effect = Effect::Read;
-            collection.effect = Effect::Read;
-        }
-        InstructionValue::NextPropertyOf { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::PrefixUpdate { value, .. }
-        | InstructionValue::PostfixUpdate { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                s.effect = Effect::Read;
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            tag.effect = Effect::Read;
-        }
-        InstructionValue::StoreGlobal { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
-                        value, ..
-                    } = &mut dep.root
-                    {
-                        value.effect = Effect::Read;
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            decl.effect = Effect::Read;
-        }
-        _ => {}
-    }
-}
-
-// =============================================================================
-// Helper: apply computed operand effects to instruction value operands
-// =============================================================================
-
-fn apply_operand_effects(
-    instr: &mut react_compiler_hir::Instruction,
-    operand_effects: &HashMap<IdentifierId, Effect>,
-    env: &mut Environment,
-    eval_order: EvaluationOrder,
-) {
-    // Helper closure to apply effect and fix up mutable range
-    let apply = |place: &mut Place, env: &mut Environment| {
-        // Fix up mutable range start
-        let ident = &env.identifiers[place.identifier.0 as usize];
-        if ident.mutable_range.end > eval_order && ident.mutable_range.start == EvaluationOrder(0)
-        {
-            let ident = &mut env.identifiers[place.identifier.0 as usize];
-            ident.mutable_range.start = eval_order;
-        }
-        // Apply effect
-        if let Some(&effect) = operand_effects.get(&place.identifier) {
-            place.effect = effect;
-        }
-        // else: default Read already set
-    };
-
-    match &mut instr.value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            apply(place, env);
-        }
-        InstructionValue::StoreLocal { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::StoreContext { lvalue, value, .. } => {
-            apply(&mut lvalue.place, env);
-            apply(value, env);
-        }
-        InstructionValue::Destructure { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            apply(left, env);
-            apply(right, env);
-        }
-        InstructionValue::NewExpression { callee, args, .. }
-        | InstructionValue::CallExpression { callee, args, .. } => {
-            apply(callee, env);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => apply(p, env),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => apply(&mut s.place, env),
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            apply(receiver, env);
-            apply(property, env);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => apply(p, env),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => apply(&mut s.place, env),
-                }
-            }
-        }
-        InstructionValue::UnaryExpression { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::TypeCastExpression { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                apply(p, env);
-            }
-            for prop in props {
-                match prop {
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => {
-                        apply(place, env)
-                    }
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        apply(argument, env)
-                    }
-                }
-            }
-            if let Some(ch) = children {
-                for c in ch {
-                    apply(c, env);
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for c in children {
-                apply(c, env);
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        apply(&mut p.place, env);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &mut p.key
-                        {
-                            apply(name, env);
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        apply(&mut s.place, env)
-                    }
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for el in elements {
-                match el {
-                    react_compiler_hir::ArrayElement::Place(p) => apply(p, env),
-                    react_compiler_hir::ArrayElement::Spread(s) => apply(&mut s.place, env),
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::PropertyStore { object, value, .. } => {
-            apply(object, env);
-            apply(value, env);
-        }
-        InstructionValue::ComputedStore { object, property, value, .. } => {
-            apply(object, env);
-            apply(property, env);
-            apply(value, env);
-        }
-        InstructionValue::PropertyLoad { object, .. } => {
-            apply(object, env);
-        }
-        InstructionValue::ComputedLoad { object, property, .. } => {
-            apply(object, env);
-            apply(property, env);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            apply(object, env);
-        }
-        InstructionValue::ComputedDelete { object, property, .. } => {
-            apply(object, env);
-            apply(property, env);
-        }
-        InstructionValue::Await { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            apply(collection, env);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            apply(iterator, env);
-            apply(collection, env);
-        }
-        InstructionValue::NextPropertyOf { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::PrefixUpdate { value, .. }
-        | InstructionValue::PostfixUpdate { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for s in subexprs {
-                apply(s, env);
-            }
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            apply(tag, env);
-        }
-        InstructionValue::StoreGlobal { value, .. } => {
-            apply(value, env);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
-                        value, ..
-                    } = &mut dep.root
-                    {
-                        apply(value, env);
-                    }
-                }
-            }
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            apply(decl, env);
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            // Context variables of inner functions are operands of the
-            // FunctionExpression/ObjectMethod instruction. We need to apply
-            // the mutable range fixup and effect assignment to them.
-            // The context Places live in env.functions[func_id].context.
-            let func_id = lowered_func.func;
-            let ctx_ids: Vec<IdentifierId> = env.functions[func_id.0 as usize]
-                .context
-                .iter()
-                .map(|c| c.identifier)
-                .collect();
-            for ctx_id in &ctx_ids {
-                // Fix up mutable range start
-                let ident = &env.identifiers[ctx_id.0 as usize];
-                if ident.mutable_range.end > eval_order
-                    && ident.mutable_range.start == EvaluationOrder(0)
-                {
-                    env.identifiers[ctx_id.0 as usize].mutable_range.start = eval_order;
-                }
-                // Apply effect: use operand_effects if present, else default to Read
-                // (matches TS where context vars are yielded by eachInstructionValueOperand
-                // and get the default Read effect when not in operandEffects)
-                let effect = operand_effects.get(ctx_id).copied().unwrap_or(Effect::Read);
-                let inner_func = &mut env.functions[func_id.0 as usize];
-                for ctx_place in &mut inner_func.context {
-                    if ctx_place.identifier == *ctx_id {
-                        ctx_place.effect = effect;
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
-}
-
-// =============================================================================
-// Helper: set terminal operand effects to Read
-// =============================================================================
-
-// =============================================================================
-// Helper: collect value-level lvalue IdentifierIds
-// =============================================================================
-
-fn collect_value_lvalue_ids(value: &InstructionValue) -> Vec<IdentifierId> {
-    let mut ids = Vec::new();
-    match value {
-        InstructionValue::DeclareContext { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. }
-        | InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
-            ids.push(lvalue.place.identifier);
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            collect_pattern_ids(&lvalue.pattern, &mut ids);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            ids.push(lvalue.identifier);
-        }
-        _ => {}
-    }
-    ids
-}
-
-fn collect_pattern_ids(pattern: &react_compiler_hir::Pattern, ids: &mut Vec<IdentifierId>) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for el in &arr.items {
-                match el {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => ids.push(p.identifier),
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => ids.push(s.place.identifier),
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => ids.push(p.place.identifier),
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => ids.push(s.place.identifier),
-                }
-            }
-        }
-    }
-}
-
-// =============================================================================
-// Helper: set value-level lvalue effects
-// =============================================================================
-
-fn set_value_lvalue_effects(value: &mut InstructionValue, default_effect: Effect) {
-    match value {
-        InstructionValue::DeclareContext { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. }
-        | InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
-            lvalue.place.effect = default_effect;
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            set_pattern_effects(&mut lvalue.pattern, default_effect);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            lvalue.effect = default_effect;
-        }
-        _ => {}
-    }
-}
-
-fn set_pattern_effects(pattern: &mut react_compiler_hir::Pattern, effect: Effect) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for el in &mut arr.items {
-                match el {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => p.effect = effect,
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => s.place.effect = effect,
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &mut obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => p.place.effect = effect,
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => s.place.effect = effect,
-                }
-            }
-        }
-    }
-}
-
-// =============================================================================
-// Helper: apply operand effects to value-level lvalues
-// =============================================================================
-
-fn apply_value_lvalue_effects(value: &mut InstructionValue, operand_effects: &HashMap<IdentifierId, Effect>) {
-    match value {
-        InstructionValue::DeclareContext { lvalue, .. }
-        | InstructionValue::StoreContext { lvalue, .. }
-        | InstructionValue::DeclareLocal { lvalue, .. }
-        | InstructionValue::StoreLocal { lvalue, .. } => {
-            if let Some(&effect) = operand_effects.get(&lvalue.place.identifier) {
-                lvalue.place.effect = effect;
-            }
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            apply_pattern_effects(&mut lvalue.pattern, operand_effects);
-        }
-        InstructionValue::PrefixUpdate { lvalue, .. }
-        | InstructionValue::PostfixUpdate { lvalue, .. } => {
-            if let Some(&effect) = operand_effects.get(&lvalue.identifier) {
-                lvalue.effect = effect;
-            }
-        }
-        _ => {}
-    }
-}
-
-fn apply_pattern_effects(pattern: &mut react_compiler_hir::Pattern, operand_effects: &HashMap<IdentifierId, Effect>) {
-    match pattern {
-        react_compiler_hir::Pattern::Array(arr) => {
-            for el in &mut arr.items {
-                match el {
-                    react_compiler_hir::ArrayPatternElement::Place(p) => {
-                        if let Some(&effect) = operand_effects.get(&p.identifier) {
-                            p.effect = effect;
-                        }
-                    }
-                    react_compiler_hir::ArrayPatternElement::Spread(s) => {
-                        if let Some(&effect) = operand_effects.get(&s.place.identifier) {
-                            s.place.effect = effect;
-                        }
-                    }
-                    react_compiler_hir::ArrayPatternElement::Hole => {}
-                }
-            }
-        }
-        react_compiler_hir::Pattern::Object(obj) => {
-            for prop in &mut obj.properties {
-                match prop {
-                    react_compiler_hir::ObjectPropertyOrSpread::Property(p) => {
-                        if let Some(&effect) = operand_effects.get(&p.place.identifier) {
-                            p.place.effect = effect;
-                        }
-                    }
-                    react_compiler_hir::ObjectPropertyOrSpread::Spread(s) => {
-                        if let Some(&effect) = operand_effects.get(&s.place.identifier) {
-                            s.place.effect = effect;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn set_terminal_operand_effects_read(terminal: &mut react_compiler_hir::Terminal) {
-    match terminal {
-        react_compiler_hir::Terminal::Throw { value, .. } => {
-            value.effect = Effect::Read;
-        }
-        react_compiler_hir::Terminal::If { test, .. }
-        | react_compiler_hir::Terminal::Branch { test, .. } => {
-            test.effect = Effect::Read;
-        }
-        react_compiler_hir::Terminal::Switch { test, cases, .. } => {
-            test.effect = Effect::Read;
-            for case_ in cases {
-                if let Some(ref mut case_test) = case_.test {
-                    case_test.effect = Effect::Read;
-                }
-            }
-        }
-        react_compiler_hir::Terminal::Try { handler_binding: Some(binding), .. } => {
-            binding.effect = Effect::Read;
-        }
-        _ => {}
-    }
-}

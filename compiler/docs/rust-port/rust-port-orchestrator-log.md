@@ -56,6 +56,15 @@ Codegen: complete (1717/1717 code comparison)
 
 # Logs
 
+## 20260328-180000 Consolidate duplicated helper logic across Rust crates
+
+Eliminated ~3,700 lines of duplicated helper code across 30 files. Created canonical
+shared implementations for: visitor ID wrappers (visitors.rs), debug printer formatting
+(new print.rs module), predicate helpers (MutableRange::contains, Effect::is_mutable,
+Environment methods), post_dominator_frontier (dominator.rs), is_react_like_name
+(environment.rs), and is_use_operator_type (lib.rs). Also created react_compiler_utils
+crate with generic DisjointSet<K>. All 1717/1717 passing, no regressions.
+
 ## 20260318-111828 Initial orchestrator status
 
 First run of orchestrator. 10 passes ported (HIR through OptimizePropsMethodCalls).

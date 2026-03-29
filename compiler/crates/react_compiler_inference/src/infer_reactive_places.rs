@@ -14,9 +14,10 @@
 //! 4. Mutation with reactive operands
 //! 5. Conditional assignment based on reactive control flow
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
+use react_compiler_hir::dominator::post_dominator_frontier;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::object_shape::HookKind;
 use react_compiler_hir::visitors;
@@ -27,7 +28,7 @@ use react_compiler_hir::{
 
 use react_compiler_utils::DisjointSet;
 
-use crate::infer_reactive_scope_variables::{find_disjoint_mutable_values, is_mutable};
+use crate::infer_reactive_scope_variables::find_disjoint_mutable_values;
 
 // =============================================================================
 // Public API
@@ -188,7 +189,7 @@ pub fn infer_reactive_places(
                                 let op_range = &env.identifiers
                                     [op_place.identifier.0 as usize]
                                     .mutable_range;
-                                if is_mutable(instr.id, op_range) {
+                                if op_range.contains(instr.id) {
                                     reactive_map.mark_reactive(op_place.identifier);
                                 }
                             }
@@ -414,76 +415,17 @@ fn is_reactive_controlled_block(
     false
 }
 
-fn post_dominator_frontier(
-    func: &HirFunction,
-    post_dominators: &react_compiler_hir::dominator::PostDominator,
-    target_id: BlockId,
-) -> HashSet<BlockId> {
-    let target_post_dominators = post_dominators_of(func, post_dominators, target_id);
-    let mut visited = HashSet::new();
-    let mut frontier = HashSet::new();
-
-    let mut to_visit: Vec<BlockId> = target_post_dominators.iter().copied().collect();
-    to_visit.push(target_id);
-
-    for block_id in to_visit {
-        if !visited.insert(block_id) {
-            continue;
-        }
-        if let Some(block) = func.body.blocks.get(&block_id) {
-            for pred in &block.preds {
-                if !target_post_dominators.contains(pred) {
-                    frontier.insert(*pred);
-                }
-            }
-        }
-    }
-    frontier
-}
-
-fn post_dominators_of(
-    func: &HirFunction,
-    post_dominators: &react_compiler_hir::dominator::PostDominator,
-    target_id: BlockId,
-) -> HashSet<BlockId> {
-    let mut result = HashSet::new();
-    let mut visited = HashSet::new();
-    let mut queue = VecDeque::new();
-    queue.push_back(target_id);
-
-    while let Some(current_id) = queue.pop_front() {
-        if !visited.insert(current_id) {
-            continue;
-        }
-        if let Some(block) = func.body.blocks.get(&current_id) {
-            for &pred in &block.preds {
-                let pred_post_dominator = post_dominators.get(pred).unwrap_or(pred);
-                if pred_post_dominator == target_id || result.contains(&pred_post_dominator) {
-                    result.insert(pred);
-                }
-                queue.push_back(pred);
-            }
-        }
-    }
-    result
-}
-
 // =============================================================================
 // Type helpers (ported from HIR.ts)
 // =============================================================================
+
+use react_compiler_hir::is_use_operator_type;
 
 fn get_hook_kind_for_type<'a>(
     env: &'a Environment,
     ty: &Type,
 ) -> Result<Option<&'a HookKind>, CompilerDiagnostic> {
     env.get_hook_kind_for_type(ty)
-}
-
-fn is_use_operator_type(ty: &Type) -> bool {
-    matches!(
-        ty,
-        Type::Function { shape_id: Some(id), .. } if id == react_compiler_hir::object_shape::BUILT_IN_USE_OPERATOR_ID
-    )
 }
 
 fn is_stable_type(ty: &Type) -> bool {

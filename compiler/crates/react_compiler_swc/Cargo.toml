@@ -7,6 +7,7 @@ edition = "2024"
 react_compiler_ast = { path = "../react_compiler_ast" }
 react_compiler = { path = "../react_compiler" }
 react_compiler_diagnostics = { path = "../react_compiler_diagnostics" }
+react_compiler_hir = { path = "../react_compiler_hir" }
 swc_ecma_ast = "21"
 swc_ecma_visit = "21"
 swc_common = "19"

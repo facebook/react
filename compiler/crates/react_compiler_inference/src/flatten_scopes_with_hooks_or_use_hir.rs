@@ -142,13 +142,5 @@ struct ActiveScope {
 }
 
 fn is_hook_or_use(env: &Environment, ty: &Type) -> Result<bool, CompilerDiagnostic> {
-    Ok(env.get_hook_kind_for_type(ty)?.is_some() || is_use_operator_type(ty))
-}
-
-fn is_use_operator_type(ty: &Type) -> bool {
-    matches!(
-        ty,
-        Type::Function { shape_id: Some(id), .. }
-            if id == react_compiler_hir::object_shape::BUILT_IN_USE_OPERATOR_ID
-    )
+    Ok(env.get_hook_kind_for_type(ty)?.is_some() || react_compiler_hir::is_use_operator_type(ty))
 }

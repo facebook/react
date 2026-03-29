@@ -265,7 +265,7 @@ fn visit_hir_function(
                 let value_lvalue_ids = each_hir_value_lvalue(&instr.value);
                 // The canonical function already includes FunctionExpression/ObjectMethod context
                 let operand_ids: Vec<IdentifierId> =
-                    crate::visitors::each_instruction_value_operand_public(&instr.value, env)
+                    react_compiler_hir::visitors::each_instruction_value_operand(&instr.value, env)
                         .iter()
                         .map(|p| p.identifier)
                         .collect();
@@ -328,7 +328,7 @@ fn visit_value(
         ReactiveValue::Instruction(iv) => {
             // Visit operands (canonical function includes FunctionExpression/ObjectMethod context)
             let operand_ids: Vec<IdentifierId> =
-                crate::visitors::each_instruction_value_operand_public(iv, env)
+                react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
                     .iter()
                     .map(|p| p.identifier)
                     .collect();

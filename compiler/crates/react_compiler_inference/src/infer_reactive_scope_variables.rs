@@ -22,7 +22,7 @@ use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
 use react_compiler_hir::{
     DeclarationId, EvaluationOrder, HirFunction, IdentifierId,
-    InstructionValue, MutableRange, Pattern, Position, SourceLocation,
+    InstructionValue, Pattern, Position, SourceLocation,
 };
 use react_compiler_utils::DisjointSet;
 
@@ -163,17 +163,6 @@ fn merge_location(
 // is_mutable / in_range helpers
 // =============================================================================
 
-/// Check if a place is mutable at the given instruction.
-/// Corresponds to TS `isMutable(instr, place)`.
-pub(crate) fn is_mutable(instr_id: EvaluationOrder, range: &MutableRange) -> bool {
-    in_range(instr_id, range)
-}
-
-/// Check if an evaluation order is within a mutable range.
-/// Corresponds to TS `inRange({id}, range)`.
-fn in_range(id: EvaluationOrder, range: &MutableRange) -> bool {
-    id >= range.start && id < range.end
-}
 
 // =============================================================================
 // may_allocate
@@ -338,7 +327,7 @@ pub(crate) fn find_disjoint_mutable_values(func: &HirFunction, env: &Environment
 
                     let value_range =
                         &env.identifiers[value.identifier.0 as usize].mutable_range;
-                    if is_mutable(instr.id, value_range)
+                    if value_range.contains(instr.id)
                         && value_range.start.0 > 0
                     {
                         operands.push(value.identifier);
@@ -359,7 +348,7 @@ pub(crate) fn find_disjoint_mutable_values(func: &HirFunction, env: &Environment
 
                     let value_range =
                         &env.identifiers[value.identifier.0 as usize].mutable_range;
-                    if is_mutable(instr.id, value_range)
+                    if value_range.contains(instr.id)
                         && value_range.start.0 > 0
                     {
                         operands.push(value.identifier);
@@ -372,7 +361,7 @@ pub(crate) fn find_disjoint_mutable_values(func: &HirFunction, env: &Environment
                     for op_id in &all_operands {
                         let op_range =
                             &env.identifiers[op_id.0 as usize].mutable_range;
-                        if is_mutable(instr.id, op_range) && op_range.start.0 > 0 {
+                        if op_range.contains(instr.id) && op_range.start.0 > 0 {
                             operands.push(*op_id);
                         }
                     }
@@ -386,7 +375,7 @@ pub(crate) fn find_disjoint_mutable_values(func: &HirFunction, env: &Environment
                     for op_id in &all_operands {
                         let op_range =
                             &env.identifiers[op_id.0 as usize].mutable_range;
-                        if is_mutable(instr.id, op_range) && op_range.start.0 > 0 {
+                        if op_range.contains(instr.id) && op_range.start.0 > 0 {
                             operands.push(*op_id);
                         }
                     }

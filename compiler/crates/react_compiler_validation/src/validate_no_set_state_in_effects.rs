@@ -17,13 +17,13 @@ use std::collections::{HashMap, HashSet};
 use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, ErrorCategory,
 };
-use react_compiler_hir::dominator::{compute_post_dominator_tree, PostDominator};
+use react_compiler_hir::dominator::{compute_post_dominator_tree, post_dominator_frontier};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     is_ref_value_type, is_set_state_type, is_use_effect_event_type, is_use_effect_hook_type,
     is_use_insertion_effect_hook_type, is_use_layout_effect_hook_type, is_use_ref_type,
     BlockId, HirFunction, Identifier, IdentifierId, InstructionValue, PlaceOrSpread,
-    PropertyLiteral, SourceLocation, Terminal, Type,
+    PropertyLiteral, SourceLocation, Terminal, Type, visitors,
 };
 
 pub fn validate_no_set_state_in_effects(
@@ -258,130 +258,13 @@ fn is_derived_from_ref(
     is_use_ref_type(ty) || is_ref_value_type(ty)
 }
 
-/// Collects all operand IdentifierIds from an instruction value (simplified version
-/// of eachInstructionValueOperand from TS).
-fn collect_operands(value: &InstructionValue, func: &HirFunction) -> Vec<IdentifierId> {
-    let mut operands = Vec::new();
-    match value {
-        InstructionValue::LoadLocal { place, .. }
-        | InstructionValue::LoadContext { place, .. } => {
-            operands.push(place.identifier);
-        }
-        InstructionValue::StoreLocal { value: v, .. }
-        | InstructionValue::StoreContext { value: v, .. } => {
-            operands.push(v.identifier);
-        }
-        InstructionValue::PropertyLoad { object, .. }
-        | InstructionValue::PropertyStore { object, .. }
-        | InstructionValue::ComputedLoad { object, .. }
-        | InstructionValue::ComputedStore { object, .. } => {
-            operands.push(object.identifier);
-        }
-        InstructionValue::CallExpression { callee, args, .. } => {
-            operands.push(callee.identifier);
-            for arg in args {
-                if let PlaceOrSpread::Place(p) = arg {
-                    operands.push(p.identifier);
-                }
-            }
-        }
-        InstructionValue::MethodCall {
-            receiver,
-            property,
-            args,
-            ..
-        } => {
-            operands.push(receiver.identifier);
-            operands.push(property.identifier);
-            for arg in args {
-                if let PlaceOrSpread::Place(p) = arg {
-                    operands.push(p.identifier);
-                }
-            }
-        }
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            operands.push(left.identifier);
-            operands.push(right.identifier);
-        }
-        InstructionValue::UnaryExpression { value: v, .. } => {
-            operands.push(v.identifier);
-        }
-        InstructionValue::Destructure { value: v, .. } => {
-            operands.push(v.identifier);
-        }
-        InstructionValue::FunctionExpression { lowered_func, .. }
-        | InstructionValue::ObjectMethod { lowered_func, .. } => {
-            let inner_func = &func.instructions; // just need context
-            let _ = inner_func;
-            // Context captures are operands
-            let _inner = &lowered_func.func;
-            // We can't easily get context here without the functions array,
-            // but the lvalue is what matters for propagation
-        }
-        _ => {}
-    }
-    operands
-}
-
-// =============================================================================
-// Control dominator analysis (port of ControlDominators.ts)
-// =============================================================================
-
-/// Computes the post-dominator frontier of `target_id`. These are immediate
-/// predecessors of nodes that post-dominate `target_id` from which execution may
-/// not reach `target_id`. Intuitively, these are the earliest blocks from which
-/// execution branches such that it may or may not reach the target block.
-fn post_dominator_frontier(
-    func: &HirFunction,
-    post_dominators: &PostDominator,
-    target_id: BlockId,
-) -> HashSet<BlockId> {
-    let target_post_dominators = post_dominators_of(func, post_dominators, target_id);
-    let mut visited = HashSet::new();
-    let mut frontier = HashSet::new();
-
-    // Iterate over the target's post-dominators plus itself
-    let mut check_blocks: Vec<BlockId> = target_post_dominators.iter().copied().collect();
-    check_blocks.push(target_id);
-
-    for block_id in check_blocks {
-        if !visited.insert(block_id) {
-            continue;
-        }
-        let block = &func.body.blocks[&block_id];
-        for &pred in &block.preds {
-            if !target_post_dominators.contains(&pred) {
-                frontier.insert(pred);
-            }
-        }
-    }
-    frontier
-}
-
-/// Walks up the post-dominator tree to collect all blocks that post-dominate `target_id`.
-fn post_dominators_of(
-    func: &HirFunction,
-    post_dominators: &PostDominator,
-    target_id: BlockId,
-) -> HashSet<BlockId> {
-    let mut result = HashSet::new();
-    let mut visited = HashSet::new();
-    let mut queue = vec![target_id];
-
-    while let Some(current_id) = queue.pop() {
-        if !visited.insert(current_id) {
-            continue;
-        }
-        let block = &func.body.blocks[&current_id];
-        for &pred in &block.preds {
-            let pred_post_dom = post_dominators.get(pred).unwrap_or(pred);
-            if pred_post_dom == target_id || result.contains(&pred_post_dom) {
-                result.insert(pred);
-            }
-            queue.push(pred);
-        }
-    }
-    result
+/// Collects all operand IdentifierIds from an instruction value.
+/// Uses the canonical `each_instruction_value_operand_with_functions` from visitors.
+fn collect_operands(value: &InstructionValue, functions: &[HirFunction]) -> Vec<IdentifierId> {
+    visitors::each_instruction_value_operand_with_functions(value, functions)
+        .into_iter()
+        .map(|p| p.identifier)
+        .collect()
 }
 
 /// Creates a function that checks whether a block is "control-dominated" by
@@ -460,7 +343,7 @@ fn get_set_state_call(
     set_state_functions: &mut HashMap<IdentifierId, SetStateInfo>,
     identifiers: &[Identifier],
     types: &[Type],
-    _functions: &[HirFunction],
+    functions: &[HirFunction],
     enable_allow_set_state_from_refs: bool,
     next_block_id_counter: u32,
 ) -> Result<Option<SetStateInfo>, CompilerDiagnostic> {
@@ -487,7 +370,7 @@ fn get_set_state_call(
             for &instr_id in &block.instructions {
                 let instr = &func.instructions[instr_id.0 as usize];
 
-                let operands = collect_operands(&instr.value, func);
+                let operands = collect_operands(&instr.value, functions);
                 let has_ref_operand = operands.iter().any(|op_id| {
                     is_derived_from_ref(*op_id, &ref_derived_values, identifiers, types)
                 });
@@ -582,7 +465,7 @@ fn get_set_state_call(
 
             // Track ref-derived values through instructions
             if enable_allow_set_state_from_refs {
-                let operands = collect_operands(&instr.value, func);
+                let operands = collect_operands(&instr.value, functions);
                 let has_ref_operand = operands.iter().any(|op_id| {
                     is_derived_from_ref(*op_id, &ref_derived_values, identifiers, types)
                 });

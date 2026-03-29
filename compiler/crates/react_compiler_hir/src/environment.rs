@@ -837,6 +837,30 @@ impl Environment {
             OutputMode::Client | OutputMode::Lint | OutputMode::Ssr => true,
         }
     }
+
+    // =========================================================================
+    // ID-based type helper methods
+    // =========================================================================
+
+    /// Check whether the function type for an identifier has a noAlias signature.
+    /// Looks up the identifier's type and checks its function signature.
+    pub fn has_no_alias_signature(&self, identifier_id: IdentifierId) -> bool {
+        let ty = &self.types[self.identifiers[identifier_id.0 as usize].type_.0 as usize];
+        self.get_function_signature(ty)
+            .ok()
+            .flatten()
+            .map_or(false, |sig| sig.no_alias)
+    }
+
+    /// Get the hook kind for an identifier, if its type represents a hook.
+    /// Looks up the identifier's type and delegates to `get_hook_kind_for_type`.
+    pub fn get_hook_kind_for_id(
+        &self,
+        identifier_id: IdentifierId,
+    ) -> Result<Option<&HookKind>, CompilerDiagnostic> {
+        let ty = &self.types[self.identifiers[identifier_id.0 as usize].type_.0 as usize];
+        self.get_hook_kind_for_type(ty)
+    }
 }
 
 impl Default for Environment {
@@ -856,6 +880,19 @@ pub fn is_hook_name(name: &str) -> bool {
     }
     let fourth_char = name.as_bytes()[3];
     fourth_char.is_ascii_uppercase() || fourth_char.is_ascii_digit()
+}
+
+/// Returns true if the name follows React naming conventions (component or hook).
+/// Components start with an uppercase letter; hooks match `use[A-Z0-9]`.
+pub fn is_react_like_name(name: &str) -> bool {
+    if name.is_empty() {
+        return false;
+    }
+    let first_char = name.as_bytes()[0];
+    if first_char.is_ascii_uppercase() {
+        return true;
+    }
+    is_hook_name(name)
 }
 
 #[cfg(test)]

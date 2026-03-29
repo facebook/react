@@ -18,8 +18,8 @@ use react_compiler_diagnostics::{
 };
 use react_compiler_hir::{
     FunctionId, HirFunction, Identifier, IdentifierId,
-    InstructionValue, ObjectPropertyOrSpread, ParamPattern, Place, PropertyLiteral,
-    Type,
+    InstructionValue, ParamPattern, Place, PropertyLiteral,
+    Type, visitors,
 };
 use react_compiler_hir::visitors::{each_pattern_operand, each_terminal_operand};
 use react_compiler_hir::dominator::compute_unconditional_blocks;
@@ -502,182 +502,16 @@ fn hook_kind_display(kind: &HookKind) -> &'static str {
 }
 
 /// Visit all operands of an instruction value (generic fallback).
+/// Uses the canonical `each_instruction_value_operand` from visitors.
 fn visit_all_operands(
     value: &InstructionValue,
     value_kinds: &HashMap<IdentifierId, Kind>,
     errors_by_loc: &mut IndexMap<SourceLocation, CompilerErrorDetail>,
     env: &mut Environment,
 ) {
-    let mut visit = |place: &Place| {
+    let operands = visitors::each_instruction_value_operand(value, &*env);
+    for place in &operands {
         visit_place(place, value_kinds, errors_by_loc, env);
-    };
-
-    match value {
-        InstructionValue::BinaryExpression { left, right, .. } => {
-            visit(left);
-            visit(right);
-        }
-        InstructionValue::UnaryExpression { value: val, .. } => {
-            visit(val);
-        }
-        InstructionValue::NewExpression { callee, args, .. } => {
-            visit(callee);
-            for arg in args {
-                match arg {
-                    react_compiler_hir::PlaceOrSpread::Place(p) => visit(p),
-                    react_compiler_hir::PlaceOrSpread::Spread(s) => visit(&s.place),
-                }
-            }
-        }
-        InstructionValue::TypeCastExpression { value: val, .. } => {
-            visit(val);
-        }
-        InstructionValue::JsxExpression {
-            tag,
-            props,
-            children,
-            ..
-        } => {
-            if let react_compiler_hir::JsxTag::Place(p) = tag {
-                visit(p);
-            }
-            for attr in props {
-                match attr {
-                    react_compiler_hir::JsxAttribute::SpreadAttribute { argument } => {
-                        visit(argument)
-                    }
-                    react_compiler_hir::JsxAttribute::Attribute { place, .. } => visit(place),
-                }
-            }
-            if let Some(children) = children {
-                for child in children {
-                    visit(child);
-                }
-            }
-        }
-        InstructionValue::ObjectExpression { properties, .. } => {
-            for prop in properties {
-                match prop {
-                    ObjectPropertyOrSpread::Property(p) => {
-                        visit(&p.place);
-                        if let react_compiler_hir::ObjectPropertyKey::Computed { name } = &p.key {
-                            visit(&name);
-                        }
-                    }
-                    ObjectPropertyOrSpread::Spread(s) => visit(&s.place),
-                }
-            }
-        }
-        InstructionValue::ArrayExpression { elements, .. } => {
-            for elem in elements {
-                match elem {
-                    react_compiler_hir::ArrayElement::Place(p) => visit(p),
-                    react_compiler_hir::ArrayElement::Spread(s) => visit(&s.place),
-                    react_compiler_hir::ArrayElement::Hole => {}
-                }
-            }
-        }
-        InstructionValue::JsxFragment { children, .. } => {
-            for child in children {
-                visit(child);
-            }
-        }
-        InstructionValue::PropertyStore {
-            object,
-            value: val,
-            ..
-        } => {
-            visit(object);
-            visit(val);
-        }
-        InstructionValue::PropertyDelete { object, .. } => {
-            visit(object);
-        }
-        InstructionValue::ComputedStore {
-            object,
-            property,
-            value: val,
-            ..
-        } => {
-            visit(object);
-            visit(property);
-            visit(val);
-        }
-        InstructionValue::ComputedDelete {
-            object, property, ..
-        } => {
-            visit(object);
-            visit(property);
-        }
-        InstructionValue::StoreGlobal { value: val, .. } => {
-            visit(val);
-        }
-        InstructionValue::TaggedTemplateExpression { tag, .. } => {
-            visit(tag);
-        }
-        InstructionValue::TemplateLiteral { subexprs, .. } => {
-            for place in subexprs {
-                visit(place);
-            }
-        }
-        InstructionValue::Await { value: val, .. } => {
-            visit(val);
-        }
-        InstructionValue::GetIterator { collection, .. } => {
-            visit(collection);
-        }
-        InstructionValue::IteratorNext {
-            iterator,
-            collection,
-            ..
-        } => {
-            visit(iterator);
-            visit(collection);
-        }
-        InstructionValue::NextPropertyOf { value: val, .. } => {
-            visit(val);
-        }
-        InstructionValue::PrefixUpdate { value: val, .. }
-        | InstructionValue::PostfixUpdate { value: val, .. } => {
-            visit(val);
-        }
-        InstructionValue::FinishMemoize { decl, .. } => {
-            visit(decl);
-        }
-        InstructionValue::StartMemoize { deps, .. } => {
-            if let Some(deps) = deps {
-                for dep in deps {
-                    if let react_compiler_hir::ManualMemoDependencyRoot::NamedLocal {
-                        value, ..
-                    } = &dep.root
-                    {
-                        visit(value);
-                    }
-                }
-            }
-        }
-        // These have no operands or are handled elsewhere
-        InstructionValue::DeclareLocal { .. }
-        | InstructionValue::DeclareContext { .. }
-        | InstructionValue::Primitive { .. }
-        | InstructionValue::JSXText { .. }
-        | InstructionValue::LoadGlobal { .. }
-        | InstructionValue::RegExpLiteral { .. }
-        | InstructionValue::MetaProperty { .. }
-        | InstructionValue::Debugger { .. }
-        | InstructionValue::UnsupportedNode { .. } => {}
-        // These are handled in the main match
-        InstructionValue::LoadLocal { .. }
-        | InstructionValue::LoadContext { .. }
-        | InstructionValue::StoreLocal { .. }
-        | InstructionValue::StoreContext { .. }
-        | InstructionValue::ComputedLoad { .. }
-        | InstructionValue::PropertyLoad { .. }
-        | InstructionValue::CallExpression { .. }
-        | InstructionValue::MethodCall { .. }
-        | InstructionValue::Destructure { .. }
-        | InstructionValue::FunctionExpression { .. }
-        | InstructionValue::ObjectMethod { .. } => {}
     }
 }
 

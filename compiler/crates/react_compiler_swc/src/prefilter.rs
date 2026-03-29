@@ -23,27 +23,7 @@ pub fn has_react_like_functions(module: &Module) -> bool {
     visitor.found
 }
 
-/// Returns true if the name follows React naming conventions (component or hook).
-fn is_react_like_name(name: &str) -> bool {
-    if name.is_empty() {
-        return false;
-    }
-
-    let first_char = name.as_bytes()[0];
-    if first_char.is_ascii_uppercase() {
-        return true;
-    }
-
-    // Check if matches use[A-Z0-9] pattern (hook)
-    if name.len() >= 4 && name.starts_with("use") {
-        let fourth = name.as_bytes()[3];
-        if fourth.is_ascii_uppercase() || fourth.is_ascii_digit() {
-            return true;
-        }
-    }
-
-    false
-}
+use react_compiler_hir::environment::is_react_like_name;
 
 struct ReactLikeVisitor {
     found: bool,

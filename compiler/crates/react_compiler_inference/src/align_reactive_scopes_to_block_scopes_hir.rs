@@ -26,6 +26,9 @@ use std::collections::{HashMap, HashSet};
 
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
+use react_compiler_hir::visitors::{
+    each_instruction_lvalue_ids, each_instruction_value_operand_ids, each_terminal_operand_ids,
+};
 use react_compiler_hir::{
     BlockId, BlockKind, EvaluationOrder, HirFunction, IdentifierId,
     MutableRange, ScopeId, Terminal,
@@ -46,41 +49,6 @@ struct ValueBlockNode {
 /// successors and fallthrough.
 fn all_terminal_block_ids(terminal: &Terminal) -> Vec<BlockId> {
     visitors::each_terminal_all_successors(terminal)
-}
-
-// =============================================================================
-// Helper: collect lvalue IdentifierIds from an instruction
-// =============================================================================
-
-fn each_instruction_lvalue_ids(
-    instr: &react_compiler_hir::Instruction,
-) -> Vec<IdentifierId> {
-    visitors::each_instruction_lvalue(instr)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-// =============================================================================
-// Helper: collect operand IdentifierIds from an instruction value
-// =============================================================================
-
-fn each_instruction_value_operand_ids(
-    value: &react_compiler_hir::InstructionValue,
-    env: &Environment,
-) -> Vec<IdentifierId> {
-    visitors::each_instruction_value_operand(value, env)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
-}
-
-/// Collects terminal operand IdentifierIds.
-fn each_terminal_operand_ids(terminal: &Terminal) -> Vec<IdentifierId> {
-    visitors::each_terminal_operand(terminal)
-        .into_iter()
-        .map(|p| p.identifier)
-        .collect()
 }
 
 // =============================================================================

@@ -157,7 +157,7 @@ fn collect_promotable_value(
     match value {
         ReactiveValue::Instruction(instr_value) => {
             // Visit operands
-            for place in crate::visitors::each_instruction_value_operand_public(instr_value, env) {
+            for place in react_compiler_hir::visitors::each_instruction_value_operand(instr_value, env) {
                 collect_promotable_place(&place, state, active_scopes, env);
             }
             // Check for JSX tag
@@ -520,7 +520,7 @@ fn promote_interposed_instruction(
                     }
 
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
 
@@ -553,7 +553,7 @@ fn promote_interposed_instruction(
                         consts.insert(lvalue.place.identifier);
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
@@ -569,7 +569,7 @@ fn promote_interposed_instruction(
                         }
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
@@ -586,7 +586,7 @@ fn promote_interposed_instruction(
                         }
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
@@ -595,13 +595,13 @@ fn promote_interposed_instruction(
                         globals.insert(lvalue.identifier);
                     }
                     // Visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
                 _ => {
                     // Default: visit operands
-                    for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
@@ -638,7 +638,7 @@ fn promote_interposed_value(
 ) {
     match value {
         ReactiveValue::Instruction(iv) => {
-            for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+            for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                 promote_interposed_place(&place, state, inter_state, consts, env);
             }
         }
@@ -843,7 +843,7 @@ fn promote_all_instances_value(
 ) {
     match value {
         ReactiveValue::Instruction(iv) => {
-            for place in crate::visitors::each_instruction_value_operand_public(iv, env) {
+            for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
                 promote_all_instances_place(&place, state, env);
             }
             // Visit inner functions

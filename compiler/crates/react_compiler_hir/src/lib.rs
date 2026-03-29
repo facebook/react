@@ -4,6 +4,7 @@ pub mod environment;
 pub mod environment_config;
 pub mod globals;
 pub mod object_shape;
+pub mod print;
 pub mod reactive;
 pub mod type_config;
 pub mod visitors;
@@ -948,6 +949,14 @@ pub struct MutableRange {
     pub end: EvaluationOrder,
 }
 
+impl MutableRange {
+    /// Returns true if the given evaluation order falls within this mutable range.
+    /// Corresponds to TS `inRange({id}, range)` / `isMutable(instr, place)`.
+    pub fn contains(&self, id: EvaluationOrder) -> bool {
+        id >= self.start && id < self.end
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum IdentifierName {
     Named(String),
@@ -980,6 +989,22 @@ pub enum Effect {
     Mutate,
     #[serde(rename = "store")]
     Store,
+}
+
+impl Effect {
+    /// Returns true if this effect represents a mutable operation.
+    /// Mutable effects are: Capture, Store, ConditionallyMutate,
+    /// ConditionallyMutateIterator, and Mutate.
+    pub fn is_mutable(&self) -> bool {
+        matches!(
+            self,
+            Effect::Capture
+                | Effect::Store
+                | Effect::ConditionallyMutate
+                | Effect::ConditionallyMutateIterator
+                | Effect::Mutate
+        )
+    }
 }
 
 impl std::fmt::Display for Effect {
@@ -1418,7 +1443,7 @@ pub struct AliasingSignature {
 
 use crate::object_shape::{
     BUILT_IN_ARRAY_ID, BUILT_IN_JSX_ID, BUILT_IN_MAP_ID, BUILT_IN_REF_VALUE_ID,
-    BUILT_IN_SET_ID, BUILT_IN_USE_REF_ID,
+    BUILT_IN_SET_ID, BUILT_IN_USE_OPERATOR_ID, BUILT_IN_USE_REF_ID,
 };
 
 /// Returns true if the type (looked up via identifier) is primitive.
@@ -1495,4 +1520,13 @@ pub fn is_use_effect_event_type(ty: &Type) -> bool {
 pub fn is_ref_or_ref_like_mutable_type(ty: &Type) -> bool {
     matches!(ty, Type::Object { shape_id: Some(id) }
         if id == object_shape::BUILT_IN_USE_REF_ID || id == object_shape::REANIMATED_SHARED_VALUE_ID)
+}
+
+/// Returns true if the type is the `use()` operator (React.use).
+pub fn is_use_operator_type(ty: &Type) -> bool {
+    matches!(
+        ty,
+        Type::Function { shape_id: Some(id), .. }
+            if id == BUILT_IN_USE_OPERATOR_ID
+    )
 }

@@ -763,12 +763,3 @@ fn terminal_id(terminal: &ReactiveTerminal) -> EvaluationOrder {
     }
 }
 
-// =============================================================================
-// Helper: iterate operands of an InstructionValue (readonly)
-// =============================================================================
-
-///// Public wrapper that delegates to `react_compiler_hir::visitors::each_instruction_value_operand`.
-/// Includes all operands including FunctionExpression/ObjectMethod context.
-pub fn each_instruction_value_operand_public(value: &react_compiler_hir::InstructionValue, env: &Environment) -> Vec<Place> {
-    react_compiler_hir::visitors::each_instruction_value_operand(value, env)
-}
