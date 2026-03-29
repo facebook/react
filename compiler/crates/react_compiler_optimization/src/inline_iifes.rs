@@ -225,6 +225,14 @@ pub fn inline_immediately_invoked_function_expressions(
                         // Multi-return path: uses LabelTerminal
                         let result = call_lvalue.clone();
 
+                        // Set block terminal to Label
+                        func.body.blocks.get_mut(&block_id).unwrap().terminal = Terminal::Label {
+                            block: inner_entry,
+                            id: EvaluationOrder(0),
+                            fallthrough: continuation_block_id,
+                            loc: block_terminal_loc,
+                        };
+
                         // Declare the IIFE temporary
                         declare_temporary(env, func, block_id, &result);
 
@@ -233,14 +241,6 @@ pub fn inline_immediately_invoked_function_expressions(
                         if env.identifiers[identifier_id.0 as usize].name.is_none() {
                             promote_temporary(env, identifier_id);
                         }
-
-                        // Set block terminal to Label
-                        func.body.blocks.get_mut(&block_id).unwrap().terminal = Terminal::Label {
-                            block: inner_entry,
-                            id: EvaluationOrder(0),
-                            fallthrough: continuation_block_id,
-                            loc: block_terminal_loc,
-                        };
 
                         // Take blocks and instructions from inner function
                         let inner_func = &mut env.functions[inner_func_id.0 as usize];
@@ -281,11 +281,7 @@ pub fn inline_immediately_invoked_function_expressions(
                 }
                 _ => {
                     // Any other use of a function expression means it isn't an IIFE
-                    let operand_ids: Vec<IdentifierId> = visitors::each_instruction_value_operand(&instr.value, env)
-                        .into_iter()
-                        .map(|p| p.identifier)
-                        .collect();
-                    for id in operand_ids {
+                    for id in visitors::each_instruction_value_operand_ids(&instr.value, env) {
                         functions.remove(&id);
                     }
                 }
@@ -348,7 +344,6 @@ fn rewrite_block(
 ) {
     if let Terminal::Return {
         value,
-        id: ret_id,
         loc: ret_loc,
         ..
     } = &block.terminal
@@ -373,11 +368,10 @@ fn rewrite_block(
         instructions.push(store_instr);
         block.instructions.push(store_instr_id);
 
-        let ret_id = *ret_id;
         let ret_loc = ret_loc.clone();
         block.terminal = Terminal::Goto {
             block: return_target,
-            id: ret_id,
+            id: EvaluationOrder(0),
             variant: GotoVariant::Break,
             loc: ret_loc,
         };
