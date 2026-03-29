@@ -40,7 +40,7 @@ function useHook(t0) {
   let t2;
   if ($[2] !== x) {
     t2 = {
-      getValue() {
+      getValue: function () {
         return x;
       },
     };

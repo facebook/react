@@ -56,7 +56,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":126},"end":{"line":16,"column":1,"index":378},"filename":"derived-state-from-prop-setter-call-outside-effect-no-error.ts"},"fnName":"Component","memoSlots":6,"memoBlocks":3,"memoValues":4,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":129},"end":{"line":16,"column":1,"index":393},"filename":"derived-state-from-prop-setter-call-outside-effect-no-error.ts"},"fnName":"Component","memoSlots":6,"memoBlocks":3,"memoValues":4,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

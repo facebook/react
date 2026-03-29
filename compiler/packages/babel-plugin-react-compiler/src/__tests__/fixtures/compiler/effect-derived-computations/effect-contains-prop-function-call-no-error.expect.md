@@ -48,8 +48,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":126},"end":{"line":12,"column":1,"index":325},"filename":"effect-contains-prop-function-call-no-error.ts"},"fnName":"Component","memoSlots":7,"memoBlocks":3,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":16,"column":41,"index":421},"end":{"line":16,"column":49,"index":429},"filename":"effect-contains-prop-function-call-no-error.ts"},"fnName":null,"memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":0,"index":129},"end":{"line":12,"column":1,"index":336},"filename":"effect-contains-prop-function-call-no-error.ts"},"fnName":"Component","memoSlots":7,"memoBlocks":3,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":16,"column":41,"index":436},"end":{"line":16,"column":49,"index":444},"filename":"effect-contains-prop-function-call-no-error.ts"},"fnName":null,"memoSlots":0,"memoBlocks":0,"memoValues":0,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

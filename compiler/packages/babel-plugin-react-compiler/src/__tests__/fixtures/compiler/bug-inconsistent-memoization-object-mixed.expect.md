@@ -2,21 +2,23 @@
 ## Input
 
 ```javascript
-import {createHookWrapper} from 'shared-runtime';
-
-function useHook({a, b, c}) {
+function Component({a, b, c}) {
   return {
-    x: [a],
-    y() {
-      return [b];
+    test1() {
+      console.log(a);
     },
-    z: {c},
+    test2: () => {
+      console.log(b);
+    },
+    test3: function () {
+      console.log(c);
+    },
   };
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: createHookWrapper(useHook),
-  params: [{a: 1, b: 2, c: 2}],
+  fn: Component,
+  params: [{a: 1, b: 2, c: 3}],
 };
 
 ```
@@ -25,14 +27,14 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { createHookWrapper } from "shared-runtime";
-
-function useHook(t0) {
+function Component(t0) {
   const $ = _c(10);
   const { a, b, c } = t0;
   let t1;
   if ($[0] !== a) {
-    t1 = [a];
+    t1 = function () {
+      console.log(a);
+    };
     $[0] = a;
     $[1] = t1;
   } else {
@@ -40,8 +42,8 @@ function useHook(t0) {
   }
   let t2;
   if ($[2] !== b) {
-    t2 = function () {
-      return [b];
+    t2 = () => {
+      console.log(b);
     };
     $[2] = b;
     $[3] = t2;
@@ -50,7 +52,9 @@ function useHook(t0) {
   }
   let t3;
   if ($[4] !== c) {
-    t3 = { c };
+    t3 = function () {
+      console.log(c);
+    };
     $[4] = c;
     $[5] = t3;
   } else {
@@ -58,7 +62,7 @@ function useHook(t0) {
   }
   let t4;
   if ($[6] !== t1 || $[7] !== t2 || $[8] !== t3) {
-    t4 = { x: t1, y: t2, z: t3 };
+    t4 = { test1: t1, test2: t2, test3: t3 };
     $[6] = t1;
     $[7] = t2;
     $[8] = t3;
@@ -70,11 +74,11 @@ function useHook(t0) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: createHookWrapper(useHook),
-  params: [{ a: 1, b: 2, c: 2 }],
+  fn: Component,
+  params: [{ a: 1, b: 2, c: 3 }],
 };
 
 ```
       
 ### Eval output
-(kind: ok) <div>{"result":{"x":[1],"y":{"kind":"Function","result":[2]},"z":{"c":2}},"shouldInvokeFns":true}</div>
+(kind: ok) {"test1":"[[ function params=0 ]]","test2":"[[ function params=0 ]]","test3":"[[ function params=0 ]]"}

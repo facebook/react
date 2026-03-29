@@ -32,7 +32,7 @@ function Component({ setParentState, prop }) {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":3,"column":0,"index":124},"end":{"line":9,"column":1,"index":259},"filename":"from-props-setstate-in-effect-no-error.ts"},"fnName":"Component","memoSlots":7,"memoBlocks":3,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":3,"column":0,"index":126},"end":{"line":9,"column":1,"index":267},"filename":"from-props-setstate-in-effect-no-error.ts"},"fnName":"Component","memoSlots":7,"memoBlocks":3,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

@@ -63,12 +63,12 @@ function unsafeUpdateConst() {
 function Component() {
   const $ = _c(3);
   if (
-    $[0] !== "36c02976ff5bc474b7510128ea8220ffe31d92cd5d245148ed0a43146d18ded4"
+    $[0] !== "70c040dc12b0c47e62786ab36ed1595f8955242e12054882091d212878ec20a3"
   ) {
     for (let $i = 0; $i < 3; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
-    $[0] = "36c02976ff5bc474b7510128ea8220ffe31d92cd5d245148ed0a43146d18ded4";
+    $[0] = "70c040dc12b0c47e62786ab36ed1595f8955242e12054882091d212878ec20a3";
   }
   useState(_temp);
 

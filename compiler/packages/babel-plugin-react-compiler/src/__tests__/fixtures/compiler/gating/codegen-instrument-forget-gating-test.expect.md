@@ -43,7 +43,7 @@ const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";
       if (DEV && shouldInstrument)
-        useRenderCounter("Bar", "/codegen-instrument-forget-gating-test.ts");
+        useRenderCounter("Bar", "C:\\codegen-instrument-forget-gating-test.ts");
       const $ = _c(2);
       let t0;
       if ($[0] !== props.bar) {
@@ -67,7 +67,7 @@ const Foo = isForgetEnabled_Fixtures()
   ? function Foo(props) {
       "use forget";
       if (DEV && shouldInstrument)
-        useRenderCounter("Foo", "/codegen-instrument-forget-gating-test.ts");
+        useRenderCounter("Foo", "C:\\codegen-instrument-forget-gating-test.ts");
       const $ = _c(3);
 
       if (props.bar < 0) {

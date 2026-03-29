@@ -52,7 +52,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":15,"index":149},"end":{"line":14,"column":1,"index":347},"filename":"derived-state-from-ref-and-state-no-error.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":4,"column":15,"index":152},"end":{"line":14,"column":1,"index":360},"filename":"derived-state-from-ref-and-state-no-error.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"memoValues":3,"prunedMemoBlocks":0,"prunedMemoValues":0}
 ```
       
 ### Eval output

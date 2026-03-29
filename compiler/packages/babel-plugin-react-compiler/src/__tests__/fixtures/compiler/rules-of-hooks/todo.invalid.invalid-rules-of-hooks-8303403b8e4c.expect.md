@@ -27,3 +27,5 @@ class ClassComponentWithHook extends React.Component {
 
 ```
       
+### Eval output
+(kind: exception) Fixture not implemented
