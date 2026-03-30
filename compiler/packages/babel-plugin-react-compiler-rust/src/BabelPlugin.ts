@@ -6,6 +6,7 @@
  */
 
 import type * as BabelCore from '@babel/core';
+import {codeFrameColumns} from '@babel/code-frame';
 import {hasReactLikeFunctions} from './prefilter';
 import {compileWithRust, type BindingRenameInfo} from './bridge';
 import {extractScopeInfo} from './scope';
@@ -14,11 +15,19 @@ import {resolveOptions, type PluginOptions} from './options';
 export default function BabelPluginReactCompilerRust(
   _babel: typeof BabelCore,
 ): BabelCore.PluginObj {
+  let compiledProgram = false;
   return {
     name: 'react-compiler-rust',
     visitor: {
       Program: {
         enter(prog, pass): void {
+          // Guard against re-entry: replaceWith() below causes Babel
+          // to re-traverse the new Program, which would re-trigger this
+          // handler. Skip if we've already compiled.
+          if (compiledProgram) {
+            return;
+          }
+          compiledProgram = true;
           const filename = pass.filename ?? null;
 
           // Step 1: Resolve options (pre-resolve JS-only values)
@@ -126,8 +135,14 @@ export default function BabelPluginReactCompilerRust(
 
           // Step 7: Handle result
           if (result.kind === 'error') {
-            // panicThreshold triggered — throw
-            const err = new Error(result.error.reason);
+            // panicThreshold triggered — throw with formatted message
+            // matching the TS compiler's CompilerError.printErrorMessage()
+            const source = pass.file.code ?? '';
+            const message = formatCompilerError(
+              result.error as any,
+              source,
+            );
+            const err = new Error(message);
             (err as any).details = result.error.details;
             throw err;
           }
@@ -155,9 +170,14 @@ export default function BabelPluginReactCompilerRust(
             // all duplicates with references to it.
             deduplicateComments(newProgram);
 
-            pass.file.ast.program = newProgram;
+            // Use Babel's replaceWith() API so that subsequent plugins
+            // (babel-plugin-fbt, babel-plugin-fbt-runtime, babel-plugin-idx)
+            // properly traverse the new AST. Direct assignment to
+            // pass.file.ast.program bypasses Babel's traversal tracking,
+            // and prog.skip() would prevent all merged plugin visitors from
+            // running on the new children.
             pass.file.ast.comments = [];
-            prog.skip(); // Don't re-traverse
+            prog.replaceWith(newProgram);
           }
         },
       },
@@ -266,4 +286,150 @@ function deduplicateComments(node: any): void {
   }
 
   visit(node);
+}
+
+const CODEFRAME_LINES_ABOVE = 2;
+const CODEFRAME_LINES_BELOW = 3;
+
+/**
+ * Map a category string from the Rust compiler to the heading used
+ * by the TS compiler's printErrorSummary().
+ */
+function categoryToHeading(category: string): string {
+  switch (category) {
+    case 'Invariant':
+      return 'Invariant';
+    case 'Todo':
+    case 'UnsupportedSyntax':
+      return 'Todo';
+    case 'EffectDependencies':
+    case 'IncompatibleLibrary':
+    case 'PreserveManualMemo':
+      return 'Compilation Skipped';
+    default:
+      return 'Error';
+  }
+}
+
+/**
+ * Format a code frame from source code and a location, matching
+ * the TS compiler's printCodeFrame().
+ */
+function printCodeFrame(
+  source: string,
+  loc: {start: {line: number; column: number}; end: {line: number; column: number}},
+  message: string,
+): string {
+  try {
+    return codeFrameColumns(
+      source,
+      {
+        start: {line: loc.start.line, column: loc.start.column + 1},
+        end: {line: loc.end.line, column: loc.end.column + 1},
+      },
+      {
+        message,
+        linesAbove: CODEFRAME_LINES_ABOVE,
+        linesBelow: CODEFRAME_LINES_BELOW,
+      },
+    );
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Format a CompilerErrorInfo into a message string matching the TS
+ * compiler's CompilerError.printErrorMessage() format.
+ *
+ * For CompilerDiagnostic (has `details` sub-items):
+ *   "Heading: reason\n\ndescription.\n\nfilename:line:col\ncodeFrame"
+ *
+ * For legacy CompilerErrorDetail (has `loc` directly):
+ *   "Heading: reason\n\ndescription.\n\nfilename:line:col\ncodeFrame"
+ */
+function formatCompilerError(
+  errorInfo: {
+    reason: string;
+    description?: string;
+    details: Array<{
+      category: string;
+      reason: string;
+      description?: string | null;
+      severity: string;
+      details?: Array<{kind: string; loc?: any; message?: string}> | null;
+      loc?: any;
+    }>;
+  },
+  source: string,
+): string {
+  const detailMessages = errorInfo.details.map(detail => {
+    const heading = categoryToHeading(detail.category);
+    const buffer: string[] = [`${heading}: ${detail.reason}`];
+
+    if (detail.description != null) {
+      // Check if this detail has sub-items (CompilerDiagnostic style)
+      if (detail.details != null && detail.details.length > 0) {
+        buffer.push('\n\n', `${detail.description}.`);
+        for (const item of detail.details) {
+          if (item.kind === 'error' && item.loc != null) {
+            const frame = printCodeFrame(source, item.loc, item.message ?? '');
+            buffer.push('\n\n');
+            if (item.loc.filename != null) {
+              buffer.push(`${item.loc.filename}:${item.loc.start.line}:${item.loc.start.column}\n`);
+            }
+            buffer.push(frame);
+          } else if (item.kind === 'hint') {
+            buffer.push('\n\n');
+            buffer.push(item.message ?? '');
+          }
+        }
+      } else {
+        // Legacy CompilerErrorDetail style
+        buffer.push(`\n\n${detail.description}.`);
+        if (detail.loc != null) {
+          const frame = printCodeFrame(source, detail.loc, detail.reason);
+          buffer.push('\n\n');
+          if (detail.loc.filename != null) {
+            buffer.push(`${detail.loc.filename}:${detail.loc.start.line}:${detail.loc.start.column}\n`);
+          }
+          buffer.push(frame);
+          buffer.push('\n\n');
+        }
+      }
+    } else {
+      // No description — check for sub-items or loc
+      if (detail.details != null && detail.details.length > 0) {
+        for (const item of detail.details) {
+          if (item.kind === 'error' && item.loc != null) {
+            const frame = printCodeFrame(source, item.loc, item.message ?? '');
+            buffer.push('\n\n');
+            if (item.loc.filename != null) {
+              buffer.push(`${item.loc.filename}:${item.loc.start.line}:${item.loc.start.column}\n`);
+            }
+            buffer.push(frame);
+          } else if (item.kind === 'hint') {
+            buffer.push('\n\n');
+            buffer.push(item.message ?? '');
+          }
+        }
+      } else if (detail.loc != null) {
+        const frame = printCodeFrame(source, detail.loc, detail.reason);
+        buffer.push('\n\n');
+        if (detail.loc.filename != null) {
+          buffer.push(`${detail.loc.filename}:${detail.loc.start.line}:${detail.loc.start.column}\n`);
+        }
+        buffer.push(frame);
+        buffer.push('\n\n');
+      }
+    }
+
+    return buffer.join('');
+  });
+
+  const count = errorInfo.details.length;
+  return (
+    `Found ${count} error${count === 1 ? '' : 's'}:\n\n` +
+    detailMessages.map(m => m.trim()).join('\n\n')
+  );
 }

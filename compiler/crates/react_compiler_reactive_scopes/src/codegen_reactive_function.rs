@@ -2251,9 +2251,9 @@ fn codegen_base_instruction_value(
             };
             Ok(ExpressionOrJsxText::Expression(wrapped))
         }
-        InstructionValue::JSXText { value, .. } => {
+        InstructionValue::JSXText { value, loc } => {
             Ok(ExpressionOrJsxText::JsxText(JSXText {
-                base: BaseNode::typed("JSXText"),
+                base: base_node_with_loc("JSXText", *loc),
                 value: value.clone(),
             }))
         }
@@ -2555,9 +2555,9 @@ fn codegen_jsx_expression(
     tag: &JsxTag,
     props: &[JsxAttribute],
     children: &Option<Vec<Place>>,
-    _loc: Option<DiagSourceLocation>,
-    _opening_loc: Option<DiagSourceLocation>,
-    _closing_loc: Option<DiagSourceLocation>,
+    loc: Option<DiagSourceLocation>,
+    opening_loc: Option<DiagSourceLocation>,
+    closing_loc: Option<DiagSourceLocation>,
 ) -> Result<ExpressionOrJsxText, CompilerError> {
     let mut attributes: Vec<JSXAttributeItem> = Vec::new();
     for attr in props {
@@ -2609,9 +2609,9 @@ fn codegen_jsx_expression(
     let is_self_closing = children.is_none();
 
     let element = JSXElement {
-        base: BaseNode::typed("JSXElement"),
+        base: base_node_with_loc("JSXElement", loc),
         opening_element: JSXOpeningElement {
-            base: BaseNode::typed("JSXOpeningElement"),
+            base: base_node_with_loc("JSXOpeningElement", opening_loc),
             name: jsx_tag.clone(),
             attributes,
             self_closing: is_self_closing,
@@ -2619,7 +2619,7 @@ fn codegen_jsx_expression(
         },
         closing_element: if !is_self_closing {
             Some(JSXClosingElement {
-                base: BaseNode::typed("JSXClosingElement"),
+                base: base_node_with_loc("JSXClosingElement", closing_loc),
                 name: jsx_tag,
             })
         } else {
@@ -2726,27 +2726,25 @@ fn codegen_jsx_attribute(
 }
 
 fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, CompilerError> {
+    let loc = place.loc;
     let value = codegen_place(cx, place)?;
     match value {
-        ExpressionOrJsxText::JsxText(ref text) => {
+        ExpressionOrJsxText::JsxText(text) => {
             if text
                 .value
                 .contains(JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN)
             {
                 Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
-                    base: BaseNode::typed("JSXExpressionContainer"),
+                    base: base_node_with_loc("JSXExpressionContainer", loc),
                     expression: JSXExpressionContainerExpr::Expression(Box::new(
                         Expression::StringLiteral(StringLiteral {
-                            base: BaseNode::typed("StringLiteral"),
+                            base: base_node_with_loc("StringLiteral", loc),
                             value: text.value.clone(),
                         }),
                     )),
                 }))
             } else {
-                Ok(JSXChild::JSXText(JSXText {
-                    base: BaseNode::typed("JSXText"),
-                    value: text.value.clone(),
-                }))
+                Ok(JSXChild::JSXText(text))
             }
         }
         ExpressionOrJsxText::Expression(Expression::JSXElement(elem)) => {
@@ -2757,7 +2755,7 @@ fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, Comp
         }
         ExpressionOrJsxText::Expression(expr) => {
             Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
-                base: BaseNode::typed("JSXExpressionContainer"),
+                base: base_node_with_loc("JSXExpressionContainer", loc),
                 expression: JSXExpressionContainerExpr::Expression(Box::new(expr)),
             }))
         }
@@ -2768,6 +2766,7 @@ fn codegen_jsx_fbt_child_element(
     cx: &mut Context,
     place: &Place,
 ) -> Result<JSXChild, CompilerError> {
+    let loc = place.loc;
     let value = codegen_place(cx, place)?;
     match value {
         ExpressionOrJsxText::JsxText(text) => Ok(JSXChild::JSXText(text)),
@@ -2776,7 +2775,7 @@ fn codegen_jsx_fbt_child_element(
         }
         ExpressionOrJsxText::Expression(expr) => {
             Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
-                base: BaseNode::typed("JSXExpressionContainer"),
+                base: base_node_with_loc("JSXExpressionContainer", loc),
                 expression: JSXExpressionContainerExpr::Expression(Box::new(expr)),
             }))
         }
@@ -2785,11 +2784,11 @@ fn codegen_jsx_fbt_child_element(
 
 fn expression_to_jsx_tag(
     expr: &Expression,
-    _loc: Option<DiagSourceLocation>,
+    loc: Option<DiagSourceLocation>,
 ) -> Result<JSXElementName, CompilerError> {
     match expr {
         Expression::Identifier(ident) => Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
-            base: BaseNode::typed("JSXIdentifier"),
+            base: base_node_with_loc("JSXIdentifier", loc),
             name: ident.name.clone(),
         })),
         Expression::MemberExpression(me) => {
@@ -2801,19 +2800,19 @@ fn expression_to_jsx_tag(
             if s.value.contains(':') {
                 let parts: Vec<&str> = s.value.splitn(2, ':').collect();
                 Ok(JSXElementName::JSXNamespacedName(JSXNamespacedName {
-                    base: BaseNode::typed("JSXNamespacedName"),
+                    base: base_node_with_loc("JSXNamespacedName", loc),
                     namespace: JSXIdentifier {
-                        base: BaseNode::typed("JSXIdentifier"),
+                        base: base_node_with_loc("JSXIdentifier", loc),
                         name: parts[0].to_string(),
                     },
                     name: JSXIdentifier {
-                        base: BaseNode::typed("JSXIdentifier"),
+                        base: base_node_with_loc("JSXIdentifier", loc),
                         name: parts[1].to_string(),
                     },
                 }))
             } else {
                 Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
-                    base: BaseNode::typed("JSXIdentifier"),
+                    base: base_node_with_loc("JSXIdentifier", loc),
                     name: s.value.clone(),
                 }))
             }

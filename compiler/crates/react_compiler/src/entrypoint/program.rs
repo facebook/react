@@ -1086,7 +1086,8 @@ fn handle_error(
     });
 
     if should_panic || is_config_error {
-        let error_info = compiler_error_to_info(err, context.filename.as_deref());
+        let source_fn = context.source_filename();
+        let error_info = compiler_error_to_info(err, source_fn.as_deref());
         Some(CompileResult::Error {
             error: error_info,
             events: context.events.clone(),
