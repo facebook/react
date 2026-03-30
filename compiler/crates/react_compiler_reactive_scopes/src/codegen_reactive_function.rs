@@ -2696,8 +2696,16 @@ fn codegen_jsx_attribute(
                             },
                         ))
                     } else {
+                        // Preserve loc from the inner StringLiteral (or fall back to
+                        // the place's loc) so downstream plugins (e.g., babel-plugin-fbt)
+                        // can read loc on attribute values.
+                        let base = if s.base.loc.is_some() {
+                            s.base.clone()
+                        } else {
+                            base_node_with_loc("StringLiteral", place.loc)
+                        };
                         Some(JSXAttributeValue::StringLiteral(StringLiteral {
-                            base: BaseNode::typed("StringLiteral"),
+                            base,
                             value: s.value.clone(),
                         }))
                     }
@@ -3270,38 +3278,38 @@ fn symbol_for(name: &str) -> Expression {
 
 fn codegen_primitive_value(
     value: &PrimitiveValue,
-    _loc: Option<DiagSourceLocation>,
+    loc: Option<DiagSourceLocation>,
 ) -> Expression {
     match value {
         PrimitiveValue::Number(n) => {
             let f = n.value();
             if f < 0.0 {
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
-                    base: BaseNode::typed("UnaryExpression"),
+                    base: base_node_with_loc("UnaryExpression", loc),
                     operator: AstUnaryOperator::Neg,
                     prefix: true,
                     argument: Box::new(Expression::NumericLiteral(NumericLiteral {
-                        base: BaseNode::typed("NumericLiteral"),
+                        base: base_node_with_loc("NumericLiteral", loc),
                         value: -f,
                     })),
                 })
             } else {
                 Expression::NumericLiteral(NumericLiteral {
-                    base: BaseNode::typed("NumericLiteral"),
+                    base: base_node_with_loc("NumericLiteral", loc),
                     value: f,
                 })
             }
         }
         PrimitiveValue::Boolean(b) => Expression::BooleanLiteral(BooleanLiteral {
-            base: BaseNode::typed("BooleanLiteral"),
+            base: base_node_with_loc("BooleanLiteral", loc),
             value: *b,
         }),
         PrimitiveValue::String(s) => Expression::StringLiteral(StringLiteral {
-            base: BaseNode::typed("StringLiteral"),
+            base: base_node_with_loc("StringLiteral", loc),
             value: s.clone(),
         }),
         PrimitiveValue::Null => Expression::NullLiteral(NullLiteral {
-            base: BaseNode::typed("NullLiteral"),
+            base: base_node_with_loc("NullLiteral", loc),
         }),
         PrimitiveValue::Undefined => Expression::Identifier(make_identifier("undefined")),
     }

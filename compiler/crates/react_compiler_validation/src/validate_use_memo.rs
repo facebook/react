@@ -36,7 +36,7 @@ fn validate_use_memo_impl(
     let mut use_memos: HashSet<IdentifierId> = HashSet::new();
     let mut react: HashSet<IdentifierId> = HashSet::new();
     let mut func_exprs: HashMap<IdentifierId, FuncExprInfo> = HashMap::new();
-    let mut unused_use_memos: HashMap<IdentifierId, SourceLocation> = HashMap::new();
+    let mut unused_use_memos: HashMap<IdentifierId, (SourceLocation, Option<String>)> = HashMap::new();
 
     for (_block_id, block) in &func.body.blocks {
         for &instr_id in &block.instructions {
@@ -124,7 +124,7 @@ fn validate_use_memo_impl(
 
     // Report unused useMemo results
     if !unused_use_memos.is_empty() {
-        for loc in unused_use_memos.values() {
+        for (loc, ident_name) in unused_use_memos.values() {
             void_memo_errors.push_diagnostic(
                 CompilerDiagnostic::new(
                     ErrorCategory::VoidUseMemo,
@@ -137,7 +137,7 @@ fn validate_use_memo_impl(
                 .with_detail(CompilerDiagnosticDetail::Error {
                     loc: Some(*loc),
                     message: Some("useMemo() result is unused".to_string()),
-                    identifier_name: None,
+                    identifier_name: ident_name.clone(),
                 }),
             );
         }
@@ -153,7 +153,7 @@ fn handle_possible_use_memo_call(
     void_memo_errors: &mut CompilerError,
     use_memos: &HashSet<IdentifierId>,
     func_exprs: &HashMap<IdentifierId, FuncExprInfo>,
-    unused_use_memos: &mut HashMap<IdentifierId, SourceLocation>,
+    unused_use_memos: &mut HashMap<IdentifierId, (SourceLocation, Option<String>)>,
     callee: &Place,
     args: &[PlaceOrSpread],
     lvalue: &Place,
@@ -240,7 +240,9 @@ fn handle_possible_use_memo_call(
         );
     } else if validate_no_void_use_memo {
         if let Some(callee_loc) = callee.loc {
-            unused_use_memos.insert(lvalue.identifier, callee_loc);
+            // The callee is always useMemo/React.useMemo since we checked is_use_memo above.
+            // The identifierName in Babel's AST SourceLocation is "useMemo".
+            unused_use_memos.insert(lvalue.identifier, (callee_loc, Some("useMemo".to_string())));
         }
     }
 }

@@ -145,6 +145,7 @@ pub fn validate_no_set_state_in_effects(
 #[derive(Debug, Clone)]
 struct SetStateInfo {
     loc: Option<SourceLocation>,
+    identifier_name: Option<String>,
 }
 
 fn is_set_state_type_by_id(
@@ -184,7 +185,7 @@ fn push_error(errors: &mut CompilerError, info: &SetStateInfo, enable_verbose: b
                 message: Some(
                     "Avoid calling setState() directly within an effect".to_string(),
                 ),
-                identifier_name: None,
+                identifier_name: info.identifier_name.clone(),
             }),
         );
     } else {
@@ -206,7 +207,7 @@ fn push_error(errors: &mut CompilerError, info: &SetStateInfo, enable_verbose: b
                 message: Some(
                     "Avoid calling setState() directly within an effect".to_string(),
                 ),
-                identifier_name: None,
+                identifier_name: info.identifier_name.clone(),
             }),
         );
     }
@@ -537,7 +538,11 @@ fn get_set_state_call(
                                 continue;
                             }
                         }
-                        return Ok(Some(SetStateInfo { loc: callee.loc }));
+                        let callee_name = identifiers[callee.identifier.0 as usize]
+                            .name
+                            .as_ref()
+                            .map(|n| n.value().to_string());
+                        return Ok(Some(SetStateInfo { loc: callee.loc, identifier_name: callee_name }));
                     }
                 }
                 _ => {}

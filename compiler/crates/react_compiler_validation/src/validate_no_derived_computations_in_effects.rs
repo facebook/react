@@ -808,6 +808,7 @@ fn validate_effect(
     struct DerivedSetStateCall {
         callee_loc: Option<SourceLocation>,
         callee_id: IdentifierId,
+        callee_identifier_name: Option<String>,
         source_ids: indexmap::IndexSet<IdentifierId>,
     }
 
@@ -901,9 +902,14 @@ fn validate_effect(
                             let arg_metadata =
                                 context.derivation_cache.cache.get(&arg0.identifier);
                             if let Some(am) = arg_metadata {
-                                effect_derived_set_state_calls.push(DerivedSetStateCall {
+                                let callee_ident_name = identifiers[callee.identifier.0 as usize]
+                                .name
+                                .as_ref()
+                                .map(|n| n.value().to_string());
+                            effect_derived_set_state_calls.push(DerivedSetStateCall {
                                     callee_loc: callee.loc,
                                     callee_id: callee.identifier,
+                                    callee_identifier_name: callee_ident_name,
                                     source_ids: am.source_ids.clone(),
                                 });
                             }
@@ -1032,7 +1038,7 @@ fn validate_effect(
                         message: Some(
                             "This should be computed during render, not in an effect".to_string(),
                         ),
-                        identifier_name: None,
+                        identifier_name: derived.callee_identifier_name.clone(),
                     }),
                 );
             }

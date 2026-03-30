@@ -170,6 +170,13 @@ export default function BabelPluginReactCompilerRust(
             // all duplicates with references to it.
             deduplicateComments(newProgram);
 
+            // Ensure all AST nodes from the Rust output have a `loc`
+            // property. Downstream Babel plugins (e.g., babel-plugin-fbt)
+            // may read `node.loc.end` without null-checking. Nodes
+            // created during Rust codegen may lack `loc` because the HIR
+            // source location was not available.
+            ensureNodeLocs(newProgram);
+
             // Use Babel's replaceWith() API so that subsequent plugins
             // (babel-plugin-fbt, babel-plugin-fbt-runtime, babel-plugin-idx)
             // properly traverse the new AST. Direct assignment to
@@ -288,6 +295,50 @@ function deduplicateComments(node: any): void {
   visit(node);
 }
 
+/**
+ * Ensure JSX attribute value nodes have a `loc` property.
+ *
+ * Downstream Babel plugins (e.g., babel-plugin-fbt) access
+ * `node.loc.end` on JSX attribute values without null-checking.
+ * The Rust compiler may produce StringLiteral attribute values
+ * without `loc`. This function adds a synthetic `loc` only to
+ * JSX attribute value nodes that need it, inheriting from the
+ * parent JSXAttribute node's loc.
+ */
+function ensureNodeLocs(node: any): void {
+  if (node == null || typeof node !== 'object') return;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      ensureNodeLocs(item);
+    }
+    return;
+  }
+  if (typeof node.type !== 'string') return;
+
+  // For JSXAttribute nodes, ensure the value child has a loc
+  if (node.type === 'JSXAttribute' && node.value != null) {
+    if (node.value.loc == null && node.loc != null) {
+      node.value.loc = node.loc;
+    } else if (node.value.loc == null && node.name?.loc != null) {
+      node.value.loc = node.name.loc;
+    }
+  }
+
+  for (const key of Object.keys(node)) {
+    if (
+      key === 'loc' ||
+      key === 'start' ||
+      key === 'end' ||
+      key === 'leadingComments' ||
+      key === 'trailingComments' ||
+      key === 'innerComments'
+    ) {
+      continue;
+    }
+    ensureNodeLocs(node[key]);
+  }
+}
+
 const CODEFRAME_LINES_ABOVE = 2;
 const CODEFRAME_LINES_BELOW = 3;
 
@@ -300,11 +351,11 @@ function categoryToHeading(category: string): string {
     case 'Invariant':
       return 'Invariant';
     case 'Todo':
-    case 'UnsupportedSyntax':
       return 'Todo';
     case 'EffectDependencies':
     case 'IncompatibleLibrary':
     case 'PreserveManualMemo':
+    case 'UnsupportedSyntax':
       return 'Compilation Skipped';
     default:
       return 'Error';

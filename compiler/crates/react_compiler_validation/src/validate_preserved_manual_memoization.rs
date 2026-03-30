@@ -601,6 +601,63 @@ fn compare_deps(
     }
 }
 
+/// Pretty-print a reactive scope dependency (e.g., `x.a.b?.c`)
+fn pretty_print_scope_dependency(
+    dep_id: IdentifierId,
+    dep_path: &[DependencyPathEntry],
+    identifiers: &[react_compiler_hir::Identifier],
+) -> String {
+    let ident = &identifiers[dep_id.0 as usize];
+    let root_str = match &ident.name {
+        Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
+        Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
+        None => "[unnamed]".to_string(),
+    };
+    let path_str: String = dep_path.iter().map(|entry| {
+        let prop = match &entry.property {
+            react_compiler_hir::PropertyLiteral::String(s) => s.clone(),
+            react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n.value()),
+        };
+        if entry.optional {
+            format!("?.{}", prop)
+        } else {
+            format!(".{}", prop)
+        }
+    }).collect();
+    format!("{}{}", root_str, path_str)
+}
+
+/// Pretty-print a manual memo dependency for error messages.
+fn print_manual_memo_dependency(
+    dep: &ManualMemoDependency,
+    identifiers: &[react_compiler_hir::Identifier],
+    with_optional: bool,
+) -> String {
+    let root_str = match &dep.root {
+        ManualMemoDependencyRoot::NamedLocal { value, .. } => {
+            let ident = &identifiers[value.identifier.0 as usize];
+            match &ident.name {
+                Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
+                Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
+                None => "[unnamed]".to_string(),
+            }
+        }
+        ManualMemoDependencyRoot::Global { identifier_name } => identifier_name.clone(),
+    };
+    let path_str: String = dep.path.iter().map(|entry| {
+        let prop = match &entry.property {
+            react_compiler_hir::PropertyLiteral::String(s) => s.clone(),
+            react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n.value()),
+        };
+        if with_optional && entry.optional {
+            format!("?.{}", prop)
+        } else {
+            format!(".{}", prop)
+        }
+    }).collect();
+    format!("{}{}", root_str, path_str)
+}
+
 fn get_compare_dependency_result_description(
     result: CompareDependencyResult,
 ) -> &'static str {
@@ -680,9 +737,24 @@ fn validate_inferred_dep(
     let ident = &env.identifiers[dep_id.0 as usize];
 
     let extra = if is_named(ident) {
-        error_diagnostic
+        // Use the original dep_id/dep_path (matching TS prettyPrintScopeDependency(dep))
+        let dep_str = pretty_print_scope_dependency(
+            dep_id,
+            dep_path,
+            &env.identifiers,
+        );
+        let source_deps_str: String = valid_deps_in_memo_block
+            .iter()
+            .map(|d| print_manual_memo_dependency(d, &env.identifiers, true))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let result_desc = error_diagnostic
             .map(|d| get_compare_dependency_result_description(d).to_string())
-            .unwrap_or_else(|| "Inferred dependency not present in source".to_string())
+            .unwrap_or_else(|| "Inferred dependency not present in source".to_string());
+        format!(
+            "The inferred dependency was `{}`, but the source dependencies were [{}]. {}",
+            dep_str, source_deps_str, result_desc
+        )
     } else {
         String::new()
     };
