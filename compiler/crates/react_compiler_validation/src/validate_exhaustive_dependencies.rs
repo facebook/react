@@ -1526,13 +1526,31 @@ fn validate_dependencies(
         }
     }
 
-    // Add hint for suggestion
-    if let Some(ref suggestion) = diagnostic.suggestions.as_ref().and_then(|s| s.first()) {
-        if let Some(ref text) = suggestion.text {
-            diagnostic.details.push(CompilerDiagnosticDetail::Hint {
-                message: format!("Inferred dependencies: `{text}`"),
-            });
-        }
+    // Add hint showing inferred dependencies
+    // This matches the TS compiler which derives the hint text from the suggestion,
+    // but we compute it directly from the inferred deps since we don't generate
+    // full suggestions (which require source index info we don't have).
+    // The TS compiler only adds this hint when a suggestion is generated, which
+    // requires manual_memo_loc to have valid index information.
+    if manual_memo_loc.is_some() {
+        let hint_deps: Vec<String> = inferred
+            .iter()
+            .filter(|dep| {
+                match dep {
+                    InferredDependency::Global { .. } => false,
+                    InferredDependency::Local { identifier, .. } => {
+                        let ty = get_identifier_type(*identifier, identifiers, types);
+                        !is_optional_dependency(*identifier, reactive, identifiers, types)
+                            && !is_effect_event_function_type(ty)
+                    }
+                }
+            })
+            .map(|dep| print_inferred_dependency(dep, identifiers))
+            .collect();
+        let text = format!("[{}]", hint_deps.join(", "));
+        diagnostic.details.push(CompilerDiagnosticDetail::Hint {
+            message: format!("Inferred dependencies: `{text}`"),
+        });
     }
 
     Ok(Some(diagnostic))

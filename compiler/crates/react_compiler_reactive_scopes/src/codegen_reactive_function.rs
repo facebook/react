@@ -43,6 +43,7 @@ use react_compiler_ast::statements::{
     VariableDeclarationKind, VariableDeclarator, WhileStatement, FunctionDeclaration,
 };
 use react_compiler_diagnostics::{
+    CompilerDiagnostic, CompilerDiagnosticDetail,
     CompilerError, CompilerErrorDetail, ErrorCategory,
     SourceLocation as DiagSourceLocation,
 };
@@ -1145,7 +1146,7 @@ fn codegen_for_in(
             category: ErrorCategory::Todo,
             reason: "Support non-trivial for..in inits".to_string(),
             description: None,
-            loc: None,
+            loc,
             suggestions: None,
         });
         return Ok(Some(Statement::EmptyStatement(EmptyStatement {
@@ -1226,7 +1227,7 @@ fn codegen_for_of(
             category: ErrorCategory::Todo,
             reason: "Support non-trivial for..of inits".to_string(),
             description: None,
-            loc: None,
+            loc,
             suggestions: None,
         });
         return Ok(Some(Statement::EmptyStatement(EmptyStatement {
@@ -1484,7 +1485,7 @@ fn emit_store(
             if instr.lvalue.is_some() {
                 return Err(invariant_err(
                     "Const declaration cannot be referenced as an expression",
-                    None,
+                    instr.loc,
                 ));
             }
             let lval = codegen_lvalue(cx, lvalue)?;
@@ -1888,13 +1889,23 @@ fn codegen_base_instruction_value(
                     Expression::Identifier(_) => "Identifier",
                     _ => "unknown",
                 };
-                return Err(invariant_err(
-                    &format!(
-                        "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. Got: '{}'",
-                        expr_type
-                    ),
-                    *loc,
-                ));
+{
+                    let msg = format!("Got: '{}'", expr_type);
+                    let mut err = CompilerError::new();
+                    err.push_diagnostic(
+                        CompilerDiagnostic::new(
+                            ErrorCategory::Invariant,
+                            "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression",
+                            None,
+                        )
+                        .with_detail(CompilerDiagnosticDetail::Error {
+                            loc: *loc,
+                            message: Some(msg),
+                            identifier_name: None,
+                        }),
+                    );
+                    return Err(err);
+                }
             }
             let arguments = args
                 .iter()
@@ -3017,13 +3028,15 @@ fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<
         Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
         Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
         None => {
-            return Err(invariant_err(
-                &format!(
-                    "Expected temporaries to be promoted to named identifiers in an earlier pass. identifier {} is unnamed",
-                    identifier_id.0
-                ),
-                None,
-            ));
+            let mut err = CompilerError::new();
+            err.push_error_detail(CompilerErrorDetail {
+                category: ErrorCategory::Invariant,
+                reason: "Expected temporaries to be promoted to named identifiers in an earlier pass".to_string(),
+                description: Some(format!("identifier {} is unnamed", identifier_id.0)),
+                loc: None,
+                suggestions: None,
+            });
+            return Err(err);
         }
     };
     Ok(make_identifier(&name))
@@ -3368,6 +3381,7 @@ fn invariant_err(reason: &str, loc: Option<DiagSourceLocation>) -> CompilerError
     });
     err
 }
+
 
 
 fn compare_scope_dependency(

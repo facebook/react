@@ -1325,7 +1325,7 @@ fn validate_effect_non_exp(
             )
             .with_detail(CompilerDiagnosticDetail::Error {
                 loc: Some(loc),
-                message: None,
+                message: Some("Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)".to_string()),
                 identifier_name: None,
             })
         })
