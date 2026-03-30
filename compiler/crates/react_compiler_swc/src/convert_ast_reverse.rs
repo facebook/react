@@ -760,21 +760,59 @@ impl ReverseCtx {
     }
 
     /// Convert an expression that may be used inside a chain (optional chaining).
+    ///
+    /// In Babel, a chain like `a?.b.c()` is represented as nested
+    /// OptionalMemberExpression / OptionalCallExpression nodes. Each node
+    /// has an `optional` flag indicating whether it uses `?.` at that point.
+    ///
+    /// In SWC, each `?.` point is wrapped in an `OptChainExpr`. Nodes in
+    /// the chain that do NOT have `?.` are plain `MemberExpr` / `CallExpr`.
+    ///
+    /// So when `optional: true`, we still need to emit `OptChainExpr`.
+    /// When `optional: false`, we emit a plain expr (part of the parent chain).
     fn convert_expression_for_chain(&self, expr: &BabelExpr) -> Expr {
         match expr {
             BabelExpr::OptionalMemberExpression(m) => {
-                self.convert_optional_member_to_member_expr(m)
+                if m.optional {
+                    // This node uses `?.`, wrap in OptChainExpr
+                    let base = self.convert_optional_member_to_chain_base(m);
+                    Expr::OptChain(OptChainExpr {
+                        span: self.span(&m.base),
+                        optional: true,
+                        base: Box::new(base),
+                    })
+                } else {
+                    // Part of a chain but no `?.` here — plain MemberExpr
+                    self.convert_optional_member_to_member_expr(m)
+                }
             }
             BabelExpr::OptionalCallExpression(call) => {
                 let callee = self.convert_expression_for_chain(&call.callee);
                 let args = self.convert_arguments(&call.arguments);
-                Expr::Call(CallExpr {
-                    span: self.span(&call.base),
-                    ctxt: SyntaxContext::empty(),
-                    callee: Callee::Expr(Box::new(callee)),
-                    args,
-                    type_args: None,
-                })
+                if call.optional {
+                    // This node uses `?.()`, wrap in OptChainExpr
+                    let base = OptChainBase::Call(OptCall {
+                        span: self.span(&call.base),
+                        ctxt: SyntaxContext::empty(),
+                        callee: Box::new(callee),
+                        args,
+                        type_args: None,
+                    });
+                    Expr::OptChain(OptChainExpr {
+                        span: self.span(&call.base),
+                        optional: true,
+                        base: Box::new(base),
+                    })
+                } else {
+                    // Part of a chain but no `?.` here — plain CallExpr
+                    Expr::Call(CallExpr {
+                        span: self.span(&call.base),
+                        ctxt: SyntaxContext::empty(),
+                        callee: Callee::Expr(Box::new(callee)),
+                        args,
+                        type_args: None,
+                    })
+                }
             }
             _ => self.convert_expression(expr),
         }
