@@ -1118,15 +1118,49 @@ impl<'a> ReverseCtx<'a> {
                 for prop in &obj.properties {
                     match prop {
                         ObjectPatternProperty::ObjectProperty(p) => {
-                            let key = self.convert_expression_to_property_key(&p.key);
-                            let binding =
-                                self.convert_pattern_to_assignment_target_maybe_default(&p.value);
-                            let atp = self
-                                .builder
-                                .assignment_target_property_assignment_target_property_property(
-                                    SPAN, key, binding, p.computed,
-                                );
-                            properties.push(atp);
+                            if p.shorthand {
+                                // Shorthand: { x } means { x: x }
+                                // Use AssignmentTargetPropertyIdentifier
+                                if let Expression::Identifier(id) = &*p.key {
+                                    let binding = self.builder.identifier_reference(
+                                        SPAN,
+                                        self.atom(&id.name),
+                                    );
+                                    let init = match &*p.value {
+                                        PatternLike::AssignmentPattern(ap) => {
+                                            Some(self.convert_expression(&ap.right))
+                                        }
+                                        _ => None,
+                                    };
+                                    let atp = self
+                                        .builder
+                                        .assignment_target_property_assignment_target_property_identifier(
+                                            SPAN, binding, init,
+                                        );
+                                    properties.push(atp);
+                                } else {
+                                    // Fallback to non-shorthand
+                                    let key = self.convert_expression_to_property_key(&p.key);
+                                    let binding =
+                                        self.convert_pattern_to_assignment_target_maybe_default(&p.value);
+                                    let atp = self
+                                        .builder
+                                        .assignment_target_property_assignment_target_property_property(
+                                            SPAN, key, binding, p.computed,
+                                        );
+                                    properties.push(atp);
+                                }
+                            } else {
+                                let key = self.convert_expression_to_property_key(&p.key);
+                                let binding =
+                                    self.convert_pattern_to_assignment_target_maybe_default(&p.value);
+                                let atp = self
+                                    .builder
+                                    .assignment_target_property_assignment_target_property_property(
+                                        SPAN, key, binding, p.computed,
+                                    );
+                                properties.push(atp);
+                            }
                         }
                         ObjectPatternProperty::RestElement(r) => {
                             let target = self.convert_pattern_to_assignment_target(&r.argument);

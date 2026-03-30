@@ -118,10 +118,27 @@ impl<'a> ConvertCtx<'a> {
             .iter()
             .map(|comment| {
                 let base = self.make_base_node(comment.span);
-                let value =
+                // OXC comment spans include delimiters (// or /* */), so we need
+                // to strip them to get the content-only value that the compiler expects.
+                let raw =
                     &self.source_text[comment.span.start as usize..comment.span.end as usize];
+                let value = match comment.kind {
+                    oxc::CommentKind::Line => {
+                        // Strip leading //
+                        raw.strip_prefix("//").unwrap_or(raw).trim().to_string()
+                    }
+                    oxc::CommentKind::SingleLineBlock | oxc::CommentKind::MultiLineBlock => {
+                        // Strip leading /* and trailing */
+                        let stripped = raw
+                            .strip_prefix("/*")
+                            .unwrap_or(raw)
+                            .strip_suffix("*/")
+                            .unwrap_or(raw);
+                        stripped.trim().to_string()
+                    }
+                };
                 let comment_data = CommentData {
-                    value: value.to_string(),
+                    value,
                     start: base.start,
                     end: base.end,
                     loc: base.loc.clone(),
@@ -1636,7 +1653,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::ChainElement::CallExpression(c) => {
                 Expression::OptionalCallExpression(OptionalCallExpression {
                     base: self.make_base_node(c.span),
-                    callee: Box::new(self.convert_expression(&c.callee)),
+                    callee: Box::new(self.convert_expression_in_chain(&c.callee)),
                     arguments: c
                         .arguments
                         .iter()
@@ -1652,7 +1669,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::ChainElement::ComputedMemberExpression(m) => {
                 Expression::OptionalMemberExpression(OptionalMemberExpression {
                     base: self.make_base_node(m.span),
-                    object: Box::new(self.convert_expression(&m.object)),
+                    object: Box::new(self.convert_expression_in_chain(&m.object)),
                     property: Box::new(self.convert_expression(&m.expression)),
                     computed: true,
                     optional: m.optional,
@@ -1661,7 +1678,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::ChainElement::StaticMemberExpression(m) => {
                 Expression::OptionalMemberExpression(OptionalMemberExpression {
                     base: self.make_base_node(m.span),
-                    object: Box::new(self.convert_expression(&m.object)),
+                    object: Box::new(self.convert_expression_in_chain(&m.object)),
                     property: Box::new(Expression::Identifier(
                         self.convert_identifier_name(&m.property),
                     )),
@@ -1672,7 +1689,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::ChainElement::PrivateFieldExpression(p) => {
                 Expression::OptionalMemberExpression(OptionalMemberExpression {
                     base: self.make_base_node(p.span),
-                    object: Box::new(self.convert_expression(&p.object)),
+                    object: Box::new(self.convert_expression_in_chain(&p.object)),
                     property: Box::new(Expression::PrivateName(PrivateName {
                         base: self.make_base_node(p.field.span),
                         id: Identifier {
@@ -1690,6 +1707,92 @@ impl<'a> ConvertCtx<'a> {
             oxc::ChainElement::TSNonNullExpression(_) => {
                 todo!("TSNonNullExpression in chain expression")
             }
+        }
+    }
+
+    /// Convert an expression that appears as callee/object inside a ChainExpression.
+    /// In OXC, `a?.b?.c` is a single ChainExpression with nested CallExpression/
+    /// MemberExpression nodes that have `optional: true`. In Babel, each optional
+    /// node is an OptionalCallExpression/OptionalMemberExpression. This method
+    /// ensures inner optional nodes get converted to the Babel Optional* types.
+    fn convert_expression_in_chain(&self, expr: &oxc::Expression) -> Expression {
+        match expr {
+            oxc::Expression::CallExpression(c) if c.optional => {
+                Expression::OptionalCallExpression(OptionalCallExpression {
+                    base: self.make_base_node(c.span),
+                    callee: Box::new(self.convert_expression_in_chain(&c.callee)),
+                    arguments: c
+                        .arguments
+                        .iter()
+                        .map(|a| self.convert_argument(a))
+                        .collect(),
+                    optional: true,
+                    type_parameters: c.type_arguments.as_ref().map(|_t| {
+                        Box::new(serde_json::Value::Null)
+                    }),
+                    type_arguments: None,
+                })
+            }
+            oxc::Expression::StaticMemberExpression(m) if m.optional => {
+                Expression::OptionalMemberExpression(OptionalMemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression_in_chain(&m.object)),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
+                    computed: false,
+                    optional: true,
+                })
+            }
+            oxc::Expression::ComputedMemberExpression(m) if m.optional => {
+                Expression::OptionalMemberExpression(OptionalMemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression_in_chain(&m.object)),
+                    property: Box::new(self.convert_expression(&m.expression)),
+                    computed: true,
+                    optional: true,
+                })
+            }
+            // Non-optional expressions inside chains: a?.b.c has a non-optional
+            // MemberExpression (.c) whose object is an optional MemberExpression (?.b).
+            // We still need to recurse for the object/callee.
+            oxc::Expression::CallExpression(c) => {
+                Expression::OptionalCallExpression(OptionalCallExpression {
+                    base: self.make_base_node(c.span),
+                    callee: Box::new(self.convert_expression_in_chain(&c.callee)),
+                    arguments: c
+                        .arguments
+                        .iter()
+                        .map(|a| self.convert_argument(a))
+                        .collect(),
+                    optional: false,
+                    type_parameters: c.type_arguments.as_ref().map(|_t| {
+                        Box::new(serde_json::Value::Null)
+                    }),
+                    type_arguments: None,
+                })
+            }
+            oxc::Expression::StaticMemberExpression(m) => {
+                Expression::OptionalMemberExpression(OptionalMemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression_in_chain(&m.object)),
+                    property: Box::new(Expression::Identifier(
+                        self.convert_identifier_name(&m.property),
+                    )),
+                    computed: false,
+                    optional: false,
+                })
+            }
+            oxc::Expression::ComputedMemberExpression(m) => {
+                Expression::OptionalMemberExpression(OptionalMemberExpression {
+                    base: self.make_base_node(m.span),
+                    object: Box::new(self.convert_expression_in_chain(&m.object)),
+                    property: Box::new(self.convert_expression(&m.expression)),
+                    computed: true,
+                    optional: false,
+                })
+            }
+            _ => self.convert_expression(expr),
         }
     }
 
@@ -1831,6 +1934,56 @@ impl<'a> ConvertCtx<'a> {
     ) -> ObjectExpressionProperty {
         match prop {
             oxc::ObjectPropertyKind::ObjectProperty(p) => {
+                // When method is true or kind is Get/Set, convert to ObjectMethod
+                // to match Babel's AST representation of method shorthand.
+                if p.method || matches!(p.kind, oxc::PropertyKind::Get | oxc::PropertyKind::Set) {
+                    if let oxc::Expression::FunctionExpression(func) = &p.value {
+                        let method_kind = match p.kind {
+                            oxc::PropertyKind::Get => ObjectMethodKind::Get,
+                            oxc::PropertyKind::Set => ObjectMethodKind::Set,
+                            _ => ObjectMethodKind::Method,
+                        };
+                        let params: Vec<PatternLike> = func
+                            .params
+                            .items
+                            .iter()
+                            .map(|p| self.convert_formal_parameter(p))
+                            .collect();
+                        let body = func
+                            .body
+                            .as_ref()
+                            .map(|b| self.convert_function_body(b))
+                            .unwrap_or_else(|| BlockStatement {
+                                base: BaseNode::default(),
+                                body: vec![],
+                                directives: vec![],
+                            });
+                        return ObjectExpressionProperty::ObjectMethod(ObjectMethod {
+                            base: self.make_base_node(p.span),
+                            method: p.method,
+                            kind: method_kind,
+                            key: Box::new(self.convert_property_key(&p.key)),
+                            params,
+                            body,
+                            computed: p.computed,
+                            id: func
+                                .id
+                                .as_ref()
+                                .map(|id| self.convert_binding_identifier(id)),
+                            generator: func.generator,
+                            is_async: func.r#async,
+                            decorators: None,
+                            return_type: func
+                                .return_type
+                                .as_ref()
+                                .map(|_| Box::new(serde_json::Value::Null)),
+                            type_parameters: func
+                                .type_parameters
+                                .as_ref()
+                                .map(|_| Box::new(serde_json::Value::Null)),
+                        });
+                    }
+                }
                 ObjectExpressionProperty::ObjectProperty(self.convert_object_property(p))
             }
             oxc::ObjectPropertyKind::SpreadProperty(s) => {

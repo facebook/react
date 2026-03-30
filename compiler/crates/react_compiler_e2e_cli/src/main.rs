@@ -155,10 +155,13 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 }
 
 fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<String, String> {
+    // Always enable TypeScript parsing (like the TS/Babel baseline uses
+    // ['typescript', 'jsx'] plugins). Some .js fixtures contain TS syntax.
     let source_type = oxc_span::SourceType::from_path(filename)
         .unwrap_or_default()
         .with_module(true)
-        .with_jsx(true);
+        .with_jsx(true)
+        .with_typescript(true);
 
     let allocator = oxc_allocator::Allocator::default();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
@@ -174,14 +177,30 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 
     let result = react_compiler_oxc::transform(&parsed.program, &semantic, source, options);
 
+    // Check for error-level diagnostics, similar to SWC path.
+    // OxcDiagnostic uses miette's Severity.
+    let has_errors = result.diagnostics.iter().any(|d| {
+        d.severity == oxc_diagnostics::Severity::Error
+    });
+
     match result.file {
         Some(ref file) => {
             let emit_allocator = oxc_allocator::Allocator::default();
             Ok(react_compiler_oxc::emit(file, &emit_allocator, Some(source)))
         }
         None => {
-            // No changes — emit the original parsed program (already has comments)
-            Ok(oxc_codegen::Codegen::new().build(&parsed.program).code)
+            if has_errors {
+                // Compilation had errors — mimic TS plugin throwing
+                let messages: Vec<String> = result
+                    .diagnostics
+                    .iter()
+                    .map(|d| d.message.to_string())
+                    .collect();
+                Err(messages.join("\n"))
+            } else {
+                // No changes — emit the original parsed program (already has comments)
+                Ok(oxc_codegen::Codegen::new().build(&parsed.program).code)
+            }
         }
     }
 }

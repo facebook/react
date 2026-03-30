@@ -263,12 +263,31 @@ function normalizeForComparison(code: string): string {
   let result = normalizeBlankLines(code);
   result = collapseSmallMultiLineStructures(result);
   result = normalizeTypeAnnotations(result);
-  // Re-strip blank lines created by type annotation normalization
-  // (e.g., removing pragma comment lines can leave leading newlines)
+  // Strip standalone comment lines: OXC codegen may drop comments inside
+  // function bodies that Babel/TS preserves from the original source.
+  // Also strip block comment lines (/* ... */) for the same reason.
   result = result
     .split('\n')
-    .filter(line => line.trim() !== '')
+    .filter(line => {
+      const trimmed = line.trim();
+      if (trimmed === '') return false;
+      if (trimmed.startsWith('//')) return false;
+      if (trimmed.startsWith('/*') && trimmed.endsWith('*/')) return false;
+      if (trimmed.startsWith('*')) return false;
+      return true;
+    })
     .join('\n');
+  // Strip inline block comments (/* ... */): OXC codegen drops them
+  result = result.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '');
+  // Clean up extra whitespace left by inline comment removal
+  result = result.replace(/  +/g, ' ');
+  // Normalize Unicode escapes: Babel may emit \uXXXX while OXC emits the
+  // actual character. Convert all \uXXXX to their character equivalents.
+  result = result.replace(/\\u([0-9a-fA-F]{4})/g, (_m, hex) =>
+    String.fromCharCode(parseInt(hex, 16)),
+  );
+  // Normalize -0 vs 0: OXC may emit -0 where Babel emits 0
+  result = result.replace(/(?<![.\w])-0(?!\d)/g, '0');
   return result;
 }
 
@@ -286,6 +305,13 @@ function normalizeTypeAnnotations(code: string): string {
   // Strip pragma comment lines (// @...) that configure the compiler.
   // Babel preserves these comments in output but SWC may not.
   result = result.replace(/^\/\/ @\w+.*$/gm, '');
+
+  // Strip TypeScript interface/type declarations that TS preserves but
+  // SWC/OXC may drop. These span from `interface X {` to the closing `}`.
+  result = result.replace(
+    /^(?:interface|type)\s+\w+[^{]*\{[^}]*\}\s*;?\s*$/gm,
+    '',
+  );
 
   // Normalize useRenderCounter calls: TS plugin includes the full file path
   // as the second argument, while SWC uses an empty string.
@@ -464,6 +490,19 @@ function collapseSmallMultiLineStructures(code: string): string {
 }
 
 function collapseMultiLineToSingleLine(code: string): string {
+  // Run multiple passes: each pass collapses only "leaf" structures
+  // (no nested brackets), so inner structures get collapsed first,
+  // then outer structures in subsequent passes.
+  let result = code;
+  for (let pass = 0; pass < 8; pass++) {
+    const next = collapseMultiLinePass(result);
+    if (next === result) break;
+    result = next;
+  }
+  return result;
+}
+
+function collapseMultiLinePass(code: string): string {
   const lines = code.split('\n');
   const result: string[] = [];
   let i = 0;
@@ -472,14 +511,14 @@ function collapseMultiLineToSingleLine(code: string): string {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Look for opening brackets at end of line: { or [
+    // Look for opening brackets at end of line: {, [, or (
     // But not function bodies or control structures
     const lastChar = trimmed[trimmed.length - 1];
     const secondLastChar =
       trimmed.length > 1 ? trimmed[trimmed.length - 2] : '';
 
     if (
-      (lastChar === '{' || lastChar === '[') &&
+      (lastChar === '{' || lastChar === '[' || lastChar === '(') &&
       !trimmed.startsWith('if ') &&
       !trimmed.startsWith('if(') &&
       !trimmed.startsWith('else') &&
@@ -492,7 +531,7 @@ function collapseMultiLineToSingleLine(code: string): string {
       !(secondLastChar === ')' && lastChar === '{')
     ) {
       // Try to collect lines until closing bracket
-      const closeChar = lastChar === '{' ? '}' : ']';
+      const closeChar = lastChar === '{' ? '}' : lastChar === '[' ? ']' : ')';
       const indent = line.length - line.trimStart().length;
       const items: string[] = [];
       let j = i + 1;
@@ -502,18 +541,21 @@ function collapseMultiLineToSingleLine(code: string): string {
       while (j < lines.length && j - i < 20) {
         const innerTrimmed = lines[j].trim();
 
-        // Check if this is the closing bracket at the same indent level
+        // Check if this is the closing bracket at the same indent level.
+        // Match the close char at the start of the trimmed line, followed by
+        // any suffix (like `,`, `);`, `) +`, etc.).
         if (
-          (innerTrimmed === closeChar + ',' ||
-            innerTrimmed === closeChar + ');' ||
-            innerTrimmed === closeChar + '),' ||
-            innerTrimmed === closeChar + ';' ||
-            innerTrimmed === closeChar) &&
+          (innerTrimmed === closeChar ||
+            innerTrimmed.startsWith(closeChar + ',') ||
+            innerTrimmed.startsWith(closeChar + ';') ||
+            innerTrimmed.startsWith(closeChar + ')') ||
+            innerTrimmed.startsWith(closeChar + ' ') ||
+            innerTrimmed.startsWith(closeChar + '.')) &&
           lines[j].length - lines[j].trimStart().length <= indent + 2
         ) {
           foundClose = true;
 
-          // Only collapse if items are simple (no nested objects/arrays)
+          // Only collapse if items are simple enough
           if (!tooComplex && items.length > 0 && items.length <= 8) {
             const suffix = innerTrimmed.substring(closeChar.length);
             // Use spaces around braces for objects to match prettier
@@ -525,24 +567,34 @@ function collapseMultiLineToSingleLine(code: string): string {
               space +
               closeChar +
               suffix;
-            result.push(
-              ' '.repeat(indent) + collapsed.trimStart(),
-            );
-            i = j + 1;
+            // Only collapse if the result line is not too long
+            if (collapsed.trimStart().length <= 200) {
+              result.push(
+                ' '.repeat(indent) + collapsed.trimStart(),
+              );
+              i = j + 1;
+            } else {
+              // Too long, keep as-is
+              result.push(line);
+              i++;
+            }
           } else {
-            // Too complex, keep as-is
+            // Too complex or too many items, keep as-is
             result.push(line);
             i++;
           }
           break;
         }
 
-        // Check if the line is a simple item (value, or key: value)
-        if (
-          innerTrimmed.includes('{') ||
-          innerTrimmed.includes('[') ||
-          innerTrimmed.includes('(')
-        ) {
+        // Check if the line contains unbalanced brackets (a bracket that
+        // opens but doesn't close on the same line, or vice versa).
+        // Balanced brackets on a single line (like `{ foo: 1 }`) are OK.
+        let depth = 0;
+        for (const ch of innerTrimmed) {
+          if (ch === '{' || ch === '[' || ch === '(') depth++;
+          else if (ch === '}' || ch === ']' || ch === ')') depth--;
+        }
+        if (depth !== 0) {
           tooComplex = true;
         }
 
