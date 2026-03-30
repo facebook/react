@@ -7,10 +7,7 @@
 
 import * as t from '@babel/types';
 import {z} from 'zod/v4';
-import {
-  CompilerError,
-  CompilerErrorDetailOptions,
-} from '../CompilerError';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {
   EnvironmentConfig,
   ExternalFunction,
@@ -260,7 +257,11 @@ export type CompileErrorDetail = {
   description: string | null;
   severity: string;
   suggestions: Array<unknown> | null;
-  details?: Array<{kind: string; loc: t.SourceLocation | null; message: string | null}>;
+  details?: Array<{
+    kind: string;
+    loc: t.SourceLocation | null;
+    message: string | null;
+  }>;
   loc?: t.SourceLocation | null;
 };
 export type CompileErrorEvent = {

@@ -221,7 +221,10 @@ export function buildRust(): boolean {
   try {
     fs.copyFileSync(sourcePath, destPath);
   } catch (e) {
-    console.error(`Failed to copy native module (${sourcePath} -> ${destPath}):`, e);
+    console.error(
+      `Failed to copy native module (${sourcePath} -> ${destPath}):`,
+      e,
+    );
     return false;
   }
 

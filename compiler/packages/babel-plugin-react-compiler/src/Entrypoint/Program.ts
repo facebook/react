@@ -189,8 +189,7 @@ export function formatDetailForLogging(
       suggestions: detail.suggestions ?? null,
       details: detail.options.details.map(d => {
         if (d.kind === 'error') {
-          const loc =
-            d.loc != null && typeof d.loc !== 'symbol' ? d.loc : null;
+          const loc = d.loc != null && typeof d.loc !== 'symbol' ? d.loc : null;
           return {kind: d.kind, loc, message: d.message};
         } else {
           return {kind: d.kind, loc: null, message: d.message};
@@ -199,9 +198,7 @@ export function formatDetailForLogging(
     };
   } else {
     const loc =
-      detail.loc != null && typeof detail.loc !== 'symbol'
-        ? detail.loc
-        : null;
+      detail.loc != null && typeof detail.loc !== 'symbol' ? detail.loc : null;
     return {
       category: detail.category,
       reason: detail.reason,

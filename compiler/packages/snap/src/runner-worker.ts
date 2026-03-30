@@ -34,7 +34,8 @@ const originalConsoleError = console.error;
 // contains ~1250 files. This assumes that no dependencies have global caches
 // that may need to be invalidated across Forget reloads.
 const invalidationSubpath = 'packages/babel-plugin-react-compiler/dist';
-const rustInvalidationSubpath = 'packages/babel-plugin-react-compiler-rust/dist';
+const rustInvalidationSubpath =
+  'packages/babel-plugin-react-compiler-rust/dist';
 let version: number | null = null;
 export function clearRequireCache() {
   Object.keys(require.cache).forEach(function (path) {
