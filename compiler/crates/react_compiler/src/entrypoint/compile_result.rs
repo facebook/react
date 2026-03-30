@@ -15,6 +15,8 @@ pub struct LoggerSourceLocation {
     pub end: LoggerPosition,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub filename: Option<String>,
+    #[serde(rename = "identifierName", skip_serializing_if = "Option::is_none")]
+    pub identifier_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -40,6 +42,7 @@ impl LoggerSourceLocation {
                 index: end_index,
             },
             filename: filename.map(|s| s.to_string()),
+            identifier_name: None,
         }
     }
 
@@ -57,6 +60,7 @@ impl LoggerSourceLocation {
                 index: None,
             },
             filename: None,
+            identifier_name: None,
         }
     }
 }

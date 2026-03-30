@@ -1159,6 +1159,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     ).with_detail(CompilerDiagnosticDetail::Error {
                         loc,
                         message: Some("Unexpected empty block with `goto` terminal".to_string()),
+                        identifier_name: None,
                     }));
                 }
                 Ok(self.extract_value_block_result(&instructions, block_id_val, loc))

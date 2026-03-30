@@ -47,6 +47,7 @@ pub fn validate_no_jsx_in_try_statement(func: &HirFunction) -> CompilerError {
                                 message: Some(
                                     "Avoid constructing JSX within try/catch".to_string(),
                                 ),
+                                identifier_name: None,
                             }),
                         );
                     }

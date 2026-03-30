@@ -202,10 +202,12 @@ fn check_operand_for_freeze_violation(
                         "This function may (indirectly) reassign or modify {} after render",
                         variable_name
                     )),
+                    identifier_name: None,
                 })
                 .with_detail(CompilerDiagnosticDetail::Error {
                     loc: mutation_info.value_loc,
                     message: Some(format!("This modifies {}", variable_name)),
+                    identifier_name: None,
                 }),
             );
         }

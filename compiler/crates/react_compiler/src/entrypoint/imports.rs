@@ -167,11 +167,14 @@ impl ProgramContext {
             name.to_string()
         } else {
             // Generate unique name with underscore prefix (similar to Babel's generateUid).
-            // Babel generates: _name, _name2, _name3, etc.
-            let mut uid = format!("_{}", name);
+            // Babel strips leading underscores before prefixing, so:
+            //   generateUid("_c") → strips to "c" → generates "_c", "_c2", "_c3", ...
+            //   generateUid("foo") → generates "_foo", "_foo2", "_foo3", ...
+            let base = name.trim_start_matches('_');
+            let mut uid = format!("_{}", base);
             let mut i = 2;
             while self.has_reference(&uid) {
-                uid = format!("_{}{}", name, i);
+                uid = format!("_{}{}", base, i);
                 i += 1;
             }
             self.known_referenced_names.insert(uid.clone());

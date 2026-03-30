@@ -103,6 +103,11 @@ pub enum CompilerDiagnosticDetail {
     Error {
         loc: Option<SourceLocation>,
         message: Option<String>,
+        /// The identifier name from the AST source location, if this error
+        /// points to an identifier node. Preserved for logger event serialization
+        /// to match Babel's SourceLocation.identifierName field.
+        #[serde(skip)]
+        identifier_name: Option<String>,
     },
     Hint {
         message: String,
@@ -145,7 +150,7 @@ impl CompilerDiagnostic {
 
     pub fn primary_location(&self) -> Option<&SourceLocation> {
         self.details.iter().find_map(|d| match d {
-            CompilerDiagnosticDetail::Error { loc, .. } => loc.as_ref(),
+            CompilerDiagnosticDetail::Error { loc, .. } => loc.as_ref(), // identifier_name covered by ..
             _ => None,
         })
     }

@@ -749,6 +749,7 @@ impl<'a> HirBuilder<'a> {
                 .with_detail(CompilerDiagnosticDetail::Error {
                     loc: None, // GeneratedSource in TS
                     message: Some("reserved word".to_string()),
+                    identifier_name: None,
                 }),
             );
         }

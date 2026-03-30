@@ -184,6 +184,7 @@ fn push_error(errors: &mut CompilerError, info: &SetStateInfo, enable_verbose: b
                 message: Some(
                     "Avoid calling setState() directly within an effect".to_string(),
                 ),
+                identifier_name: None,
             }),
         );
     } else {
@@ -205,6 +206,7 @@ fn push_error(errors: &mut CompilerError, info: &SetStateInfo, enable_verbose: b
                 message: Some(
                     "Avoid calling setState() directly within an effect".to_string(),
                 ),
+                identifier_name: None,
             }),
         );
     }

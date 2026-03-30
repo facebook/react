@@ -1560,12 +1560,14 @@ fn log_errors_as_events(
                             react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
                                 loc,
                                 message,
+                                identifier_name,
                             } => CompilerErrorItemInfo {
                                 kind: "error".to_string(),
                                 loc: loc.as_ref().map(|l| LoggerSourceLocation {
                                     start: LoggerPosition { line: l.start.line, column: l.start.column, index: l.start.index },
                                     end: LoggerPosition { line: l.end.line, column: l.end.column, index: l.end.index },
                                     filename: source_filename.clone(),
+                                    identifier_name: identifier_name.clone(),
                                 }),
                                 message: message.clone(),
                             },

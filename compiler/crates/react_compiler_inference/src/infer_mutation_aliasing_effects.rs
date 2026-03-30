@@ -185,6 +185,7 @@ pub fn infer_mutation_aliasing_effects(
                 ).with_detail(CompilerDiagnosticDetail::Error {
                     loc: error_loc,
                     message: Some("this is uninitialized".to_string()),
+                    identifier_name: None,
                 });
                 env.record_diagnostic(diag);
                 return Ok(());
@@ -999,7 +1000,7 @@ fn apply_signature(
                             "This value cannot be modified",
                             Some(reason_str),
                         );
-                        diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc: mutate_value.loc, message: Some(format!("{} cannot be modified", variable)) });
+                        diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc: mutate_value.loc, message: Some(format!("{} cannot be modified", variable)), identifier_name: None });
                         if is_mutate {
                             if let AliasingEffect::Mutate { reason: Some(MutationReason::AssignCurrentProperty), .. } = effect {
                                 diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Hint {
@@ -1460,6 +1461,7 @@ fn apply_effect(
                                     "{} accessed before it is declared",
                                     variable.as_deref().unwrap_or("variable")
                                 )),
+                                identifier_name: None,
                             });
                         }
                     }
@@ -1469,6 +1471,7 @@ fn apply_effect(
                             "{} is declared here",
                             variable.as_deref().unwrap_or("variable")
                         )),
+                        identifier_name: None,
                     });
                     apply_effect(context, state, AliasingEffect::MutateFrozen {
                         place: value.clone(),
@@ -1488,6 +1491,7 @@ fn apply_effect(
                     diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
                         loc: value.loc,
                         message: Some(format!("{} cannot be modified", variable)),
+                        identifier_name: None,
                     });
 
                     if let AliasingEffect::Mutate { reason: Some(MutationReason::AssignCurrentProperty), .. } = &effect {
@@ -1963,7 +1967,7 @@ fn compute_signature_for_instruction(
                     variable
                 )),
             );
-            diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc: instr.loc, message: Some(format!("{} cannot be reassigned", variable)) });
+            diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc: instr.loc, message: Some(format!("{} cannot be reassigned", variable)), identifier_name: None });
             effects.push(AliasingEffect::MutateGlobal {
                 place: sg_value.clone(),
                 error: diagnostic,
@@ -2060,7 +2064,7 @@ fn compute_effects_for_legacy_signature(
                 }
             )),
         );
-        diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc: _loc.copied(), message: Some("Cannot call impure function".to_string()) });
+        diagnostic.details.push(react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc: _loc.copied(), message: Some("Cannot call impure function".to_string()), identifier_name: None });
         effects.push(AliasingEffect::Impure {
             place: receiver.clone(),
             error: diagnostic,

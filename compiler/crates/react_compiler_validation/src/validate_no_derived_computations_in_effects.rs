@@ -1032,6 +1032,7 @@ fn validate_effect(
                         message: Some(
                             "This should be computed during render, not in an effect".to_string(),
                         ),
+                        identifier_name: None,
                     }),
                 );
             }
@@ -1290,6 +1291,7 @@ fn validate_effect_non_exp(
             .with_detail(CompilerDiagnosticDetail::Error {
                 loc: Some(loc),
                 message: None,
+                identifier_name: None,
             })
         })
         .collect()

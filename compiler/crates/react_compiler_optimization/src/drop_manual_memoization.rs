@@ -226,6 +226,7 @@ fn process_manual_memo_call(
                         "Expected the first argument to be an inline function expression"
                             .to_string(),
                     ),
+                    identifier_name: None,
                 }),
             );
             return;
@@ -556,6 +557,7 @@ fn extract_manual_memoization_args(
                     } else {
                         "Expected a memoization function".to_string()
                     }),
+                    identifier_name: None,
                 }),
             );
             return None;
@@ -597,6 +599,7 @@ fn extract_manual_memoization_args(
                 message: Some(format!(
                     "Expected the dependency list for {kind_name} to be an array literal"
                 )),
+                identifier_name: None,
             }),
         );
         return None;
@@ -618,6 +621,7 @@ fn extract_manual_memoization_args(
                 .with_detail(CompilerDiagnosticDetail::Error {
                     loc: dep.loc.clone(),
                     message: Some("Expected the dependency list to be an array of simple expressions (e.g. `x`, `x.y.z`, `x?.y?.z`)".to_string()),
+                    identifier_name: None,
                 }),
             );
         }

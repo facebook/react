@@ -60,6 +60,7 @@ pub fn validate_locals_not_reassigned_after_render(func: &HirFunction, env: &mut
                     "Cannot reassign {} after render completes",
                     variable_name
                 )),
+                identifier_name: None,
             }),
         );
     }
@@ -153,6 +154,7 @@ fn get_context_reassignment(
                                         "Cannot reassign {}",
                                         variable_name
                                     )),
+                                    identifier_name: None,
                                 }),
                             );
                             // Return null (don't propagate further) — matches TS behavior

@@ -45,6 +45,7 @@ fn invariant_error_with_loc(reason: &str, description: Option<String>, loc: Opti
     ).with_detail(CompilerDiagnosticDetail::Error {
         loc,
         message: Some(reason.to_string()),
+        identifier_name: None,
     });
     err.push_diagnostic(diagnostic);
     err

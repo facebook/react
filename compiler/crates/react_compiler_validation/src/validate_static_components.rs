@@ -79,12 +79,14 @@ pub fn validate_static_components(func: &HirFunction) -> CompilerError {
                                 message: Some(
                                     "This component is created during render".to_string(),
                                 ),
+                                identifier_name: None,
                             })
                             .with_detail(CompilerDiagnosticDetail::Error {
                                 loc: location,
                                 message: Some(
                                     "The component is created during render here".to_string(),
                                 ),
+                                identifier_name: None,
                             });
                             error.push_diagnostic(diagnostic);
                         }

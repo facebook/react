@@ -286,6 +286,7 @@ pub fn suppressions_to_compiler_error(suppressions: &[SuppressionRange]) -> Comp
         diagnostic = diagnostic.with_detail(CompilerDiagnosticDetail::Error {
             loc,
             message: Some("Found React rule suppression".to_string()),
+            identifier_name: None,
         });
 
         error.push_diagnostic(diagnostic);

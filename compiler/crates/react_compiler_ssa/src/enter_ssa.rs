@@ -92,6 +92,7 @@ impl SSABuilder {
             ).with_detail(CompilerDiagnosticDetail::Error {
                 loc: old_place.loc,
                 message: None,
+                identifier_name: None,
             }));
         }
 

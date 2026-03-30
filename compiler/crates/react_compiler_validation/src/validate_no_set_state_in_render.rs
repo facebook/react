@@ -140,6 +140,7 @@ fn validate_impl(
                                 .with_detail(CompilerDiagnosticDetail::Error {
                                     loc: callee.loc,
                                     message: Some("Found setState() within useMemo()".to_string()),
+                                    identifier_name: None,
                                 }),
                             );
                         } else if unconditional_blocks.contains(&block.id) {
@@ -157,6 +158,7 @@ fn validate_impl(
                                     .with_detail(CompilerDiagnosticDetail::Error {
                                         loc: callee.loc,
                                         message: Some("Found setState() in render".to_string()),
+                                        identifier_name: None,
                                     }),
                                 );
                             } else {
@@ -173,6 +175,7 @@ fn validate_impl(
                                     .with_detail(CompilerDiagnosticDetail::Error {
                                         loc: callee.loc,
                                         message: Some("Found setState() in render".to_string()),
+                                        identifier_name: None,
                                     }),
                                 );
                             }

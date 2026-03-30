@@ -137,6 +137,7 @@ fn validate_use_memo_impl(
                 .with_detail(CompilerDiagnosticDetail::Error {
                     loc: Some(*loc),
                     message: Some("useMemo() result is unused".to_string()),
+                    identifier_name: None,
                 }),
             );
         }
@@ -194,6 +195,7 @@ fn handle_possible_use_memo_call(
             .with_detail(CompilerDiagnosticDetail::Error {
                 loc,
                 message: Some("Callbacks with parameters are not supported".to_string()),
+                identifier_name: None,
             }),
         );
     }
@@ -212,6 +214,7 @@ fn handle_possible_use_memo_call(
             .with_detail(CompilerDiagnosticDetail::Error {
                 loc: body_info.loc,
                 message: Some("Async and generator functions are not supported".to_string()),
+                identifier_name: None,
             }),
         );
     }
@@ -232,6 +235,7 @@ fn handle_possible_use_memo_call(
             .with_detail(CompilerDiagnosticDetail::Error {
                 loc: body_info.loc,
                 message: Some("useMemo() callbacks must return a value".to_string()),
+                identifier_name: None,
             }),
         );
     } else if validate_no_void_use_memo {
@@ -265,6 +269,7 @@ fn validate_no_context_variable_assignment(
                         .with_detail(CompilerDiagnosticDetail::Error {
                             loc: lvalue.place.loc,
                             message: Some("Cannot reassign variable".to_string()),
+                            identifier_name: None,
                         }),
                     );
                 }

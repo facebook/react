@@ -1442,6 +1442,7 @@ fn validate_dependencies(
             diagnostic.details.push(CompilerDiagnosticDetail::Error {
                 loc: *loc,
                 message: Some(format!("Missing dependency `{dep_str}`{hint}")),
+                identifier_name: None,
             });
         }
     }
@@ -1456,6 +1457,7 @@ fn validate_dependencies(
                     message: Some(format!(
                         "Unnecessary dependency `{dep_str}`. Values declared outside of a component/hook should not be listed as dependencies as the component will not re-render if they change"
                     )),
+                    identifier_name: None,
                 });
             }
             ManualMemoDependencyRoot::NamedLocal { value, .. } => {
@@ -1485,6 +1487,7 @@ fn validate_dependencies(
                                 message: Some(format!(
                                     "Functions returned from `useEffectEvent` must not be included in the dependency array. Remove `{dep_str}` from the dependencies."
                                 )),
+                                identifier_name: None,
                             });
                         } else if !is_optional_dependency_inferred(
                             matching,
@@ -1500,12 +1503,14 @@ fn validate_dependencies(
                                 message: Some(format!(
                                     "Overly precise dependency `{dep_str}`, use `{inferred_str}` instead"
                                 )),
+                                identifier_name: None,
                             });
                         } else {
                             let dep_str = print_manual_memo_dependency(dep, identifiers);
                             diagnostic.details.push(CompilerDiagnosticDetail::Error {
                                 loc: dep.loc.or(manual_memo_loc),
                                 message: Some(format!("Unnecessary dependency `{dep_str}`")),
+                                identifier_name: None,
                             });
                         }
                     }
@@ -1514,6 +1519,7 @@ fn validate_dependencies(
                     diagnostic.details.push(CompilerDiagnosticDetail::Error {
                         loc: dep.loc.or(manual_memo_loc),
                         message: Some(format!("Unnecessary dependency `{dep_str}`")),
+                        identifier_name: None,
                     });
                 }
             }

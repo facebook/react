@@ -234,6 +234,7 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
                             message: Some(
                                 "This dependency may be modified later".to_string(),
                             ),
+                            identifier_name: None,
                         });
                         state.env.record_diagnostic(diag);
                     }
@@ -336,6 +337,7 @@ fn record_unmemoized_error(loc: Option<SourceLocation>, env: &mut Environment) {
     .with_detail(CompilerDiagnosticDetail::Error {
         loc,
         message: Some("Could not preserve existing memoization".to_string()),
+        identifier_name: None,
     });
     env.record_diagnostic(diag);
 }
@@ -699,6 +701,7 @@ fn validate_inferred_dep(
     .with_detail(CompilerDiagnosticDetail::Error {
         loc: memo_location,
         message: Some("Could not preserve existing manual memoization".to_string()),
+        identifier_name: None,
     });
     env.record_diagnostic(diag);
 }

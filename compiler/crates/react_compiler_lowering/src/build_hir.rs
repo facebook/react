@@ -1643,6 +1643,7 @@ fn lower_expression(
                             .with_detail(CompilerDiagnosticDetail::Error {
                                 loc: id_loc.clone(),
                                 message: Some(reason.clone()),
+                                identifier_name: None,
                             }),
                         );
                     }
@@ -1667,6 +1668,7 @@ fn lower_expression(
                             CompilerDiagnosticDetail::Error {
                                 message: Some(format!("Multiple `<{}:{}>` tags found", tag_name, name)),
                                 loc: loc.clone(),
+                                identifier_name: None,
                             }
                         }).collect();
                         let mut diag = react_compiler_diagnostics::CompilerDiagnostic::new(
@@ -4834,6 +4836,7 @@ fn lower_inner(
                             .with_detail(CompilerDiagnosticDetail::Error {
                                 loc: convert_opt_loc(&ident.base.loc),
                                 message: Some("Could not find binding".to_string()),
+                                identifier_name: None,
                             }),
                         );
                     }
@@ -4880,6 +4883,7 @@ fn lower_inner(
                     .with_detail(CompilerDiagnosticDetail::Error {
                         loc: convert_opt_loc(&member.base.loc),
                         message: Some("Unsupported parameter type".to_string()),
+                        identifier_name: None,
                     }),
                 );
             }

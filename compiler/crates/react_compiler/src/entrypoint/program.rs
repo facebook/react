@@ -959,10 +959,14 @@ fn diagnostic_details_to_items(
         .details
         .iter()
         .map(|item| match item {
-            react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message } => {
+            react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message, identifier_name } => {
                 CompilerErrorItemInfo {
                     kind: "error".to_string(),
-                    loc: loc.as_ref().map(|l| diag_loc_to_logger_loc(l, filename)),
+                    loc: loc.as_ref().map(|l| {
+                        let mut logger_loc = diag_loc_to_logger_loc(l, filename);
+                        logger_loc.identifier_name = identifier_name.clone();
+                        logger_loc
+                    }),
                     message: message.clone(),
                 }
             }
@@ -995,6 +999,7 @@ fn to_logger_loc(
             index: loc.end.index,
         },
         filename: filename.map(|s| s.to_string()),
+        identifier_name: loc.identifier_name.clone(),
     })
 }
 
@@ -1015,6 +1020,7 @@ fn diag_loc_to_logger_loc(
             index: loc.end.index,
         },
         filename: filename.map(|s| s.to_string()),
+        identifier_name: None,
     }
 }
 
