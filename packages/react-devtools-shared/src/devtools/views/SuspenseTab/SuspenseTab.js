@@ -501,9 +501,7 @@ function SuspenseTab(_: {}) {
                   <div className={styles.VRule} />
                 </Fragment>
               )}
-              <div className={styles.SuspenseBreadcrumbs}>
-                <SuspenseBreadcrumbs />
-              </div>
+              <SuspenseBreadcrumbs />
               <div className={styles.VRule} />
               <ToggleUniqueSuspenders />
               {!hideSettings && <SettingsModalContextToggle />}

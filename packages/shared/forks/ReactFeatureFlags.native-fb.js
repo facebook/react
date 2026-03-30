@@ -21,7 +21,6 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 export const {
   alwaysThrottleRetries,
   enableEffectEventMutationPhase,
-  enableHiddenSubtreeInsertionEffectCleanup,
   enableObjectFiber,
   enableEagerAlternateStateNodeCleanup,
   passChildrenWhenCloningPersistedNodes,
@@ -29,6 +28,7 @@ export const {
   enableFragmentRefsScrollIntoView,
   enableFragmentRefsInstanceHandles,
   enableFragmentRefsTextNodes,
+  enableViewTransitionForPersistenceMode,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -46,7 +46,6 @@ export const enableCPUSuspense: boolean = true;
 export const enableCreateEventHandleAPI: boolean = false;
 export const enableMoveBefore: boolean = true;
 export const enableFizzExternalRuntime: boolean = true;
-export const enableHalt: boolean = true;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableLegacyCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
@@ -63,14 +62,14 @@ export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableSuspenseCallback: boolean = true;
 export const enableTaint: boolean = true;
 export const enableTransitionTracing: boolean = false;
-export const enableTrustedTypesIntegration: boolean = false;
+export const enableTrustedTypesIntegration: boolean = true;
 export const enableUpdaterTracking: boolean = __PROFILE__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableYieldingBeforePassive: boolean = false;
 export const enableThrottledScheduling: boolean = false;
-export const enableViewTransition: boolean = false;
+export const enableViewTransition: boolean = true;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -85,6 +84,14 @@ export const enablePerformanceIssueReporting: boolean =
 export const enableInternalInstanceMap: boolean = false;
 export const enableOptimisticKey: boolean = false;
 export const enableParallelTransitions: boolean = false;
+
+export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'off';
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

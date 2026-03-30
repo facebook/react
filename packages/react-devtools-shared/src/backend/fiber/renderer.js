@@ -18,7 +18,7 @@ import type {
   Wakeable,
 } from 'shared/ReactTypes';
 
-import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 import {
   ComponentFilterDisplayName,
@@ -43,11 +43,11 @@ import {
   ElementTypeActivity,
   ElementTypeVirtual,
   StrictMode,
+  ActivityHiddenMode,
+  ActivityVisibleMode,
 } from 'react-devtools-shared/src/frontend/types';
 import {
   deletePathInObject,
-  getDisplayName,
-  getWrappedDisplayName,
   getInObject,
   getUID,
   renamePathInObject,
@@ -57,7 +57,6 @@ import {
 import {
   formatConsoleArgumentsToSingleString,
   formatDurationToMicrosecondsGranularity,
-  gt,
   gte,
   serializeToString,
 } from 'react-devtools-shared/src/backend/utils';
@@ -109,14 +108,6 @@ import {
   STRICT_MODE_SYMBOL_STRING,
   PROFILER_NUMBER,
   PROFILER_SYMBOL_STRING,
-  REACT_MEMO_CACHE_SENTINEL,
-  SCOPE_NUMBER,
-  SCOPE_SYMBOL_STRING,
-  FORWARD_REF_NUMBER,
-  FORWARD_REF_SYMBOL_STRING,
-  MEMO_NUMBER,
-  MEMO_SYMBOL_STRING,
-  SERVER_CONTEXT_SYMBOL_STRING,
   LAZY_SYMBOL_STRING,
   REACT_OPTIMISTIC_KEY,
 } from '../shared/ReactSymbols';
@@ -124,9 +115,32 @@ import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
 import {componentInfoToComponentLogsMap} from '../shared/DevToolsServerComponentLogs';
 
-import is from 'shared/objectIs';
-
 import {getIODescription} from 'shared/ReactIODescription';
+
+import {
+  getPublicInstance,
+  getNativeTag,
+  getCurrentTime,
+} from 'react-devtools-shared/src/backend/DevToolsNativeHost';
+import {
+  isError,
+  rootSupportsProfiling,
+  isErrorBoundary,
+  getSecondaryEnvironmentName,
+  areEqualRects,
+} from './shared/DevToolsFiberInspection';
+import {
+  didFiberRender,
+  getContextChanged,
+  getChangedHooksIndices,
+  getChangedKeys,
+} from './shared/DevToolsFiberChangeDetection';
+import {getInternalReactConstants} from './shared/DevToolsFiberInternalReactConstants';
+import {
+  ioExistsInSuspenseAncestor,
+  getAwaitInSuspendedByFromIO,
+  getVirtualEndTime,
+} from './shared/DevToolsFiberSuspense';
 
 import {
   getStackByFiberInDevAndProd,
@@ -134,13 +148,6 @@ import {
   supportsOwnerStacks,
   supportsConsoleTasks,
 } from './DevToolsFiberComponentStack';
-
-// $FlowFixMe[method-unbinding]
-const toString = Object.prototype.toString;
-
-function isError(object: mixed) {
-  return toString.call(object) === '[object Error]';
-}
 
 import {getStyleXData} from '../StyleX/utils';
 import {createProfilingHooks} from '../profilingHooks';
@@ -160,10 +167,10 @@ import type {
   ProfilingDataBackend,
   ProfilingDataForRootBackend,
   ReactRenderer,
+  Rect,
   RendererInterface,
   SerializedElement,
   SerializedAsyncInfo,
-  WorkTagMap,
   CurrentDispatcherRef,
   LegacyDispatcherRef,
   ProfilingSettings,
@@ -175,29 +182,20 @@ import type {
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import type {
+  FiberInstance,
+  FilteredFiberInstance,
+  VirtualInstance,
+  DevToolsInstance,
+  SuspenseNode,
+} from './shared/DevToolsFiberTypes';
+import {
+  FIBER_INSTANCE,
+  VIRTUAL_INSTANCE,
+  FILTERED_FIBER_INSTANCE,
+} from './shared/DevToolsFiberTypes';
 import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
 import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
-
-// Kinds
-const FIBER_INSTANCE = 0;
-const VIRTUAL_INSTANCE = 1;
-const FILTERED_FIBER_INSTANCE = 2;
-
-// This type represents a stateful instance of a Client Component i.e. a Fiber pair.
-// These instances also let us track stateful DevTools meta data like id and warnings.
-type FiberInstance = {
-  kind: 0,
-  id: number,
-  parent: null | DevToolsInstance,
-  firstChild: null | DevToolsInstance,
-  nextSibling: null | DevToolsInstance,
-  source: null | string | Error | ReactFunctionLocation, // source location of this component function, or owned child stack
-  logCount: number, // total number of errors/warnings last seen
-  treeBaseDuration: number, // the profiled time of the last render of this subtree
-  suspendedBy: null | Array<ReactAsyncInfo>, // things that suspended in the children position of this component
-  suspenseNode: null | SuspenseNode,
-  data: Fiber, // one of a Fiber pair
-};
 
 function createFiberInstance(fiber: Fiber): FiberInstance {
   return {
@@ -214,22 +212,6 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     data: fiber,
   };
 }
-
-type FilteredFiberInstance = {
-  kind: 2,
-  // We exclude id from the type to get errors if we try to access it.
-  // However it is still in the object to preserve hidden class.
-  // id: number,
-  parent: null | DevToolsInstance,
-  firstChild: null | DevToolsInstance,
-  nextSibling: null | DevToolsInstance,
-  source: null | string | Error | ReactFunctionLocation, // always null here.
-  logCount: number, // total number of errors/warnings last seen
-  treeBaseDuration: number, // the profiled time of the last render of this subtree
-  suspendedBy: null | Array<ReactAsyncInfo>, // only used at the root
-  suspenseNode: null | SuspenseNode,
-  data: Fiber, // one of a Fiber pair
-};
 
 // This is used to represent a filtered Fiber but still lets us find its host instance.
 function createFilteredFiberInstance(fiber: Fiber): FilteredFiberInstance {
@@ -248,27 +230,6 @@ function createFilteredFiberInstance(fiber: Fiber): FilteredFiberInstance {
   }: any);
 }
 
-// This type represents a stateful instance of a Server Component or a Component
-// that gets optimized away - e.g. call-through without creating a Fiber.
-// It's basically a virtual Fiber. This is not a semantic concept in React.
-// It only exists as a virtual concept to let the same Element in the DevTools
-// persist. To be selectable separately from all ReactComponentInfo and overtime.
-type VirtualInstance = {
-  kind: 1,
-  id: number,
-  parent: null | DevToolsInstance,
-  firstChild: null | DevToolsInstance,
-  nextSibling: null | DevToolsInstance,
-  source: null | string | Error | ReactFunctionLocation, // source location of this server component, or owned child stack
-  logCount: number, // total number of errors/warnings last seen
-  treeBaseDuration: number, // the profiled time of the last render of this subtree
-  suspendedBy: null | Array<ReactAsyncInfo>, // things that blocked the server component's child from rendering
-  suspenseNode: null,
-  // The latest info for this instance. This can be updated over time and the
-  // same info can appear in more than once ServerComponentInstance.
-  data: ReactComponentInfo,
-};
-
 function createVirtualInstance(
   debugEntry: ReactComponentInfo,
 ): VirtualInstance {
@@ -286,30 +247,6 @@ function createVirtualInstance(
     data: debugEntry,
   };
 }
-
-type DevToolsInstance = FiberInstance | VirtualInstance | FilteredFiberInstance;
-
-// A Generic Rect super type which can include DOMRect and other objects with similar shape like in React Native.
-type Rect = {x: number, y: number, width: number, height: number, ...};
-
-type SuspenseNode = {
-  // The Instance can be a Suspense boundary, a SuspenseList Row, or HostRoot.
-  // It can also be disconnected from the main tree if it's a Filtered Instance.
-  instance: FiberInstance | FilteredFiberInstance,
-  parent: null | SuspenseNode,
-  firstChild: null | SuspenseNode,
-  nextSibling: null | SuspenseNode,
-  rects: null | Array<Rect>, // The bounding rects of content children.
-  suspendedBy: Map<ReactIOInfo, Set<DevToolsInstance>>, // Tracks which data we're suspended by and the children that suspend it.
-  environments: Map<string, number>, // Tracks the Flight environment names that suspended this. I.e. if the server blocked this.
-  endTime: number, // Track a short cut to the maximum end time value within the suspendedBy set.
-  // Track whether any of the items in suspendedBy are unique this this Suspense boundaries or if they're all
-  // also in the parent sets. This determine whether this could contribute in the loading sequence.
-  hasUniqueSuspenders: boolean,
-  // Track whether anything suspended in this boundary that we can't track either because it was using throw
-  // a promise, an older version of React or because we're inspecting prod.
-  hasUnknownSuspenders: boolean,
-};
 
 // Update flags need to be propagated up until the caller that put the corresponding
 // node on the stack.
@@ -338,18 +275,6 @@ function createSuspenseNode(
   });
 }
 
-type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
-type getTypeSymbolType = (type: any) => symbol | string | number;
-
-type ReactPriorityLevelsType = {
-  ImmediatePriority: number,
-  UserBlockingPriority: number,
-  NormalPriority: number,
-  LowPriority: number,
-  IdlePriority: number,
-  NoPriority: number,
-};
-
 export function getDispatcherRef(renderer: {
   +currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   ...
@@ -373,484 +298,6 @@ export function getDispatcherRef(renderer: {
     };
   }
   return (injectedRef: any);
-}
-
-function getFiberFlags(fiber: Fiber): number {
-  // The name of this field changed from "effectTag" to "flags"
-  return fiber.flags !== undefined ? fiber.flags : (fiber: any).effectTag;
-}
-
-// Some environments (e.g. React Native / Hermes) don't support the performance API yet.
-const getCurrentTime =
-  // $FlowFixMe[method-unbinding]
-  typeof performance === 'object' && typeof performance.now === 'function'
-    ? () => performance.now()
-    : () => Date.now();
-
-export function getInternalReactConstants(version: string): {
-  getDisplayNameForFiber: getDisplayNameForFiberType,
-  getTypeSymbol: getTypeSymbolType,
-  ReactPriorityLevels: ReactPriorityLevelsType,
-  ReactTypeOfWork: WorkTagMap,
-  StrictModeBits: number,
-  SuspenseyImagesMode: number,
-} {
-  // **********************************************************
-  // The section below is copied from files in React repo.
-  // Keep it in sync, and add version guards if it changes.
-  //
-  // Technically these priority levels are invalid for versions before 16.9,
-  // but 16.9 is the first version to report priority level to DevTools,
-  // so we can avoid checking for earlier versions and support pre-16.9 canary releases in the process.
-  let ReactPriorityLevels: ReactPriorityLevelsType = {
-    ImmediatePriority: 99,
-    UserBlockingPriority: 98,
-    NormalPriority: 97,
-    LowPriority: 96,
-    IdlePriority: 95,
-    NoPriority: 90,
-  };
-
-  if (gt(version, '17.0.2')) {
-    ReactPriorityLevels = {
-      ImmediatePriority: 1,
-      UserBlockingPriority: 2,
-      NormalPriority: 3,
-      LowPriority: 4,
-      IdlePriority: 5,
-      NoPriority: 0,
-    };
-  }
-
-  let StrictModeBits = 0;
-  if (gte(version, '18.0.0-alpha')) {
-    // 18+
-    StrictModeBits = 0b011000;
-  } else if (gte(version, '16.9.0')) {
-    // 16.9 - 17
-    StrictModeBits = 0b1;
-  } else if (gte(version, '16.3.0')) {
-    // 16.3 - 16.8
-    StrictModeBits = 0b10;
-  }
-
-  const SuspenseyImagesMode = 0b0100000;
-
-  let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
-
-  // **********************************************************
-  // The section below is copied from files in React repo.
-  // Keep it in sync, and add version guards if it changes.
-  //
-  // TODO Update the gt() check below to be gte() whichever the next version number is.
-  // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
-  if (gt(version, '17.0.1')) {
-    ReactTypeOfWork = {
-      CacheComponent: 24, // Experimental
-      ClassComponent: 1,
-      ContextConsumer: 9,
-      ContextProvider: 10,
-      CoroutineComponent: -1, // Removed
-      CoroutineHandlerPhase: -1, // Removed
-      DehydratedSuspenseComponent: 18, // Behind a flag
-      ForwardRef: 11,
-      Fragment: 7,
-      FunctionComponent: 0,
-      HostComponent: 5,
-      HostPortal: 4,
-      HostRoot: 3,
-      HostHoistable: 26, // In reality, 18.2+. But doesn't hurt to include it here
-      HostSingleton: 27, // Same as above
-      HostText: 6,
-      IncompleteClassComponent: 17,
-      IncompleteFunctionComponent: 28,
-      IndeterminateComponent: 2, // removed in 19.0.0
-      LazyComponent: 16,
-      LegacyHiddenComponent: 23, // Does not exist in 18+ OSS but exists in fb builds
-      MemoComponent: 14,
-      Mode: 8,
-      OffscreenComponent: 22, // Experimental in 17. Stable in 18+
-      Profiler: 12,
-      ScopeComponent: 21, // Experimental
-      SimpleMemoComponent: 15,
-      SuspenseComponent: 13,
-      SuspenseListComponent: 19, // Experimental
-      TracingMarkerComponent: 25, // Experimental - This is technically in 18 but we don't
-      // want to fork again so we're adding it here instead
-      YieldComponent: -1, // Removed
-      Throw: 29,
-      ViewTransitionComponent: 30, // Experimental
-      ActivityComponent: 31,
-    };
-  } else if (gte(version, '17.0.0-alpha')) {
-    ReactTypeOfWork = {
-      CacheComponent: -1, // Doesn't exist yet
-      ClassComponent: 1,
-      ContextConsumer: 9,
-      ContextProvider: 10,
-      CoroutineComponent: -1, // Removed
-      CoroutineHandlerPhase: -1, // Removed
-      DehydratedSuspenseComponent: 18, // Behind a flag
-      ForwardRef: 11,
-      Fragment: 7,
-      FunctionComponent: 0,
-      HostComponent: 5,
-      HostPortal: 4,
-      HostRoot: 3,
-      HostHoistable: -1, // Doesn't exist yet
-      HostSingleton: -1, // Doesn't exist yet
-      HostText: 6,
-      IncompleteClassComponent: 17,
-      IncompleteFunctionComponent: -1, // Doesn't exist yet
-      IndeterminateComponent: 2,
-      LazyComponent: 16,
-      LegacyHiddenComponent: 24,
-      MemoComponent: 14,
-      Mode: 8,
-      OffscreenComponent: 23, // Experimental
-      Profiler: 12,
-      ScopeComponent: 21, // Experimental
-      SimpleMemoComponent: 15,
-      SuspenseComponent: 13,
-      SuspenseListComponent: 19, // Experimental
-      TracingMarkerComponent: -1, // Doesn't exist yet
-      YieldComponent: -1, // Removed
-      Throw: -1, // Doesn't exist yet
-      ViewTransitionComponent: -1, // Doesn't exist yet
-      ActivityComponent: -1, // Doesn't exist yet
-    };
-  } else if (gte(version, '16.6.0-beta.0')) {
-    ReactTypeOfWork = {
-      CacheComponent: -1, // Doesn't exist yet
-      ClassComponent: 1,
-      ContextConsumer: 9,
-      ContextProvider: 10,
-      CoroutineComponent: -1, // Removed
-      CoroutineHandlerPhase: -1, // Removed
-      DehydratedSuspenseComponent: 18, // Behind a flag
-      ForwardRef: 11,
-      Fragment: 7,
-      FunctionComponent: 0,
-      HostComponent: 5,
-      HostPortal: 4,
-      HostRoot: 3,
-      HostHoistable: -1, // Doesn't exist yet
-      HostSingleton: -1, // Doesn't exist yet
-      HostText: 6,
-      IncompleteClassComponent: 17,
-      IncompleteFunctionComponent: -1, // Doesn't exist yet
-      IndeterminateComponent: 2,
-      LazyComponent: 16,
-      LegacyHiddenComponent: -1,
-      MemoComponent: 14,
-      Mode: 8,
-      OffscreenComponent: -1, // Experimental
-      Profiler: 12,
-      ScopeComponent: -1, // Experimental
-      SimpleMemoComponent: 15,
-      SuspenseComponent: 13,
-      SuspenseListComponent: 19, // Experimental
-      TracingMarkerComponent: -1, // Doesn't exist yet
-      YieldComponent: -1, // Removed
-      Throw: -1, // Doesn't exist yet
-      ViewTransitionComponent: -1, // Doesn't exist yet
-      ActivityComponent: -1, // Doesn't exist yet
-    };
-  } else if (gte(version, '16.4.3-alpha')) {
-    ReactTypeOfWork = {
-      CacheComponent: -1, // Doesn't exist yet
-      ClassComponent: 2,
-      ContextConsumer: 11,
-      ContextProvider: 12,
-      CoroutineComponent: -1, // Removed
-      CoroutineHandlerPhase: -1, // Removed
-      DehydratedSuspenseComponent: -1, // Doesn't exist yet
-      ForwardRef: 13,
-      Fragment: 9,
-      FunctionComponent: 0,
-      HostComponent: 7,
-      HostPortal: 6,
-      HostRoot: 5,
-      HostHoistable: -1, // Doesn't exist yet
-      HostSingleton: -1, // Doesn't exist yet
-      HostText: 8,
-      IncompleteClassComponent: -1, // Doesn't exist yet
-      IncompleteFunctionComponent: -1, // Doesn't exist yet
-      IndeterminateComponent: 4,
-      LazyComponent: -1, // Doesn't exist yet
-      LegacyHiddenComponent: -1,
-      MemoComponent: -1, // Doesn't exist yet
-      Mode: 10,
-      OffscreenComponent: -1, // Experimental
-      Profiler: 15,
-      ScopeComponent: -1, // Experimental
-      SimpleMemoComponent: -1, // Doesn't exist yet
-      SuspenseComponent: 16,
-      SuspenseListComponent: -1, // Doesn't exist yet
-      TracingMarkerComponent: -1, // Doesn't exist yet
-      YieldComponent: -1, // Removed
-      Throw: -1, // Doesn't exist yet
-      ViewTransitionComponent: -1, // Doesn't exist yet
-      ActivityComponent: -1, // Doesn't exist yet
-    };
-  } else {
-    ReactTypeOfWork = {
-      CacheComponent: -1, // Doesn't exist yet
-      ClassComponent: 2,
-      ContextConsumer: 12,
-      ContextProvider: 13,
-      CoroutineComponent: 7,
-      CoroutineHandlerPhase: 8,
-      DehydratedSuspenseComponent: -1, // Doesn't exist yet
-      ForwardRef: 14,
-      Fragment: 10,
-      FunctionComponent: 1,
-      HostComponent: 5,
-      HostPortal: 4,
-      HostRoot: 3,
-      HostHoistable: -1, // Doesn't exist yet
-      HostSingleton: -1, // Doesn't exist yet
-      HostText: 6,
-      IncompleteClassComponent: -1, // Doesn't exist yet
-      IncompleteFunctionComponent: -1, // Doesn't exist yet
-      IndeterminateComponent: 0,
-      LazyComponent: -1, // Doesn't exist yet
-      LegacyHiddenComponent: -1,
-      MemoComponent: -1, // Doesn't exist yet
-      Mode: 11,
-      OffscreenComponent: -1, // Experimental
-      Profiler: 15,
-      ScopeComponent: -1, // Experimental
-      SimpleMemoComponent: -1, // Doesn't exist yet
-      SuspenseComponent: 16,
-      SuspenseListComponent: -1, // Doesn't exist yet
-      TracingMarkerComponent: -1, // Doesn't exist yet
-      YieldComponent: 9,
-      Throw: -1, // Doesn't exist yet
-      ViewTransitionComponent: -1, // Doesn't exist yet
-      ActivityComponent: -1, // Doesn't exist yet
-    };
-  }
-  // **********************************************************
-  // End of copied code.
-  // **********************************************************
-
-  function getTypeSymbol(type: any): symbol | string | number {
-    const symbolOrNumber =
-      typeof type === 'object' && type !== null ? type.$$typeof : type;
-
-    return typeof symbolOrNumber === 'symbol'
-      ? symbolOrNumber.toString()
-      : symbolOrNumber;
-  }
-
-  const {
-    CacheComponent,
-    ClassComponent,
-    IncompleteClassComponent,
-    IncompleteFunctionComponent,
-    FunctionComponent,
-    IndeterminateComponent,
-    ForwardRef,
-    HostRoot,
-    HostHoistable,
-    HostSingleton,
-    HostComponent,
-    HostPortal,
-    HostText,
-    Fragment,
-    LazyComponent,
-    LegacyHiddenComponent,
-    MemoComponent,
-    OffscreenComponent,
-    Profiler,
-    ScopeComponent,
-    SimpleMemoComponent,
-    SuspenseComponent,
-    SuspenseListComponent,
-    TracingMarkerComponent,
-    Throw,
-    ViewTransitionComponent,
-    ActivityComponent,
-  } = ReactTypeOfWork;
-
-  function resolveFiberType(type: any): $FlowFixMe {
-    const typeSymbol = getTypeSymbol(type);
-    switch (typeSymbol) {
-      case MEMO_NUMBER:
-      case MEMO_SYMBOL_STRING:
-        // recursively resolving memo type in case of memo(forwardRef(Component))
-        return resolveFiberType(type.type);
-      case FORWARD_REF_NUMBER:
-      case FORWARD_REF_SYMBOL_STRING:
-        return type.render;
-      default:
-        return type;
-    }
-  }
-
-  // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
-  function getDisplayNameForFiber(
-    fiber: Fiber,
-    shouldSkipForgetCheck: boolean = false,
-  ): string | null {
-    const {elementType, type, tag} = fiber;
-
-    let resolvedType = type;
-    if (typeof type === 'object' && type !== null) {
-      resolvedType = resolveFiberType(type);
-    }
-
-    let resolvedContext: any = null;
-    if (
-      !shouldSkipForgetCheck &&
-      // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
-      (fiber.updateQueue?.memoCache != null ||
-        (Array.isArray(fiber.memoizedState?.memoizedState) &&
-          fiber.memoizedState.memoizedState[0]?.[REACT_MEMO_CACHE_SENTINEL]) ||
-        fiber.memoizedState?.memoizedState?.[REACT_MEMO_CACHE_SENTINEL])
-    ) {
-      const displayNameWithoutForgetWrapper = getDisplayNameForFiber(
-        fiber,
-        true,
-      );
-      if (displayNameWithoutForgetWrapper == null) {
-        return null;
-      }
-
-      return `Forget(${displayNameWithoutForgetWrapper})`;
-    }
-
-    switch (tag) {
-      case ActivityComponent:
-        return 'Activity';
-      case CacheComponent:
-        return 'Cache';
-      case ClassComponent:
-      case IncompleteClassComponent:
-      case IncompleteFunctionComponent:
-      case FunctionComponent:
-      case IndeterminateComponent:
-        return getDisplayName(resolvedType);
-      case ForwardRef:
-        return getWrappedDisplayName(
-          elementType,
-          resolvedType,
-          'ForwardRef',
-          'Anonymous',
-        );
-      case HostRoot:
-        const fiberRoot = fiber.stateNode;
-        if (fiberRoot != null && fiberRoot._debugRootType !== null) {
-          return fiberRoot._debugRootType;
-        }
-        return null;
-      case HostComponent:
-      case HostSingleton:
-      case HostHoistable:
-        return type;
-      case HostPortal:
-      case HostText:
-        return null;
-      case Fragment:
-        return 'Fragment';
-      case LazyComponent:
-        // This display name will not be user visible.
-        // Once a Lazy component loads its inner component, React replaces the tag and type.
-        // This display name will only show up in console logs when DevTools DEBUG mode is on.
-        return 'Lazy';
-      case MemoComponent:
-      case SimpleMemoComponent:
-        // Display name in React does not use `Memo` as a wrapper but fallback name.
-        return getWrappedDisplayName(
-          elementType,
-          resolvedType,
-          'Memo',
-          'Anonymous',
-        );
-      case SuspenseComponent:
-        return 'Suspense';
-      case LegacyHiddenComponent:
-        return 'LegacyHidden';
-      case OffscreenComponent:
-        return 'Offscreen';
-      case ScopeComponent:
-        return 'Scope';
-      case SuspenseListComponent:
-        return 'SuspenseList';
-      case Profiler:
-        return 'Profiler';
-      case TracingMarkerComponent:
-        return 'TracingMarker';
-      case ViewTransitionComponent:
-        return 'ViewTransition';
-      case Throw:
-        // This should really never be visible.
-        return 'Error';
-      default:
-        const typeSymbol = getTypeSymbol(type);
-
-        switch (typeSymbol) {
-          case CONCURRENT_MODE_NUMBER:
-          case CONCURRENT_MODE_SYMBOL_STRING:
-          case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
-            return null;
-          case PROVIDER_NUMBER:
-          case PROVIDER_SYMBOL_STRING:
-            // 16.3.0 exposed the context object as "context"
-            // PR #12501 changed it to "_context" for 16.3.1+
-            // NOTE Keep in sync with inspectElementRaw()
-            resolvedContext = fiber.type._context || fiber.type.context;
-            return `${resolvedContext.displayName || 'Context'}.Provider`;
-          case CONTEXT_NUMBER:
-          case CONTEXT_SYMBOL_STRING:
-          case SERVER_CONTEXT_SYMBOL_STRING:
-            if (
-              fiber.type._context === undefined &&
-              fiber.type.Provider === fiber.type
-            ) {
-              // In 19+, Context.Provider === Context, so this is a provider.
-              resolvedContext = fiber.type;
-              return `${resolvedContext.displayName || 'Context'}.Provider`;
-            }
-
-            // 16.3-16.5 read from "type" because the Consumer is the actual context object.
-            // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
-            // NOTE Keep in sync with inspectElementRaw()
-            resolvedContext = fiber.type._context || fiber.type;
-
-            // NOTE: TraceUpdatesBackendManager depends on the name ending in '.Consumer'
-            // If you change the name, figure out a more resilient way to detect it.
-            return `${resolvedContext.displayName || 'Context'}.Consumer`;
-          case CONSUMER_SYMBOL_STRING:
-            // 19+
-            resolvedContext = fiber.type._context;
-            return `${resolvedContext.displayName || 'Context'}.Consumer`;
-          case STRICT_MODE_NUMBER:
-          case STRICT_MODE_SYMBOL_STRING:
-            return null;
-          case PROFILER_NUMBER:
-          case PROFILER_SYMBOL_STRING:
-            return `Profiler(${fiber.memoizedProps.id})`;
-          case SCOPE_NUMBER:
-          case SCOPE_SYMBOL_STRING:
-            return 'Scope';
-          default:
-            // Unknown element type.
-            // This may mean a new element type that has not yet been added to DevTools.
-            return null;
-        }
-    }
-  }
-
-  return {
-    getDisplayNameForFiber,
-    getTypeSymbol,
-    ReactPriorityLevels,
-    ReactTypeOfWork,
-    StrictModeBits,
-    SuspenseyImagesMode,
-  };
 }
 
 // All environment names we've seen so far. This lets us create a list of filters to apply.
@@ -882,53 +329,6 @@ const hostResourceToDevToolsInstanceMap: Map<
   HostInstance,
   Set<DevToolsInstance>,
 > = new Map();
-
-// Ideally, this should be injected from Reconciler config
-function getPublicInstance(instance: HostInstance): HostInstance {
-  // Typically the PublicInstance and HostInstance is the same thing but not in Fabric.
-  // So we need to detect this and use that as the public instance.
-
-  // React Native. Modern. Fabric.
-  if (typeof instance === 'object' && instance !== null) {
-    if (typeof instance.canonical === 'object' && instance.canonical !== null) {
-      if (
-        typeof instance.canonical.publicInstance === 'object' &&
-        instance.canonical.publicInstance !== null
-      ) {
-        return instance.canonical.publicInstance;
-      }
-    }
-
-    // React Native. Legacy. Paper.
-    if (typeof instance._nativeTag === 'number') {
-      return instance._nativeTag;
-    }
-  }
-
-  // React Web. Usually a DOM element.
-  return instance;
-}
-
-function getNativeTag(instance: HostInstance): number | null {
-  if (typeof instance !== 'object' || instance === null) {
-    return null;
-  }
-
-  // Modern. Fabric.
-  if (
-    instance.canonical != null &&
-    typeof instance.canonical.nativeTag === 'number'
-  ) {
-    return instance.canonical.nativeTag;
-  }
-
-  // Legacy.  Paper.
-  if (typeof instance._nativeTag === 'number') {
-    return instance._nativeTag;
-  }
-
-  return null;
-}
 
 function aquireHostInstance(
   nearestInstance: DevToolsInstance,
@@ -991,8 +391,8 @@ function releaseHostResource(
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (const firstInstance of resourceInstances) {
           publicInstanceToDevToolsInstanceMap.set(
+            publicInstance,
             firstInstance,
-            nearestInstance,
           );
           break;
         }
@@ -1029,7 +429,6 @@ export function attach(
   const {
     ActivityComponent,
     ClassComponent,
-    ContextConsumer,
     DehydratedSuspenseComponent,
     ForwardRef,
     Fragment,
@@ -1138,7 +537,7 @@ export function attach(
   // if any passive effects called console.warn / console.error.
   let needsToFlushComponentLogs = false;
 
-  function bruteForceFlushErrorsAndWarnings() {
+  function bruteForceFlushErrorsAndWarnings(root: FiberInstance) {
     // Refresh error/warning count for all mounted unfiltered Fibers.
     let hasChanges = false;
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -1156,7 +555,7 @@ export function attach(
       }
     }
     if (hasChanges) {
-      flushPendingEvents();
+      flushPendingEvents(root);
     }
   }
 
@@ -1183,7 +582,7 @@ export function attach(
         updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
       }
     }
-    flushPendingEvents();
+    flushPendingEvents(null);
   }
 
   function clearConsoleLogsHelper(instanceID: number, type: 'error' | 'warn') {
@@ -1211,7 +610,7 @@ export function attach(
         }
         const changed = recordConsoleLogs(devtoolsInstance, componentLogsEntry);
         if (changed) {
-          flushPendingEvents();
+          flushPendingEvents(null);
           updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
         }
       }
@@ -1533,6 +932,8 @@ export function attach(
     if (isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      // Supporting change of filters while profiling would require a refactor
+      // to flush after each root instead of at the end.
       throw Error('Cannot modify filter preferences while profiling');
     }
 
@@ -1647,7 +1048,8 @@ export function attach(
       focusedActivityFilter.activityID = focusedActivityID;
     }
 
-    flushPendingEvents();
+    // We're not profiling so it's safe to flush without a specific root.
+    flushPendingEvents(null);
 
     needsToFlushComponentLogs = false;
   }
@@ -1989,130 +1391,6 @@ export function attach(
     }
   }
 
-  function getContextChanged(prevFiber: Fiber, nextFiber: Fiber): boolean {
-    let prevContext =
-      prevFiber.dependencies && prevFiber.dependencies.firstContext;
-    let nextContext =
-      nextFiber.dependencies && nextFiber.dependencies.firstContext;
-
-    while (prevContext && nextContext) {
-      // Note this only works for versions of React that support this key (e.v. 18+)
-      // For older versions, there's no good way to read the current context value after render has completed.
-      // This is because React maintains a stack of context values during render,
-      // but by the time DevTools is called, render has finished and the stack is empty.
-      if (prevContext.context !== nextContext.context) {
-        // If the order of context has changed, then the later context values might have
-        // changed too but the main reason it rerendered was earlier. Either an earlier
-        // context changed value but then we would have exited already. If we end up here
-        // it's because a state or props change caused the order of contexts used to change.
-        // So the main cause is not the contexts themselves.
-        return false;
-      }
-      if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
-        return true;
-      }
-
-      prevContext = prevContext.next;
-      nextContext = nextContext.next;
-    }
-    return false;
-  }
-
-  function didStatefulHookChange(prev: HooksNode, next: HooksNode): boolean {
-    // Detect the shape of useState() / useReducer() / useTransition() / useSyncExternalStore() / useActionState()
-    const isStatefulHook =
-      prev.isStateEditable === true ||
-      prev.name === 'SyncExternalStore' ||
-      prev.name === 'Transition' ||
-      prev.name === 'ActionState' ||
-      prev.name === 'FormState';
-
-    // Compare the values to see if they changed
-    if (isStatefulHook) {
-      return prev.value !== next.value;
-    }
-
-    return false;
-  }
-
-  function getChangedHooksIndices(
-    prevHooks: HooksTree | null,
-    nextHooks: HooksTree | null,
-  ): null | Array<number> {
-    if (prevHooks == null || nextHooks == null) {
-      return null;
-    }
-
-    const indices: Array<number> = [];
-    let index = 0;
-
-    function traverse(prevTree: HooksTree, nextTree: HooksTree): void {
-      for (let i = 0; i < prevTree.length; i++) {
-        const prevHook = prevTree[i];
-        const nextHook = nextTree[i];
-
-        if (prevHook.subHooks.length > 0 && nextHook.subHooks.length > 0) {
-          traverse(prevHook.subHooks, nextHook.subHooks);
-          continue;
-        }
-
-        if (didStatefulHookChange(prevHook, nextHook)) {
-          indices.push(index);
-        }
-
-        index++;
-      }
-    }
-
-    traverse(prevHooks, nextHooks);
-    return indices;
-  }
-
-  function getChangedKeys(prev: any, next: any): null | Array<string> {
-    if (prev == null || next == null) {
-      return null;
-    }
-
-    const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
-    const changedKeys = [];
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const key of keys) {
-      if (prev[key] !== next[key]) {
-        changedKeys.push(key);
-      }
-    }
-
-    return changedKeys;
-  }
-
-  function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
-    switch (nextFiber.tag) {
-      case ClassComponent:
-      case FunctionComponent:
-      case ContextConsumer:
-      case MemoComponent:
-      case SimpleMemoComponent:
-      case ForwardRef:
-        // For types that execute user code, we check PerformedWork effect.
-        // We don't reflect bailouts (either referential or sCU) in DevTools.
-        // TODO: This flag is a leaked implementation detail. Once we start
-        // releasing DevTools in lockstep with React, we should import a
-        // function from the reconciler instead.
-        const PerformedWork = 0b000000000000000000000000001;
-        return (getFiberFlags(nextFiber) & PerformedWork) === PerformedWork;
-      // Note: ContextConsumer only gets PerformedWork effect in 16.3.3+
-      // so it won't get highlighted with React 16.3.0 to 16.3.2.
-      default:
-        // For host components and other types, we compare inputs
-        // to determine whether something is an update.
-        return (
-          prevFiber.memoizedProps !== nextFiber.memoizedProps ||
-          prevFiber.memoizedState !== nextFiber.memoizedState ||
-          prevFiber.ref !== nextFiber.ref
-        );
-    }
-  }
-
   type OperationsArray = Array<number>;
 
   type StringTableEntry = {
@@ -2203,7 +1481,12 @@ export function attach(
     }
   }
 
-  function flushPendingEvents(): void {
+  /**
+   * Allowed to flush pending events without a specific root when:
+   * - pending operations don't record tree mutations e.g. TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS
+   * - not profiling (the commit tree builder requires the root of the mutations)
+   */
+  function flushPendingEvents(root: FiberInstance | null): void {
     if (shouldBailoutWithPendingOperations()) {
       // If we aren't profiling, we can just bail out here.
       // No use sending an empty update over the bridge.
@@ -2245,11 +1528,10 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    if (currentRoot === null) {
-      // TODO: This is not always safe so this field is probably not needed.
+    if (root === null) {
       operations[i++] = -1;
     } else {
-      operations[i++] = currentRoot.id;
+      operations[i++] = root.id;
     }
 
     // Now fill in the string table.
@@ -2595,7 +1877,12 @@ export function attach(
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : String(key);
+      const keyString =
+        key === null
+          ? null
+          : key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : String(key);
       const keyStringID = getStringID(keyString);
 
       const nameProp =
@@ -2631,6 +1918,20 @@ export function attach(
           pushOperation(TREE_OPERATION_SET_SUBTREE_MODE);
           pushOperation(id);
           pushOperation(StrictMode);
+        }
+      }
+
+      // If this is an Activity component, check if it's hidden.
+      if (fiber.tag === ActivityComponent) {
+        const offscreenChild = fiber.child;
+        if (
+          offscreenChild !== null &&
+          offscreenChild.tag === OffscreenComponent &&
+          offscreenChild.memoizedState !== null
+        ) {
+          pushOperation(TREE_OPERATION_SET_SUBTREE_MODE);
+          pushOperation(id);
+          pushOperation(ActivityHiddenMode);
         }
       }
     }
@@ -2927,20 +2228,6 @@ export function attach(
   // the current parent here as well.
   let reconcilingParentSuspenseNode: null | SuspenseNode = null;
 
-  function ioExistsInSuspenseAncestor(
-    suspenseNode: SuspenseNode,
-    ioInfo: ReactIOInfo,
-  ): boolean {
-    let ancestor = suspenseNode.parent;
-    while (ancestor !== null) {
-      if (ancestor.suspendedBy.has(ioInfo)) {
-        return true;
-      }
-      ancestor = ancestor.parent;
-    }
-    return false;
-  }
-
   function insertSuspendedBy(asyncInfo: ReactAsyncInfo): void {
     if (reconcilingParent === null || reconcilingParentSuspenseNode === null) {
       throw new Error(
@@ -3039,19 +2326,6 @@ export function attach(
     }
   }
 
-  function getAwaitInSuspendedByFromIO(
-    suspensedBy: Array<ReactAsyncInfo>,
-    ioInfo: ReactIOInfo,
-  ): null | ReactAsyncInfo {
-    for (let i = 0; i < suspensedBy.length; i++) {
-      const asyncInfo = suspensedBy[i];
-      if (asyncInfo.awaited === ioInfo) {
-        return asyncInfo;
-      }
-    }
-    return null;
-  }
-
   function unblockSuspendedBy(
     parentSuspenseNode: SuspenseNode,
     ioInfo: ReactIOInfo,
@@ -3083,15 +2357,6 @@ export function attach(
       }
       node = node.nextSibling;
     }
-  }
-
-  function getVirtualEndTime(ioInfo: ReactIOInfo): number {
-    if (ioInfo.env != null) {
-      // Sort client side content first so that scripts and streams don't
-      // cover up the effect of server time.
-      return ioInfo.end + 1000000;
-    }
-    return ioInfo.end;
   }
 
   function computeEndTime(suspenseNode: SuspenseNode) {
@@ -3186,15 +2451,16 @@ export function attach(
                 environmentCounts.set(env, count - 1);
               }
             }
-          }
-          if (
-            suspenseNode.hasUniqueSuspenders &&
-            !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
-          ) {
-            // This entry wasn't in any ancestor and is no longer in this suspense boundary.
-            // This means that a child might now be the unique suspender for this IO.
-            // Search the child boundaries to see if we can reveal any of them.
-            unblockSuspendedBy(suspenseNode, ioInfo);
+
+            if (
+              suspenseNode.hasUniqueSuspenders &&
+              !ioExistsInSuspenseAncestor(suspenseNode, ioInfo)
+            ) {
+              // This entry wasn't in any ancestor and is no longer in this suspense boundary.
+              // This means that a child might now be the unique suspender for this IO.
+              // Search the child boundaries to see if we can reveal any of them.
+              unblockSuspendedBy(suspenseNode, ioInfo);
+            }
           }
         }
       }
@@ -3332,6 +2598,17 @@ export function attach(
     }
   }
 
+  // Returns true if this is a hidden OffscreenComponent that belongs to
+  // an Activity boundary (as opposed to Suspense). Activity's children
+  // should remain visible in the DevTools tree even when hidden.
+  function isActivityHiddenOffscreen(fiber: Fiber): boolean {
+    return (
+      isHiddenOffscreen(fiber) &&
+      fiber.return !== null &&
+      fiber.return.tag === ActivityComponent
+    );
+  }
+
   /**
    * Offscreen of suspended Suspense
    */
@@ -3413,34 +2690,6 @@ export function attach(
       instance = instance.parent;
     }
     return false;
-  }
-
-  function areEqualRects(
-    a: null | Array<Rect>,
-    b: null | Array<Rect>,
-  ): boolean {
-    if (a === null) {
-      return b === null;
-    }
-    if (b === null) {
-      return false;
-    }
-    if (a.length !== b.length) {
-      return false;
-    }
-    for (let i = 0; i < a.length; i++) {
-      const aRect = a[i];
-      const bRect = b[i];
-      if (
-        aRect.x !== bRect.x ||
-        aRect.y !== bRect.y ||
-        aRect.width !== bRect.width ||
-        aRect.height !== bRect.height
-      ) {
-        return false;
-      }
-    }
-    return true;
   }
 
   function measureUnchangedSuspenseNodesRecursively(
@@ -3613,25 +2862,6 @@ export function attach(
 
     const id = instance.id;
     pendingRealUnmountedIDs.push(id);
-  }
-
-  function getSecondaryEnvironmentName(
-    debugInfo: ?ReactDebugInfo,
-    index: number,
-  ): null | string {
-    if (debugInfo != null) {
-      const componentInfo: ReactComponentInfo = (debugInfo[index]: any);
-      for (let i = index + 1; i < debugInfo.length; i++) {
-        const debugEntry = debugInfo[i];
-        if (typeof debugEntry.env === 'string') {
-          // If the next environment is different then this component was the boundary
-          // and it changed before entering the next component. So we assign this
-          // component a secondary environment.
-          return componentInfo.env !== debugEntry.env ? debugEntry.env : null;
-        }
-      }
-    }
-    return null;
   }
 
   function trackDebugInfoFromLazyType(fiber: Fiber): void {
@@ -4283,7 +3513,16 @@ export function attach(
           isInDisconnectedSubtree = stashedDisconnected;
         }
       } else if (isHiddenOffscreen(fiber)) {
-        // hidden Activity is noisy.
+        if (isActivityHiddenOffscreen(fiber)) {
+          // Activity's hidden children should still be visible in DevTools.
+          if (fiber.child !== null) {
+            mountChildrenRecursively(
+              fiber.child,
+              traceNearestHostComponentUpdate,
+            );
+          }
+        }
+        // Otherwise, hidden Offscreen (e.g. non-Activity) is noisy.
         // Including it may show overlapping Suspense rects
       } else if (fiber.tag === SuspenseComponent && OffscreenComponent === -1) {
         // Legacy Suspense without the Offscreen wrapper. For the modern Suspense we just handle the
@@ -4513,7 +3752,11 @@ export function attach(
         pushOperation(convertedTreeBaseDuration);
       }
 
-      if (prevFiber == null || didFiberRender(prevFiber, fiber)) {
+      if (
+        prevFiber == null ||
+        (prevFiber !== fiber &&
+          didFiberRender(ReactTypeOfWork, prevFiber, fiber))
+      ) {
         if (actualDuration != null) {
           // The actual duration reported by React includes time spent working on children.
           // This is useful information, but it's also useful to be able to exclude child durations.
@@ -4612,8 +3855,9 @@ export function attach(
     while (child !== null) {
       if (child.kind === FILTERED_FIBER_INSTANCE) {
         const fiber = child.data;
-        if (isHiddenOffscreen(fiber)) {
+        if (isHiddenOffscreen(fiber) && !isActivityHiddenOffscreen(fiber)) {
           // The children of this Offscreen are hidden so they don't get added.
+          // Activity's hidden children are still shown in the tree.
         } else {
           addUnfilteredChildrenIDs(child, nextChildren);
         }
@@ -5143,11 +4387,14 @@ export function attach(
           elementType === ElementTypeMemo ||
           elementType === ElementTypeForwardRef
         ) {
-          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
-          traceNearestHostComponentUpdate = didFiberRender(
-            prevFiber,
-            nextFiber,
-          );
+          if (prevFiber !== nextFiber) {
+            // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+            traceNearestHostComponentUpdate = didFiberRender(
+              ReactTypeOfWork,
+              prevFiber,
+              nextFiber,
+            );
+          }
         }
       }
     }
@@ -5167,18 +4414,20 @@ export function attach(
       previousSuspendedBy = fiberInstance.suspendedBy;
       // Update the Fiber so we that we always keep the current Fiber on the data.
       fiberInstance.data = nextFiber;
-      if (
-        mostRecentlyInspectedElement !== null &&
-        (mostRecentlyInspectedElement.id === fiberInstance.id ||
-          // If we're inspecting a Root, we inspect the Screen.
-          // Invalidating any Root invalidates the Screen too.
-          (mostRecentlyInspectedElement.type === ElementTypeRoot &&
-            nextFiber.tag === HostRoot)) &&
-        didFiberRender(prevFiber, nextFiber)
-      ) {
-        // If this Fiber has updated, clear cached inspected data.
-        // If it is inspected again, it may need to be re-run to obtain updated hooks values.
-        hasElementUpdatedSinceLastInspected = true;
+      if (prevFiber !== nextFiber) {
+        if (
+          mostRecentlyInspectedElement !== null &&
+          (mostRecentlyInspectedElement.id === fiberInstance.id ||
+            // If we're inspecting a Root, we inspect the Screen.
+            // Invalidating any Root invalidates the Screen too.
+            (mostRecentlyInspectedElement.type === ElementTypeRoot &&
+              nextFiber.tag === HostRoot)) &&
+          didFiberRender(ReactTypeOfWork, prevFiber, nextFiber)
+        ) {
+          // If this Fiber has updated, clear cached inspected data.
+          // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+          hasElementUpdatedSinceLastInspected = true;
+        }
       }
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
@@ -5392,11 +4641,42 @@ export function attach(
           updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
         }
       } else if (nextIsHidden) {
-        if (prevWasHidden) {
+        if (isActivityHiddenOffscreen(nextFiber)) {
+          // Activity's hidden children stay visible in the DevTools tree.
+          // Whether staying hidden or transitioning to hidden, update normally.
+          updateFlags |= updateChildrenRecursively(
+            nextFiber.child,
+            prevFiber.child,
+            traceNearestHostComponentUpdate,
+          );
+        } else if (prevWasHidden) {
           // still hidden. Nothing to do.
         } else {
           // We're hiding the children. Remove them from the Frontend
           unmountRemainingChildren();
+        }
+      } else if (prevWasHidden && !nextIsHidden) {
+        if (
+          nextFiber.return !== null &&
+          nextFiber.return.tag === ActivityComponent
+        ) {
+          // Activity children were never unmounted, so just update normally.
+          updateFlags |= updateChildrenRecursively(
+            nextFiber.child,
+            prevFiber.child,
+            traceNearestHostComponentUpdate,
+          );
+        } else {
+          // Since we don't mount hidden children and unmount children when hiding,
+          // we need to enter the mount path when revealing.
+          const nextChildSet = nextFiber.child;
+          if (nextChildSet !== null) {
+            mountChildrenRecursively(
+              nextChildSet,
+              traceNearestHostComponentUpdate,
+            );
+            updateFlags |= ShouldResetChildren | ShouldResetSuspenseChildren;
+          }
         }
       } else if (
         nextFiber.tag === SuspenseComponent &&
@@ -5530,6 +4810,27 @@ export function attach(
       }
 
       if (fiberInstance !== null) {
+        // Detect Activity hidden/visible mode changes.
+        if (
+          prevFiber.tag === ActivityComponent &&
+          nextFiber.tag === ActivityComponent &&
+          fiberInstance.kind === FIBER_INSTANCE
+        ) {
+          const prevOffscreen = prevFiber.child;
+          const nextOffscreen = nextFiber.child;
+          if (prevOffscreen !== null && nextOffscreen !== null) {
+            const prevHidden = isHiddenOffscreen(prevOffscreen);
+            const nextHidden = isHiddenOffscreen(nextOffscreen);
+            if (prevHidden !== nextHidden) {
+              pushOperation(TREE_OPERATION_SET_SUBTREE_MODE);
+              pushOperation(fiberInstance.id);
+              pushOperation(
+                nextHidden ? ActivityHiddenMode : ActivityVisibleMode,
+              );
+            }
+          }
+        }
+
         removePreviousSuspendedBy(
           fiberInstance,
           previousSuspendedBy,
@@ -5552,10 +4853,12 @@ export function attach(
           }
           recordConsoleLogs(fiberInstance, componentLogsEntry);
 
-          const isProfilingSupported =
-            nextFiber.hasOwnProperty('treeBaseDuration');
-          if (isProfilingSupported) {
-            recordProfilingDurations(fiberInstance, prevFiber);
+          if (!isInDisconnectedSubtree) {
+            const isProfilingSupported =
+              nextFiber.hasOwnProperty('treeBaseDuration');
+            if (isProfilingSupported) {
+              recordProfilingDurations(fiberInstance, prevFiber);
+            }
           }
         }
       }
@@ -5670,9 +4973,11 @@ export function attach(
       if (
         (child.kind === FIBER_INSTANCE ||
           child.kind === FILTERED_FIBER_INSTANCE) &&
-        isHiddenOffscreen(child.data)
+        isHiddenOffscreen(child.data) &&
+        !isActivityHiddenOffscreen(child.data)
       ) {
         // This instance's children should remain disconnected.
+        // Activity's hidden children are still shown in the tree.
       } else {
         reconnectChildrenRecursively(child);
       }
@@ -5681,22 +4986,6 @@ export function attach(
 
   function cleanup() {
     isProfiling = false;
-  }
-
-  function rootSupportsProfiling(root: any) {
-    if (root.memoizedInteractions != null) {
-      // v16 builds include this field for the scheduler/tracing API.
-      return true;
-    } else if (
-      root.current != null &&
-      root.current.hasOwnProperty('treeBaseDuration')
-    ) {
-      // The scheduler/tracing API was removed in v17 though
-      // so we need to check a non-root Fiber.
-      return true;
-    } else {
-      return false;
-    }
   }
 
   function flushInitialOperations() {
@@ -5746,10 +5035,10 @@ export function attach(
 
         mountFiberRecursively(root.current, false);
 
+        flushPendingEvents(currentRoot);
+
         currentRoot = (null: any);
       });
-
-      flushPendingEvents();
 
       needsToFlushComponentLogs = false;
     }
@@ -5760,7 +5049,7 @@ export function attach(
     // safe to stop calling it from Fiber.
   }
 
-  function handlePostCommitFiberRoot(root: any) {
+  function handlePostCommitFiberRoot(root: FiberRoot) {
     if (isProfiling && rootSupportsProfiling(root)) {
       if (currentCommitProfilingMetadata !== null) {
         const {effectDuration, passiveEffectDuration} =
@@ -5774,12 +5063,18 @@ export function attach(
     }
 
     if (needsToFlushComponentLogs) {
+      const rootInstance = rootToFiberInstanceMap.get(root);
+      if (rootInstance === undefined) {
+        throw new Error(
+          'Should have a root instance for a committed root. This is a bug in React DevTools.',
+        );
+      }
       // We received new logs after commit. I.e. in a passive effect. We need to
       // traverse the tree to find the affected ones. If we just moved the whole
       // tree traversal from handleCommitFiberRoot to handlePostCommitFiberRoot
       // this wouldn't be needed. For now we just brute force check all instances.
       // This is not that common of a case.
-      bruteForceFlushErrorsAndWarnings();
+      bruteForceFlushErrorsAndWarnings(rootInstance);
     }
   }
 
@@ -5876,7 +5171,7 @@ export function attach(
     }
 
     // We're done here.
-    flushPendingEvents();
+    flushPendingEvents(currentRoot);
 
     needsToFlushComponentLogs = false;
 
@@ -6142,7 +5437,10 @@ export function attach(
       return {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id: instance.id,
-        key: fiber.key === REACT_OPTIMISTIC_KEY ? null : fiber.key,
+        key:
+          fiber.key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : fiber.key,
         env: null,
         stack:
           fiber._debugOwner == null || fiber._debugStack == null
@@ -6158,7 +5456,7 @@ export function attach(
         key:
           componentInfo.key == null ||
           componentInfo.key === REACT_OPTIMISTIC_KEY
-            ? null
+            ? 'React.optimisticKey'
             : componentInfo.key,
         env: componentInfo.env == null ? null : componentInfo.env,
         stack:
@@ -6758,23 +6056,6 @@ export function attach(
     return {instance, style};
   }
 
-  function isErrorBoundary(fiber: Fiber): boolean {
-    const {tag, type} = fiber;
-
-    switch (tag) {
-      case ClassComponent:
-      case IncompleteClassComponent:
-        const instance = fiber.stateNode;
-        return (
-          typeof type.getDerivedStateFromError === 'function' ||
-          (instance !== null &&
-            typeof instance.componentDidCatch === 'function')
-        );
-      default:
-        return false;
-    }
-  }
-
   function inspectElementRaw(id: number): InspectedElement | null {
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
@@ -6822,6 +6103,8 @@ export function attach(
 
     // TODO Show custom UI for Cache like we do for Suspense
     // For now, just hide state data entirely since it's not meant to be inspected.
+    // Make sure delete, rename, and override of state handles all tags for which
+    // we show state.
     const showState =
       tag === ClassComponent || tag === IncompleteClassComponent;
 
@@ -6947,7 +6230,7 @@ export function attach(
       current = current.return;
       if (temp.tag === SuspenseComponent) {
         hasSuspenseBoundary = true;
-      } else if (isErrorBoundary(temp)) {
+      } else if (isErrorBoundary(ReactTypeOfWork, temp)) {
         hasErrorBoundary = true;
       }
     }
@@ -6957,7 +6240,7 @@ export function attach(
     }
 
     let isErrored = false;
-    if (isErrorBoundary(fiber)) {
+    if (isErrorBoundary(ReactTypeOfWork, fiber)) {
       // if the current inspected element is an error boundary,
       // either that we want to use it to toggle off error state
       // or that we allow to force error state on it if it's within another
@@ -7083,7 +6366,12 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext,
 
-      key: key != null && key !== REACT_OPTIMISTIC_KEY ? key : null,
+      key:
+        key != null
+          ? key === REACT_OPTIMISTIC_KEY
+            ? 'React.optimisticKey'
+            : key
+          : null,
 
       type: elementType,
 
@@ -7144,7 +6432,7 @@ export function attach(
         current = current.return;
         if (temp.tag === SuspenseComponent) {
           hasSuspenseBoundary = true;
-        } else if (isErrorBoundary(temp)) {
+        } else if (isErrorBoundary(ReactTypeOfWork, temp)) {
           hasErrorBoundary = true;
         }
       }
@@ -7778,8 +7066,13 @@ export function attach(
           }
           break;
         case 'state':
-          deletePathInObject(instance.state, path);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+            case IncompleteClassComponent:
+              deletePathInObject(instance.state, path);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
@@ -7839,22 +7132,30 @@ export function attach(
           }
           break;
         case 'props':
-          if (instance === null) {
-            if (typeof overridePropsRenamePath === 'function') {
-              overridePropsRenamePath(fiber, oldPath, newPath);
-            }
-          } else {
-            fiber.pendingProps = copyWithRename(
-              instance.props,
-              oldPath,
-              newPath,
-            );
-            instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithRename(
+                instance.props,
+                oldPath,
+                newPath,
+              );
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overridePropsRenamePath === 'function') {
+                overridePropsRenamePath(fiber, oldPath, newPath);
+              }
+              break;
           }
           break;
         case 'state':
-          renamePathInObject(instance.state, oldPath, newPath);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+            case IncompleteClassComponent:
+              renamePathInObject(instance.state, oldPath, newPath);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
@@ -7924,6 +7225,7 @@ export function attach(
         case 'state':
           switch (fiber.tag) {
             case ClassComponent:
+            case IncompleteClassComponent:
               setInObject(instance.state, path, value);
               instance.forceUpdate();
               break;
@@ -8187,7 +7489,7 @@ export function attach(
   // Map of Fiber and its force error status: true (error), false (toggled off)
   const forceErrorForFibers = new Map<Fiber, boolean>();
 
-  function shouldErrorFiberAccordingToMap(fiber: any): boolean {
+  function shouldErrorFiberAccordingToMap(fiber: any): boolean | null {
     if (typeof setErrorHandler !== 'function') {
       throw new Error(
         'Expected overrideError() to not get called for earlier React versions.',
@@ -8223,7 +7525,7 @@ export function attach(
       }
     }
     if (status === undefined) {
-      return false;
+      return null;
     }
     return status;
   }
@@ -8247,7 +7549,7 @@ export function attach(
       return;
     }
     let fiber = nearestFiber;
-    while (!isErrorBoundary(fiber)) {
+    while (!isErrorBoundary(ReactTypeOfWork, fiber)) {
       if (fiber.return === null) {
         return;
       }
@@ -8804,86 +8106,6 @@ export function attach(
     return unresolvedSource;
   }
 
-  type InternalMcpFunctions = {
-    __internal_only_getComponentTree?: Function,
-  };
-
-  const internalMcpFunctions: InternalMcpFunctions = {};
-  if (__IS_INTERNAL_MCP_BUILD__) {
-    // eslint-disable-next-line no-inner-declarations
-    function __internal_only_getComponentTree(): string {
-      let treeString = '';
-
-      function buildTreeString(
-        instance: DevToolsInstance,
-        prefix: string = '',
-        isLastChild: boolean = true,
-      ): void {
-        if (!instance) return;
-
-        const name =
-          (instance.kind !== VIRTUAL_INSTANCE
-            ? getDisplayNameForFiber(instance.data)
-            : instance.data.name) || 'Unknown';
-
-        const id = instance.id !== undefined ? instance.id : 'unknown';
-
-        if (name !== 'createRoot()') {
-          treeString +=
-            prefix +
-            (isLastChild ? '└── ' : '├── ') +
-            name +
-            ' (id: ' +
-            id +
-            ')\n';
-        }
-
-        const childPrefix = prefix + (isLastChild ? '    ' : '│   ');
-
-        let childCount = 0;
-        let tempChild = instance.firstChild;
-        while (tempChild !== null) {
-          childCount++;
-          tempChild = tempChild.nextSibling;
-        }
-
-        let child = instance.firstChild;
-        let currentChildIndex = 0;
-
-        while (child !== null) {
-          currentChildIndex++;
-          const isLastSibling = currentChildIndex === childCount;
-          buildTreeString(child, childPrefix, isLastSibling);
-          child = child.nextSibling;
-        }
-      }
-
-      const rootInstances: Array<DevToolsInstance> = [];
-      idToDevToolsInstanceMap.forEach(instance => {
-        if (instance.parent === null || instance.parent.parent === null) {
-          rootInstances.push(instance);
-        }
-      });
-
-      if (rootInstances.length > 0) {
-        for (let i = 0; i < rootInstances.length; i++) {
-          const isLast = i === rootInstances.length - 1;
-          buildTreeString(rootInstances[i], '', isLast);
-          if (!isLast) {
-            treeString += '\n';
-          }
-        }
-      } else {
-        treeString = 'No component tree found.';
-      }
-
-      return treeString;
-    }
-
-    internalMcpFunctions.__internal_only_getComponentTree =
-      __internal_only_getComponentTree;
-  }
-
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -8927,6 +8149,5 @@ export function attach(
     supportsTogglingSuspense,
     updateComponentFilters,
     getEnvironmentNames,
-    ...internalMcpFunctions,
   };
 }

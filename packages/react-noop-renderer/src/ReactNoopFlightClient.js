@@ -14,6 +14,7 @@
  * environment.
  */
 
+import type {Thenable} from 'shared/ReactTypes';
 import type {FindSourceMapURLCallback} from 'react-client/flight';
 
 import {readModule} from 'react-noop-renderer/flight-modules';
@@ -25,6 +26,7 @@ type Source = Array<Uint8Array>;
 const decoderOptions = {stream: true};
 
 const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
+  // $FlowFixMe[prop-missing]
   ReactFlightClient({
     createStringDecoder() {
       return new TextDecoder();
@@ -43,10 +45,8 @@ const {createResponse, createStreamState, processBinaryChunk, getRoot, close} =
     requireModule(idx: string) {
       return readModule(idx);
     },
-    parseModel(response: Response, json) {
-      return JSON.parse(json, response._fromJSON);
-    },
     bindToConsole(methodName, args, badgeName) {
+      // $FlowFixMe[incompatible-call]
       return Function.prototype.bind.apply(
         // eslint-disable-next-line react-internal/no-production-logging
         console[methodName],
@@ -64,23 +64,33 @@ type ReadOptions = {|
 
 function read<T>(source: Source, options: ReadOptions): Thenable<T> {
   const response = createResponse(
+    // $FlowFixMe[incompatible-call]
     source,
     null,
+    // $FlowFixMe[incompatible-call]
     null,
     undefined,
     undefined,
     undefined,
     undefined,
+    false,
     options !== undefined ? options.findSourceMapURL : undefined,
     true,
     undefined,
     __DEV__ && options !== undefined && options.debugChannel !== undefined
-      ? options.debugChannel.onMessage
+      ? // $FlowFixMe[incompatible-call]
+        options.debugChannel.onMessage
       : undefined,
   );
   const streamState = createStreamState(response, source);
   for (let i = 0; i < source.length; i++) {
-    processBinaryChunk(response, streamState, source[i], 0);
+    processBinaryChunk(
+      response,
+      streamState,
+      source[i],
+      // $FlowFixMe[extra-arg]
+      0,
+    );
   }
   if (options !== undefined && options.close) {
     close(response);

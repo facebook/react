@@ -25,9 +25,7 @@ export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
 export const enableMoveBefore = false;
 export const enableFizzExternalRuntime = true;
-export const enableHalt = true;
 export const enableInfiniteRenderLoopDetection = false;
-export const enableHiddenSubtreeInsertionEffectCleanup = true;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
@@ -48,7 +46,7 @@ export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseCallback = false;
 export const enableTaint = true;
 export const enableTransitionTracing = false;
-export const enableTrustedTypesIntegration = false;
+export const enableTrustedTypesIntegration = true;
 export const enableUpdaterTracking = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const retryLaneExpirationMs = 5000;
@@ -56,7 +54,8 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableYieldingBeforePassive = false;
 export const enableThrottledScheduling = false;
-export const enableViewTransition = false;
+export const enableViewTransition = true;
+export const enableViewTransitionForPersistenceMode = false;
 export const enableGestureTransition = false;
 export const enableScrollEndPolyfill = true;
 export const enableSuspenseyImages = false;
@@ -71,6 +70,14 @@ export const enableFragmentRefsTextNodes = false;
 export const ownerStackLimit = 1e4;
 export const enableOptimisticKey = false;
 export const enableParallelTransitions = false;
+
+export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'off';
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

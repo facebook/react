@@ -314,6 +314,7 @@ const possibleStandardNames = {
   markerwidth: 'markerWidth',
   mask: 'mask',
   maskcontentunits: 'maskContentUnits',
+  masktype: 'maskType',
   maskunits: 'maskUnits',
   mathematical: 'mathematical',
   mode: 'mode',

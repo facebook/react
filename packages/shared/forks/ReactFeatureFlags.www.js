@@ -19,13 +19,11 @@ export const {
   disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
   enableEffectEventMutationPhase,
-  enableHiddenSubtreeInsertionEffectCleanup,
   enableInfiniteRenderLoopDetection,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableTrustedTypesIntegration,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
@@ -45,7 +43,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableUpdaterTracking = __PROFILE__;
-
+export const enableTrustedTypesIntegration: boolean = true;
 export const enableSuspenseAvoidThisFallback: boolean = true;
 
 export const enableAsyncDebugInfo: boolean = true;
@@ -74,8 +72,6 @@ export const enableAsyncIterableChildren: boolean = false;
 
 export const enableTaint: boolean = false;
 
-export const enableHalt: boolean = true;
-
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
 export const disableCommentsAsDOMContainers: boolean = false;
@@ -102,6 +98,8 @@ export const disableLegacyMode: boolean = true;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
+export const enableViewTransitionForPersistenceMode: boolean = false;
+
 export const enableGestureTransition: boolean = false;
 
 export const enableSuspenseyImages: boolean = false;
@@ -115,6 +113,14 @@ export const ownerStackLimit = 1e4;
 export const enableFragmentRefsInstanceHandles: boolean = true;
 
 export const enableOptimisticKey: boolean = false;
+
+export const eprh_enableUseKeyedStateCompilerLint: boolean = true;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = true;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'extra-only';
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
