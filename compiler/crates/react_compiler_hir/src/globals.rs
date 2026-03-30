@@ -1319,8 +1319,212 @@ fn build_object_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
+    let mixed_index_of = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Read),
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_includes = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Read),
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_at = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            positional_params: vec![Effect::Read],
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_MIXED_READONLY_ID.to_string()),
+            },
+            callee_effect: Effect::Capture,
+            return_value_kind: ValueKind::Frozen,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_map = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
+            },
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Mutable,
+            no_alias: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_flat_map = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
+            },
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Mutable,
+            no_alias: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_filter = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
+            },
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Mutable,
+            no_alias: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_concat = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Capture),
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
+            },
+            callee_effect: Effect::Capture,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_slice = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Read),
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_ARRAY_ID.to_string()),
+            },
+            callee_effect: Effect::Capture,
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_every = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Primitive,
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Primitive,
+            no_alias: true,
+            mutable_only_if_operands_are_mutable: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_some = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Primitive,
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Primitive,
+            no_alias: true,
+            mutable_only_if_operands_are_mutable: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_find = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_MIXED_READONLY_ID.to_string()),
+            },
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Frozen,
+            no_alias: true,
+            mutable_only_if_operands_are_mutable: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_find_index = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            return_type: Type::Primitive,
+            callee_effect: Effect::ConditionallyMutate,
+            return_value_kind: ValueKind::Primitive,
+            no_alias: true,
+            mutable_only_if_operands_are_mutable: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mixed_join = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Read),
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let mut mixed_props = HashMap::new();
     mixed_props.insert("toString".to_string(), mixed_to_string);
+    mixed_props.insert("indexOf".to_string(), mixed_index_of);
+    mixed_props.insert("includes".to_string(), mixed_includes);
+    mixed_props.insert("at".to_string(), mixed_at);
+    mixed_props.insert("map".to_string(), mixed_map);
+    mixed_props.insert("flatMap".to_string(), mixed_flat_map);
+    mixed_props.insert("filter".to_string(), mixed_filter);
+    mixed_props.insert("concat".to_string(), mixed_concat);
+    mixed_props.insert("slice".to_string(), mixed_slice);
+    mixed_props.insert("every".to_string(), mixed_every);
+    mixed_props.insert("some".to_string(), mixed_some);
+    mixed_props.insert("find".to_string(), mixed_find);
+    mixed_props.insert("findIndex".to_string(), mixed_find_index);
+    mixed_props.insert("join".to_string(), mixed_join);
     mixed_props.insert("*".to_string(), Type::Object {
         shape_id: Some(BUILT_IN_MIXED_READONLY_ID.to_string()),
     });

@@ -614,6 +614,8 @@ impl<'a> ConvertCtx<'a> {
             return_type: f.return_type.as_ref().map(|_| Box::new(serde_json::Value::Null)),
             type_parameters: f.type_params.as_ref().map(|_| Box::new(serde_json::Value::Null)),
             predicate: None,
+            component_declaration: false,
+            hook_declaration: false,
         }
     }
 
@@ -1037,7 +1039,7 @@ impl<'a> ConvertCtx<'a> {
             swc::DefaultDecl::Fn(f) => {
                 let func = &f.function;
                 let body = func.body.as_ref().map(|b| self.convert_block_statement(b)).unwrap_or_else(|| BlockStatement { base: self.make_base_node(func.span), body: vec![], directives: vec![] });
-                ExportDefaultDecl::FunctionDeclaration(FunctionDeclaration { base: self.make_base_node(func.span), id: f.ident.as_ref().map(|id| self.convert_ident_to_identifier(id)), params: self.convert_params(&func.params), body, generator: func.is_generator, is_async: func.is_async, declare: None, return_type: func.return_type.as_ref().map(|_| Box::new(serde_json::Value::Null)), type_parameters: func.type_params.as_ref().map(|_| Box::new(serde_json::Value::Null)), predicate: None })
+                ExportDefaultDecl::FunctionDeclaration(FunctionDeclaration { base: self.make_base_node(func.span), id: f.ident.as_ref().map(|id| self.convert_ident_to_identifier(id)), params: self.convert_params(&func.params), body, generator: func.is_generator, is_async: func.is_async, declare: None, return_type: func.return_type.as_ref().map(|_| Box::new(serde_json::Value::Null)), type_parameters: func.type_params.as_ref().map(|_| Box::new(serde_json::Value::Null)), predicate: None, component_declaration: false, hook_declaration: false })
             }
             swc::DefaultDecl::Class(c) => {
                 let class = &c.class;

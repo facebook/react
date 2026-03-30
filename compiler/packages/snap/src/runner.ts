@@ -69,6 +69,12 @@ type CompileOptions = {
 };
 
 async function runTestCommand(opts: TestOptions): Promise<void> {
+  // Rust native module doesn't load in jest-worker child processes,
+  // so force sync mode when using the Rust backend.
+  if (opts.rust) {
+    opts.sync = true;
+  }
+
   const worker: Worker & typeof runnerWorker = new Worker(WORKER_PATH, {
     enableWorkerThreads: opts.workerThreads,
     numWorkers: NUM_WORKERS,

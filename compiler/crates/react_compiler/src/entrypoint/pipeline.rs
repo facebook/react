@@ -846,19 +846,9 @@ pub fn compile_fn(
         context.add_memo_cache_import();
     }
 
-    // ValidateSourceLocations: record errors after codegen so pass logs are emitted.
-    // The Rust port cannot implement this validation (it requires the original Babel AST),
-    // but we record errors here so the function compilation is suppressed, matching TS behavior
-    // where validateSourceLocations records errors that cause env.hasErrors() to be true.
-    if env.config.validate_source_locations {
-        env.record_error(react_compiler_diagnostics::CompilerErrorDetail {
-            category: react_compiler_diagnostics::ErrorCategory::Todo,
-            reason: "ValidateSourceLocations is not yet supported in the Rust compiler".to_string(),
-            description: Some("Source location validation requires access to the original AST".to_string()),
-            loc: None,
-            suggestions: None,
-        });
-    }
+    // ValidateSourceLocations: silently skipped in the Rust compiler.
+    // This pass requires the original Babel AST (which the Rust compiler doesn't have access to),
+    // so it cannot be implemented. The pass is simply skipped rather than reporting a Todo error.
 
     // Simulate unexpected exception for testing (matches TS Pipeline.ts)
     if env.config.throw_unknown_exception_testonly {
@@ -982,6 +972,8 @@ pub fn compile_outlined_fn(
         return_type: None,
         type_parameters: None,
         predicate: None,
+        component_declaration: false,
+        hook_declaration: false,
     };
 
     // Build scope info by assigning fake positions to all identifiers

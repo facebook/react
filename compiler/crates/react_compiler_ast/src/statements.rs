@@ -5,6 +5,10 @@ use crate::common::BaseNode;
 use crate::expressions::{Expression, Identifier};
 use crate::patterns::PatternLike;
 
+fn is_false(v: &bool) -> bool {
+    !v
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Statement {
@@ -309,6 +313,20 @@ pub struct FunctionDeclaration {
         rename = "predicate"
     )]
     pub predicate: Option<Box<serde_json::Value>>,
+    /// Set by the Hermes parser for Flow `component Foo(...) { ... }` syntax
+    #[serde(
+        default,
+        skip_serializing_if = "is_false",
+        rename = "__componentDeclaration"
+    )]
+    pub component_declaration: bool,
+    /// Set by the Hermes parser for Flow `hook useFoo(...) { ... }` syntax
+    #[serde(
+        default,
+        skip_serializing_if = "is_false",
+        rename = "__hookDeclaration"
+    )]
+    pub hook_declaration: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

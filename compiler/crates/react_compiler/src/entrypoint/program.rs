@@ -811,6 +811,8 @@ fn get_react_function_type(
     is_declaration: bool,
     parent_callee_name: Option<&str>,
     opts: &PluginOptions,
+    is_component_declaration: bool,
+    is_hook_declaration: bool,
 ) -> Option<ReactFunctionType> {
     // Check for opt-in directives in the function body
     if let FunctionBody::Block(_) = body {
@@ -825,21 +827,33 @@ fn get_react_function_type(
     }
 
     // Component and hook declarations are known components/hooks
-    // (In the TS version, this uses isComponentDeclaration/isHookDeclaration
-    //  which check for the `component` and `hook` keywords in the syntax.
-    //  Since standard JS doesn't have these, we skip this for now.)
+    // (Flow `component Foo() { ... }` and `hook useFoo() { ... }` syntax,
+    //  detected via __componentDeclaration / __hookDeclaration from the Hermes parser)
+    let component_syntax_type = if is_declaration {
+        if is_component_declaration {
+            Some(ReactFunctionType::Component)
+        } else if is_hook_declaration {
+            Some(ReactFunctionType::Hook)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
     match opts.compilation_mode.as_str() {
         "annotation" => {
             // opt-ins were checked above
             None
         }
-        "infer" => get_component_or_hook_like(name, params, body, parent_callee_name),
+        "infer" => {
+            // Check if this is a component or hook-like function
+            component_syntax_type
+                .or_else(|| get_component_or_hook_like(name, params, body, parent_callee_name))
+        }
         "syntax" => {
             // In syntax mode, only compile declared components/hooks
-            // Since we don't have component/hook syntax support yet, return None
-            let _ = is_declaration;
-            None
+            component_syntax_type
         }
         "all" => Some(
             get_component_or_hook_like(name, params, body, parent_callee_name)
@@ -1357,6 +1371,10 @@ struct FunctionInfo<'a> {
     body_directives: Vec<Directive>,
     base: &'a BaseNode,
     parent_callee_name: Option<String>,
+    /// True if the node has `__componentDeclaration` set by the Hermes parser (Flow component syntax)
+    is_component_declaration: bool,
+    /// True if the node has `__hookDeclaration` set by the Hermes parser (Flow hook syntax)
+    is_hook_declaration: bool,
 }
 
 /// Extract function info from a FunctionDeclaration
@@ -1369,6 +1387,8 @@ fn fn_info_from_decl(decl: &FunctionDeclaration) -> FunctionInfo<'_> {
         body_directives: decl.body.directives.clone(),
         base: &decl.base,
         parent_callee_name: None,
+        is_component_declaration: decl.component_declaration,
+        is_hook_declaration: decl.hook_declaration,
     }
 }
 
@@ -1386,6 +1406,8 @@ fn fn_info_from_func_expr<'a>(
         body_directives: expr.body.directives.clone(),
         base: &expr.base,
         parent_callee_name,
+        is_component_declaration: false,
+        is_hook_declaration: false,
     }
 }
 
@@ -1409,6 +1431,8 @@ fn fn_info_from_arrow<'a>(
         body_directives: directives,
         base: &expr.base,
         parent_callee_name,
+        is_component_declaration: false,
+        is_hook_declaration: false,
     }
 }
 
@@ -1430,9 +1454,11 @@ fn try_make_compile_source<'a>(
         info.params,
         &info.body,
         &info.body_directives,
-        false,
+        info.is_component_declaration || info.is_hook_declaration,
         info.parent_callee_name.as_deref(),
         opts,
+        info.is_component_declaration,
+        info.is_hook_declaration,
     )?;
 
     // Mark as compiled
@@ -2229,6 +2255,8 @@ fn apply_compiled_functions(
                 return_type: None,
                 type_parameters: None,
                 predicate: None,
+                component_declaration: false,
+                hook_declaration: false,
             };
             outlined_decls.push((compiled.fn_start, compiled.original_kind, outlined_decl));
         }
@@ -2740,6 +2768,8 @@ fn apply_gated_function_hoisted(
         return_type: None,
         type_parameters: None,
         predicate: None,
+        component_declaration: false,
+        hook_declaration: false,
     };
 
     // Build the gating result variable: `const gating_result = gating();`
@@ -2913,6 +2943,8 @@ fn apply_gated_function_hoisted(
         return_type: None,
         type_parameters: None,
         predicate: None,
+        component_declaration: false,
+        hook_declaration: false,
     });
 
     // Insert nodes. The TS code uses insertBefore for the gating result and optimized fn,

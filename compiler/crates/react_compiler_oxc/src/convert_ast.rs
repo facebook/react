@@ -597,6 +597,8 @@ impl<'a> ConvertCtx<'a> {
                 Box::new(serde_json::Value::Null)
             }),
             predicate: None,
+            component_declaration: false,
+            hook_declaration: false,
         }
     }
 

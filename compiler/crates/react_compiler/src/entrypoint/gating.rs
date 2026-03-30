@@ -340,6 +340,8 @@ fn insert_additional_function_declaration(
         return_type: None,
         type_parameters: None,
         predicate: None,
+        component_declaration: false,
+        hook_declaration: false,
     });
 
     // Build: const gating_result = gating();

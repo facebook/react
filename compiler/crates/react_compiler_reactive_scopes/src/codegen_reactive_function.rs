@@ -1526,6 +1526,8 @@ fn emit_store(
                         return_type: None,
                         type_parameters: None,
                         predicate: None,
+                        component_declaration: false,
+                        hook_declaration: false,
                     })))
                 }
                 _ => Err(invariant_err("Expected a function expression for function declaration", None)),
@@ -1658,7 +1660,17 @@ fn codegen_instruction_value(
     instr_value: &ReactiveValue,
 ) -> Result<ExpressionOrJsxText, CompilerError> {
     match instr_value {
-        ReactiveValue::Instruction(iv) => codegen_base_instruction_value(cx, iv),
+        ReactiveValue::Instruction(iv) => {
+            let mut result = codegen_base_instruction_value(cx, iv)?;
+            // Propagate instrValue.loc to the generated expression, matching TS:
+            //   if (instrValue.loc != null && instrValue.loc != GeneratedSource) {
+            //       value.loc = instrValue.loc;
+            //   }
+            if let Some(loc) = iv.loc() {
+                apply_loc_to_value(&mut result, *loc);
+            }
+            Ok(result)
+        }
         ReactiveValue::LogicalExpression {
             operator,
             left,
@@ -1890,7 +1902,7 @@ fn codegen_base_instruction_value(
             receiver: _,
             property,
             args,
-            loc,
+            loc: _,
         } => {
             let member_expr = codegen_place_to_expression(cx, property)?;
             // Invariant: MethodCall::property must resolve to a MemberExpression
@@ -2739,7 +2751,7 @@ fn codegen_jsx_attribute(
                 )),
             };
             Ok(JSXAttributeItem::JSXAttribute(AstJSXAttribute {
-                base: BaseNode::typed("JSXAttribute"),
+                base: base_node_with_loc("JSXAttribute", place.loc),
                 name: prop_name,
                 value: attr_value,
             }))
@@ -3026,7 +3038,24 @@ fn codegen_place(
             place.loc,
         ));
     }
-    let ast_ident = convert_identifier(place.identifier, cx.env)?;
+    let mut ast_ident = convert_identifier(place.identifier, cx.env)?;
+    // Override identifier loc with place.loc, matching TS: identifier.loc = place.loc
+    if let Some(loc) = place.loc {
+        ast_ident.base.loc = Some(AstSourceLocation {
+            start: AstPosition {
+                line: loc.start.line,
+                column: loc.start.column,
+                index: None,
+            },
+            end: AstPosition {
+                line: loc.end.line,
+                column: loc.end.column,
+                index: None,
+            },
+            filename: None,
+            identifier_name: None,
+        });
+    }
     Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
         ast_ident,
     )))
@@ -3049,7 +3078,7 @@ fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<
             return Err(err);
         }
     };
-    Ok(make_identifier(&name))
+    Ok(make_identifier_with_loc(&name, ident.loc))
 }
 
 fn codegen_argument(
@@ -3267,13 +3296,153 @@ fn make_identifier(name: &str) -> AstIdentifier {
     }
 }
 
+fn make_identifier_with_loc(name: &str, loc: Option<DiagSourceLocation>) -> AstIdentifier {
+    AstIdentifier {
+        base: base_node_with_loc("Identifier", loc),
+        name: name.to_string(),
+        type_annotation: None,
+        optional: None,
+        decorators: None,
+    }
+}
+
 fn make_var_declarator(id: PatternLike, init: Option<Expression>) -> VariableDeclarator {
+    // Reconstruct VariableDeclarator.loc from id.loc.start and init.loc.end,
+    // matching TS createVariableDeclarator behavior for retainLines support.
+    let loc = get_pattern_loc(&id).and_then(|id_loc| {
+        let end = match &init {
+            Some(expr) => get_expression_loc(expr).map(|l| l.end.clone()).unwrap_or_else(|| id_loc.end.clone()),
+            None => id_loc.end.clone(),
+        };
+        Some(AstSourceLocation {
+            start: id_loc.start.clone(),
+            end,
+            filename: id_loc.filename.clone(),
+            identifier_name: None,
+        })
+    });
     VariableDeclarator {
-        base: BaseNode::typed("VariableDeclarator"),
+        base: if let Some(loc) = loc {
+            BaseNode {
+                node_type: Some("VariableDeclarator".to_string()),
+                loc: Some(loc),
+                ..Default::default()
+            }
+        } else {
+            BaseNode::typed("VariableDeclarator")
+        },
         id,
         init: init.map(Box::new),
         definite: None,
     }
+}
+
+/// Extract the loc from a PatternLike's base node.
+fn get_pattern_loc(pattern: &PatternLike) -> Option<&AstSourceLocation> {
+    match pattern {
+        PatternLike::Identifier(id) => id.base.loc.as_ref(),
+        PatternLike::ObjectPattern(p) => p.base.loc.as_ref(),
+        PatternLike::ArrayPattern(p) => p.base.loc.as_ref(),
+        PatternLike::AssignmentPattern(p) => p.base.loc.as_ref(),
+        PatternLike::RestElement(p) => p.base.loc.as_ref(),
+        _ => None,
+    }
+}
+
+/// Extract the loc from an Expression's base node.
+fn get_expression_loc(expr: &Expression) -> Option<&AstSourceLocation> {
+    match expr {
+        Expression::Identifier(e) => e.base.loc.as_ref(),
+        Expression::StringLiteral(e) => e.base.loc.as_ref(),
+        Expression::NumericLiteral(e) => e.base.loc.as_ref(),
+        Expression::BooleanLiteral(e) => e.base.loc.as_ref(),
+        Expression::NullLiteral(e) => e.base.loc.as_ref(),
+        Expression::CallExpression(e) => e.base.loc.as_ref(),
+        Expression::MemberExpression(e) => e.base.loc.as_ref(),
+        Expression::OptionalMemberExpression(e) => e.base.loc.as_ref(),
+        Expression::ArrayExpression(e) => e.base.loc.as_ref(),
+        Expression::ObjectExpression(e) => e.base.loc.as_ref(),
+        Expression::ArrowFunctionExpression(e) => e.base.loc.as_ref(),
+        Expression::FunctionExpression(e) => e.base.loc.as_ref(),
+        Expression::BinaryExpression(e) => e.base.loc.as_ref(),
+        Expression::UnaryExpression(e) => e.base.loc.as_ref(),
+        Expression::UpdateExpression(e) => e.base.loc.as_ref(),
+        Expression::LogicalExpression(e) => e.base.loc.as_ref(),
+        Expression::ConditionalExpression(e) => e.base.loc.as_ref(),
+        Expression::SequenceExpression(e) => e.base.loc.as_ref(),
+        Expression::AssignmentExpression(e) => e.base.loc.as_ref(),
+        Expression::TemplateLiteral(e) => e.base.loc.as_ref(),
+        Expression::TaggedTemplateExpression(e) => e.base.loc.as_ref(),
+        Expression::SpreadElement(e) => e.base.loc.as_ref(),
+        Expression::RegExpLiteral(e) => e.base.loc.as_ref(),
+        Expression::JSXElement(e) => e.base.loc.as_ref(),
+        Expression::JSXFragment(e) => e.base.loc.as_ref(),
+        Expression::NewExpression(e) => e.base.loc.as_ref(),
+        Expression::OptionalCallExpression(e) => e.base.loc.as_ref(),
+        _ => None,
+    }
+}
+
+/// Apply a source location to an ExpressionOrJsxText value, matching the TS behavior
+/// where `value.loc = instrValue.loc` is set at the end of codegenInstructionValue.
+fn apply_loc_to_value(value: &mut ExpressionOrJsxText, loc: DiagSourceLocation) {
+    let ast_loc = AstSourceLocation {
+        start: AstPosition {
+            line: loc.start.line,
+            column: loc.start.column,
+            index: None,
+        },
+        end: AstPosition {
+            line: loc.end.line,
+            column: loc.end.column,
+            index: None,
+        },
+        filename: None,
+        identifier_name: None,
+    };
+    match value {
+        ExpressionOrJsxText::Expression(expr) => {
+            apply_loc_to_expression(expr, ast_loc);
+        }
+        ExpressionOrJsxText::JsxText(text) => {
+            text.base.loc = Some(ast_loc);
+        }
+    }
+}
+
+/// Apply a source location to an Expression's base node.
+fn apply_loc_to_expression(expr: &mut Expression, loc: AstSourceLocation) {
+    let base = match expr {
+        Expression::Identifier(e) => &mut e.base,
+        Expression::StringLiteral(e) => &mut e.base,
+        Expression::NumericLiteral(e) => &mut e.base,
+        Expression::BooleanLiteral(e) => &mut e.base,
+        Expression::NullLiteral(e) => &mut e.base,
+        Expression::CallExpression(e) => &mut e.base,
+        Expression::MemberExpression(e) => &mut e.base,
+        Expression::OptionalMemberExpression(e) => &mut e.base,
+        Expression::ArrayExpression(e) => &mut e.base,
+        Expression::ObjectExpression(e) => &mut e.base,
+        Expression::ArrowFunctionExpression(e) => &mut e.base,
+        Expression::FunctionExpression(e) => &mut e.base,
+        Expression::BinaryExpression(e) => &mut e.base,
+        Expression::UnaryExpression(e) => &mut e.base,
+        Expression::UpdateExpression(e) => &mut e.base,
+        Expression::LogicalExpression(e) => &mut e.base,
+        Expression::ConditionalExpression(e) => &mut e.base,
+        Expression::SequenceExpression(e) => &mut e.base,
+        Expression::AssignmentExpression(e) => &mut e.base,
+        Expression::TemplateLiteral(e) => &mut e.base,
+        Expression::TaggedTemplateExpression(e) => &mut e.base,
+        Expression::SpreadElement(e) => &mut e.base,
+        Expression::RegExpLiteral(e) => &mut e.base,
+        Expression::JSXElement(e) => &mut e.base,
+        Expression::JSXFragment(e) => &mut e.base,
+        Expression::NewExpression(e) => &mut e.base,
+        Expression::OptionalCallExpression(e) => &mut e.base,
+        _ => return,
+    };
+    base.loc = Some(loc);
 }
 
 fn codegen_label(id: BlockId) -> String {
