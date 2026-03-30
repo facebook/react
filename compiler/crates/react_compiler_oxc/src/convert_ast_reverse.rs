@@ -11,8 +11,9 @@
 
 use oxc_allocator::{Allocator, FromIn};
 use oxc_ast::ast as oxc;
-use oxc_span::{Atom, SPAN};
+use oxc_span::{Atom, Span, SPAN};
 use react_compiler_ast::{
+    common::BaseNode,
     declarations::*,
     expressions::*,
     jsx::*,
@@ -20,6 +21,38 @@ use react_compiler_ast::{
     patterns::*,
     statements::*,
 };
+
+/// Set the span on an OXC Statement.
+fn set_statement_span(stmt: &mut oxc::Statement<'_>, span: Span) {
+    use oxc_span::GetSpanMut;
+    match stmt {
+        oxc::Statement::ImportDeclaration(d) => *d.span_mut() = span,
+        oxc::Statement::VariableDeclaration(d) => *d.span_mut() = span,
+        oxc::Statement::FunctionDeclaration(d) => *d.span_mut() = span,
+        oxc::Statement::ExportNamedDeclaration(d) => *d.span_mut() = span,
+        oxc::Statement::ExportDefaultDeclaration(d) => *d.span_mut() = span,
+        oxc::Statement::ExportAllDeclaration(d) => *d.span_mut() = span,
+        oxc::Statement::ExpressionStatement(s) => *s.span_mut() = span,
+        oxc::Statement::IfStatement(s) => *s.span_mut() = span,
+        oxc::Statement::ForStatement(s) => *s.span_mut() = span,
+        oxc::Statement::WhileStatement(s) => *s.span_mut() = span,
+        oxc::Statement::DoWhileStatement(s) => *s.span_mut() = span,
+        oxc::Statement::ForInStatement(s) => *s.span_mut() = span,
+        oxc::Statement::ForOfStatement(s) => *s.span_mut() = span,
+        oxc::Statement::SwitchStatement(s) => *s.span_mut() = span,
+        oxc::Statement::ThrowStatement(s) => *s.span_mut() = span,
+        oxc::Statement::TryStatement(s) => *s.span_mut() = span,
+        oxc::Statement::BreakStatement(s) => *s.span_mut() = span,
+        oxc::Statement::ContinueStatement(s) => *s.span_mut() = span,
+        oxc::Statement::LabeledStatement(s) => *s.span_mut() = span,
+        oxc::Statement::BlockStatement(s) => *s.span_mut() = span,
+        oxc::Statement::ReturnStatement(s) => *s.span_mut() = span,
+        oxc::Statement::WithStatement(s) => *s.span_mut() = span,
+        oxc::Statement::EmptyStatement(s) => *s.span_mut() = span,
+        oxc::Statement::DebuggerStatement(s) => *s.span_mut() = span,
+        _ => {} // ClassDeclaration etc. - leave as-is
+    }
+}
 
 /// Convert a `react_compiler_ast::File` into an OXC `Program` allocated in the given arena.
 pub fn convert_program_to_oxc<'a>(
@@ -48,6 +81,16 @@ impl<'a> ReverseCtx<'a> {
         Atom::from_in(s, self.allocator)
     }
 
+    /// Convert a BaseNode's start/end into an OXC Span.
+    /// Returns SPAN (0,0) if the base has no position info.
+    fn span_from_base(&self, base: &BaseNode) -> Span {
+        match (base.start, base.end) {
+            (Some(start), Some(end)) => Span::new(start, end),
+            (Some(start), None) => Span::new(start, start),
+            _ => SPAN,
+        }
+    }
+
     // ===== Program =====
 
     fn convert_program(&self, program: &react_compiler_ast::Program) -> oxc::Program<'a> {
@@ -56,7 +99,10 @@ impl<'a> ReverseCtx<'a> {
             react_compiler_ast::SourceType::Script => oxc_span::SourceType::cjs(),
         };
 
-        let body = self.convert_statements(&program.body);
+        // Use convert_statements_with_spans for the top-level body so that
+        // original source positions are preserved. This allows comments from
+        // the original source to be correctly attached to statements.
+        let body = self.convert_statements_with_spans(&program.body);
         let directives = self.convert_directives(&program.directives);
         let comments = self.builder.vec();
 
@@ -88,12 +134,55 @@ impl<'a> ReverseCtx<'a> {
 
     // ===== Statements =====
 
-    fn convert_statements(
+    /// Convert statements preserving span info from the Babel AST.
+    /// This is used for top-level program body where span positions
+    /// are needed for comment attachment.
+    fn convert_statements_with_spans(
         &self,
         stmts: &[Statement],
     ) -> oxc_allocator::Vec<'a, oxc::Statement<'a>> {
         self.builder
-            .vec_from_iter(stmts.iter().map(|s| self.convert_statement(s)))
+            .vec_from_iter(stmts.iter().map(|s| {
+                let span = self.get_statement_span(s);
+                let mut oxc_stmt = self.convert_statement(s);
+                if span != SPAN {
+                    set_statement_span(&mut oxc_stmt, span);
+                }
+                oxc_stmt
+            }))
+    }
+
+    /// Extract the span from a Babel AST Statement's base node.
+    fn get_statement_span(&self, stmt: &Statement) -> Span {
+        let base = match stmt {
+            Statement::BlockStatement(s) => &s.base,
+            Statement::ReturnStatement(s) => &s.base,
+            Statement::ExpressionStatement(s) => &s.base,
+            Statement::IfStatement(s) => &s.base,
+            Statement::ForStatement(s) => &s.base,
+            Statement::WhileStatement(s) => &s.base,
+            Statement::DoWhileStatement(s) => &s.base,
+            Statement::ForInStatement(s) => &s.base,
+            Statement::ForOfStatement(s) => &s.base,
+            Statement::SwitchStatement(s) => &s.base,
+            Statement::ThrowStatement(s) => &s.base,
+            Statement::TryStatement(s) => &s.base,
+            Statement::BreakStatement(s) => &s.base,
+            Statement::ContinueStatement(s) => &s.base,
+            Statement::LabeledStatement(s) => &s.base,
+            Statement::EmptyStatement(s) => &s.base,
+            Statement::DebuggerStatement(s) => &s.base,
+            Statement::WithStatement(s) => &s.base,
+            Statement::VariableDeclaration(d) => &d.base,
+            Statement::FunctionDeclaration(f) => &f.base,
+            Statement::ClassDeclaration(c) => &c.base,
+            Statement::ImportDeclaration(d) => &d.base,
+            Statement::ExportNamedDeclaration(d) => &d.base,
+            Statement::ExportDefaultDeclaration(d) => &d.base,
+            Statement::ExportAllDeclaration(d) => &d.base,
+            _ => return SPAN,
+        };
+        self.span_from_base(base)
     }
 
     fn convert_statement(&self, stmt: &Statement) -> oxc::Statement<'a> {

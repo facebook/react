@@ -61,7 +61,11 @@ pub fn transform(
     };
 
     let compiled_file = program_ast.and_then(|raw_json| {
-        serde_json::from_str(raw_json.get()).ok()
+        // First parse to serde_json::Value which deduplicates "type" fields
+        // (the compiler output can produce duplicate "type" keys due to
+        // BaseNode.node_type + #[serde(tag = "type")] enum tagging)
+        let value: serde_json::Value = serde_json::from_str(raw_json.get()).ok()?;
+        serde_json::from_value(value).ok()
     });
 
     TransformResult {
@@ -106,8 +110,60 @@ pub fn lint(
 
 /// Emit a react_compiler_ast::File to a string via OXC codegen.
 /// Converts the File to an OXC Program, then uses oxc_codegen to emit.
-pub fn emit(file: &react_compiler_ast::File, allocator: &oxc_allocator::Allocator) -> String {
-    let program = convert_ast_reverse::convert_program_to_oxc(file, allocator);
+///
+/// If `source_text` is provided, comments from the original source will be
+/// preserved in the output by re-parsing the source to extract comments and
+/// injecting them into the OXC program before codegen.
+pub fn emit(
+    file: &react_compiler_ast::File,
+    allocator: &oxc_allocator::Allocator,
+    source_text: Option<&str>,
+) -> String {
+    let mut program = convert_ast_reverse::convert_program_to_oxc(file, allocator);
+
+    if let Some(source) = source_text {
+        // Re-parse the original source to extract comments.
+        // We use a separate allocator for the parse since we only need the comments.
+        let comment_allocator = oxc_allocator::Allocator::default();
+        // Parse as TSX to handle maximum syntax variety
+        let source_type = oxc_span::SourceType::tsx();
+        let parsed =
+            oxc_parser::Parser::new(&comment_allocator, source, source_type).parse();
+
+        // Collect the span starts of top-level statements in the compiled
+        // program. Only comments attached to these positions should be
+        // preserved — comments inside function bodies would have
+        // `attached_to` values that don't match any top-level statement.
+        let mut top_level_starts = std::collections::HashSet::new();
+        top_level_starts.insert(0u32); // position 0 for comments at the very start
+        for stmt in &program.body {
+            use oxc_span::GetSpan;
+            let start = stmt.span().start;
+            if start > 0 {
+                top_level_starts.insert(start);
+            }
+        }
+
+        // Copy only comments attached to top-level statements.
+        let mut comments = oxc_allocator::Vec::with_capacity_in(
+            parsed.program.comments.len(),
+            allocator,
+        );
+        for comment in &parsed.program.comments {
+            if top_level_starts.contains(&comment.attached_to) {
+                comments.push(*comment);
+            }
+        }
+        program.comments = comments;
+
+        // Set the source_text so the codegen can extract comment content
+        // from the original source spans.
+        // We copy the source into the allocator to guarantee the lifetime.
+        let source_in_alloc =
+            oxc_allocator::StringBuilder::from_str_in(source, allocator);
+        program.source_text = source_in_alloc.into_str();
+    }
+
     oxc_codegen::Codegen::new().build(&program).code
 }
 

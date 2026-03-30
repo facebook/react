@@ -139,7 +139,9 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 
 fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<String, String> {
     let source_type = oxc_span::SourceType::from_path(filename)
-        .unwrap_or_default();
+        .unwrap_or_default()
+        .with_module(true)
+        .with_jsx(true);
 
     let allocator = oxc_allocator::Allocator::default();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
@@ -158,10 +160,10 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
     match result.file {
         Some(ref file) => {
             let emit_allocator = oxc_allocator::Allocator::default();
-            Ok(react_compiler_oxc::emit(file, &emit_allocator))
+            Ok(react_compiler_oxc::emit(file, &emit_allocator, Some(source)))
         }
         None => {
-            // No changes — emit the original parsed program
+            // No changes — emit the original parsed program (already has comments)
             Ok(oxc_codegen::Codegen::new().build(&parsed.program).code)
         }
     }
