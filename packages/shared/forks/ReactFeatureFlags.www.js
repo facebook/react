@@ -114,5 +114,13 @@ export const enableFragmentRefsInstanceHandles: boolean = true;
 
 export const enableOptimisticKey: boolean = false;
 
+export const eprh_enableUseKeyedStateCompilerLint: boolean = true;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = true;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'extra-only';
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

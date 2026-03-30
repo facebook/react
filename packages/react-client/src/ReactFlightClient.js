@@ -3525,7 +3525,8 @@ function resolveErrorDev(
 
   let error;
   const errorOptions =
-    'cause' in errorInfo
+    // We don't serialize Error.cause in prod so we never need to deserialize
+    __DEV__ && 'cause' in errorInfo
       ? {
           cause: reviveModel(
             response,
@@ -3536,18 +3537,40 @@ function resolveErrorDev(
           ),
         }
       : undefined;
+  const isAggregateError =
+    typeof AggregateError !== 'undefined' && 'errors' in errorInfo;
+  const revivedErrors =
+    // We don't serialize AggregateError.errors in prod so we never need to deserialize
+    __DEV__ && isAggregateError
+      ? reviveModel(
+          response,
+          // $FlowFixMe[incompatible-cast]
+          (errorInfo.errors: JSONValue),
+          errorInfo,
+          'errors',
+        )
+      : null;
   const callStack = buildFakeCallStack(
     response,
     stack,
     env,
     false,
-    // $FlowFixMe[incompatible-use]
-    Error.bind(
-      null,
-      message ||
-        'An error occurred in the Server Components render but no message was provided',
-      errorOptions,
-    ),
+    isAggregateError
+      ? // $FlowFixMe[incompatible-use]
+        AggregateError.bind(
+          null,
+          revivedErrors,
+          message ||
+            'An error occurred in the Server Components render but no message was provided',
+          errorOptions,
+        )
+      : // $FlowFixMe[incompatible-use]
+        Error.bind(
+          null,
+          message ||
+            'An error occurred in the Server Components render but no message was provided',
+          errorOptions,
+        ),
   );
 
   let ownerTask: null | ConsoleTask = null;
