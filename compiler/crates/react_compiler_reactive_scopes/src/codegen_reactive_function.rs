@@ -2318,14 +2318,33 @@ fn codegen_base_instruction_value(
                 },
             )))
         }
-        InstructionValue::UnsupportedNode { node_type, .. } => {
-            // We don't have the original AST node, so emit a placeholder
-            Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
-                make_identifier(&format!(
-                    "__unsupported_{}",
-                    node_type.as_deref().unwrap_or("unknown")
-                )),
-            )))
+        InstructionValue::UnsupportedNode { original_node, node_type, .. } => {
+            // Try to deserialize the original AST node from JSON (mirrors statement-level handler)
+            match original_node {
+                Some(node) => {
+                    match serde_json::from_value::<Expression>(node.clone()) {
+                        Ok(expr) => Ok(ExpressionOrJsxText::Expression(expr)),
+                        Err(_) => {
+                            // Not a valid expression — fall back to placeholder
+                            Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
+                                make_identifier(&format!(
+                                    "__unsupported_{}",
+                                    node_type.as_deref().unwrap_or("unknown")
+                                )),
+                            )))
+                        }
+                    }
+                }
+                None => {
+                    // No original node available — fall back to placeholder
+                    Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
+                        make_identifier(&format!(
+                            "__unsupported_{}",
+                            node_type.as_deref().unwrap_or("unknown")
+                        )),
+                    )))
+                }
+            }
         }
         InstructionValue::StartMemoize { .. }
         | InstructionValue::FinishMemoize { .. }

@@ -9,31 +9,6 @@ Current test status: Pass 1717/1717, Code 1716/1717, Snap 1717/1718.
 
 ## Critical Gaps (incorrect compilation possible)
 
-### 1. Transitive freeze of FunctionExpression captures is incomplete
-- **TS**: `Inference/InferMutationAliasingEffects.ts:1461-1475`
-- **Rust**: `react_compiler_inference/src/infer_mutation_aliasing_effects.rs:396-404`
-- The TS `freezeValue` recursively freezes FunctionExpression captures — and since `freeze` calls `freezeValue`, this creates a recursive chain through multiple layers of nested function captures. The Rust `freeze_value` does not recurse into function captures. While `apply_effect` for `Freeze` handles one level (looking up function values for the frozen place), it misses the recursive case where a frozen capture is itself a FunctionExpression. When `enablePreserveExistingMemoizationGuarantees` or `enableTransitivelyFreezeFunctionExpressions` is enabled, nested function captures could remain mutable when they should be frozen.
-
-### 2. UnsupportedNode expression codegen emits placeholder identifier
-- **TS**: `ReactiveScopes/CodegenReactiveFunction.ts:1786-1793`
-  ```typescript
-  case 'UnsupportedNode': {
-    const node = instrValue.node;
-    if (!t.isExpression(node)) { return node as any; }
-    value = node;  // re-emits the original AST node
-    break;
-  }
-  ```
-- **Rust**: `react_compiler_reactive_scopes/src/codegen_reactive_function.rs:2321-2329`
-  ```rust
-  InstructionValue::UnsupportedNode { node_type, .. } => {
-    Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
-      make_identifier(&format!("__unsupported_{}", node_type.as_deref().unwrap_or("unknown")))
-    )))
-  }
-  ```
-- The TS re-emits the original Babel AST node. The Rust emits a broken `__unsupported_<type>` identifier reference. The statement-level handler does deserialize the original node from JSON, but the expression-level fallback produces incorrect output.
-
 ### 3. Hardcoded `useMemoCache` identifier name
 - **TS**: `ReactiveScopes/CodegenReactiveFunction.ts:166-178`
   ```typescript
@@ -61,14 +36,7 @@ Current test status: Pass 1717/1717, Code 1716/1717, Snap 1717/1718.
 ### 5. Extra early return on inferMutationAliasingEffects errors
 - **TS**: `Entrypoint/Pipeline.ts:220-221` — continues through remaining passes
 - **Rust**: `react_compiler/src/entrypoint/pipeline.rs:272-279`
-  ```rust
-  let errors_before = env.error_count();
-  react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false)?;
-  if env.error_count() > errors_before {
-      return Err(env.take_errors_since(errors_before));
-  }
-  ```
-- The Rust bails out early if inferMutationAliasingEffects records errors, while TS continues and aggregates all errors at the end. This affects fault-tolerance — Rust may return a subset of errors.
+- The Rust bails out early if inferMutationAliasingEffects records errors, while TS continues and aggregates all errors at the end. In practice this only fires for rare edge cases (uninitialized identifiers, spread in hook args) since common MutateFrozen/MutateGlobal errors are stored as instruction effects and only recorded on env later in `infer_mutation_aliasing_ranges`. Simply removing the early return causes downstream panics (e.g., in `prune_non_escaping_scopes`), so the fix requires making downstream passes tolerant of error states before the early return can be removed.
 
 ---
 

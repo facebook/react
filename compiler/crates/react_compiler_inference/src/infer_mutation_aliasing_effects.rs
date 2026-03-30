@@ -1046,6 +1046,53 @@ fn apply_signature(
 }
 
 // =============================================================================
+// Transitive freeze helper
+// =============================================================================
+
+/// Recursively freeze through FunctionExpression captures. If `value_id`
+/// corresponds to a FunctionExpression, freeze each of its context captures
+/// and recurse into any that are themselves FunctionExpressions. This matches
+/// the TS `freezeValue` → `freeze` → `freezeValue` recursion chain.
+fn freeze_function_captures_transitive(
+    state: &mut InferenceState,
+    context: &Context,
+    env: &Environment,
+    value_id: ValueId,
+    reason: ValueReason,
+) {
+    if let Some(&func_id) = context.function_values.get(&value_id) {
+        let ctx_ids: Vec<IdentifierId> = env.functions[func_id.0 as usize]
+            .context
+            .iter()
+            .map(|p| p.identifier)
+            .collect();
+        for ctx_id in ctx_ids {
+            // Replicate InferenceState::freeze() logic inline —
+            // we need to recurse with context/env which freeze() doesn't have.
+            if !state.variables.contains_key(&ctx_id) {
+                continue;
+            }
+            let kind = state.kind(ctx_id).kind;
+            match kind {
+                ValueKind::Context | ValueKind::Mutable | ValueKind::MaybeFrozen => {
+                    let vids: Vec<ValueId> = state.values_for(ctx_id);
+                    for vid in vids {
+                        state.freeze_value(vid, reason);
+                        // Recurse into nested function captures
+                        freeze_function_captures_transitive(
+                            state, context, env, vid, reason,
+                        );
+                    }
+                }
+                ValueKind::Frozen | ValueKind::Global | ValueKind::Primitive => {
+                    // Already frozen or immutable — no-op
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
 // applyEffect
 // =============================================================================
 
@@ -1070,19 +1117,15 @@ fn apply_effect(
                     env.config.enable_preserve_existing_memoization_guarantees
                     || env.config.enable_transitively_freeze_function_expressions;
                 if enable_transitive {
-                    // Check if the frozen value is a function expression
+                    // Recursively freeze through function captures. The TS
+                    // freezeValue() calls freeze() on each capture, which
+                    // calls freezeValue() again — creating a transitive
+                    // closure through arbitrarily nested function captures.
                     let value_ids: Vec<ValueId> = state.values_for(value.identifier);
                     for vid in &value_ids {
-                        if let Some(&func_id) = context.function_values.get(vid) {
-                            let ctx_ids: Vec<IdentifierId> = env.functions[func_id.0 as usize]
-                                .context
-                                .iter()
-                                .map(|p| p.identifier)
-                                .collect();
-                            for ctx_id in ctx_ids {
-                                state.freeze(ctx_id, reason);
-                            }
-                        }
+                        freeze_function_captures_transitive(
+                            state, context, env, *vid, reason,
+                        );
                     }
                 }
             }
