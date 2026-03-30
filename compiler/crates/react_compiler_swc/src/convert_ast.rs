@@ -313,11 +313,43 @@ impl<'a> ConvertCtx<'a> {
     }
 
     fn convert_block_statement(&self, block: &swc::BlockStmt) -> BlockStatement {
+        let mut body: Vec<Statement> = Vec::new();
+        let mut directives: Vec<Directive> = Vec::new();
+        let mut past_directives = false;
+
+        for stmt in &block.stmts {
+            if !past_directives {
+                if let Some(dir) = self.try_extract_block_directive(stmt) {
+                    directives.push(dir);
+                    continue;
+                }
+                past_directives = true;
+            }
+            body.push(self.convert_statement(stmt));
+        }
+
         BlockStatement {
             base: self.make_base_node(block.span),
-            body: block.stmts.iter().map(|s| self.convert_statement(s)).collect(),
-            directives: vec![],
+            body,
+            directives,
         }
+    }
+
+    /// Try to extract a directive from a statement in a block body.
+    /// Directives are expression statements whose expression is a string literal.
+    fn try_extract_block_directive(&self, stmt: &swc::Stmt) -> Option<Directive> {
+        if let swc::Stmt::Expr(expr_stmt) = stmt {
+            if let swc::Expr::Lit(swc::Lit::Str(s)) = &*expr_stmt.expr {
+                return Some(Directive {
+                    base: self.make_base_node(expr_stmt.span),
+                    value: DirectiveLiteral {
+                        base: self.make_base_node(s.span),
+                        value: wtf8_to_string(&s.value),
+                    },
+                });
+            }
+        }
+        None
     }
 
     fn convert_catch_clause(&self, clause: &swc::CatchClause) -> CatchClause {
@@ -490,7 +522,22 @@ impl<'a> ConvertCtx<'a> {
             swc::Expr::TsTypeAssertion(e) => Expression::TSTypeAssertion(TSTypeAssertion { base: self.make_base_node(e.span), expression: Box::new(self.convert_expression(&e.expr)), type_annotation: Box::new(serde_json::Value::Null) }),
             swc::Expr::TsNonNull(e) => Expression::TSNonNullExpression(TSNonNullExpression { base: self.make_base_node(e.span), expression: Box::new(self.convert_expression(&e.expr)) }),
             swc::Expr::TsInstantiation(e) => Expression::TSInstantiationExpression(TSInstantiationExpression { base: self.make_base_node(e.span), expression: Box::new(self.convert_expression(&e.expr)), type_parameters: Box::new(serde_json::Value::Null) }),
-            swc::Expr::TsConstAssertion(e) => Expression::TSAsExpression(TSAsExpression { base: self.make_base_node(e.span), expression: Box::new(self.convert_expression(&e.expr)), type_annotation: Box::new(serde_json::Value::Null) }),
+            swc::Expr::TsConstAssertion(e) => {
+                // "as const" → TSAsExpression with typeAnnotation: TSTypeReference { typeName: Identifier { name: "const" } }
+                // This matches Babel's AST representation of `as const`.
+                let type_ann = serde_json::json!({
+                    "type": "TSTypeReference",
+                    "typeName": {
+                        "type": "Identifier",
+                        "name": "const"
+                    }
+                });
+                Expression::TSAsExpression(TSAsExpression {
+                    base: self.make_base_node(e.span),
+                    expression: Box::new(self.convert_expression(&e.expr)),
+                    type_annotation: Box::new(type_ann),
+                })
+            }
             swc::Expr::Invalid(i) => Expression::Identifier(Identifier { base: self.make_base_node(i.span), name: "__invalid__".to_string(), type_annotation: None, optional: None, decorators: None }),
         }
     }

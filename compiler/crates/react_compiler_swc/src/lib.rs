@@ -246,6 +246,11 @@ pub fn emit_with_comments(
     let code = emit_module_to_string(module, comments);
     let code = fix_block_comment_newlines(&code);
 
+    // Add blank lines after directives to match Babel's codegen behavior.
+    // Babel always emits a blank line after the last directive in a
+    // program/function body.
+    let code = add_blank_lines_after_directives(&code);
+
     // Reposition blank lines that SWC places before comment blocks:
     // SWC emits blank lines before leading comments, but Babel places
     // them after the comments (between comments and the declaration).
@@ -403,6 +408,60 @@ fn find_comment_block_start(lines: &[&str], code_line_idx: usize) -> usize {
         }
     }
     start
+}
+
+/// Add blank lines after directive sequences in function/program bodies.
+///
+/// Babel's codegen emits a blank line after the last directive in a body
+/// (e.g., after `"use strict";` or `"use no memo";`). SWC's codegen
+/// does not. This function adds those blank lines to match Babel's output.
+fn add_blank_lines_after_directives(code: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    if lines.is_empty() {
+        return code.to_string();
+    }
+
+    let mut result: Vec<&str> = Vec::with_capacity(lines.len() + 8);
+    let mut i = 0;
+
+    while i < lines.len() {
+        result.push(lines[i]);
+
+        // Check if this line is a directive (string literal expression statement)
+        if is_directive_line(lines[i]) {
+            // Check if the next line is NOT a directive and NOT blank
+            if i + 1 < lines.len()
+                && !is_directive_line(lines[i + 1])
+                && !lines[i + 1].trim().is_empty()
+            {
+                result.push("");
+            }
+        }
+
+        i += 1;
+    }
+
+    // Rejoin, preserving trailing newline if present
+    let mut output = result.join("\n");
+    if code.ends_with('\n') && !output.ends_with('\n') {
+        output.push('\n');
+    }
+    output
+}
+
+/// Check if a line is a directive (a string literal expression statement).
+/// Directives look like: `"use strict";` or `'use no memo';` possibly with
+/// leading whitespace (indentation for function body directives).
+fn is_directive_line(line: &str) -> bool {
+    let trimmed = line.trim();
+    // Must start with a quote and end with the matching quote + semicolon
+    if let Some(rest) = trimmed.strip_prefix('"') {
+        rest.ends_with("\";")
+    } else if let Some(rest) = trimmed.strip_prefix('\'') {
+        rest.ends_with("';")
+    } else {
+        false
+    }
 }
 
 /// Insert newlines after `*/` when followed by code on the same line.

@@ -10,7 +10,7 @@
 //! nodes suitable for code generation via `swc_codegen`.
 
 use swc_atoms::{Atom, Wtf8Atom};
-use swc_common::{BytePos, Span, SyntaxContext, DUMMY_SP};
+use swc_common::{BytePos, Span, Spanned, SyntaxContext, DUMMY_SP};
 use swc_common::comments::{Comment as SwcComment, CommentKind, SingleThreadedComments, Comments};
 use swc_ecma_ast::*;
 
@@ -140,11 +140,25 @@ impl ReverseCtx {
     // ===== Program =====
 
     fn convert_program(&self, program: &react_compiler_ast::Program) -> Module {
-        let body = program
-            .body
-            .iter()
-            .map(|s| self.convert_statement_to_module_item(s))
-            .collect();
+        let mut body: Vec<ModuleItem> = Vec::new();
+
+        // Convert directives to expression statements at the beginning
+        for dir in &program.directives {
+            let span = self.span(&dir.base);
+            let str_span = self.span(&dir.value.base);
+            body.push(ModuleItem::Stmt(Stmt::Expr(ExprStmt {
+                span,
+                expr: Box::new(Expr::Lit(Lit::Str(Str {
+                    span: str_span,
+                    value: self.wtf8(&dir.value.value),
+                    raw: None,
+                }))),
+            })));
+        }
+
+        for s in &program.body {
+            body.push(self.convert_statement_to_module_item(s));
+        }
 
         Module {
             span: DUMMY_SP,
@@ -386,10 +400,30 @@ impl ReverseCtx {
     }
 
     fn convert_block_statement(&self, block: &babel_stmt::BlockStatement) -> BlockStmt {
+        let mut stmts: Vec<Stmt> = Vec::new();
+
+        // Convert directives to expression statements at the beginning
+        for dir in &block.directives {
+            let span = self.span(&dir.base);
+            let str_span = self.span(&dir.value.base);
+            stmts.push(Stmt::Expr(ExprStmt {
+                span,
+                expr: Box::new(Expr::Lit(Lit::Str(Str {
+                    span: str_span,
+                    value: self.wtf8(&dir.value.value),
+                    raw: None,
+                }))),
+            }));
+        }
+
+        for s in &block.body {
+            stmts.push(self.convert_statement(s));
+        }
+
         BlockStmt {
             span: self.span(&block.base),
             ctxt: SyntaxContext::empty(),
-            stmts: block.body.iter().map(|s| self.convert_statement(s)).collect(),
+            stmts,
         }
     }
 
@@ -541,12 +575,24 @@ impl ReverseCtx {
             }
             BabelExpr::LogicalExpression(log) => {
                 let op = self.convert_logical_operator(&log.operator);
-                Expr::Bin(BinExpr {
-                    span: self.span(&log.base),
+                let span = self.span(&log.base);
+                let bin = Expr::Bin(BinExpr {
+                    span,
                     op,
                     left: Box::new(self.convert_expression(&log.left)),
                     right: Box::new(self.convert_expression(&log.right)),
-                })
+                });
+                // Wrap logical expressions in parentheses to prevent
+                // ambiguity when mixing ?? with || or && (which is a syntax
+                // error without explicit parens per the spec).
+                if matches!(op, BinaryOp::NullishCoalescing) {
+                    Expr::Paren(ParenExpr {
+                        span,
+                        expr: Box::new(bin),
+                    })
+                } else {
+                    bin
+                }
             }
             BabelExpr::UnaryExpression(un) => {
                 let op = self.convert_unary_operator(&un.operator);
@@ -574,11 +620,20 @@ impl ReverseCtx {
             BabelExpr::AssignmentExpression(assign) => {
                 let op = self.convert_assignment_operator(&assign.operator);
                 let left = self.convert_pattern_to_assign_target(&assign.left);
-                Expr::Assign(AssignExpr {
-                    span: self.span(&assign.base),
+                let span = self.span(&assign.base);
+                let assign_expr = Expr::Assign(AssignExpr {
+                    span,
                     op,
                     left,
                     right: Box::new(self.convert_expression(&assign.right)),
+                });
+                // Wrap assignment expressions in parentheses. SWC's codegen
+                // does not always insert necessary parens for assignments
+                // when they appear as operands of binary/logical expressions
+                // (e.g., `x + x = 2` instead of `x + (x = 2)`).
+                Expr::Paren(ParenExpr {
+                    span,
+                    expr: Box::new(assign_expr),
                 })
             }
             BabelExpr::SequenceExpression(seq) => {
@@ -587,9 +642,14 @@ impl ReverseCtx {
                     .iter()
                     .map(|e| Box::new(self.convert_expression(e)))
                     .collect();
-                Expr::Seq(SeqExpr {
-                    span: self.span(&seq.base),
-                    exprs,
+                let span = self.span(&seq.base);
+                // Wrap sequence expressions in parentheses. SWC's codegen
+                // does not always insert necessary parens for sequence
+                // expressions (e.g., in ternary consequent position), so
+                // wrapping unconditionally is safe and prevents parse errors.
+                Expr::Paren(ParenExpr {
+                    span,
+                    expr: Box::new(Expr::Seq(SeqExpr { span, exprs })),
                 })
             }
             BabelExpr::ArrowFunctionExpression(arrow) => self.convert_arrow_function(arrow),
@@ -735,8 +795,30 @@ impl ReverseCtx {
                 let fragment = self.convert_jsx_fragment(frag);
                 Expr::JSXFragment(fragment)
             }
-            // TS expressions - strip the type wrapper, keep the expression
-            BabelExpr::TSAsExpression(e) => self.convert_expression(&e.expression),
+            // TS expressions - preserve as SWC TS nodes
+            BabelExpr::TSAsExpression(e) => {
+                let expr = Box::new(self.convert_expression(&e.expression));
+                let span = self.span(&e.base);
+                // Check if this is "as const" — Babel represents it as
+                // TSAsExpression with typeAnnotation: TSTypeReference { typeName: Identifier { name: "const" } }
+                let is_as_const = e.type_annotation
+                    .get("type").and_then(|v| v.as_str()) == Some("TSTypeReference")
+                    && e.type_annotation
+                        .get("typeName")
+                        .and_then(|tn| tn.get("name"))
+                        .and_then(|n| n.as_str()) == Some("const");
+
+                if is_as_const {
+                    Expr::TsConstAssertion(TsConstAssertion { span, expr })
+                } else {
+                    let type_ann = self.convert_ts_type_from_json(&e.type_annotation, span);
+                    Expr::TsAs(TsAsExpr {
+                        span,
+                        expr,
+                        type_ann: Box::new(type_ann),
+                    })
+                }
+            }
             BabelExpr::TSSatisfiesExpression(e) => self.convert_expression(&e.expression),
             BabelExpr::TSNonNullExpression(e) => {
                 Expr::TsNonNull(TsNonNullExpr {
@@ -934,7 +1016,15 @@ impl ReverseCtx {
     ) -> PropOrSpread {
         match prop {
             babel_expr::ObjectExpressionProperty::ObjectProperty(p) => {
-                let key = self.convert_expression_to_prop_name(&p.key);
+                let key = if p.computed {
+                    // Computed property key: [expr]
+                    PropName::Computed(ComputedPropName {
+                        span: DUMMY_SP,
+                        expr: Box::new(self.convert_expression(&p.key)),
+                    })
+                } else {
+                    self.convert_expression_to_prop_name(&p.key)
+                };
                 let value = self.convert_expression(&p.value);
                 let method = p.method.unwrap_or(false);
 
@@ -968,7 +1058,14 @@ impl ReverseCtx {
                 }
             }
             babel_expr::ObjectExpressionProperty::ObjectMethod(m) => {
-                let key = self.convert_expression_to_prop_name(&m.key);
+                let key = if m.computed {
+                    PropName::Computed(ComputedPropName {
+                        span: DUMMY_SP,
+                        expr: Box::new(self.convert_expression(&m.key)),
+                    })
+                } else {
+                    self.convert_expression_to_prop_name(&m.key)
+                };
                 let func = self.convert_object_method_to_function(m);
                 match m.kind {
                     babel_expr::ObjectMethodKind::Get => {
@@ -1122,9 +1219,18 @@ impl ReverseCtx {
             }
             babel_expr::ArrowFunctionBody::Expression(expr) => {
                 if is_expression {
-                    Box::new(BlockStmtOrExpr::Expr(Box::new(
-                        self.convert_expression(expr),
-                    )))
+                    let converted = self.convert_expression(expr);
+                    // Wrap object expressions in parens to prevent ambiguity
+                    // with block bodies: `() => ({...})` vs `() => {...}`
+                    let converted = if matches!(&converted, Expr::Object(_)) {
+                        Expr::Paren(ParenExpr {
+                            span: converted.span(),
+                            expr: Box::new(converted),
+                        })
+                    } else {
+                        converted
+                    };
+                    Box::new(BlockStmtOrExpr::Expr(Box::new(converted)))
                 } else {
                     // Wrap in block with return
                     let ret_stmt = Stmt::Return(ReturnStmt {
@@ -1870,6 +1976,46 @@ impl ReverseCtx {
             src,
             type_only,
             with: None,
+        }
+    }
+
+    // ===== TS type helpers =====
+
+    /// Convert a JSON-serialized TypeScript type annotation to an SWC TsType.
+    /// This handles common cases from the compiler's output. For unrecognized
+    /// types, it falls back to `any`.
+    fn convert_ts_type_from_json(&self, json: &serde_json::Value, span: Span) -> TsType {
+        let type_name = json.get("type").and_then(|v| v.as_str()).unwrap_or("");
+        match type_name {
+            "TSTypeReference" => {
+                let name = json
+                    .get("typeName")
+                    .and_then(|tn| tn.get("name"))
+                    .and_then(|n| n.as_str())
+                    .unwrap_or("unknown");
+                if name == "const" {
+                    // "as const" is a TsConstAssertion in SWC, but TsAsExpr expects TsType.
+                    // Use TsTypeRef with "const" name.
+                    TsType::TsTypeRef(TsTypeRef {
+                        span,
+                        type_name: TsEntityName::Ident(self.ident("const", span)),
+                        type_params: None,
+                    })
+                } else {
+                    TsType::TsTypeRef(TsTypeRef {
+                        span,
+                        type_name: TsEntityName::Ident(self.ident(name, span)),
+                        type_params: None,
+                    })
+                }
+            }
+            _ => {
+                // Fallback: emit `any` type
+                TsType::TsKeywordType(TsKeywordType {
+                    span,
+                    kind: TsKeywordTypeKind::TsAnyKeyword,
+                })
+            }
         }
     }
 

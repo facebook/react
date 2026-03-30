@@ -87,18 +87,21 @@ fn main() {
 }
 
 fn determine_swc_syntax(filename: &str) -> swc_ecma_parser::Syntax {
-    let is_tsx = filename.ends_with(".tsx");
-    let is_ts = filename.ends_with(".ts") || is_tsx;
-    let is_jsx = filename.ends_with(".jsx") || is_tsx;
+    let is_flow = filename.ends_with(".flow.js");
 
-    if is_ts {
-        swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
-            tsx: is_tsx,
+    if is_flow {
+        // Flow files use ES syntax (SWC doesn't have a Flow parser)
+        swc_ecma_parser::Syntax::Es(swc_ecma_parser::EsSyntax {
+            jsx: true,
             ..Default::default()
         })
     } else {
-        swc_ecma_parser::Syntax::Es(swc_ecma_parser::EsSyntax {
-            jsx: is_jsx || filename.ends_with(".js"),
+        // For all other files (.js, .jsx, .ts, .tsx), use TypeScript parser
+        // with TSX enabled. This matches the Babel test harness which always
+        // uses ['typescript', 'jsx'] parser plugins for non-Flow files.
+        // Many .js fixtures contain TypeScript syntax like `as const`.
+        swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
+            tsx: true,
             ..Default::default()
         })
     }
@@ -128,11 +131,31 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 
     let result = react_compiler_swc::transform(&module, source, options);
 
+    // Check for error-level diagnostics. When panicThreshold is "all_errors",
+    // the TS/Babel plugin throws on any compilation error. We replicate this
+    // behavior by returning an error when there are error diagnostics and
+    // no compiled output.
+    let has_errors = result.diagnostics.iter().any(|d| {
+        matches!(d.severity, react_compiler_swc::diagnostics::Severity::Error)
+    });
+
     match result.module {
         Some(compiled_module) => Ok(react_compiler_swc::emit(&compiled_module)),
         None => {
-            // No changes needed — emit the original module
-            Ok(react_compiler_swc::emit(&module))
+            if has_errors {
+                // Compilation had errors — mimic TS plugin throwing
+                let messages: Vec<String> = result
+                    .diagnostics
+                    .iter()
+                    .map(|d| d.message.clone())
+                    .collect();
+                Err(messages.join("\n"))
+            } else {
+                // No changes needed — return the original source text.
+                // This matches Babel's behavior where the transform plugin
+                // returns the original code unchanged when no compilation occurs.
+                Ok(source.to_string())
+            }
         }
     }
 }
