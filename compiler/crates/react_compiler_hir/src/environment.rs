@@ -839,6 +839,36 @@ impl Environment {
     }
 
     // =========================================================================
+    // Name resolution helpers
+    // =========================================================================
+
+    /// Get the user-visible name for an identifier.
+    ///
+    /// First checks the identifier's own name. If None, looks for another
+    /// identifier with the same `declaration_id` that has a name. This handles
+    /// SSA identifiers that don't carry names but share a declaration_id with
+    /// the original named identifier from lowering.
+    ///
+    /// This is analogous to `identifierName` on Babel's SourceLocation,
+    /// which the parser sets on every identifier node.
+    pub fn identifier_name_for_id(&self, id: IdentifierId) -> Option<String> {
+        let ident = &self.identifiers[id.0 as usize];
+        if let Some(name) = &ident.name {
+            return Some(name.value().to_string());
+        }
+        // Fall back: find another identifier with the same declaration_id that has a Named name
+        let decl_id = ident.declaration_id;
+        for other in &self.identifiers {
+            if other.declaration_id == decl_id {
+                if let Some(IdentifierName::Named(name)) = &other.name {
+                    return Some(name.clone());
+                }
+            }
+        }
+        None
+    }
+
+    // =========================================================================
     // ID-based type helper methods
     // =========================================================================
 

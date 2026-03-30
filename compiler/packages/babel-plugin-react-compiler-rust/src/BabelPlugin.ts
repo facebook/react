@@ -59,24 +59,24 @@ export default function BabelPluginReactCompilerRust(
             // Report as CompileUnexpectedThrow + CompileError, matching TS compiler behavior
             // when compilation throws unexpectedly.
             const errMsg = e instanceof Error ? e.message : String(e);
+            // Parse the Babel error message to extract reason and description
+            // Format: "reason. description"
+            const dotIdx = errMsg.indexOf('. ');
+            const reason = dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
+            let description: string | undefined =
+              dotIdx >= 0 ? errMsg.substring(dotIdx + 2) : undefined;
+            // Strip trailing period from description (the TS compiler's
+            // CompilerDiagnostic.toString() adds ". description." but the
+            // detail.description field doesn't include the trailing period)
+            if (description?.endsWith('.')) {
+              description = description.slice(0, -1);
+            }
             if (logger) {
               logger.logEvent(filename, {
                 kind: 'CompileUnexpectedThrow',
                 fnName: null,
                 data: `Error: ${errMsg}`,
               });
-              // Parse the Babel error message to extract reason and description
-              // Format: "reason. description"
-              const dotIdx = errMsg.indexOf('. ');
-              const reason = dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
-              let description =
-                dotIdx >= 0 ? errMsg.substring(dotIdx + 2) : undefined;
-              // Strip trailing period from description (the TS compiler's
-              // CompilerDiagnostic.toString() adds ". description." but the
-              // detail.description field doesn't include the trailing period)
-              if (description?.endsWith('.')) {
-                description = description.slice(0, -1);
-              }
               logger.logEvent(filename, {
                 kind: 'CompileError',
                 fnName: null,
@@ -95,13 +95,23 @@ export default function BabelPluginReactCompilerRust(
                 },
               });
             }
-            // Respect panicThreshold: if set to 'all_errors', throw to match TS behavior
+            // Respect panicThreshold: if set to 'all_errors', throw to match TS behavior.
+            // Format the error like TS CompilerError.printErrorMessage() would:
+            // "Found 1 error:\n\nHeading: reason\n\ndescription."
             const panicThreshold = (pass.opts as PluginOptions).panicThreshold;
             if (
               panicThreshold === 'all_errors' ||
               panicThreshold === 'critical_errors'
             ) {
-              throw e;
+              const heading = 'Error';
+              const parts = [`${heading}: ${reason}`];
+              if (description != null) {
+                parts.push(`\n\n${description}.`);
+              }
+              const formatted = `Found 1 error:\n\n${parts.join('')}`;
+              const err = new Error(formatted);
+              (err as any).details = [];
+              throw err;
             }
             return;
           }
@@ -138,10 +148,12 @@ export default function BabelPluginReactCompilerRust(
             // panicThreshold triggered — throw with formatted message
             // matching the TS compiler's CompilerError.printErrorMessage()
             const source = pass.file.code ?? '';
-            const message = formatCompilerError(
-              result.error as any,
-              source,
-            );
+            // If the error has a rawMessage, use it directly (e.g., simulated
+            // unknown exceptions from throwUnknownException__testonly which in
+            // the TS compiler are plain Error objects, not CompilerErrors)
+            const message = (result.error as any).rawMessage != null
+              ? (result.error as any).rawMessage
+              : formatCompilerError(result.error as any, source);
             const err = new Error(message);
             (err as any).details = result.error.details;
             throw err;

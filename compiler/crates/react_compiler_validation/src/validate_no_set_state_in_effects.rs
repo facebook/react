@@ -22,7 +22,7 @@ use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     is_ref_value_type, is_set_state_type, is_use_effect_event_type, is_use_effect_hook_type,
     is_use_insertion_effect_hook_type, is_use_layout_effect_hook_type, is_use_ref_type,
-    BlockId, HirFunction, Identifier, IdentifierId, InstructionValue, PlaceOrSpread,
+    BlockId, HirFunction, Identifier, IdentifierId, IdentifierName, InstructionValue, PlaceOrSpread,
     PropertyLiteral, SourceLocation, Terminal, Type, visitors,
 };
 
@@ -74,6 +74,7 @@ pub fn validate_no_set_state_in_effects(
                             functions,
                             enable_allow_set_state_from_refs,
                             env.next_block_id_counter,
+                            env.code.as_deref(),
                         )?;
                         if let Some(info) = callee {
                             set_state_functions.insert(instr.lvalue.identifier, info);
@@ -146,6 +147,35 @@ pub fn validate_no_set_state_in_effects(
 struct SetStateInfo {
     loc: Option<SourceLocation>,
     identifier_name: Option<String>,
+}
+
+/// Get the user-visible name for an identifier, matching Babel's
+/// loc.identifierName behavior. First checks the identifier's own name,
+/// then falls back to extracting the name from the source code at the
+/// given source location (the callee's loc). This handles SSA identifiers
+/// whose names were lost during compiler passes.
+fn get_identifier_name_with_loc(
+    id: IdentifierId,
+    identifiers: &[Identifier],
+    loc: &Option<SourceLocation>,
+    source_code: Option<&str>,
+) -> Option<String> {
+    let ident = &identifiers[id.0 as usize];
+    if let Some(IdentifierName::Named(name)) = &ident.name {
+        return Some(name.clone());
+    }
+    // Fall back to extracting from source code
+    if let (Some(loc), Some(code)) = (loc, source_code) {
+        let start_idx = loc.start.index? as usize;
+        let end_idx = loc.end.index? as usize;
+        if start_idx < code.len() && end_idx <= code.len() && start_idx < end_idx {
+            let slice = &code[start_idx..end_idx];
+            if !slice.is_empty() && slice.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '$') {
+                return Some(slice.to_string());
+            }
+        }
+    }
+    None
 }
 
 fn is_set_state_type_by_id(
@@ -349,6 +379,7 @@ fn get_set_state_call(
     functions: &[HirFunction],
     enable_allow_set_state_from_refs: bool,
     next_block_id_counter: u32,
+    source_code: Option<&str>,
 ) -> Result<Option<SetStateInfo>, CompilerDiagnostic> {
     let mut ref_derived_values: HashSet<IdentifierId> = HashSet::new();
 
@@ -538,10 +569,12 @@ fn get_set_state_call(
                                 continue;
                             }
                         }
-                        let callee_name = identifiers[callee.identifier.0 as usize]
-                            .name
-                            .as_ref()
-                            .map(|n| n.value().to_string());
+                        // Get the user-visible identifier name, matching Babel's
+                        // loc.identifierName behavior. Uses declaration_id to find
+                        // the original named identifier when SSA creates unnamed copies.
+                        let callee_name = get_identifier_name_with_loc(
+                            callee.identifier, identifiers, &callee.loc, source_code,
+                        );
                         return Ok(Some(SetStateInfo { loc: callee.loc, identifier_name: callee_name }));
                     }
                 }

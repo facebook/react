@@ -1093,7 +1093,23 @@ fn handle_error(
 
     if should_panic || is_config_error {
         let source_fn = context.source_filename();
-        let error_info = compiler_error_to_info(err, source_fn.as_deref());
+        let mut error_info = compiler_error_to_info(err, source_fn.as_deref());
+
+        // Detect simulated unknown exception (throwUnknownException__testonly).
+        // In the TS compiler, this throws a plain Error('unexpected error'), not
+        // a CompilerError. Set rawMessage so the JS side throws with the raw
+        // message instead of formatting through formatCompilerError().
+        let is_simulated_unknown = err.details.len() == 1
+            && err.details.iter().all(|d| match d {
+                CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                    d.category == ErrorCategory::Invariant && d.reason == "unexpected error"
+                }
+                _ => false,
+            });
+        if is_simulated_unknown {
+            error_info.raw_message = Some("unexpected error".to_string());
+        }
+
         Some(CompileResult::Error {
             error: error_info,
             events: context.events.clone(),
@@ -1141,6 +1157,7 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
         reason,
         description,
         details,
+        raw_message: None,
     }
 }
 

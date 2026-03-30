@@ -27,6 +27,35 @@ use react_compiler_hir::visitors::{
     each_instruction_operand as canonical_each_instruction_operand,
 };
 
+/// Get the user-visible name for an identifier, matching Babel's
+/// loc.identifierName behavior. First checks the identifier's own name,
+/// then falls back to extracting the name from the source code at the
+/// given source location. This handles SSA identifiers whose names were
+/// lost during compiler passes.
+fn get_identifier_name_with_loc(
+    id: IdentifierId,
+    identifiers: &[Identifier],
+    loc: &Option<SourceLocation>,
+    source_code: Option<&str>,
+) -> Option<String> {
+    let ident = &identifiers[id.0 as usize];
+    if let Some(IdentifierName::Named(name)) = &ident.name {
+        return Some(name.clone());
+    }
+    // Fall back to extracting from source code
+    if let (Some(loc), Some(code)) = (loc, source_code) {
+        let start_idx = loc.start.index? as usize;
+        let end_idx = loc.end.index? as usize;
+        if start_idx < code.len() && end_idx <= code.len() && start_idx < end_idx {
+            let slice = &code[start_idx..end_idx];
+            if !slice.is_empty() && slice.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '$') {
+                return Some(slice.to_string());
+            }
+        }
+    }
+    None
+}
+
 const MAX_FIXPOINT_ITERATIONS: usize = 100;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -802,7 +831,6 @@ fn validate_effect(
     let types = &env.types;
     let functions = &env.functions;
     let effect_function = &functions[effect_func_id.0 as usize];
-
     let mut seen_blocks: HashSet<BlockId> = HashSet::new();
 
     struct DerivedSetStateCall {
@@ -902,10 +930,11 @@ fn validate_effect(
                             let arg_metadata =
                                 context.derivation_cache.cache.get(&arg0.identifier);
                             if let Some(am) = arg_metadata {
-                                let callee_ident_name = identifiers[callee.identifier.0 as usize]
-                                .name
-                                .as_ref()
-                                .map(|n| n.value().to_string());
+                                // Get the user-visible identifier name, matching Babel's
+                                // loc.identifierName. Falls back to extracting from source code.
+                                let callee_ident_name = get_identifier_name_with_loc(
+                                    callee.identifier, identifiers, &callee.loc, env.code.as_deref(),
+                                );
                             effect_derived_set_state_calls.push(DerivedSetStateCall {
                                     callee_loc: callee.loc,
                                     callee_id: callee.identifier,

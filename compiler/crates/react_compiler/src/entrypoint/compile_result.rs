@@ -128,6 +128,12 @@ pub struct CompilerErrorInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub details: Vec<CompilerErrorDetailInfo>,
+    /// When set, the JS shim should throw an Error with this exact message
+    /// instead of formatting through formatCompilerError(). This is used
+    /// for simulated unknown exceptions (throwUnknownException__testonly)
+    /// which in the TS compiler are plain Error objects, not CompilerErrors.
+    #[serde(rename = "rawMessage", skip_serializing_if = "Option::is_none")]
+    pub raw_message: Option<String>,
 }
 
 /// Serializable error detail — flat plain object matching the TS
