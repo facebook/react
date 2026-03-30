@@ -2,6 +2,8 @@
 
 Overall: 1717/1717 passing (100%). All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported with application. Code comparison: 1717/1717 (100%).
 
+Snap (end-to-end): 841/1718 passed, 877 failed
+
 ## Transformation passes
 
 HIR: partial (1651/1653, 2 failures — block ID ordering)

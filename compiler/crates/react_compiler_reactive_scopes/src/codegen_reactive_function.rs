@@ -12,7 +12,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use react_compiler_ast::common::BaseNode;
+use react_compiler_ast::common::{BaseNode, SourceLocation as AstSourceLocation, Position as AstPosition};
 use react_compiler_ast::expressions::{
     self as ast_expr, ArrowFunctionBody, Expression, Identifier as AstIdentifier,
 };
@@ -920,13 +920,14 @@ fn codegen_terminal(
         ReactiveTerminal::Break {
             target,
             target_kind,
+            loc,
             ..
         } => {
             if *target_kind == ReactiveTerminalTargetKind::Implicit {
                 return Ok(None);
             }
             Ok(Some(Statement::BreakStatement(BreakStatement {
-                base: BaseNode::typed("BreakStatement"),
+                base: base_node_with_loc("BreakStatement", *loc),
                 label: if *target_kind == ReactiveTerminalTargetKind::Labeled {
                     Some(make_identifier(&codegen_label(*target)))
                 } else {
@@ -937,13 +938,14 @@ fn codegen_terminal(
         ReactiveTerminal::Continue {
             target,
             target_kind,
+            loc,
             ..
         } => {
             if *target_kind == ReactiveTerminalTargetKind::Implicit {
                 return Ok(None);
             }
             Ok(Some(Statement::ContinueStatement(ContinueStatement {
-                base: BaseNode::typed("ContinueStatement"),
+                base: base_node_with_loc("ContinueStatement", *loc),
                 label: if *target_kind == ReactiveTerminalTargetKind::Labeled {
                     Some(make_identifier(&codegen_label(*target)))
                 } else {
@@ -951,25 +953,25 @@ fn codegen_terminal(
                 },
             })))
         }
-        ReactiveTerminal::Return { value, .. } => {
+        ReactiveTerminal::Return { value, loc, .. } => {
             let expr = codegen_place_to_expression(cx, value)?;
             if let Expression::Identifier(ref ident) = expr {
                 if ident.name == "undefined" {
                     return Ok(Some(Statement::ReturnStatement(ReturnStatement {
-                        base: BaseNode::typed("ReturnStatement"),
+                        base: base_node_with_loc("ReturnStatement", *loc),
                         argument: None,
                     })));
                 }
             }
             Ok(Some(Statement::ReturnStatement(ReturnStatement {
-                base: BaseNode::typed("ReturnStatement"),
+                base: base_node_with_loc("ReturnStatement", *loc),
                 argument: Some(Box::new(expr)),
             })))
         }
-        ReactiveTerminal::Throw { value, .. } => {
+        ReactiveTerminal::Throw { value, loc, .. } => {
             let expr = codegen_place_to_expression(cx, value)?;
             Ok(Some(Statement::ThrowStatement(ThrowStatement {
-                base: BaseNode::typed("ThrowStatement"),
+                base: base_node_with_loc("ThrowStatement", *loc),
                 argument: Box::new(expr),
             })))
         }
@@ -977,6 +979,7 @@ fn codegen_terminal(
             test,
             consequent,
             alternate,
+            loc,
             ..
         } => {
             let test_expr = codegen_place_to_expression(cx, test)?;
@@ -992,13 +995,13 @@ fn codegen_terminal(
                 None
             };
             Ok(Some(Statement::IfStatement(IfStatement {
-                base: BaseNode::typed("IfStatement"),
+                base: base_node_with_loc("IfStatement", *loc),
                 test: Box::new(test_expr),
                 consequent: Box::new(Statement::BlockStatement(consequent_block)),
                 alternate: alternate_stmt,
             })))
         }
-        ReactiveTerminal::Switch { test, cases, .. } => {
+        ReactiveTerminal::Switch { test, cases, loc, .. } => {
             let test_expr = codegen_place_to_expression(cx, test)?;
             let switch_cases: Vec<SwitchCase> = cases
                 .iter()
@@ -1026,29 +1029,29 @@ fn codegen_terminal(
                 })
                 .collect::<Result<_, CompilerError>>()?;
             Ok(Some(Statement::SwitchStatement(SwitchStatement {
-                base: BaseNode::typed("SwitchStatement"),
+                base: base_node_with_loc("SwitchStatement", *loc),
                 discriminant: Box::new(test_expr),
                 cases: switch_cases,
             })))
         }
         ReactiveTerminal::DoWhile {
-            loop_block, test, ..
+            loop_block, test, loc, ..
         } => {
             let test_expr = codegen_instruction_value_to_expression(cx, test)?;
             let body = codegen_block(cx, loop_block)?;
             Ok(Some(Statement::DoWhileStatement(DoWhileStatement {
-                base: BaseNode::typed("DoWhileStatement"),
+                base: base_node_with_loc("DoWhileStatement", *loc),
                 test: Box::new(test_expr),
                 body: Box::new(Statement::BlockStatement(body)),
             })))
         }
         ReactiveTerminal::While {
-            test, loop_block, ..
+            test, loop_block, loc, ..
         } => {
             let test_expr = codegen_instruction_value_to_expression(cx, test)?;
             let body = codegen_block(cx, loop_block)?;
             Ok(Some(Statement::WhileStatement(WhileStatement {
-                base: BaseNode::typed("WhileStatement"),
+                base: base_node_with_loc("WhileStatement", *loc),
                 test: Box::new(test_expr),
                 body: Box::new(Statement::BlockStatement(body)),
             })))
@@ -1058,6 +1061,7 @@ fn codegen_terminal(
             test,
             update,
             loop_block,
+            loc,
             ..
         } => {
             let init_val = codegen_for_init(cx, init)?;
@@ -1068,7 +1072,7 @@ fn codegen_terminal(
                 .transpose()?;
             let body = codegen_block(cx, loop_block)?;
             Ok(Some(Statement::ForStatement(ForStatement {
-                base: BaseNode::typed("ForStatement"),
+                base: base_node_with_loc("ForStatement", *loc),
                 init: init_val.map(|v| Box::new(v)),
                 test: Some(Box::new(test_expr)),
                 update: update_expr.map(Box::new),
@@ -1076,17 +1080,18 @@ fn codegen_terminal(
             })))
         }
         ReactiveTerminal::ForIn {
-            init, loop_block, ..
+            init, loop_block, loc, ..
         } => {
-            codegen_for_in(cx, init, loop_block)
+            codegen_for_in(cx, init, loop_block, *loc)
         }
         ReactiveTerminal::ForOf {
             init,
             test,
             loop_block,
+            loc,
             ..
         } => {
-            codegen_for_of(cx, init, test, loop_block)
+            codegen_for_of(cx, init, test, loop_block, *loc)
         }
         ReactiveTerminal::Label { block, .. } => {
             let body = codegen_block(cx, block)?;
@@ -1096,6 +1101,7 @@ fn codegen_terminal(
             block,
             handler_binding,
             handler,
+            loc,
             ..
         } => {
             let catch_param = match handler_binding.as_ref() {
@@ -1109,7 +1115,7 @@ fn codegen_terminal(
             let try_block = codegen_block(cx, block)?;
             let handler_block = codegen_block(cx, handler)?;
             Ok(Some(Statement::TryStatement(TryStatement {
-                base: BaseNode::typed("TryStatement"),
+                base: base_node_with_loc("TryStatement", *loc),
                 block: try_block,
                 handler: Some(CatchClause {
                     base: BaseNode::typed("CatchClause"),
@@ -1126,6 +1132,7 @@ fn codegen_for_in(
     cx: &mut Context,
     init: &ReactiveValue,
     loop_block: &ReactiveBlock,
+    loc: Option<DiagSourceLocation>,
 ) -> Result<Option<Statement>, CompilerError> {
     let ReactiveValue::SequenceExpression { instructions, .. } = init else {
         return Err(invariant_err(
@@ -1153,7 +1160,7 @@ fn codegen_for_in(
     let right = codegen_instruction_value_to_expression(cx, &iterable_collection.value)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForInStatement(ForInStatement {
-        base: BaseNode::typed("ForInStatement"),
+        base: base_node_with_loc("ForInStatement", loc),
         left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
             VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
@@ -1177,6 +1184,7 @@ fn codegen_for_of(
     init: &ReactiveValue,
     test: &ReactiveValue,
     loop_block: &ReactiveBlock,
+    loc: Option<DiagSourceLocation>,
 ) -> Result<Option<Statement>, CompilerError> {
     // Validate init is SequenceExpression with single GetIterator instruction
     let ReactiveValue::SequenceExpression {
@@ -1233,7 +1241,7 @@ fn codegen_for_of(
     let right = codegen_place_to_expression(cx, collection)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForOfStatement(ForOfStatement {
-        base: BaseNode::typed("ForOfStatement"),
+        base: base_node_with_loc("ForOfStatement", loc),
         left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
             VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
@@ -1389,7 +1397,7 @@ fn codegen_instruction_nullable(
             }
             InstructionValue::Debugger { .. } => {
                 return Ok(Some(Statement::DebuggerStatement(DebuggerStatement {
-                    base: BaseNode::typed("DebuggerStatement"),
+                    base: base_node_with_loc("DebuggerStatement", instr.loc),
                 })));
             }
             InstructionValue::UnsupportedNode { original_node: Some(node), .. } => {
@@ -1481,7 +1489,7 @@ fn emit_store(
             }
             let lval = codegen_lvalue(cx, lvalue)?;
             Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
-                base: BaseNode::typed("VariableDeclaration"),
+                base: base_node_with_loc("VariableDeclaration", instr.loc),
                 declarations: vec![make_var_declarator(lval, value)],
                 kind: VariableDeclarationKind::Const,
                 declare: None,
@@ -1498,7 +1506,7 @@ fn emit_store(
             match rhs {
                 Expression::FunctionExpression(func_expr) => {
                     Ok(Some(Statement::FunctionDeclaration(FunctionDeclaration {
-                        base: BaseNode::typed("FunctionDeclaration"),
+                        base: base_node_with_loc("FunctionDeclaration", instr.loc),
                         id: Some(fn_id),
                         params: func_expr.params,
                         body: func_expr.body,
@@ -1523,7 +1531,7 @@ fn emit_store(
             }
             let lval = codegen_lvalue(cx, lvalue)?;
             Ok(Some(Statement::VariableDeclaration(VariableDeclaration {
-                base: BaseNode::typed("VariableDeclaration"),
+                base: base_node_with_loc("VariableDeclaration", instr.loc),
                 declarations: vec![make_var_declarator(lval, value)],
                 kind: VariableDeclarationKind::Let,
                 declare: None,
@@ -1555,7 +1563,7 @@ fn emit_store(
                 }
             }
             Ok(Some(Statement::ExpressionStatement(ExpressionStatement {
-                base: BaseNode::typed("ExpressionStatement"),
+                base: base_node_with_loc("ExpressionStatement", instr.loc),
                 expression: Box::new(expr),
             })))
         }
@@ -1581,7 +1589,7 @@ fn codegen_instruction(
     let Some(ref lvalue) = instr.lvalue else {
         let expr = convert_value_to_expression(value);
         return Ok(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::typed("ExpressionStatement"),
+            base: base_node_with_loc("ExpressionStatement", instr.loc),
             expression: Box::new(expr),
         }));
     };
@@ -1596,7 +1604,7 @@ fn codegen_instruction(
     let expr_value = convert_value_to_expression(value);
     if cx.has_declared(lvalue.identifier) {
         Ok(Statement::ExpressionStatement(ExpressionStatement {
-            base: BaseNode::typed("ExpressionStatement"),
+            base: base_node_with_loc("ExpressionStatement", instr.loc),
             expression: Box::new(Expression::AssignmentExpression(
                 ast_expr::AssignmentExpression {
                     base: BaseNode::typed("AssignmentExpression"),
@@ -1611,7 +1619,7 @@ fn codegen_instruction(
         }))
     } else {
         Ok(Statement::VariableDeclaration(VariableDeclaration {
-            base: BaseNode::typed("VariableDeclaration"),
+            base: base_node_with_loc("VariableDeclaration", instr.loc),
             declarations: vec![make_var_declarator(
                 PatternLike::Identifier(convert_identifier(lvalue.identifier, cx.env)?),
                 Some(expr_value),
@@ -3190,6 +3198,34 @@ fn convert_update_operator(op: &react_compiler_hir::UpdateOperator) -> AstUpdate
 // =============================================================================
 // Helpers
 // =============================================================================
+
+/// Create a BaseNode with the given type name and optional source location.
+/// Converts from the diagnostics SourceLocation (line, column) to the AST
+/// SourceLocation format. This is critical for Babel's `retainLines: true`
+/// option to insert blank lines at correct positions.
+fn base_node_with_loc(type_name: &str, loc: Option<DiagSourceLocation>) -> BaseNode {
+    match loc {
+        Some(loc) => BaseNode {
+            node_type: Some(type_name.to_string()),
+            loc: Some(AstSourceLocation {
+                start: AstPosition {
+                    line: loc.start.line,
+                    column: loc.start.column,
+                    index: None,
+                },
+                end: AstPosition {
+                    line: loc.end.line,
+                    column: loc.end.column,
+                    index: None,
+                },
+                filename: None,
+                identifier_name: None,
+            }),
+            ..Default::default()
+        },
+        None => BaseNode::typed(type_name),
+    }
+}
 
 fn make_identifier(name: &str) -> AstIdentifier {
     AstIdentifier {

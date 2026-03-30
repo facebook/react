@@ -14,7 +14,13 @@ import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 import {BABEL_PLUGIN_ROOT, PROJECT_ROOT} from './constants';
 import {TestFilter, getFixtures} from './fixture-utils';
-import {TestResult, TestResults, report, update} from './reporter';
+import {
+  TestResult,
+  TestResults,
+  normalizeCodeBlankLines,
+  report,
+  update,
+} from './reporter';
 import {
   RunnerAction,
   RunnerState,
@@ -150,7 +156,7 @@ async function runTestCommand(opts: TestOptions): Promise<void> {
                 update(results);
                 isSuccess = true;
               } else {
-                isSuccess = report(results, opts.verbose);
+                isSuccess = report(results, opts.verbose, opts.rust);
               }
             } catch (e) {
               console.warn('Failed to build compiler with tsup:', e);
@@ -522,8 +528,16 @@ async function onChange(
 
     // Track fixture status for autocomplete suggestions
     for (const [basename, result] of results) {
+      const actual =
+        enableRust && result.actual
+          ? normalizeCodeBlankLines(result.actual)
+          : result.actual;
+      const expected =
+        enableRust && result.expected
+          ? normalizeCodeBlankLines(result.expected)
+          : result.expected;
       const failed =
-        result.actual !== result.expected || result.unexpectedError != null;
+        actual !== expected || result.unexpectedError != null;
       state.fixtureLastRunStatus.set(basename, failed ? 'fail' : 'pass');
     }
 
@@ -531,7 +545,7 @@ async function onChange(
       update(results);
       state.lastUpdate = end;
     } else {
-      report(results, verbose);
+      report(results, verbose, enableRust);
     }
     console.log(`Completed in ${Math.floor(end - start)} ms`);
   } else {

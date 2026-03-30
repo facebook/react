@@ -7,6 +7,60 @@ use serde::Serialize;
 
 use crate::timing::TimingEntry;
 
+/// Source location with index and filename fields for logger event serialization.
+/// Matches the Babel SourceLocation format that the TS compiler emits in logger events.
+#[derive(Debug, Clone, Serialize)]
+pub struct LoggerSourceLocation {
+    pub start: LoggerPosition,
+    pub end: LoggerPosition,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filename: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct LoggerPosition {
+    pub line: u32,
+    pub column: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
+}
+
+impl LoggerSourceLocation {
+    /// Create from a diagnostics SourceLocation, adding index and filename.
+    pub fn from_loc(loc: &SourceLocation, filename: Option<&str>, start_index: Option<u32>, end_index: Option<u32>) -> Self {
+        Self {
+            start: LoggerPosition {
+                line: loc.start.line,
+                column: loc.start.column,
+                index: start_index,
+            },
+            end: LoggerPosition {
+                line: loc.end.line,
+                column: loc.end.column,
+                index: end_index,
+            },
+            filename: filename.map(|s| s.to_string()),
+        }
+    }
+
+    /// Create from a diagnostics SourceLocation without index or filename.
+    pub fn from_loc_simple(loc: &SourceLocation) -> Self {
+        Self {
+            start: LoggerPosition {
+                line: loc.start.line,
+                column: loc.start.column,
+                index: None,
+            },
+            end: LoggerPosition {
+                line: loc.end.line,
+                column: loc.end.column,
+                index: None,
+            },
+            filename: None,
+        }
+    }
+}
+
 /// A variable rename from lowering, serialized for the JS shim.
 #[derive(Debug, Clone, Serialize)]
 pub struct BindingRenameInfo {
@@ -72,29 +126,27 @@ pub struct CompilerErrorInfo {
     pub details: Vec<CompilerErrorDetailInfo>,
 }
 
-/// Serializable error detail.
+/// Serializable error detail — flat plain object matching the TS
+/// `formatDetailForLogging()` output. All fields are direct properties.
 #[derive(Debug, Clone, Serialize)]
 pub struct CompilerErrorDetailInfo {
     pub category: String,
     pub reason: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub severity: Option<String>,
-    /// Error/hint items. When present, these carry location info
-    /// instead of the top-level `loc` field.
+    pub severity: String,
+    pub suggestions: Option<()>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<Vec<CompilerErrorItemInfo>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub loc: Option<SourceLocation>,
+    pub loc: Option<LoggerSourceLocation>,
 }
 
 /// Individual error or hint item within a CompilerErrorDetailInfo.
 #[derive(Debug, Clone, Serialize)]
 pub struct CompilerErrorItemInfo {
     pub kind: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loc: Option<SourceLocation>,
+    pub loc: Option<LoggerSourceLocation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
 }
@@ -150,9 +202,9 @@ pub struct OutlinedFunction {
 #[serde(tag = "kind")]
 pub enum LoggerEvent {
     CompileSuccess {
-        #[serde(rename = "fnLoc", skip_serializing_if = "Option::is_none")]
-        fn_loc: Option<SourceLocation>,
-        #[serde(rename = "fnName", skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "fnLoc")]
+        fn_loc: Option<LoggerSourceLocation>,
+        #[serde(rename = "fnName")]
         fn_name: Option<String>,
         #[serde(rename = "memoSlots")]
         memo_slots: u32,
@@ -166,25 +218,25 @@ pub enum LoggerEvent {
         pruned_memo_values: u32,
     },
     CompileError {
-        #[serde(rename = "fnLoc", skip_serializing_if = "Option::is_none")]
-        fn_loc: Option<SourceLocation>,
         detail: CompilerErrorDetailInfo,
+        #[serde(rename = "fnLoc")]
+        fn_loc: Option<LoggerSourceLocation>,
     },
     CompileSkip {
-        #[serde(rename = "fnLoc", skip_serializing_if = "Option::is_none")]
-        fn_loc: Option<SourceLocation>,
+        #[serde(rename = "fnLoc")]
+        fn_loc: Option<LoggerSourceLocation>,
         reason: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        loc: Option<SourceLocation>,
+        loc: Option<LoggerSourceLocation>,
     },
     CompileUnexpectedThrow {
-        #[serde(rename = "fnLoc", skip_serializing_if = "Option::is_none")]
-        fn_loc: Option<SourceLocation>,
+        #[serde(rename = "fnLoc")]
+        fn_loc: Option<LoggerSourceLocation>,
         data: String,
     },
     PipelineError {
-        #[serde(rename = "fnLoc", skip_serializing_if = "Option::is_none")]
-        fn_loc: Option<SourceLocation>,
+        #[serde(rename = "fnLoc")]
+        fn_loc: Option<LoggerSourceLocation>,
         data: String,
     },
 }

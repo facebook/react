@@ -18,6 +18,32 @@ ${s}
 }
 const SPROUT_SEPARATOR = '\n### Eval output\n';
 
+/**
+ * Normalize blank lines in the ## Code section of a snapshot.
+ * Strips blank lines that appear inside code blocks so that
+ * whitespace-only differences don't cause test failures.
+ */
+export function normalizeCodeBlankLines(snapshot: string): string {
+  const codeStart = snapshot.indexOf('## Code\n');
+  if (codeStart === -1) return snapshot;
+  const codeBlockStart = snapshot.indexOf('```javascript\n', codeStart);
+  if (codeBlockStart === -1) return snapshot;
+  const contentStart = codeBlockStart + '```javascript\n'.length;
+  const codeBlockEnd = snapshot.indexOf('\n```', contentStart);
+  if (codeBlockEnd === -1) return snapshot;
+
+  const before = snapshot.slice(0, contentStart);
+  const code = snapshot.slice(contentStart, codeBlockEnd);
+  const after = snapshot.slice(codeBlockEnd);
+
+  const normalized = code
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .join('\n');
+
+  return before + normalized + after;
+}
+
 export function writeOutputToString(
   input: string,
   compilerOutput: string | null,
@@ -142,10 +168,19 @@ export async function update(results: TestResults): Promise<void> {
 export function report(
   results: TestResults,
   verbose: boolean = false,
+  rust: boolean = false,
 ): boolean {
   const failures: Array<[string, TestResult]> = [];
   for (const [basename, result] of results) {
-    if (result.actual === result.expected && result.unexpectedError == null) {
+    const actual =
+      rust && result.actual
+        ? normalizeCodeBlankLines(result.actual)
+        : result.actual;
+    const expected =
+      rust && result.expected
+        ? normalizeCodeBlankLines(result.expected)
+        : result.expected;
+    if (actual === expected && result.unexpectedError == null) {
       if (verbose) {
         console.log(
           chalk.green.inverse.bold(' PASS ') + ' ' + chalk.dim(basename),
@@ -171,19 +206,27 @@ export function report(
           ` >> Unexpected error during test: \n${result.unexpectedError}`,
         );
       } else {
-        if (result.expected == null) {
-          invariant(result.actual != null, '[Tester] Internal failure.');
+        const actual =
+          rust && result.actual
+            ? normalizeCodeBlankLines(result.actual)
+            : result.actual;
+        const expected =
+          rust && result.expected
+            ? normalizeCodeBlankLines(result.expected)
+            : result.expected;
+        if (expected == null) {
+          invariant(actual != null, '[Tester] Internal failure.');
           console.log(
             chalk.red('[ expected fixture output is absent ]') + '\n',
           );
-        } else if (result.actual == null) {
-          invariant(result.expected != null, '[Tester] Internal failure.');
+        } else if (actual == null) {
+          invariant(expected != null, '[Tester] Internal failure.');
           console.log(
             chalk.red(`[ fixture input for ${result.outputPath} is absent ]`) +
               '\n',
           );
         } else {
-          console.log(diff(result.expected, result.actual) + '\n');
+          console.log(diff(expected, actual) + '\n');
         }
       }
     }

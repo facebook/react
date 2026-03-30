@@ -273,10 +273,12 @@ pub fn suppressions_to_compiler_error(suppressions: &[SuppressionRange]) -> Comp
                 start: react_compiler_diagnostics::Position {
                     line: l.start.line,
                     column: l.start.column,
+                    index: l.start.index,
                 },
                 end: react_compiler_diagnostics::Position {
                     line: l.end.line,
                     column: l.end.column,
+                    index: l.end.index,
                 },
             }
         });

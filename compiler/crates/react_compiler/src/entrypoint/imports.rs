@@ -40,6 +40,10 @@ pub struct NonLocalImportSpecifier {
 pub struct ProgramContext {
     pub opts: PluginOptions,
     pub filename: Option<String>,
+    /// The source filename from the parser's sourceFilename option.
+    /// This is the filename stored on AST node `loc.filename` fields,
+    /// which may differ from `filename` (e.g., no path prefix).
+    source_filename: Option<String>,
     pub code: Option<String>,
     pub react_runtime_module: String,
     pub suppressions: Vec<SuppressionRange>,
@@ -83,6 +87,7 @@ impl ProgramContext {
         Self {
             opts,
             filename,
+            source_filename: None,
             code,
             react_runtime_module,
             suppressions,
@@ -99,6 +104,18 @@ impl ProgramContext {
             known_referenced_names: HashSet::new(),
             imports: HashMap::new(),
         }
+    }
+
+    /// Set the source filename (from AST node loc.filename).
+    pub fn set_source_filename(&mut self, filename: Option<String>) {
+        if self.source_filename.is_none() {
+            self.source_filename = filename;
+        }
+    }
+
+    /// Get the source filename for logger events.
+    pub fn source_filename(&self) -> Option<String> {
+        self.source_filename.clone()
     }
 
     /// Check if a function at the given start position has already been compiled.
@@ -249,8 +266,8 @@ pub fn validate_restricted_imports(
                 )
                 .with_description(format!("Import from module {}", import.source.value));
                 detail.loc = import.base.loc.as_ref().map(|loc| SourceLocation {
-                    start: Position { line: loc.start.line, column: loc.start.column },
-                    end: Position { line: loc.end.line, column: loc.end.column },
+                    start: Position { line: loc.start.line, column: loc.start.column, index: loc.start.index },
+                    end: Position { line: loc.end.line, column: loc.end.column, index: loc.end.index },
                 });
                 error.push_error_detail(detail);
             }

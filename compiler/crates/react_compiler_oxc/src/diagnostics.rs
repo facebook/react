@@ -62,18 +62,11 @@ fn error_detail_to_diagnostic(detail: &CompilerErrorDetailInfo, is_error: bool) 
         format!("[ReactCompiler] {}: {}", detail.category, detail.reason)
     };
 
-    let mut diag = if is_error {
+    if is_error {
         OxcDiagnostic::error(message)
     } else {
         OxcDiagnostic::warn(message)
-    };
-
-    // Add severity as help text if available
-    if let Some(severity) = &detail.severity {
-        diag = diag.with_help(format!("Severity: {}", severity));
     }
-
-    diag
 }
 
 fn event_to_diagnostic(event: &LoggerEvent) -> Option<OxcDiagnostic> {

@@ -89,6 +89,9 @@ pub struct SourceLocation {
 pub struct Position {
     pub line: u32,
     pub column: u32,
+    /// Byte offset in the source file. Preserved for logger event serialization.
+    #[serde(default, skip_serializing)]
+    pub index: Option<u32>,
 }
 
 /// Sentinel value for generated/synthetic source locations

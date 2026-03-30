@@ -15,7 +15,7 @@ use react_compiler_hir::environment::{Environment, OutputMode};
 use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 
-use super::compile_result::{CodegenFunction, CompilerErrorDetailInfo, CompilerErrorItemInfo, DebugLogEntry, OutlinedFunction};
+use super::compile_result::{CodegenFunction, CompilerErrorDetailInfo, CompilerErrorItemInfo, DebugLogEntry, LoggerPosition, LoggerSourceLocation, OutlinedFunction};
 use super::imports::ProgramContext;
 use super::plugin_options::CompilerOutputMode;
 use crate::debug_print;
@@ -1546,6 +1546,9 @@ fn log_errors_as_events(
     errors: &CompilerError,
     context: &mut ProgramContext,
 ) {
+    // Use the source_filename from the AST (set by parser's sourceFilename option).
+    // This is stored on the Environment during lowering.
+    let source_filename = context.source_filename();
     for detail in &errors.details {
         let (category, reason, description, severity, details) = match detail {
             react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
@@ -1559,7 +1562,11 @@ fn log_errors_as_events(
                                 message,
                             } => CompilerErrorItemInfo {
                                 kind: "error".to_string(),
-                                loc: *loc,
+                                loc: loc.as_ref().map(|l| LoggerSourceLocation {
+                                    start: LoggerPosition { line: l.start.line, column: l.start.column, index: l.start.index },
+                                    end: LoggerPosition { line: l.end.line, column: l.end.column, index: l.end.index },
+                                    filename: source_filename.clone(),
+                                }),
                                 message: message.clone(),
                             },
                             react_compiler_diagnostics::CompilerDiagnosticDetail::Hint {
@@ -1599,7 +1606,8 @@ fn log_errors_as_events(
                 category,
                 reason,
                 description,
-                severity: Some(severity),
+                severity,
+                suggestions: None,
                 details,
                 loc: None,
             },

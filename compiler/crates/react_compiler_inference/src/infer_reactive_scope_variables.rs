@@ -150,10 +150,18 @@ fn merge_location(
             start: Position {
                 line: l.start.line.min(r.start.line),
                 column: l.start.column.min(r.start.column),
+                index: match (l.start.index, r.start.index) {
+                    (Some(a), Some(b)) => Some(a.min(b)),
+                    (a, b) => a.or(b),
+                },
             },
             end: Position {
                 line: l.end.line.max(r.end.line),
                 column: l.end.column.max(r.end.column),
+                index: match (l.end.index, r.end.index) {
+                    (Some(a), Some(b)) => Some(a.max(b)),
+                    (a, b) => a.or(b),
+                },
             },
         }),
     }

@@ -34,8 +34,9 @@ use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
 use super::compile_result::{
-    BindingRenameInfo, CodegenFunction, CompileResult, CompilerErrorDetailInfo, CompilerErrorInfo,
-    CompilerErrorItemInfo, DebugLogEntry, LoggerEvent, OrderedLogItem,
+    BindingRenameInfo, CodegenFunction, CompileResult, CompilerErrorDetailInfo,
+    CompilerErrorInfo, CompilerErrorItemInfo, DebugLogEntry, LoggerEvent, LoggerPosition,
+    LoggerSourceLocation, OrderedLogItem,
 };
 use super::imports::{
     ProgramContext, add_imports_to_program, get_react_compiler_runtime_module,
@@ -73,6 +74,8 @@ struct CompileSource<'a> {
     /// Location of this function in the AST for logging
     fn_name: Option<String>,
     fn_loc: Option<SourceLocation>,
+    /// Original AST source location (with index and filename) for logger events.
+    fn_ast_loc: Option<react_compiler_ast::common::SourceLocation>,
     fn_start: Option<u32>,
     fn_end: Option<u32>,
     fn_type: ReactFunctionType,
@@ -929,10 +932,12 @@ fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocati
         start: react_compiler_diagnostics::Position {
             line: loc.start.line,
             column: loc.start.column,
+            index: loc.start.index,
         },
         end: react_compiler_diagnostics::Position {
             line: loc.end.line,
             column: loc.end.column,
+            index: loc.end.index,
         },
     }
 }
@@ -948,6 +953,7 @@ fn base_node_loc(base: &BaseNode) -> Option<SourceLocation> {
 /// Convert CompilerDiagnostic details into serializable CompilerErrorItemInfo items.
 fn diagnostic_details_to_items(
     d: &react_compiler_diagnostics::CompilerDiagnostic,
+    filename: Option<&str>,
 ) -> Option<Vec<CompilerErrorItemInfo>> {
     let items: Vec<CompilerErrorItemInfo> = d
         .details
@@ -956,7 +962,7 @@ fn diagnostic_details_to_items(
             react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message } => {
                 CompilerErrorItemInfo {
                     kind: "error".to_string(),
-                    loc: *loc,
+                    loc: loc.as_ref().map(|l| diag_loc_to_logger_loc(l, filename)),
                     message: message.clone(),
                 }
             }
@@ -972,8 +978,56 @@ fn diagnostic_details_to_items(
     if items.is_empty() { None } else { Some(items) }
 }
 
+/// Convert an optional AST SourceLocation to a LoggerSourceLocation with filename.
+fn to_logger_loc(
+    ast_loc: Option<&react_compiler_ast::common::SourceLocation>,
+    filename: Option<&str>,
+) -> Option<LoggerSourceLocation> {
+    ast_loc.map(|loc| LoggerSourceLocation {
+        start: LoggerPosition {
+            line: loc.start.line,
+            column: loc.start.column,
+            index: loc.start.index,
+        },
+        end: LoggerPosition {
+            line: loc.end.line,
+            column: loc.end.column,
+            index: loc.end.index,
+        },
+        filename: filename.map(|s| s.to_string()),
+    })
+}
+
+/// Convert a diagnostics SourceLocation to a LoggerSourceLocation with filename.
+fn diag_loc_to_logger_loc(
+    loc: &SourceLocation,
+    filename: Option<&str>,
+) -> LoggerSourceLocation {
+    LoggerSourceLocation {
+        start: LoggerPosition {
+            line: loc.start.line,
+            column: loc.start.column,
+            index: loc.start.index,
+        },
+        end: LoggerPosition {
+            line: loc.end.line,
+            column: loc.end.column,
+            index: loc.end.index,
+        },
+        filename: filename.map(|s| s.to_string()),
+    }
+}
+
 /// Log an error as LoggerEvent(s) directly onto the ProgramContext.
-fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut ProgramContext) {
+fn log_error(
+    err: &CompilerError,
+    fn_ast_loc: Option<&react_compiler_ast::common::SourceLocation>,
+    context: &mut ProgramContext,
+) {
+    // Use the filename from the AST node's loc (set by parser's sourceFilename option),
+    // not from plugin options (which may have a different prefix like '/').
+    let source_filename = fn_ast_loc.and_then(|loc| loc.filename.as_deref());
+    let fn_loc = to_logger_loc(fn_ast_loc, source_filename);
     for detail in &err.details {
         match detail {
             CompilerErrorOrDiagnostic::Diagnostic(d) => {
@@ -983,8 +1037,9 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut 
                         category: format!("{:?}", d.category),
                         reason: d.reason.clone(),
                         description: d.description.clone(),
-                        severity: Some(format!("{:?}", d.severity())),
-                        details: diagnostic_details_to_items(d),
+                        severity: format!("{:?}", d.severity()),
+                        suggestions: None,
+                        details: diagnostic_details_to_items(d, source_filename),
                         loc: None,
                     },
                 });
@@ -996,9 +1051,10 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut 
                         category: format!("{:?}", d.category),
                         reason: d.reason.clone(),
                         description: d.description.clone(),
-                        severity: Some(format!("{:?}", d.severity())),
+                        severity: format!("{:?}", d.severity()),
+                        suggestions: None,
                         details: None,
-                        loc: d.loc,
+                        loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, source_filename)),
                     },
                 });
             }
@@ -1011,11 +1067,11 @@ fn log_error(err: &CompilerError, fn_loc: Option<SourceLocation>, context: &mut 
 /// otherwise returns None (error was logged only).
 fn handle_error(
     err: &CompilerError,
-    fn_loc: Option<SourceLocation>,
+    fn_ast_loc: Option<&react_compiler_ast::common::SourceLocation>,
     context: &mut ProgramContext,
 ) -> Option<CompileResult> {
     // Log the error
-    log_error(err, fn_loc, context);
+    log_error(err, fn_ast_loc, context);
 
     let should_panic = match context.opts.panic_threshold.as_str() {
         "all_errors" => true,
@@ -1030,7 +1086,7 @@ fn handle_error(
     });
 
     if should_panic || is_config_error {
-        let error_info = compiler_error_to_info(err);
+        let error_info = compiler_error_to_info(err, context.filename.as_deref());
         Some(CompileResult::Error {
             error: error_info,
             events: context.events.clone(),
@@ -1043,7 +1099,7 @@ fn handle_error(
 }
 
 /// Convert a diagnostics CompilerError to a serializable CompilerErrorInfo.
-fn compiler_error_to_info(err: &CompilerError) -> CompilerErrorInfo {
+fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> CompilerErrorInfo {
     let details: Vec<CompilerErrorDetailInfo> = err
         .details
         .iter()
@@ -1052,17 +1108,19 @@ fn compiler_error_to_info(err: &CompilerError) -> CompilerErrorInfo {
                 category: format!("{:?}", d.category),
                 reason: d.reason.clone(),
                 description: d.description.clone(),
-                severity: Some(format!("{:?}", d.severity())),
-                details: diagnostic_details_to_items(d),
+                severity: format!("{:?}", d.severity()),
+                suggestions: None,
+                details: diagnostic_details_to_items(d, filename),
                 loc: None,
             },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
                 category: format!("{:?}", d.category),
                 reason: d.reason.clone(),
                 description: d.description.clone(),
-                severity: Some(format!("{:?}", d.severity())),
+                severity: format!("{:?}", d.severity()),
+                suggestions: None,
                 details: None,
-                loc: d.loc,
+                loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, filename)),
             },
         })
         .collect();
@@ -1137,7 +1195,7 @@ fn process_fn(
         Ok(d) => d,
         Err(err) => {
             // Apply panic threshold logic (same as compilation errors)
-            if let Some(result) = handle_error(&err, source.fn_loc.clone(), context) {
+            if let Some(result) = handle_error(&err, source.fn_ast_loc.as_ref(), context) {
                 return Err(result);
             }
             return Ok(None);
@@ -1151,10 +1209,10 @@ fn process_fn(
         Err(err) => {
             if opt_out.is_some() {
                 // If there's an opt-out, just log the error (don't escalate)
-                log_error(&err, source.fn_loc.clone(), context);
+                log_error(&err, source.fn_ast_loc.as_ref(), context);
             } else {
                 // Apply panic threshold logic
-                if let Some(result) = handle_error(&err, source.fn_loc.clone(), context) {
+                if let Some(result) = handle_error(&err, source.fn_ast_loc.as_ref(), context) {
                     return Err(result);
                 }
             }
@@ -1164,10 +1222,11 @@ fn process_fn(
             // Check opt-out
             if !context.opts.ignore_use_no_forget && opt_out.is_some() {
                 let opt_out_value = &opt_out.unwrap().value.value;
+                let source_filename = source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
                 context.log_event(LoggerEvent::CompileSkip {
-                    fn_loc: source.fn_loc.clone(),
+                    fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
-                    loc: opt_out.and_then(|d| d.base.loc.as_ref().map(convert_loc)),
+                    loc: opt_out.and_then(|d| to_logger_loc(d.base.loc.as_ref(), source_filename)),
                 });
                 // Even though the function is skipped, register the memo cache import
                 // if the compiled function had memo slots. This matches TS behavior where
@@ -1180,8 +1239,9 @@ fn process_fn(
             }
 
             // Log success with memo stats from CodegenFunction
+            let source_filename = source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
             context.log_event(LoggerEvent::CompileSuccess {
-                fn_loc: source.fn_loc.clone(),
+                fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
                 fn_name: source.fn_name.clone(),
                 memo_slots: codegen_fn.memo_slots_used,
                 memo_blocks: codegen_fn.memo_blocks,
@@ -1344,6 +1404,7 @@ fn try_make_compile_source<'a>(
         fn_node: info.fn_node,
         fn_name: info.name,
         fn_loc: base_node_loc(info.base),
+        fn_ast_loc: info.base.loc.clone(),
         fn_start: info.base.start,
         fn_end: info.base.end,
         fn_type,
@@ -3397,6 +3458,24 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
         suppressions,
         has_module_scope_opt_out,
     );
+
+    // Extract the source filename from the AST (set by parser's sourceFilename option).
+    // This is the bare filename (e.g., "foo.ts") without path prefixes, which the TS
+    // compiler uses in logger event source locations.
+    let source_filename = program.base.loc.as_ref().and_then(|loc| loc.filename.clone())
+        .or_else(|| {
+            // Fallback: try the first statement's loc
+            program.body.first().and_then(|stmt| {
+                let base = match stmt {
+                    react_compiler_ast::statements::Statement::ExpressionStatement(s) => &s.base,
+                    react_compiler_ast::statements::Statement::VariableDeclaration(s) => &s.base,
+                    react_compiler_ast::statements::Statement::FunctionDeclaration(s) => &s.base,
+                    _ => return None,
+                };
+                base.loc.as_ref().and_then(|loc| loc.filename.clone())
+            })
+        });
+    context.set_source_filename(source_filename);
 
     // Initialize known referenced names from scope bindings for UID collision detection
     context.init_from_scope(&scope);

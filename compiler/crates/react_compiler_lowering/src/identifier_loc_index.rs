@@ -46,10 +46,12 @@ fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocati
         start: react_compiler_hir::Position {
             line: loc.start.line,
             column: loc.start.column,
+            index: loc.start.index,
         },
         end: react_compiler_hir::Position {
             line: loc.end.line,
             column: loc.end.column,
+            index: loc.end.index,
         },
     }
 }
