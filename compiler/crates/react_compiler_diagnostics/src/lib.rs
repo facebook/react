@@ -155,6 +155,10 @@ impl CompilerDiagnostic {
         self.category.severity()
     }
 
+    pub fn logged_severity(&self) -> ErrorSeverity {
+        self.category.logged_severity()
+    }
+
     pub fn with_detail(mut self, detail: CompilerDiagnosticDetail) -> Self {
         self.details.push(detail);
         self
@@ -203,6 +207,10 @@ impl CompilerErrorDetail {
     pub fn severity(&self) -> ErrorSeverity {
         self.category.severity()
     }
+
+    pub fn logged_severity(&self) -> ErrorSeverity {
+        self.category.logged_severity()
+    }
 }
 
 /// Aggregate compiler error - can contain multiple diagnostics.
@@ -224,6 +232,13 @@ impl CompilerErrorOrDiagnostic {
         match self {
             Self::Diagnostic(d) => d.severity(),
             Self::ErrorDetail(d) => d.severity(),
+        }
+    }
+
+    pub fn logged_severity(&self) -> ErrorSeverity {
+        match self {
+            Self::Diagnostic(d) => d.logged_severity(),
+            Self::ErrorDetail(d) => d.logged_severity(),
         }
     }
 }

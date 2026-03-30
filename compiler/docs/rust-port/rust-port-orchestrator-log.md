@@ -2,7 +2,7 @@
 
 Overall: 1717/1717 passing (100%). All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported with application. Code comparison: 1717/1717 (100%).
 
-Snap (end-to-end): 1605/1718 passed, 113 failed
+Snap (end-to-end): 1702/1718 passed, 16 failed
 
 ## Transformation passes
 
@@ -512,3 +512,19 @@ calls to canonical `react_compiler_hir::visitors` functions. Remaining local fun
 thin wrappers (e.g., calling canonical and mapping `Place` → `IdentifierId`).
 Added `each_instruction_value_operand_with_functions` to canonical visitors for split-borrow cases.
 All 1717 tests still passing. Pass 1717/1717, Code 1717/1717.
+
+## 20260330-134202 Fix 30 snap test failures — validation, codegen, prefilter
+
+Fixed 30 snap test failures across multiple categories:
+- ValidatePreservedManualMemoization: added has_invalid_deps flag to suppress spurious errors (7 fixed)
+- Type provider validation: fixed error messages, added namespace import validation (3 fixed)
+- knownIncompatible: implemented IncompatibleLibrary error check with early return (3 fixed)
+- JSON log ordering: added CompileErrorWithLoc variant, fixed severity with logged_severity() (2 fixed)
+- Code-frame abbreviation: ported CODEFRAME_MAX_LINES logic to Rust BabelPlugin.ts (2 fixed)
+- Codegen error formatting: for-init messages, MethodCall span narrowing, for-in/of locs (4 fixed)
+- Error message text: "this is Const" format matching TS (1 fixed)
+- Prefilter: React.memo/forwardRef detection in TS and SWC prefilters (3 fixed)
+- globals.rs: toString() on BuiltInObject/MixedReadonly, is_ref_like_name fix (3 fixed)
+- scope.rs/hir_builder.rs: name-based binding fallback for component-syntax ref params (1 fixed)
+- Snap runner: auto-enable sync mode when --rust is set (1 infra fix)
+Pass 1717/1717, Code 1717/1717, Snap 1702/1718.

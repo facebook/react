@@ -136,6 +136,20 @@ impl ScopeInfo {
             .map(|id| &self.bindings[id.0 as usize])
     }
 
+    /// Look up a binding by name in the scope that contains the identifier at `start`.
+    /// Used as a fallback when position-based lookup (`resolve_reference`) returns a
+    /// binding whose name doesn't match -- e.g., when Babel's Flow component transform
+    /// creates multiple params with the same start position.
+    pub fn resolve_reference_by_name(&self, name: &str, start: u32) -> Option<&BindingData> {
+        // Find which scope contains this position
+        let scope_id = self.resolve_reference(start)
+            .map(|b| b.scope)?;
+        // Look for a binding with the matching name in that scope
+        let scope = &self.scopes[scope_id.0 as usize];
+        scope.bindings.get(name)
+            .map(|id| &self.bindings[id.0 as usize])
+    }
+
     /// Get all bindings declared in a scope (for hoisting iteration).
     pub fn scope_bindings(&self, scope_id: ScopeId) -> impl Iterator<Item = &BindingData> {
         self.scopes[scope_id.0 as usize]

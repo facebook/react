@@ -498,6 +498,7 @@ fn make_manual_memoization_markers(
             manual_memo_id,
             deps: deps_list,
             deps_loc: Some(deps_loc),
+            has_invalid_deps: false,
             loc: fn_expr.loc.clone(),
         },
         loc: fn_expr.loc.clone(),

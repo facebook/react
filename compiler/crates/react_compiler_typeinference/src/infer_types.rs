@@ -231,7 +231,16 @@ fn is_ref_like_name(object_name: &str, property_name: &PropertyNameKind) -> bool
     if !is_current {
         return false;
     }
-    object_name == "ref" || object_name.ends_with("Ref")
+    // Match TS regex: /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/
+    // "Ref" alone does NOT match — requires at least one character before "Ref"
+    // (e.g., "fooRef", "aRef" match, but bare "Ref" does not).
+    object_name == "ref"
+        || (object_name.len() > 3
+            && object_name.ends_with("Ref")
+            && object_name[..1]
+                .chars()
+                .next()
+                .is_some_and(|c| c.is_ascii_alphabetic() || c == '$' || c == '_'))
 }
 
 /// Type equality matching TS `typeEquals`.

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use crate::*;
 use crate::default_module_type_provider::default_module_type_provider;
 use crate::environment_config::EnvironmentConfig;
-use crate::globals::{self, Global, GlobalRegistry, install_type_config};
+use crate::globals::{self, Global, GlobalRegistry};
 use crate::object_shape::{
     FunctionSignature, HookKind, HookSignatureBuilder, ShapeRegistry,
     BUILT_IN_MIXED_READONLY_ID,
@@ -80,6 +80,7 @@ pub struct Environment {
     globals: GlobalRegistry,
     pub shapes: ShapeRegistry,
     module_types: HashMap<String, Option<Global>>,
+    module_type_errors: HashMap<String, Vec<String>>,
 
     // Environment configuration (feature flags, custom hooks, etc.)
     pub config: EnvironmentConfig,
@@ -180,6 +181,7 @@ impl Environment {
             globals: global_registry,
             shapes,
             module_types,
+            module_type_errors: HashMap::new(),
             default_nonmutating_hook: None,
             default_mutating_hook: None,
             outlined_functions: Vec::new(),
@@ -224,6 +226,7 @@ impl Environment {
             globals: self.globals.clone(),
             shapes: self.shapes.clone(),
             module_types: self.module_types.clone(),
+            module_type_errors: self.module_type_errors.clone(),
             config: self.config.clone(),
             default_nonmutating_hook: self.default_nonmutating_hook.clone(),
             default_mutating_hook: self.default_mutating_hook.clone(),
@@ -454,30 +457,27 @@ impl Environment {
                 // Try module type provider. We resolve first, then do property
                 // lookup on the cloned result to avoid double-borrow of self.
                 let module_type = self.resolve_module_type(module);
+
+                // Check for module type validation errors (hook-name vs hook-type mismatches)
+                if let Some(errors) = self.module_type_errors.remove(module.as_str()) {
+                    if let Some(first_error) = errors.into_iter().next() {
+                        self.record_error(
+                            CompilerErrorDetail::new(
+                                ErrorCategory::Config,
+                                "Invalid type configuration for module",
+                            )
+                            .with_description(format!("{}", first_error))
+                            .with_loc(loc),
+                        );
+                    }
+                }
+
                 if let Some(module_type) = module_type {
                     if let Some(imported_type) = Self::get_property_type_from_shapes(
                         &self.shapes,
                         &module_type,
                         imported,
                     ) {
-                        // Validate hook-name vs hook-type consistency
-                        let expect_hook = is_hook_name(imported);
-                        let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
-                        if expect_hook != is_hook {
-                            self.record_error(
-                            CompilerErrorDetail::new(
-                                ErrorCategory::Config,
-                                "Invalid type configuration for module",
-                            )
-                            .with_description(format!(
-                                "Expected type for `import {{{}}} from '{}'` {} based on the exported name",
-                                imported,
-                                module,
-                                if expect_hook { "to be a hook" } else { "not to be a hook" }
-                            ))
-                            .with_loc(loc),
-                        );
-                        }
                         return Some(imported_type);
                     }
                 }
@@ -503,6 +503,21 @@ impl Environment {
                 }
 
                 let module_type = self.resolve_module_type(module);
+
+                // Check for module type validation errors (hook-name vs hook-type mismatches)
+                if let Some(errors) = self.module_type_errors.remove(module.as_str()) {
+                    if let Some(first_error) = errors.into_iter().next() {
+                        self.record_error(
+                            CompilerErrorDetail::new(
+                                ErrorCategory::Config,
+                                "Invalid type configuration for module",
+                            )
+                            .with_description(format!("{}", first_error))
+                            .with_loc(loc),
+                        );
+                    }
+                }
+
                 if let Some(module_type) = module_type {
                     let imported_type = if is_default {
                         Self::get_property_type_from_shapes(
@@ -514,22 +529,22 @@ impl Environment {
                         Some(module_type)
                     };
                     if let Some(imported_type) = imported_type {
-                        // Validate hook-name vs hook-type consistency
+                        // Validate hook-name vs hook-type consistency for module name
                         let expect_hook = is_hook_name(module);
                         let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
                         if expect_hook != is_hook {
                             self.record_error(
-                            CompilerErrorDetail::new(
-                                ErrorCategory::Config,
-                                "Invalid type configuration for module",
-                            )
-                            .with_description(format!(
-                                "Expected type for `import ... from '{}'` {} based on the module name",
-                                module,
-                                if expect_hook { "to be a hook" } else { "not to be a hook" }
-                            ))
-                            .with_loc(loc),
-                        );
+                                CompilerErrorDetail::new(
+                                    ErrorCategory::Config,
+                                    "Invalid type configuration for module",
+                                )
+                                .with_description(format!(
+                                    "Expected type for `import ... from '{}'` {} based on the module name",
+                                    module,
+                                    if expect_hook { "to be a hook" } else { "not to be a hook" }
+                                ))
+                                .with_loc(loc),
+                            );
                         }
                         return Some(imported_type);
                     }
@@ -700,13 +715,23 @@ impl Environment {
             .or_else(|| default_module_type_provider(module_name));
 
         let module_type = module_config.map(|config| {
-            install_type_config(
+            let mut type_errors: Vec<String> = Vec::new();
+            let ty = globals::install_type_config_with_errors(
                 &mut self.globals,
                 &mut self.shapes,
                 &config,
                 module_name,
                 (),
-            )
+                &mut type_errors,
+            );
+            // Store errors for later reporting when the import is actually used
+            for err in type_errors {
+                self.module_type_errors
+                    .entry(module_name.to_string())
+                    .or_default()
+                    .push(err);
+            }
+            ty
         });
         self.module_types
             .insert(module_name.to_string(), module_type.clone());

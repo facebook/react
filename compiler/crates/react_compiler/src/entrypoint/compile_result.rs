@@ -232,6 +232,13 @@ pub enum LoggerEvent {
         #[serde(rename = "fnLoc")]
         fn_loc: Option<LoggerSourceLocation>,
     },
+    /// Same as CompileError but serializes fnLoc before detail (matching TS program.ts output)
+    #[serde(rename = "CompileError")]
+    CompileErrorWithLoc {
+        #[serde(rename = "fnLoc")]
+        fn_loc: LoggerSourceLocation,
+        detail: CompilerErrorDetailInfo,
+    },
     CompileSkip {
         #[serde(rename = "fnLoc")]
         fn_loc: Option<LoggerSourceLocation>,

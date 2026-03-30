@@ -408,7 +408,7 @@ pub fn compile_fn(
 
     if env.enable_validations() {
         context.timing.start("ValidateExhaustiveDependencies");
-        react_compiler_validation::validate_exhaustive_dependencies(&hir, &mut env)?;
+        react_compiler_validation::validate_exhaustive_dependencies(&mut hir, &mut env)?;
         if context.debug_enabled {
             context.log_debug(DebugLogEntry::new("ValidateExhaustiveDependencies", "ok".to_string()));
         }
@@ -1590,7 +1590,7 @@ fn log_errors_as_events(
                     format!("{:?}", d.category),
                     d.reason.clone(),
                     d.description.clone(),
-                    format!("{:?}", d.severity()),
+                    format!("{:?}", d.logged_severity()),
                     items,
                 )
             }
@@ -1598,7 +1598,7 @@ fn log_errors_as_events(
                 format!("{:?}", d.category),
                 d.reason.clone(),
                 d.description.clone(),
-                format!("{:?}", d.severity()),
+                format!("{:?}", d.logged_severity()),
                 None,
             ),
         };

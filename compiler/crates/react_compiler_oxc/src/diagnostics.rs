@@ -73,7 +73,8 @@ fn event_to_diagnostic(event: &LoggerEvent) -> Option<OxcDiagnostic> {
     match event {
         LoggerEvent::CompileSuccess { .. } => None,
         LoggerEvent::CompileSkip { .. } => None,
-        LoggerEvent::CompileError { detail, .. } => {
+        LoggerEvent::CompileError { detail, .. }
+        | LoggerEvent::CompileErrorWithLoc { detail, .. } => {
             Some(error_detail_to_diagnostic(detail, false))
         }
         LoggerEvent::CompileUnexpectedThrow { data, .. } => {

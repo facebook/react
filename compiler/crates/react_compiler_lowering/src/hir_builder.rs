@@ -858,9 +858,20 @@ impl<'a> HirBuilder<'a> {
                         },
                     }
                 } else {
-                    // Local binding: resolve via resolve_binding
-                    let binding_id = binding.id;
-                    let binding_kind = crate::convert_binding_kind(&binding.kind);
+                    // Local binding: resolve via resolve_binding.
+                    // When the resolved binding's name doesn't match the identifier
+                    // being resolved, fall back to a name-based lookup. This handles
+                    // cases like component-syntax where Flow transforms create multiple
+                    // params with the same start position (e.g., both _$$empty_props_placeholder$$
+                    // and ref have start=106 after the Flow component transform).
+                    let resolved_binding = if binding.name != name {
+                        self.scope_info.resolve_reference_by_name(name, start_offset)
+                            .unwrap_or(binding)
+                    } else {
+                        binding
+                    };
+                    let binding_id = resolved_binding.id;
+                    let binding_kind = crate::convert_binding_kind(&resolved_binding.kind);
                     let identifier_id = self.resolve_binding_with_loc(name, binding_id, loc);
                     VariableBinding::Identifier {
                         identifier: identifier_id,

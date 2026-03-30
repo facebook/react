@@ -1037,32 +1037,49 @@ fn log_error(
     for detail in &err.details {
         match detail {
             CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                context.log_event(LoggerEvent::CompileError {
-                    fn_loc: fn_loc.clone(),
-                    detail: CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.severity()),
-                        suggestions: None,
-                        details: diagnostic_details_to_items(d, source_filename),
-                        loc: None,
-                    },
-                });
+                let detail_info = CompilerErrorDetailInfo {
+                    category: format!("{:?}", d.category),
+                    reason: d.reason.clone(),
+                    description: d.description.clone(),
+                    severity: format!("{:?}", d.logged_severity()),
+                    suggestions: None,
+                    details: diagnostic_details_to_items(d, source_filename),
+                    loc: None,
+                };
+                // Use CompileErrorWithLoc when fn_loc is present to match TS field ordering
+                if let Some(ref loc) = fn_loc {
+                    context.log_event(LoggerEvent::CompileErrorWithLoc {
+                        fn_loc: loc.clone(),
+                        detail: detail_info,
+                    });
+                } else {
+                    context.log_event(LoggerEvent::CompileError {
+                        fn_loc: None,
+                        detail: detail_info,
+                    });
+                }
             }
             CompilerErrorOrDiagnostic::ErrorDetail(d) => {
-                context.log_event(LoggerEvent::CompileError {
-                    fn_loc: fn_loc.clone(),
-                    detail: CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.severity()),
-                        suggestions: None,
-                        details: None,
-                        loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, source_filename)),
-                    },
-                });
+                let detail_info = CompilerErrorDetailInfo {
+                    category: format!("{:?}", d.category),
+                    reason: d.reason.clone(),
+                    description: d.description.clone(),
+                    severity: format!("{:?}", d.logged_severity()),
+                    suggestions: None,
+                    details: None,
+                    loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, source_filename)),
+                };
+                if let Some(ref loc) = fn_loc {
+                    context.log_event(LoggerEvent::CompileErrorWithLoc {
+                        fn_loc: loc.clone(),
+                        detail: detail_info,
+                    });
+                } else {
+                    context.log_event(LoggerEvent::CompileError {
+                        fn_loc: None,
+                        detail: detail_info,
+                    });
+                }
             }
         }
     }

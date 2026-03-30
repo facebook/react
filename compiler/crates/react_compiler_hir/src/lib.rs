@@ -715,6 +715,7 @@ pub enum InstructionValue {
         manual_memo_id: u32,
         deps: Option<Vec<ManualMemoDependency>>,
         deps_loc: Option<Option<SourceLocation>>,
+        has_invalid_deps: bool,
         loc: Option<SourceLocation>,
     },
     FinishMemoize {

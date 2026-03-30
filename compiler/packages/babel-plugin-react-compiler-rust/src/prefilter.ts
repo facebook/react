@@ -38,7 +38,7 @@ export function hasReactLikeFunctions(program: NodePath<t.Program>): boolean {
     FunctionExpression(path) {
       if (found) return;
       const name = inferFunctionName(path);
-      if (name && isReactLikeName(name)) {
+      if ((name && isReactLikeName(name)) || isInsideMemoOrForwardRef(path)) {
         found = true;
         path.stop();
       }
@@ -46,13 +46,46 @@ export function hasReactLikeFunctions(program: NodePath<t.Program>): boolean {
     ArrowFunctionExpression(path) {
       if (found) return;
       const name = inferFunctionName(path);
-      if (name && isReactLikeName(name)) {
+      if ((name && isReactLikeName(name)) || isInsideMemoOrForwardRef(path)) {
         found = true;
         path.stop();
       }
     },
   });
   return found;
+}
+
+/**
+ * Check if a function expression/arrow is the first argument of
+ * React.memo(), React.forwardRef(), memo(), or forwardRef().
+ */
+function isInsideMemoOrForwardRef(
+  path: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>,
+): boolean {
+  const parent = path.parentPath;
+  if (parent == null || !parent.isCallExpression()) return false;
+  const callExpr = parent.node as t.CallExpression;
+  // Must be the first argument
+  if (callExpr.arguments[0] !== path.node) return false;
+  const callee = callExpr.callee;
+  // Direct calls: memo(...) or forwardRef(...)
+  if (
+    callee.type === 'Identifier' &&
+    (callee.name === 'memo' || callee.name === 'forwardRef')
+  ) {
+    return true;
+  }
+  // Member expression calls: React.memo(...) or React.forwardRef(...)
+  if (
+    callee.type === 'MemberExpression' &&
+    callee.object.type === 'Identifier' &&
+    callee.object.name === 'React' &&
+    callee.property.type === 'Identifier' &&
+    (callee.property.name === 'memo' || callee.property.name === 'forwardRef')
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function isReactLikeName(name: string): boolean {

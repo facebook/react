@@ -191,6 +191,7 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
         ReactiveValue::Instruction(InstructionValue::StartMemoize {
             manual_memo_id,
             deps,
+            has_invalid_deps,
             ..
         }) => {
             // TS: CompilerError.invariant(state.manualMemoState == null, ...)
@@ -199,8 +200,10 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
                 "Unexpected nested StartMemoize instructions"
             );
 
-            // TODO: check hasInvalidDeps when the field is added to the Rust HIR.
             // TS: if (value.hasInvalidDeps === true) { return; }
+            if *has_invalid_deps {
+                return;
+            }
 
             let deps_from_source = deps.clone();
 

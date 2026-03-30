@@ -21,7 +21,11 @@ use react_compiler_hir::visitors::{
 /// Validates that existing manual memoization is exhaustive and does not
 /// have extraneous dependencies. The goal is to ensure auto-memoization
 /// will not substantially change program behavior.
-pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
+///
+/// Note: takes `&mut HirFunction` (deviating from the read-only validation convention)
+/// because it sets `has_invalid_deps` on StartMemoize instructions when validation
+/// errors are found, so that ValidatePreservedManualMemoization can skip those blocks.
+pub fn validate_exhaustive_dependencies(func: &mut HirFunction, env: &mut Environment) -> Result<(), CompilerDiagnostic> {
     let reactive = collect_reactive_identifiers(func, &env.functions);
     let validate_memo = env.config.validate_exhaustive_memoization_dependencies;
     let validate_effect = env.config.validate_exhaustive_effect_dependencies.clone();
@@ -54,6 +58,7 @@ pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environmen
         validate_effect: validate_effect.clone(),
         reactive: &reactive,
         diagnostics: Vec::new(),
+        invalid_memo_ids: HashSet::new(),
     };
 
     collect_dependencies(
@@ -65,6 +70,17 @@ pub fn validate_exhaustive_dependencies(func: &HirFunction, env: &mut Environmen
         &mut Some(&mut callbacks),
         false,
     )?;
+
+    // Set has_invalid_deps on StartMemoize instructions that had validation errors
+    if !callbacks.invalid_memo_ids.is_empty() {
+        for instr in func.instructions.iter_mut() {
+            if let InstructionValue::StartMemoize { manual_memo_id, has_invalid_deps, .. } = &mut instr.value {
+                if callbacks.invalid_memo_ids.contains(manual_memo_id) {
+                    *has_invalid_deps = true;
+                }
+            }
+        }
+    }
 
     // Record all diagnostics on the environment
     for diagnostic in callbacks.diagnostics {
@@ -167,6 +183,8 @@ struct Callbacks<'a> {
     validate_effect: ExhaustiveEffectDepsMode,
     reactive: &'a HashSet<IdentifierId>,
     diagnostics: Vec<CompilerDiagnostic>,
+    /// manual_memo_ids that had validation errors (to set has_invalid_deps)
+    invalid_memo_ids: HashSet<u32>,
 }
 
 // =============================================================================
@@ -797,6 +815,7 @@ fn collect_dependencies(
                     deps,
                     deps_loc,
                     loc,
+                    ..
                 } => {
                     if let Some(cb) = callbacks.as_mut() {
                         // onStartMemoize — mirrors TS behavior of clearing dependencies and locals
@@ -854,6 +873,7 @@ fn collect_dependencies(
                                 )?;
                                 if let Some(diag) = diagnostic {
                                     cb.diagnostics.push(diag);
+                                    cb.invalid_memo_ids.insert(sm.manual_memo_id);
                                 }
                             }
 
@@ -1532,7 +1552,7 @@ fn validate_dependencies(
     // full suggestions (which require source index info we don't have).
     // The TS compiler only adds this hint when a suggestion is generated, which
     // requires manual_memo_loc to have valid index information.
-    if manual_memo_loc.is_some() {
+    if manual_memo_loc.map_or(false, |loc| loc.start.index.is_some() && loc.end.index.is_some()) {
         let hint_deps: Vec<String> = inferred
             .iter()
             .filter(|dep| {

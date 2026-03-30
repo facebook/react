@@ -1337,6 +1337,30 @@ fn apply_effect(
                 }
             }
             if let Some(sig) = signature {
+                // Check known_incompatible (TS line 2351-2370)
+                if let Some(ref incompatible_msg) = sig.known_incompatible {
+                    if env.enable_validations() {
+                        let mut diagnostic = CompilerDiagnostic::new(
+                            ErrorCategory::IncompatibleLibrary,
+                            "Use of incompatible library",
+                            Some(
+                                "This API returns functions which cannot be memoized without leading to stale UI. \
+                                 To prevent this, by default React Compiler will skip memoizing this component/hook. \
+                                 However, you may see issues if values from this API are passed to other components/hooks that are \
+                                 memoized".to_string(),
+                            ),
+                        );
+                        diagnostic.details.push(CompilerDiagnosticDetail::Error {
+                            loc: receiver.loc,
+                            message: Some(incompatible_msg.clone()),
+                            identifier_name: None,
+                        });
+                        env.record_diagnostic(diagnostic);
+                        // TS throws here, aborting further processing for this call
+                        return;
+                    }
+                }
+
                 if let Some(ref aliasing) = sig.aliasing {
                     let sig_effects = compute_effects_for_aliasing_signature_config(
                         env, aliasing, into, receiver, args, &[], loc.as_ref(),
@@ -1349,6 +1373,7 @@ fn apply_effect(
                         return;
                     }
                 }
+
                 // Legacy signature
                 let mut todo_errors: Vec<react_compiler_diagnostics::CompilerErrorDetail> = Vec::new();
                 let legacy_effects = compute_effects_for_legacy_signature(

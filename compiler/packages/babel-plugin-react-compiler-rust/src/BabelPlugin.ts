@@ -151,9 +151,10 @@ export default function BabelPluginReactCompilerRust(
             // If the error has a rawMessage, use it directly (e.g., simulated
             // unknown exceptions from throwUnknownException__testonly which in
             // the TS compiler are plain Error objects, not CompilerErrors)
-            const message = (result.error as any).rawMessage != null
-              ? (result.error as any).rawMessage
-              : formatCompilerError(result.error as any, source);
+            const message =
+              (result.error as any).rawMessage != null
+                ? (result.error as any).rawMessage
+                : formatCompilerError(result.error as any, source);
             const err = new Error(message);
             (err as any).details = result.error.details;
             throw err;
@@ -353,6 +354,8 @@ function ensureNodeLocs(node: any): void {
 
 const CODEFRAME_LINES_ABOVE = 2;
 const CODEFRAME_LINES_BELOW = 3;
+const CODEFRAME_MAX_LINES = 10;
+const CODEFRAME_ABBREVIATED_SOURCE_LINES = 5;
 
 /**
  * Map a category string from the Rust compiler to the heading used
@@ -380,11 +383,14 @@ function categoryToHeading(category: string): string {
  */
 function printCodeFrame(
   source: string,
-  loc: {start: {line: number; column: number}; end: {line: number; column: number}},
+  loc: {
+    start: {line: number; column: number};
+    end: {line: number; column: number};
+  },
   message: string,
 ): string {
   try {
-    return codeFrameColumns(
+    const printed = codeFrameColumns(
       source,
       {
         start: {line: loc.start.line, column: loc.start.column + 1},
@@ -396,6 +402,21 @@ function printCodeFrame(
         linesBelow: CODEFRAME_LINES_BELOW,
       },
     );
+    const lines = printed.split(/\r?\n/);
+    if (loc.end.line - loc.start.line < CODEFRAME_MAX_LINES) {
+      return printed;
+    }
+    const pipeIndex = lines[0].indexOf('|');
+    return [
+      ...lines.slice(
+        0,
+        CODEFRAME_LINES_ABOVE + CODEFRAME_ABBREVIATED_SOURCE_LINES,
+      ),
+      ' '.repeat(pipeIndex) + '\u2026',
+      ...lines.slice(
+        -(CODEFRAME_LINES_BELOW + CODEFRAME_ABBREVIATED_SOURCE_LINES),
+      ),
+    ].join('\n');
   } catch {
     return '';
   }
@@ -439,7 +460,9 @@ function formatCompilerError(
             const frame = printCodeFrame(source, item.loc, item.message ?? '');
             buffer.push('\n\n');
             if (item.loc.filename != null) {
-              buffer.push(`${item.loc.filename}:${item.loc.start.line}:${item.loc.start.column}\n`);
+              buffer.push(
+                `${item.loc.filename}:${item.loc.start.line}:${item.loc.start.column}\n`,
+              );
             }
             buffer.push(frame);
           } else if (item.kind === 'hint') {
@@ -454,7 +477,9 @@ function formatCompilerError(
           const frame = printCodeFrame(source, detail.loc, detail.reason);
           buffer.push('\n\n');
           if (detail.loc.filename != null) {
-            buffer.push(`${detail.loc.filename}:${detail.loc.start.line}:${detail.loc.start.column}\n`);
+            buffer.push(
+              `${detail.loc.filename}:${detail.loc.start.line}:${detail.loc.start.column}\n`,
+            );
           }
           buffer.push(frame);
           buffer.push('\n\n');
@@ -468,7 +493,9 @@ function formatCompilerError(
             const frame = printCodeFrame(source, item.loc, item.message ?? '');
             buffer.push('\n\n');
             if (item.loc.filename != null) {
-              buffer.push(`${item.loc.filename}:${item.loc.start.line}:${item.loc.start.column}\n`);
+              buffer.push(
+                `${item.loc.filename}:${item.loc.start.line}:${item.loc.start.column}\n`,
+              );
             }
             buffer.push(frame);
           } else if (item.kind === 'hint') {
@@ -480,7 +507,9 @@ function formatCompilerError(
         const frame = printCodeFrame(source, detail.loc, detail.reason);
         buffer.push('\n\n');
         if (detail.loc.filename != null) {
-          buffer.push(`${detail.loc.filename}:${detail.loc.start.line}:${detail.loc.start.column}\n`);
+          buffer.push(
+            `${detail.loc.filename}:${detail.loc.start.line}:${detail.loc.start.column}\n`,
+          );
         }
         buffer.push(frame);
         buffer.push('\n\n');

@@ -536,8 +536,7 @@ async function onChange(
         enableRust && result.expected
           ? normalizeCodeBlankLines(result.expected)
           : result.expected;
-      const failed =
-        actual !== expected || result.unexpectedError != null;
+      const failed = actual !== expected || result.unexpectedError != null;
       state.fixtureLastRunStatus.set(basename, failed ? 'fail' : 'pass');
     }
 

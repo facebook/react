@@ -1157,7 +1157,7 @@ fn codegen_for_in(
     let iterable_item = &instructions[1];
     let instr_value = get_instruction_value(&iterable_item.value)?;
     let (lval, var_decl_kind) =
-        extract_for_in_of_lval(cx, instr_value, "for..in")?;
+        extract_for_in_of_lval(cx, instr_value, "for..in", loc)?;
     let right = codegen_instruction_value_to_expression(cx, &iterable_collection.value)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForInStatement(ForInStatement {
@@ -1237,7 +1237,7 @@ fn codegen_for_of(
     let iterable_item = &test_instrs[1];
     let instr_value = get_instruction_value(&iterable_item.value)?;
     let (lval, var_decl_kind) =
-        extract_for_in_of_lval(cx, instr_value, "for..of")?;
+        extract_for_in_of_lval(cx, instr_value, "for..of", loc)?;
 
     let right = codegen_place_to_expression(cx, collection)?;
     let body = codegen_block(cx, loop_block)?;
@@ -1267,6 +1267,7 @@ fn extract_for_in_of_lval(
     cx: &mut Context,
     instr_value: &InstructionValue,
     context_name: &str,
+    loc: Option<DiagSourceLocation>,
 ) -> Result<(PatternLike, VariableDeclarationKind), CompilerError> {
     let (lval, kind) = match instr_value {
         InstructionValue::StoreLocal { lvalue, .. } => {
@@ -1280,7 +1281,7 @@ fn extract_for_in_of_lval(
                 category: ErrorCategory::Todo,
                 reason: format!("Support non-trivial {} inits", context_name),
                 description: None,
-                loc: None,
+                loc,
                 suggestions: None,
             });
             return Ok((
@@ -1354,10 +1355,17 @@ fn codegen_for_init(
                 }
                 declarators.extend(var_decl.declarations);
             } else {
-                return Err(invariant_err(
-                    &format!("Expected a variable declaration in for-init, got {:?}", std::mem::discriminant(&instr)),
-                    None,
-                ));
+                let stmt_type = get_statement_type_name(&instr);
+                let stmt_loc = get_statement_loc(&instr);
+                let mut err = CompilerError::new();
+                err.push_error_detail(CompilerErrorDetail {
+                    category: ErrorCategory::Invariant,
+                    reason: "Expected a variable declaration".to_string(),
+                    description: Some(format!("Got {}", stmt_type)),
+                    loc: stmt_loc,
+                    suggestions: None,
+                });
+                return Err(err);
             }
         }
         if declarators.is_empty() {
@@ -1483,8 +1491,9 @@ fn emit_store(
             // Invariant: Const declarations cannot also have an outer lvalue
             // (i.e., cannot be referenced as an expression)
             if instr.lvalue.is_some() {
-                return Err(invariant_err(
+                return Err(invariant_err_with_detail_message(
                     "Const declaration cannot be referenced as an expression",
+                    "this is Const",
                     instr.loc,
                 ));
             }
@@ -1525,9 +1534,10 @@ fn emit_store(
         InstructionKind::Let => {
             // Invariant: Let declarations cannot also have an outer lvalue
             if instr.lvalue.is_some() {
-                return Err(invariant_err(
+                return Err(invariant_err_with_detail_message(
                     "Const declaration cannot be referenced as an expression",
-                    None,
+                    "this is Let",
+                    instr.loc,
                 ));
             }
             let lval = codegen_lvalue(cx, lvalue)?;
@@ -1899,7 +1909,7 @@ fn codegen_base_instruction_value(
                             None,
                         )
                         .with_detail(CompilerDiagnosticDetail::Error {
-                            loc: *loc,
+                            loc: property.loc,
                             message: Some(msg),
                             identifier_name: None,
                         }),
@@ -3382,7 +3392,84 @@ fn invariant_err(reason: &str, loc: Option<DiagSourceLocation>) -> CompilerError
     err
 }
 
+fn invariant_err_with_detail_message(reason: &str, message: &str, loc: Option<DiagSourceLocation>) -> CompilerError {
+    let mut err = CompilerError::new();
+    let diagnostic = react_compiler_diagnostics::CompilerDiagnostic::new(
+        ErrorCategory::Invariant,
+        reason,
+        None::<String>,
+    ).with_detail(react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
+        loc,
+        message: Some(message.to_string()),
+        identifier_name: None,
+    });
+    err.push_diagnostic(diagnostic);
+    err
+}
 
+
+
+fn get_statement_type_name(stmt: &Statement) -> &'static str {
+    match stmt {
+        Statement::ExpressionStatement(_) => "ExpressionStatement",
+        Statement::BlockStatement(_) => "BlockStatement",
+        Statement::VariableDeclaration(_) => "VariableDeclaration",
+        Statement::ReturnStatement(_) => "ReturnStatement",
+        Statement::IfStatement(_) => "IfStatement",
+        Statement::SwitchStatement(_) => "SwitchStatement",
+        Statement::ForStatement(_) => "ForStatement",
+        Statement::ForInStatement(_) => "ForInStatement",
+        Statement::ForOfStatement(_) => "ForOfStatement",
+        Statement::WhileStatement(_) => "WhileStatement",
+        Statement::DoWhileStatement(_) => "DoWhileStatement",
+        Statement::LabeledStatement(_) => "LabeledStatement",
+        Statement::ThrowStatement(_) => "ThrowStatement",
+        Statement::TryStatement(_) => "TryStatement",
+        Statement::BreakStatement(_) => "BreakStatement",
+        Statement::ContinueStatement(_) => "ContinueStatement",
+        Statement::FunctionDeclaration(_) => "FunctionDeclaration",
+        Statement::DebuggerStatement(_) => "DebuggerStatement",
+        Statement::EmptyStatement(_) => "EmptyStatement",
+        _ => "Statement",
+    }
+}
+
+fn get_statement_loc(stmt: &Statement) -> Option<DiagSourceLocation> {
+    let base = match stmt {
+        Statement::ExpressionStatement(s) => &s.base,
+        Statement::BlockStatement(s) => &s.base,
+        Statement::VariableDeclaration(s) => &s.base,
+        Statement::ReturnStatement(s) => &s.base,
+        Statement::IfStatement(s) => &s.base,
+        Statement::ForStatement(s) => &s.base,
+        Statement::ForInStatement(s) => &s.base,
+        Statement::ForOfStatement(s) => &s.base,
+        Statement::WhileStatement(s) => &s.base,
+        Statement::DoWhileStatement(s) => &s.base,
+        Statement::LabeledStatement(s) => &s.base,
+        Statement::ThrowStatement(s) => &s.base,
+        Statement::TryStatement(s) => &s.base,
+        Statement::SwitchStatement(s) => &s.base,
+        Statement::BreakStatement(s) => &s.base,
+        Statement::ContinueStatement(s) => &s.base,
+        Statement::FunctionDeclaration(s) => &s.base,
+        Statement::DebuggerStatement(s) => &s.base,
+        Statement::EmptyStatement(s) => &s.base,
+        _ => return None,
+    };
+    base.loc.as_ref().map(|loc| DiagSourceLocation {
+        start: react_compiler_diagnostics::Position {
+            line: loc.start.line,
+            column: loc.start.column,
+            index: loc.start.index,
+        },
+        end: react_compiler_diagnostics::Position {
+            line: loc.end.line,
+            column: loc.end.column,
+            index: loc.end.index,
+        },
+    })
+}
 
 fn compare_scope_dependency(
     a: &react_compiler_hir::ReactiveScopeDependency,

@@ -4,8 +4,8 @@
 // LICENSE file in the root directory of this source tree.
 
 use swc_ecma_ast::{
-    ArrowExpr, AssignExpr, AssignTarget, Class, FnDecl, FnExpr, Module, Pat, SimpleAssignTarget,
-    VarDeclarator,
+    ArrowExpr, AssignExpr, AssignTarget, Callee, Class, Expr, FnDecl, FnExpr, MemberProp,
+    Module, Pat, SimpleAssignTarget, VarDeclarator, CallExpr,
 };
 use swc_ecma_visit::Visit;
 
@@ -127,8 +127,58 @@ impl Visit for ReactLikeVisitor {
         // Don't traverse into the function body
     }
 
+    fn visit_call_expr(&mut self, call: &CallExpr) {
+        if self.found {
+            return;
+        }
+
+        // Check if this is memo(fn) / forwardRef(fn) / React.memo(fn) / React.forwardRef(fn)
+        if is_memo_or_forward_ref_call(call) {
+            // If the first arg is a function expression or arrow, mark as found
+            if let Some(first_arg) = call.args.first() {
+                match &*first_arg.expr {
+                    Expr::Fn(_) | Expr::Arrow(_) => {
+                        self.found = true;
+                        return;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        // Continue traversal for other call expressions
+        // Visit args to find function expressions inside non-memo/forwardRef calls
+        for arg in &call.args {
+            self.visit_expr(&arg.expr);
+        }
+    }
+
     fn visit_class(&mut self, _class: &Class) {
         // Skip class bodies entirely
+    }
+}
+
+fn is_memo_or_forward_ref_call(call: &CallExpr) -> bool {
+    match &call.callee {
+        Callee::Expr(expr) => match &**expr {
+            // Direct calls: memo(...) or forwardRef(...)
+            Expr::Ident(ident) => {
+                ident.sym == "memo" || ident.sym == "forwardRef"
+            }
+            // Member expression: React.memo(...) or React.forwardRef(...)
+            Expr::Member(member) => {
+                if let Expr::Ident(obj) = &*member.obj {
+                    if obj.sym == "React" {
+                        if let MemberProp::Ident(prop) = &member.prop {
+                            return prop.sym == "memo" || prop.sym == "forwardRef";
+                        }
+                    }
+                }
+                false
+            }
+            _ => false,
+        },
+        _ => false,
     }
 }
 

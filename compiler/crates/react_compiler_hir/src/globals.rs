@@ -133,12 +133,37 @@ pub fn base_globals() -> &'static HashMap<String, Global> {
 
 /// Convert a user-provided TypeConfig into an internal Type, registering shapes
 /// as needed. Ported from TS `installTypeConfig` in Globals.ts.
+/// If `errors` is provided, hook-name vs hook-type consistency validation
+/// errors are collected there.
 pub fn install_type_config(
     _globals: &mut GlobalRegistry,
     shapes: &mut ShapeRegistry,
     type_config: &TypeConfig,
     module_name: &str,
     _loc: (),
+) -> Global {
+    install_type_config_inner(_globals, shapes, type_config, module_name, _loc, &mut None)
+}
+
+/// Like `install_type_config` but collects validation errors.
+pub fn install_type_config_with_errors(
+    _globals: &mut GlobalRegistry,
+    shapes: &mut ShapeRegistry,
+    type_config: &TypeConfig,
+    module_name: &str,
+    _loc: (),
+    errors: &mut Vec<String>,
+) -> Global {
+    install_type_config_inner(_globals, shapes, type_config, module_name, _loc, &mut Some(errors))
+}
+
+fn install_type_config_inner(
+    _globals: &mut GlobalRegistry,
+    shapes: &mut ShapeRegistry,
+    type_config: &TypeConfig,
+    module_name: &str,
+    _loc: (),
+    errors: &mut Option<&mut Vec<String>>,
 ) -> Global {
     match type_config {
         TypeConfig::TypeReference(TypeReferenceConfig { name }) => match name {
@@ -156,12 +181,13 @@ pub fn install_type_config(
         },
         TypeConfig::Function(func_config) => {
             // Compute return type first to avoid double-borrow of shapes
-            let return_type = install_type_config(
+            let return_type = install_type_config_inner(
                 _globals,
                 shapes,
                 &func_config.return_type,
                 module_name,
                 (),
+                errors,
             );
             add_function(
                 shapes,
@@ -188,12 +214,13 @@ pub fn install_type_config(
         }
         TypeConfig::Hook(hook_config) => {
             // Compute return type first to avoid double-borrow of shapes
-            let return_type = install_type_config(
+            let return_type = install_type_config_inner(
                 _globals,
                 shapes,
                 &hook_config.return_type,
                 module_name,
                 (),
+                errors,
             );
             add_hook(
                 shapes,
@@ -223,15 +250,35 @@ pub fn install_type_config(
                     props
                         .iter()
                         .map(|(key, value)| {
-                            let ty = install_type_config(
+                            let ty = install_type_config_inner(
                                 _globals,
                                 shapes,
                                 value,
                                 module_name,
                                 (),
+                                errors,
                             );
-                            // Note: TS validates hook-name vs hook-type consistency here.
-                            // We skip that validation for now.
+                            // Validate hook-name vs hook-type consistency (matching TS installTypeConfig)
+                            if let Some(errs) = errors {
+                                let expect_hook = crate::environment::is_hook_name(key);
+                                let is_hook = match &ty {
+                                    Type::Function { shape_id: Some(id), .. } => {
+                                        shapes.get(id)
+                                            .and_then(|shape| shape.function_type.as_ref())
+                                            .and_then(|ft| ft.hook_kind.as_ref())
+                                            .is_some()
+                                    }
+                                    _ => false,
+                                };
+                                if expect_hook != is_hook {
+                                    errs.push(format!(
+                                        "Expected type for object property '{}' from module '{}' {} based on the property name",
+                                        key,
+                                        module_name,
+                                        if expect_hook { "to be a hook" } else { "not to be a hook" }
+                                    ));
+                                }
+                            }
                             (key.clone(), ty)
                         })
                         .collect()
@@ -1237,19 +1284,50 @@ fn build_weak_map_shape(shapes: &mut ShapeRegistry) {
 }
 
 fn build_object_shape(shapes: &mut ShapeRegistry) {
-    // BuiltInObject: empty shape (used as the default for object literals)
-    add_object(shapes, Some(BUILT_IN_OBJECT_ID), Vec::new());
+    // BuiltInObject: has toString() returning Primitive (matches TS BuiltInObjectId shape)
+    let to_string = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    add_object(
+        shapes,
+        Some(BUILT_IN_OBJECT_ID),
+        vec![("toString".to_string(), to_string)],
+    );
     // BuiltInFunction: empty shape
     add_object(shapes, Some(BUILT_IN_FUNCTION_ID), Vec::new());
     // BuiltInJsx: empty shape
     add_object(shapes, Some(BUILT_IN_JSX_ID), Vec::new());
-    // BuiltInMixedReadonly: has a wildcard property that returns Poly
-    let mut props = HashMap::new();
-    props.insert("*".to_string(), Type::Poly);
+    // BuiltInMixedReadonly: has explicit method types + wildcard returning MixedReadonly
+    // (matches TS BuiltInMixedReadonlyId shape)
+    let mixed_to_string = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::Read),
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
+    let mut mixed_props = HashMap::new();
+    mixed_props.insert("toString".to_string(), mixed_to_string);
+    mixed_props.insert("*".to_string(), Type::Object {
+        shape_id: Some(BUILT_IN_MIXED_READONLY_ID.to_string()),
+    });
     shapes.insert(
         BUILT_IN_MIXED_READONLY_ID.to_string(),
         ObjectShape {
-            properties: props,
+            properties: mixed_props,
             function_type: None,
         },
     );

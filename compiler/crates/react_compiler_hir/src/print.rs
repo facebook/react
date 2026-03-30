@@ -1356,6 +1356,7 @@ impl<'a> PrintFormatter<'a> {
                 manual_memo_id,
                 deps,
                 deps_loc: _,
+                has_invalid_deps: _,
                 loc,
             } => {
                 self.line("StartMemoize {");
