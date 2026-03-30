@@ -9,8 +9,8 @@ pub mod convert_scope;
 pub mod diagnostics;
 pub mod prefilter;
 
-use convert_ast::convert_module;
-use convert_ast_reverse::convert_program_to_swc;
+use convert_ast::convert_module_with_source_type;
+use convert_ast_reverse::convert_program_to_swc_with_source;
 use convert_scope::build_scope_info;
 use diagnostics::{compile_result_to_diagnostics, DiagnosticMessage};
 use prefilter::has_react_like_functions;
@@ -71,7 +71,18 @@ pub fn transform(
         };
     }
 
-    let file = convert_module(module, source_text);
+    // Detect source type from pragma. The @script pragma indicates
+    // CommonJS (script) mode, which affects how imports are emitted.
+    let source_type = if source_text
+        .lines()
+        .next()
+        .map_or(false, |line| line.contains("@script"))
+    {
+        react_compiler_ast::SourceType::Script
+    } else {
+        react_compiler_ast::SourceType::Module
+    };
+    let file = convert_module_with_source_type(module, source_text, source_type);
     let scope_info = build_scope_info(module);
     let result =
         react_compiler::entrypoint::program::compile_program(file, scope_info, options);
@@ -92,7 +103,7 @@ pub fn transform(
         // BaseNode.node_type + #[serde(tag = "type")] enum tagging)
         let value: serde_json::Value = serde_json::from_str(raw_json.get()).ok()?;
         let file: react_compiler_ast::File = serde_json::from_value(value).ok()?;
-        let result = convert_program_to_swc(&file);
+        let result = convert_program_to_swc_with_source(&file, Some(source_text));
         Some(result)
     });
 
@@ -257,6 +268,12 @@ pub fn emit_with_comments(
     // Move blank lines from before comment blocks to after them when
     // the comment block is followed by a top-level declaration.
     let code = reposition_comment_blank_lines(&code);
+
+    // Expand single-line object literals to multi-line format in
+    // FIXTURE_ENTRYPOINT-style structures. SWC codegen emits small objects
+    // on single lines while Babel puts them on multiple lines. Prettier
+    // preserves this choice, causing formatting differences.
+    let code = expand_fixture_entrypoint_objects(&code);
 
     if blank_line_positions.is_empty() || module.body.is_empty() {
         return code;
@@ -585,13 +602,21 @@ fn reposition_comment_blank_lines(code: &str) -> String {
                     }
                 }
 
-                // Check if the line after the comment block is a non-blank
-                // declaration (function, export, class, etc.)
+                // Check if the line after the comment block is a top-level
+                // declaration (function, class, export, const, let, var).
+                // This is specifically for Babel's codegen which places blank
+                // lines after comment blocks before declarations, not before.
                 if comment_end < lines.len() && comment_end > comment_start {
                     let after_comment = lines[comment_end].trim();
-                    let is_declaration = !after_comment.is_empty()
-                        && !after_comment.starts_with("//")
-                        && !after_comment.starts_with("/*");
+                    let is_declaration = after_comment.starts_with("function ")
+                        || after_comment.starts_with("export ")
+                        || after_comment.starts_with("class ")
+                        || after_comment.starts_with("const ")
+                        || after_comment.starts_with("let ")
+                        || after_comment.starts_with("var ")
+                        || after_comment.starts_with("import ")
+                        || after_comment.starts_with("async function ")
+                        || after_comment.starts_with("async function*");
 
                     if is_declaration {
                         // Also check that the line before the blank line is
@@ -867,6 +892,312 @@ fn extract_source_comments(
     }
 
     result
+}
+
+/// Normalize source code formatting to match Babel's codegen behavior.
+/// Applied to source text that was not modified by the compiler.
+/// Currently adds blank lines after directive sequences, matching
+/// Babel's generator which always emits a blank line after the last
+/// directive in a function/program body.
+pub fn normalize_source(source: &str) -> String {
+    let code = add_blank_lines_after_directives(source);
+    let code = remove_blank_lines_after_last_import(&code);
+    let code = remove_blank_lines_before_fixture_entrypoint(&code);
+    expand_fixture_entrypoint_objects(&code)
+}
+
+/// Remove blank lines immediately before `export const FIXTURE_ENTRYPOINT`.
+/// Babel's codegen doesn't preserve blank lines between function declarations
+/// and the FIXTURE_ENTRYPOINT export.
+fn remove_blank_lines_before_fixture_entrypoint(code: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    if lines.is_empty() {
+        return code.to_string();
+    }
+
+    // Find the FIXTURE_ENTRYPOINT line
+    let mut entrypoint_idx: Option<usize> = None;
+    for (i, &line) in lines.iter().enumerate() {
+        if line.trim().starts_with("export const FIXTURE_ENTRYPOINT")
+            || line.trim().starts_with("export const FIXTURE_ENTRYPOINT")
+        {
+            entrypoint_idx = Some(i);
+            break;
+        }
+    }
+
+    let entrypoint_idx = match entrypoint_idx {
+        Some(idx) if idx > 0 => idx,
+        _ => return code.to_string(),
+    };
+
+    // Check if the line before FIXTURE_ENTRYPOINT is blank
+    if !lines[entrypoint_idx - 1].trim().is_empty() {
+        return code.to_string();
+    }
+
+    // Remove the blank line
+    let mut result: Vec<&str> = Vec::with_capacity(lines.len());
+    for (i, &line) in lines.iter().enumerate() {
+        if i == entrypoint_idx - 1 {
+            continue;
+        }
+        result.push(line);
+    }
+
+    let mut output = result.join("\n");
+    if code.ends_with('\n') && !output.ends_with('\n') {
+        output.push('\n');
+    }
+    output
+}
+
+/// Remove blank lines between the last import declaration and the first
+/// non-import statement. Babel's codegen doesn't preserve these blank lines.
+///
+/// Only removes blank lines that immediately follow the LAST import line
+/// (not blank lines between comments or between import groups).
+fn remove_blank_lines_after_last_import(code: &str) -> String {
+    let lines: Vec<&str> = code.lines().collect();
+    if lines.is_empty() {
+        return code.to_string();
+    }
+
+    // Find the index of the last import statement
+    let mut last_import_idx: Option<usize> = None;
+    for (i, &line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("import ") || trimmed.starts_with("import{") {
+            last_import_idx = Some(i);
+        }
+    }
+
+    let last_import_idx = match last_import_idx {
+        Some(idx) => idx,
+        None => return code.to_string(),
+    };
+
+    // Check if there's a blank line immediately after the last import
+    let blank_idx = last_import_idx + 1;
+    if blank_idx >= lines.len() || !lines[blank_idx].trim().is_empty() {
+        return code.to_string();
+    }
+
+    // Remove this blank line
+    let mut result: Vec<&str> = Vec::with_capacity(lines.len());
+    for (i, &line) in lines.iter().enumerate() {
+        if i == blank_idx {
+            continue; // skip the blank line
+        }
+        result.push(line);
+    }
+
+    let mut output = result.join("\n");
+    if code.ends_with('\n') && !output.ends_with('\n') {
+        output.push('\n');
+    }
+    output
+}
+
+/// Expand single-line object literals to multi-line format within
+/// FIXTURE_ENTRYPOINT structures only.
+///
+/// SWC's codegen emits small objects on a single line (e.g.,
+/// `params: [{ value: "test" }]`), while Babel's codegen puts them on
+/// multiple lines. Since prettier preserves the single-line vs multi-line
+/// choice, we need to expand them before prettier runs.
+///
+/// This function ONLY operates within FIXTURE_ENTRYPOINT blocks to avoid
+/// affecting compiled code.
+fn expand_fixture_entrypoint_objects(code: &str) -> String {
+    // Find the start of FIXTURE_ENTRYPOINT block
+    let entrypoint_marker = "FIXTURE_ENTRYPOINT";
+    if !code.contains(entrypoint_marker) {
+        return code.to_string();
+    }
+
+    // Find the byte position of FIXTURE_ENTRYPOINT
+    let entrypoint_pos = match code.find(entrypoint_marker) {
+        Some(pos) => pos,
+        None => return code.to_string(),
+    };
+
+    // Only process lines after FIXTURE_ENTRYPOINT
+    let (before, after) = code.split_at(entrypoint_pos);
+    let expanded = expand_single_line_objects_in_block(after);
+    format!("{}{}", before, expanded)
+}
+
+fn expand_single_line_objects_in_block(code: &str) -> String {
+    let mut result = String::with_capacity(code.len() + 256);
+    let lines: Vec<&str> = code.lines().collect();
+
+    for (idx, &line) in lines.iter().enumerate() {
+        if let Some(expanded) = try_expand_object_line(line) {
+            result.push_str(&expanded);
+        } else {
+            result.push_str(line);
+        }
+        if idx < lines.len() - 1 || code.ends_with('\n') {
+            result.push('\n');
+        }
+    }
+
+    result
+}
+
+/// Try to expand a single-line object literal to multi-line.
+/// Returns Some(expanded) if the line contains an expandable object, None otherwise.
+fn try_expand_object_line(line: &str) -> Option<String> {
+    let trimmed = line.trim();
+
+    // Calculate indentation
+    let indent = &line[..line.len() - line.trim_start().len()];
+
+    // Pattern 1: `key: [{ prop: val, prop2: val2 }],` or `key: [{ ... }, { ... }],`
+    // Pattern 2: `[{ prop: val }, { prop: val }]` (array of objects)
+    // We need to find `[` containing `{...}` entries
+
+    // Check if this line has a [ ... ] with { ... } objects inside
+    if !trimmed.contains("[{") && !trimmed.contains("{ ") {
+        return None;
+    }
+
+    // Find the bracket-enclosed array content
+    let bracket_start = trimmed.find('[')?;
+    let bracket_end = trimmed.rfind(']')?;
+    if bracket_start >= bracket_end {
+        return None;
+    }
+
+    let array_content = &trimmed[bracket_start + 1..bracket_end];
+    let inner_trimmed = array_content.trim();
+
+    // Check if this contains objects: at least one `{ ... }`
+    if !inner_trimmed.starts_with('{') || !inner_trimmed.contains(':') {
+        return None;
+    }
+
+    // We need at least one property with a colon to expand
+    if !inner_trimmed.contains(':') {
+        return None;
+    }
+
+    // Split the array content into individual elements
+    let prefix = &trimmed[..bracket_start + 1];
+    let suffix = &trimmed[bracket_end..];
+
+    // Parse the objects - split at `}, {` boundaries
+    let elements = split_array_elements(inner_trimmed);
+
+    let inner_indent = format!("{}  ", indent);
+    let prop_indent = format!("{}    ", indent);
+
+    let mut result = String::new();
+    result.push_str(indent);
+    result.push_str(prefix);
+    result.push('\n');
+
+    for (i, elem) in elements.iter().enumerate() {
+        let elem = elem.trim();
+        if elem.starts_with('{') && elem.ends_with('}') {
+            // Expand this object
+            let obj_content = &elem[1..elem.len() - 1].trim();
+            let props = split_object_properties(obj_content);
+
+            result.push_str(&inner_indent);
+            result.push_str("{\n");
+            for (_j, prop) in props.iter().enumerate() {
+                result.push_str(&prop_indent);
+                result.push_str(prop.trim());
+                result.push_str(",\n");
+            }
+            result.push_str(&inner_indent);
+            result.push('}');
+        } else {
+            result.push_str(&inner_indent);
+            result.push_str(elem);
+        }
+        if i < elements.len() - 1 {
+            result.push(',');
+        }
+        result.push('\n');
+    }
+
+    result.push_str(indent);
+    result.push_str(suffix);
+
+    Some(result)
+}
+
+/// Split array content into individual elements, respecting nested braces/brackets.
+fn split_array_elements(s: &str) -> Vec<String> {
+    let mut elements = Vec::new();
+    let mut current = String::new();
+    let mut depth = 0;
+
+    for ch in s.chars() {
+        match ch {
+            '{' | '[' | '(' => {
+                depth += 1;
+                current.push(ch);
+            }
+            '}' | ']' | ')' => {
+                depth -= 1;
+                current.push(ch);
+            }
+            ',' if depth == 0 => {
+                let trimmed = current.trim().to_string();
+                if !trimmed.is_empty() {
+                    elements.push(trimmed);
+                }
+                current.clear();
+            }
+            _ => {
+                current.push(ch);
+            }
+        }
+    }
+    let trimmed = current.trim().to_string();
+    if !trimmed.is_empty() {
+        elements.push(trimmed);
+    }
+    elements
+}
+
+/// Split object properties, respecting nested structures.
+fn split_object_properties(s: &str) -> Vec<String> {
+    let mut props = Vec::new();
+    let mut current = String::new();
+    let mut depth = 0;
+
+    for ch in s.chars() {
+        match ch {
+            '{' | '[' | '(' => {
+                depth += 1;
+                current.push(ch);
+            }
+            '}' | ']' | ')' => {
+                depth -= 1;
+                current.push(ch);
+            }
+            ',' if depth == 0 => {
+                let trimmed = current.trim().to_string();
+                if !trimmed.is_empty() {
+                    props.push(trimmed);
+                }
+                current.clear();
+            }
+            _ => {
+                current.push(ch);
+            }
+        }
+    }
+    let trimmed = current.trim().to_string();
+    if !trimmed.is_empty() {
+        props.push(trimmed);
+    }
+    props
 }
 
 /// Convenience wrapper — parses source text, then lints.

@@ -24,6 +24,16 @@ fn wtf8_to_string(value: &swc_atoms::Wtf8Atom) -> String {
 
 /// Converts an SWC Module AST to the React compiler's Babel-compatible AST.
 pub fn convert_module(module: &swc::Module, source_text: &str) -> File {
+    convert_module_with_source_type(module, source_text, SourceType::Module)
+}
+
+/// Converts an SWC Module AST to the React compiler's Babel-compatible AST
+/// with an explicit source type.
+pub fn convert_module_with_source_type(
+    module: &swc::Module,
+    source_text: &str,
+    source_type: SourceType,
+) -> File {
     let ctx = ConvertCtx::new(source_text);
     let base = ctx.make_base_node(module.span);
 
@@ -48,7 +58,7 @@ pub fn convert_module(module: &swc::Module, source_text: &str) -> File {
             base,
             body,
             directives,
-            source_type: SourceType::Module,
+            source_type,
             interpreter: None,
             source_file: None,
         },

@@ -36,8 +36,19 @@ pub struct SwcConversionResult {
 
 /// Convert a `react_compiler_ast::File` into an SWC `Module` and extracted comments.
 pub fn convert_program_to_swc(file: &react_compiler_ast::File) -> SwcConversionResult {
+    convert_program_to_swc_with_source(file, None)
+}
+
+/// Convert a `react_compiler_ast::File` into an SWC `Module` and extracted comments.
+/// When `source_text` is provided, type declarations can be extracted from the
+/// original source for perfect fidelity.
+pub fn convert_program_to_swc_with_source(
+    file: &react_compiler_ast::File,
+    source_text: Option<&str>,
+) -> SwcConversionResult {
     let ctx = ReverseCtx {
         comments: SingleThreadedComments::default(),
+        source_text: source_text.map(|s| s.to_string()),
     };
     let module = ctx.convert_program(&file.program);
     SwcConversionResult {
@@ -48,6 +59,7 @@ pub fn convert_program_to_swc(file: &react_compiler_ast::File) -> SwcConversionR
 
 struct ReverseCtx {
     comments: SingleThreadedComments,
+    source_text: Option<String>,
 }
 
 impl ReverseCtx {
@@ -112,6 +124,113 @@ impl ReverseCtx {
 
     fn wtf8(&self, s: &str) -> Wtf8Atom {
         Wtf8Atom::from(s)
+    }
+
+    /// Escape non-ASCII characters and special characters (like tab) in a string
+    /// value to \uXXXX or \xXX sequences, matching Babel's codegen output.
+    /// Returns the raw string representation wrapped in double quotes.
+    fn escape_string_raw(&self, value: &str) -> Option<Atom> {
+        let mut needs_escape = false;
+        for ch in value.chars() {
+            if !ch.is_ascii() || ch == '\t' || ch == '\'' || ch == '"' || ch == '\\' {
+                needs_escape = true;
+                break;
+            }
+        }
+        if !needs_escape {
+            return None;
+        }
+        let mut escaped = String::with_capacity(value.len() + 16);
+        escaped.push('"');
+        for ch in value.chars() {
+            match ch {
+                '"' => escaped.push_str("\\\""),
+                '\\' => escaped.push_str("\\\\"),
+                '\n' => escaped.push_str("\\n"),
+                '\r' => escaped.push_str("\\r"),
+                '\t' => escaped.push_str("\\t"),
+                c if !c.is_ascii() => {
+                    // Encode using \uXXXX (or surrogate pairs for chars > U+FFFF)
+                    let mut buf = [0u16; 2];
+                    let encoded = c.encode_utf16(&mut buf);
+                    for unit in encoded {
+                        escaped.push_str(&format!("\\u{:04X}", unit));
+                    }
+                }
+                c => escaped.push(c),
+            }
+        }
+        escaped.push('"');
+        Some(Atom::from(escaped.as_str()))
+    }
+
+    /// Extract the original source text for a node and re-parse it as a
+    /// statement using SWC's TypeScript parser. This is used for type
+    /// declarations (type aliases, interfaces, enums) that the compiler
+    /// preserves verbatim from the original source.
+    fn extract_source_stmt(&self, base: &react_compiler_ast::common::BaseNode) -> Option<Stmt> {
+        let source = self.source_text.as_deref()?;
+        let start = base.start? as usize;
+        let end = base.end? as usize;
+        // SWC BytePos is 1-based
+        let start_idx = start.saturating_sub(1);
+        let end_idx = end.saturating_sub(1);
+        if start_idx >= source.len() || end_idx > source.len() || start_idx >= end_idx {
+            return None;
+        }
+        let text = &source[start_idx..end_idx];
+        self.parse_ts_stmt(text, base)
+    }
+
+    /// Parse a string as a TypeScript statement using SWC's parser.
+    fn parse_ts_stmt(&self, text: &str, base: &react_compiler_ast::common::BaseNode) -> Option<Stmt> {
+        let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
+        let fm = cm.new_source_file(
+            swc_common::sync::Lrc::new(swc_common::FileName::Anon),
+            text.to_string(),
+        );
+        let mut errors = vec![];
+        let module = swc_ecma_parser::parse_file_as_module(
+            &fm,
+            swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
+                tsx: true,
+                ..Default::default()
+            }),
+            swc_ecma_ast::EsVersion::latest(),
+            None,
+            &mut errors,
+        ).ok()?;
+
+        if let Some(item) = module.body.into_iter().next() {
+            match item {
+                ModuleItem::Stmt(stmt) => {
+                    // Assign the original span so blank line computation works
+                    let span = self.span(base);
+                    return Some(self.assign_span_to_stmt(stmt, span));
+                }
+                ModuleItem::ModuleDecl(_) => {}
+            }
+        }
+        None
+    }
+
+    /// Assign a span to a statement's outermost node.
+    fn assign_span_to_stmt(&self, stmt: Stmt, span: Span) -> Stmt {
+        match stmt {
+            Stmt::Decl(Decl::TsTypeAlias(mut d)) => {
+                d.span = span;
+                Stmt::Decl(Decl::TsTypeAlias(d))
+            }
+            Stmt::Decl(Decl::TsInterface(mut d)) => {
+                d.span = span;
+                Stmt::Decl(Decl::TsInterface(d))
+            }
+            Stmt::Decl(Decl::TsEnum(mut d)) => {
+                d.span = span;
+                Stmt::Decl(Decl::TsEnum(d))
+            }
+            other => other,
+        }
     }
 
     fn ident(&self, name: &str, span: Span) -> Ident {
@@ -376,15 +495,32 @@ impl ReverseCtx {
             | BabelStmt::ExportNamedDeclaration(_)
             | BabelStmt::ExportDefaultDeclaration(_)
             | BabelStmt::ExportAllDeclaration(_) => Stmt::Empty(EmptyStmt { span: DUMMY_SP }),
-            // TS/Flow declarations - not emitted by the React compiler output
-            BabelStmt::TSTypeAliasDeclaration(_)
-            | BabelStmt::TSInterfaceDeclaration(_)
-            | BabelStmt::TSEnumDeclaration(_)
-            | BabelStmt::TSModuleDeclaration(_)
+            // TS declarations - extract from source text if available
+            BabelStmt::TSTypeAliasDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            BabelStmt::TSInterfaceDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            BabelStmt::TSEnumDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            // Flow type declarations - extract from source text if available
+            BabelStmt::TypeAlias(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            BabelStmt::OpaqueType(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            BabelStmt::InterfaceDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            BabelStmt::EnumDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
+            }
+            // Other TS/Flow declarations
+            BabelStmt::TSModuleDeclaration(_)
             | BabelStmt::TSDeclareFunction(_)
-            | BabelStmt::TypeAlias(_)
-            | BabelStmt::OpaqueType(_)
-            | BabelStmt::InterfaceDeclaration(_)
             | BabelStmt::DeclareVariable(_)
             | BabelStmt::DeclareFunction(_)
             | BabelStmt::DeclareClass(_)
@@ -394,8 +530,7 @@ impl ReverseCtx {
             | BabelStmt::DeclareExportAllDeclaration(_)
             | BabelStmt::DeclareInterface(_)
             | BabelStmt::DeclareTypeAlias(_)
-            | BabelStmt::DeclareOpaqueType(_)
-            | BabelStmt::EnumDeclaration(_) => Stmt::Empty(EmptyStmt { span: DUMMY_SP }),
+            | BabelStmt::DeclareOpaqueType(_) => Stmt::Empty(EmptyStmt { span: DUMMY_SP }),
         }
     }
 
@@ -504,13 +639,22 @@ impl ReverseCtx {
             BabelExpr::StringLiteral(lit) => Expr::Lit(Lit::Str(Str {
                 span: self.span(&lit.base),
                 value: self.wtf8(&lit.value),
-                raw: None,
+                raw: self.escape_string_raw(&lit.value),
             })),
-            BabelExpr::NumericLiteral(lit) => Expr::Lit(Lit::Num(Number {
-                span: self.span(&lit.base),
-                value: lit.value,
-                raw: None,
-            })),
+            BabelExpr::NumericLiteral(lit) => {
+                // Convert -0.0 to 0.0 to match Babel's codegen behavior.
+                // Babel outputs `0` for both `-0` and `0`.
+                let value = if lit.value == 0.0 && lit.value.is_sign_negative() {
+                    0.0
+                } else {
+                    lit.value
+                };
+                Expr::Lit(Lit::Num(Number {
+                    span: self.span(&lit.base),
+                    value,
+                    raw: None,
+                }))
+            }
             BabelExpr::BooleanLiteral(lit) => Expr::Lit(Lit::Bool(Bool {
                 span: self.span(&lit.base),
                 value: lit.value,
@@ -531,6 +675,16 @@ impl ReverseCtx {
             BabelExpr::CallExpression(call) => {
                 let callee = self.convert_expression(&call.callee);
                 let args = self.convert_arguments(&call.arguments);
+                // Wrap arrow/function expressions in parens when used as
+                // call targets (IIFEs). SWC codegen does not add parens for
+                // `(() => ...)()`, resulting in incorrect code.
+                let callee = match &callee {
+                    Expr::Arrow(_) | Expr::Fn(_) => Expr::Paren(ParenExpr {
+                        span: callee.span(),
+                        expr: Box::new(callee),
+                    }),
+                    _ => callee,
+                };
                 Expr::Call(CallExpr {
                     span: self.span(&call.base),
                     ctxt: SyntaxContext::empty(),
@@ -582,17 +736,15 @@ impl ReverseCtx {
                     left: Box::new(self.convert_expression(&log.left)),
                     right: Box::new(self.convert_expression(&log.right)),
                 });
-                // Wrap logical expressions in parentheses to prevent
-                // ambiguity when mixing ?? with || or && (which is a syntax
-                // error without explicit parens per the spec).
-                if matches!(op, BinaryOp::NullishCoalescing) {
-                    Expr::Paren(ParenExpr {
-                        span,
-                        expr: Box::new(bin),
-                    })
-                } else {
-                    bin
-                }
+                // Wrap all logical expressions in parentheses. Logical
+                // operators (||, &&, ??) have lower precedence than most
+                // binary operators, but SWC's codegen does not always insert
+                // parens correctly (e.g., `a + b || c` vs `a + (b || c)`).
+                // Wrapping unconditionally is safe.
+                Expr::Paren(ParenExpr {
+                    span,
+                    expr: Box::new(bin),
+                })
             }
             BabelExpr::UnaryExpression(un) => {
                 let op = self.convert_unary_operator(&un.operator);
@@ -611,12 +763,22 @@ impl ReverseCtx {
                     arg: Box::new(self.convert_expression(&up.argument)),
                 })
             }
-            BabelExpr::ConditionalExpression(cond) => Expr::Cond(CondExpr {
-                span: self.span(&cond.base),
-                test: Box::new(self.convert_expression(&cond.test)),
-                cons: Box::new(self.convert_expression(&cond.consequent)),
-                alt: Box::new(self.convert_expression(&cond.alternate)),
-            }),
+            BabelExpr::ConditionalExpression(cond) => {
+                let span = self.span(&cond.base);
+                // Wrap conditional expressions in parentheses. SWC's codegen
+                // does not always insert parens for ternaries inside binary
+                // or assignment expressions (e.g., `x + cond ? a : b` instead
+                // of `x + (cond ? a : b)`).
+                Expr::Paren(ParenExpr {
+                    span,
+                    expr: Box::new(Expr::Cond(CondExpr {
+                        span,
+                        test: Box::new(self.convert_expression(&cond.test)),
+                        cons: Box::new(self.convert_expression(&cond.consequent)),
+                        alt: Box::new(self.convert_expression(&cond.alternate)),
+                    })),
+                })
+            }
             BabelExpr::AssignmentExpression(assign) => {
                 let op = self.convert_assignment_operator(&assign.operator);
                 let left = self.convert_pattern_to_assign_target(&assign.left);
@@ -901,7 +1063,18 @@ impl ReverseCtx {
     }
 
     fn convert_member_expression(&self, m: &babel_expr::MemberExpression) -> Expr {
-        let object = Box::new(self.convert_expression(&m.object));
+        let object = self.convert_expression(&m.object);
+        // When an optional chain expression is used as the object of a
+        // non-optional member expression (e.g., `(props?.a).b`), wrap it
+        // in parens to properly terminate the optional chain. Without
+        // parens, SWC codegen emits `props?.a.b` which extends the chain.
+        let object = match &object {
+            Expr::OptChain(_) => Box::new(Expr::Paren(ParenExpr {
+                span: object.span(),
+                expr: Box::new(object),
+            })),
+            _ => Box::new(object),
+        };
         if m.computed {
             let property = self.convert_expression(&m.property);
             Expr::Member(MemberExpr {
@@ -1274,7 +1447,13 @@ impl ReverseCtx {
     fn convert_pattern(&self, pattern: &PatternLike) -> Pat {
         match pattern {
             PatternLike::Identifier(id) => {
-                Pat::Ident(self.binding_ident(&id.name, self.span(&id.base)))
+                let mut bi = self.binding_ident(&id.name, self.span(&id.base));
+                bi.id.optional = id.optional.unwrap_or(false);
+                // Preserve type annotations if present
+                if let Some(ref type_ann) = id.type_annotation {
+                    bi.type_ann = self.convert_ts_type_annotation_from_json(type_ann);
+                }
+                Pat::Ident(bi)
             }
             PatternLike::ObjectPattern(obj) => {
                 let mut props: Vec<ObjectPatProp> = Vec::new();
@@ -1585,7 +1764,7 @@ impl ReverseCtx {
                 swc_ecma_ast::JSXAttrValue::Str(Str {
                     span: self.span(&s.base),
                     value: self.wtf8(&s.value),
-                    raw: None,
+                    raw: self.escape_string_raw(&s.value),
                 })
             }
             react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(ec) => {
@@ -1981,6 +2160,24 @@ impl ReverseCtx {
 
     // ===== TS type helpers =====
 
+    /// Convert a Babel TSTypeAnnotation JSON to an SWC TsTypeAnnotation.
+    /// Returns None if the JSON is not a valid type annotation.
+    fn convert_ts_type_annotation_from_json(
+        &self,
+        json: &serde_json::Value,
+    ) -> Option<Box<TsTypeAnn>> {
+        let type_name = json.get("type")?.as_str()?;
+        if type_name != "TSTypeAnnotation" && type_name != "TypeAnnotation" {
+            return None;
+        }
+        let type_annotation = json.get("typeAnnotation")?;
+        let ts_type = self.convert_ts_type_from_json(type_annotation, DUMMY_SP);
+        Some(Box::new(TsTypeAnn {
+            span: DUMMY_SP,
+            type_ann: Box::new(ts_type),
+        }))
+    }
+
     /// Convert a JSON-serialized TypeScript type annotation to an SWC TsType.
     /// This handles common cases from the compiler's output. For unrecognized
     /// types, it falls back to `any`.
@@ -1994,8 +2191,6 @@ impl ReverseCtx {
                     .and_then(|n| n.as_str())
                     .unwrap_or("unknown");
                 if name == "const" {
-                    // "as const" is a TsConstAssertion in SWC, but TsAsExpr expects TsType.
-                    // Use TsTypeRef with "const" name.
                     TsType::TsTypeRef(TsTypeRef {
                         span,
                         type_name: TsEntityName::Ident(self.ident("const", span)),
@@ -2008,6 +2203,221 @@ impl ReverseCtx {
                         type_params: None,
                     })
                 }
+            }
+            "TSNumberKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsNumberKeyword,
+            }),
+            "TSStringKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsStringKeyword,
+            }),
+            "TSBooleanKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsBooleanKeyword,
+            }),
+            "TSVoidKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsVoidKeyword,
+            }),
+            "TSNullKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsNullKeyword,
+            }),
+            "TSUndefinedKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsUndefinedKeyword,
+            }),
+            "TSAnyKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsAnyKeyword,
+            }),
+            "TSNeverKeyword" => TsType::TsKeywordType(TsKeywordType {
+                span,
+                kind: TsKeywordTypeKind::TsNeverKeyword,
+            }),
+            "TSUnionType" => {
+                let types = json.get("types").and_then(|t| t.as_array()).map(|arr| {
+                    arr.iter()
+                        .map(|t| Box::new(self.convert_ts_type_from_json(t, span)))
+                        .collect::<Vec<_>>()
+                }).unwrap_or_default();
+                TsType::TsUnionOrIntersectionType(
+                    TsUnionOrIntersectionType::TsUnionType(TsUnionType {
+                        span,
+                        types,
+                    }),
+                )
+            }
+            "TSIntersectionType" => {
+                let types = json.get("types").and_then(|t| t.as_array()).map(|arr| {
+                    arr.iter()
+                        .map(|t| Box::new(self.convert_ts_type_from_json(t, span)))
+                        .collect::<Vec<_>>()
+                }).unwrap_or_default();
+                TsType::TsUnionOrIntersectionType(
+                    TsUnionOrIntersectionType::TsIntersectionType(TsIntersectionType {
+                        span,
+                        types,
+                    }),
+                )
+            }
+            "TSLiteralType" => {
+                if let Some(literal) = json.get("literal") {
+                    let lit_type = literal.get("type").and_then(|t| t.as_str()).unwrap_or("");
+                    match lit_type {
+                        "StringLiteral" => {
+                            let value = literal.get("value").and_then(|v| v.as_str()).unwrap_or("");
+                            TsType::TsLitType(TsLitType {
+                                span,
+                                lit: TsLit::Str(Str {
+                                    span,
+                                    value: self.wtf8(value),
+                                    raw: None,
+                                }),
+                            })
+                        }
+                        "NumericLiteral" => {
+                            let value = literal.get("value").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            TsType::TsLitType(TsLitType {
+                                span,
+                                lit: TsLit::Number(Number {
+                                    span,
+                                    value,
+                                    raw: None,
+                                }),
+                            })
+                        }
+                        "BooleanLiteral" => {
+                            let value = literal.get("value").and_then(|v| v.as_bool()).unwrap_or(false);
+                            TsType::TsLitType(TsLitType {
+                                span,
+                                lit: TsLit::Bool(Bool {
+                                    span,
+                                    value,
+                                }),
+                            })
+                        }
+                        _ => TsType::TsKeywordType(TsKeywordType {
+                            span,
+                            kind: TsKeywordTypeKind::TsAnyKeyword,
+                        }),
+                    }
+                } else {
+                    TsType::TsKeywordType(TsKeywordType {
+                        span,
+                        kind: TsKeywordTypeKind::TsAnyKeyword,
+                    })
+                }
+            }
+            "TSArrayType" => {
+                let elem = json.get("elementType")
+                    .map(|t| self.convert_ts_type_from_json(t, span))
+                    .unwrap_or(TsType::TsKeywordType(TsKeywordType {
+                        span,
+                        kind: TsKeywordTypeKind::TsAnyKeyword,
+                    }));
+                TsType::TsArrayType(TsArrayType {
+                    span,
+                    elem_type: Box::new(elem),
+                })
+            }
+            "TSFunctionType" | "TSTypeLiteral" | "TSParenthesizedType" | "TSTupleType"
+            | "TSOptionalType" | "TSRestType" | "TSConditionalType" | "TSInferType"
+            | "TSMappedType" | "TSIndexedAccessType" | "TSTypeOperator" | "TSTypePredicate"
+            | "TSImportType" | "TSQualifiedName" => {
+                // For complex types, try to extract from source text
+                if let (Some(source), Some(start), Some(end)) = (
+                    self.source_text.as_deref(),
+                    json.get("start").and_then(|v| v.as_u64()),
+                    json.get("end").and_then(|v| v.as_u64()),
+                ) {
+                    let start_idx = (start as usize).saturating_sub(1);
+                    let end_idx = (end as usize).saturating_sub(1);
+                    if start_idx < source.len() && end_idx <= source.len() && start_idx < end_idx {
+                        let text = &source[start_idx..end_idx];
+                        // Parse the type using SWC
+                        let wrapper = format!("type __T = {};", text);
+                        let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
+                        let fm = cm.new_source_file(
+                            swc_common::sync::Lrc::new(swc_common::FileName::Anon),
+                            wrapper,
+                        );
+                        let mut errors = vec![];
+                        if let Ok(module) = swc_ecma_parser::parse_file_as_module(
+                            &fm,
+                            swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
+                                tsx: true,
+                                ..Default::default()
+                            }),
+                            swc_ecma_ast::EsVersion::latest(),
+                            None,
+                            &mut errors,
+                        ) {
+                            if let Some(ModuleItem::Stmt(Stmt::Decl(Decl::TsTypeAlias(alias)))) =
+                                module.body.into_iter().next()
+                            {
+                                return *alias.type_ann;
+                            }
+                        }
+                    }
+                }
+                // Fallback
+                TsType::TsKeywordType(TsKeywordType {
+                    span,
+                    kind: TsKeywordTypeKind::TsAnyKeyword,
+                })
+            }
+            // Flow types
+            "NumberTypeAnnotation" | "StringTypeAnnotation" | "BooleanTypeAnnotation"
+            | "VoidTypeAnnotation" | "NullLiteralTypeAnnotation" | "AnyTypeAnnotation"
+            | "GenericTypeAnnotation" | "UnionTypeAnnotation" | "IntersectionTypeAnnotation"
+            | "NullableTypeAnnotation" | "FunctionTypeAnnotation" | "ObjectTypeAnnotation"
+            | "ArrayTypeAnnotation" | "TupleTypeAnnotation" | "TypeofTypeAnnotation"
+            | "NumberLiteralTypeAnnotation" | "StringLiteralTypeAnnotation"
+            | "BooleanLiteralTypeAnnotation" => {
+                // For Flow types, try to extract from source text
+                if let (Some(source), Some(start), Some(end)) = (
+                    self.source_text.as_deref(),
+                    json.get("start").and_then(|v| v.as_u64()),
+                    json.get("end").and_then(|v| v.as_u64()),
+                ) {
+                    let start_idx = (start as usize).saturating_sub(1);
+                    let end_idx = (end as usize).saturating_sub(1);
+                    if start_idx < source.len() && end_idx <= source.len() && start_idx < end_idx {
+                        let text = &source[start_idx..end_idx];
+                        // For Flow types, we can use TS parser as many simple types
+                        // have the same syntax
+                        let wrapper = format!("type __T = {};", text);
+                        let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
+                        let fm = cm.new_source_file(
+                            swc_common::sync::Lrc::new(swc_common::FileName::Anon),
+                            wrapper,
+                        );
+                        let mut errors = vec![];
+                        if let Ok(module) = swc_ecma_parser::parse_file_as_module(
+                            &fm,
+                            swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
+                                tsx: true,
+                                ..Default::default()
+                            }),
+                            swc_ecma_ast::EsVersion::latest(),
+                            None,
+                            &mut errors,
+                        ) {
+                            if let Some(ModuleItem::Stmt(Stmt::Decl(Decl::TsTypeAlias(alias)))) =
+                                module.body.into_iter().next()
+                            {
+                                return *alias.type_ann;
+                            }
+                        }
+                    }
+                }
+                // Fallback
+                TsType::TsKeywordType(TsKeywordType {
+                    span,
+                    kind: TsKeywordTypeKind::TsAnyKeyword,
+                })
             }
             _ => {
                 // Fallback: emit `any` type

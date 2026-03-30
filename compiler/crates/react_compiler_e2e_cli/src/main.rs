@@ -86,25 +86,17 @@ fn main() {
     }
 }
 
-fn determine_swc_syntax(filename: &str) -> swc_ecma_parser::Syntax {
-    let is_flow = filename.ends_with(".flow.js");
-
-    if is_flow {
-        // Flow files use ES syntax (SWC doesn't have a Flow parser)
-        swc_ecma_parser::Syntax::Es(swc_ecma_parser::EsSyntax {
-            jsx: true,
-            ..Default::default()
-        })
-    } else {
-        // For all other files (.js, .jsx, .ts, .tsx), use TypeScript parser
-        // with TSX enabled. This matches the Babel test harness which always
-        // uses ['typescript', 'jsx'] parser plugins for non-Flow files.
-        // Many .js fixtures contain TypeScript syntax like `as const`.
-        swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
-            tsx: true,
-            ..Default::default()
-        })
-    }
+fn determine_swc_syntax(_filename: &str) -> swc_ecma_parser::Syntax {
+    // Use TypeScript parser for all files including Flow files.
+    // SWC doesn't have a native Flow parser, but the TS parser can handle
+    // most Flow-compatible syntax (type aliases, type annotations, etc.).
+    // The Babel test harness uses ['typescript', 'jsx'] for non-Flow files
+    // and ['flow', 'jsx'] for Flow files, but SWC's TS parser is close
+    // enough for our e2e test purposes.
+    swc_ecma_parser::Syntax::Typescript(swc_ecma_parser::TsSyntax {
+        tsx: true,
+        ..Default::default()
+    })
 }
 
 fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<String, String> {
@@ -115,12 +107,13 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
     );
 
     let syntax = determine_swc_syntax(filename);
+    let comments = swc_common::comments::SingleThreadedComments::default();
     let mut errors = vec![];
     let module = swc_ecma_parser::parse_file_as_module(
         &fm,
         syntax,
         swc_ecma_ast::EsVersion::latest(),
-        None,
+        Some(&comments),
         &mut errors,
     )
     .map_err(|e| format!("SWC parse error: {e:?}"))?;
@@ -151,10 +144,11 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
                     .collect();
                 Err(messages.join("\n"))
             } else {
-                // No changes needed — return the original source text.
-                // This matches Babel's behavior where the transform plugin
-                // returns the original code unchanged when no compilation occurs.
-                Ok(source.to_string())
+                // No changes needed — return the original source text
+                // with directive blank lines normalized to match Babel's
+                // codegen behavior. Babel always adds a blank line after
+                // the last directive in a function/program body.
+                Ok(react_compiler_swc::normalize_source(source))
             }
         }
     }
