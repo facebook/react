@@ -25,3 +25,13 @@ export function markOutlinedByReactCompiler(
   outlinedNode.isOutlinedByReactCompiler = true;
   return outlinedNode;
 }
+
+export function copyOutlinedByReactCompilerMarker(
+  source: t.FunctionDeclaration,
+  target: t.FunctionDeclaration,
+): t.FunctionDeclaration {
+  if (isOutlinedByReactCompiler(source)) {
+    return markOutlinedByReactCompiler(target);
+  }
+  return target;
+}

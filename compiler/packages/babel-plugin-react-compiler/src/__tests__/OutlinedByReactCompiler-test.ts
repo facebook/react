@@ -7,17 +7,20 @@
 
 import * as t from '@babel/types';
 import {runBabelPluginReactCompiler} from '../Babel/RunReactCompilerBabelPlugin';
+import {PluginOptions} from '../Entrypoint';
 import {isOutlinedByReactCompiler} from '../Utils/OutlinedByReactCompiler';
 
-function compile(source: string): t.File {
+function compile(source: string, options: PluginOptions = {}): t.File {
   const result = runBabelPluginReactCompiler(
     source,
     'test.js',
     'flow',
     {
+      ...options,
       compilationMode: 'all',
       environment: {
         enableCustomTypeDefinitionForReanimated: true,
+        ...options.environment,
       },
     },
     true,
@@ -42,6 +45,19 @@ function getFunctionDeclaration(
   expect(t.isFunctionDeclaration(fn)).toBe(true);
 
   return fn as t.FunctionDeclaration;
+}
+
+function isRecompiledByReactCompiler(fn: t.FunctionDeclaration): boolean {
+  return fn.body.body.some(
+    statement =>
+      t.isVariableDeclaration(statement) &&
+      statement.declarations.some(
+        declarator =>
+          t.isIdentifier(declarator.id, {name: '$'}) &&
+          t.isCallExpression(declarator.init) &&
+          t.isIdentifier(declarator.init.callee, {name: '_c'}),
+      ),
+  );
 }
 
 describe('outlined function markers', () => {
@@ -76,5 +92,52 @@ describe('outlined function markers', () => {
     expect(
       isOutlinedByReactCompiler(getFunctionDeclaration(ast.program, 'useFoo')),
     ).toBe(false);
+  });
+
+  it('preserves the marker for JSX-outlined functions after recompilation', () => {
+    const ast = compile(
+      `
+      function Component({arr}) {
+        const x = useX();
+        return (
+          <>
+            {arr.map((i, id) => {
+              return (
+                <Bar key={id} x={x}>
+                  <Baz i={i}></Baz>
+                </Bar>
+              );
+            })}
+          </>
+        );
+      }
+
+      function Bar({x, children}) {
+        return (
+          <>
+            {x}
+            {children}
+          </>
+        );
+      }
+
+      function Baz({i}) {
+        return i;
+      }
+
+      function useX() {
+        return 'x';
+      }
+    `,
+      {
+        environment: {
+          enableJsxOutlining: true,
+        },
+      },
+    );
+
+    const outlinedComponent = getFunctionDeclaration(ast.program, '_temp');
+    expect(isRecompiledByReactCompiler(outlinedComponent)).toBe(true);
+    expect(isOutlinedByReactCompiler(outlinedComponent)).toBe(true);
   });
 });
