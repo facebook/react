@@ -1761,10 +1761,21 @@ impl ReverseCtx {
     ) -> swc_ecma_ast::JSXAttrValue {
         match value {
             react_compiler_ast::jsx::JSXAttributeValue::StringLiteral(s) => {
+                // For JSX attributes, if the value contains double quotes,
+                // use single quotes to avoid escaping issues that prettier
+                // can't parse (e.g., name="\"user\" name").
+                let raw = if s.value.contains('"') {
+                    Some(Atom::from(format!(
+                        "'{}'",
+                        s.value.replace('\\', "\\\\").replace('\'', "\\'")
+                    )))
+                } else {
+                    self.escape_string_raw(&s.value)
+                };
                 swc_ecma_ast::JSXAttrValue::Str(Str {
                     span: self.span(&s.base),
                     value: self.wtf8(&s.value),
-                    raw: self.escape_string_raw(&s.value),
+                    raw,
                 })
             }
             react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(ec) => {

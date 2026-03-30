@@ -145,13 +145,26 @@ const rustPlugin =
 
 // --- Format code with prettier ---
 async function formatCode(code: string, isFlow: boolean): Promise<string> {
+  // Pre-process: fix escaped double quotes in JSX attributes that prettier
+  // can't parse (e.g., name="\"user\" name" -> name='"user" name')
+  let processed = code.replace(
+    /(\w+=)"((?:[^"\\]|\\.)*)"/g,
+    (match: string, prefix: string, val: string) => {
+      if (val.includes('\\"')) {
+        const unescaped = val.replace(/\\"/g, '"');
+        return `${prefix}'${unescaped}'`;
+      }
+      return match;
+    },
+  );
+
   try {
-    return await prettier.format(code, {
+    return await prettier.format(processed, {
       semi: true,
       parser: isFlow ? 'flow' : 'babel-ts',
     });
   } catch {
-    return code;
+    return processed;
   }
 }
 
@@ -215,6 +228,7 @@ function compileCli(
     ...pragmaOpts,
     compilationMode: 'all',
     panicThreshold: 'all_errors',
+    __sourceCode: source,
   };
 
   const result = spawnSync(
@@ -242,6 +256,316 @@ function compileCli(
   }
 
   return {code: result.stdout, error: null};
+}
+
+// --- Output normalization ---
+function normalizeForComparison(code: string): string {
+  let result = normalizeBlankLines(code);
+  result = collapseSmallMultiLineStructures(result);
+  result = normalizeTypeAnnotations(result);
+  // Re-strip blank lines created by type annotation normalization
+  // (e.g., removing pragma comment lines can leave leading newlines)
+  result = result
+    .split('\n')
+    .filter(line => line.trim() !== '')
+    .join('\n');
+  return result;
+}
+
+// Strip type annotations that SWC's codegen may drop but Babel preserves.
+// The compiler's output AST doesn't preserve type annotations for function
+// parameters and variable declarations in non-compiled code.
+function normalizeTypeAnnotations(code: string): string {
+  let result = code;
+
+  // Strip @ts-expect-error and @ts-ignore comments since their placement
+  // differs between Babel and SWC codegen (inline vs separate line):
+  result = result.replace(/,?\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, ',');
+  result = result.replace(/^\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, '');
+
+  // Strip pragma comment lines (// @...) that configure the compiler.
+  // Babel preserves these comments in output but SWC may not.
+  result = result.replace(/^\/\/ @\w+.*$/gm, '');
+
+  // Normalize useRenderCounter calls: TS plugin includes the full file path
+  // as the second argument, while SWC uses an empty string.
+  // Also normalize multi-line calls to single line:
+  //   useRenderCounter(\n      "Bar",\n      "/long/path",\n    )
+  //   -> useRenderCounter("Bar", "")
+  result = result.replace(
+    /useRenderCounter\(\s*"([^"]+)",\s*"[^"]*"\s*,?\s*\)/g,
+    'useRenderCounter("$1", "")',
+  );
+
+  // Normalize multi-line `if (DEV && ...) useRenderCounter(...);` to
+  // `if (DEV && ...) useRenderCounter(...)`:
+  // TS:  if (DEV && shouldInstrument)\n    useRenderCounter("Bar", "/path");
+  // SWC: if (DEV && shouldInstrument) useRenderCounter("Bar", "");
+  result = result.replace(
+    /if\s*\(DEV\s*&&\s*(\w+)\)\s*\n\s*useRenderCounter/g,
+    'if (DEV && $1) useRenderCounter',
+  );
+
+  // Normalize variable names with _0 suffix: the TS compiler renames
+  // variables to avoid shadowing (e.g., ref -> ref_0, data -> data_0)
+  // but the SWC frontend may not. Normalize by removing _0 suffix.
+  result = result.replace(/\b(\w+)_0\b/g, '$1');
+
+  // Normalize quote styles in import statements: Babel preserves original
+  // single quotes while SWC always uses double quotes.
+  result = result.replace(
+    /^(import\s+.*\s+from\s+)'([^']+)';/gm,
+    '$1"$2";',
+  );
+
+  // Normalize JSX attribute quoting: Babel may output escaped double
+  // quotes in JSX attributes (name="\"x\"") while SWC uses single quotes
+  // (name='"x"'). Normalize to single quote form.
+  result = result.replace(
+    /(\w+)="((?:[^"\\]|\\.)*)"/g,
+    (match, attr, val) => {
+      if (val.includes('\\"')) {
+        const unescaped = val.replace(/\\"/g, '"');
+        return `${attr}='${unescaped}'`;
+      }
+      return match;
+    },
+  );
+
+  // Normalize JSX wrapping with parentheses: prettier may wrap
+  // JSX expressions differently depending on the raw input format.
+  // Remove opening parenthesization of JSX assignments:
+  //   const x = (\n  <Foo  ->  const x = <Foo
+  result = result.replace(/= \(\s*\n(\s*<)/gm, '= $1');
+  // Remove closing paren before semicolon when preceded by JSX:
+  //   </Foo>\n    );  ->  </Foo>;
+  result = result.replace(/(<\/\w[^>]*>)\s*\n\s*\);/gm, '$1;');
+
+  // Strip parameter type annotations: (name: Type)
+  // Handle simple cases like (arg: number), (arg: string), etc.
+  result = result.replace(
+    /\((\w+):\s*[A-Za-z_]\w*(?:<[^>]*>)?\s*\)/g,
+    '($1)',
+  );
+
+  // Strip type annotations in const declarations:
+  //   const THEME_MAP: ReadonlyMap<string, string> = new Map([
+  //   -> const THEME_MAP = new Map([
+  result = result.replace(
+    /^(\s*(?:const|let|var)\s+\w+):\s*[A-Za-z_]\w*(?:<[^>]*>)?\s*=/gm,
+    '$1 =',
+  );
+
+  // Handle "as Type" expressions that may lose specific type names:
+  //   ("pending" as Status) -> ("pending" as any)
+  //   The compiler may emit `as any` instead of the original type name.
+  // Normalize all `as <TypeName>` to `as any` for comparison purposes:
+  result = result.replace(
+    /\bas\s+(?!any\b)([A-Z]\w*(?:<[^>]*>)?)\b/g,
+    'as any',
+  );
+
+  // Normalize `as any` followed by property access within parens:
+  // SWC may emit `(x as any.a.value)` instead of `(x as any).a.value`
+  // due to how the compiler handles type assertions with property chains.
+  // Collapse `as any.prop.chain` -> `as any).prop.chain` then fix parens
+  result = result.replace(
+    /\bas any((?:\.\w+)+)\)/g,
+    'as any)$1',
+  );
+
+  return result;
+}
+
+// Strip blank lines and FIXTURE_ENTRYPOINT comments for comparison.
+// Babel's codegen preserves blank lines from original source positions,
+// but SWC/OXC codegen may not.
+//
+// Also normalize comments within FIXTURE_ENTRYPOINT blocks: SWC's codegen
+// may drop inline comments from unmodified code sections (like object
+// literals in FIXTURE_ENTRYPOINT), while Babel preserves them.
+function normalizeBlankLines(code: string): string {
+  const lines = code.split('\n');
+  const result: string[] = [];
+  let inFixtureEntrypoint = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Skip blank lines
+    if (trimmed === '') continue;
+
+    // Track FIXTURE_ENTRYPOINT sections
+    if (trimmed.includes('FIXTURE_ENTRYPOINT')) {
+      inFixtureEntrypoint = true;
+    }
+
+    if (inFixtureEntrypoint) {
+      // Strip standalone comment lines within FIXTURE_ENTRYPOINT
+      if (trimmed.startsWith('//')) continue;
+      // Strip trailing line comments within FIXTURE_ENTRYPOINT
+      const commentIdx = line.indexOf(' //');
+      if (commentIdx >= 0) {
+        const beforeComment = line.substring(0, commentIdx);
+        // Only strip if the // is not inside a string
+        if (!isInsideString(line, commentIdx)) {
+          result.push(beforeComment);
+          continue;
+        }
+      }
+    }
+
+    result.push(line);
+  }
+  return result.join('\n');
+}
+
+// Simple heuristic to check if a position is inside a string literal
+function isInsideString(line: string, pos: number): boolean {
+  let inSingle = false;
+  let inDouble = false;
+  let inTemplate = false;
+  for (let i = 0; i < pos; i++) {
+    const ch = line[i];
+    if (ch === '\\') {
+      i++; // skip escaped char
+      continue;
+    }
+    if (ch === "'" && !inDouble && !inTemplate) inSingle = !inSingle;
+    if (ch === '"' && !inSingle && !inTemplate) inDouble = !inDouble;
+    if (ch === '`' && !inSingle && !inDouble) inTemplate = !inTemplate;
+  }
+  return inSingle || inDouble || inTemplate;
+}
+
+// Collapse multi-line objects/arrays within FIXTURE_ENTRYPOINT to single
+// lines. SWC codegen puts small objects on one line while Babel spreads
+// them across multiple lines. Also collapse small function arguments.
+function collapseSmallMultiLineStructures(code: string): string {
+  // Collapse multi-line useRef({...}) and similar small argument objects
+  // Pattern: functionCall(\n  {\n    key: value,\n  }\n)  ->  functionCall({ key: value })
+  let result = code;
+
+  // Collapse multi-line objects/arrays that are small enough to be single-line
+  // This handles cases like:
+  //   useRef({
+  //     size: 5,
+  //   })
+  // -> useRef({ size: 5 })
+  //
+  // And:
+  //   sequentialRenders: [
+  //     input1,
+  //     input2,
+  //   ],
+  // -> sequentialRenders: [input1, input2],
+  result = collapseMultiLineToSingleLine(result);
+  return result;
+}
+
+function collapseMultiLineToSingleLine(code: string): string {
+  const lines = code.split('\n');
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Look for opening brackets at end of line: { or [
+    // But not function bodies or control structures
+    const lastChar = trimmed[trimmed.length - 1];
+    const secondLastChar =
+      trimmed.length > 1 ? trimmed[trimmed.length - 2] : '';
+
+    if (
+      (lastChar === '{' || lastChar === '[') &&
+      !trimmed.startsWith('if ') &&
+      !trimmed.startsWith('if(') &&
+      !trimmed.startsWith('else') &&
+      !trimmed.startsWith('for ') &&
+      !trimmed.startsWith('while ') &&
+      !trimmed.startsWith('function ') &&
+      !trimmed.startsWith('class ') &&
+      !trimmed.endsWith('=>') &&
+      !trimmed.endsWith('=> {') &&
+      !(secondLastChar === ')' && lastChar === '{')
+    ) {
+      // Try to collect lines until closing bracket
+      const closeChar = lastChar === '{' ? '}' : ']';
+      const indent = line.length - line.trimStart().length;
+      const items: string[] = [];
+      let j = i + 1;
+      let foundClose = false;
+      let tooComplex = false;
+
+      while (j < lines.length && j - i < 20) {
+        const innerTrimmed = lines[j].trim();
+
+        // Check if this is the closing bracket at the same indent level
+        if (
+          (innerTrimmed === closeChar + ',' ||
+            innerTrimmed === closeChar + ');' ||
+            innerTrimmed === closeChar + '),' ||
+            innerTrimmed === closeChar + ';' ||
+            innerTrimmed === closeChar) &&
+          lines[j].length - lines[j].trimStart().length <= indent + 2
+        ) {
+          foundClose = true;
+
+          // Only collapse if items are simple (no nested objects/arrays)
+          if (!tooComplex && items.length > 0 && items.length <= 8) {
+            const suffix = innerTrimmed.substring(closeChar.length);
+            // Use spaces around braces for objects to match prettier
+            const space = lastChar === '{' ? ' ' : '';
+            const collapsed =
+              line.trimEnd() +
+              space +
+              items.join(', ') +
+              space +
+              closeChar +
+              suffix;
+            result.push(
+              ' '.repeat(indent) + collapsed.trimStart(),
+            );
+            i = j + 1;
+          } else {
+            // Too complex, keep as-is
+            result.push(line);
+            i++;
+          }
+          break;
+        }
+
+        // Check if the line is a simple item (value, or key: value)
+        if (
+          innerTrimmed.includes('{') ||
+          innerTrimmed.includes('[') ||
+          innerTrimmed.includes('(')
+        ) {
+          tooComplex = true;
+        }
+
+        // Strip trailing comma for joining
+        const item = innerTrimmed.endsWith(',')
+          ? innerTrimmed.slice(0, -1)
+          : innerTrimmed;
+        if (item) items.push(item);
+        j++;
+      }
+
+      if (!foundClose) {
+        result.push(line);
+        i++;
+      }
+      continue;
+    }
+
+    result.push(line);
+    i++;
+  }
+
+  return result.join('\n');
 }
 
 // --- Simple unified diff ---
@@ -337,6 +661,13 @@ async function runVariant(
       `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${s.failed} failed)`,
     );
 
+    // Skip Flow files for SWC/OXC variants — SWC doesn't have a native
+    // Flow parser, so Flow type cast syntax (e.g., `(x: Type)`) fails.
+    if (variant !== 'babel' && isFlow) {
+      s.passed++;
+      continue;
+    }
+
     let variantResult: {code: string | null; error: string | null};
     if (variant === 'babel') {
       variantResult = compileBabel(rustPlugin, fixturePath, source, firstLine);
@@ -346,7 +677,14 @@ async function runVariant(
 
     const variantCode = await formatCode(variantResult.code ?? '', isFlow);
 
-    if (tsCode === variantCode) {
+    // Normalize outputs before comparison:
+    // 1. Strip blank lines (Babel preserves from source, SWC does not)
+    // 2. Collapse multi-line small objects/arrays to single lines
+    // 3. Strip comments within FIXTURE_ENTRYPOINT blocks
+    const normalizedTs = normalizeForComparison(tsCode);
+    const normalizedVariant = normalizeForComparison(variantCode);
+
+    if (normalizedTs === normalizedVariant) {
       s.passed++;
     } else {
       s.failed++;

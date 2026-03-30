@@ -344,6 +344,50 @@ impl Visit for ScopeCollector {
         self.visit_function_inner(&fn_decl.function);
     }
 
+    fn visit_export_default_decl(&mut self, decl: &ExportDefaultDecl) {
+        // For `export default function foo(...)`, the function name should be
+        // hoisted to the enclosing scope (like FnDecl), not bound only in the
+        // function's own scope (like FnExpr).
+        match &decl.decl {
+            DefaultDecl::Fn(fn_expr) => {
+                if let Some(ident) = &fn_expr.ident {
+                    let hoist_scope = self.enclosing_function_scope();
+                    let name = ident.sym.to_string();
+                    let start = ident.span.lo.0;
+                    self.add_binding(
+                        name,
+                        BindingKind::Hoisted,
+                        hoist_scope,
+                        "FunctionDeclaration".to_string(),
+                        Some(start),
+                        None,
+                    );
+                }
+                self.visit_function_inner(&fn_expr.function);
+            }
+            DefaultDecl::Class(class_expr) => {
+                if let Some(ident) = &class_expr.ident {
+                    let name = ident.sym.to_string();
+                    let start = ident.span.lo.0;
+                    self.add_binding(
+                        name,
+                        BindingKind::Local,
+                        self.current_scope(),
+                        "ClassDeclaration".to_string(),
+                        Some(start),
+                        None,
+                    );
+                }
+                self.push_scope(ScopeKind::Class, class_expr.class.span.lo.0);
+                class_expr.class.visit_children_with(self);
+                self.pop_scope();
+            }
+            DefaultDecl::TsInterfaceDecl(d) => {
+                d.visit_with(self);
+            }
+        }
+    }
+
     fn visit_fn_expr(&mut self, fn_expr: &FnExpr) {
         let func_start = fn_expr.function.span.lo.0;
         self.push_scope(ScopeKind::Function, func_start);
@@ -684,6 +728,27 @@ impl<'a> Visit for ReferenceResolver<'a> {
     fn visit_fn_decl(&mut self, fn_decl: &FnDecl) {
         // Don't resolve the function name — it's a declaration
         self.visit_function_inner(&fn_decl.function);
+    }
+
+    fn visit_export_default_decl(&mut self, decl: &ExportDefaultDecl) {
+        // Mirror the collector: handle exported functions/classes with their own
+        // scope logic, rather than falling through to the default FnExpr visitor.
+        match &decl.decl {
+            DefaultDecl::Fn(fn_expr) => {
+                // Don't resolve the function name — it's a declaration
+                self.visit_function_inner(&fn_expr.function);
+            }
+            DefaultDecl::Class(class_expr) => {
+                if let Some(&scope_id) = self.find_scope_at(class_expr.class.span.lo.0) {
+                    self.scope_stack.push(scope_id);
+                    class_expr.class.visit_children_with(self);
+                    self.scope_stack.pop();
+                }
+            }
+            DefaultDecl::TsInterfaceDecl(d) => {
+                d.visit_with(self);
+            }
+        }
     }
 
     fn visit_fn_expr(&mut self, fn_expr: &FnExpr) {

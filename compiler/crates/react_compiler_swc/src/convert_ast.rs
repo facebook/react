@@ -52,6 +52,9 @@ pub fn convert_module_with_source_type(
         body.push(ctx.convert_module_item(item));
     }
 
+    // Extract comments from source text for suppression detection
+    let comments = extract_comments_from_source(source_text);
+
     File {
         base: ctx.make_base_node(module.span),
         program: Program {
@@ -62,9 +65,81 @@ pub fn convert_module_with_source_type(
             interpreter: None,
             source_file: None,
         },
-        comments: vec![],
+        comments,
         errors: vec![],
     }
+}
+
+/// Extract comments from source text for suppression detection.
+/// This uses simple regex-style parsing to find block and line comments.
+fn extract_comments_from_source(source: &str) -> Vec<react_compiler_ast::common::Comment> {
+    use react_compiler_ast::common::{Comment, CommentData};
+    let mut comments = Vec::new();
+    let bytes = source.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+
+    while i < len {
+        if bytes[i] == b'/' && i + 1 < len {
+            if bytes[i + 1] == b'/' {
+                // Line comment
+                let start = i as u32;
+                let content_start = i + 2;
+                let mut end = content_start;
+                while end < len && bytes[end] != b'\n' {
+                    end += 1;
+                }
+                let value = String::from_utf8_lossy(&bytes[content_start..end]).to_string();
+                comments.push(Comment::CommentLine(CommentData {
+                    value: value.trim().to_string(),
+                    start: Some(start),
+                    end: Some(end as u32),
+                    loc: None,
+                }));
+                i = end;
+                continue;
+            } else if bytes[i + 1] == b'*' {
+                // Block comment
+                let start = i as u32;
+                let content_start = i + 2;
+                let mut end = content_start;
+                while end + 1 < len {
+                    if bytes[end] == b'*' && bytes[end + 1] == b'/' {
+                        break;
+                    }
+                    end += 1;
+                }
+                let value = String::from_utf8_lossy(&bytes[content_start..end]).to_string();
+                let comment_end = if end + 1 < len { end + 2 } else { end };
+                comments.push(Comment::CommentBlock(CommentData {
+                    value: value.trim().to_string(),
+                    start: Some(start),
+                    end: Some(comment_end as u32),
+                    loc: None,
+                }));
+                i = comment_end;
+                continue;
+            }
+        }
+        // Skip string literals to avoid matching // inside strings
+        if bytes[i] == b'"' || bytes[i] == b'\'' || bytes[i] == b'`' {
+            let quote = bytes[i];
+            i += 1;
+            while i < len {
+                if bytes[i] == b'\\' {
+                    i += 2; // skip escaped char
+                    continue;
+                }
+                if bytes[i] == quote {
+                    break;
+                }
+                i += 1;
+            }
+        }
+        i += 1;
+    }
+
+    comments
 }
 
 fn try_extract_directive(item: &swc::ModuleItem, ctx: &ConvertCtx) -> Option<Directive> {
