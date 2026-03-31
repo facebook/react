@@ -520,7 +520,7 @@ async function main() {
   const ITEM_COUNT = 200;
 
   const WARMUP = 50;
-  const ITERATIONS = 200;
+  const ITERATIONS = 1000;
   const PROFILE_WARMUP = 50;
   const PROFILE_ITERATIONS = 500;
 
@@ -663,7 +663,7 @@ async function main() {
   // --- Concurrent Benchmark ---
   if (CONCURRENT_MODE) {
     const CONCURRENCY = 50;
-    const TOTAL = 500;
+    const TOTAL = 1000;
     const CONC_WARMUP = 20;
 
     console.log(
