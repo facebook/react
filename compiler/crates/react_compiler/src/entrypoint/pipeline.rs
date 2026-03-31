@@ -270,13 +270,8 @@ pub fn compile_fn(
     }
 
     context.timing.start("InferMutationAliasingEffects");
-    let errors_before = env.error_count();
     react_compiler_inference::infer_mutation_aliasing_effects(&mut hir, &mut env, false)?;
     context.timing.stop();
-
-    if env.error_count() > errors_before {
-        return Err(env.take_errors_since(errors_before));
-    }
 
     if context.debug_enabled {
         context.timing.start("debug_print:InferMutationAliasingEffects");

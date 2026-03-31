@@ -33,10 +33,6 @@ Current test status: Pass 1717/1717, Code 1716/1717, Snap 1717/1718.
 - **Rust**: `react_compiler/src/entrypoint/program.rs:1527-1705`
 - The TS uses Babel `program.traverse` to find ALL functions in the entire AST tree (skipping class bodies). The Rust `find_functions_to_compile` only walks top-level program body statements. Functions nested inside `if` blocks, try/catch, or non-standard positions would be missed in non-'all' compilation modes.
 
-### 5. Extra early return on inferMutationAliasingEffects errors
-- **TS**: `Entrypoint/Pipeline.ts:220-221` — continues through remaining passes
-- **Rust**: `react_compiler/src/entrypoint/pipeline.rs:272-279`
-- The Rust bails out early if inferMutationAliasingEffects records errors, while TS continues and aggregates all errors at the end. In practice this only fires for rare edge cases (uninitialized identifiers, spread in hook args) since common MutateFrozen/MutateGlobal errors are stored as instruction effects and only recorded on env later in `infer_mutation_aliasing_ranges`. Simply removing the early return causes downstream panics (e.g., in `prune_non_escaping_scopes`), so the fix requires making downstream passes tolerant of error states before the early return can be removed.
 
 ---
 

@@ -158,7 +158,7 @@ pub fn infer_mutation_aliasing_effects(
             states_by_block.insert(block_id, incoming_state.clone());
             let mut state = incoming_state.clone();
 
-            infer_block(&mut context, &mut state, block_id, func, env);
+            infer_block(&mut context, &mut state, block_id, func, env)?;
 
             // Check for uninitialized identifier access (matches TS invariant:
             // "Expected value kind to be initialized")
@@ -187,8 +187,7 @@ pub fn infer_mutation_aliasing_effects(
                     message: Some("this is uninitialized".to_string()),
                     identifier_name: None,
                 });
-                env.record_diagnostic(diag);
-                return Ok(());
+                return Err(diag);
             }
 
             // Queue successors
@@ -842,7 +841,7 @@ fn infer_block(
     block_id: BlockId,
     func: &mut HirFunction,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerDiagnostic> {
     let block = &func.body.blocks[&block_id];
 
     // Process phis
@@ -877,7 +876,7 @@ fn infer_block(
             &func.instructions[instr_index],
             env,
             func,
-        );
+        )?;
         func.instructions[instr_index].effects = effects;
     }
 
@@ -950,6 +949,7 @@ fn infer_block(
         }
         TerminalAction::None => {}
     }
+    Ok(())
 }
 
 // =============================================================================
@@ -963,7 +963,7 @@ fn apply_signature(
     instr: &react_compiler_hir::Instruction,
     env: &mut Environment,
     func: &HirFunction,
-) -> Option<Vec<AliasingEffect>> {
+) -> Result<Option<Vec<AliasingEffect>>, CompilerDiagnostic> {
     let mut effects: Vec<AliasingEffect> = Vec::new();
 
     // For function instructions, validate frozen mutation
@@ -1027,7 +1027,7 @@ fn apply_signature(
     let sig_effects: Vec<AliasingEffect> = sig.effects.clone();
 
     for effect in &sig_effects {
-        apply_effect(context, state, effect.clone(), &mut initialized, &mut effects, env, func);
+        apply_effect(context, state, effect.clone(), &mut initialized, &mut effects, env, func)?;
     }
 
     // If lvalue is not yet defined, initialize it with a default value.
@@ -1042,7 +1042,7 @@ fn apply_signature(
         state.define(instr.lvalue.identifier, vid);
     }
 
-    if effects.is_empty() { None } else { Some(effects) }
+    Ok(if effects.is_empty() { None } else { Some(effects) })
 }
 
 // =============================================================================
@@ -1104,7 +1104,7 @@ fn apply_effect(
     effects: &mut Vec<AliasingEffect>,
     env: &mut Environment,
     func: &HirFunction,
-) {
+) -> Result<(), CompilerDiagnostic> {
     let effect = context.intern_effect(effect);
     match effect {
         AliasingEffect::Freeze { ref value, reason } => {
@@ -1187,7 +1187,7 @@ fn apply_effect(
                     apply_effect(context, state, AliasingEffect::ImmutableCapture {
                         from: from.clone(),
                         into: into.clone(),
-                    }, initialized, effects, env, func);
+                    }, initialized, effects, env, func)?;
                 }
                 _ => {
                     effects.push(effect.clone());
@@ -1260,7 +1260,7 @@ fn apply_effect(
                 apply_effect(context, state, AliasingEffect::Capture {
                     from: capture.clone(),
                     into: into.clone(),
-                }, initialized, effects, env, func);
+                }, initialized, effects, env, func)?;
             }
         }
         AliasingEffect::MaybeAlias { ref from, ref into }
@@ -1294,7 +1294,7 @@ fn apply_effect(
                 apply_effect(context, state, AliasingEffect::ImmutableCapture {
                     from: from.clone(),
                     into: into.clone(),
-                }, initialized, effects, env, func);
+                }, initialized, effects, env, func)?;
             } else if (source_type == Some("mutable") && destination_type == Some("mutable"))
                 || is_maybe_alias
             {
@@ -1305,7 +1305,7 @@ fn apply_effect(
                 apply_effect(context, state, AliasingEffect::MaybeAlias {
                     from: from.clone(),
                     into: into.clone(),
-                }, initialized, effects, env, func);
+                }, initialized, effects, env, func)?;
             }
         }
         AliasingEffect::Assign { ref from, ref into } => {
@@ -1320,7 +1320,7 @@ fn apply_effect(
                     apply_effect(context, state, AliasingEffect::ImmutableCapture {
                         from: from.clone(),
                         into: into.clone(),
-                    }, initialized, effects, env, func);
+                    }, initialized, effects, env, func)?;
                     let cache_key = format!("Assign_frozen:{}:{}", from.identifier.0, into.identifier.0);
                     let value_id = *context.effect_value_id_cache.entry(cache_key).or_insert_with(ValueId::new);
                     state.initialize(value_id, AbstractValue {
@@ -1364,16 +1364,16 @@ fn apply_effect(
                             let context_places: Vec<Place> = inner_func.context.clone();
                             let sig_effects = compute_effects_for_aliasing_signature(
                                 env, &sig, into, receiver, args, &context_places, loc.as_ref(),
-                            );
+                            )?;
                             if let Some(sig_effs) = sig_effects {
                                 // Conditionally mutate the function itself first
                                 apply_effect(context, state, AliasingEffect::MutateTransitiveConditionally {
                                     value: function.clone(),
-                                }, initialized, effects, env, func);
+                                }, initialized, effects, env, func)?;
                                 for se in sig_effs {
-                                    apply_effect(context, state, se, initialized, effects, env, func);
+                                    apply_effect(context, state, se, initialized, effects, env, func)?;
                                 }
-                                return;
+                                return Ok(());
                             }
                         }
                     }
@@ -1398,9 +1398,8 @@ fn apply_effect(
                             message: Some(incompatible_msg.clone()),
                             identifier_name: None,
                         });
-                        env.record_diagnostic(diagnostic);
-                        // TS throws here, aborting further processing for this call
-                        return;
+                        // TS throws here, aborting compilation for this function
+                        return Err(diagnostic);
                     }
                 }
 
@@ -1408,12 +1407,12 @@ fn apply_effect(
                     let sig_effects = compute_effects_for_aliasing_signature_config(
                         env, aliasing, into, receiver, args, &[], loc.as_ref(),
                         &mut context.aliasing_config_temp_cache,
-                    );
+                    )?;
                     if let Some(sig_effs) = sig_effects {
                         for se in sig_effs {
-                            apply_effect(context, state, se, initialized, effects, env, func);
+                            apply_effect(context, state, se, initialized, effects, env, func)?;
                         }
-                        return;
+                        return Ok(());
                     }
                 }
 
@@ -1422,11 +1421,12 @@ fn apply_effect(
                 let legacy_effects = compute_effects_for_legacy_signature(
                     state, sig, into, receiver, args, loc.as_ref(), env, &context.function_values, &mut todo_errors,
                 );
-                for err_detail in todo_errors {
-                    env.record_error(err_detail);
+                // Todo errors should short-circuit (TS throws throwTodo)
+                if let Some(err_detail) = todo_errors.into_iter().next() {
+                    return Err(CompilerDiagnostic::from_detail(err_detail));
                 }
                 for le in legacy_effects {
-                    apply_effect(context, state, le, initialized, effects, env, func);
+                    apply_effect(context, state, le, initialized, effects, env, func)?;
                 }
             } else {
                 // No signature: default behavior
@@ -1434,7 +1434,7 @@ fn apply_effect(
                     into: into.clone(),
                     value: ValueKind::Mutable,
                     reason: ValueReason::Other,
-                }, initialized, effects, env, func);
+                }, initialized, effects, env, func)?;
 
                 let all_operands = build_apply_operands(receiver, function, args);
                 for (operand, _is_function_operand, is_spread) in &all_operands {
@@ -1446,20 +1446,20 @@ fn apply_effect(
                     } else {
                         apply_effect(context, state, AliasingEffect::MutateTransitiveConditionally {
                             value: operand.clone(),
-                        }, initialized, effects, env, func);
+                        }, initialized, effects, env, func)?;
                     }
 
                     if *is_spread {
                         let ty = &env.types[env.identifiers[operand.identifier.0 as usize].type_.0 as usize];
                         if let Some(mutate_iter) = conditionally_mutate_iterator(operand, ty) {
-                            apply_effect(context, state, mutate_iter, initialized, effects, env, func);
+                            apply_effect(context, state, mutate_iter, initialized, effects, env, func)?;
                         }
                     }
 
                     apply_effect(context, state, AliasingEffect::MaybeAlias {
                         from: operand.clone(),
                         into: into.clone(),
-                    }, initialized, effects, env, func);
+                    }, initialized, effects, env, func)?;
 
                     // In TS, `other === arg` compares the Place extracted from
                     // `otherArg` with the original `arg` element. For Identifier
@@ -1475,7 +1475,7 @@ fn apply_effect(
                         apply_effect(context, state, AliasingEffect::Capture {
                             from: operand.clone(),
                             into: other.clone(),
-                        }, initialized, effects, env, func);
+                        }, initialized, effects, env, func)?;
                     }
                 }
             }
@@ -1544,7 +1544,7 @@ fn apply_effect(
                     apply_effect(context, state, AliasingEffect::MutateFrozen {
                         place: value.clone(),
                         error: diagnostic,
-                    }, initialized, effects, env, func);
+                    }, initialized, effects, env, func)?;
                 } else {
                     let reason_str = get_write_error_reason(&abstract_value);
                     let variable = match &ident.name {
@@ -1579,7 +1579,7 @@ fn apply_effect(
                             error: diagnostic,
                         }
                     };
-                    apply_effect(context, state, error_kind, initialized, effects, env, func);
+                    apply_effect(context, state, error_kind, initialized, effects, env, func)?;
                 }
             }
         }
@@ -1590,6 +1590,7 @@ fn apply_effect(
             effects.push(effect.clone());
         }
     }
+    Ok(())
 }
 
 // =============================================================================
@@ -2376,7 +2377,7 @@ fn compute_effects_for_aliasing_signature_config(
     context: &[Place],
     _loc: Option<&SourceLocation>,
     temp_cache: &mut HashMap<(IdentifierId, String), Place>,
-) -> Option<Vec<AliasingEffect>> {
+) -> Result<Option<Vec<AliasingEffect>>, CompilerDiagnostic> {
     // Build substitutions from config strings to places
     let mut substitutions: HashMap<String, Vec<Place>> = HashMap::new();
     substitutions.insert(config.receiver.clone(), vec![receiver.clone()]);
@@ -2393,7 +2394,7 @@ fn compute_effects_for_aliasing_signature_config(
                 } else if let Some(ref rest) = config.rest {
                     substitutions.entry(rest.clone()).or_default().push(place.clone());
                 } else {
-                    return None;
+                    return Ok(None);
                 }
 
                 if matches!(arg, PlaceOrSpreadOrHole::Spread(_)) {
@@ -2429,14 +2430,10 @@ fn compute_effects_for_aliasing_signature_config(
                 let values = substitutions.get(value).cloned().unwrap_or_default();
                 for v in values {
                     if mutable_spreads.contains(&v.identifier) {
-                        env.record_error(react_compiler_diagnostics::CompilerErrorDetail {
-                            reason: "Support spread syntax for hook arguments".to_string(),
-                            description: None,
-                            category: ErrorCategory::Todo,
-                            loc: v.loc,
-                            suggestions: None,
-                        });
-                        return Some(effects);
+                        return Err(CompilerDiagnostic::todo(
+                            "Support spread syntax for hook arguments",
+                            v.loc,
+                        ));
                     }
                     effects.push(AliasingEffect::Freeze { value: v, reason: *reason });
                 }
@@ -2550,13 +2547,13 @@ fn compute_effects_for_aliasing_signature_config(
                         loc: _loc.copied(),
                     });
                 } else {
-                    return None;
+                    return Ok(None);
                 }
             }
         }
     }
 
-    Some(effects)
+    Ok(Some(effects))
 }
 
 // =============================================================================
@@ -2607,11 +2604,11 @@ fn compute_effects_for_aliasing_signature(
     args: &[PlaceOrSpreadOrHole],
     context: &[Place],
     _loc: Option<&SourceLocation>,
-) -> Option<Vec<AliasingEffect>> {
+) -> Result<Option<Vec<AliasingEffect>>, CompilerDiagnostic> {
     if signature.params.len() > args.len()
         || (args.len() > signature.params.len() && signature.rest.is_none())
     {
-        return None;
+        return Ok(None);
     }
 
     let mut mutable_spreads: HashSet<IdentifierId> = HashSet::new();
@@ -2630,7 +2627,7 @@ fn compute_effects_for_aliasing_signature(
                 } else if let Some(rest_id) = signature.rest {
                     substitutions.entry(rest_id).or_default().push(place.clone());
                 } else {
-                    return None;
+                    return Ok(None);
                 }
 
                 if is_spread {
@@ -2733,14 +2730,10 @@ fn compute_effects_for_aliasing_signature(
                 let values = substitutions.get(&value.identifier).cloned().unwrap_or_default();
                 for v in values {
                     if mutable_spreads.contains(&v.identifier) {
-                        env.record_error(react_compiler_diagnostics::CompilerErrorDetail {
-                            reason: "Support spread syntax for hook arguments".to_string(),
-                            description: None,
-                            category: ErrorCategory::Todo,
-                            loc: v.loc,
-                            suggestions: None,
-                        });
-                        return Some(effects);
+                        return Err(CompilerDiagnostic::todo(
+                            "Support spread syntax for hook arguments",
+                            v.loc,
+                        ));
                     }
                     effects.push(AliasingEffect::Freeze { value: v, reason: *reason });
                 }
@@ -2786,17 +2779,17 @@ fn compute_effects_for_aliasing_signature(
                         loc: _loc.copied(),
                     });
                 } else {
-                    return None;
+                    return Ok(None);
                 }
             }
             AliasingEffect::CreateFunction { .. } => {
                 // Not supported in signature substitution
-                return None;
+                return Ok(None);
             }
         }
     }
 
-    Some(effects)
+    Ok(Some(effects))
 }
 
 // =============================================================================

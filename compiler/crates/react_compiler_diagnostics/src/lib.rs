@@ -164,6 +164,28 @@ impl CompilerDiagnostic {
         self
     }
 
+    /// Create a Todo diagnostic (matches TS `CompilerError.throwTodo()`).
+    pub fn todo(reason: impl Into<String>, loc: Option<SourceLocation>) -> Self {
+        let reason = reason.into();
+        let mut diag = Self::new(ErrorCategory::Todo, reason.clone(), None);
+        diag.details.push(CompilerDiagnosticDetail::Error {
+            loc,
+            message: Some(reason),
+            identifier_name: None,
+        });
+        diag
+    }
+
+    /// Create a diagnostic from a CompilerErrorDetail.
+    pub fn from_detail(detail: CompilerErrorDetail) -> Self {
+        Self::new(detail.category, detail.reason.clone(), detail.description.clone())
+            .with_detail(CompilerDiagnosticDetail::Error {
+                loc: detail.loc,
+                message: Some(detail.reason),
+                identifier_name: None,
+            })
+    }
+
     pub fn primary_location(&self) -> Option<&SourceLocation> {
         self.details.iter().find_map(|d| match d {
             CompilerDiagnosticDetail::Error { loc, .. } => loc.as_ref(), // identifier_name covered by ..
