@@ -58,6 +58,15 @@ Codegen: complete (1717/1717 code comparison)
 
 # Logs
 
+## 20260331-210000 Fix function name inference to match TS parent-checking behavior
+
+Fixed FunctionDiscoveryVisitor to only infer declarator names for direct function inits,
+matching TS's path.parentPath.isVariableDeclarator() check. Previously current_declarator_name
+leaked to all descendant functions (e.g., arrows nested inside object literals). Now the name
+is explicitly scoped: set only for function/arrow/call inits, cleared in non-forwardRef/memo
+call expressions, and cleared after forwardRef/memo calls finish processing arguments.
+1723/1723 passing.
+
 ## 20260331-200000 Fix CompilerDiagnostic::todo() to produce ErrorDetail variant
 
 Removed the flat-loc serialization hack from log_error, compiler_error_to_info, and

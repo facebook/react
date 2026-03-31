@@ -1563,7 +1563,21 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         node: &'ast VariableDeclarator,
         _scope_stack: &[ScopeId],
     ) {
-        self.current_declarator_name = get_declarator_name(node);
+        // Only infer the declarator name when the init is a direct function
+        // expression, arrow, or call expression (for forwardRef/memo wrappers).
+        // TS checks `path.parentPath.isVariableDeclarator()` which only matches
+        // when the function IS the init, not when it's nested inside an object,
+        // array, or other expression.
+        if let Some(ref init) = node.init {
+            match init.as_ref() {
+                Expression::FunctionExpression(_)
+                | Expression::ArrowFunctionExpression(_)
+                | Expression::CallExpression(_) => {
+                    self.current_declarator_name = get_declarator_name(node);
+                }
+                _ => {}
+            }
+        }
     }
 
     fn leave_variable_declarator(
@@ -1580,6 +1594,12 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         _scope_stack: &[ScopeId],
     ) {
         let callee_name = get_callee_name_if_react_api(&node.callee).map(|s| s.to_string());
+        // In TS, the declarator name only flows through forwardRef/memo calls
+        // (path.parentPath.isCallExpression() checks the callee). For any other
+        // call expression, clear the name so nested functions don't inherit it.
+        if callee_name.is_none() {
+            self.current_declarator_name = None;
+        }
         self.parent_callee_stack.push(callee_name);
     }
 
@@ -1588,7 +1608,18 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         _node: &'ast CallExpression,
         _scope_stack: &[ScopeId],
     ) {
-        self.parent_callee_stack.pop();
+        let was_react_api = self
+            .parent_callee_stack
+            .pop()
+            .and_then(|name| name)
+            .is_some();
+        // After a forwardRef/memo call finishes, clear the declarator name.
+        // The name is only valid within the call's arguments — if a function
+        // inside consumed it via .take(), great; if not, it shouldn't leak
+        // to sibling or subsequent expressions.
+        if was_react_api {
+            self.current_declarator_name = None;
+        }
     }
 
     fn enter_function_declaration(
