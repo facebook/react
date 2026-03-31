@@ -10,8 +10,15 @@ const path = require('path');
 const url = require('url');
 const fs = require('fs');
 const http = require('http');
+const {Readable} = require('stream');
 const webpack = require('webpack');
-const {PassThrough, Transform, Readable} = require('stream');
+
+const {
+  renderFizzNode,
+  renderFizzEdge,
+  renderFlightFizzNode,
+  renderFlightFizzEdge,
+} = require('./render-helpers');
 
 // ---------------------------------------------------------------------------
 // Manifest setup (WebpackMock pattern)
@@ -98,244 +105,6 @@ function build() {
 }
 
 // ---------------------------------------------------------------------------
-// Shared helpers
-// ---------------------------------------------------------------------------
-
-function escapeFlightChunk(data) {
-  return JSON.stringify(data)
-    .replace(/<!--/g, '<\\!--')
-    .replace(/<\/(script)/gi, '</\\$1');
-}
-
-// ---------------------------------------------------------------------------
-// Request handlers
-// ---------------------------------------------------------------------------
-
-function handleFizzNode(App, itemCount, res) {
-  const React = require('react');
-  const {renderToPipeableStream} = require('react-dom/server');
-
-  const {pipe} = renderToPipeableStream(React.createElement(App, {itemCount}), {
-    onShellReady() {
-      pipe(res);
-    },
-    onError(e) {
-      console.error('Fizz Node error:', e);
-    },
-  });
-}
-
-function handleFizzEdge(App, itemCount, res) {
-  const React = require('react');
-  const {renderToReadableStream} = require('react-dom/server');
-
-  renderToReadableStream(React.createElement(App, {itemCount})).then(
-    function (stream) {
-      Readable.fromWeb(stream).pipe(res);
-    },
-    function (err) {
-      console.error('Fizz Edge error:', err);
-    }
-  );
-}
-
-function handleFlightFizzNode(renderRSCNode, AppComponent, itemCount, res) {
-  const React = require('react');
-  const {renderToPipeableStream} = require('react-dom/server');
-  const {createFromNodeStream} = require('react-server-dom-webpack/client');
-
-  const {pipe: rscPipe} = renderRSCNode(
-    clientManifest,
-    AppComponent,
-    itemCount
-  );
-  const trunk = new PassThrough();
-  const forSsr = new PassThrough();
-  const forInline = new PassThrough();
-  trunk.pipe(forSsr);
-  trunk.pipe(forInline);
-
-  let flightScripts = '';
-  forInline.on('data', function (chunk) {
-    flightScripts +=
-      '<script>(self.__FLIGHT_DATA||=[]).push(' +
-      escapeFlightChunk(chunk.toString()) +
-      ')</script>';
-  });
-
-  rscPipe(trunk);
-
-  let cachedResult;
-  function Root() {
-    if (!cachedResult) {
-      cachedResult = createFromNodeStream(forSsr, ssrManifest);
-    }
-    return React.use(cachedResult);
-  }
-
-  const {pipe} = renderToPipeableStream(React.createElement(Root), {
-    onShellReady() {
-      // Buffer HTML chunks within a tick before injecting Flight scripts,
-      // to avoid splitting mid-tag. Same approach as rsc-html-stream.
-      const trailer = '</body></html>';
-      let buffered = [];
-      let timeout = null;
-      const injector = new Transform({
-        transform(chunk, _encoding, cb) {
-          buffered.push(chunk);
-          if (!timeout) {
-            timeout = setTimeout(() => {
-              for (const buf of buffered) {
-                let str = buf.toString();
-                if (str.endsWith(trailer)) {
-                  str = str.slice(0, -trailer.length);
-                }
-                this.push(str);
-              }
-              buffered.length = 0;
-              timeout = null;
-              if (flightScripts) {
-                this.push(flightScripts);
-                flightScripts = '';
-              }
-            }, 0);
-          }
-          cb();
-        },
-        flush(cb) {
-          if (timeout) {
-            clearTimeout(timeout);
-            for (const buf of buffered) {
-              let str = buf.toString();
-              if (str.endsWith(trailer)) {
-                str = str.slice(0, -trailer.length);
-              }
-              this.push(str);
-            }
-            buffered.length = 0;
-          }
-          if (flightScripts) {
-            this.push(flightScripts);
-            flightScripts = '';
-          }
-          this.push(trailer);
-          cb();
-        },
-      });
-      pipe(injector);
-      injector.pipe(res);
-    },
-    onError(e) {
-      console.error('Flight+Fizz Node error:', e);
-    },
-  });
-}
-
-function handleFlightFizzEdge(renderRSCEdge, AppComponent, itemCount, res) {
-  const React = require('react');
-  const {renderToReadableStream} = require('react-dom/server');
-  const {
-    createFromReadableStream,
-  } = require('react-server-dom-webpack/client.edge');
-
-  const htmlTrailer = '</body></html>';
-  const enc = new TextEncoder();
-
-  const webStream = renderRSCEdge(clientManifest, AppComponent, itemCount);
-  const [forSsr, forInline] = webStream.tee();
-
-  let resolveInline;
-  const inlinePromise = new Promise(function (r) {
-    resolveInline = r;
-  });
-  const htmlDecoder = new TextDecoder();
-  let buffered = [];
-  let timeout = null;
-
-  function flushBuffered(controller) {
-    for (const chunk of buffered) {
-      let buf = htmlDecoder.decode(chunk, {stream: true});
-      if (buf.endsWith(htmlTrailer)) {
-        buf = buf.slice(0, -htmlTrailer.length);
-      }
-      controller.enqueue(enc.encode(buf));
-    }
-    const remaining = htmlDecoder.decode();
-    if (remaining.length) {
-      let buf = remaining;
-      if (buf.endsWith(htmlTrailer)) {
-        buf = buf.slice(0, -htmlTrailer.length);
-      }
-      controller.enqueue(enc.encode(buf));
-    }
-    buffered.length = 0;
-    timeout = null;
-  }
-
-  function writeFlightChunk(data, controller) {
-    controller.enqueue(
-      enc.encode(
-        '<script>(self.__FLIGHT_DATA||=[]).push(' +
-          escapeFlightChunk(data) +
-          ')</script>'
-      )
-    );
-  }
-
-  const injector = new TransformStream({
-    start(controller) {
-      (async function () {
-        const reader = forInline.getReader();
-        const decoder = new TextDecoder('utf-8', {fatal: true});
-        for (;;) {
-          const {done, value} = await reader.read();
-          if (done) break;
-          writeFlightChunk(decoder.decode(value, {stream: true}), controller);
-        }
-        const remaining = decoder.decode();
-        if (remaining.length) {
-          writeFlightChunk(remaining, controller);
-        }
-        resolveInline();
-      })();
-    },
-    transform(chunk, controller) {
-      buffered.push(chunk);
-      if (!timeout) {
-        timeout = setTimeout(function () {
-          flushBuffered(controller);
-        }, 0);
-      }
-    },
-    async flush(controller) {
-      await inlinePromise;
-      if (timeout) {
-        clearTimeout(timeout);
-        flushBuffered(controller);
-      }
-      controller.enqueue(enc.encode(htmlTrailer));
-    },
-  });
-
-  const cachedResult = createFromReadableStream(forSsr, {
-    serverConsumerManifest: ssrManifest,
-  });
-  function Root() {
-    return React.use(cachedResult);
-  }
-
-  renderToReadableStream(React.createElement(Root)).then(
-    function (htmlStream) {
-      const outputStream = htmlStream.pipeThrough(injector);
-      Readable.fromWeb(outputStream).pipe(res);
-    },
-    function (err) {
-      console.error('Flight+Fizz Edge error:', err);
-    }
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Server
 // ---------------------------------------------------------------------------
 
@@ -355,25 +124,99 @@ async function main() {
   const App = require('./src/App.js').default;
   const AppAsync = require('./src/AppAsync.js').default;
 
+  function pipeStreamToRes(stream, res) {
+    if (typeof stream.pipe === 'function') {
+      // Node Readable stream
+      stream.pipe(res);
+    } else {
+      // Web ReadableStream — convert to Node stream for HTTP response
+      Readable.fromWeb(stream).pipe(res);
+    }
+  }
+
+  function pipeToRes(streamOrPromise, res) {
+    if (typeof streamOrPromise.then === 'function') {
+      streamOrPromise.then(
+        function (stream) {
+          pipeStreamToRes(stream, res);
+        },
+        function (err) {
+          console.error(err);
+          if (!res.headersSent) res.writeHead(500);
+          res.end();
+        }
+      );
+    } else {
+      pipeStreamToRes(streamOrPromise, res);
+    }
+  }
+
   const routes = {
-    '/fizz-node-sync': res => handleFizzNode(App, ITEM_COUNT, res),
-    '/fizz-node-async': res => handleFizzNode(AppAsync, ITEM_COUNT, res),
-    '/fizz-edge-sync': res => handleFizzEdge(App, ITEM_COUNT, res),
-    '/fizz-edge-async': res => handleFizzEdge(AppAsync, ITEM_COUNT, res),
-    '/flight-node-sync': res =>
-      handleFlightFizzNode(renderRSCNode, RSCApp, ITEM_COUNT, res),
-    '/flight-node-async': res =>
-      handleFlightFizzNode(renderRSCNode, RSCAppAsync, ITEM_COUNT, res),
-    '/flight-edge-sync': res =>
-      handleFlightFizzEdge(renderRSCEdge, RSCApp, ITEM_COUNT, res),
-    '/flight-edge-async': res =>
-      handleFlightFizzEdge(renderRSCEdge, RSCAppAsync, ITEM_COUNT, res),
+    '/fizz-node-sync': function (res) {
+      pipeToRes(renderFizzNode(App, ITEM_COUNT), res);
+    },
+    '/fizz-node-async': function (res) {
+      pipeToRes(renderFizzNode(AppAsync, ITEM_COUNT), res);
+    },
+    '/fizz-edge-sync': function (res) {
+      pipeToRes(renderFizzEdge(App, ITEM_COUNT), res);
+    },
+    '/fizz-edge-async': function (res) {
+      pipeToRes(renderFizzEdge(AppAsync, ITEM_COUNT), res);
+    },
+    '/flight-node-sync': function (res) {
+      pipeToRes(
+        renderFlightFizzNode(
+          renderRSCNode,
+          RSCApp,
+          ITEM_COUNT,
+          clientManifest,
+          ssrManifest
+        ),
+        res
+      );
+    },
+    '/flight-node-async': function (res) {
+      pipeToRes(
+        renderFlightFizzNode(
+          renderRSCNode,
+          RSCAppAsync,
+          ITEM_COUNT,
+          clientManifest,
+          ssrManifest
+        ),
+        res
+      );
+    },
+    '/flight-edge-sync': function (res) {
+      pipeToRes(
+        renderFlightFizzEdge(
+          renderRSCEdge,
+          RSCApp,
+          ITEM_COUNT,
+          clientManifest,
+          ssrManifest
+        ),
+        res
+      );
+    },
+    '/flight-edge-async': function (res) {
+      pipeToRes(
+        renderFlightFizzEdge(
+          renderRSCEdge,
+          RSCAppAsync,
+          ITEM_COUNT,
+          clientManifest,
+          ssrManifest
+        ),
+        res
+      );
+    },
   };
 
   const server = http.createServer(function (req, res) {
     const handler = routes[req.url];
     if (!handler) {
-      // Index page listing all endpoints
       if (req.url === '/' || req.url === '') {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(
@@ -417,9 +260,9 @@ async function main() {
   const WARMUP_AMOUNT = 200;
   const BENCH_AMOUNT = 1000;
 
-  function runAutocannon(url, connections, amount) {
+  function runAutocannon(benchUrl, connections, amount) {
     return new Promise(function (resolve, reject) {
-      const instance = autocannon({url, connections, amount});
+      const instance = autocannon({url: benchUrl, connections, amount});
       autocannon.track(instance, {
         renderProgressBar: false,
         renderResultsTable: false,
@@ -502,13 +345,13 @@ async function main() {
 
     for (const route of Object.keys(routes)) {
       const label = route.slice(1);
-      const url = 'http://localhost:' + PORT + route;
+      const benchUrl = 'http://localhost:' + PORT + route;
 
       // Warmup
-      await runAutocannon(url, c, WARMUP_AMOUNT);
+      await runAutocannon(benchUrl, c, WARMUP_AMOUNT);
 
-      const data = await runAutocannon(url, c, BENCH_AMOUNT);
-      const reqPerSec = 1000 / data.latency.mean * data.connections;
+      const data = await runAutocannon(benchUrl, c, BENCH_AMOUNT);
+      const reqPerSec = (1000 / data.latency.mean) * data.connections;
       const latencyMedian = data.latency.p50;
       const latencyP99 = data.latency.p99;
       const errors = data.errors + data.timeouts;
