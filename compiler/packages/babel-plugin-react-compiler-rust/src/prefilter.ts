@@ -30,15 +30,19 @@ export function hasReactLikeFunctions(program: NodePath<t.Program>): boolean {
     FunctionDeclaration(path) {
       if (found) return;
       const name = path.node.id?.name;
-      if (name && isReactLikeName(name)) {
+      if ((name && isReactLikeName(name)) || hasOptInDirective(path.node)) {
         found = true;
         path.stop();
       }
     },
     FunctionExpression(path) {
       if (found) return;
-      const name = inferFunctionName(path);
-      if ((name && isReactLikeName(name)) || isInsideMemoOrForwardRef(path)) {
+      const name = path.node.id?.name ?? inferFunctionName(path);
+      if (
+        (name && isReactLikeName(name)) ||
+        isInsideMemoOrForwardRef(path) ||
+        hasOptInDirective(path.node)
+      ) {
         found = true;
         path.stop();
       }
@@ -46,7 +50,11 @@ export function hasReactLikeFunctions(program: NodePath<t.Program>): boolean {
     ArrowFunctionExpression(path) {
       if (found) return;
       const name = inferFunctionName(path);
-      if ((name && isReactLikeName(name)) || isInsideMemoOrForwardRef(path)) {
+      if (
+        (name && isReactLikeName(name)) ||
+        isInsideMemoOrForwardRef(path) ||
+        hasOptInDirective(path.node)
+      ) {
         found = true;
         path.stop();
       }
@@ -86,6 +94,22 @@ function isInsideMemoOrForwardRef(
     return true;
   }
   return false;
+}
+
+/**
+ * Check if a function has an opt-in directive ('use memo' or 'use forget')
+ * in its body, indicating it should be compiled in annotation mode.
+ */
+function hasOptInDirective(
+  node:
+    | t.FunctionDeclaration
+    | t.FunctionExpression
+    | t.ArrowFunctionExpression,
+): boolean {
+  if (node.body.type !== 'BlockStatement') return false;
+  return node.body.directives.some(
+    d => d.value.value === 'use memo' || d.value.value === 'use forget',
+  );
 }
 
 function isReactLikeName(name: string): boolean {

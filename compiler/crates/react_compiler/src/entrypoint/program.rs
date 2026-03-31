@@ -1724,63 +1724,156 @@ fn visit_statement_for_functions<'a>(
         // depth (matching Babel's traverse behavior). In 'all' mode, only
         // top-level functions are compiled — the TS compiler's scope check
         // (`fn.scope.getProgramParent() !== fn.scope.parent`) rejects
-        // non-program-scope functions — so we skip recursion.
-        Statement::BlockStatement(block) if opts.compilation_mode != "all" => {
-            for s in &block.body {
-                visit_statement_for_functions(s, opts, context, queue);
-            }
-        }
-        Statement::IfStatement(if_stmt) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&if_stmt.consequent, opts, context, queue);
-            if let Some(ref alt) = if_stmt.alternate {
-                visit_statement_for_functions(alt, opts, context, queue);
-            }
-        }
-        Statement::TryStatement(try_stmt) if opts.compilation_mode != "all" => {
-            for s in &try_stmt.block.body {
-                visit_statement_for_functions(s, opts, context, queue);
-            }
-            if let Some(ref handler) = try_stmt.handler {
-                for s in &handler.body.body {
-                    visit_statement_for_functions(s, opts, context, queue);
-                }
-            }
-            if let Some(ref finalizer) = try_stmt.finalizer {
-                for s in &finalizer.body {
+        // non-program-scope functions — so we skip body recursion.
+        //
+        // Expression positions (test, discriminant, etc.) are checked
+        // unconditionally because functions in expression positions at the
+        // top level have program scope even in 'all' mode.
+        Statement::BlockStatement(block) => {
+            if opts.compilation_mode != "all" {
+                for s in &block.body {
                     visit_statement_for_functions(s, opts, context, queue);
                 }
             }
         }
-        Statement::SwitchStatement(switch_stmt) if opts.compilation_mode != "all" => {
+        Statement::IfStatement(if_stmt) => {
+            find_nested_functions_in_expr(&if_stmt.test, opts, context, queue);
+            if opts.compilation_mode != "all" {
+                visit_statement_for_functions(&if_stmt.consequent, opts, context, queue);
+                if let Some(ref alt) = if_stmt.alternate {
+                    visit_statement_for_functions(alt, opts, context, queue);
+                }
+            }
+        }
+        Statement::TryStatement(try_stmt) => {
+            if opts.compilation_mode != "all" {
+                for s in &try_stmt.block.body {
+                    visit_statement_for_functions(s, opts, context, queue);
+                }
+                if let Some(ref handler) = try_stmt.handler {
+                    for s in &handler.body.body {
+                        visit_statement_for_functions(s, opts, context, queue);
+                    }
+                }
+                if let Some(ref finalizer) = try_stmt.finalizer {
+                    for s in &finalizer.body {
+                        visit_statement_for_functions(s, opts, context, queue);
+                    }
+                }
+            }
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            find_nested_functions_in_expr(&switch_stmt.discriminant, opts, context, queue);
             for case in &switch_stmt.cases {
-                for s in &case.consequent {
-                    visit_statement_for_functions(s, opts, context, queue);
+                if let Some(ref test) = case.test {
+                    find_nested_functions_in_expr(test, opts, context, queue);
+                }
+                if opts.compilation_mode != "all" {
+                    for s in &case.consequent {
+                        visit_statement_for_functions(s, opts, context, queue);
+                    }
                 }
             }
         }
-        Statement::LabeledStatement(labeled) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&labeled.body, opts, context, queue);
+        Statement::LabeledStatement(labeled) => {
+            if opts.compilation_mode != "all" {
+                visit_statement_for_functions(&labeled.body, opts, context, queue);
+            }
         }
-        Statement::ForStatement(for_stmt) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&for_stmt.body, opts, context, queue);
+        Statement::ForStatement(for_stmt) => {
+            // In 'all' mode, Babel's scope check rejects functions in for-init/test/update
+            // (the for statement creates a scope), so skip expression-position processing.
+            if opts.compilation_mode != "all" {
+                // Handle init
+                if let Some(ref init) = for_stmt.init {
+                    match init.as_ref() {
+                        ForInit::VariableDeclaration(var_decl) => {
+                            for decl in &var_decl.declarations {
+                                if let Some(ref init_expr) = decl.init {
+                                    let inferred_name = get_declarator_name(decl);
+
+                                    match init_expr.as_ref() {
+                                        Expression::FunctionExpression(func) => {
+                                            let info = fn_info_from_func_expr(func, inferred_name, None);
+                                            if let Some(source) = try_make_compile_source(info, opts, context) {
+                                                queue.push(source);
+                                            }
+                                        }
+                                        Expression::ArrowFunctionExpression(arrow) => {
+                                            let info = fn_info_from_arrow(arrow, inferred_name, None);
+                                            if let Some(source) = try_make_compile_source(info, opts, context) {
+                                                queue.push(source);
+                                            }
+                                        }
+                                        other => {
+                                            if let Some(info) = try_extract_wrapped_function(other, inferred_name) {
+                                                if let Some(source) = try_make_compile_source(info, opts, context) {
+                                                    queue.push(source);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        ForInit::Expression(expr) => {
+                            find_nested_functions_in_expr(expr, opts, context, queue);
+                        }
+                    }
+                }
+                // Check test and update expressions
+                if let Some(ref test) = for_stmt.test {
+                    find_nested_functions_in_expr(test, opts, context, queue);
+                }
+                if let Some(ref update) = for_stmt.update {
+                    find_nested_functions_in_expr(update, opts, context, queue);
+                }
+                visit_statement_for_functions(&for_stmt.body, opts, context, queue);
+            }
         }
-        Statement::WhileStatement(while_stmt) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&while_stmt.body, opts, context, queue);
+        Statement::WhileStatement(while_stmt) => {
+            // In 'all' mode, Babel's scope check rejects functions in while test
+            if opts.compilation_mode != "all" {
+                find_nested_functions_in_expr(&while_stmt.test, opts, context, queue);
+                visit_statement_for_functions(&while_stmt.body, opts, context, queue);
+            }
         }
-        Statement::DoWhileStatement(do_while) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&do_while.body, opts, context, queue);
+        Statement::DoWhileStatement(do_while) => {
+            if opts.compilation_mode != "all" {
+                find_nested_functions_in_expr(&do_while.test, opts, context, queue);
+                visit_statement_for_functions(&do_while.body, opts, context, queue);
+            }
         }
-        Statement::ForInStatement(for_in) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&for_in.body, opts, context, queue);
+        Statement::ForInStatement(for_in) => {
+            if opts.compilation_mode != "all" {
+                find_nested_functions_in_expr(&for_in.right, opts, context, queue);
+                visit_statement_for_functions(&for_in.body, opts, context, queue);
+            }
         }
-        Statement::ForOfStatement(for_of) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&for_of.body, opts, context, queue);
+        Statement::ForOfStatement(for_of) => {
+            if opts.compilation_mode != "all" {
+                find_nested_functions_in_expr(&for_of.right, opts, context, queue);
+                visit_statement_for_functions(&for_of.body, opts, context, queue);
+            }
         }
-        Statement::WithStatement(with_stmt) if opts.compilation_mode != "all" => {
-            visit_statement_for_functions(&with_stmt.body, opts, context, queue);
+        Statement::WithStatement(with_stmt) => {
+            if opts.compilation_mode != "all" {
+                find_nested_functions_in_expr(&with_stmt.object, opts, context, queue);
+                visit_statement_for_functions(&with_stmt.body, opts, context, queue);
+            }
         }
 
-        // All other statements (return, throw, break, continue, empty, debugger,
+        // Issue 3: Visit expressions in return/throw statements
+        Statement::ReturnStatement(ret) => {
+            if let Some(ref arg) = ret.argument {
+                find_nested_functions_in_expr(arg, opts, context, queue);
+            }
+        }
+        Statement::ThrowStatement(throw_stmt) => {
+            find_nested_functions_in_expr(&throw_stmt.argument, opts, context, queue);
+        }
+
+        // All other statements (break, continue, empty, debugger,
         // imports, type declarations, etc.) can't contain function declarations
         _ => {}
     }
@@ -2168,6 +2261,138 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
         }
         Statement::ExpressionStatement(expr_stmt) => {
             clone_original_expr_as_expression(&expr_stmt.expression, start)
+        }
+        // Recurse into block-containing statements
+        Statement::BlockStatement(block) => {
+            for s in &block.body {
+                if let Some(e) = clone_original_fn_as_expression(s, start) {
+                    return Some(e);
+                }
+            }
+            None
+        }
+        Statement::IfStatement(if_stmt) => {
+            if let Some(e) = clone_original_expr_as_expression(&if_stmt.test, start) {
+                return Some(e);
+            }
+            if let Some(e) = clone_original_fn_as_expression(&if_stmt.consequent, start) {
+                return Some(e);
+            }
+            if let Some(ref alt) = if_stmt.alternate {
+                if let Some(e) = clone_original_fn_as_expression(alt, start) {
+                    return Some(e);
+                }
+            }
+            None
+        }
+        Statement::TryStatement(try_stmt) => {
+            for s in &try_stmt.block.body {
+                if let Some(e) = clone_original_fn_as_expression(s, start) {
+                    return Some(e);
+                }
+            }
+            if let Some(ref handler) = try_stmt.handler {
+                for s in &handler.body.body {
+                    if let Some(e) = clone_original_fn_as_expression(s, start) {
+                        return Some(e);
+                    }
+                }
+            }
+            if let Some(ref finalizer) = try_stmt.finalizer {
+                for s in &finalizer.body {
+                    if let Some(e) = clone_original_fn_as_expression(s, start) {
+                        return Some(e);
+                    }
+                }
+            }
+            None
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            if let Some(e) = clone_original_expr_as_expression(&switch_stmt.discriminant, start) {
+                return Some(e);
+            }
+            for case in &switch_stmt.cases {
+                for s in &case.consequent {
+                    if let Some(e) = clone_original_fn_as_expression(s, start) {
+                        return Some(e);
+                    }
+                }
+            }
+            None
+        }
+        Statement::LabeledStatement(labeled) => {
+            clone_original_fn_as_expression(&labeled.body, start)
+        }
+        Statement::ForStatement(for_stmt) => {
+            if let Some(ref init) = for_stmt.init {
+                match init.as_ref() {
+                    ForInit::VariableDeclaration(var_decl) => {
+                        for d in &var_decl.declarations {
+                            if let Some(ref init_expr) = d.init {
+                                if let Some(e) = clone_original_expr_as_expression(init_expr, start) {
+                                    return Some(e);
+                                }
+                            }
+                        }
+                    }
+                    ForInit::Expression(expr) => {
+                        if let Some(e) = clone_original_expr_as_expression(expr, start) {
+                            return Some(e);
+                        }
+                    }
+                }
+            }
+            if let Some(ref test) = for_stmt.test {
+                if let Some(e) = clone_original_expr_as_expression(test, start) {
+                    return Some(e);
+                }
+            }
+            if let Some(ref update) = for_stmt.update {
+                if let Some(e) = clone_original_expr_as_expression(update, start) {
+                    return Some(e);
+                }
+            }
+            clone_original_fn_as_expression(&for_stmt.body, start)
+        }
+        Statement::WhileStatement(while_stmt) => {
+            if let Some(e) = clone_original_expr_as_expression(&while_stmt.test, start) {
+                return Some(e);
+            }
+            clone_original_fn_as_expression(&while_stmt.body, start)
+        }
+        Statement::DoWhileStatement(do_while) => {
+            if let Some(e) = clone_original_expr_as_expression(&do_while.test, start) {
+                return Some(e);
+            }
+            clone_original_fn_as_expression(&do_while.body, start)
+        }
+        Statement::ForInStatement(for_in) => {
+            if let Some(e) = clone_original_expr_as_expression(&for_in.right, start) {
+                return Some(e);
+            }
+            clone_original_fn_as_expression(&for_in.body, start)
+        }
+        Statement::ForOfStatement(for_of) => {
+            if let Some(e) = clone_original_expr_as_expression(&for_of.right, start) {
+                return Some(e);
+            }
+            clone_original_fn_as_expression(&for_of.body, start)
+        }
+        Statement::WithStatement(with_stmt) => {
+            if let Some(e) = clone_original_expr_as_expression(&with_stmt.object, start) {
+                return Some(e);
+            }
+            clone_original_fn_as_expression(&with_stmt.body, start)
+        }
+        Statement::ReturnStatement(ret) => {
+            if let Some(ref arg) = ret.argument {
+                clone_original_expr_as_expression(arg, start)
+            } else {
+                None
+            }
+        }
+        Statement::ThrowStatement(throw_stmt) => {
+            clone_original_expr_as_expression(&throw_stmt.argument, start)
         }
         _ => None,
     }
@@ -2677,6 +2902,89 @@ fn replace_fn_with_gated(
                 return true;
             }
         }
+        // Recurse into block-containing statements
+        Statement::BlockStatement(block) => {
+            for s in block.body.iter_mut() {
+                if replace_fn_with_gated(s, start, _compiled, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        Statement::IfStatement(if_stmt) => {
+            if replace_fn_with_gated(&mut if_stmt.consequent, start, _compiled, gating_expression) {
+                return true;
+            }
+            if let Some(ref mut alt) = if_stmt.alternate {
+                if replace_fn_with_gated(alt, start, _compiled, gating_expression) {
+                    return true;
+                }
+            }
+        }
+        Statement::TryStatement(try_stmt) => {
+            for s in try_stmt.block.body.iter_mut() {
+                if replace_fn_with_gated(s, start, _compiled, gating_expression) {
+                    return true;
+                }
+            }
+            if let Some(ref mut handler) = try_stmt.handler {
+                for s in handler.body.body.iter_mut() {
+                    if replace_fn_with_gated(s, start, _compiled, gating_expression) {
+                        return true;
+                    }
+                }
+            }
+            if let Some(ref mut finalizer) = try_stmt.finalizer {
+                for s in finalizer.body.iter_mut() {
+                    if replace_fn_with_gated(s, start, _compiled, gating_expression) {
+                        return true;
+                    }
+                }
+            }
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            for case in switch_stmt.cases.iter_mut() {
+                for s in case.consequent.iter_mut() {
+                    if replace_fn_with_gated(s, start, _compiled, gating_expression) {
+                        return true;
+                    }
+                }
+            }
+        }
+        Statement::LabeledStatement(labeled) => {
+            if replace_fn_with_gated(&mut labeled.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
+        Statement::ForStatement(for_stmt) => {
+            if replace_fn_with_gated(&mut for_stmt.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
+        Statement::WhileStatement(while_stmt) => {
+            if replace_fn_with_gated(&mut while_stmt.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
+        Statement::DoWhileStatement(do_while) => {
+            if replace_fn_with_gated(&mut do_while.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
+        Statement::ForInStatement(for_in) => {
+            if replace_fn_with_gated(&mut for_in.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
+        Statement::ForOfStatement(for_of) => {
+            if replace_fn_with_gated(&mut for_of.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
+        Statement::WithStatement(with_stmt) => {
+            if replace_fn_with_gated(&mut with_stmt.body, start, _compiled, gating_expression) {
+                return true;
+            }
+        }
         _ => {}
     }
     false
@@ -3103,6 +3411,7 @@ fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name
             rename_identifier_in_block(block, old_name, new_name);
         }
         Statement::IfStatement(if_stmt) => {
+            rename_identifier_in_expression(&mut if_stmt.test, old_name, new_name);
             rename_identifier_in_statement(&mut if_stmt.consequent, old_name, new_name);
             if let Some(ref mut alt) = if_stmt.alternate {
                 rename_identifier_in_statement(alt, old_name, new_name);
@@ -3118,6 +3427,7 @@ fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name
             }
         }
         Statement::SwitchStatement(switch_stmt) => {
+            rename_identifier_in_expression(&mut switch_stmt.discriminant, old_name, new_name);
             for case in switch_stmt.cases.iter_mut() {
                 for s in case.consequent.iter_mut() {
                     rename_identifier_in_statement(s, old_name, new_name);
@@ -3128,22 +3438,55 @@ fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name
             rename_identifier_in_statement(&mut labeled.body, old_name, new_name);
         }
         Statement::ForStatement(for_stmt) => {
+            if let Some(ref mut init) = for_stmt.init {
+                match init.as_mut() {
+                    ForInit::VariableDeclaration(var_decl) => {
+                        for d in var_decl.declarations.iter_mut() {
+                            if let Some(ref mut init_expr) = d.init {
+                                rename_identifier_in_expression(init_expr, old_name, new_name);
+                            }
+                        }
+                    }
+                    ForInit::Expression(expr) => {
+                        rename_identifier_in_expression(expr, old_name, new_name);
+                    }
+                }
+            }
+            if let Some(ref mut test) = for_stmt.test {
+                rename_identifier_in_expression(test, old_name, new_name);
+            }
+            if let Some(ref mut update) = for_stmt.update {
+                rename_identifier_in_expression(update, old_name, new_name);
+            }
             rename_identifier_in_statement(&mut for_stmt.body, old_name, new_name);
         }
         Statement::WhileStatement(while_stmt) => {
+            rename_identifier_in_expression(&mut while_stmt.test, old_name, new_name);
             rename_identifier_in_statement(&mut while_stmt.body, old_name, new_name);
         }
         Statement::DoWhileStatement(do_while) => {
+            rename_identifier_in_expression(&mut do_while.test, old_name, new_name);
             rename_identifier_in_statement(&mut do_while.body, old_name, new_name);
         }
         Statement::ForInStatement(for_in) => {
+            rename_identifier_in_expression(&mut for_in.right, old_name, new_name);
             rename_identifier_in_statement(&mut for_in.body, old_name, new_name);
         }
         Statement::ForOfStatement(for_of) => {
+            rename_identifier_in_expression(&mut for_of.right, old_name, new_name);
             rename_identifier_in_statement(&mut for_of.body, old_name, new_name);
         }
         Statement::WithStatement(with_stmt) => {
+            rename_identifier_in_expression(&mut with_stmt.object, old_name, new_name);
             rename_identifier_in_statement(&mut with_stmt.body, old_name, new_name);
+        }
+        Statement::ReturnStatement(ret) => {
+            if let Some(ref mut arg) = ret.argument {
+                rename_identifier_in_expression(arg, old_name, new_name);
+            }
+        }
+        Statement::ThrowStatement(throw_stmt) => {
+            rename_identifier_in_expression(&mut throw_stmt.argument, old_name, new_name);
         }
         _ => {}
     }
@@ -3272,6 +3615,90 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
             } else {
                 false
             }
+        }
+        Statement::ExpressionStatement(expr_stmt) => {
+            expr_has_fn_at_start(&expr_stmt.expression, start)
+        }
+        // Recurse into block-containing statements
+        Statement::BlockStatement(block) => {
+            block.body.iter().any(|s| stmt_has_fn_at_start(s, start))
+        }
+        Statement::IfStatement(if_stmt) => {
+            expr_has_fn_at_start(&if_stmt.test, start)
+                || stmt_has_fn_at_start(&if_stmt.consequent, start)
+                || if_stmt
+                    .alternate
+                    .as_ref()
+                    .map_or(false, |alt| stmt_has_fn_at_start(alt, start))
+        }
+        Statement::TryStatement(try_stmt) => {
+            try_stmt.block.body.iter().any(|s| stmt_has_fn_at_start(s, start))
+                || try_stmt
+                    .handler
+                    .as_ref()
+                    .map_or(false, |h| h.body.body.iter().any(|s| stmt_has_fn_at_start(s, start)))
+                || try_stmt
+                    .finalizer
+                    .as_ref()
+                    .map_or(false, |f| f.body.iter().any(|s| stmt_has_fn_at_start(s, start)))
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            expr_has_fn_at_start(&switch_stmt.discriminant, start)
+                || switch_stmt.cases.iter().any(|case| {
+                    case.consequent.iter().any(|s| stmt_has_fn_at_start(s, start))
+                })
+        }
+        Statement::LabeledStatement(labeled) => stmt_has_fn_at_start(&labeled.body, start),
+        Statement::ForStatement(for_stmt) => {
+            if let Some(ref init) = for_stmt.init {
+                match init.as_ref() {
+                    ForInit::VariableDeclaration(var_decl) => {
+                        if var_decl.declarations.iter().any(|d| {
+                            d.init.as_ref().map_or(false, |e| expr_has_fn_at_start(e, start))
+                        }) {
+                            return true;
+                        }
+                    }
+                    ForInit::Expression(expr) => {
+                        if expr_has_fn_at_start(expr, start) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            if for_stmt.test.as_ref().map_or(false, |t| expr_has_fn_at_start(t, start)) {
+                return true;
+            }
+            if for_stmt.update.as_ref().map_or(false, |u| expr_has_fn_at_start(u, start)) {
+                return true;
+            }
+            stmt_has_fn_at_start(&for_stmt.body, start)
+        }
+        Statement::WhileStatement(while_stmt) => {
+            expr_has_fn_at_start(&while_stmt.test, start)
+                || stmt_has_fn_at_start(&while_stmt.body, start)
+        }
+        Statement::DoWhileStatement(do_while) => {
+            expr_has_fn_at_start(&do_while.test, start)
+                || stmt_has_fn_at_start(&do_while.body, start)
+        }
+        Statement::ForInStatement(for_in) => {
+            expr_has_fn_at_start(&for_in.right, start)
+                || stmt_has_fn_at_start(&for_in.body, start)
+        }
+        Statement::ForOfStatement(for_of) => {
+            expr_has_fn_at_start(&for_of.right, start)
+                || stmt_has_fn_at_start(&for_of.body, start)
+        }
+        Statement::WithStatement(with_stmt) => {
+            expr_has_fn_at_start(&with_stmt.object, start)
+                || stmt_has_fn_at_start(&with_stmt.body, start)
+        }
+        Statement::ReturnStatement(ret) => {
+            ret.argument.as_ref().map_or(false, |arg| expr_has_fn_at_start(arg, start))
+        }
+        Statement::ThrowStatement(throw_stmt) => {
+            expr_has_fn_at_start(&throw_stmt.argument, start)
         }
         _ => false,
     }
@@ -3414,6 +3841,9 @@ fn replace_fn_in_statement(
             }
         }
         Statement::IfStatement(if_stmt) => {
+            if replace_fn_in_expression(&mut if_stmt.test, start, compiled) {
+                return true;
+            }
             if replace_fn_in_statement(&mut if_stmt.consequent, start, compiled) {
                 return true;
             }
@@ -3445,7 +3875,15 @@ fn replace_fn_in_statement(
             }
         }
         Statement::SwitchStatement(switch_stmt) => {
+            if replace_fn_in_expression(&mut switch_stmt.discriminant, start, compiled) {
+                return true;
+            }
             for case in switch_stmt.cases.iter_mut() {
+                if let Some(ref mut test) = case.test {
+                    if replace_fn_in_expression(test, start, compiled) {
+                        return true;
+                    }
+                }
                 for s in case.consequent.iter_mut() {
                     if replace_fn_in_statement(s, start, compiled) {
                         return true;
@@ -3459,32 +3897,87 @@ fn replace_fn_in_statement(
             }
         }
         Statement::ForStatement(for_stmt) => {
+            if let Some(ref mut init) = for_stmt.init {
+                match init.as_mut() {
+                    ForInit::VariableDeclaration(var_decl) => {
+                        for d in var_decl.declarations.iter_mut() {
+                            if let Some(ref mut init_expr) = d.init {
+                                if replace_fn_in_expression(init_expr, start, compiled) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    ForInit::Expression(expr) => {
+                        if replace_fn_in_expression(expr, start, compiled) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            if let Some(ref mut test) = for_stmt.test {
+                if replace_fn_in_expression(test, start, compiled) {
+                    return true;
+                }
+            }
+            if let Some(ref mut update) = for_stmt.update {
+                if replace_fn_in_expression(update, start, compiled) {
+                    return true;
+                }
+            }
             if replace_fn_in_statement(&mut for_stmt.body, start, compiled) {
                 return true;
             }
         }
         Statement::WhileStatement(while_stmt) => {
+            if replace_fn_in_expression(&mut while_stmt.test, start, compiled) {
+                return true;
+            }
             if replace_fn_in_statement(&mut while_stmt.body, start, compiled) {
                 return true;
             }
         }
         Statement::DoWhileStatement(do_while) => {
+            if replace_fn_in_expression(&mut do_while.test, start, compiled) {
+                return true;
+            }
             if replace_fn_in_statement(&mut do_while.body, start, compiled) {
                 return true;
             }
         }
         Statement::ForInStatement(for_in) => {
+            if replace_fn_in_expression(&mut for_in.right, start, compiled) {
+                return true;
+            }
             if replace_fn_in_statement(&mut for_in.body, start, compiled) {
                 return true;
             }
         }
         Statement::ForOfStatement(for_of) => {
+            if replace_fn_in_expression(&mut for_of.right, start, compiled) {
+                return true;
+            }
             if replace_fn_in_statement(&mut for_of.body, start, compiled) {
                 return true;
             }
         }
         Statement::WithStatement(with_stmt) => {
+            if replace_fn_in_expression(&mut with_stmt.object, start, compiled) {
+                return true;
+            }
             if replace_fn_in_statement(&mut with_stmt.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::ReturnStatement(ret) => {
+            if let Some(ref mut arg) = ret.argument {
+                if replace_fn_in_expression(arg, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Statement::ThrowStatement(throw_stmt) => {
+            if replace_fn_in_expression(&mut throw_stmt.argument, start, compiled) {
                 return true;
             }
         }
