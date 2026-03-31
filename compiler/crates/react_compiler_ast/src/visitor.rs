@@ -850,3 +850,609 @@ impl<'a> AstWalker<'a> {
         v.enter_jsx_identifier(&expr.property, &self.scope_stack);
     }
 }
+
+// =============================================================================
+// Mutable visitor
+// =============================================================================
+
+/// Result from a mutable visitor hook.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VisitResult {
+    /// Continue traversal to children.
+    Continue,
+    /// Stop traversal immediately.
+    Stop,
+}
+
+impl VisitResult {
+    pub fn is_stop(self) -> bool {
+        self == VisitResult::Stop
+    }
+}
+
+/// Trait for mutating Babel AST nodes during traversal.
+///
+/// Override hooks to intercept and mutate specific node types.
+/// Return [`VisitResult::Stop`] from any hook to halt the walk.
+/// Hooks are called *before* the walker recurses into children,
+/// so returning `Stop` prevents child traversal.
+pub trait MutVisitor {
+    /// Called for every statement before recursing into its children.
+    fn visit_statement(&mut self, _stmt: &mut Statement) -> VisitResult {
+        VisitResult::Continue
+    }
+
+    /// Called for every expression before recursing into its children.
+    fn visit_expression(&mut self, _expr: &mut Expression) -> VisitResult {
+        VisitResult::Continue
+    }
+
+    /// Called for identifiers in expression position.
+    fn visit_identifier(&mut self, _node: &mut Identifier) -> VisitResult {
+        VisitResult::Continue
+    }
+}
+
+/// Walk a program's body mutably, calling visitor hooks for each node.
+pub fn walk_program_mut(v: &mut impl MutVisitor, program: &mut Program) -> VisitResult {
+    for stmt in program.body.iter_mut() {
+        if walk_statement_mut(v, stmt).is_stop() {
+            return VisitResult::Stop;
+        }
+    }
+    VisitResult::Continue
+}
+
+/// Walk a single statement mutably, calling visitor hooks and recursing into children.
+pub fn walk_statement_mut(v: &mut impl MutVisitor, stmt: &mut Statement) -> VisitResult {
+    if v.visit_statement(stmt).is_stop() {
+        return VisitResult::Stop;
+    }
+    match stmt {
+        Statement::BlockStatement(node) => {
+            for s in node.body.iter_mut() {
+                if walk_statement_mut(v, s).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Statement::ReturnStatement(node) => {
+            if let Some(ref mut arg) = node.argument {
+                if walk_expression_mut(v, arg).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Statement::ExpressionStatement(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::IfStatement(node) => {
+            if walk_expression_mut(v, &mut node.test).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_statement_mut(v, &mut node.consequent).is_stop() {
+                return VisitResult::Stop;
+            }
+            if let Some(ref mut alt) = node.alternate {
+                if walk_statement_mut(v, alt).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Statement::ForStatement(node) => {
+            if let Some(ref mut init) = node.init {
+                match init.as_mut() {
+                    ForInit::VariableDeclaration(decl) => {
+                        if walk_variable_declaration_mut(v, decl).is_stop() {
+                            return VisitResult::Stop;
+                        }
+                    }
+                    ForInit::Expression(expr) => {
+                        if walk_expression_mut(v, expr).is_stop() {
+                            return VisitResult::Stop;
+                        }
+                    }
+                }
+            }
+            if let Some(ref mut test) = node.test {
+                if walk_expression_mut(v, test).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+            if let Some(ref mut update) = node.update {
+                if walk_expression_mut(v, update).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::WhileStatement(node) => {
+            if walk_expression_mut(v, &mut node.test).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::DoWhileStatement(node) => {
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_expression_mut(v, &mut node.test).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::ForInStatement(node) => {
+            if walk_expression_mut(v, &mut node.right).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::ForOfStatement(node) => {
+            if walk_expression_mut(v, &mut node.right).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::SwitchStatement(node) => {
+            if walk_expression_mut(v, &mut node.discriminant).is_stop() {
+                return VisitResult::Stop;
+            }
+            for case in node.cases.iter_mut() {
+                if let Some(ref mut test) = case.test {
+                    if walk_expression_mut(v, test).is_stop() {
+                        return VisitResult::Stop;
+                    }
+                }
+                for s in case.consequent.iter_mut() {
+                    if walk_statement_mut(v, s).is_stop() {
+                        return VisitResult::Stop;
+                    }
+                }
+            }
+        }
+        Statement::ThrowStatement(node) => {
+            if walk_expression_mut(v, &mut node.argument).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::TryStatement(node) => {
+            for s in node.block.body.iter_mut() {
+                if walk_statement_mut(v, s).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+            if let Some(ref mut handler) = node.handler {
+                for s in handler.body.body.iter_mut() {
+                    if walk_statement_mut(v, s).is_stop() {
+                        return VisitResult::Stop;
+                    }
+                }
+            }
+            if let Some(ref mut finalizer) = node.finalizer {
+                for s in finalizer.body.iter_mut() {
+                    if walk_statement_mut(v, s).is_stop() {
+                        return VisitResult::Stop;
+                    }
+                }
+            }
+        }
+        Statement::LabeledStatement(node) => {
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::VariableDeclaration(node) => {
+            if walk_variable_declaration_mut(v, node).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::FunctionDeclaration(node) => {
+            for s in node.body.body.iter_mut() {
+                if walk_statement_mut(v, s).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Statement::ClassDeclaration(node) => {
+            if let Some(ref mut sc) = node.super_class {
+                if walk_expression_mut(v, sc).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Statement::WithStatement(node) => {
+            if walk_expression_mut(v, &mut node.object).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_statement_mut(v, &mut node.body).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Statement::ExportNamedDeclaration(node) => {
+            if let Some(ref mut decl) = node.declaration {
+                if walk_declaration_mut(v, decl).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Statement::ExportDefaultDeclaration(node) => {
+            if walk_export_default_decl_mut(v, &mut node.declaration).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        // No runtime expressions to traverse
+        Statement::BreakStatement(_)
+        | Statement::ContinueStatement(_)
+        | Statement::EmptyStatement(_)
+        | Statement::DebuggerStatement(_)
+        | Statement::ImportDeclaration(_)
+        | Statement::ExportAllDeclaration(_)
+        | Statement::TSTypeAliasDeclaration(_)
+        | Statement::TSInterfaceDeclaration(_)
+        | Statement::TSEnumDeclaration(_)
+        | Statement::TSModuleDeclaration(_)
+        | Statement::TSDeclareFunction(_)
+        | Statement::TypeAlias(_)
+        | Statement::OpaqueType(_)
+        | Statement::InterfaceDeclaration(_)
+        | Statement::DeclareVariable(_)
+        | Statement::DeclareFunction(_)
+        | Statement::DeclareClass(_)
+        | Statement::DeclareModule(_)
+        | Statement::DeclareModuleExports(_)
+        | Statement::DeclareExportDeclaration(_)
+        | Statement::DeclareExportAllDeclaration(_)
+        | Statement::DeclareInterface(_)
+        | Statement::DeclareTypeAlias(_)
+        | Statement::DeclareOpaqueType(_)
+        | Statement::EnumDeclaration(_) => {}
+    }
+    VisitResult::Continue
+}
+
+/// Walk an expression mutably, calling visitor hooks and recursing into children.
+pub fn walk_expression_mut(v: &mut impl MutVisitor, expr: &mut Expression) -> VisitResult {
+    if v.visit_expression(expr).is_stop() {
+        return VisitResult::Stop;
+    }
+    match expr {
+        Expression::Identifier(node) => {
+            if v.visit_identifier(node).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::CallExpression(node) => {
+            if walk_expression_mut(v, &mut node.callee).is_stop() {
+                return VisitResult::Stop;
+            }
+            for arg in node.arguments.iter_mut() {
+                if walk_expression_mut(v, arg).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::MemberExpression(node) => {
+            if walk_expression_mut(v, &mut node.object).is_stop() {
+                return VisitResult::Stop;
+            }
+            if node.computed {
+                if walk_expression_mut(v, &mut node.property).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::OptionalCallExpression(node) => {
+            if walk_expression_mut(v, &mut node.callee).is_stop() {
+                return VisitResult::Stop;
+            }
+            for arg in node.arguments.iter_mut() {
+                if walk_expression_mut(v, arg).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::OptionalMemberExpression(node) => {
+            if walk_expression_mut(v, &mut node.object).is_stop() {
+                return VisitResult::Stop;
+            }
+            if node.computed {
+                if walk_expression_mut(v, &mut node.property).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::BinaryExpression(node) => {
+            if walk_expression_mut(v, &mut node.left).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_expression_mut(v, &mut node.right).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::LogicalExpression(node) => {
+            if walk_expression_mut(v, &mut node.left).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_expression_mut(v, &mut node.right).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::UnaryExpression(node) => {
+            if walk_expression_mut(v, &mut node.argument).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::UpdateExpression(node) => {
+            if walk_expression_mut(v, &mut node.argument).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::ConditionalExpression(node) => {
+            if walk_expression_mut(v, &mut node.test).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_expression_mut(v, &mut node.consequent).is_stop() {
+                return VisitResult::Stop;
+            }
+            if walk_expression_mut(v, &mut node.alternate).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::AssignmentExpression(node) => {
+            if walk_expression_mut(v, &mut node.right).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::SequenceExpression(node) => {
+            for e in node.expressions.iter_mut() {
+                if walk_expression_mut(v, e).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::ArrowFunctionExpression(node) => {
+            match node.body.as_mut() {
+                ArrowFunctionBody::BlockStatement(block) => {
+                    for s in block.body.iter_mut() {
+                        if walk_statement_mut(v, s).is_stop() {
+                            return VisitResult::Stop;
+                        }
+                    }
+                }
+                ArrowFunctionBody::Expression(e) => {
+                    if walk_expression_mut(v, e).is_stop() {
+                        return VisitResult::Stop;
+                    }
+                }
+            }
+        }
+        Expression::FunctionExpression(node) => {
+            for s in node.body.body.iter_mut() {
+                if walk_statement_mut(v, s).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::ObjectExpression(node) => {
+            for prop in node.properties.iter_mut() {
+                match prop {
+                    ObjectExpressionProperty::ObjectProperty(p) => {
+                        if p.computed {
+                            if walk_expression_mut(v, &mut p.key).is_stop() {
+                                return VisitResult::Stop;
+                            }
+                        }
+                        if walk_expression_mut(v, &mut p.value).is_stop() {
+                            return VisitResult::Stop;
+                        }
+                    }
+                    ObjectExpressionProperty::ObjectMethod(m) => {
+                        for s in m.body.body.iter_mut() {
+                            if walk_statement_mut(v, s).is_stop() {
+                                return VisitResult::Stop;
+                            }
+                        }
+                    }
+                    ObjectExpressionProperty::SpreadElement(s) => {
+                        if walk_expression_mut(v, &mut s.argument).is_stop() {
+                            return VisitResult::Stop;
+                        }
+                    }
+                }
+            }
+        }
+        Expression::ArrayExpression(node) => {
+            for elem in node.elements.iter_mut().flatten() {
+                if walk_expression_mut(v, elem).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::NewExpression(node) => {
+            if walk_expression_mut(v, &mut node.callee).is_stop() {
+                return VisitResult::Stop;
+            }
+            for arg in node.arguments.iter_mut() {
+                if walk_expression_mut(v, arg).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::TemplateLiteral(node) => {
+            for e in node.expressions.iter_mut() {
+                if walk_expression_mut(v, e).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::TaggedTemplateExpression(node) => {
+            if walk_expression_mut(v, &mut node.tag).is_stop() {
+                return VisitResult::Stop;
+            }
+            for e in node.quasi.expressions.iter_mut() {
+                if walk_expression_mut(v, e).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::AwaitExpression(node) => {
+            if walk_expression_mut(v, &mut node.argument).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::YieldExpression(node) => {
+            if let Some(ref mut arg) = node.argument {
+                if walk_expression_mut(v, arg).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Expression::SpreadElement(node) => {
+            if walk_expression_mut(v, &mut node.argument).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::ParenthesizedExpression(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::AssignmentPattern(node) => {
+            if walk_expression_mut(v, &mut node.right).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::ClassExpression(node) => {
+            if let Some(ref mut sc) = node.super_class {
+                if walk_expression_mut(v, sc).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        // JSX — not walked for current use cases
+        Expression::JSXElement(_) | Expression::JSXFragment(_) => {}
+        // TS/Flow wrappers — traverse inner expression
+        Expression::TSAsExpression(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::TSSatisfiesExpression(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::TSNonNullExpression(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::TSTypeAssertion(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::TSInstantiationExpression(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::TypeCastExpression(node) => {
+            if walk_expression_mut(v, &mut node.expression).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        // Leaf nodes
+        Expression::StringLiteral(_)
+        | Expression::NumericLiteral(_)
+        | Expression::BooleanLiteral(_)
+        | Expression::NullLiteral(_)
+        | Expression::BigIntLiteral(_)
+        | Expression::RegExpLiteral(_)
+        | Expression::MetaProperty(_)
+        | Expression::PrivateName(_)
+        | Expression::Super(_)
+        | Expression::Import(_)
+        | Expression::ThisExpression(_) => {}
+    }
+    VisitResult::Continue
+}
+
+// ---- Private helper walk-mut functions ----
+
+fn walk_variable_declaration_mut(
+    v: &mut impl MutVisitor,
+    decl: &mut VariableDeclaration,
+) -> VisitResult {
+    for declarator in decl.declarations.iter_mut() {
+        if let Some(ref mut init) = declarator.init {
+            if walk_expression_mut(v, init).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+    }
+    VisitResult::Continue
+}
+
+fn walk_declaration_mut(v: &mut impl MutVisitor, decl: &mut Declaration) -> VisitResult {
+    match decl {
+        Declaration::FunctionDeclaration(node) => {
+            for s in node.body.body.iter_mut() {
+                if walk_statement_mut(v, s).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        Declaration::VariableDeclaration(node) => {
+            if walk_variable_declaration_mut(v, node).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Declaration::ClassDeclaration(node) => {
+            if let Some(ref mut sc) = node.super_class {
+                if walk_expression_mut(v, sc).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        _ => {}
+    }
+    VisitResult::Continue
+}
+
+fn walk_export_default_decl_mut(
+    v: &mut impl MutVisitor,
+    decl: &mut ExportDefaultDecl,
+) -> VisitResult {
+    match decl {
+        ExportDefaultDecl::FunctionDeclaration(node) => {
+            for s in node.body.body.iter_mut() {
+                if walk_statement_mut(v, s).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+        ExportDefaultDecl::Expression(expr) => {
+            if walk_expression_mut(v, expr).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        ExportDefaultDecl::ClassDeclaration(node) => {
+            if let Some(ref mut sc) = node.super_class {
+                if walk_expression_mut(v, sc).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+    }
+    VisitResult::Continue
+}

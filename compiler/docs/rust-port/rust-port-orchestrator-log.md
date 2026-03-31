@@ -1,8 +1,8 @@
 # Status
 
-Overall: 1717/1717 passing (100%). All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported with application. Code comparison: 1717/1717 (100%).
+Overall: 1721/1723 passing, 2 failed, frontier: AnalyseFunction (inner). All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1722/1723.
 
-Snap (end-to-end): 1717/1718 passed, 1 failed (intentional: error.todo-missing-source-locations)
+Snap (end-to-end): 1721/1723 passed, 2 failed
 
 ## Transformation passes
 
@@ -57,6 +57,14 @@ ValidatePreservedManualMemoization: complete
 Codegen: complete (1717/1717 code comparison)
 
 # Logs
+
+## 20260331-180000 Add MutVisitor trait and refactor AST mutation to use shared walker
+
+Added MutVisitor trait with visit_statement/visit_expression/visit_identifier hooks and
+walk_program_mut/walk_statement_mut/walk_expression_mut free functions to react_compiler_ast.
+Refactored three groups of manual recursive AST walkers in program.rs (~780 lines) into three
+visitor structs: ReplaceFnVisitor, ReplaceWithGatedVisitor, RenameIdentifierVisitor (~110 lines).
+No test regressions (1721/1723).
 
 ## 20260329-120000 Static base registries for ShapeRegistry and GlobalRegistry
 

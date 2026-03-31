@@ -24,7 +24,7 @@ use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
 use react_compiler_ast::scope::{ScopeId, ScopeInfo};
 use react_compiler_ast::statements::*;
-use react_compiler_ast::visitor::{AstWalker, Visitor};
+use react_compiler_ast::visitor::{AstWalker, MutVisitor, VisitResult, Visitor, walk_program_mut};
 use react_compiler_ast::{File, Program};
 use react_compiler_diagnostics::{
     CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
@@ -2282,7 +2282,13 @@ fn apply_compiled_functions(
             }
         } else {
             // No gating: replace the function directly (original behavior)
-            replace_function_in_program(program, compiled);
+            if let Some(start) = compiled.fn_start {
+                let mut visitor = ReplaceFnVisitor {
+                    start,
+                    compiled,
+                };
+                walk_program_mut(&mut visitor, program);
+            }
         }
     }
 
@@ -2330,9 +2336,11 @@ fn apply_compiled_functions(
     if needs_memo_import {
         let import_spec = context.add_memo_cache_import();
         let local_name = import_spec.name;
-        for stmt in program.body.iter_mut() {
-            rename_identifier_in_statement(stmt, "useMemoCache", &local_name);
-        }
+        let mut visitor = RenameIdentifierVisitor {
+            old_name: "useMemoCache",
+            new_name: &local_name,
+        };
+        walk_program_mut(&mut visitor, program);
     }
 
     // Instrumentation and hook guard imports are pre-registered in compile_program
@@ -2411,8 +2419,7 @@ fn apply_gated_function_conditional(
     // because we need to insert `export default Name;` after the replacement.
     let mut export_default_name: Option<(usize, String)> = None;
 
-    for (idx, stmt) in program.body.iter_mut().enumerate() {
-        // Check for export default function with a name (needs special handling)
+    for (idx, stmt) in program.body.iter().enumerate() {
         if let Statement::ExportDefaultDeclaration(export) = stmt {
             if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
                 if f.base.start == Some(start) {
@@ -2422,10 +2429,13 @@ fn apply_gated_function_conditional(
                 }
             }
         }
-        if replace_fn_with_gated(stmt, start, compiled, &gating_expression) {
-            break;
-        }
     }
+
+    let mut visitor = ReplaceWithGatedVisitor {
+        start,
+        gating_expression: &gating_expression,
+    };
+    walk_program_mut(&mut visitor, program);
 
     // If this was an export default function with a name, insert `export default Name;` after
     if let Some((idx, name)) = export_default_name {
@@ -2448,19 +2458,17 @@ fn apply_gated_function_conditional(
     }
 }
 
-/// Replace a function in a statement with a gated version (conditional expression).
-/// Returns true if the replacement was made.
-fn replace_fn_with_gated(
-    stmt: &mut Statement,
+/// Visitor that replaces a function with a gated conditional expression.
+struct ReplaceWithGatedVisitor<'a> {
     start: u32,
-    _compiled: &CompiledFnForReplacement,
-    gating_expression: &Expression,
-) -> bool {
-    match stmt {
-        Statement::FunctionDeclaration(f) => {
-            if f.base.start == Some(start) {
-                // Convert: `function Foo(props) { ... }`
-                // To: `const Foo = gating() ? ... : ...;`
+    gating_expression: &'a Expression,
+}
+
+impl MutVisitor for ReplaceWithGatedVisitor<'_> {
+    fn visit_statement(&mut self, stmt: &mut Statement) -> VisitResult {
+        // FunctionDeclaration → replace with `const Foo = gating() ? ... : ...;`
+        if let Statement::FunctionDeclaration(f) = &*stmt {
+            if f.base.start == Some(self.start) {
                 let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
                     base: BaseNode::typed("Identifier"),
                     name: "anonymous".to_string(),
@@ -2468,7 +2476,6 @@ fn replace_fn_with_gated(
                     optional: None,
                     decorators: None,
                 });
-                // Transfer comments from original function to the replacement
                 let mut base = BaseNode::typed("VariableDeclaration");
                 base.leading_comments = f.base.leading_comments.clone();
                 base.trailing_comments = f.base.trailing_comments.clone();
@@ -2479,290 +2486,97 @@ fn replace_fn_with_gated(
                     declarations: vec![VariableDeclarator {
                         base: BaseNode::typed("VariableDeclarator"),
                         id: PatternLike::Identifier(fn_name),
-                        init: Some(Box::new(gating_expression.clone())),
+                        init: Some(Box::new(self.gating_expression.clone())),
                         definite: None,
                     }],
                     declare: None,
                 });
-                return true;
+                return VisitResult::Stop;
             }
         }
-        Statement::ExportDefaultDeclaration(export) => {
-            // Check if this is a FunctionDeclaration first
+
+        // ExportDefaultDeclaration with FunctionDeclaration
+        if let Statement::ExportDefaultDeclaration(export) = stmt {
             let is_fn_decl_match = matches!(
                 export.declaration.as_ref(),
-                ExportDefaultDecl::FunctionDeclaration(f) if f.base.start == Some(start)
+                ExportDefaultDecl::FunctionDeclaration(f) if f.base.start == Some(self.start)
             );
             if is_fn_decl_match {
                 if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
                     let fn_name = f.id.clone();
                     if let Some(fn_id) = fn_name {
-                        // `export default function Foo(props) { ... }`
-                        // -> `const Foo = gating() ? ... : ...; export default Foo;`
-                        // Transfer comments from the export statement
                         let mut base = BaseNode::typed("VariableDeclaration");
                         base.leading_comments = export.base.leading_comments.clone();
                         base.trailing_comments = export.base.trailing_comments.clone();
                         base.inner_comments = export.base.inner_comments.clone();
-                        let var_stmt = Statement::VariableDeclaration(VariableDeclaration {
+                        *stmt = Statement::VariableDeclaration(VariableDeclaration {
                             base,
                             kind: VariableDeclarationKind::Const,
                             declarations: vec![VariableDeclarator {
                                 base: BaseNode::typed("VariableDeclarator"),
-                                id: PatternLike::Identifier(fn_id.clone()),
-                                init: Some(Box::new(gating_expression.clone())),
+                                id: PatternLike::Identifier(fn_id),
+                                init: Some(Box::new(self.gating_expression.clone())),
                                 definite: None,
                             }],
                             declare: None,
                         });
-                        *stmt = var_stmt;
-                        return true;
+                        return VisitResult::Stop;
                     } else {
-                        // `export default function(props) { ... }` (anonymous)
-                        // -> `export default gating() ? ... : ...`
-                        export.declaration =
-                            Box::new(ExportDefaultDecl::Expression(Box::new(gating_expression.clone())));
-                        return true;
+                        export.declaration = Box::new(ExportDefaultDecl::Expression(Box::new(
+                            self.gating_expression.clone(),
+                        )));
+                        return VisitResult::Stop;
                     }
                 }
             }
-            // Check Expression case
-            if let ExportDefaultDecl::Expression(e) = export.declaration.as_mut() {
-                if replace_gated_in_expression(e, start, gating_expression) {
-                    return true;
-                }
-            }
+            // Expression case handled by walker recursion into visit_expression
         }
-        Statement::ExportNamedDeclaration(export) => {
-            if let Some(ref mut decl) = export.declaration {
-                match decl.as_mut() {
-                    Declaration::FunctionDeclaration(f) => {
-                        if f.base.start == Some(start) {
-                            // `export function Foo(props) { ... }`
-                            // -> `export const Foo = gating() ? ... : ...;`
-                            let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
-                                base: BaseNode::typed("Identifier"),
-                                name: "anonymous".to_string(),
-                                type_annotation: None,
-                                optional: None,
-                                decorators: None,
-                            });
-                            *decl = Box::new(Declaration::VariableDeclaration(
-                                VariableDeclaration {
-                                    base: BaseNode::typed("VariableDeclaration"),
-                                    kind: VariableDeclarationKind::Const,
-                                    declarations: vec![VariableDeclarator {
-                                        base: BaseNode::typed("VariableDeclarator"),
-                                        id: PatternLike::Identifier(fn_name),
-                                        init: Some(Box::new(gating_expression.clone())),
-                                        definite: None,
-                                    }],
-                                    declare: None,
-                                },
-                            ));
-                            return true;
-                        }
-                    }
-                    Declaration::VariableDeclaration(var_decl) => {
-                        for d in var_decl.declarations.iter_mut() {
-                            if let Some(ref mut init) = d.init {
-                                if replace_gated_in_expression(init, start, gating_expression) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Statement::VariableDeclaration(var_decl) => {
-            for d in var_decl.declarations.iter_mut() {
-                if let Some(ref mut init) = d.init {
-                    if replace_gated_in_expression(init, start, gating_expression) {
-                        return true;
-                    }
-                }
-            }
-        }
-        Statement::ExpressionStatement(expr_stmt) => {
-            if replace_gated_in_expression(&mut expr_stmt.expression, start, gating_expression) {
-                return true;
-            }
-        }
-        // Recurse into block-containing statements
-        Statement::BlockStatement(block) => {
-            for s in block.body.iter_mut() {
-                if replace_fn_with_gated(s, start, _compiled, gating_expression) {
-                    return true;
-                }
-            }
-        }
-        Statement::IfStatement(if_stmt) => {
-            if replace_fn_with_gated(&mut if_stmt.consequent, start, _compiled, gating_expression) {
-                return true;
-            }
-            if let Some(ref mut alt) = if_stmt.alternate {
-                if replace_fn_with_gated(alt, start, _compiled, gating_expression) {
-                    return true;
-                }
-            }
-        }
-        Statement::TryStatement(try_stmt) => {
-            for s in try_stmt.block.body.iter_mut() {
-                if replace_fn_with_gated(s, start, _compiled, gating_expression) {
-                    return true;
-                }
-            }
-            if let Some(ref mut handler) = try_stmt.handler {
-                for s in handler.body.body.iter_mut() {
-                    if replace_fn_with_gated(s, start, _compiled, gating_expression) {
-                        return true;
-                    }
-                }
-            }
-            if let Some(ref mut finalizer) = try_stmt.finalizer {
-                for s in finalizer.body.iter_mut() {
-                    if replace_fn_with_gated(s, start, _compiled, gating_expression) {
-                        return true;
-                    }
-                }
-            }
-        }
-        Statement::SwitchStatement(switch_stmt) => {
-            for case in switch_stmt.cases.iter_mut() {
-                for s in case.consequent.iter_mut() {
-                    if replace_fn_with_gated(s, start, _compiled, gating_expression) {
-                        return true;
-                    }
-                }
-            }
-        }
-        Statement::LabeledStatement(labeled) => {
-            if replace_fn_with_gated(&mut labeled.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        Statement::ForStatement(for_stmt) => {
-            if replace_fn_with_gated(&mut for_stmt.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        Statement::WhileStatement(while_stmt) => {
-            if replace_fn_with_gated(&mut while_stmt.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        Statement::DoWhileStatement(do_while) => {
-            if replace_fn_with_gated(&mut do_while.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        Statement::ForInStatement(for_in) => {
-            if replace_fn_with_gated(&mut for_in.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        Statement::ForOfStatement(for_of) => {
-            if replace_fn_with_gated(&mut for_of.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        Statement::WithStatement(with_stmt) => {
-            if replace_fn_with_gated(&mut with_stmt.body, start, _compiled, gating_expression) {
-                return true;
-            }
-        }
-        _ => {}
-    }
-    false
-}
 
-/// Replace a function in an expression with a gated conditional expression.
-fn replace_gated_in_expression(
-    expr: &mut Expression,
-    start: u32,
-    gating_expression: &Expression,
-) -> bool {
-    match expr {
-        Expression::FunctionExpression(f) => {
-            if f.base.start == Some(start) {
-                *expr = gating_expression.clone();
-                return true;
-            }
-        }
-        Expression::ArrowFunctionExpression(f) => {
-            if f.base.start == Some(start) {
-                *expr = gating_expression.clone();
-                return true;
-            }
-        }
-        Expression::CallExpression(call) => {
-            for arg in call.arguments.iter_mut() {
-                if replace_gated_in_expression(arg, start, gating_expression) {
-                    return true;
-                }
-            }
-        }
-        Expression::ObjectExpression(obj) => {
-            for prop in obj.properties.iter_mut() {
-                match prop {
-                    ObjectExpressionProperty::ObjectProperty(p) => {
-                        if replace_gated_in_expression(&mut p.value, start, gating_expression) {
-                            return true;
-                        }
+        // ExportNamedDeclaration with FunctionDeclaration
+        if let Statement::ExportNamedDeclaration(export) = stmt {
+            if let Some(ref mut decl) = export.declaration {
+                if let Declaration::FunctionDeclaration(f) = decl.as_mut() {
+                    if f.base.start == Some(self.start) {
+                        let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
+                            base: BaseNode::typed("Identifier"),
+                            name: "anonymous".to_string(),
+                            type_annotation: None,
+                            optional: None,
+                            decorators: None,
+                        });
+                        *decl = Box::new(Declaration::VariableDeclaration(VariableDeclaration {
+                            base: BaseNode::typed("VariableDeclaration"),
+                            kind: VariableDeclarationKind::Const,
+                            declarations: vec![VariableDeclarator {
+                                base: BaseNode::typed("VariableDeclarator"),
+                                id: PatternLike::Identifier(fn_name),
+                                init: Some(Box::new(self.gating_expression.clone())),
+                                definite: None,
+                            }],
+                            declare: None,
+                        }));
+                        return VisitResult::Stop;
                     }
-                    ObjectExpressionProperty::SpreadElement(s) => {
-                        if replace_gated_in_expression(&mut s.argument, start, gating_expression) {
-                            return true;
-                        }
-                    }
-                    _ => {}
                 }
             }
         }
-        Expression::ArrayExpression(arr) => {
-            for elem in arr.elements.iter_mut().flatten() {
-                if replace_gated_in_expression(elem, start, gating_expression) {
-                    return true;
-                }
-            }
-        }
-        Expression::AssignmentExpression(assign) => {
-            if replace_gated_in_expression(&mut assign.right, start, gating_expression) {
-                return true;
-            }
-        }
-        Expression::SequenceExpression(seq) => {
-            for e in seq.expressions.iter_mut() {
-                if replace_gated_in_expression(e, start, gating_expression) {
-                    return true;
-                }
-            }
-        }
-        Expression::ConditionalExpression(cond) => {
-            if replace_gated_in_expression(&mut cond.consequent, start, gating_expression) {
-                return true;
-            }
-            if replace_gated_in_expression(&mut cond.alternate, start, gating_expression) {
-                return true;
-            }
-        }
-        Expression::ParenthesizedExpression(paren) => {
-            if replace_gated_in_expression(&mut paren.expression, start, gating_expression) {
-                return true;
-            }
-        }
-        Expression::NewExpression(new) => {
-            for arg in new.arguments.iter_mut() {
-                if replace_gated_in_expression(arg, start, gating_expression) {
-                    return true;
-                }
-            }
-        }
-        _ => {}
+
+        VisitResult::Continue
     }
-    false
+
+    fn visit_expression(&mut self, expr: &mut Expression) -> VisitResult {
+        match expr {
+            Expression::FunctionExpression(f) if f.base.start == Some(self.start) => {
+                *expr = self.gating_expression.clone();
+                VisitResult::Stop
+            }
+            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.start) => {
+                *expr = self.gating_expression.clone();
+                VisitResult::Stop
+            }
+            _ => VisitResult::Continue,
+        }
+    }
 }
 
 /// Apply the hoisted function declaration gating pattern.
@@ -3052,220 +2866,6 @@ fn apply_gated_function_hoisted(
     program.body.insert(fn_idx, gating_result_stmt);
 }
 
-/// Rename an identifier in a statement (recursive walk).
-fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name: &str) {
-    match stmt {
-        Statement::FunctionDeclaration(f) => {
-            rename_identifier_in_block(&mut f.body, old_name, new_name);
-        }
-        Statement::VariableDeclaration(var_decl) => {
-            for decl in var_decl.declarations.iter_mut() {
-                if let Some(ref mut init) = decl.init {
-                    rename_identifier_in_expression(init, old_name, new_name);
-                }
-            }
-        }
-        Statement::ExpressionStatement(expr_stmt) => {
-            rename_identifier_in_expression(&mut expr_stmt.expression, old_name, new_name);
-        }
-        Statement::ExportDefaultDeclaration(export) => match export.declaration.as_mut() {
-            ExportDefaultDecl::FunctionDeclaration(f) => {
-                rename_identifier_in_block(&mut f.body, old_name, new_name);
-            }
-            ExportDefaultDecl::Expression(e) => {
-                rename_identifier_in_expression(e, old_name, new_name);
-            }
-            _ => {}
-        },
-        Statement::ExportNamedDeclaration(export) => {
-            if let Some(ref mut decl) = export.declaration {
-                match decl.as_mut() {
-                    Declaration::FunctionDeclaration(f) => {
-                        rename_identifier_in_block(&mut f.body, old_name, new_name);
-                    }
-                    Declaration::VariableDeclaration(var_decl) => {
-                        for d in var_decl.declarations.iter_mut() {
-                            if let Some(ref mut init) = d.init {
-                                rename_identifier_in_expression(init, old_name, new_name);
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        // Recurse into block-containing statements
-        Statement::BlockStatement(block) => {
-            rename_identifier_in_block(block, old_name, new_name);
-        }
-        Statement::IfStatement(if_stmt) => {
-            rename_identifier_in_expression(&mut if_stmt.test, old_name, new_name);
-            rename_identifier_in_statement(&mut if_stmt.consequent, old_name, new_name);
-            if let Some(ref mut alt) = if_stmt.alternate {
-                rename_identifier_in_statement(alt, old_name, new_name);
-            }
-        }
-        Statement::TryStatement(try_stmt) => {
-            rename_identifier_in_block(&mut try_stmt.block, old_name, new_name);
-            if let Some(ref mut handler) = try_stmt.handler {
-                rename_identifier_in_block(&mut handler.body, old_name, new_name);
-            }
-            if let Some(ref mut finalizer) = try_stmt.finalizer {
-                rename_identifier_in_block(finalizer, old_name, new_name);
-            }
-        }
-        Statement::SwitchStatement(switch_stmt) => {
-            rename_identifier_in_expression(&mut switch_stmt.discriminant, old_name, new_name);
-            for case in switch_stmt.cases.iter_mut() {
-                for s in case.consequent.iter_mut() {
-                    rename_identifier_in_statement(s, old_name, new_name);
-                }
-            }
-        }
-        Statement::LabeledStatement(labeled) => {
-            rename_identifier_in_statement(&mut labeled.body, old_name, new_name);
-        }
-        Statement::ForStatement(for_stmt) => {
-            if let Some(ref mut init) = for_stmt.init {
-                match init.as_mut() {
-                    ForInit::VariableDeclaration(var_decl) => {
-                        for d in var_decl.declarations.iter_mut() {
-                            if let Some(ref mut init_expr) = d.init {
-                                rename_identifier_in_expression(init_expr, old_name, new_name);
-                            }
-                        }
-                    }
-                    ForInit::Expression(expr) => {
-                        rename_identifier_in_expression(expr, old_name, new_name);
-                    }
-                }
-            }
-            if let Some(ref mut test) = for_stmt.test {
-                rename_identifier_in_expression(test, old_name, new_name);
-            }
-            if let Some(ref mut update) = for_stmt.update {
-                rename_identifier_in_expression(update, old_name, new_name);
-            }
-            rename_identifier_in_statement(&mut for_stmt.body, old_name, new_name);
-        }
-        Statement::WhileStatement(while_stmt) => {
-            rename_identifier_in_expression(&mut while_stmt.test, old_name, new_name);
-            rename_identifier_in_statement(&mut while_stmt.body, old_name, new_name);
-        }
-        Statement::DoWhileStatement(do_while) => {
-            rename_identifier_in_expression(&mut do_while.test, old_name, new_name);
-            rename_identifier_in_statement(&mut do_while.body, old_name, new_name);
-        }
-        Statement::ForInStatement(for_in) => {
-            rename_identifier_in_expression(&mut for_in.right, old_name, new_name);
-            rename_identifier_in_statement(&mut for_in.body, old_name, new_name);
-        }
-        Statement::ForOfStatement(for_of) => {
-            rename_identifier_in_expression(&mut for_of.right, old_name, new_name);
-            rename_identifier_in_statement(&mut for_of.body, old_name, new_name);
-        }
-        Statement::WithStatement(with_stmt) => {
-            rename_identifier_in_expression(&mut with_stmt.object, old_name, new_name);
-            rename_identifier_in_statement(&mut with_stmt.body, old_name, new_name);
-        }
-        Statement::ReturnStatement(ret) => {
-            if let Some(ref mut arg) = ret.argument {
-                rename_identifier_in_expression(arg, old_name, new_name);
-            }
-        }
-        Statement::ThrowStatement(throw_stmt) => {
-            rename_identifier_in_expression(&mut throw_stmt.argument, old_name, new_name);
-        }
-        _ => {}
-    }
-}
-
-/// Rename an identifier in a block statement body (recursive walk).
-fn rename_identifier_in_block(block: &mut BlockStatement, old_name: &str, new_name: &str) {
-    for stmt in block.body.iter_mut() {
-        rename_identifier_in_statement(stmt, old_name, new_name);
-    }
-}
-
-/// Rename an identifier in an expression (recursive walk into function bodies).
-fn rename_identifier_in_expression(expr: &mut Expression, old_name: &str, new_name: &str) {
-    match expr {
-        Expression::Identifier(id) => {
-            if id.name == old_name {
-                id.name = new_name.to_string();
-            }
-        }
-        Expression::CallExpression(call) => {
-            rename_identifier_in_expression(&mut call.callee, old_name, new_name);
-            for arg in call.arguments.iter_mut() {
-                rename_identifier_in_expression(arg, old_name, new_name);
-            }
-        }
-        Expression::FunctionExpression(f) => {
-            rename_identifier_in_block(&mut f.body, old_name, new_name);
-        }
-        Expression::ArrowFunctionExpression(f) => {
-            if let ArrowFunctionBody::BlockStatement(block) = f.body.as_mut() {
-                rename_identifier_in_block(block, old_name, new_name);
-            }
-        }
-        Expression::ConditionalExpression(cond) => {
-            rename_identifier_in_expression(&mut cond.test, old_name, new_name);
-            rename_identifier_in_expression(&mut cond.consequent, old_name, new_name);
-            rename_identifier_in_expression(&mut cond.alternate, old_name, new_name);
-        }
-        Expression::ObjectExpression(obj) => {
-            for prop in obj.properties.iter_mut() {
-                match prop {
-                    ObjectExpressionProperty::ObjectProperty(p) => {
-                        rename_identifier_in_expression(&mut p.value, old_name, new_name);
-                    }
-                    ObjectExpressionProperty::SpreadElement(s) => {
-                        rename_identifier_in_expression(&mut s.argument, old_name, new_name);
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Expression::ArrayExpression(arr) => {
-            for elem in arr.elements.iter_mut().flatten() {
-                rename_identifier_in_expression(elem, old_name, new_name);
-            }
-        }
-        Expression::AssignmentExpression(assign) => {
-            rename_identifier_in_expression(&mut assign.right, old_name, new_name);
-        }
-        Expression::SequenceExpression(seq) => {
-            for e in seq.expressions.iter_mut() {
-                rename_identifier_in_expression(e, old_name, new_name);
-            }
-        }
-        Expression::LogicalExpression(log) => {
-            rename_identifier_in_expression(&mut log.left, old_name, new_name);
-            rename_identifier_in_expression(&mut log.right, old_name, new_name);
-        }
-        Expression::BinaryExpression(bin) => {
-            rename_identifier_in_expression(&mut bin.left, old_name, new_name);
-            rename_identifier_in_expression(&mut bin.right, old_name, new_name);
-        }
-        Expression::NewExpression(new) => {
-            rename_identifier_in_expression(&mut new.callee, old_name, new_name);
-            for arg in new.arguments.iter_mut() {
-                rename_identifier_in_expression(arg, old_name, new_name);
-            }
-        }
-        Expression::ParenthesizedExpression(paren) => {
-            rename_identifier_in_expression(&mut paren.expression, old_name, new_name);
-        }
-        Expression::OptionalCallExpression(call) => {
-            rename_identifier_in_expression(&mut call.callee, old_name, new_name);
-            for arg in call.arguments.iter_mut() {
-                rename_identifier_in_expression(arg, old_name, new_name);
-            }
-        }
-        _ => {}
-    }
-}
 
 /// Check if a statement contains a function whose BaseNode.start matches.
 fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
@@ -3405,429 +3005,110 @@ fn expr_has_fn_at_start(expr: &Expression, start: u32) -> bool {
     }
 }
 
-/// Replace a function in the program body with its compiled version.
-fn replace_function_in_program(program: &mut Program, compiled: &CompiledFnForReplacement) {
-    let start = match compiled.fn_start {
-        Some(s) => s,
-        None => return,
-    };
 
-    for stmt in program.body.iter_mut() {
-        if replace_fn_in_statement(stmt, start, compiled) {
-            return;
-        }
-    }
-}
-
-/// Clear comments from a BaseNode so Babel doesn't emit them in the compiled output.
-/// In the TS compiler, replaceWith() creates new nodes without comments; we achieve
-/// the same by stripping them from replaced function nodes.
-#[allow(dead_code)]
-fn clear_comments(base: &mut BaseNode) {
-    base.leading_comments = None;
-    base.trailing_comments = None;
-    base.inner_comments = None;
-}
-
-/// Try to replace a function in a statement. Returns true if replaced.
-fn replace_fn_in_statement(
-    stmt: &mut Statement,
+/// Visitor that replaces a compiled function in the AST by matching `base.start`.
+struct ReplaceFnVisitor<'a> {
     start: u32,
-    compiled: &CompiledFnForReplacement,
-) -> bool {
-    match stmt {
-        Statement::FunctionDeclaration(f) => {
-            if f.base.start == Some(start) {
-                f.id = compiled.codegen_fn.id.clone();
-                f.params = compiled.codegen_fn.params.clone();
-                f.body = compiled.codegen_fn.body.clone();
-                f.generator = compiled.codegen_fn.generator;
-                f.is_async = compiled.codegen_fn.is_async;
-                // Clear type annotations — the TS compiler creates a fresh node
-                // without returnType/typeParameters/predicate/declare
+    compiled: &'a CompiledFnForReplacement,
+}
+
+impl MutVisitor for ReplaceFnVisitor<'_> {
+    fn visit_statement(&mut self, stmt: &mut Statement) -> VisitResult {
+        match stmt {
+            Statement::FunctionDeclaration(f) if f.base.start == Some(self.start) => {
+                f.id = self.compiled.codegen_fn.id.clone();
+                f.params = self.compiled.codegen_fn.params.clone();
+                f.body = self.compiled.codegen_fn.body.clone();
+                f.generator = self.compiled.codegen_fn.generator;
+                f.is_async = self.compiled.codegen_fn.is_async;
                 f.return_type = None;
                 f.type_parameters = None;
                 f.predicate = None;
                 f.declare = None;
-                return true;
+                return VisitResult::Stop;
             }
-        }
-        Statement::VariableDeclaration(var_decl) => {
-            for decl in var_decl.declarations.iter_mut() {
-                if let Some(ref mut init) = decl.init {
-                    if replace_fn_in_expression(init, start, compiled) {
-                        return true;
-                    }
-                }
-            }
-        }
-        Statement::ExportDefaultDeclaration(export) => {
-            match export.declaration.as_mut() {
-                ExportDefaultDecl::FunctionDeclaration(f) => {
-                    if f.base.start == Some(start) {
-                        f.id = compiled.codegen_fn.id.clone();
-                        f.params = compiled.codegen_fn.params.clone();
-                        f.body = compiled.codegen_fn.body.clone();
-                        f.generator = compiled.codegen_fn.generator;
-                        f.is_async = compiled.codegen_fn.is_async;
+            Statement::ExportDefaultDeclaration(export) => {
+                if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_mut() {
+                    if f.base.start == Some(self.start) {
+                        f.id = self.compiled.codegen_fn.id.clone();
+                        f.params = self.compiled.codegen_fn.params.clone();
+                        f.body = self.compiled.codegen_fn.body.clone();
+                        f.generator = self.compiled.codegen_fn.generator;
+                        f.is_async = self.compiled.codegen_fn.is_async;
                         f.return_type = None;
                         f.type_parameters = None;
                         f.predicate = None;
                         f.declare = None;
-                        return true;
+                        return VisitResult::Stop;
                     }
                 }
-                ExportDefaultDecl::Expression(e) => {
-                    if replace_fn_in_expression(e, start, compiled) {
-                        return true;
-                    }
-                }
-                _ => {}
             }
-        }
-        Statement::ExportNamedDeclaration(export) => {
-            if let Some(ref mut decl) = export.declaration {
-                match decl.as_mut() {
-                    Declaration::FunctionDeclaration(f) => {
-                        if f.base.start == Some(start) {
-                            f.id = compiled.codegen_fn.id.clone();
-                            f.params = compiled.codegen_fn.params.clone();
-                            f.body = compiled.codegen_fn.body.clone();
-                            f.generator = compiled.codegen_fn.generator;
-                            f.is_async = compiled.codegen_fn.is_async;
+            Statement::ExportNamedDeclaration(export) => {
+                if let Some(ref mut decl) = export.declaration {
+                    if let Declaration::FunctionDeclaration(f) = decl.as_mut() {
+                        if f.base.start == Some(self.start) {
+                            f.id = self.compiled.codegen_fn.id.clone();
+                            f.params = self.compiled.codegen_fn.params.clone();
+                            f.body = self.compiled.codegen_fn.body.clone();
+                            f.generator = self.compiled.codegen_fn.generator;
+                            f.is_async = self.compiled.codegen_fn.is_async;
                             f.return_type = None;
                             f.type_parameters = None;
                             f.predicate = None;
                             f.declare = None;
-                            return true;
-                        }
-                    }
-                    Declaration::VariableDeclaration(var_decl) => {
-                        for d in var_decl.declarations.iter_mut() {
-                            if let Some(ref mut init) = d.init {
-                                if replace_fn_in_expression(init, start, compiled) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Statement::ExpressionStatement(expr_stmt) => {
-            if replace_fn_in_expression(&mut expr_stmt.expression, start, compiled) {
-                return true;
-            }
-        }
-        // Recurse into block-containing statements to find nested functions
-        Statement::BlockStatement(block) => {
-            for s in block.body.iter_mut() {
-                if replace_fn_in_statement(s, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Statement::IfStatement(if_stmt) => {
-            if replace_fn_in_expression(&mut if_stmt.test, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_statement(&mut if_stmt.consequent, start, compiled) {
-                return true;
-            }
-            if let Some(ref mut alt) = if_stmt.alternate {
-                if replace_fn_in_statement(alt, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Statement::TryStatement(try_stmt) => {
-            for s in try_stmt.block.body.iter_mut() {
-                if replace_fn_in_statement(s, start, compiled) {
-                    return true;
-                }
-            }
-            if let Some(ref mut handler) = try_stmt.handler {
-                for s in handler.body.body.iter_mut() {
-                    if replace_fn_in_statement(s, start, compiled) {
-                        return true;
-                    }
-                }
-            }
-            if let Some(ref mut finalizer) = try_stmt.finalizer {
-                for s in finalizer.body.iter_mut() {
-                    if replace_fn_in_statement(s, start, compiled) {
-                        return true;
-                    }
-                }
-            }
-        }
-        Statement::SwitchStatement(switch_stmt) => {
-            if replace_fn_in_expression(&mut switch_stmt.discriminant, start, compiled) {
-                return true;
-            }
-            for case in switch_stmt.cases.iter_mut() {
-                if let Some(ref mut test) = case.test {
-                    if replace_fn_in_expression(test, start, compiled) {
-                        return true;
-                    }
-                }
-                for s in case.consequent.iter_mut() {
-                    if replace_fn_in_statement(s, start, compiled) {
-                        return true;
-                    }
-                }
-            }
-        }
-        Statement::LabeledStatement(labeled) => {
-            if replace_fn_in_statement(&mut labeled.body, start, compiled) {
-                return true;
-            }
-        }
-        Statement::ForStatement(for_stmt) => {
-            if let Some(ref mut init) = for_stmt.init {
-                match init.as_mut() {
-                    ForInit::VariableDeclaration(var_decl) => {
-                        for d in var_decl.declarations.iter_mut() {
-                            if let Some(ref mut init_expr) = d.init {
-                                if replace_fn_in_expression(init_expr, start, compiled) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    ForInit::Expression(expr) => {
-                        if replace_fn_in_expression(expr, start, compiled) {
-                            return true;
+                            return VisitResult::Stop;
                         }
                     }
                 }
             }
-            if let Some(ref mut test) = for_stmt.test {
-                if replace_fn_in_expression(test, start, compiled) {
-                    return true;
-                }
-            }
-            if let Some(ref mut update) = for_stmt.update {
-                if replace_fn_in_expression(update, start, compiled) {
-                    return true;
-                }
-            }
-            if replace_fn_in_statement(&mut for_stmt.body, start, compiled) {
-                return true;
-            }
+            _ => {}
         }
-        Statement::WhileStatement(while_stmt) => {
-            if replace_fn_in_expression(&mut while_stmt.test, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_statement(&mut while_stmt.body, start, compiled) {
-                return true;
-            }
-        }
-        Statement::DoWhileStatement(do_while) => {
-            if replace_fn_in_expression(&mut do_while.test, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_statement(&mut do_while.body, start, compiled) {
-                return true;
-            }
-        }
-        Statement::ForInStatement(for_in) => {
-            if replace_fn_in_expression(&mut for_in.right, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_statement(&mut for_in.body, start, compiled) {
-                return true;
-            }
-        }
-        Statement::ForOfStatement(for_of) => {
-            if replace_fn_in_expression(&mut for_of.right, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_statement(&mut for_of.body, start, compiled) {
-                return true;
-            }
-        }
-        Statement::WithStatement(with_stmt) => {
-            if replace_fn_in_expression(&mut with_stmt.object, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_statement(&mut with_stmt.body, start, compiled) {
-                return true;
-            }
-        }
-        Statement::ReturnStatement(ret) => {
-            if let Some(ref mut arg) = ret.argument {
-                if replace_fn_in_expression(arg, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Statement::ThrowStatement(throw_stmt) => {
-            if replace_fn_in_expression(&mut throw_stmt.argument, start, compiled) {
-                return true;
-            }
-        }
-        _ => {}
+        VisitResult::Continue
     }
-    false
-}
 
-/// Try to replace a function in an expression. Returns true if replaced.
-fn replace_fn_in_expression(
-    expr: &mut Expression,
-    start: u32,
-    compiled: &CompiledFnForReplacement,
-) -> bool {
-    match expr {
-        Expression::FunctionExpression(f) => {
-            if f.base.start == Some(start) {
-                f.id = compiled.codegen_fn.id.clone();
-                f.params = compiled.codegen_fn.params.clone();
-                f.body = compiled.codegen_fn.body.clone();
-                f.generator = compiled.codegen_fn.generator;
-                f.is_async = compiled.codegen_fn.is_async;
-                // Clear type annotations — the TS compiler creates a fresh node
+    fn visit_expression(&mut self, expr: &mut Expression) -> VisitResult {
+        match expr {
+            Expression::FunctionExpression(f) if f.base.start == Some(self.start) => {
+                f.id = self.compiled.codegen_fn.id.clone();
+                f.params = self.compiled.codegen_fn.params.clone();
+                f.body = self.compiled.codegen_fn.body.clone();
+                f.generator = self.compiled.codegen_fn.generator;
+                f.is_async = self.compiled.codegen_fn.is_async;
                 f.return_type = None;
                 f.type_parameters = None;
-                return true;
+                VisitResult::Stop
             }
-        }
-        Expression::ArrowFunctionExpression(f) => {
-            if f.base.start == Some(start) {
-                f.params = compiled.codegen_fn.params.clone();
+            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.start) => {
+                f.params = self.compiled.codegen_fn.params.clone();
                 f.body = Box::new(ArrowFunctionBody::BlockStatement(
-                    compiled.codegen_fn.body.clone(),
+                    self.compiled.codegen_fn.body.clone(),
                 ));
-                f.generator = compiled.codegen_fn.generator;
-                f.is_async = compiled.codegen_fn.is_async;
-                // Arrow functions always have expression: false after compilation
-                // since codegen produces a BlockStatement body
+                f.generator = self.compiled.codegen_fn.generator;
+                f.is_async = self.compiled.codegen_fn.is_async;
                 f.expression = Some(false);
-                // Clear type annotations — the TS compiler creates a fresh node
                 f.return_type = None;
                 f.type_parameters = None;
                 f.predicate = None;
-                return true;
+                VisitResult::Stop
             }
+            _ => VisitResult::Continue,
         }
-        // Handle forwardRef/memo wrappers: replace the inner function
-        Expression::CallExpression(call) => {
-            for arg in call.arguments.iter_mut() {
-                if replace_fn_in_expression(arg, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        // Recurse into sub-expressions that may contain nested functions
-        Expression::ObjectExpression(obj) => {
-            for prop in obj.properties.iter_mut() {
-                match prop {
-                    ObjectExpressionProperty::ObjectProperty(p) => {
-                        if replace_fn_in_expression(&mut p.value, start, compiled) {
-                            return true;
-                        }
-                    }
-                    ObjectExpressionProperty::SpreadElement(s) => {
-                        if replace_fn_in_expression(&mut s.argument, start, compiled) {
-                            return true;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-        Expression::ArrayExpression(arr) => {
-            for elem in arr.elements.iter_mut().flatten() {
-                if replace_fn_in_expression(elem, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Expression::AssignmentExpression(assign) => {
-            if replace_fn_in_expression(&mut assign.right, start, compiled) {
-                return true;
-            }
-        }
-        Expression::SequenceExpression(seq) => {
-            for e in seq.expressions.iter_mut() {
-                if replace_fn_in_expression(e, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Expression::ConditionalExpression(cond) => {
-            if replace_fn_in_expression(&mut cond.consequent, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_expression(&mut cond.alternate, start, compiled) {
-                return true;
-            }
-        }
-        Expression::LogicalExpression(log) => {
-            if replace_fn_in_expression(&mut log.left, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_expression(&mut log.right, start, compiled) {
-                return true;
-            }
-        }
-        Expression::BinaryExpression(bin) => {
-            if replace_fn_in_expression(&mut bin.left, start, compiled) {
-                return true;
-            }
-            if replace_fn_in_expression(&mut bin.right, start, compiled) {
-                return true;
-            }
-        }
-        Expression::UnaryExpression(unary) => {
-            if replace_fn_in_expression(&mut unary.argument, start, compiled) {
-                return true;
-            }
-        }
-        Expression::NewExpression(new) => {
-            for arg in new.arguments.iter_mut() {
-                if replace_fn_in_expression(arg, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Expression::ParenthesizedExpression(paren) => {
-            if replace_fn_in_expression(&mut paren.expression, start, compiled) {
-                return true;
-            }
-        }
-        Expression::OptionalCallExpression(call) => {
-            for arg in call.arguments.iter_mut() {
-                if replace_fn_in_expression(arg, start, compiled) {
-                    return true;
-                }
-            }
-        }
-        Expression::TSAsExpression(ts) => {
-            if replace_fn_in_expression(&mut ts.expression, start, compiled) {
-                return true;
-            }
-        }
-        Expression::TSSatisfiesExpression(ts) => {
-            if replace_fn_in_expression(&mut ts.expression, start, compiled) {
-                return true;
-            }
-        }
-        Expression::TSNonNullExpression(ts) => {
-            if replace_fn_in_expression(&mut ts.expression, start, compiled) {
-                return true;
-            }
-        }
-        Expression::TypeCastExpression(tc) => {
-            if replace_fn_in_expression(&mut tc.expression, start, compiled) {
-                return true;
-            }
-        }
-        _ => {}
     }
-    false
+}
+
+/// Visitor that renames all occurrences of an identifier in expression position.
+struct RenameIdentifierVisitor<'a> {
+    old_name: &'a str,
+    new_name: &'a str,
+}
+
+impl MutVisitor for RenameIdentifierVisitor<'_> {
+    fn visit_identifier(&mut self, node: &mut Identifier) -> VisitResult {
+        if node.name == self.old_name {
+            node.name = self.new_name.to_string();
+        }
+        VisitResult::Continue
+    }
 }
 
 /// Main entry point for the React Compiler.
