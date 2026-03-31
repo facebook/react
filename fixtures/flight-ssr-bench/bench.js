@@ -138,13 +138,13 @@ function renderFizzNode(AppComponent, itemCount) {
 }
 
 // Flight + Fizz (Node) — RSC render → Node stream → Fizz via Node streams.
-function renderFlightFizzNode(rscBundle, AppComponent, itemCount) {
+function renderFlightFizzNode(renderRSCNode, AppComponent, itemCount) {
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
 
   // Phase 1: RSC → Flight stream
-  const {pipe: rscPipe} = rscBundle(clientManifest, AppComponent, itemCount);
+  const {pipe: rscPipe} = renderRSCNode(clientManifest, AppComponent, itemCount);
   const flightStream = new PassThrough();
   rscPipe(flightStream);
 
@@ -197,19 +197,15 @@ async function renderFizzEdge(AppComponent, itemCount) {
 }
 
 // Flight + Fizz (Edge) — RSC render → ReadableStream → Fizz via web streams.
-function renderFlightFizzEdge(rscBundle, AppComponent, itemCount) {
+function renderFlightFizzEdge(renderRSCEdge, AppComponent, itemCount) {
   const React = require('react');
   const {renderToReadableStream} = require('react-dom/server');
   const {
     createFromReadableStream,
   } = require('react-server-dom-webpack/client.edge');
-  const {Readable} = require('stream');
 
-  // Phase 1: RSC → Node stream → Web ReadableStream
-  const {pipe: rscPipe} = rscBundle(clientManifest, AppComponent, itemCount);
-  const nodeStream = new PassThrough();
-  rscPipe(nodeStream);
-  const webStream = Readable.toWeb(nodeStream);
+  // Phase 1: RSC → Web ReadableStream
+  const webStream = renderRSCEdge(clientManifest, AppComponent, itemCount);
 
   // Phase 2: ReadableStream → React tree → HTML
   const cachedResult = createFromReadableStream(webStream, {
@@ -515,8 +511,8 @@ async function main() {
   console.log('Building RSC bundle...\n');
   await build();
 
-  const rscBundle = require('./build/rsc-bundle.js').default;
-  const rscApps = require('./build/rsc-bundle.js');
+  const {renderRSCNode, renderRSCEdge, App: RSCApp, AppAsync: RSCAppAsync} =
+    require('./build/rsc-bundle.js');
   const App = require('./src/App.js').default;
   const AppAsync = require('./src/AppAsync.js').default;
 
@@ -594,8 +590,8 @@ async function main() {
   console.log('Fizz (Node, sync):          %d bytes', fizzNodeHtml.length);
 
   const flightFizzNodeHtml = await renderFlightFizzNode(
-    rscBundle,
-    rscApps.App,
+    renderRSCNode,
+    RSCApp,
     ITEM_COUNT
   );
   console.log(
@@ -607,8 +603,8 @@ async function main() {
   console.log('Fizz (Node, async):         %d bytes', fizzNodeAsyncHtml.length);
 
   const flightFizzNodeAsyncHtml = await renderFlightFizzNode(
-    rscBundle,
-    rscApps.AppAsync,
+    renderRSCNode,
+    RSCAppAsync,
     ITEM_COUNT
   );
   console.log(
@@ -623,8 +619,8 @@ async function main() {
   console.log('Fizz (Edge, async):         %d bytes', fizzEdgeAsyncHtml.length);
 
   const flightFizzEdgeHtml = await renderFlightFizzEdge(
-    rscBundle,
-    rscApps.App,
+    renderRSCEdge,
+    RSCApp,
     ITEM_COUNT
   );
   console.log(
@@ -633,8 +629,8 @@ async function main() {
   );
 
   const flightFizzEdgeAsyncHtml = await renderFlightFizzEdge(
-    rscBundle,
-    rscApps.AppAsync,
+    renderRSCEdge,
+    RSCAppAsync,
     ITEM_COUNT
   );
   console.log(
@@ -662,7 +658,7 @@ async function main() {
 
     await profileRun(
       'Flight + Fizz (Node, sync)',
-      () => renderFlightFizzNode(rscBundle, rscApps.App, ITEM_COUNT),
+      () => renderFlightFizzNode(renderRSCNode, RSCApp, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
       path.join(profileDir, 'flight-fizz-node-sync.cpuprofile')
@@ -678,7 +674,7 @@ async function main() {
 
     await profileRun(
       'Flight + Fizz (Node, async)',
-      () => renderFlightFizzNode(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+      () => renderFlightFizzNode(renderRSCNode, RSCAppAsync, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
       path.join(profileDir, 'flight-fizz-node-async.cpuprofile')
@@ -694,7 +690,7 @@ async function main() {
 
     await profileRun(
       'Flight + Fizz (Edge, sync)',
-      () => renderFlightFizzEdge(rscBundle, rscApps.App, ITEM_COUNT),
+      () => renderFlightFizzEdge(renderRSCEdge, RSCApp, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
       path.join(profileDir, 'flight-fizz-edge-sync.cpuprofile')
@@ -710,7 +706,7 @@ async function main() {
 
     await profileRun(
       'Flight + Fizz (Edge, async)',
-      () => renderFlightFizzEdge(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+      () => renderFlightFizzEdge(renderRSCEdge, RSCAppAsync, ITEM_COUNT),
       PROFILE_WARMUP,
       PROFILE_ITERATIONS,
       path.join(profileDir, 'flight-fizz-edge-async.cpuprofile')
@@ -741,7 +737,7 @@ async function main() {
 
   const flightFizzNodeSync = await runBenchmark(
     'Flight + Fizz (Node, sync)',
-    () => renderFlightFizzNode(rscBundle, rscApps.App, ITEM_COUNT),
+    () => renderFlightFizzNode(renderRSCNode, RSCApp, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
@@ -757,7 +753,7 @@ async function main() {
 
   const flightFizzNodeAsync = await runBenchmark(
     'Flight + Fizz (Node, async)',
-    () => renderFlightFizzNode(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+    () => renderFlightFizzNode(renderRSCNode, RSCAppAsync, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
@@ -773,7 +769,7 @@ async function main() {
 
   const flightFizzEdgeSync = await runBenchmark(
     'Flight + Fizz (Edge, sync)',
-    () => renderFlightFizzEdge(rscBundle, rscApps.App, ITEM_COUNT),
+    () => renderFlightFizzEdge(renderRSCEdge, RSCApp, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );
@@ -789,7 +785,7 @@ async function main() {
 
   const flightFizzEdgeAsync = await runBenchmark(
     'Flight + Fizz (Edge, async)',
-    () => renderFlightFizzEdge(rscBundle, rscApps.AppAsync, ITEM_COUNT),
+    () => renderFlightFizzEdge(renderRSCEdge, RSCAppAsync, ITEM_COUNT),
     ITERATIONS,
     WARMUP
   );

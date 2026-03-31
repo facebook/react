@@ -122,12 +122,12 @@ function renderClassical(AppComponent, itemCount) {
   });
 }
 
-function renderFlight(rscBundle, AppComponent, itemCount) {
+function renderFlight(renderRSCNode, AppComponent, itemCount) {
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
 
-  const {pipe: rscPipe} = rscBundle(clientManifest, AppComponent, itemCount);
+  const {pipe: rscPipe} = renderRSCNode(clientManifest, AppComponent, itemCount);
   const rscStream = new PassThrough();
   const flightStream = new PassThrough();
   const rscPayloadChunks = [];
@@ -181,8 +181,8 @@ async function main() {
   console.log('Building RSC bundle...\n');
   await build();
 
-  const rscBundle = require('./build/rsc-bundle.js').default;
-  const rscApps = require('./build/rsc-bundle.js');
+  const {renderRSCNode, App: RSCApp, AppAsync: RSCAppAsync} =
+    require('./build/rsc-bundle.js');
   const App = require('./src/App.js').default;
   const AppAsync = require('./src/AppAsync.js').default;
 
@@ -193,7 +193,7 @@ async function main() {
     {name: 'classical-sync', render: () => renderClassical(App, itemCount)},
     {
       name: 'flight-sync',
-      render: () => renderFlight(rscBundle, rscApps.App, itemCount),
+      render: () => renderFlight(renderRSCNode, RSCApp, itemCount),
     },
     {
       name: 'classical-async',
@@ -201,7 +201,7 @@ async function main() {
     },
     {
       name: 'flight-async',
-      render: () => renderFlight(rscBundle, rscApps.AppAsync, itemCount),
+      render: () => renderFlight(renderRSCNode, RSCAppAsync, itemCount),
     },
   ];
 
