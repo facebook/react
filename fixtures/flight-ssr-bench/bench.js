@@ -118,7 +118,7 @@ function renderFizzNode(AppComponent, itemCount) {
   return new Promise(function (resolve, reject) {
     const element = React.createElement(AppComponent, {itemCount});
     const {pipe} = renderToPipeableStream(element, {
-      onAllReady() {
+      onShellReady() {
         const chunks = [];
         const writable = new Writable({
           write(chunk, _encoding, cb) {
@@ -159,7 +159,7 @@ function renderFlightFizzNode(renderRSCNode, AppComponent, itemCount) {
     }
 
     const {pipe} = renderToPipeableStream(React.createElement(Root), {
-      onAllReady() {
+      onShellReady() {
         const chunks = [];
         const writable = new Writable({
           write(chunk, _encoding, cb) {
