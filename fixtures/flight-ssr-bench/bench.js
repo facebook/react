@@ -175,22 +175,50 @@ function renderFlightFizzNode(renderRSCNode, AppComponent, itemCount) {
 
     const {pipe} = renderToPipeableStream(React.createElement(Root), {
       onShellReady() {
-        const chunks = [];
+        const outputChunks = [];
+        const trailer = '</body></html>';
+        let buffered = [];
+        let timeout = null;
         const injector = new Transform({
           transform(chunk, _encoding, cb) {
-            chunks.push(chunk);
-            if (flightScripts) {
-              chunks.push(Buffer.from(flightScripts));
-              flightScripts = '';
+            buffered.push(chunk);
+            if (!timeout) {
+              timeout = setTimeout(() => {
+                for (const buf of buffered) {
+                  let str = buf.toString();
+                  if (str.endsWith(trailer)) {
+                    str = str.slice(0, -trailer.length);
+                  }
+                  outputChunks.push(Buffer.from(str));
+                }
+                buffered.length = 0;
+                timeout = null;
+                if (flightScripts) {
+                  outputChunks.push(Buffer.from(flightScripts));
+                  flightScripts = '';
+                }
+              }, 0);
             }
             cb();
           },
           flush(cb) {
+            if (timeout) {
+              clearTimeout(timeout);
+              for (const buf of buffered) {
+                let str = buf.toString();
+                if (str.endsWith(trailer)) {
+                  str = str.slice(0, -trailer.length);
+                }
+                outputChunks.push(Buffer.from(str));
+              }
+              buffered.length = 0;
+            }
             if (flightScripts) {
-              chunks.push(Buffer.from(flightScripts));
+              outputChunks.push(Buffer.from(flightScripts));
               flightScripts = '';
             }
-            resolve(Buffer.concat(chunks).toString('utf-8'));
+            outputChunks.push(Buffer.from(trailer));
+            resolve(Buffer.concat(outputChunks).toString('utf-8'));
             cb();
           },
         });
@@ -484,7 +512,7 @@ function printGrid(colHeaders, rows, getValue, unit, note) {
   const labelWidth = Math.max(...rows.map(r => r[0].length));
   const suffix = unit ? ' ' + unit : '';
   const fmtVal = v =>
-    (v.toFixed(unit === 'req/s' ? 0 : 1) + suffix).padStart(10 + suffix.length);
+    (v.toFixed(1) + suffix).padStart(10 + suffix.length);
   const fmtPct = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
   const colWidth = 10 + suffix.length;
 

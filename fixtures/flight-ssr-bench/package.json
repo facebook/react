@@ -13,15 +13,17 @@
     "react": "experimental",
     "react-dom": "experimental",
     "react-server-dom-webpack": "experimental",
+    "autocannon": "^8.0.0",
     "webpack": "^5.64.4"
   },
   "scripts": {
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebench": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "build": "NODE_ENV=production node render.js",
-    "start": "NODE_ENV=production node render.js && npx -y serve build",
+    "start": "NODE_ENV=production node bench-server.js",
     "bench": "NODE_ENV=production node --expose-gc bench.js",
     "bench:profile": "NODE_ENV=production node --expose-gc bench.js --profile",
-    "bench:concurrent": "NODE_ENV=production node --expose-gc bench.js --concurrent"
+    "bench:concurrent": "NODE_ENV=production node --expose-gc bench.js --concurrent",
+    "bench:server": "NODE_ENV=production node bench-server.js --bench"
   }
 }
