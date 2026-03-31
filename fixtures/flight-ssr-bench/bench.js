@@ -15,6 +15,7 @@ const inspector = require('node:inspector');
 
 const PROFILE_MODE = process.argv.includes('--profile');
 const ISOLATE_MODE = process.argv.includes('--isolate');
+const CONCURRENT_MODE = process.argv.includes('--concurrent');
 
 // ---------------------------------------------------------------------------
 // Manifest setup (WebpackMock pattern)
@@ -298,6 +299,111 @@ function printResult(result) {
   );
 }
 
+async function runConcurrent(name, fn, total, concurrency, warmup) {
+  for (let i = 0; i < warmup; i++) {
+    await fn();
+  }
+
+  let gcCount = 0;
+  let gcTotalMs = 0;
+  const gcObs = new PerformanceObserver(list => {
+    for (const entry of list.getEntries()) {
+      gcCount++;
+      gcTotalMs += entry.duration;
+    }
+  });
+  gcObs.observe({entryTypes: ['gc']});
+
+  const latencies = new Array(total);
+  let completed = 0;
+  let launched = 0;
+
+  const start = performance.now();
+  await new Promise(resolve => {
+    function launch() {
+      while (launched < total && launched - completed < concurrency) {
+        const idx = launched++;
+        const t0 = performance.now();
+        fn().then(() => {
+          latencies[idx] = performance.now() - t0;
+          completed++;
+          if (completed === total) {
+            resolve();
+          } else {
+            launch();
+          }
+        });
+      }
+    }
+    launch();
+  });
+  const elapsed = performance.now() - start;
+  gcObs.disconnect();
+
+  const sorted = [...latencies].sort((a, b) => a - b);
+  const mean = sorted.reduce((s, t) => s + t, 0) / sorted.length;
+  const p95 = sorted[Math.floor(sorted.length * 0.95)];
+
+  return {
+    name,
+    reqPerSec: (total / elapsed) * 1000,
+    mean,
+    p95,
+    total,
+    concurrency,
+    gcCount,
+    gcTotalMs,
+  };
+}
+
+function printConcurrentResult(result) {
+  console.log('  %s:', result.name);
+  console.log('    Req/s:  %s', result.reqPerSec.toFixed(1));
+  console.log('    Mean:   %s ms', result.mean.toFixed(2));
+  console.log('    P95:    %s ms', result.p95.toFixed(2));
+  console.log(
+    '    GC:     %d pauses, %s ms total (%s ms/req)',
+    result.gcCount,
+    result.gcTotalMs.toFixed(1),
+    (result.gcTotalMs / result.total).toFixed(2)
+  );
+}
+
+function printGrid(colHeaders, rows, getValue, unit, note) {
+  const labelWidth = Math.max(...rows.map(r => r[0].length));
+  const suffix = unit ? ' ' + unit : '';
+  const fmtVal = v =>
+    (v.toFixed(unit === 'req/s' ? 0 : 1) + suffix).padStart(10 + suffix.length);
+  const fmtPct = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
+  const colWidth = 10 + suffix.length;
+
+  const header =
+    ''.padEnd(labelWidth) +
+    '  ' +
+    colHeaders.map(h => h.padStart(colWidth)).join('  ') +
+    '     Delta';
+  console.log('  ' + header);
+  console.log('  ' + '-'.repeat(header.length));
+  for (const [label, a, b] of rows) {
+    const va = getValue(a);
+    const vb = getValue(b);
+    const pct = ((vb - va) / va) * 100;
+    console.log(
+      '  ' +
+        label.padEnd(labelWidth) +
+        '  ' +
+        fmtVal(va) +
+        '  ' +
+        fmtVal(vb) +
+        '  ' +
+        fmtPct(pct)
+    );
+  }
+  if (note) {
+    console.log('  (%s)', note);
+  }
+}
+
 function getOverhead(baseline, comparison) {
   const pctMedian =
     ((comparison.median - baseline.median) / baseline.median) * 100;
@@ -308,7 +414,7 @@ function getOverhead(baseline, comparison) {
   };
 }
 
-function printOverheadTable(rows) {
+function printOverheadTable(rows, valueLabel) {
   const baselineWidth = Math.max(
     ...rows.filter(Boolean).map(r => r.baseline.length)
   );
@@ -321,7 +427,7 @@ function printOverheadTable(rows) {
       'Baseline'.padEnd(baselineWidth) +
       '  ' +
       'Comparison'.padEnd(comparisonWidth) +
-      '    Median'
+      '    ' + (valueLabel || 'Median')
   );
   console.log('  ' + '-'.repeat(baselineWidth + comparisonWidth + 14));
   for (const row of rows) {
@@ -719,6 +825,125 @@ async function main() {
     return;
   }
 
+  // --- Concurrent Benchmark ---
+  if (CONCURRENT_MODE) {
+    const CONCURRENCY = 50;
+    const TOTAL = 500;
+    const CONC_WARMUP = 20;
+
+    console.log(
+      '\n--- Concurrent Benchmark (%d warmup, %d concurrency, %d requests, %d items) ---\n',
+      CONC_WARMUP,
+      CONCURRENCY,
+      TOTAL,
+      ITEM_COUNT
+    );
+
+    const fizzNodeSync = await runConcurrent(
+      'Fizz (Node, sync)',
+      () => renderFizzNode(App, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(fizzNodeSync);
+
+    const flightFizzNodeSync = await runConcurrent(
+      'Flight + Fizz (Node, sync)',
+      () => renderFlightFizzNode(renderRSCNode, RSCApp, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(flightFizzNodeSync);
+
+    const fizzNodeAsync = await runConcurrent(
+      'Fizz (Node, async)',
+      () => renderFizzNode(AppAsync, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(fizzNodeAsync);
+
+    const flightFizzNodeAsync = await runConcurrent(
+      'Flight + Fizz (Node, async)',
+      () => renderFlightFizzNode(renderRSCNode, RSCAppAsync, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(flightFizzNodeAsync);
+
+    const fizzEdgeSync = await runConcurrent(
+      'Fizz (Edge, sync)',
+      () => renderFizzEdge(App, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(fizzEdgeSync);
+
+    const flightFizzEdgeSync = await runConcurrent(
+      'Flight + Fizz (Edge, sync)',
+      () => renderFlightFizzEdge(renderRSCEdge, RSCApp, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(flightFizzEdgeSync);
+
+    const fizzEdgeAsync = await runConcurrent(
+      'Fizz (Edge, async)',
+      () => renderFizzEdge(AppAsync, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(fizzEdgeAsync);
+
+    const flightFizzEdgeAsync = await runConcurrent(
+      'Flight + Fizz (Edge, async)',
+      () => renderFlightFizzEdge(renderRSCEdge, RSCAppAsync, ITEM_COUNT),
+      TOTAL,
+      CONCURRENCY,
+      CONC_WARMUP
+    );
+    printConcurrentResult(flightFizzEdgeAsync);
+
+    const rps = r => r.reqPerSec;
+
+    console.log('\n--- Flight overhead ---\n');
+    printGrid(
+      ['Fizz', 'Flight+Fizz'],
+      [
+        ['Node sync', fizzNodeSync, flightFizzNodeSync],
+        ['Node async', fizzNodeAsync, flightFizzNodeAsync],
+        ['Edge sync', fizzEdgeSync, flightFizzEdgeSync],
+        ['Edge async', fizzEdgeAsync, flightFizzEdgeAsync],
+      ],
+      rps,
+      'req/s',
+      'higher is better'
+    );
+
+    console.log('\n--- Edge vs Node ---\n');
+    printGrid(
+      ['Node', 'Edge'],
+      [
+        ['Fizz sync', fizzNodeSync, fizzEdgeSync],
+        ['Fizz async', fizzNodeAsync, fizzEdgeAsync],
+        ['Flight+Fizz sync', flightFizzNodeSync, flightFizzEdgeSync],
+        ['Flight+Fizz async', flightFizzNodeAsync, flightFizzEdgeAsync],
+      ],
+      rps,
+      'req/s',
+      'higher is better'
+    );
+
+    return;
+  }
+
   // --- Benchmark ---
   console.log(
     '\n--- Benchmark (%d warmup, %d iterations, %d items) ---\n',
@@ -791,18 +1016,35 @@ async function main() {
   );
   printResult(flightFizzEdgeAsync);
 
-  console.log('\n--- Overhead ---\n');
-  printOverheadTable([
-    getOverhead(fizzNodeSync, flightFizzNodeSync),
-    getOverhead(fizzNodeAsync, flightFizzNodeAsync),
-    getOverhead(fizzEdgeSync, flightFizzEdgeSync),
-    getOverhead(fizzEdgeAsync, flightFizzEdgeAsync),
-    null,
-    getOverhead(fizzNodeSync, fizzEdgeSync),
-    getOverhead(fizzNodeAsync, fizzEdgeAsync),
-    getOverhead(flightFizzNodeSync, flightFizzEdgeSync),
-    getOverhead(flightFizzNodeAsync, flightFizzEdgeAsync),
-  ]);
+  const median = r => r.median;
+
+  console.log('\n--- Flight overhead ---\n');
+  printGrid(
+    ['Fizz', 'Flight+Fizz'],
+    [
+      ['Node sync', fizzNodeSync, flightFizzNodeSync],
+      ['Node async', fizzNodeAsync, flightFizzNodeAsync],
+      ['Edge sync', fizzEdgeSync, flightFizzEdgeSync],
+      ['Edge async', fizzEdgeAsync, flightFizzEdgeAsync],
+    ],
+    median,
+    'ms',
+    'median, lower is better'
+  );
+
+  console.log('\n--- Edge vs Node ---\n');
+  printGrid(
+    ['Node', 'Edge'],
+    [
+      ['Fizz sync', fizzNodeSync, fizzEdgeSync],
+      ['Fizz async', fizzNodeAsync, fizzEdgeAsync],
+      ['Flight+Fizz sync', flightFizzNodeSync, flightFizzEdgeSync],
+      ['Flight+Fizz async', flightFizzNodeAsync, flightFizzEdgeAsync],
+    ],
+    median,
+    'ms',
+    'median, lower is better'
+  );
 }
 
 main().catch(function (err) {
