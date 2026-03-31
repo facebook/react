@@ -14,7 +14,6 @@ const {PassThrough, Writable} = require('stream');
 const inspector = require('node:inspector');
 
 const PROFILE_MODE = process.argv.includes('--profile');
-const ISOLATE_MODE = process.argv.includes('--isolate');
 const CONCURRENT_MODE = process.argv.includes('--concurrent');
 
 // ---------------------------------------------------------------------------
@@ -404,48 +403,6 @@ function printGrid(colHeaders, rows, getValue, unit, note) {
   }
 }
 
-function getOverhead(baseline, comparison) {
-  const pctMedian =
-    ((comparison.median - baseline.median) / baseline.median) * 100;
-  return {
-    baseline: baseline.name,
-    comparison: comparison.name,
-    median: pctMedian,
-  };
-}
-
-function printOverheadTable(rows, valueLabel) {
-  const baselineWidth = Math.max(
-    ...rows.filter(Boolean).map(r => r.baseline.length)
-  );
-  const comparisonWidth = Math.max(
-    ...rows.filter(Boolean).map(r => r.comparison.length)
-  );
-  const fmt = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
-  console.log(
-    '  ' +
-      'Baseline'.padEnd(baselineWidth) +
-      '  ' +
-      'Comparison'.padEnd(comparisonWidth) +
-      '    ' + (valueLabel || 'Median')
-  );
-  console.log('  ' + '-'.repeat(baselineWidth + comparisonWidth + 14));
-  for (const row of rows) {
-    if (!row) {
-      console.log('');
-      continue;
-    }
-    console.log(
-      '  ' +
-        row.baseline.padEnd(baselineWidth) +
-        '  ' +
-        row.comparison.padEnd(comparisonWidth) +
-        '  ' +
-        fmt(row.median)
-    );
-  }
-}
-
 // ---------------------------------------------------------------------------
 // CPU Profiling
 // ---------------------------------------------------------------------------
@@ -548,68 +505,6 @@ async function profileRun(name, fn, warmup, iterations, outputPath) {
 }
 
 // ---------------------------------------------------------------------------
-// Isolated (per-process) runner
-// ---------------------------------------------------------------------------
-
-const {execFileSync} = require('child_process');
-
-function runIsolated(mode, app, items) {
-  const result = execFileSync(
-    process.execPath,
-    [
-      '--expose-gc',
-      path.resolve(__dirname, 'bench-worker.js'),
-      '--mode',
-      mode,
-      '--app',
-      app,
-      '--items',
-      String(items),
-    ],
-    {
-      env: {...process.env, NODE_ENV: 'production'},
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 30000,
-    }
-  );
-  return parseFloat(result.trim());
-}
-
-async function runIsolatedBenchmark(
-  name,
-  mode,
-  app,
-  items,
-  iterations,
-  warmup
-) {
-  for (let i = 0; i < warmup; i++) {
-    runIsolated(mode, app, items);
-  }
-
-  const times = [];
-  for (let i = 0; i < iterations; i++) {
-    times.push(runIsolated(mode, app, items));
-  }
-
-  const sorted = [...times].sort((a, b) => a - b);
-  const trimCount = Math.floor(sorted.length * 0.05);
-  const trimmed = sorted.slice(trimCount, sorted.length - trimCount);
-
-  const mean = trimmed.reduce((s, t) => s + t, 0) / trimmed.length;
-  const median = sorted[Math.floor(sorted.length / 2)];
-  const stddev = Math.sqrt(
-    trimmed.reduce((s, t) => s + (t - mean) ** 2, 0) / trimmed.length
-  );
-  const p95 = sorted[Math.floor(sorted.length * 0.95)];
-  const min = sorted[0];
-  const max = sorted[sorted.length - 1];
-
-  return {name, mean, median, stddev, p95, min, max, iterations};
-}
-
-// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -623,66 +518,6 @@ async function main() {
   const AppAsync = require('./src/AppAsync.js').default;
 
   const ITEM_COUNT = 200;
-
-  if (ISOLATE_MODE) {
-    const WARMUP = 10;
-    const ITERATIONS = 50;
-
-    console.log(
-      '\n--- Isolated Benchmark (%d warmup, %d iterations, %d items) ---\n',
-      WARMUP,
-      ITERATIONS,
-      ITEM_COUNT
-    );
-
-    const fizzNodeSync = await runIsolatedBenchmark(
-      'Fizz (Node, sync)',
-      'classical',
-      'sync',
-      ITEM_COUNT,
-      ITERATIONS,
-      WARMUP
-    );
-    printResult(fizzNodeSync);
-
-    const flightFizzNodeSync = await runIsolatedBenchmark(
-      'Flight + Fizz (Node, sync)',
-      'flight',
-      'sync',
-      ITEM_COUNT,
-      ITERATIONS,
-      WARMUP
-    );
-    printResult(flightFizzNodeSync);
-
-    const fizzNodeAsync = await runIsolatedBenchmark(
-      'Fizz (Node, async)',
-      'classical',
-      'async',
-      ITEM_COUNT,
-      ITERATIONS,
-      WARMUP
-    );
-    printResult(fizzNodeAsync);
-
-    const flightFizzNodeAsync = await runIsolatedBenchmark(
-      'Flight + Fizz (Node, async)',
-      'flight',
-      'async',
-      ITEM_COUNT,
-      ITERATIONS,
-      WARMUP
-    );
-    printResult(flightFizzNodeAsync);
-
-    console.log('\n--- Overhead ---\n');
-    printOverheadTable([
-      getOverhead(fizzNodeSync, flightFizzNodeSync),
-      getOverhead(fizzNodeAsync, flightFizzNodeAsync),
-    ]);
-
-    return;
-  }
 
   const WARMUP = 50;
   const ITERATIONS = 200;
