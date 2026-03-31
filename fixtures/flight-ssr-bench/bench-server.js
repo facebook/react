@@ -508,7 +508,7 @@ async function main() {
       await runAutocannon(url, c, WARMUP_AMOUNT);
 
       const data = await runAutocannon(url, c, BENCH_AMOUNT);
-      const reqPerSec = data.requests.total / data.duration;
+      const reqPerSec = 1000 / data.latency.mean * data.connections;
       const latencyMedian = data.latency.p50;
       const latencyP99 = data.latency.p99;
       const errors = data.errors + data.timeouts;
