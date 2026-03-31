@@ -1538,83 +1538,48 @@ fn log_errors_as_events(
     for detail in &errors.details {
         let detail_info = match detail {
             react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                // Same flat-format conversion as log_error in program.rs: when a
-                // diagnostic has exactly one Error detail whose message matches the
-                // reason (e.g., CompilerDiagnostic::todo()), use the flat format
-                // with loc directly, matching TS CompilerErrorDetail behavior.
-                let flat_loc = if d.details.len() == 1 && d.description.is_none() {
-                    match &d.details[0] {
-                        react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
-                            loc,
-                            message,
-                            ..
-                        } if message.as_deref() == Some(&d.reason) => {
-                            loc.as_ref().map(|l| LoggerSourceLocation {
-                                start: LoggerPosition { line: l.start.line, column: l.start.column, index: l.start.index },
-                                end: LoggerPosition { line: l.end.line, column: l.end.column, index: l.end.index },
-                                filename: source_filename.clone(),
-                                identifier_name: None,
-                            })
-                        }
-                        _ => None,
+                let items: Option<Vec<CompilerErrorItemInfo>> = {
+                    let v: Vec<CompilerErrorItemInfo> = d
+                        .details
+                        .iter()
+                        .map(|item| match item {
+                            react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
+                                loc,
+                                message,
+                                identifier_name,
+                            } => CompilerErrorItemInfo {
+                                kind: "error".to_string(),
+                                loc: loc.as_ref().map(|l| LoggerSourceLocation {
+                                    start: LoggerPosition { line: l.start.line, column: l.start.column, index: l.start.index },
+                                    end: LoggerPosition { line: l.end.line, column: l.end.column, index: l.end.index },
+                                    filename: source_filename.clone(),
+                                    identifier_name: identifier_name.clone(),
+                                }),
+                                message: message.clone(),
+                            },
+                            react_compiler_diagnostics::CompilerDiagnosticDetail::Hint {
+                                message,
+                            } => CompilerErrorItemInfo {
+                                kind: "hint".to_string(),
+                                loc: None,
+                                message: Some(message.clone()),
+                            },
+                        })
+                        .collect();
+                    if v.is_empty() {
+                        None
+                    } else {
+                        Some(v)
                     }
-                } else {
-                    None
                 };
-                if flat_loc.is_some() {
-                    CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.logged_severity()),
-                        suggestions: None,
-                        details: None,
-                        loc: flat_loc,
-                    }
-                } else {
-                    let items: Option<Vec<CompilerErrorItemInfo>> = {
-                        let v: Vec<CompilerErrorItemInfo> = d
-                            .details
-                            .iter()
-                            .map(|item| match item {
-                                react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
-                                    loc,
-                                    message,
-                                    identifier_name,
-                                } => CompilerErrorItemInfo {
-                                    kind: "error".to_string(),
-                                    loc: loc.as_ref().map(|l| LoggerSourceLocation {
-                                        start: LoggerPosition { line: l.start.line, column: l.start.column, index: l.start.index },
-                                        end: LoggerPosition { line: l.end.line, column: l.end.column, index: l.end.index },
-                                        filename: source_filename.clone(),
-                                        identifier_name: identifier_name.clone(),
-                                    }),
-                                    message: message.clone(),
-                                },
-                                react_compiler_diagnostics::CompilerDiagnosticDetail::Hint {
-                                    message,
-                                } => CompilerErrorItemInfo {
-                                    kind: "hint".to_string(),
-                                    loc: None,
-                                    message: Some(message.clone()),
-                                },
-                            })
-                            .collect();
-                        if v.is_empty() {
-                            None
-                        } else {
-                            Some(v)
-                        }
-                    };
-                    CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.logged_severity()),
-                        suggestions: None,
-                        details: items,
-                        loc: None,
-                    }
+                CompilerErrorDetailInfo {
+                    category: format!("{:?}", d.category),
+                    reason: d.reason.clone(),
+                    description: d.description.clone(),
+                    severity: format!("{:?}", d.logged_severity()),
+                    suggestions: None,
+                    details: items,
+                    loc: None,
                 }
             }
             react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {

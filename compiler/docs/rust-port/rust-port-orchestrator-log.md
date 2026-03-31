@@ -1,8 +1,8 @@
 # Status
 
-Overall: 1722/1723 passing, 1 failed, frontier: HIR. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1722/1723.
+Overall: 1723/1723 passing, 0 failed. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1722/1723.
 
-Snap (end-to-end): 1722/1723 passed, 1 failed (error.todo-locally-require-fbt.js — HIR level)
+Snap (end-to-end): 1723/1723 passed, 0 failed
 
 ## Transformation passes
 
@@ -57,6 +57,15 @@ ValidatePreservedManualMemoization: complete
 Codegen: complete (1717/1717 code comparison)
 
 # Logs
+
+## 20260331-200000 Fix CompilerDiagnostic::todo() to produce ErrorDetail variant
+
+Removed the flat-loc serialization hack from log_error, compiler_error_to_info, and
+log_errors_as_events. Instead fixed the root cause: the From<CompilerDiagnostic> for
+CompilerError impl now converts Todo-category diagnostics to CompilerErrorOrDiagnostic::ErrorDetail
+(matching TS's CompilerError.throwTodo() → CompilerErrorDetail). Invariant-category
+diagnostics remain as CompilerErrorOrDiagnostic::Diagnostic with sub-details (matching TS).
+1723/1723 passing.
 
 ## 20260331-190000 Fix inner function debug log flushing and todo error event format
 

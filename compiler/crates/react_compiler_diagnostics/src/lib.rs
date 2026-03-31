@@ -334,7 +334,21 @@ impl Default for CompilerError {
 impl From<CompilerDiagnostic> for CompilerError {
     fn from(diagnostic: CompilerDiagnostic) -> Self {
         let mut error = CompilerError::new();
-        error.push_diagnostic(diagnostic);
+        // Todo diagnostics should produce ErrorDetail (flat loc format), matching
+        // the TS behavior where CompilerError.throwTodo() creates a CompilerErrorDetail
+        // with loc directly on it, not a CompilerDiagnostic with sub-details.
+        if diagnostic.category == ErrorCategory::Todo {
+            let loc = diagnostic.primary_location().cloned();
+            error.push_error_detail(CompilerErrorDetail {
+                category: diagnostic.category,
+                reason: diagnostic.reason,
+                description: diagnostic.description,
+                loc,
+                suggestions: diagnostic.suggestions,
+            });
+        } else {
+            error.push_diagnostic(diagnostic);
+        }
         error
     }
 }

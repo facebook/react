@@ -1052,49 +1052,14 @@ fn log_error(
     for detail in &err.details {
         let detail_info = match detail {
             CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                // Check if this diagnostic should be logged in "flat" format (like a
-                // CompilerErrorDetail). This matches the TS behavior where throwTodo()
-                // creates a CompilerErrorDetail with a direct `loc`, not a
-                // CompilerDiagnostic with sub-details. The Rust side creates
-                // CompilerDiagnostic::todo() which wraps the loc in a sub-detail.
-                // Convert to flat format when the diagnostic has exactly one Error
-                // detail whose message matches the reason (i.e., it was created by
-                // CompilerDiagnostic::todo() or similar flat constructors).
-                let flat_loc = if d.details.len() == 1 && d.description.is_none() {
-                    match &d.details[0] {
-                        react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
-                            loc,
-                            message,
-                            ..
-                        } if message.as_deref() == Some(&d.reason) => {
-                            loc.as_ref().map(|l| diag_loc_to_logger_loc(l, source_filename))
-                        }
-                        _ => None,
-                    }
-                } else {
-                    None
-                };
-                if flat_loc.is_some() {
-                    // Flat format: loc directly on the detail, no sub-details
-                    CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.logged_severity()),
-                        suggestions: None,
-                        details: None,
-                        loc: flat_loc,
-                    }
-                } else {
-                    CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.logged_severity()),
-                        suggestions: None,
-                        details: diagnostic_details_to_items(d, source_filename),
-                        loc: None,
-                    }
+                CompilerErrorDetailInfo {
+                    category: format!("{:?}", d.category),
+                    reason: d.reason.clone(),
+                    description: d.description.clone(),
+                    severity: format!("{:?}", d.logged_severity()),
+                    suggestions: None,
+                    details: diagnostic_details_to_items(d, source_filename),
+                    loc: None,
                 }
             }
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
@@ -1182,43 +1147,14 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
         .iter()
         .map(|d| match d {
             CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                // Same flat-format conversion as log_error: when a diagnostic has
-                // exactly one Error detail whose message matches the reason (e.g.,
-                // CompilerDiagnostic::todo()), use the flat format with loc directly.
-                let flat_loc = if d.details.len() == 1 && d.description.is_none() {
-                    match &d.details[0] {
-                        react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
-                            loc,
-                            message,
-                            ..
-                        } if message.as_deref() == Some(&d.reason) => {
-                            loc.as_ref().map(|l| diag_loc_to_logger_loc(l, filename))
-                        }
-                        _ => None,
-                    }
-                } else {
-                    None
-                };
-                if flat_loc.is_some() {
-                    CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.severity()),
-                        suggestions: None,
-                        details: None,
-                        loc: flat_loc,
-                    }
-                } else {
-                    CompilerErrorDetailInfo {
-                        category: format!("{:?}", d.category),
-                        reason: d.reason.clone(),
-                        description: d.description.clone(),
-                        severity: format!("{:?}", d.severity()),
-                        suggestions: None,
-                        details: diagnostic_details_to_items(d, filename),
-                        loc: None,
-                    }
+                CompilerErrorDetailInfo {
+                    category: format!("{:?}", d.category),
+                    reason: d.reason.clone(),
+                    description: d.description.clone(),
+                    severity: format!("{:?}", d.severity()),
+                    suggestions: None,
+                    details: diagnostic_details_to_items(d, filename),
+                    loc: None,
                 }
             }
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
