@@ -285,6 +285,9 @@ async function main() {
     const fmtPct = function (v) {
       return ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
     };
+    const fmtFactor = function (va, vb) {
+      return (vb / va).toFixed(2) + 'x';
+    };
     const colWidth = 10 + suffix.length;
     const header =
       ''.padEnd(labelWidth) +
@@ -294,7 +297,7 @@ async function main() {
           return h.padStart(colWidth);
         })
         .join('  ') +
-      '     Delta';
+      '     Delta   Factor';
     console.log('  ' + header);
     console.log('  ' + '-'.repeat(header.length));
     for (const [label, a, b] of rows) {
@@ -309,7 +312,9 @@ async function main() {
           '  ' +
           fmtVal(vb) +
           '  ' +
-          fmtPct(pct)
+          fmtPct(pct) +
+          '  ' +
+          fmtFactor(va, vb).padStart(7)
       );
     }
   }

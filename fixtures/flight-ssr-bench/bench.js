@@ -299,13 +299,17 @@ function printGrid(colHeaders, rows, getValue, unit, note) {
   const suffix = unit ? ' ' + unit : '';
   const fmtVal = v => (v.toFixed(1) + suffix).padStart(10 + suffix.length);
   const fmtPct = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
+  const fmtFactor = function (va, vb) {
+    const ratio = vb / va;
+    return (ratio.toFixed(2) + 'x').padStart(7);
+  };
   const colWidth = 10 + suffix.length;
 
   const header =
     ''.padEnd(labelWidth) +
     '  ' +
     colHeaders.map(h => h.padStart(colWidth)).join('  ') +
-    '     Delta';
+    '     Delta   Factor';
   console.log('  ' + header);
   console.log('  ' + '-'.repeat(header.length));
   for (const [label, a, b] of rows) {
@@ -320,7 +324,9 @@ function printGrid(colHeaders, rows, getValue, unit, note) {
         '  ' +
         fmtVal(vb) +
         '  ' +
-        fmtPct(pct)
+        fmtPct(pct) +
+        '  ' +
+        fmtFactor(va, vb)
     );
   }
   if (note) {
