@@ -2676,6 +2676,20 @@ impl<'a> ConvertCtx<'a> {
             }
         }
 
+        // Handle default parameter values: OXC stores default values in
+        // FormalParameter.initializer rather than using BindingPattern::AssignmentPattern.
+        // Babel/TS expects them as AssignmentPattern in the params array.
+        if let Some(ref initializer) = param.initializer {
+            let right = self.convert_expression(initializer);
+            pattern = PatternLike::AssignmentPattern(AssignmentPattern {
+                base: self.make_base_node(param.span),
+                left: Box::new(pattern),
+                right: Box::new(right),
+                type_annotation: None,
+                decorators: None,
+            });
+        }
+
         pattern
     }
 

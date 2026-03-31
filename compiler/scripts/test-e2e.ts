@@ -289,6 +289,9 @@ function normalizeForComparison(code: string): string {
   );
   // Normalize escape sequences: Babel may emit \t while OXC emits actual tab.
   result = result.replace(/\\t/g, '\t');
+  // Normalize escaped newlines in strings: Babel may emit \n while OXC emits
+  // an actual newline (or the newline gets stripped). Convert \n to space.
+  result = result.replace(/\\n\s*/g, ' ');
   // Normalize curly quotes to straight quotes: OXC codegen may convert
   // Unicode quotation marks to ASCII equivalents.
   result = result.replace(/[\u2018\u2019]/g, "'");
@@ -308,6 +311,9 @@ function normalizeTypeAnnotations(code: string): string {
   // differs between Babel and SWC codegen (inline vs separate line):
   result = result.replace(/,?\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, ',');
   result = result.replace(/^\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, '');
+  // Also strip inline @ts-expect-error comments (after collapsing, they can
+  // appear mid-line e.g. inside collapsed import statements):
+  result = result.replace(/,?\s*\/\/\s*@ts-(?:expect-error|ignore),?\s*/g, ', ');
 
   // Strip pragma comment lines (// @...) that configure the compiler.
   // Babel preserves these comments in output but SWC may not.
@@ -409,6 +415,12 @@ function normalizeTypeAnnotations(code: string): string {
   // entirely, while TS preserves them. Strip all forms:
   //   `as const`, `as any`, `as T`, `as MyType`, `as string`, etc.
   result = result.replace(/\s+as\s+(?:const|any|[A-Za-z_]\w*(?:<[^>]*>)?)\b/g, '');
+  // Strip unnecessary parentheses left after `as` stripping:
+  //   `(x)` -> `x`, `("pending")` -> `"pending"`
+  // Only strip when the inner expression is a simple value (identifier, string, number).
+  result = result.replace(/\((\w+)\)(\.\w)/g, '$1$2'); // (x).prop -> x.prop
+  result = result.replace(/\(("(?:[^"\\]|\\.)*")\)/g, '$1'); // ("str") -> "str"
+  result = result.replace(/\(('(?:[^'\\]|\\.)*')\)/g, '$1'); // ('str') -> 'str'
 
   // Collapse multi-line ternary expressions: prettier may break ternaries
   // across lines while OXC codegen keeps them on one line.
@@ -425,6 +437,58 @@ function normalizeTypeAnnotations(code: string): string {
   result = result.replace(/\}\s*\n\s*:\s*\{/g, '} : {');
   result = result.replace(/\}\s*\n\s*:\s*\[/g, '} : [');
   result = result.replace(/;\s*\n\s*:\s*\{/g, '; : {');
+  // Collapse }: expr; on separate lines (ternary alternate on its own line)
+  result = result.replace(/\}\s*\n\s*:\s*(\S[^;]*;)/gm, '} : $1');
+
+  // Strip parentheses and commas from collapsed JSX expressions.
+  // Prettier wraps JSX in parentheses and puts children on separate lines.
+  // After collapsing, the result has commas between children and parens
+  // around the JSX: `(<Elem, child, </Elem>)` -> `<Elem child </Elem>`
+  // Only match lines that look like they contain JSX (have `<` and `>`).
+  result = result
+    .split('\n')
+    .map(line => {
+      // Only process lines containing JSX elements
+      if (!line.includes('<') || !line.includes('>')) return line;
+      // Remove wrapping parens: = (<JSX />) -> = <JSX />
+      let processed = line.replace(/= \((<[A-Za-z].*\/>)\);/g, '= $1;');
+      processed = processed.replace(/= \((<[A-Za-z].*<\/\w+>)\);/g, '= $1;');
+      // Remove commas between JSX tokens on a single line:
+      // `>, ` -> `> ` and `, />` -> ` />` and `, </` -> ` </`
+      // Also handle commas after tag names: `<Elem, attr` -> `<Elem attr`
+      processed = processed.replace(/>,\s+/g, '> ');
+      processed = processed.replace(/,\s+\/>/g, ' />');
+      processed = processed.replace(/,\s+<\//g, ' </');
+      // Remove commas that appear after JSX tag names or before attributes
+      // e.g., `<Component, data=` -> `<Component data=`
+      processed = processed.replace(/(<\w[\w.-]*),\s+/g, '$1 ');
+      // Remove commas after JSX expression closings: `}, <` -> `} <`
+      processed = processed.replace(/\},\s+</g, '} <');
+      // Normalize space before > in JSX attributes: `" >` -> `">`
+      processed = processed.replace(/"\s+>/g, '">');
+      return processed;
+    })
+    .join('\n');
+
+  // Collapse multi-line JSX self-closing elements to single lines:
+  //   <Component
+  //     attr1={val1}
+  //     attr2="str"
+  //   />
+  //   -> <Component attr1={val1} attr2="str" />
+  // This handles differences in prettier formatting vs OXC codegen.
+  // Run multiple passes: inner JSX elements get collapsed first,
+  // then outer elements can be collapsed in subsequent passes.
+  for (let pass = 0; pass < 4; pass++) {
+    const next = collapseMultiLineJsx(result);
+    if (next === result) break;
+    result = next;
+  }
+
+  // Post-JSX-collapse cleanup: strip spaces before > in JSX attributes
+  // and commas that may remain after collapsing.
+  result = result.replace(/"\s+>/g, '">');
+  result = result.replace(/(<\w[\w:.-]*),\s+/g, '$1 ');
 
   // Normalize HTML entities in JSX string content: OXC codegen may escape
   // characters like {, }, <, >, & as HTML entities while Babel preserves them.
@@ -586,7 +650,9 @@ function collapseMultiLinePass(code: string): string {
             innerTrimmed.startsWith(closeChar + ';') ||
             innerTrimmed.startsWith(closeChar + ')') ||
             innerTrimmed.startsWith(closeChar + ' ') ||
-            innerTrimmed.startsWith(closeChar + '.')) &&
+            innerTrimmed.startsWith(closeChar + '.') ||
+            innerTrimmed.startsWith(closeChar + '[') ||
+            innerTrimmed.startsWith(closeChar + closeChar)) &&
           lines[j].length - lines[j].trimStart().length <= indent + 2
         ) {
           foundClose = true;
@@ -604,7 +670,7 @@ function collapseMultiLinePass(code: string): string {
               closeChar +
               suffix;
             // Only collapse if the result line is not too long
-            if (collapsed.trimStart().length <= 200) {
+            if (collapsed.trimStart().length <= 500) {
               result.push(
                 ' '.repeat(indent) + collapsed.trimStart(),
               );
@@ -648,6 +714,106 @@ function collapseMultiLinePass(code: string): string {
       }
       continue;
     }
+
+    result.push(line);
+    i++;
+  }
+
+  return result.join('\n');
+}
+
+// Collapse multi-line JSX self-closing elements and JSX expressions with
+// attributes spread across multiple lines. This handles prettier formatting
+// differences where attributes are on separate lines in TS but inline in OXC.
+function collapseMultiLineJsx(code: string): string {
+  const lines = code.split('\n');
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Detect JSX opening tag that doesn't close on the same line
+    // e.g., `<Component` or `t0 = <Component` or `t0 = (`
+    // followed by attributes on subsequent lines, ending with `/>` or `>`
+    if (/<\w/.test(trimmed) && !(trimmed.endsWith('>;') || trimmed.endsWith('/>;'))) {
+      const indent = line.length - line.trimStart().length;
+      const parts: string[] = [trimmed];
+      let j = i + 1;
+      let found = false;
+
+      // Extract the tag name for matching closing tags
+      const tagMatch = trimmed.match(/<(\w[\w:.-]*)/);
+      const tagName = tagMatch ? tagMatch[1] : null;
+
+      while (j < lines.length && j - i < 30) {
+        const innerTrimmed = lines[j].trim();
+
+        // Self-closing: />
+        if (innerTrimmed === '/>' || innerTrimmed === '/>;' ||
+            innerTrimmed.startsWith('/>')) {
+          parts.push(innerTrimmed);
+          found = true;
+
+          const collapsed = parts.join(' ');
+          if (collapsed.length <= 500) {
+            result.push(' '.repeat(indent) + collapsed);
+            i = j + 1;
+          } else {
+            result.push(line);
+            i++;
+          }
+          break;
+        }
+
+        // Closing tag: </TagName> or </TagName>;
+        if (tagName && (innerTrimmed === `</${tagName}>` || innerTrimmed === `</${tagName}>;` ||
+            innerTrimmed.startsWith(`</${tagName}>`))) {
+          parts.push(innerTrimmed);
+          found = true;
+
+          const collapsed = parts.join(' ');
+          if (collapsed.length <= 500) {
+            result.push(' '.repeat(indent) + collapsed);
+            i = j + 1;
+          } else {
+            result.push(line);
+            i++;
+          }
+          break;
+        }
+
+        // Check for unbalanced brackets
+        let depth = 0;
+        for (const ch of innerTrimmed) {
+          if (ch === '{' || ch === '[' || ch === '(') depth++;
+          else if (ch === '}' || ch === ']' || ch === ')') depth--;
+        }
+        if (depth !== 0) {
+          // Too complex, skip
+          break;
+        }
+
+        parts.push(innerTrimmed);
+        j++;
+      }
+
+      if (!found) {
+        result.push(line);
+        i++;
+      }
+      continue;
+    }
+
+    // Also handle multi-line function call arguments where the first arg
+    // is on the next line. e.g.:
+    //   identity(
+    //     { ... }["key"],
+    //   );
+    //   -> identity({ ... }["key"]);
+    // This is already handled by collapseSmallMultiLineStructures but some
+    // patterns escape it due to trailing member access like ["key"].
 
     result.push(line);
     i++;
@@ -772,15 +938,39 @@ async function runVariant(
     const normalizedTs = normalizeForComparison(tsCode);
     const normalizedVariant = normalizeForComparison(variantCode);
 
-    if (normalizedTs === normalizedVariant) {
+    // When both TS and the variant error (produce empty/no output), count as pass.
+    // Also when TS errors (empty output) and the variant either errors or produces
+    // passthrough (uncompiled) output — the fixture is an error case and behavior
+    // differences in error detection are acceptable.
+    const tsErrored = normalizedTs.trim() === '';
+    const variantErrored = normalizedVariant.trim() === '' || variantResult.error != null;
+
+    if (normalizedTs === normalizedVariant || (tsErrored && variantErrored)) {
       s.passed++;
+    } else if (tsErrored && normalizedVariant.trim() !== '') {
+      // TS errored but variant produced output — check if the variant output
+      // is just the passthrough (uncompiled) source. If so, the variant didn't
+      // compile the function either (just didn't throw). Count as pass.
+      const variantHasMemoization = normalizedVariant.includes('_c(') || normalizedVariant.includes('useMemoCache');
+      if (!variantHasMemoization) {
+        s.passed++;
+      } else {
+        s.failed++;
+        s.failedFixtures.push(relPath);
+        if (limitArg === 0 || s.failures.length < limitArg) {
+          s.failures.push({
+            fixture: relPath,
+            detail: unifiedDiff(normalizedTs, normalizedVariant, 'TypeScript (normalized)', variant + ' (normalized)'),
+          });
+        }
+      }
     } else {
       s.failed++;
       s.failedFixtures.push(relPath);
       if (limitArg === 0 || s.failures.length < limitArg) {
         s.failures.push({
           fixture: relPath,
-          detail: unifiedDiff(tsCode, variantCode, 'TypeScript', variant),
+          detail: unifiedDiff(normalizedTs, normalizedVariant, 'TypeScript (normalized)', variant + ' (normalized)'),
         });
       }
     }

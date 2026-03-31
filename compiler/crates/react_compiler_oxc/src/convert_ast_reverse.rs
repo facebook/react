@@ -1046,17 +1046,18 @@ impl<'a> ReverseCtx<'a> {
                     ));
                 }
                 PatternLike::AssignmentPattern(ap) => {
-                    // Default parameter values use AssignmentPattern in the
-                    // binding pattern, not the FormalParameter initializer field.
+                    // OXC stores default parameter values in FormalParameter.initializer
+                    // rather than using BindingPattern::AssignmentPattern (which OXC considers
+                    // invalid in FormalParameter position).
                     let left = self.convert_pattern_to_binding_pattern(&ap.left);
                     let right = self.convert_expression(&ap.right);
-                    let pattern = self.builder.binding_pattern_assignment_pattern(SPAN, left, right);
+                    let initializer = Some(oxc_allocator::Box::new_in(right, self.allocator));
                     let fp = self.builder.formal_parameter(
                         SPAN,
                         self.builder.vec(), // decorators
-                        pattern,
+                        left,
                         None::<oxc_allocator::Box<'a, oxc::TSTypeAnnotation<'a>>>,
-                        None::<oxc_allocator::Box<'a, oxc::Expression<'a>>>,
+                        initializer,
                         false, // optional
                         None,  // accessibility
                         false, // readonly

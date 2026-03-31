@@ -832,6 +832,19 @@ impl<'a> HirBuilder<'a> {
                 }
             }
             Some(binding) => {
+                // Treat type-only declarations as globals so the compiler
+                // doesn't try to create/initialize HIR bindings for them.
+                // TSEnumDeclaration is included because enums inside function
+                // bodies are lowered as UnsupportedNode and their binding
+                // is never initialized in HIR.
+                if matches!(binding.declaration_type.as_str(),
+                    "TSTypeAliasDeclaration" | "TSInterfaceDeclaration"
+                    | "TSEnumDeclaration" | "TSModuleDeclaration"
+                ) {
+                    return VariableBinding::Global {
+                        name: name.to_string(),
+                    };
+                }
                 if binding.scope == self.scope_info.program_scope {
                     // Module-level binding: check import info
                     match &binding.import {
