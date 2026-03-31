@@ -1,8 +1,8 @@
 # Status
 
-Overall: 1721/1723 passing, 2 failed, frontier: AnalyseFunction (inner). All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1722/1723.
+Overall: 1722/1723 passing, 1 failed, frontier: HIR. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1722/1723.
 
-Snap (end-to-end): 1721/1723 passed, 2 failed
+Snap (end-to-end): 1722/1723 passed, 1 failed (error.todo-locally-require-fbt.js — HIR level)
 
 ## Transformation passes
 
@@ -57,6 +57,15 @@ ValidatePreservedManualMemoization: complete
 Codegen: complete (1717/1717 code comparison)
 
 # Logs
+
+## 20260331-190000 Fix inner function debug log flushing and todo error event format
+
+Fixed 2 pre-existing test failures. (1) In pipeline.rs, inner function debug logs were
+lost when analyse_functions errored because `?` propagated before flushing logs. Fixed by
+capturing the result, flushing logs, then propagating. (2) CompilerDiagnostic::todo()
+produced nested error events while TS uses flat format with loc directly. Fixed by detecting
+flat diagnostics (single Error detail matching reason) and converting to flat format in
+log_error, compiler_error_to_info, and log_errors_as_events. 1722/1723 passing.
 
 ## 20260331-180000 Add MutVisitor trait and refactor AST mutation to use shared walker
 
