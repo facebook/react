@@ -59,21 +59,55 @@ pub fn convert_program_to_oxc<'a>(
     file: &react_compiler_ast::File,
     allocator: &'a Allocator,
 ) -> oxc::Program<'a> {
-    let ctx = ReverseCtx::new(allocator);
+    let ctx = ReverseCtx::new(allocator, None);
+    ctx.convert_program(&file.program)
+}
+
+/// Convert with source text available for extracting TS declarations.
+pub fn convert_program_to_oxc_with_source<'a>(
+    file: &react_compiler_ast::File,
+    allocator: &'a Allocator,
+    source_text: &str,
+) -> oxc::Program<'a> {
+    let ctx = ReverseCtx::new(allocator, Some(source_text.to_string()));
     ctx.convert_program(&file.program)
 }
 
 struct ReverseCtx<'a> {
     allocator: &'a Allocator,
     builder: oxc_ast::AstBuilder<'a>,
+    source_text: Option<String>,
 }
 
 impl<'a> ReverseCtx<'a> {
-    fn new(allocator: &'a Allocator) -> Self {
+    fn new(allocator: &'a Allocator, source_text: Option<String>) -> Self {
         Self {
             allocator,
             builder: oxc_ast::AstBuilder::new(allocator),
+            source_text,
         }
+    }
+
+    /// Extract a statement from the original source text using the base node's
+    /// start/end positions. Re-parses the snippet with OXC to get a proper AST node.
+    fn extract_source_stmt(&self, base: &BaseNode) -> Option<oxc::Statement<'a>> {
+        let source = self.source_text.as_deref()?;
+        let start = base.start? as usize;
+        let end = base.end? as usize;
+        if start >= source.len() || end > source.len() || start >= end {
+            return None;
+        }
+        let text = &source[start..end];
+        // Copy the text into the allocator so its lifetime matches 'a
+        let text_in_alloc = oxc_allocator::StringBuilder::from_str_in(text, self.allocator);
+        let text_ref: &'a str = text_in_alloc.into_str();
+        let source_type = oxc_span::SourceType::tsx();
+        let parsed = oxc_parser::Parser::new(self.allocator, text_ref, source_type).parse();
+        if parsed.panicked || parsed.program.body.is_empty() {
+            return None;
+        }
+        let stmt = parsed.program.body.into_iter().next()?;
+        Some(stmt)
     }
 
     /// Allocate a string in the arena and return an Atom with lifetime 'a.
@@ -292,9 +326,9 @@ impl<'a> ReverseCtx<'a> {
                 let func = self.convert_function_decl(f, oxc::FunctionType::FunctionDeclaration);
                 oxc::Statement::FunctionDeclaration(self.builder.alloc(func))
             }
-            Statement::ClassDeclaration(_c) => {
-                // Class declarations are rare in compiler output
-                todo!("ClassDeclaration reverse conversion")
+            Statement::ClassDeclaration(c) => {
+                let class = self.convert_class_declaration(c);
+                oxc::Statement::ClassDeclaration(self.builder.alloc(class))
             }
             Statement::ImportDeclaration(d) => {
                 let decl = self.convert_import_declaration(d);
@@ -312,16 +346,35 @@ impl<'a> ReverseCtx<'a> {
                 let decl = self.convert_export_all_declaration(d);
                 oxc::Statement::ExportAllDeclaration(self.builder.alloc(decl))
             }
-            // TS/Flow declarations - not emitted by the React compiler output
-            Statement::TSTypeAliasDeclaration(_)
-            | Statement::TSInterfaceDeclaration(_)
-            | Statement::TSEnumDeclaration(_)
-            | Statement::TSModuleDeclaration(_)
-            | Statement::TSDeclareFunction(_)
-            | Statement::TypeAlias(_)
-            | Statement::OpaqueType(_)
-            | Statement::InterfaceDeclaration(_)
-            | Statement::DeclareVariable(_)
+            // TS/Flow declarations - try to extract from source text, fall back to empty
+            Statement::TSTypeAliasDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::TSInterfaceDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::TSEnumDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::TSModuleDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::TSDeclareFunction(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::TypeAlias(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::OpaqueType(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::InterfaceDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::EnumDeclaration(d) => {
+                self.extract_source_stmt(&d.base).unwrap_or_else(|| self.builder.statement_empty(SPAN))
+            }
+            Statement::DeclareVariable(_)
             | Statement::DeclareFunction(_)
             | Statement::DeclareClass(_)
             | Statement::DeclareModule(_)
@@ -330,8 +383,7 @@ impl<'a> ReverseCtx<'a> {
             | Statement::DeclareExportAllDeclaration(_)
             | Statement::DeclareInterface(_)
             | Statement::DeclareTypeAlias(_)
-            | Statement::DeclareOpaqueType(_)
-            | Statement::EnumDeclaration(_) => self.builder.statement_empty(SPAN),
+            | Statement::DeclareOpaqueType(_) => self.builder.statement_empty(SPAN),
         }
     }
 
@@ -878,6 +930,31 @@ impl<'a> ReverseCtx<'a> {
         )
     }
 
+    fn convert_class_declaration(&self, c: &ClassDeclaration) -> oxc::Class<'a> {
+        let id = c
+            .id
+            .as_ref()
+            .map(|id| self.builder.binding_identifier(SPAN, self.atom(&id.name)));
+        let super_class = c
+            .super_class
+            .as_ref()
+            .map(|s| self.convert_expression(s));
+        let body = self.builder.class_body(SPAN, self.builder.vec());
+        self.builder.class(
+            SPAN,
+            oxc::ClassType::ClassDeclaration,
+            self.builder.vec(), // decorators
+            id,
+            None::<oxc_allocator::Box<'a, oxc::TSTypeParameterDeclaration<'a>>>,
+            super_class,
+            None::<oxc_allocator::Box<'a, oxc::TSTypeParameterInstantiation<'a>>>,
+            self.builder.vec(), // implements
+            body,
+            c.is_abstract.unwrap_or(false),
+            c.declare.unwrap_or(false),
+        )
+    }
+
     fn convert_function_expr(&self, f: &FunctionExpression) -> oxc::Function<'a> {
         let id = f
             .id
@@ -969,14 +1046,17 @@ impl<'a> ReverseCtx<'a> {
                     ));
                 }
                 PatternLike::AssignmentPattern(ap) => {
-                    let pattern = self.convert_pattern_to_binding_pattern(&ap.left);
-                    let init = self.convert_expression(&ap.right);
+                    // Default parameter values use AssignmentPattern in the
+                    // binding pattern, not the FormalParameter initializer field.
+                    let left = self.convert_pattern_to_binding_pattern(&ap.left);
+                    let right = self.convert_expression(&ap.right);
+                    let pattern = self.builder.binding_pattern_assignment_pattern(SPAN, left, right);
                     let fp = self.builder.formal_parameter(
                         SPAN,
                         self.builder.vec(), // decorators
                         pattern,
                         None::<oxc_allocator::Box<'a, oxc::TSTypeAnnotation<'a>>>,
-                        Some(init),
+                        None::<oxc_allocator::Box<'a, oxc::Expression<'a>>>,
                         false, // optional
                         None,  // accessibility
                         false, // readonly
@@ -1601,8 +1681,9 @@ impl<'a> ReverseCtx<'a> {
                 let d = self.convert_variable_declaration(v);
                 oxc::Declaration::VariableDeclaration(self.builder.alloc(d))
             }
-            Declaration::ClassDeclaration(_) => {
-                todo!("ClassDeclaration in export")
+            Declaration::ClassDeclaration(c) => {
+                let class = self.convert_class_declaration(c);
+                oxc::Declaration::ClassDeclaration(self.builder.alloc(class))
             }
             _ => {
                 let d = self.builder.variable_declaration(
@@ -1678,8 +1759,9 @@ impl<'a> ReverseCtx<'a> {
                 let func = self.convert_function_decl(f, oxc::FunctionType::FunctionDeclaration);
                 oxc::ExportDefaultDeclarationKind::FunctionDeclaration(self.builder.alloc(func))
             }
-            ExportDefaultDecl::ClassDeclaration(_) => {
-                todo!("ClassDeclaration in export default")
+            ExportDefaultDecl::ClassDeclaration(c) => {
+                let class = self.convert_class_declaration(c);
+                oxc::ExportDefaultDeclarationKind::ClassDeclaration(self.builder.alloc(class))
             }
             ExportDefaultDecl::Expression(e) => {
                 oxc::ExportDefaultDeclarationKind::from(self.convert_expression(e))

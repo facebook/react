@@ -78,6 +78,25 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         let node_id = scoping.get_node_id(scope_id);
         let node = nodes.get_node(node_id);
         let start = node.kind().span().start;
+        // For function scopes inside object methods, also map the parent
+        // ObjectProperty start so the compiler can look up the scope using the
+        // ObjectMethod's start position (which matches the property start in Babel).
+        if matches!(kind, ScopeKind::Function) {
+            if let AstKind::Function(_) = node.kind() {
+                let parent_node_id = nodes.parent_id(node_id);
+                let parent_node = nodes.get_node(parent_node_id);
+                match parent_node.kind() {
+                    AstKind::ObjectProperty(prop) if prop.method || matches!(prop.kind, oxc_ast::ast::PropertyKind::Get | oxc_ast::ast::PropertyKind::Set) => {
+                        let prop_start = parent_node.kind().span().start;
+                        if prop_start != start {
+                            node_to_scope.insert(prop_start, our_scope_id);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
         node_to_scope.insert(start, our_scope_id);
 
         scopes.push(ScopeData {
@@ -165,6 +184,27 @@ fn get_binding_kind(
         return BindingKind::Module;
     }
 
+    // Check the declaration node first — FormalParameter and CatchParameter
+    // need to be detected before the FunctionScopedVariable flag check, because
+    // OXC marks function parameters and catch parameters with FunctionScopedVariable.
+    let decl_node = semantic.symbol_declaration(symbol_id);
+    match decl_node.kind() {
+        AstKind::FormalParameter(_) => return BindingKind::Param,
+        AstKind::FormalParameterRest(_) => return BindingKind::Param,
+        AstKind::CatchParameter(_) => return BindingKind::Let,
+        AstKind::TSTypeAliasDeclaration(_) => return BindingKind::Local,
+        AstKind::TSEnumDeclaration(_) => return BindingKind::Local,
+        AstKind::TSModuleDeclaration(_) => return BindingKind::Local,
+        AstKind::Function(_) => {
+            if flags.contains(SymbolFlags::Function) {
+                return BindingKind::Hoisted;
+            }
+            return BindingKind::Local;
+        }
+        AstKind::Class(_) => return BindingKind::Local,
+        _ => {}
+    }
+
     if flags.contains(SymbolFlags::FunctionScopedVariable) {
         return BindingKind::Var;
     }
@@ -177,26 +217,12 @@ fn get_binding_kind(
         }
     }
 
-    // Check the declaration node for hoisted/param/local
-    let decl_node = semantic.symbol_declaration(symbol_id);
-    match decl_node.kind() {
-        AstKind::Function(_) => {
-            if flags.contains(SymbolFlags::Function) {
-                return BindingKind::Hoisted;
-            }
-            BindingKind::Local
-        }
-        AstKind::Class(_) => BindingKind::Local,
-        AstKind::FormalParameter(_) => BindingKind::Param,
-        _ => {
-            if flags.contains(SymbolFlags::Function) {
-                BindingKind::Hoisted
-            } else if flags.contains(SymbolFlags::Class) {
-                BindingKind::Local
-            } else {
-                BindingKind::Unknown
-            }
-        }
+    if flags.contains(SymbolFlags::Function) {
+        BindingKind::Hoisted
+    } else if flags.contains(SymbolFlags::Class) {
+        BindingKind::Local
+    } else {
+        BindingKind::Unknown
     }
 }
 
@@ -232,10 +258,15 @@ fn ast_kind_to_string(kind: AstKind) -> String {
             }
         }
         AstKind::FormalParameter(_) => "FormalParameter",
+        AstKind::FormalParameterRest(_) => "FormalParameter",
         AstKind::ImportSpecifier(_) => "ImportSpecifier",
         AstKind::ImportDefaultSpecifier(_) => "ImportDefaultSpecifier",
         AstKind::ImportNamespaceSpecifier(_) => "ImportNamespaceSpecifier",
         AstKind::CatchClause(_) => "CatchClause",
+        AstKind::CatchParameter(_) => "CatchClause",
+        AstKind::TSTypeAliasDeclaration(_) => "TSTypeAliasDeclaration",
+        AstKind::TSEnumDeclaration(_) => "TSEnumDeclaration",
+        AstKind::TSModuleDeclaration(_) => "TSModuleDeclaration",
         _ => "Unknown",
     }
     .to_string()
@@ -267,6 +298,7 @@ fn find_binding_identifier_start(kind: AstKind, name: &str) -> Option<u32> {
             }
         }),
         AstKind::FormalParameter(param) => find_identifier_in_pattern(&param.pattern, name),
+        AstKind::FormalParameterRest(rest) => find_identifier_in_pattern(&rest.rest.argument, name),
         AstKind::ImportSpecifier(spec) => Some(spec.local.span.start),
         AstKind::ImportDefaultSpecifier(spec) => Some(spec.local.span.start),
         AstKind::ImportNamespaceSpecifier(spec) => Some(spec.local.span.start),
@@ -274,6 +306,33 @@ fn find_binding_identifier_start(kind: AstKind, name: &str) -> Option<u32> {
             .param
             .as_ref()
             .and_then(|p| find_identifier_in_pattern(&p.pattern, name)),
+        AstKind::CatchParameter(param) => find_identifier_in_pattern(&param.pattern, name),
+        AstKind::TSTypeAliasDeclaration(decl) => {
+            if decl.id.name.as_str() == name {
+                Some(decl.id.span.start)
+            } else {
+                None
+            }
+        }
+        AstKind::TSEnumDeclaration(decl) => {
+            if decl.id.name.as_str() == name {
+                Some(decl.id.span.start)
+            } else {
+                None
+            }
+        }
+        AstKind::TSModuleDeclaration(decl) => {
+            match &decl.id {
+                oxc_ast::ast::TSModuleDeclarationName::Identifier(id) => {
+                    if id.name.as_str() == name {
+                        Some(id.span.start)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            }
+        }
         _ => None,
     }
 }

@@ -157,9 +157,13 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<String, String> {
     // Always enable TypeScript parsing (like the TS/Babel baseline uses
     // ['typescript', 'jsx'] plugins). Some .js fixtures contain TS syntax.
+    // Check for @script pragma in the first line to use script source type.
+    let first_line = source.lines().next().unwrap_or("");
+    let is_script = first_line.contains("@script");
     let source_type = oxc_span::SourceType::from_path(filename)
         .unwrap_or_default()
-        .with_module(true)
+        .with_module(!is_script)
+        .with_script(is_script)
         .with_jsx(true)
         .with_typescript(true);
 

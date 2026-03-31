@@ -119,7 +119,11 @@ pub fn emit(
     allocator: &oxc_allocator::Allocator,
     source_text: Option<&str>,
 ) -> String {
-    let mut program = convert_ast_reverse::convert_program_to_oxc(file, allocator);
+    let mut program = if let Some(source) = source_text {
+        convert_ast_reverse::convert_program_to_oxc_with_source(file, allocator, source)
+    } else {
+        convert_ast_reverse::convert_program_to_oxc(file, allocator)
+    };
 
     if let Some(source) = source_text {
         // Re-parse the original source to extract comments.

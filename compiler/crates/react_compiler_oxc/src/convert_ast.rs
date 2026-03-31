@@ -597,12 +597,7 @@ impl<'a> ConvertCtx<'a> {
                 .id
                 .as_ref()
                 .map(|id| self.convert_binding_identifier(id)),
-            params: func
-                .params
-                .items
-                .iter()
-                .map(|p| self.convert_formal_parameter(p))
-                .collect(),
+            params: self.convert_formal_parameters(&func.params),
             body: self.convert_function_body(func.body.as_ref().unwrap()),
             generator: func.generator,
             is_async: func.r#async,
@@ -1276,12 +1271,7 @@ impl<'a> ConvertCtx<'a> {
 
         ArrowFunctionExpression {
             base: self.make_base_node(arrow.span),
-            params: arrow
-                .params
-                .items
-                .iter()
-                .map(|p| self.convert_formal_parameter(p))
-                .collect(),
+            params: self.convert_formal_parameters(&arrow.params),
             body: Box::new(body),
             id: None,
             generator: false,
@@ -1710,11 +1700,32 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
+    /// Check if an expression within a chain contains any optional access.
+    fn expr_contains_optional(expr: &oxc::Expression) -> bool {
+        match expr {
+            oxc::Expression::CallExpression(c) => {
+                c.optional || Self::expr_contains_optional(&c.callee)
+            }
+            oxc::Expression::StaticMemberExpression(m) => {
+                m.optional || Self::expr_contains_optional(&m.object)
+            }
+            oxc::Expression::ComputedMemberExpression(m) => {
+                m.optional || Self::expr_contains_optional(&m.object)
+            }
+            oxc::Expression::PrivateFieldExpression(p) => {
+                p.optional || Self::expr_contains_optional(&p.object)
+            }
+            _ => false,
+        }
+    }
+
     /// Convert an expression that appears as callee/object inside a ChainExpression.
     /// In OXC, `a?.b?.c` is a single ChainExpression with nested CallExpression/
     /// MemberExpression nodes that have `optional: true`. In Babel, each optional
-    /// node is an OptionalCallExpression/OptionalMemberExpression. This method
-    /// ensures inner optional nodes get converted to the Babel Optional* types.
+    /// node is an OptionalCallExpression/OptionalMemberExpression. Non-optional
+    /// nodes that appear AFTER the first `?.` become OptionalMember/Call with
+    /// `optional: false`, while non-optional nodes BEFORE the first `?.` are
+    /// regular MemberExpression/CallExpression nodes.
     fn convert_expression_in_chain(&self, expr: &oxc::Expression) -> Expression {
         match expr {
             oxc::Expression::CallExpression(c) if c.optional => {
@@ -1753,10 +1764,12 @@ impl<'a> ConvertCtx<'a> {
                     optional: true,
                 })
             }
-            // Non-optional expressions inside chains: a?.b.c has a non-optional
-            // MemberExpression (.c) whose object is an optional MemberExpression (?.b).
-            // We still need to recurse for the object/callee.
-            oxc::Expression::CallExpression(c) => {
+            // Non-optional expressions inside chains: need to check if the
+            // object/callee still contains optional parts. If so, this node
+            // is AFTER the first `?.` and should be OptionalMember/Call with
+            // optional: false. If not, it's BEFORE the first `?.` and should
+            // be a regular MemberExpression/CallExpression.
+            oxc::Expression::CallExpression(c) if Self::expr_contains_optional(&c.callee) => {
                 Expression::OptionalCallExpression(OptionalCallExpression {
                     base: self.make_base_node(c.span),
                     callee: Box::new(self.convert_expression_in_chain(&c.callee)),
@@ -1772,7 +1785,7 @@ impl<'a> ConvertCtx<'a> {
                     type_arguments: None,
                 })
             }
-            oxc::Expression::StaticMemberExpression(m) => {
+            oxc::Expression::StaticMemberExpression(m) if Self::expr_contains_optional(&m.object) => {
                 Expression::OptionalMemberExpression(OptionalMemberExpression {
                     base: self.make_base_node(m.span),
                     object: Box::new(self.convert_expression_in_chain(&m.object)),
@@ -1783,7 +1796,7 @@ impl<'a> ConvertCtx<'a> {
                     optional: false,
                 })
             }
-            oxc::Expression::ComputedMemberExpression(m) => {
+            oxc::Expression::ComputedMemberExpression(m) if Self::expr_contains_optional(&m.object) => {
                 Expression::OptionalMemberExpression(OptionalMemberExpression {
                     base: self.make_base_node(m.span),
                     object: Box::new(self.convert_expression_in_chain(&m.object)),
@@ -1792,6 +1805,8 @@ impl<'a> ConvertCtx<'a> {
                     optional: false,
                 })
             }
+            // No optional in the sub-tree — this is the base receiver before
+            // the first `?.`. Convert as a regular expression.
             _ => self.convert_expression(expr),
         }
     }
@@ -1866,12 +1881,7 @@ impl<'a> ConvertCtx<'a> {
                 .id
                 .as_ref()
                 .map(|id| self.convert_binding_identifier(id)),
-            params: func
-                .params
-                .items
-                .iter()
-                .map(|p| self.convert_formal_parameter(p))
-                .collect(),
+            params: self.convert_formal_parameters(&func.params),
             body: self.convert_function_body(func.body.as_ref().unwrap()),
             generator: func.generator,
             is_async: func.r#async,
@@ -1943,12 +1953,7 @@ impl<'a> ConvertCtx<'a> {
                             oxc::PropertyKind::Set => ObjectMethodKind::Set,
                             _ => ObjectMethodKind::Method,
                         };
-                        let params: Vec<PatternLike> = func
-                            .params
-                            .items
-                            .iter()
-                            .map(|p| self.convert_formal_parameter(p))
-                            .collect();
+                        let params: Vec<PatternLike> = self.convert_formal_parameters(&func.params);
                         let body = func
                             .body
                             .as_ref()
@@ -2623,6 +2628,26 @@ impl<'a> ConvertCtx<'a> {
             type_annotation: None,
             decorators: None,
         }
+    }
+
+    /// Convert FormalParameters (items + optional rest) to a Vec<PatternLike>.
+    /// OXC stores rest parameters separately from items, but Babel includes them
+    /// in the same params array.
+    fn convert_formal_parameters(&self, params: &oxc::FormalParameters) -> Vec<PatternLike> {
+        let mut result: Vec<PatternLike> = params
+            .items
+            .iter()
+            .map(|p| self.convert_formal_parameter(p))
+            .collect();
+        if let Some(rest) = &params.rest {
+            result.push(PatternLike::RestElement(RestElement {
+                base: self.make_base_node(rest.rest.span),
+                argument: Box::new(self.convert_binding_pattern(&rest.rest.argument)),
+                type_annotation: rest.type_annotation.as_ref().map(|_| Box::new(serde_json::Value::Null)),
+                decorators: None,
+            }));
+        }
+        result
     }
 
     fn convert_formal_parameter(&self, param: &oxc::FormalParameter) -> PatternLike {

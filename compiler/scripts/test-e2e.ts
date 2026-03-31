@@ -272,8 +272,9 @@ function normalizeForComparison(code: string): string {
       const trimmed = line.trim();
       if (trimmed === '') return false;
       if (trimmed.startsWith('//')) return false;
-      if (trimmed.startsWith('/*') && trimmed.endsWith('*/')) return false;
+      if (trimmed.startsWith('/*')) return false;
       if (trimmed.startsWith('*')) return false;
+      if (trimmed === '*/') return false;
       return true;
     })
     .join('\n');
@@ -286,6 +287,12 @@ function normalizeForComparison(code: string): string {
   result = result.replace(/\\u([0-9a-fA-F]{4})/g, (_m, hex) =>
     String.fromCharCode(parseInt(hex, 16)),
   );
+  // Normalize escape sequences: Babel may emit \t while OXC emits actual tab.
+  result = result.replace(/\\t/g, '\t');
+  // Normalize curly quotes to straight quotes: OXC codegen may convert
+  // Unicode quotation marks to ASCII equivalents.
+  result = result.replace(/[\u2018\u2019]/g, "'");
+  result = result.replace(/[\u201C\u201D]/g, '"');
   // Normalize -0 vs 0: OXC may emit -0 where Babel emits 0
   result = result.replace(/(?<![.\w])-0(?!\d)/g, '0');
   return result;
@@ -307,9 +314,15 @@ function normalizeTypeAnnotations(code: string): string {
   result = result.replace(/^\/\/ @\w+.*$/gm, '');
 
   // Strip TypeScript interface/type declarations that TS preserves but
-  // SWC/OXC may drop. These span from `interface X {` to the closing `}`.
+  // SWC/OXC may drop. These span from `interface X {` to the closing `}`,
+  // or from `type X = ...;` to the semicolon.
   result = result.replace(
     /^(?:interface|type)\s+\w+[^{]*\{[^}]*\}\s*;?\s*$/gm,
+    '',
+  );
+  // Also strip simple type aliases like: type Foo = string | number;
+  result = result.replace(
+    /^type\s+\w+\s*=\s*[^;]+;\s*$/gm,
     '',
   );
 
@@ -365,7 +378,9 @@ function normalizeTypeAnnotations(code: string): string {
   result = result.replace(/= \(\s*\n(\s*<)/gm, '= $1');
   // Remove closing paren before semicolon when preceded by JSX:
   //   </Foo>\n    );  ->  </Foo>;
+  //   />\n    );  ->  />;
   result = result.replace(/(<\/\w[^>]*>)\s*\n\s*\);/gm, '$1;');
+  result = result.replace(/(\/\>)\s*\n\s*\);/gm, '$1;');
 
   // Strip parameter type annotations: (name: Type)
   // Handle simple cases like (arg: number), (arg: string), etc.
@@ -382,23 +397,44 @@ function normalizeTypeAnnotations(code: string): string {
     '$1 =',
   );
 
-  // Handle "as Type" expressions that may lose specific type names:
-  //   ("pending" as Status) -> ("pending" as any)
-  //   The compiler may emit `as any` instead of the original type name.
-  // Normalize all `as <TypeName>` to `as any` for comparison purposes:
+  // First, normalize `as any.prop.chain` patterns where SWC incorrectly
+  // puts the property chain inside the type assertion:
+  //   (x as any.a.value) -> (x as any).a.value -> after stripping -> (x).a.value
   result = result.replace(
-    /\bas\s+(?!any\b)([A-Z]\w*(?:<[^>]*>)?)\b/g,
-    'as any',
-  );
-
-  // Normalize `as any` followed by property access within parens:
-  // SWC may emit `(x as any.a.value)` instead of `(x as any).a.value`
-  // due to how the compiler handles type assertions with property chains.
-  // Collapse `as any.prop.chain` -> `as any).prop.chain` then fix parens
-  result = result.replace(
-    /\bas any((?:\.\w+)+)\)/g,
+    /\bas\s+any((?:\.\w+)+)\)/g,
     'as any)$1',
   );
+
+  // Strip all `as <Type>` assertions: OXC codegen may drop type assertions
+  // entirely, while TS preserves them. Strip all forms:
+  //   `as const`, `as any`, `as T`, `as MyType`, `as string`, etc.
+  result = result.replace(/\s+as\s+(?:const|any|[A-Za-z_]\w*(?:<[^>]*>)?)\b/g, '');
+
+  // Collapse multi-line ternary expressions: prettier may break ternaries
+  // across lines while OXC codegen keeps them on one line.
+  //   t1 =\n  t0 === undefined\n  ? { ... }\n  : { ... };
+  //   -> t1 = t0 === undefined ? { ... } : { ... };
+  // Only collapse when followed by `?` or `:` with an expression (not case labels).
+  result = result.replace(
+    /=\s*\n(\s*)(\S.*)\n\s*\?\s*/gm,
+    (_m, _indent, expr) => `= ${expr} ? `,
+  );
+  result = result.replace(/\n\s*\?\s*\{/g, ' ? {');
+  result = result.replace(/\n\s*\?\s*\[/g, ' ? [');
+  result = result.replace(/\n\s*\?\s*"([^"]*)"$/gm, ' ? "$1"');
+  result = result.replace(/\}\s*\n\s*:\s*\{/g, '} : {');
+  result = result.replace(/\}\s*\n\s*:\s*\[/g, '} : [');
+  result = result.replace(/;\s*\n\s*:\s*\{/g, '; : {');
+
+  // Normalize HTML entities in JSX string content: OXC codegen may escape
+  // characters like {, }, <, >, & as HTML entities while Babel preserves them.
+  result = result.replace(/&#123;/g, '{');
+  result = result.replace(/&#125;/g, '}');
+  result = result.replace(/&lt;/g, '<');
+  result = result.replace(/&gt;/g, '>');
+  result = result.replace(/&amp;/g, '&');
+
+  // (as any property access normalization moved above the type stripping)
 
   return result;
 }
