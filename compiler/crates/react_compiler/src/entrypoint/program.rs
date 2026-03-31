@@ -22,8 +22,9 @@ use react_compiler_ast::declarations::{
 };
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
-use react_compiler_ast::scope::ScopeInfo;
+use react_compiler_ast::scope::{ScopeId, ScopeInfo};
 use react_compiler_ast::statements::*;
+use react_compiler_ast::visitor::{AstWalker, Visitor};
 use react_compiler_ast::{File, Program};
 use react_compiler_diagnostics::{
     CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
@@ -1487,507 +1488,194 @@ fn get_declarator_name(decl: &VariableDeclarator) -> Option<String> {
     }
 }
 
-/// Check if an expression is a function wrapped in forwardRef/memo, and if so
-/// extract the inner function info with the callee name for context.
-fn try_extract_wrapped_function<'a>(
-    expr: &'a Expression,
-    inferred_name: Option<String>,
-) -> Option<FunctionInfo<'a>> {
-    if let Expression::CallExpression(call) = expr {
-        let callee_name = get_callee_name_if_react_api(&call.callee)?;
-        // The first argument should be a function
-        if let Some(first_arg) = call.arguments.first() {
-            return match first_arg {
-                Expression::FunctionExpression(func) => Some(fn_info_from_func_expr(
-                    func,
-                    inferred_name,
-                    Some(callee_name.to_string()),
-                )),
-                Expression::ArrowFunctionExpression(arrow) => Some(fn_info_from_arrow(
-                    arrow,
-                    inferred_name,
-                    Some(callee_name.to_string()),
-                )),
-                _ => None,
-            };
+// -----------------------------------------------------------------------
+// FunctionDiscoveryVisitor — uses AstWalker to find compilable functions
+// -----------------------------------------------------------------------
+
+/// Visitor that discovers functions to compile, matching the TypeScript
+/// compiler's Babel `program.traverse` behavior.
+///
+/// Uses the `AstWalker` with `traverse_function_bodies` returning `false`
+/// so we don't recurse into function bodies (similar to Babel's `fn.skip()`).
+///
+/// Tracks parent context via:
+/// - `current_declarator_name`: set by `enter_variable_declarator`, used to
+///   infer function names from `const Foo = () => {}`.
+/// - `parent_callee_stack`: set by `enter_call_expression`, used to detect
+///   forwardRef/memo wrappers around function expressions.
+///
+/// In 'all' mode, uses `scope_stack.len() > 1` to reject functions that are
+/// not at program scope. The walker pushes the program scope first, then
+/// nested scopes for for/switch/etc. — so `len() > 1` means the function
+/// is inside a nested scope (not at program level), matching Babel's
+/// `fn.scope.getProgramParent() !== fn.scope.parent` check.
+struct FunctionDiscoveryVisitor<'a, 'ast> {
+    opts: &'a PluginOptions,
+    context: &'a mut ProgramContext,
+    queue: Vec<CompileSource<'ast>>,
+    /// The inferred name from the current VariableDeclarator, if any.
+    current_declarator_name: Option<String>,
+    /// Stack tracking callee names of enclosing CallExpressions.
+    /// `Some(name)` when the callee is a React API (forwardRef/memo),
+    /// `None` for other calls.
+    parent_callee_stack: Vec<Option<String>>,
+    /// Depth counter for loop expression positions (while.test, for-in.right, etc.).
+    /// When > 0, functions are treated as non-program-scope in 'all' mode.
+    loop_expression_depth: usize,
+}
+
+impl<'a, 'ast> FunctionDiscoveryVisitor<'a, 'ast> {
+    fn new(opts: &'a PluginOptions, context: &'a mut ProgramContext) -> Self {
+        Self {
+            opts,
+            context,
+            queue: Vec::new(),
+            current_declarator_name: None,
+            parent_callee_stack: Vec::new(),
+            loop_expression_depth: 0,
         }
     }
-    None
+
+    /// Check if in 'all' mode and the function is inside a nested scope.
+    /// The walker pushes the function's own scope BEFORE calling enter hooks,
+    /// so scope_stack = [program, ...parents, function_scope]. A top-level
+    /// function has len=2 (program + function). Anything deeper means it's
+    /// inside a nested scope (for/switch/etc.) and should be rejected.
+    /// Also rejects functions found in loop expression positions (while.test,
+    /// for-in.right, etc.) where Babel treats the scope as non-program.
+    fn is_rejected_by_scope_check(&self, scope_stack: &[ScopeId]) -> bool {
+        self.opts.compilation_mode == "all"
+            && (scope_stack.len() > 2 || self.loop_expression_depth > 0)
+    }
+
+    /// Get the current parent callee name (forwardRef/memo) if any.
+    fn current_parent_callee(&self) -> Option<String> {
+        self.parent_callee_stack
+            .last()
+            .and_then(|opt| opt.clone())
+    }
+}
+
+impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
+    fn traverse_function_bodies(&self) -> bool {
+        false // Don't recurse into function bodies (like Babel's fn.skip())
+    }
+
+    fn enter_loop_expression(&mut self) {
+        self.loop_expression_depth += 1;
+    }
+
+    fn leave_loop_expression(&mut self) {
+        self.loop_expression_depth -= 1;
+    }
+
+    fn enter_variable_declarator(
+        &mut self,
+        node: &'ast VariableDeclarator,
+        _scope_stack: &[ScopeId],
+    ) {
+        self.current_declarator_name = get_declarator_name(node);
+    }
+
+    fn leave_variable_declarator(
+        &mut self,
+        _node: &'ast VariableDeclarator,
+        _scope_stack: &[ScopeId],
+    ) {
+        self.current_declarator_name = None;
+    }
+
+    fn enter_call_expression(
+        &mut self,
+        node: &'ast CallExpression,
+        _scope_stack: &[ScopeId],
+    ) {
+        let callee_name = get_callee_name_if_react_api(&node.callee).map(|s| s.to_string());
+        self.parent_callee_stack.push(callee_name);
+    }
+
+    fn leave_call_expression(
+        &mut self,
+        _node: &'ast CallExpression,
+        _scope_stack: &[ScopeId],
+    ) {
+        self.parent_callee_stack.pop();
+    }
+
+    fn enter_function_declaration(
+        &mut self,
+        node: &'ast FunctionDeclaration,
+        scope_stack: &[ScopeId],
+    ) {
+        if self.is_rejected_by_scope_check(scope_stack) {
+            return;
+        }
+        let info = fn_info_from_decl(node);
+        if let Some(source) = try_make_compile_source(info, self.opts, self.context) {
+            self.queue.push(source);
+        }
+    }
+
+    fn enter_function_expression(
+        &mut self,
+        node: &'ast FunctionExpression,
+        scope_stack: &[ScopeId],
+    ) {
+        if self.is_rejected_by_scope_check(scope_stack) {
+            return;
+        }
+        let inferred_name = node
+            .id
+            .as_ref()
+            .map(|id| id.name.clone())
+            .or_else(|| self.current_declarator_name.take());
+        let parent_callee = self.current_parent_callee();
+        let info = fn_info_from_func_expr(node, inferred_name, parent_callee);
+        if let Some(source) = try_make_compile_source(info, self.opts, self.context) {
+            self.queue.push(source);
+        }
+    }
+
+    fn enter_arrow_function_expression(
+        &mut self,
+        node: &'ast ArrowFunctionExpression,
+        scope_stack: &[ScopeId],
+    ) {
+        if self.is_rejected_by_scope_check(scope_stack) {
+            return;
+        }
+        let inferred_name = self.current_declarator_name.take();
+        let parent_callee = self.current_parent_callee();
+        let info = fn_info_from_arrow(node, inferred_name, parent_callee);
+        if let Some(source) = try_make_compile_source(info, self.opts, self.context) {
+            self.queue.push(source);
+        }
+    }
 }
 
 /// Find all functions in the program that should be compiled.
 ///
-/// Traverses the program body recursively, visiting functions at any depth
-/// (matching the TypeScript compiler's Babel `program.traverse` behavior).
-/// Export declarations are handled at the top level. All other statements
-/// are processed by `visit_statement_for_functions`, which recurses into
-/// block-containing statements (if, try, for, while, switch, labeled, etc.).
+/// Uses the `AstWalker` with a `FunctionDiscoveryVisitor` to traverse
+/// the entire program, discovering functions at any depth. The visitor
+/// uses `traverse_function_bodies() -> false` to skip recursing into
+/// function bodies (matching Babel's `fn.skip()` behavior).
 ///
-/// Skips classes and their contents (they may reference `this`).
+/// The visitor tracks parent context (VariableDeclarator names for
+/// `const Foo = () => {}`, CallExpression callees for forwardRef/memo
+/// wrappers) via enter/leave hooks.
+///
+/// Skips classes and their contents (the walker does not recurse into
+/// class bodies).
 fn find_functions_to_compile<'a>(
     program: &'a Program,
     opts: &PluginOptions,
     context: &mut ProgramContext,
+    scope: &ScopeInfo,
 ) -> Vec<CompileSource<'a>> {
-    let mut queue = Vec::new();
-
-    for (_index, stmt) in program.body.iter().enumerate() {
-        match stmt {
-            // Export declarations are only valid at the top level
-            Statement::ExportDefaultDeclaration(export) => {
-                match export.declaration.as_ref() {
-                    ExportDefaultDecl::FunctionDeclaration(func) => {
-                        let info = fn_info_from_decl(func);
-                        if let Some(source) = try_make_compile_source(info, opts, context) {
-                            queue.push(source);
-                        }
-                    }
-                    ExportDefaultDecl::Expression(expr) => match expr.as_ref() {
-                        Expression::FunctionExpression(func) => {
-                            let info = fn_info_from_func_expr(func, None, None);
-                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                queue.push(source);
-                            }
-                        }
-                        Expression::ArrowFunctionExpression(arrow) => {
-                            let info = fn_info_from_arrow(arrow, None, None);
-                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                queue.push(source);
-                            }
-                        }
-                        other => {
-                            if let Some(info) = try_extract_wrapped_function(other, None) {
-                                if let Some(source) = try_make_compile_source(info, opts, context) {
-                                    queue.push(source);
-                                }
-                            }
-                        }
-                    },
-                    ExportDefaultDecl::ClassDeclaration(_) => {
-                        // Skip classes
-                    }
-                }
-            }
-
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(ref declaration) = export.declaration {
-                    match declaration.as_ref() {
-                        Declaration::FunctionDeclaration(func) => {
-                            let info = fn_info_from_decl(func);
-                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                queue.push(source);
-                            }
-                        }
-                        Declaration::VariableDeclaration(var_decl) => {
-                            for decl in &var_decl.declarations {
-                                if let Some(ref init) = decl.init {
-                                    let inferred_name = get_declarator_name(decl);
-
-                                    match init.as_ref() {
-                                        Expression::FunctionExpression(func) => {
-                                            let info =
-                                                fn_info_from_func_expr(func, inferred_name, None);
-                                            if let Some(source) =
-                                                try_make_compile_source(info, opts, context)
-                                            {
-                                                queue.push(source);
-                                            }
-                                        }
-                                        Expression::ArrowFunctionExpression(arrow) => {
-                                            let info =
-                                                fn_info_from_arrow(arrow, inferred_name, None);
-                                            if let Some(source) =
-                                                try_make_compile_source(info, opts, context)
-                                            {
-                                                queue.push(source);
-                                            }
-                                        }
-                                        other => {
-                                            if let Some(info) =
-                                                try_extract_wrapped_function(other, inferred_name)
-                                            {
-                                                if let Some(source) =
-                                                    try_make_compile_source(info, opts, context)
-                                                {
-                                                    queue.push(source);
-                                                }
-                                            }
-                                            // In 'all' mode, also find nested function expressions
-                                            if opts.compilation_mode == "all" {
-                                                find_nested_functions_in_expr(other, opts, context, &mut queue);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        Declaration::ClassDeclaration(_) => {
-                            // Skip classes
-                        }
-                        _ => {}
-                    }
-                }
-            }
-
-            // For all other statements, use the recursive visitor which
-            // handles function discovery at any nesting depth
-            other => visit_statement_for_functions(other, opts, context, &mut queue),
-        }
-    }
-
-    queue
-}
-
-/// Recursively visit a statement looking for functions to compile.
-///
-/// Handles function declarations, variable declarations with function
-/// initializers, and expression statements with forwardRef/memo wrappers.
-/// Recurses into block-containing statements (if, try, for, while, switch,
-/// labeled, etc.) to match the TypeScript compiler's Babel traverse behavior,
-/// which visits every function node at any depth (except inside class bodies).
-fn visit_statement_for_functions<'a>(
-    stmt: &'a Statement,
-    opts: &PluginOptions,
-    context: &mut ProgramContext,
-    queue: &mut Vec<CompileSource<'a>>,
-) {
-    match stmt {
-        // Skip classes (they may reference `this`)
-        Statement::ClassDeclaration(_) => {}
-
-        Statement::FunctionDeclaration(func) => {
-            let info = fn_info_from_decl(func);
-            if let Some(source) = try_make_compile_source(info, opts, context) {
-                queue.push(source);
-            }
-        }
-
-        Statement::VariableDeclaration(var_decl) => {
-            for decl in &var_decl.declarations {
-                if let Some(ref init) = decl.init {
-                    let inferred_name = get_declarator_name(decl);
-
-                    match init.as_ref() {
-                        Expression::FunctionExpression(func) => {
-                            let info = fn_info_from_func_expr(func, inferred_name, None);
-                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                queue.push(source);
-                            }
-                        }
-                        Expression::ArrowFunctionExpression(arrow) => {
-                            let info = fn_info_from_arrow(arrow, inferred_name, None);
-                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                queue.push(source);
-                            }
-                        }
-                        // Check for forwardRef/memo wrappers:
-                        // const Foo = React.forwardRef(() => { ... })
-                        // const Foo = memo(() => { ... })
-                        other => {
-                            if let Some(info) =
-                                try_extract_wrapped_function(other, inferred_name)
-                            {
-                                if let Some(source) =
-                                    try_make_compile_source(info, opts, context)
-                                {
-                                    queue.push(source);
-                                }
-                            }
-                            // In 'all' mode, also find nested function expressions
-                            // (e.g., const _ = { useHook: () => {} })
-                            if opts.compilation_mode == "all" {
-                                find_nested_functions_in_expr(other, opts, context, queue);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // ExpressionStatement: check for bare forwardRef/memo calls
-        // e.g. React.memo(props => { ... })
-        Statement::ExpressionStatement(expr_stmt) => {
-            if let Some(info) = try_extract_wrapped_function(&expr_stmt.expression, None) {
-                if let Some(source) = try_make_compile_source(info, opts, context) {
-                    queue.push(source);
-                }
-            }
-            // In 'all' mode, also find function expressions/arrows nested
-            // in expression statements (e.g., `Foo = () => ...`,
-            // `unknownFunction(function() { ... })`)
-            if opts.compilation_mode == "all" {
-                find_nested_functions_in_expr(&expr_stmt.expression, opts, context, queue);
-            }
-        }
-
-        // Recurse into block-containing statements to find functions at any
-        // depth (matching Babel's traverse behavior). In 'all' mode, only
-        // top-level functions are compiled — the TS compiler's scope check
-        // (`fn.scope.getProgramParent() !== fn.scope.parent`) rejects
-        // non-program-scope functions — so we skip body recursion.
-        //
-        // Expression positions (test, discriminant, etc.) are checked
-        // unconditionally because functions in expression positions at the
-        // top level have program scope even in 'all' mode.
-        Statement::BlockStatement(block) => {
-            if opts.compilation_mode != "all" {
-                for s in &block.body {
-                    visit_statement_for_functions(s, opts, context, queue);
-                }
-            }
-        }
-        Statement::IfStatement(if_stmt) => {
-            find_nested_functions_in_expr(&if_stmt.test, opts, context, queue);
-            if opts.compilation_mode != "all" {
-                visit_statement_for_functions(&if_stmt.consequent, opts, context, queue);
-                if let Some(ref alt) = if_stmt.alternate {
-                    visit_statement_for_functions(alt, opts, context, queue);
-                }
-            }
-        }
-        Statement::TryStatement(try_stmt) => {
-            if opts.compilation_mode != "all" {
-                for s in &try_stmt.block.body {
-                    visit_statement_for_functions(s, opts, context, queue);
-                }
-                if let Some(ref handler) = try_stmt.handler {
-                    for s in &handler.body.body {
-                        visit_statement_for_functions(s, opts, context, queue);
-                    }
-                }
-                if let Some(ref finalizer) = try_stmt.finalizer {
-                    for s in &finalizer.body {
-                        visit_statement_for_functions(s, opts, context, queue);
-                    }
-                }
-            }
-        }
-        Statement::SwitchStatement(switch_stmt) => {
-            find_nested_functions_in_expr(&switch_stmt.discriminant, opts, context, queue);
-            for case in &switch_stmt.cases {
-                if let Some(ref test) = case.test {
-                    find_nested_functions_in_expr(test, opts, context, queue);
-                }
-                if opts.compilation_mode != "all" {
-                    for s in &case.consequent {
-                        visit_statement_for_functions(s, opts, context, queue);
-                    }
-                }
-            }
-        }
-        Statement::LabeledStatement(labeled) => {
-            if opts.compilation_mode != "all" {
-                visit_statement_for_functions(&labeled.body, opts, context, queue);
-            }
-        }
-        Statement::ForStatement(for_stmt) => {
-            // In 'all' mode, Babel's scope check rejects functions in for-init/test/update
-            // (the for statement creates a scope), so skip expression-position processing.
-            if opts.compilation_mode != "all" {
-                // Handle init
-                if let Some(ref init) = for_stmt.init {
-                    match init.as_ref() {
-                        ForInit::VariableDeclaration(var_decl) => {
-                            for decl in &var_decl.declarations {
-                                if let Some(ref init_expr) = decl.init {
-                                    let inferred_name = get_declarator_name(decl);
-
-                                    match init_expr.as_ref() {
-                                        Expression::FunctionExpression(func) => {
-                                            let info = fn_info_from_func_expr(func, inferred_name, None);
-                                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                                queue.push(source);
-                                            }
-                                        }
-                                        Expression::ArrowFunctionExpression(arrow) => {
-                                            let info = fn_info_from_arrow(arrow, inferred_name, None);
-                                            if let Some(source) = try_make_compile_source(info, opts, context) {
-                                                queue.push(source);
-                                            }
-                                        }
-                                        other => {
-                                            if let Some(info) = try_extract_wrapped_function(other, inferred_name) {
-                                                if let Some(source) = try_make_compile_source(info, opts, context) {
-                                                    queue.push(source);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        ForInit::Expression(expr) => {
-                            find_nested_functions_in_expr(expr, opts, context, queue);
-                        }
-                    }
-                }
-                // Check test and update expressions
-                if let Some(ref test) = for_stmt.test {
-                    find_nested_functions_in_expr(test, opts, context, queue);
-                }
-                if let Some(ref update) = for_stmt.update {
-                    find_nested_functions_in_expr(update, opts, context, queue);
-                }
-                visit_statement_for_functions(&for_stmt.body, opts, context, queue);
-            }
-        }
-        Statement::WhileStatement(while_stmt) => {
-            // In 'all' mode, Babel's scope check rejects functions in while test
-            if opts.compilation_mode != "all" {
-                find_nested_functions_in_expr(&while_stmt.test, opts, context, queue);
-                visit_statement_for_functions(&while_stmt.body, opts, context, queue);
-            }
-        }
-        Statement::DoWhileStatement(do_while) => {
-            if opts.compilation_mode != "all" {
-                find_nested_functions_in_expr(&do_while.test, opts, context, queue);
-                visit_statement_for_functions(&do_while.body, opts, context, queue);
-            }
-        }
-        Statement::ForInStatement(for_in) => {
-            if opts.compilation_mode != "all" {
-                find_nested_functions_in_expr(&for_in.right, opts, context, queue);
-                visit_statement_for_functions(&for_in.body, opts, context, queue);
-            }
-        }
-        Statement::ForOfStatement(for_of) => {
-            if opts.compilation_mode != "all" {
-                find_nested_functions_in_expr(&for_of.right, opts, context, queue);
-                visit_statement_for_functions(&for_of.body, opts, context, queue);
-            }
-        }
-        Statement::WithStatement(with_stmt) => {
-            if opts.compilation_mode != "all" {
-                find_nested_functions_in_expr(&with_stmt.object, opts, context, queue);
-                visit_statement_for_functions(&with_stmt.body, opts, context, queue);
-            }
-        }
-
-        // Issue 3: Visit expressions in return/throw statements
-        Statement::ReturnStatement(ret) => {
-            if let Some(ref arg) = ret.argument {
-                find_nested_functions_in_expr(arg, opts, context, queue);
-            }
-        }
-        Statement::ThrowStatement(throw_stmt) => {
-            find_nested_functions_in_expr(&throw_stmt.argument, opts, context, queue);
-        }
-
-        // All other statements (break, continue, empty, debugger,
-        // imports, type declarations, etc.) can't contain function declarations
-        _ => {}
-    }
-}
-
-/// Recursively find function expressions and arrow functions nested within
-/// an expression.  This is used in `compilationMode: 'all'` to match the
-/// TypeScript compiler's Babel traverse behavior, which visits every
-/// FunctionExpression / ArrowFunctionExpression in the AST (but only
-/// compiles those whose parent scope is the program scope).
-fn find_nested_functions_in_expr<'a>(
-    expr: &'a Expression,
-    opts: &PluginOptions,
-    context: &mut ProgramContext,
-    queue: &mut Vec<CompileSource<'a>>,
-) {
-    match expr {
-        Expression::FunctionExpression(func) => {
-            let info = fn_info_from_func_expr(func, None, None);
-            if let Some(source) = try_make_compile_source(info, opts, context) {
-                queue.push(source);
-            }
-            // Don't recurse into the function body (nested functions are not
-            // at program scope level)
-        }
-        Expression::ArrowFunctionExpression(arrow) => {
-            let info = fn_info_from_arrow(arrow, None, None);
-            if let Some(source) = try_make_compile_source(info, opts, context) {
-                queue.push(source);
-            }
-            // Don't recurse into the function body
-        }
-        // Skip class expressions (they may reference `this`)
-        Expression::ClassExpression(_) => {}
-        // Recurse into sub-expressions
-        Expression::AssignmentExpression(assign) => {
-            find_nested_functions_in_expr(&assign.right, opts, context, queue);
-        }
-        Expression::CallExpression(call) => {
-            for arg in &call.arguments {
-                find_nested_functions_in_expr(arg, opts, context, queue);
-            }
-        }
-        Expression::SequenceExpression(seq) => {
-            for expr in &seq.expressions {
-                find_nested_functions_in_expr(expr, opts, context, queue);
-            }
-        }
-        Expression::ConditionalExpression(cond) => {
-            find_nested_functions_in_expr(&cond.consequent, opts, context, queue);
-            find_nested_functions_in_expr(&cond.alternate, opts, context, queue);
-        }
-        Expression::LogicalExpression(logical) => {
-            find_nested_functions_in_expr(&logical.left, opts, context, queue);
-            find_nested_functions_in_expr(&logical.right, opts, context, queue);
-        }
-        Expression::BinaryExpression(binary) => {
-            find_nested_functions_in_expr(&binary.left, opts, context, queue);
-            find_nested_functions_in_expr(&binary.right, opts, context, queue);
-        }
-        Expression::UnaryExpression(unary) => {
-            find_nested_functions_in_expr(&unary.argument, opts, context, queue);
-        }
-        Expression::ArrayExpression(arr) => {
-            for elem in &arr.elements {
-                if let Some(e) = elem {
-                    find_nested_functions_in_expr(e, opts, context, queue);
-                }
-            }
-        }
-        Expression::ObjectExpression(obj) => {
-            for prop in &obj.properties {
-                match prop {
-                    ObjectExpressionProperty::ObjectProperty(p) => {
-                        find_nested_functions_in_expr(&p.value, opts, context, queue);
-                    }
-                    ObjectExpressionProperty::SpreadElement(s) => {
-                        find_nested_functions_in_expr(&s.argument, opts, context, queue);
-                    }
-                    ObjectExpressionProperty::ObjectMethod(_) => {}
-                }
-            }
-        }
-        Expression::NewExpression(new) => {
-            for arg in &new.arguments {
-                find_nested_functions_in_expr(arg, opts, context, queue);
-            }
-        }
-        Expression::ParenthesizedExpression(paren) => {
-            find_nested_functions_in_expr(&paren.expression, opts, context, queue);
-        }
-        Expression::OptionalCallExpression(call) => {
-            for arg in &call.arguments {
-                find_nested_functions_in_expr(arg, opts, context, queue);
-            }
-        }
-        Expression::TSAsExpression(ts) => {
-            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
-        }
-        Expression::TSSatisfiesExpression(ts) => {
-            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
-        }
-        Expression::TSNonNullExpression(ts) => {
-            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
-        }
-        Expression::TSTypeAssertion(ts) => {
-            find_nested_functions_in_expr(&ts.expression, opts, context, queue);
-        }
-        Expression::TypeCastExpression(tc) => {
-            find_nested_functions_in_expr(&tc.expression, opts, context, queue);
-        }
-        // Leaf expressions or expressions that don't contain functions
-        _ => {}
-    }
+    let mut visitor = FunctionDiscoveryVisitor::new(opts, context);
+    let mut walker = AstWalker::new(scope);
+    walker.walk_program(&mut visitor, program);
+    visitor.queue
 }
 
 // -----------------------------------------------------------------------
@@ -4314,7 +4002,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     context.hook_guard_name = hook_guard_name;
 
     // Find all functions to compile
-    let queue = find_functions_to_compile(program, &options, &mut context);
+    let queue = find_functions_to_compile(program, &options, &mut context, &scope);
 
     // Clone env_config once for all function compilations (avoids per-function clone
     // while satisfying the borrow checker — compile_fn needs &mut context + &env_config)
@@ -4585,6 +4273,9 @@ mod tests {
             ignore_use_no_forget: false,
             custom_opt_out_directives: None,
             environment: EnvironmentConfig::default(),
+            source_code: None,
+            profiling: false,
+            debug: false,
         };
         assert!(!should_skip_compilation(&program, &options));
     }

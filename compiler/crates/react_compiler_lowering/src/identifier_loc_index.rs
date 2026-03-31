@@ -72,12 +72,12 @@ impl IdentifierLocVisitor {
     }
 }
 
-impl Visitor for IdentifierLocVisitor {
-    fn enter_identifier(&mut self, node: &Identifier, _scope_stack: &[ScopeId]) {
+impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
+    fn enter_identifier(&mut self, node: &'ast Identifier, _scope_stack: &[ScopeId]) {
         self.insert_identifier(node, false);
     }
 
-    fn enter_jsx_identifier(&mut self, node: &JSXIdentifier, _scope_stack: &[ScopeId]) {
+    fn enter_jsx_identifier(&mut self, node: &'ast JSXIdentifier, _scope_stack: &[ScopeId]) {
         if let (Some(start), Some(loc)) = (node.base.start, &node.base.loc) {
             self.index.insert(
                 start,
@@ -91,24 +91,24 @@ impl Visitor for IdentifierLocVisitor {
         }
     }
 
-    fn enter_jsx_opening_element(&mut self, node: &JSXOpeningElement, _scope_stack: &[ScopeId]) {
+    fn enter_jsx_opening_element(&mut self, node: &'ast JSXOpeningElement, _scope_stack: &[ScopeId]) {
         self.current_opening_element_loc = node.base.loc.as_ref().map(|loc| convert_loc(loc));
     }
 
-    fn leave_jsx_opening_element(&mut self, _node: &JSXOpeningElement, _scope_stack: &[ScopeId]) {
+    fn leave_jsx_opening_element(&mut self, _node: &'ast JSXOpeningElement, _scope_stack: &[ScopeId]) {
         self.current_opening_element_loc = None;
     }
 
     // Visit function/class declaration and expression name identifiers,
     // which are not walked by the generic walker (to avoid affecting
     // other Visitor consumers like find_context_identifiers).
-    fn enter_function_declaration(&mut self, node: &FunctionDeclaration, _scope_stack: &[ScopeId]) {
+    fn enter_function_declaration(&mut self, node: &'ast FunctionDeclaration, _scope_stack: &[ScopeId]) {
         if let Some(id) = &node.id {
             self.insert_identifier(id, true);
         }
     }
 
-    fn enter_function_expression(&mut self, node: &FunctionExpression, _scope_stack: &[ScopeId]) {
+    fn enter_function_expression(&mut self, node: &'ast FunctionExpression, _scope_stack: &[ScopeId]) {
         if let Some(id) = &node.id {
             self.insert_identifier(id, true);
         }

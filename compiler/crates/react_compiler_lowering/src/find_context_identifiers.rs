@@ -61,41 +61,41 @@ impl<'a> ContextIdentifierVisitor<'a> {
     }
 }
 
-impl Visitor for ContextIdentifierVisitor<'_> {
-    fn enter_function_declaration(&mut self, node: &FunctionDeclaration, _: &[ScopeId]) {
+impl<'ast> Visitor<'ast> for ContextIdentifierVisitor<'_> {
+    fn enter_function_declaration(&mut self, node: &'ast FunctionDeclaration, _: &[ScopeId]) {
         self.push_function_scope(node.base.start);
     }
-    fn leave_function_declaration(&mut self, node: &FunctionDeclaration, _: &[ScopeId]) {
+    fn leave_function_declaration(&mut self, node: &'ast FunctionDeclaration, _: &[ScopeId]) {
         self.pop_function_scope(node.base.start);
     }
-    fn enter_function_expression(&mut self, node: &FunctionExpression, _: &[ScopeId]) {
+    fn enter_function_expression(&mut self, node: &'ast FunctionExpression, _: &[ScopeId]) {
         self.push_function_scope(node.base.start);
     }
-    fn leave_function_expression(&mut self, node: &FunctionExpression, _: &[ScopeId]) {
+    fn leave_function_expression(&mut self, node: &'ast FunctionExpression, _: &[ScopeId]) {
         self.pop_function_scope(node.base.start);
     }
     fn enter_arrow_function_expression(
         &mut self,
-        node: &ArrowFunctionExpression,
+        node: &'ast ArrowFunctionExpression,
         _: &[ScopeId],
     ) {
         self.push_function_scope(node.base.start);
     }
     fn leave_arrow_function_expression(
         &mut self,
-        node: &ArrowFunctionExpression,
+        node: &'ast ArrowFunctionExpression,
         _: &[ScopeId],
     ) {
         self.pop_function_scope(node.base.start);
     }
-    fn enter_object_method(&mut self, node: &ObjectMethod, _: &[ScopeId]) {
+    fn enter_object_method(&mut self, node: &'ast ObjectMethod, _: &[ScopeId]) {
         self.push_function_scope(node.base.start);
     }
-    fn leave_object_method(&mut self, node: &ObjectMethod, _: &[ScopeId]) {
+    fn leave_object_method(&mut self, node: &'ast ObjectMethod, _: &[ScopeId]) {
         self.pop_function_scope(node.base.start);
     }
 
-    fn enter_identifier(&mut self, node: &Identifier, _scope_stack: &[ScopeId]) {
+    fn enter_identifier(&mut self, node: &'ast Identifier, _scope_stack: &[ScopeId]) {
         let start = match node.base.start {
             Some(s) => s,
             None => return,
@@ -119,7 +119,7 @@ impl Visitor for ContextIdentifierVisitor<'_> {
 
     fn enter_assignment_expression(
         &mut self,
-        node: &AssignmentExpression,
+        node: &'ast AssignmentExpression,
         scope_stack: &[ScopeId],
     ) {
         let current_scope = scope_stack
@@ -129,7 +129,7 @@ impl Visitor for ContextIdentifierVisitor<'_> {
         walk_lval_for_reassignment(self, &node.left, current_scope);
     }
 
-    fn enter_update_expression(&mut self, node: &UpdateExpression, scope_stack: &[ScopeId]) {
+    fn enter_update_expression(&mut self, node: &'ast UpdateExpression, scope_stack: &[ScopeId]) {
         if let Expression::Identifier(ident) = node.argument.as_ref() {
             let current_scope = scope_stack
                 .last()
