@@ -126,37 +126,54 @@ function renderFlight(renderRSCNode, AppComponent, itemCount) {
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
+  const {Transform} = require('stream');
 
   const {pipe: rscPipe} = renderRSCNode(clientManifest, AppComponent, itemCount);
-  const rscStream = new PassThrough();
-  const flightStream = new PassThrough();
-  const rscPayloadChunks = [];
+  const trunk = new PassThrough();
+  const forSsr = new PassThrough();
+  const forInline = new PassThrough();
+  trunk.pipe(forSsr);
+  trunk.pipe(forInline);
 
-  rscStream.on('data', function (chunk) {
+  const rscPayloadChunks = [];
+  let flightScripts = '';
+  forInline.on('data', function (chunk) {
     rscPayloadChunks.push(chunk);
+    const escaped = JSON.stringify(chunk.toString())
+      .replace(/<!--/g, '<\\!--')
+      .replace(/<\/(script)/gi, '</\\$1');
+    flightScripts +=
+      '<script>(self.__FLIGHT_DATA||=[]).push(' + escaped + ')</script>';
   });
 
-  rscPipe(rscStream);
-  rscStream.pipe(flightStream);
+  rscPipe(trunk);
 
   return new Promise(function (resolve, reject) {
     let cachedResult;
     function Root() {
       if (!cachedResult) {
-        cachedResult = createFromNodeStream(flightStream, ssrManifest);
+        cachedResult = createFromNodeStream(forSsr, ssrManifest);
       }
       return React.use(cachedResult);
     }
 
     const {pipe} = renderToPipeableStream(React.createElement(Root), {
-      onAllReady() {
+      onShellReady() {
         const htmlChunks = [];
-        const writable = new Writable({
-          write(chunk, _encoding, cb) {
+        const injector = new Transform({
+          transform(chunk, _encoding, cb) {
             htmlChunks.push(chunk);
+            if (flightScripts) {
+              htmlChunks.push(Buffer.from(flightScripts));
+              flightScripts = '';
+            }
             cb();
           },
-          final(cb) {
+          flush(cb) {
+            if (flightScripts) {
+              htmlChunks.push(Buffer.from(flightScripts));
+              flightScripts = '';
+            }
             resolve({
               html: Buffer.concat(htmlChunks).toString('utf-8'),
               rscPayload: Buffer.concat(rscPayloadChunks).toString('utf-8'),
@@ -164,7 +181,7 @@ function renderFlight(renderRSCNode, AppComponent, itemCount) {
             cb();
           },
         });
-        pipe(writable);
+        pipe(injector);
       },
       onError: reject,
     });

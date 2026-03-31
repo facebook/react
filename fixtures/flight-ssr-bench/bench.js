@@ -137,23 +137,38 @@ function renderFizzNode(AppComponent, itemCount) {
   });
 }
 
-// Flight + Fizz (Node) — RSC render → Node stream → Fizz via Node streams.
+// Flight + Fizz (Node) — RSC render → tee → Fizz + script injection.
 function renderFlightFizzNode(renderRSCNode, AppComponent, itemCount) {
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
+  const {Transform} = require('stream');
 
-  // Phase 1: RSC → Flight stream
+  // Phase 1: RSC → Flight stream, tee into SSR + script injection
   const {pipe: rscPipe} = renderRSCNode(clientManifest, AppComponent, itemCount);
-  const flightStream = new PassThrough();
-  rscPipe(flightStream);
+  const trunk = new PassThrough();
+  const forSsr = new PassThrough();
+  const forInline = new PassThrough();
+  trunk.pipe(forSsr);
+  trunk.pipe(forInline);
 
-  // Phase 2: Flight stream → React tree → HTML
+  let flightScripts = '';
+  forInline.on('data', function (chunk) {
+    const escaped = JSON.stringify(chunk.toString())
+      .replace(/<!--/g, '<\\!--')
+      .replace(/<\/(script)/gi, '</\\$1');
+    flightScripts +=
+      '<script>(self.__FLIGHT_DATA||=[]).push(' + escaped + ')</script>';
+  });
+
+  rscPipe(trunk);
+
+  // Phase 2: Flight stream → React tree → HTML with injected scripts
   return new Promise(function (resolve, reject) {
     let cachedResult;
     function Root() {
       if (!cachedResult) {
-        cachedResult = createFromNodeStream(flightStream, ssrManifest);
+        cachedResult = createFromNodeStream(forSsr, ssrManifest);
       }
       return React.use(cachedResult);
     }
@@ -161,17 +176,25 @@ function renderFlightFizzNode(renderRSCNode, AppComponent, itemCount) {
     const {pipe} = renderToPipeableStream(React.createElement(Root), {
       onShellReady() {
         const chunks = [];
-        const writable = new Writable({
-          write(chunk, _encoding, cb) {
+        const injector = new Transform({
+          transform(chunk, _encoding, cb) {
             chunks.push(chunk);
+            if (flightScripts) {
+              chunks.push(Buffer.from(flightScripts));
+              flightScripts = '';
+            }
             cb();
           },
-          final(cb) {
+          flush(cb) {
+            if (flightScripts) {
+              chunks.push(Buffer.from(flightScripts));
+              flightScripts = '';
+            }
             resolve(Buffer.concat(chunks).toString('utf-8'));
             cb();
           },
         });
-        pipe(writable);
+        pipe(injector);
       },
       onError: reject,
     });
@@ -196,7 +219,9 @@ async function renderFizzEdge(AppComponent, itemCount) {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
-// Flight + Fizz (Edge) — RSC render → ReadableStream → Fizz via web streams.
+// Flight + Fizz (Edge) — RSC render → tee → Fizz + script injection via web streams.
+// Injection follows the rsc-html-stream pattern: buffer HTML chunks within a tick,
+// strip </body></html> trailer, inject Flight scripts, re-add trailer at flush.
 function renderFlightFizzEdge(renderRSCEdge, AppComponent, itemCount) {
   const React = require('react');
   const {renderToReadableStream} = require('react-dom/server');
@@ -204,11 +229,97 @@ function renderFlightFizzEdge(renderRSCEdge, AppComponent, itemCount) {
     createFromReadableStream,
   } = require('react-server-dom-webpack/client.edge');
 
-  // Phase 1: RSC → Web ReadableStream
-  const webStream = renderRSCEdge(clientManifest, AppComponent, itemCount);
+  const htmlTrailer = '</body></html>';
+  const enc = new TextEncoder();
 
-  // Phase 2: ReadableStream → React tree → HTML
-  const cachedResult = createFromReadableStream(webStream, {
+  // Phase 1: RSC → Web ReadableStream, tee into SSR + script injection
+  const webStream = renderRSCEdge(clientManifest, AppComponent, itemCount);
+  const [forSsr, forInline] = webStream.tee();
+
+  // TransformStream that buffers HTML chunks per tick, strips </body></html>,
+  // injects Flight scripts between flushes, and re-adds the trailer at the end.
+  // Follows the rsc-html-stream pattern.
+  let resolveInline;
+  const inlinePromise = new Promise(function (r) {
+    resolveInline = r;
+  });
+  const htmlDecoder = new TextDecoder();
+  let buffered = [];
+  let timeout = null;
+
+  function flushBuffered(controller) {
+    for (const chunk of buffered) {
+      let buf = htmlDecoder.decode(chunk, {stream: true});
+      if (buf.endsWith(htmlTrailer)) {
+        buf = buf.slice(0, -htmlTrailer.length);
+      }
+      controller.enqueue(enc.encode(buf));
+    }
+    const remaining = htmlDecoder.decode();
+    if (remaining.length) {
+      let buf = remaining;
+      if (buf.endsWith(htmlTrailer)) {
+        buf = buf.slice(0, -htmlTrailer.length);
+      }
+      controller.enqueue(enc.encode(buf));
+    }
+    buffered.length = 0;
+    timeout = null;
+  }
+
+  function writeFlightChunk(data, controller) {
+    const escaped = JSON.stringify(data)
+      .replace(/<!--/g, '<\\!--')
+      .replace(/<\/(script)/gi, '</\\$1');
+    controller.enqueue(
+      enc.encode(
+        '<script>(self.__FLIGHT_DATA||=[]).push(' + escaped + ')</script>'
+      )
+    );
+  }
+
+  const injector = new TransformStream({
+    start(controller) {
+      // Start consuming the inline Flight stream, writing scripts directly
+      // to the transform output between HTML flushes.
+      (async function () {
+        const reader = forInline.getReader();
+        const decoder = new TextDecoder('utf-8', {fatal: true});
+        for (;;) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          writeFlightChunk(
+            decoder.decode(value, {stream: true}),
+            controller
+          );
+        }
+        const remaining = decoder.decode();
+        if (remaining.length) {
+          writeFlightChunk(remaining, controller);
+        }
+        resolveInline();
+      })();
+    },
+    transform(chunk, controller) {
+      buffered.push(chunk);
+      if (!timeout) {
+        timeout = setTimeout(function () {
+          flushBuffered(controller);
+        }, 0);
+      }
+    },
+    async flush(controller) {
+      await inlinePromise;
+      if (timeout) {
+        clearTimeout(timeout);
+        flushBuffered(controller);
+      }
+      controller.enqueue(enc.encode(htmlTrailer));
+    },
+  });
+
+  // Phase 2: ReadableStream → React tree → HTML → injector → output
+  const cachedResult = createFromReadableStream(forSsr, {
     serverConsumerManifest: ssrManifest,
   });
   function Root() {
@@ -216,8 +327,9 @@ function renderFlightFizzEdge(renderRSCEdge, AppComponent, itemCount) {
   }
 
   return renderToReadableStream(React.createElement(Root)).then(
-    function (stream) {
-      const reader = stream.getReader();
+    function (htmlStream) {
+      const outputStream = htmlStream.pipeThrough(injector);
+      const reader = outputStream.getReader();
       const chunks = [];
       function read() {
         return reader.read().then(function ({done, value}) {
