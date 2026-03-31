@@ -50,55 +50,86 @@ function renderFlightFizzNode(
   AppComponent,
   itemCount,
   clientManifest,
-  ssrManifest
+  ssrManifest,
+  opts
 ) {
+  const inject = !opts || opts.inject !== false;
   const React = require('react');
   const {renderToPipeableStream} = require('react-dom/server');
   const {createFromNodeStream} = require('react-server-dom-webpack/client');
 
-  // Phase 1: RSC → Flight stream, tee into SSR + script injection
   const {pipe: rscPipe} = renderRSCNode(
     clientManifest,
     AppComponent,
     itemCount
   );
-  const trunk = new PassThrough();
-  const forSsr = new PassThrough();
-  const forInline = new PassThrough();
-  trunk.pipe(forSsr);
-  trunk.pipe(forInline);
 
-  let flightScripts = '';
-  forInline.on('data', function (chunk) {
-    flightScripts +=
-      '<script>(self.__FLIGHT_DATA||=[]).push(' +
-      JSON.stringify(chunk.toString()) +
-      ')</script>';
-  });
+  let flightStream;
+  if (inject) {
+    // Tee the Flight stream into SSR + script injection
+    const trunk = new PassThrough();
+    const forSsr = new PassThrough();
+    const forInline = new PassThrough();
+    trunk.pipe(forSsr);
+    trunk.pipe(forInline);
 
-  rscPipe(trunk);
+    var flightScripts = '';
+    forInline.on('data', function (chunk) {
+      flightScripts +=
+        '<script>(self.__FLIGHT_DATA||=[]).push(' +
+        JSON.stringify(chunk.toString()) +
+        ')</script>';
+    });
 
-  // Phase 2: Flight stream → React tree → HTML with injected scripts
+    rscPipe(trunk);
+    flightStream = forSsr;
+  } else {
+    flightStream = new PassThrough();
+    rscPipe(flightStream);
+  }
+
   let cachedResult;
   function Root() {
     if (!cachedResult) {
-      cachedResult = createFromNodeStream(forSsr, ssrManifest);
+      cachedResult = createFromNodeStream(flightStream, ssrManifest);
     }
     return React.use(cachedResult);
   }
 
   const output = new PassThrough();
-  const trailer = '</body></html>';
 
   const {pipe} = renderToPipeableStream(React.createElement(Root), {
     onShellReady() {
-      let buffered = [];
-      let timeout = null;
-      const injector = new Transform({
-        transform(chunk, _encoding, cb) {
-          buffered.push(chunk);
-          if (!timeout) {
-            timeout = setTimeout(() => {
+      if (inject) {
+        // Buffer HTML chunks within a tick to avoid injecting scripts mid-tag.
+        const trailer = '</body></html>';
+        let buffered = [];
+        let timeout = null;
+        const injector = new Transform({
+          transform(chunk, _encoding, cb) {
+            buffered.push(chunk);
+            if (!timeout) {
+              timeout = setTimeout(() => {
+                for (const buf of buffered) {
+                  let str = buf.toString();
+                  if (str.endsWith(trailer)) {
+                    str = str.slice(0, -trailer.length);
+                  }
+                  this.push(str);
+                }
+                buffered.length = 0;
+                timeout = null;
+                if (flightScripts) {
+                  this.push(flightScripts);
+                  flightScripts = '';
+                }
+              }, 0);
+            }
+            cb();
+          },
+          flush(cb) {
+            if (timeout) {
+              clearTimeout(timeout);
               for (const buf of buffered) {
                 let str = buf.toString();
                 if (str.endsWith(trailer)) {
@@ -107,37 +138,20 @@ function renderFlightFizzNode(
                 this.push(str);
               }
               buffered.length = 0;
-              timeout = null;
-              if (flightScripts) {
-                this.push(flightScripts);
-                flightScripts = '';
-              }
-            }, 0);
-          }
-          cb();
-        },
-        flush(cb) {
-          if (timeout) {
-            clearTimeout(timeout);
-            for (const buf of buffered) {
-              let str = buf.toString();
-              if (str.endsWith(trailer)) {
-                str = str.slice(0, -trailer.length);
-              }
-              this.push(str);
             }
-            buffered.length = 0;
-          }
-          if (flightScripts) {
-            this.push(flightScripts);
-            flightScripts = '';
-          }
-          this.push(trailer);
-          cb();
-        },
-      });
-      pipe(injector);
-      injector.pipe(output);
+            if (flightScripts) {
+              this.push(flightScripts);
+              flightScripts = '';
+            }
+            this.push(trailer);
+            cb();
+          },
+        });
+        pipe(injector);
+        injector.pipe(output);
+      } else {
+        pipe(output);
+      }
     },
     onError(e) {
       console.error('Flight+Fizz Node error:', e);
@@ -161,95 +175,107 @@ function renderFlightFizzEdge(
   AppComponent,
   itemCount,
   clientManifest,
-  ssrManifest
+  ssrManifest,
+  opts
 ) {
+  const inject = !opts || opts.inject !== false;
   const React = require('react');
   const {renderToReadableStream} = require('react-dom/server');
   const {
     createFromReadableStream,
   } = require('react-server-dom-webpack/client.edge');
 
-  const htmlTrailer = '</body></html>';
-  const enc = new TextEncoder();
-
-  // Phase 1: RSC → Web ReadableStream, tee into SSR + script injection
   const webStream = renderRSCEdge(clientManifest, AppComponent, itemCount);
-  const [forSsr, forInline] = webStream.tee();
 
-  let resolveInline;
-  const inlinePromise = new Promise(function (r) {
-    resolveInline = r;
-  });
-  const htmlDecoder = new TextDecoder();
-  let buffered = [];
-  let timeout = null;
+  let forSsr;
+  let injector;
 
-  function flushBuffered(controller) {
-    for (const chunk of buffered) {
-      let buf = htmlDecoder.decode(chunk, {stream: true});
-      if (buf.endsWith(htmlTrailer)) {
-        buf = buf.slice(0, -htmlTrailer.length);
-      }
-      controller.enqueue(enc.encode(buf));
-    }
-    const remaining = htmlDecoder.decode();
-    if (remaining.length) {
-      let buf = remaining;
-      if (buf.endsWith(htmlTrailer)) {
-        buf = buf.slice(0, -htmlTrailer.length);
-      }
-      controller.enqueue(enc.encode(buf));
-    }
-    buffered.length = 0;
-    timeout = null;
-  }
+  if (inject) {
+    const htmlTrailer = '</body></html>';
+    const enc = new TextEncoder();
 
-  function writeFlightChunk(data, controller) {
-    controller.enqueue(
-      enc.encode(
-        '<script>(self.__FLIGHT_DATA||=[]).push(' +
-          JSON.stringify(data) +
-          ')</script>'
-      )
-    );
-  }
+    let forInline;
+    [forSsr, forInline] = webStream.tee();
 
-  const injector = new TransformStream({
-    start(controller) {
-      (async function () {
-        const reader = forInline.getReader();
-        const decoder = new TextDecoder('utf-8', {fatal: true});
-        for (;;) {
-          const {done, value} = await reader.read();
-          if (done) break;
-          writeFlightChunk(decoder.decode(value, {stream: true}), controller);
+    let resolveInline;
+    const inlinePromise = new Promise(function (r) {
+      resolveInline = r;
+    });
+    const htmlDecoder = new TextDecoder();
+    let buffered = [];
+    let timeout = null;
+
+    function flushBuffered(controller) {
+      for (const chunk of buffered) {
+        let buf = htmlDecoder.decode(chunk, {stream: true});
+        if (buf.endsWith(htmlTrailer)) {
+          buf = buf.slice(0, -htmlTrailer.length);
         }
-        const remaining = decoder.decode();
-        if (remaining.length) {
-          writeFlightChunk(remaining, controller);
+        controller.enqueue(enc.encode(buf));
+      }
+      const remaining = htmlDecoder.decode();
+      if (remaining.length) {
+        let buf = remaining;
+        if (buf.endsWith(htmlTrailer)) {
+          buf = buf.slice(0, -htmlTrailer.length);
         }
-        resolveInline();
-      })();
-    },
-    transform(chunk, controller) {
-      buffered.push(chunk);
-      if (!timeout) {
-        timeout = setTimeout(function () {
+        controller.enqueue(enc.encode(buf));
+      }
+      buffered.length = 0;
+      timeout = null;
+    }
+
+    function writeFlightChunk(data, controller) {
+      controller.enqueue(
+        enc.encode(
+          '<script>(self.__FLIGHT_DATA||=[]).push(' +
+            JSON.stringify(data) +
+            ')</script>'
+        )
+      );
+    }
+
+    injector = new TransformStream({
+      start(controller) {
+        (async function () {
+          const reader = forInline.getReader();
+          const decoder = new TextDecoder('utf-8', {fatal: true});
+          for (;;) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            writeFlightChunk(
+              decoder.decode(value, {stream: true}),
+              controller
+            );
+          }
+          const remaining = decoder.decode();
+          if (remaining.length) {
+            writeFlightChunk(remaining, controller);
+          }
+          resolveInline();
+        })();
+      },
+      transform(chunk, controller) {
+        buffered.push(chunk);
+        if (!timeout) {
+          timeout = setTimeout(function () {
+            flushBuffered(controller);
+          }, 0);
+        }
+      },
+      async flush(controller) {
+        await inlinePromise;
+        if (timeout) {
+          clearTimeout(timeout);
           flushBuffered(controller);
-        }, 0);
-      }
-    },
-    async flush(controller) {
-      await inlinePromise;
-      if (timeout) {
-        clearTimeout(timeout);
-        flushBuffered(controller);
-      }
-      controller.enqueue(enc.encode(htmlTrailer));
-    },
-  });
+        }
+        controller.enqueue(enc.encode(htmlTrailer));
+      },
+    });
+  } else {
+    forSsr = webStream;
+  }
 
-  // Phase 2: ReadableStream → React tree → HTML → injector → output
   const cachedResult = createFromReadableStream(forSsr, {
     serverConsumerManifest: ssrManifest,
   });
@@ -259,7 +285,7 @@ function renderFlightFizzEdge(
 
   return renderToReadableStream(React.createElement(Root)).then(
     function (htmlStream) {
-      return htmlStream.pipeThrough(injector);
+      return injector ? htmlStream.pipeThrough(injector) : htmlStream;
     }
   );
 }

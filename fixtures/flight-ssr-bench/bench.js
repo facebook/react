@@ -14,6 +14,7 @@ const inspector = require('node:inspector');
 
 const PROFILE_MODE = process.argv.includes('--profile');
 const CONCURRENT_MODE = process.argv.includes('--concurrent');
+const INJECT = !process.argv.includes('--no-injection');
 
 // ---------------------------------------------------------------------------
 // Manifest setup (WebpackMock pattern)
@@ -133,7 +134,8 @@ function renderFlightFizzNode(renderRSCNode, AppComponent, itemCount) {
       AppComponent,
       itemCount,
       clientManifest,
-      ssrManifest
+      ssrManifest,
+      {inject: INJECT}
     )
   );
 }
@@ -144,7 +146,8 @@ function renderFlightFizzEdge(renderRSCEdge, AppComponent, itemCount) {
     AppComponent,
     itemCount,
     clientManifest,
-    ssrManifest
+    ssrManifest,
+    {inject: INJECT}
   ).then(webStreamToString);
 }
 
