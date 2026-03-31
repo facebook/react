@@ -20,19 +20,6 @@ Current test status: Pass 1717/1717, Code 1716/1717, Snap 1717/1718.
   ```
 - The TS dynamically resolves the `useMemoCache` import to `_c` (from `react/compiler-runtime` import specifier `c`). The Rust hardcodes `"useMemoCache"`. The BabelPlugin.ts wrapper handles the rename to `_c` during AST application, so this works in practice, but it means the codegen output has an incorrect intermediate identifier.
 
-### 4. Function discovery limited to top-level statements
-- **TS**: `Entrypoint/Program.ts:568-597`
-  ```typescript
-  program.traverse({
-    ClassDeclaration(node) { node.skip(); },
-    FunctionDeclaration: traverseFunction,
-    FunctionExpression: traverseFunction,
-    ArrowFunctionExpression: traverseFunction,
-  })
-  ```
-- **Rust**: `react_compiler/src/entrypoint/program.rs:1527-1705`
-- The TS uses Babel `program.traverse` to find ALL functions in the entire AST tree (skipping class bodies). The Rust `find_functions_to_compile` only walks top-level program body statements. Functions nested inside `if` blocks, try/catch, or non-standard positions would be missed in non-'all' compilation modes.
-
 
 ---
 

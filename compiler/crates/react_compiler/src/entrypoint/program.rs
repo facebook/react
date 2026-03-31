@@ -1517,11 +1517,11 @@ fn try_extract_wrapped_function<'a>(
 
 /// Find all functions in the program that should be compiled.
 ///
-/// Traverses the top-level program body looking for:
-/// - FunctionDeclaration
-/// - VariableDeclaration with function expression initializers
-/// - ExportDefaultDeclaration with function declarations/expressions
-/// - ExportNamedDeclaration with function declarations
+/// Traverses the program body recursively, visiting functions at any depth
+/// (matching the TypeScript compiler's Babel `program.traverse` behavior).
+/// Export declarations are handled at the top level. All other statements
+/// are processed by `visit_statement_for_functions`, which recurses into
+/// block-containing statements (if, try, for, while, switch, labeled, etc.).
 ///
 /// Skips classes and their contents (they may reference `this`).
 fn find_functions_to_compile<'a>(
@@ -1533,58 +1533,7 @@ fn find_functions_to_compile<'a>(
 
     for (_index, stmt) in program.body.iter().enumerate() {
         match stmt {
-            // Skip classes
-            Statement::ClassDeclaration(_) => continue,
-
-            Statement::FunctionDeclaration(func) => {
-                let info = fn_info_from_decl(func);
-                if let Some(source) = try_make_compile_source(info, opts, context) {
-                    queue.push(source);
-                }
-            }
-
-            Statement::VariableDeclaration(var_decl) => {
-                for decl in &var_decl.declarations {
-                    if let Some(ref init) = decl.init {
-                        let inferred_name = get_declarator_name(decl);
-
-                        match init.as_ref() {
-                            Expression::FunctionExpression(func) => {
-                                let info = fn_info_from_func_expr(func, inferred_name, None);
-                                if let Some(source) = try_make_compile_source(info, opts, context) {
-                                    queue.push(source);
-                                }
-                            }
-                            Expression::ArrowFunctionExpression(arrow) => {
-                                let info = fn_info_from_arrow(arrow, inferred_name, None);
-                                if let Some(source) = try_make_compile_source(info, opts, context) {
-                                    queue.push(source);
-                                }
-                            }
-                            // Check for forwardRef/memo wrappers:
-                            // const Foo = React.forwardRef(() => { ... })
-                            // const Foo = memo(() => { ... })
-                            other => {
-                                if let Some(info) =
-                                    try_extract_wrapped_function(other, inferred_name)
-                                {
-                                    if let Some(source) =
-                                        try_make_compile_source(info, opts, context)
-                                    {
-                                        queue.push(source);
-                                    }
-                                }
-                                // In 'all' mode, also find nested function expressions
-                                // (e.g., const _ = { useHook: () => {} })
-                                if opts.compilation_mode == "all" {
-                                    find_nested_functions_in_expr(other, opts, context, &mut queue);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
+            // Export declarations are only valid at the top level
             Statement::ExportDefaultDeclaration(export) => {
                 match export.declaration.as_ref() {
                     ExportDefaultDecl::FunctionDeclaration(func) => {
@@ -1680,28 +1629,161 @@ fn find_functions_to_compile<'a>(
                 }
             }
 
-            // ExpressionStatement: check for bare forwardRef/memo calls
-            // e.g. React.memo(props => { ... })
-            Statement::ExpressionStatement(expr_stmt) => {
-                if let Some(info) = try_extract_wrapped_function(&expr_stmt.expression, None) {
-                    if let Some(source) = try_make_compile_source(info, opts, context) {
-                        queue.push(source);
-                    }
-                }
-                // In 'all' mode, also find function expressions/arrows nested
-                // in top-level expression statements (e.g., `Foo = () => ...`,
-                // `unknownFunction(function() { ... })`)
-                if opts.compilation_mode == "all" {
-                    find_nested_functions_in_expr(&expr_stmt.expression, opts, context, &mut queue);
-                }
-            }
-
-            // All other statement types are ignored (imports, type declarations, etc.)
-            _ => {}
+            // For all other statements, use the recursive visitor which
+            // handles function discovery at any nesting depth
+            other => visit_statement_for_functions(other, opts, context, &mut queue),
         }
     }
 
     queue
+}
+
+/// Recursively visit a statement looking for functions to compile.
+///
+/// Handles function declarations, variable declarations with function
+/// initializers, and expression statements with forwardRef/memo wrappers.
+/// Recurses into block-containing statements (if, try, for, while, switch,
+/// labeled, etc.) to match the TypeScript compiler's Babel traverse behavior,
+/// which visits every function node at any depth (except inside class bodies).
+fn visit_statement_for_functions<'a>(
+    stmt: &'a Statement,
+    opts: &PluginOptions,
+    context: &mut ProgramContext,
+    queue: &mut Vec<CompileSource<'a>>,
+) {
+    match stmt {
+        // Skip classes (they may reference `this`)
+        Statement::ClassDeclaration(_) => {}
+
+        Statement::FunctionDeclaration(func) => {
+            let info = fn_info_from_decl(func);
+            if let Some(source) = try_make_compile_source(info, opts, context) {
+                queue.push(source);
+            }
+        }
+
+        Statement::VariableDeclaration(var_decl) => {
+            for decl in &var_decl.declarations {
+                if let Some(ref init) = decl.init {
+                    let inferred_name = get_declarator_name(decl);
+
+                    match init.as_ref() {
+                        Expression::FunctionExpression(func) => {
+                            let info = fn_info_from_func_expr(func, inferred_name, None);
+                            if let Some(source) = try_make_compile_source(info, opts, context) {
+                                queue.push(source);
+                            }
+                        }
+                        Expression::ArrowFunctionExpression(arrow) => {
+                            let info = fn_info_from_arrow(arrow, inferred_name, None);
+                            if let Some(source) = try_make_compile_source(info, opts, context) {
+                                queue.push(source);
+                            }
+                        }
+                        // Check for forwardRef/memo wrappers:
+                        // const Foo = React.forwardRef(() => { ... })
+                        // const Foo = memo(() => { ... })
+                        other => {
+                            if let Some(info) =
+                                try_extract_wrapped_function(other, inferred_name)
+                            {
+                                if let Some(source) =
+                                    try_make_compile_source(info, opts, context)
+                                {
+                                    queue.push(source);
+                                }
+                            }
+                            // In 'all' mode, also find nested function expressions
+                            // (e.g., const _ = { useHook: () => {} })
+                            if opts.compilation_mode == "all" {
+                                find_nested_functions_in_expr(other, opts, context, queue);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ExpressionStatement: check for bare forwardRef/memo calls
+        // e.g. React.memo(props => { ... })
+        Statement::ExpressionStatement(expr_stmt) => {
+            if let Some(info) = try_extract_wrapped_function(&expr_stmt.expression, None) {
+                if let Some(source) = try_make_compile_source(info, opts, context) {
+                    queue.push(source);
+                }
+            }
+            // In 'all' mode, also find function expressions/arrows nested
+            // in expression statements (e.g., `Foo = () => ...`,
+            // `unknownFunction(function() { ... })`)
+            if opts.compilation_mode == "all" {
+                find_nested_functions_in_expr(&expr_stmt.expression, opts, context, queue);
+            }
+        }
+
+        // Recurse into block-containing statements to find functions at any
+        // depth (matching Babel's traverse behavior). In 'all' mode, only
+        // top-level functions are compiled — the TS compiler's scope check
+        // (`fn.scope.getProgramParent() !== fn.scope.parent`) rejects
+        // non-program-scope functions — so we skip recursion.
+        Statement::BlockStatement(block) if opts.compilation_mode != "all" => {
+            for s in &block.body {
+                visit_statement_for_functions(s, opts, context, queue);
+            }
+        }
+        Statement::IfStatement(if_stmt) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&if_stmt.consequent, opts, context, queue);
+            if let Some(ref alt) = if_stmt.alternate {
+                visit_statement_for_functions(alt, opts, context, queue);
+            }
+        }
+        Statement::TryStatement(try_stmt) if opts.compilation_mode != "all" => {
+            for s in &try_stmt.block.body {
+                visit_statement_for_functions(s, opts, context, queue);
+            }
+            if let Some(ref handler) = try_stmt.handler {
+                for s in &handler.body.body {
+                    visit_statement_for_functions(s, opts, context, queue);
+                }
+            }
+            if let Some(ref finalizer) = try_stmt.finalizer {
+                for s in &finalizer.body {
+                    visit_statement_for_functions(s, opts, context, queue);
+                }
+            }
+        }
+        Statement::SwitchStatement(switch_stmt) if opts.compilation_mode != "all" => {
+            for case in &switch_stmt.cases {
+                for s in &case.consequent {
+                    visit_statement_for_functions(s, opts, context, queue);
+                }
+            }
+        }
+        Statement::LabeledStatement(labeled) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&labeled.body, opts, context, queue);
+        }
+        Statement::ForStatement(for_stmt) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&for_stmt.body, opts, context, queue);
+        }
+        Statement::WhileStatement(while_stmt) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&while_stmt.body, opts, context, queue);
+        }
+        Statement::DoWhileStatement(do_while) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&do_while.body, opts, context, queue);
+        }
+        Statement::ForInStatement(for_in) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&for_in.body, opts, context, queue);
+        }
+        Statement::ForOfStatement(for_of) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&for_of.body, opts, context, queue);
+        }
+        Statement::WithStatement(with_stmt) if opts.compilation_mode != "all" => {
+            visit_statement_for_functions(&with_stmt.body, opts, context, queue);
+        }
+
+        // All other statements (return, throw, break, continue, empty, debugger,
+        // imports, type declarations, etc.) can't contain function declarations
+        _ => {}
+    }
 }
 
 /// Recursively find function expressions and arrow functions nested within
@@ -3016,6 +3098,53 @@ fn rename_identifier_in_statement(stmt: &mut Statement, old_name: &str, new_name
                 }
             }
         }
+        // Recurse into block-containing statements
+        Statement::BlockStatement(block) => {
+            rename_identifier_in_block(block, old_name, new_name);
+        }
+        Statement::IfStatement(if_stmt) => {
+            rename_identifier_in_statement(&mut if_stmt.consequent, old_name, new_name);
+            if let Some(ref mut alt) = if_stmt.alternate {
+                rename_identifier_in_statement(alt, old_name, new_name);
+            }
+        }
+        Statement::TryStatement(try_stmt) => {
+            rename_identifier_in_block(&mut try_stmt.block, old_name, new_name);
+            if let Some(ref mut handler) = try_stmt.handler {
+                rename_identifier_in_block(&mut handler.body, old_name, new_name);
+            }
+            if let Some(ref mut finalizer) = try_stmt.finalizer {
+                rename_identifier_in_block(finalizer, old_name, new_name);
+            }
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            for case in switch_stmt.cases.iter_mut() {
+                for s in case.consequent.iter_mut() {
+                    rename_identifier_in_statement(s, old_name, new_name);
+                }
+            }
+        }
+        Statement::LabeledStatement(labeled) => {
+            rename_identifier_in_statement(&mut labeled.body, old_name, new_name);
+        }
+        Statement::ForStatement(for_stmt) => {
+            rename_identifier_in_statement(&mut for_stmt.body, old_name, new_name);
+        }
+        Statement::WhileStatement(while_stmt) => {
+            rename_identifier_in_statement(&mut while_stmt.body, old_name, new_name);
+        }
+        Statement::DoWhileStatement(do_while) => {
+            rename_identifier_in_statement(&mut do_while.body, old_name, new_name);
+        }
+        Statement::ForInStatement(for_in) => {
+            rename_identifier_in_statement(&mut for_in.body, old_name, new_name);
+        }
+        Statement::ForOfStatement(for_of) => {
+            rename_identifier_in_statement(&mut for_of.body, old_name, new_name);
+        }
+        Statement::WithStatement(with_stmt) => {
+            rename_identifier_in_statement(&mut with_stmt.body, old_name, new_name);
+        }
         _ => {}
     }
 }
@@ -3273,6 +3402,89 @@ fn replace_fn_in_statement(
         }
         Statement::ExpressionStatement(expr_stmt) => {
             if replace_fn_in_expression(&mut expr_stmt.expression, start, compiled) {
+                return true;
+            }
+        }
+        // Recurse into block-containing statements to find nested functions
+        Statement::BlockStatement(block) => {
+            for s in block.body.iter_mut() {
+                if replace_fn_in_statement(s, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Statement::IfStatement(if_stmt) => {
+            if replace_fn_in_statement(&mut if_stmt.consequent, start, compiled) {
+                return true;
+            }
+            if let Some(ref mut alt) = if_stmt.alternate {
+                if replace_fn_in_statement(alt, start, compiled) {
+                    return true;
+                }
+            }
+        }
+        Statement::TryStatement(try_stmt) => {
+            for s in try_stmt.block.body.iter_mut() {
+                if replace_fn_in_statement(s, start, compiled) {
+                    return true;
+                }
+            }
+            if let Some(ref mut handler) = try_stmt.handler {
+                for s in handler.body.body.iter_mut() {
+                    if replace_fn_in_statement(s, start, compiled) {
+                        return true;
+                    }
+                }
+            }
+            if let Some(ref mut finalizer) = try_stmt.finalizer {
+                for s in finalizer.body.iter_mut() {
+                    if replace_fn_in_statement(s, start, compiled) {
+                        return true;
+                    }
+                }
+            }
+        }
+        Statement::SwitchStatement(switch_stmt) => {
+            for case in switch_stmt.cases.iter_mut() {
+                for s in case.consequent.iter_mut() {
+                    if replace_fn_in_statement(s, start, compiled) {
+                        return true;
+                    }
+                }
+            }
+        }
+        Statement::LabeledStatement(labeled) => {
+            if replace_fn_in_statement(&mut labeled.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::ForStatement(for_stmt) => {
+            if replace_fn_in_statement(&mut for_stmt.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::WhileStatement(while_stmt) => {
+            if replace_fn_in_statement(&mut while_stmt.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::DoWhileStatement(do_while) => {
+            if replace_fn_in_statement(&mut do_while.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::ForInStatement(for_in) => {
+            if replace_fn_in_statement(&mut for_in.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::ForOfStatement(for_of) => {
+            if replace_fn_in_statement(&mut for_of.body, start, compiled) {
+                return true;
+            }
+        }
+        Statement::WithStatement(with_stmt) => {
+            if replace_fn_in_statement(&mut with_stmt.body, start, compiled) {
                 return true;
             }
         }
