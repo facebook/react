@@ -14,7 +14,7 @@ export default function TableRow({product, columns}) {
           ) : col.key === 'rating' ? (
             <span className="rating">
               <span className="star">&#9733;</span> {product[col.key]}
-              <span className="review-count">({product.reviews})</span>
+              <span className="review-count">({product.reviewCount})</span>
             </span>
           ) : col.key === 'name' ? (
             <div className="product-name-cell">
