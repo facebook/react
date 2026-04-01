@@ -166,6 +166,8 @@ function printResult(result) {
 }
 
 async function runConcurrent(name, fn, total, concurrency, warmup) {
+  if (canGC) globalThis.gc();
+
   for (let i = 0; i < warmup; i++) {
     await fn();
   }
