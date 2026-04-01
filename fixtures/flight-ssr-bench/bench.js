@@ -53,6 +53,7 @@ const {
   nodeStreamToString,
   webStreamToString,
 } = require('./render-helpers');
+const {printGrid} = require('./print-helpers');
 
 function renderFizzNode(AppComponent, itemCount) {
   return nodeStreamToString(renderFizzNodeStream(AppComponent, itemCount));
@@ -232,46 +233,6 @@ function printConcurrentResult(result) {
     result.gcTotalMs.toFixed(1),
     (result.gcTotalMs / result.total).toFixed(2)
   );
-}
-
-function printGrid(colHeaders, rows, getValue, unit, note) {
-  const labelWidth = Math.max(...rows.map(r => r[0].length));
-  const suffix = unit ? ' ' + unit : '';
-  const fmtVal = v => (v.toFixed(1) + suffix).padStart(10 + suffix.length);
-  const fmtPct = v => ((v >= 0 ? '+' : '') + v.toFixed(1) + '%').padStart(8);
-  const fmtFactor = function (va, vb) {
-    const ratio = vb / va;
-    return (ratio.toFixed(2) + 'x').padStart(7);
-  };
-  const colWidth = 10 + suffix.length;
-
-  const header =
-    ''.padEnd(labelWidth) +
-    '  ' +
-    colHeaders.map(h => h.padStart(colWidth)).join('  ') +
-    '     Delta   Factor';
-  console.log('  ' + header);
-  console.log('  ' + '-'.repeat(header.length));
-  for (const [label, a, b] of rows) {
-    const va = getValue(a);
-    const vb = getValue(b);
-    const pct = ((vb - va) / va) * 100;
-    console.log(
-      '  ' +
-        label.padEnd(labelWidth) +
-        '  ' +
-        fmtVal(va) +
-        '  ' +
-        fmtVal(vb) +
-        '  ' +
-        fmtPct(pct) +
-        '  ' +
-        fmtFactor(va, vb)
-    );
-  }
-  if (note) {
-    console.log('  (%s)', note);
-  }
 }
 
 // ---------------------------------------------------------------------------
