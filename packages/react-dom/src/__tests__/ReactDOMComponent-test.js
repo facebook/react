@@ -813,6 +813,54 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('arabicForm')).toBe(false);
     });
 
+    it('should apply React-specific aliases to SVG elements for transformBox', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<svg transformBox="fill-box" />);
+      });
+      const node = container.firstChild;
+      // Test attribute initialization.
+      expect(node.getAttribute('transform-box')).toBe('fill-box');
+      expect(node.hasAttribute('transformBox')).toBe(false);
+      // Test attribute update.
+      await act(() => {
+        root.render(<svg transformBox="stroke-box" />);
+      });
+      expect(node.getAttribute('transform-box')).toBe('stroke-box');
+      expect(node.hasAttribute('transformBox')).toBe(false);
+      // Test attribute removal by setting to null.
+      await act(() => {
+        root.render(<svg transformBox={null} />);
+      });
+      expect(node.hasAttribute('transform-box')).toBe(false);
+      expect(node.hasAttribute('transformBox')).toBe(false);
+      // Restore.
+      await act(() => {
+        root.render(<svg transformBox="fill-box" />);
+      });
+      expect(node.getAttribute('transform-box')).toBe('fill-box');
+      expect(node.hasAttribute('transformBox')).toBe(false);
+      // Test attribute removal by setting to undefined.
+      await act(() => {
+        root.render(<svg transformBox={undefined} />);
+      });
+      expect(node.hasAttribute('transform-box')).toBe(false);
+      expect(node.hasAttribute('transformBox')).toBe(false);
+      // Restore.
+      await act(() => {
+        root.render(<svg transformBox="fill-box" />);
+      });
+      expect(node.getAttribute('transform-box')).toBe('fill-box');
+      expect(node.hasAttribute('transformBox')).toBe(false);
+      // Test attribute removal.
+      await act(() => {
+        root.render(<svg />);
+      });
+      expect(node.hasAttribute('transform-box')).toBe(false);
+      expect(node.hasAttribute('transformBox')).toBe(false);
+    });
+
     it('should properly update custom attributes on custom elements', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
@@ -2675,6 +2723,23 @@ describe('ReactDOMComponent', () => {
       assertConsoleErrorDev([
         'Invalid DOM property `tabindex`. Did you mean `tabIndex`?\n' +
           '    in input (at **)',
+      ]);
+    });
+
+    it('should warn about incorrect casing on SVG properties (ssr)', () => {
+      ReactDOMServer.renderToString(
+        React.createElement('mask', {'mask-type': 'luminance'}),
+      );
+      assertConsoleErrorDev([
+        'Invalid DOM property `mask-type`. Did you mean `maskType`?\n' +
+          '    in mask (at **)',
+      ]);
+      ReactDOMServer.renderToString(
+        React.createElement('svg', {'transform-box': 'fill-box'}),
+      );
+      assertConsoleErrorDev([
+        'Invalid DOM property `transform-box`. Did you mean `transformBox`?\n' +
+          '    in svg (at **)',
       ]);
     });
 
