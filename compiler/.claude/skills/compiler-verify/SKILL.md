@@ -25,7 +25,8 @@ Arguments:
 
 3. **If Rust changed**, run these sequentially (stop on failure):
    - `bash compiler/scripts/test-babel-ast.sh` — Babel AST round-trip tests
-   - `bash compiler/scripts/test-rust-port.sh` — full Rust port test suite (must stay at 1717/1717 pass + code, 0 failures — do not regress)
+   - `bash compiler/scripts/test-rust-port.sh` — full Rust port test suite (compares Rust vs TS compiler output across all passes; must have 0 failures — do not regress)
+   - `yarn snap --rust` — end-to-end snap tests using the Rust compiler (compares compiled output and logger events against `.expect.md` fixtures; use `yarn snap --rust -p <pattern>` for focused checks)
 
 4. **Always run** (from the repo root):
    - `yarn prettier-all` — format all changed files
@@ -40,4 +41,4 @@ Arguments:
 
 - **Running `yarn snap` without `-p`** is fine for full verification, but slow. Use `-p` for focused checks.
 - **Running prettier from compiler/** — must run from the repo root.
-- **Forgetting Rust tests** — if you touched `.rs` files, always run the round-trip test.
+- **Forgetting Rust tests** — if you touched `.rs` files, always run the round-trip test and `yarn snap --rust`.
