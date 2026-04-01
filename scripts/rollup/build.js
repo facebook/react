@@ -372,7 +372,6 @@ function getPlugins(
     const isProfiling = isProfilingBundleType(bundleType);
 
     const needsMinifiedByClosure =
-      false &&
       bundleType !== ESM_PROD &&
       bundleType !== ESM_DEV &&
       // TODO(@poteto) figure out ICE in closure compiler for eslint-plugin-react-hooks (ts)

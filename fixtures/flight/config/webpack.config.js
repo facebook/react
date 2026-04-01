@@ -243,7 +243,7 @@ module.exports = function (webpackEnv) {
       level: 'none',
     },
     optimization: {
-      minimize: false && isEnvProduction,
+      minimize: isEnvProduction,
       minimizer: [
         // This is only used in production mode
         new TerserPlugin({
