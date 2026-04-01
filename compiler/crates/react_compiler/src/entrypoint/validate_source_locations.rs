@@ -50,12 +50,24 @@ pub fn validate_source_locations(
             .into_iter()
             .collect();
 
-    for (_key, entry) in &important_original {
+    // Sort entries by source position to match TS output order
+    // (JS Map preserves insertion order, which is AST traversal order = source order)
+    let mut sorted_entries: Vec<&ImportantLocation> = important_original.values().collect();
+    sorted_entries.sort_by(|a, b| {
+        a.loc.start.line.cmp(&b.loc.start.line)
+            .then(a.loc.start.column.cmp(&b.loc.start.column))
+            // Outer nodes (larger spans) before inner nodes, matching depth-first traversal
+            .then(b.loc.end.line.cmp(&a.loc.end.line))
+            .then(b.loc.end.column.cmp(&a.loc.end.column))
+    });
+
+    for entry in &sorted_entries {
         let generated_node_types = generated.get(&entry.key);
 
         if generated_node_types.is_none() {
             // Location is completely missing
-            let node_types_str: Vec<&str> = entry.node_types.iter().copied().collect();
+            let mut node_types_str: Vec<&str> = entry.node_types.iter().copied().collect();
+            node_types_str.sort();
             report_missing_location(env, &entry.loc, &node_types_str.join(", "));
         } else {
             let generated_node_types = generated_node_types.unwrap();
@@ -150,7 +162,8 @@ fn report_wrong_node_type(
     actual_types: &HashSet<String>,
 ) {
     let diag_loc = ast_to_diag_loc(loc);
-    let actual: Vec<&str> = actual_types.iter().map(|s| s.as_str()).collect();
+    let mut actual: Vec<&str> = actual_types.iter().map(|s| s.as_str()).collect();
+    actual.sort();
     env.record_diagnostic(
         CompilerDiagnostic::new(
             ErrorCategory::Todo,
@@ -244,23 +257,28 @@ fn collect_important_original_locations(
 ) -> HashMap<String, ImportantLocation> {
     let mut locations = HashMap::new();
 
+    // Note: TS uses func.traverse() which visits DESCENDANTS only, not the root
+    // function node itself. So we don't record the root function as important.
     match func {
         FunctionNode::FunctionDeclaration(f) => {
-            record_important("FunctionDeclaration", &f.base.loc, &mut locations);
+            if let Some(id) = &f.id {
+                record_important("Identifier", &id.base.loc, &mut locations);
+            }
             for param in &f.params {
                 collect_original_pattern(param, &mut locations);
             }
             collect_original_block(&f.body.body, false, &mut locations);
         }
         FunctionNode::FunctionExpression(f) => {
-            record_important("FunctionExpression", &f.base.loc, &mut locations);
+            if let Some(id) = &f.id {
+                record_important("Identifier", &id.base.loc, &mut locations);
+            }
             for param in &f.params {
                 collect_original_pattern(param, &mut locations);
             }
             collect_original_block(&f.body.body, false, &mut locations);
         }
         FunctionNode::ArrowFunctionExpression(f) => {
-            record_important("ArrowFunctionExpression", &f.base.loc, &mut locations);
             for param in &f.params {
                 collect_original_pattern(param, &mut locations);
             }

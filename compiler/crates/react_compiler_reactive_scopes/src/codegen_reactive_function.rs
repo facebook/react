@@ -748,12 +748,10 @@ fn codegen_reactive_scope(
         if !cx.has_declared(decl.identifier) {
             statements.push(Statement::VariableDeclaration(VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
-                declarations: vec![VariableDeclarator {
-                    base: BaseNode::typed("VariableDeclarator"),
-                    id: PatternLike::Identifier(name.clone()),
-                    init: None,
-                    definite: None,
-                }],
+                declarations: vec![make_var_declarator(
+                    PatternLike::Identifier(name.clone()),
+                    None,
+                )],
                 kind: VariableDeclarationKind::Let,
                 declare: None,
             }));
@@ -2973,7 +2971,7 @@ fn codegen_array_pattern(
         })
         .collect::<Result<_, CompilerError>>()?;
     Ok(PatternLike::ArrayPattern(AstArrayPattern {
-        base: BaseNode::typed("ArrayPattern"),
+        base: base_node_with_loc("ArrayPattern", pattern.loc),
         elements,
         type_annotation: None,
         decorators: None,
@@ -3016,7 +3014,7 @@ fn codegen_object_pattern(
         .collect::<Result<_, CompilerError>>()?;
     Ok(PatternLike::ObjectPattern(
         react_compiler_ast::patterns::ObjectPattern {
-            base: BaseNode::typed("ObjectPattern"),
+            base: base_node_with_loc("ObjectPattern", pattern.loc),
             properties,
             type_annotation: None,
             decorators: None,

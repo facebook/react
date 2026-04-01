@@ -2,7 +2,7 @@
 
 Overall: 1724/1724 passing, 0 failed. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1724/1724.
 
-Snap (end-to-end): 1724/1724 passed, 0 failed
+Snap (end-to-end): 1725/1725 passed, 0 failed
 
 ## Transformation passes
 
@@ -57,6 +57,16 @@ ValidatePreservedManualMemoization: complete
 Codegen: complete (1717/1717 code comparison)
 
 # Logs
+
+## 20260331-230000 Fix ValidateSourceLocations error count discrepancy
+
+Fixed 4 issues causing the Rust compiler to report 27 errors vs TS's 22 on the
+error.todo-missing-source-locations fixture: (1) Don't record the root function node as
+important (TS func.traverse visits descendants only). (2) Use make_var_declarator for
+hoisted scope declarations to reconstruct VariableDeclarator source locations. (3) Pass
+HIR pattern source locations through to generated ArrayPattern/ObjectPattern AST nodes.
+(4) Sort validation errors by source position for deterministic output. yarn snap --rust
+now 1725/1725 (was 1724/1725).
 
 ## 20260331-220000 Port ValidateSourceLocations to Rust compiler
 
