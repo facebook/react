@@ -58,6 +58,17 @@ Codegen: complete (1717/1717 code comparison)
 
 # Logs
 
+## 20260401-120000 Extend test-e2e with event comparison and fix bugs
+
+Extended test-e2e.sh to compare logEvent() calls across all frontends (babel,
+swc, oxc) against the TS baseline. Added --json flag to e2e CLI binary to
+expose logger events. Fixed two bugs found by the new comparison: (1) TS
+Program.ts logged directive as [object Object] instead of its string value.
+(2) Rust program.rs used inferred fn_name for CompileSuccess instead of
+codegen_fn.id, causing arrow functions to report names the TS compiler doesn't.
+Removed all code output normalization from test-e2e.ts — comparison now uses
+prettier only.
+
 ## 20260331-230000 Fix ValidateSourceLocations error count discrepancy
 
 Fixed 4 issues causing the Rust compiler to report 27 errors vs TS's 22 on the

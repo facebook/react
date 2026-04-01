@@ -678,7 +678,7 @@ function processFn(
     programContext.logEvent({
       kind: 'CompileSkip',
       fnLoc: fn.node.body.loc ?? null,
-      reason: `Skipped due to '${directives.optOut.value}' directive.`,
+      reason: `Skipped due to '${directives.optOut.value.value}' directive.`,
       loc: directives.optOut.loc ?? null,
     });
     return null;

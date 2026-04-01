@@ -8,10 +8,14 @@
 //! Reads source from stdin, compiles via the chosen frontend, writes compiled
 //! code to stdout. Errors go to stderr. Exit 0 = success, exit 1 = error.
 //!
+//! With `--json`, outputs a JSON envelope to stdout containing code/error and
+//! logger events. Always exits 0 in JSON mode (errors are in the envelope).
+//!
 //! Usage:
-//!   react-compiler-e2e --frontend <swc|oxc> --filename <path> [--options <json>]
+//!   react-compiler-e2e --frontend <swc|oxc> --filename <path> [--options <json>] [--json]
 
 use clap::Parser;
+use react_compiler::entrypoint::compile_result::LoggerEvent;
 use react_compiler::entrypoint::plugin_options::PluginOptions;
 use std::io::Read;
 use std::process;
@@ -30,6 +34,17 @@ struct Cli {
     /// JSON-serialized PluginOptions
     #[arg(long)]
     options: Option<String>,
+
+    /// Output JSON envelope with code/error and logger events
+    #[arg(long)]
+    json: bool,
+}
+
+/// Result of compiling via a frontend, carrying both code/error and logger events.
+struct CompileOutput {
+    code: Option<String>,
+    error: Option<String>,
+    events: Vec<LoggerEvent>,
 }
 
 fn main() {
@@ -66,7 +81,7 @@ fn main() {
         serde_json::from_str(default_json).unwrap()
     };
 
-    let result = match cli.frontend.as_str() {
+    let output = match cli.frontend.as_str() {
         "swc" => compile_swc(&source, &cli.filename, options),
         "oxc" => compile_oxc(&source, &cli.filename, options),
         other => {
@@ -75,13 +90,27 @@ fn main() {
         }
     };
 
-    match result {
-        Ok(code) => {
-            print!("{code}");
-        }
-        Err(e) => {
-            eprintln!("{e}");
-            process::exit(1);
+    if cli.json {
+        // JSON envelope mode: always output JSON to stdout, exit 0
+        let envelope = serde_json::json!({
+            "code": output.code,
+            "error": output.error,
+            "events": output.events,
+        });
+        println!("{}", serde_json::to_string(&envelope).unwrap());
+    } else {
+        // Legacy mode: code to stdout, errors to stderr
+        match (output.code, output.error) {
+            (Some(code), _) => {
+                print!("{code}");
+            }
+            (None, Some(e)) => {
+                eprintln!("{e}");
+                process::exit(1);
+            }
+            (None, None) => {
+                process::exit(1);
+            }
         }
     }
 }
@@ -99,7 +128,7 @@ fn determine_swc_syntax(_filename: &str) -> swc_ecma_parser::Syntax {
     })
 }
 
-fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<String, String> {
+fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> CompileOutput {
     let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
     let fm = cm.new_source_file(
         swc_common::sync::Lrc::new(swc_common::FileName::Anon),
@@ -115,14 +144,29 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
         swc_ecma_ast::EsVersion::latest(),
         Some(&comments),
         &mut errors,
-    )
-    .map_err(|e| format!("SWC parse error: {e:?}"))?;
+    );
+
+    let module = match module {
+        Ok(m) => m,
+        Err(e) => {
+            return CompileOutput {
+                code: None,
+                error: Some(format!("SWC parse error: {e:?}")),
+                events: vec![],
+            };
+        }
+    };
 
     if !errors.is_empty() {
-        return Err(format!("SWC parse errors: {errors:?}"));
+        return CompileOutput {
+            code: None,
+            error: Some(format!("SWC parse errors: {errors:?}")),
+            events: vec![],
+        };
     }
 
     let result = react_compiler_swc::transform(&module, source, options);
+    let events = result.events;
 
     // Check for error-level diagnostics. When panicThreshold is "all_errors",
     // the TS/Babel plugin throws on any compilation error. We replicate this
@@ -133,7 +177,11 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
     });
 
     match result.module {
-        Some(compiled_module) => Ok(react_compiler_swc::emit(&compiled_module)),
+        Some(compiled_module) => CompileOutput {
+            code: Some(react_compiler_swc::emit(&compiled_module)),
+            error: None,
+            events,
+        },
         None => {
             if has_errors {
                 // Compilation had errors — mimic TS plugin throwing
@@ -142,19 +190,27 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> Result<S
                     .iter()
                     .map(|d| d.message.clone())
                     .collect();
-                Err(messages.join("\n"))
+                CompileOutput {
+                    code: None,
+                    error: Some(messages.join("\n")),
+                    events,
+                }
             } else {
                 // No changes needed — return the original source text
                 // with directive blank lines normalized to match Babel's
                 // codegen behavior. Babel always adds a blank line after
                 // the last directive in a function/program body.
-                Ok(react_compiler_swc::normalize_source(source))
+                CompileOutput {
+                    code: Some(react_compiler_swc::normalize_source(source)),
+                    error: None,
+                    events,
+                }
             }
         }
     }
 }
 
-fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<String, String> {
+fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> CompileOutput {
     // Always enable TypeScript parsing (like the TS/Babel baseline uses
     // ['typescript', 'jsx'] plugins). Some .js fixtures contain TS syntax.
     // Check for @script pragma in the first line to use script source type.
@@ -172,7 +228,11 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
 
     if parsed.panicked || !parsed.errors.is_empty() {
         let err_msgs: Vec<String> = parsed.errors.iter().map(|e| e.to_string()).collect();
-        return Err(format!("OXC parse errors: {}", err_msgs.join("; ")));
+        return CompileOutput {
+            code: None,
+            error: Some(format!("OXC parse errors: {}", err_msgs.join("; "))),
+            events: vec![],
+        };
     }
 
     let semantic = oxc_semantic::SemanticBuilder::new()
@@ -180,6 +240,7 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
         .semantic;
 
     let result = react_compiler_oxc::transform(&parsed.program, &semantic, source, options);
+    let events = result.events;
 
     // Check for error-level diagnostics, similar to SWC path.
     // OxcDiagnostic uses miette's Severity.
@@ -190,7 +251,11 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
     match result.file {
         Some(ref file) => {
             let emit_allocator = oxc_allocator::Allocator::default();
-            Ok(react_compiler_oxc::emit(file, &emit_allocator, Some(source)))
+            CompileOutput {
+                code: Some(react_compiler_oxc::emit(file, &emit_allocator, Some(source))),
+                error: None,
+                events,
+            }
         }
         None => {
             if has_errors {
@@ -200,10 +265,18 @@ fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> Result<S
                     .iter()
                     .map(|d| d.message.to_string())
                     .collect();
-                Err(messages.join("\n"))
+                CompileOutput {
+                    code: None,
+                    error: Some(messages.join("\n")),
+                    events,
+                }
             } else {
                 // No changes — emit the original parsed program (already has comments)
-                Ok(oxc_codegen::Codegen::new().build(&parsed.program).code)
+                CompileOutput {
+                    code: Some(oxc_codegen::Codegen::new().build(&parsed.program).code),
+                    error: None,
+                    events,
+                }
             }
         }
     }

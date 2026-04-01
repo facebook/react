@@ -1302,7 +1302,7 @@ fn process_fn(
             let source_filename = source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
             context.log_event(LoggerEvent::CompileSuccess {
                 fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
-                fn_name: source.fn_name.clone(),
+                fn_name: codegen_fn.id.as_ref().map(|id| id.name.clone()),
                 memo_slots: codegen_fn.memo_slots_used,
                 memo_blocks: codegen_fn.memo_blocks,
                 memo_values: codegen_fn.memo_values,

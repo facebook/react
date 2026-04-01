@@ -145,36 +145,29 @@ const rustPlugin =
 
 // --- Format code with prettier ---
 async function formatCode(code: string, isFlow: boolean): Promise<string> {
-  // Pre-process: fix escaped double quotes in JSX attributes that prettier
-  // can't parse (e.g., name="\"user\" name" -> name='"user" name')
-  let processed = code.replace(
-    /(\w+=)"((?:[^"\\]|\\.)*)"/g,
-    (match: string, prefix: string, val: string) => {
-      if (val.includes('\\"')) {
-        const unescaped = val.replace(/\\"/g, '"');
-        return `${prefix}'${unescaped}'`;
-      }
-      return match;
-    },
-  );
-
   try {
-    return await prettier.format(processed, {
+    return await prettier.format(code, {
       semi: true,
       parser: isFlow ? 'flow' : 'babel-ts',
     });
   } catch {
-    return processed;
+    return code;
   }
 }
 
 // --- Compile via Babel plugin ---
+type CompileResult = {
+  code: string | null;
+  error: string | null;
+  events: Array<Record<string, unknown>>;
+};
+
 function compileBabel(
   plugin: any,
   fixturePath: string,
   source: string,
   firstLine: string,
-): {code: string | null; error: string | null} {
+): CompileResult {
   const isFlow = firstLine.includes('@flow');
   const isScript = firstLine.includes('@script');
   const parserPlugins: string[] = isFlow
@@ -185,12 +178,15 @@ function compileBabel(
     compilationMode: 'all',
   });
 
+  const events: Array<Record<string, unknown>> = [];
   const pluginOptions = {
     ...pragmaOpts,
     compilationMode: 'all' as const,
     panicThreshold: 'all_errors' as const,
     logger: {
-      logEvent(): void {},
+      logEvent(_filename: string | null, event: Record<string, unknown>): void {
+        events.push(event);
+      },
       debugLogIRs(): void {},
     },
   };
@@ -204,9 +200,9 @@ function compileBabel(
       configFile: false,
       babelrc: false,
     });
-    return {code: result?.code ?? null, error: null};
+    return {code: result?.code ?? null, error: null, events};
   } catch (e) {
-    return {code: null, error: e instanceof Error ? e.message : String(e)};
+    return {code: null, error: e instanceof Error ? e.message : String(e), events};
   }
 }
 
@@ -216,7 +212,7 @@ function compileCli(
   fixturePath: string,
   source: string,
   firstLine: string,
-): {code: string | null; error: string | null} {
+): CompileResult {
   const pragmaOpts = parseConfigPragmaForTests(firstLine, {
     compilationMode: 'all',
   });
@@ -240,6 +236,7 @@ function compileCli(
       fixturePath,
       '--options',
       JSON.stringify(options),
+      '--json',
     ],
     {
       input: source,
@@ -248,577 +245,100 @@ function compileCli(
     },
   );
 
-  if (result.status !== 0) {
-    return {
-      code: null,
-      error: result.stderr || `Process exited with code ${result.status}`,
-    };
+  // In JSON mode, the CLI always exits 0 and puts everything in the envelope.
+  // Non-zero exit means a crash (parse failure, panic), not a compilation error.
+  if (result.stdout) {
+    try {
+      const envelope = JSON.parse(result.stdout);
+      return {
+        code: envelope.code ?? null,
+        error: envelope.error ?? null,
+        events: envelope.events ?? [],
+      };
+    } catch {
+      // JSON parse failed — fall through to legacy handling
+    }
   }
 
-  return {code: result.stdout, error: null};
+  // Fallback for crashes or missing stdout
+  return {
+    code: null,
+    error: result.stderr || `Process exited with code ${result.status}`,
+    events: [],
+  };
 }
 
-// --- Output normalization ---
-function normalizeForComparison(code: string): string {
-  let result = normalizeBlankLines(code);
-  result = collapseSmallMultiLineStructures(result);
-  result = normalizeTypeAnnotations(result);
-  // Strip standalone comment lines: OXC codegen may drop comments inside
-  // function bodies that Babel/TS preserves from the original source.
-  // Also strip block comment lines (/* ... */) for the same reason.
-  result = result
-    .split('\n')
-    .filter(line => {
-      const trimmed = line.trim();
-      if (trimmed === '') return false;
-      if (trimmed.startsWith('//')) return false;
-      if (trimmed.startsWith('/*')) return false;
-      if (trimmed.startsWith('*')) return false;
-      if (trimmed === '*/') return false;
-      return true;
-    })
-    .join('\n');
-  // Strip inline block comments (/* ... */): OXC codegen drops them
-  result = result.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '');
-  // Clean up extra whitespace left by inline comment removal
-  result = result.replace(/  +/g, ' ');
-  // Normalize Unicode escapes: Babel may emit \uXXXX while OXC emits the
-  // actual character. Convert all \uXXXX to their character equivalents.
-  result = result.replace(/\\u([0-9a-fA-F]{4})/g, (_m, hex) =>
-    String.fromCharCode(parseInt(hex, 16)),
-  );
-  // Normalize escape sequences: Babel may emit \t while OXC emits actual tab.
-  result = result.replace(/\\t/g, '\t');
-  // Normalize escaped newlines in strings: Babel may emit \n while OXC emits
-  // an actual newline (or the newline gets stripped). Convert \n to space.
-  result = result.replace(/\\n\s*/g, ' ');
-  // Normalize curly quotes to straight quotes: OXC codegen may convert
-  // Unicode quotation marks to ASCII equivalents.
-  result = result.replace(/[\u2018\u2019]/g, "'");
-  result = result.replace(/[\u201C\u201D]/g, '"');
-  // Normalize -0 vs 0: OXC may emit -0 where Babel emits 0
-  result = result.replace(/(?<![.\w])-0(?!\d)/g, '0');
-  return result;
+// --- Event normalization ---
+// Strip identifierName (Babel-specific SourceLocation property), sort
+// keys for stable comparison, then JSON.stringify.
+// For 1-based frontends (SWC, OXC), adjust column and index values
+// inside error detail locations to match Babel's 0-based convention.
+const STRIP_KEYS = new Set(['identifierName', 'fnLoc']);
+let oneBasedColumns = false;
+
+function sortAndStrip(obj: unknown): unknown {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sortAndStrip);
+  const sorted: Record<string, unknown> = {};
+  for (const key of Object.keys(obj as Record<string, unknown>).sort()) {
+    if (STRIP_KEYS.has(key)) continue;
+    sorted[key] = sortAndStrip((obj as Record<string, unknown>)[key]);
+  }
+  return sorted;
 }
 
-// Strip type annotations that SWC's codegen may drop but Babel preserves.
-// The compiler's output AST doesn't preserve type annotations for function
-// parameters and variable declarations in non-compiled code.
-function normalizeTypeAnnotations(code: string): string {
-  let result = code;
-
-  // Strip @ts-expect-error and @ts-ignore comments since their placement
-  // differs between Babel and SWC codegen (inline vs separate line):
-  result = result.replace(/,?\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, ',');
-  result = result.replace(/^\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, '');
-  // Also strip inline @ts-expect-error comments (after collapsing, they can
-  // appear mid-line e.g. inside collapsed import statements):
-  result = result.replace(
-    /,?\s*\/\/\s*@ts-(?:expect-error|ignore),?\s*/g,
-    ', ',
-  );
-
-  // Strip pragma comment lines (// @...) that configure the compiler.
-  // Babel preserves these comments in output but SWC may not.
-  result = result.replace(/^\/\/ @\w+.*$/gm, '');
-
-  // Strip TypeScript interface/type declarations that TS preserves but
-  // SWC/OXC may drop. These span from `interface X {` to the closing `}`,
-  // or from `type X = ...;` to the semicolon.
-  result = result.replace(
-    /^(?:interface|type)\s+\w+[^{]*\{[^}]*\}\s*;?\s*$/gm,
-    '',
-  );
-  // Also strip simple type aliases like: type Foo = string | number;
-  result = result.replace(/^type\s+\w+\s*=\s*[^;]+;\s*$/gm, '');
-
-  // Normalize useRenderCounter calls: TS plugin includes the full file path
-  // as the second argument, while SWC uses an empty string.
-  // Also normalize multi-line calls to single line:
-  //   useRenderCounter(\n      "Bar",\n      "/long/path",\n    )
-  //   -> useRenderCounter("Bar", "")
-  result = result.replace(
-    /useRenderCounter\(\s*"([^"]+)",\s*"[^"]*"\s*,?\s*\)/g,
-    'useRenderCounter("$1", "")',
-  );
-
-  // Normalize multi-line `if (DEV && ...) useRenderCounter(...);` to
-  // `if (DEV && ...) useRenderCounter(...)`:
-  // TS:  if (DEV && shouldInstrument)\n    useRenderCounter("Bar", "/path");
-  // SWC: if (DEV && shouldInstrument) useRenderCounter("Bar", "");
-  result = result.replace(
-    /if\s*\(DEV\s*&&\s*(\w+)\)\s*\n\s*useRenderCounter/g,
-    'if (DEV && $1) useRenderCounter',
-  );
-
-  // Normalize variable names with _0 suffix: the TS compiler renames
-  // variables to avoid shadowing (e.g., ref -> ref_0, data -> data_0)
-  // but the SWC frontend may not. Normalize by removing _0 suffix.
-  result = result.replace(/\b(\w+)_0\b/g, '$1');
-
-  // Normalize quote styles in import statements: Babel preserves original
-  // single quotes while SWC always uses double quotes.
-  result = result.replace(/^(import\s+.*\s+from\s+)'([^']+)';/gm, '$1"$2";');
-
-  // Normalize JSX attribute quoting: Babel may output escaped double
-  // quotes in JSX attributes (name="\"x\"") while SWC uses single quotes
-  // (name='"x"'). Normalize to single quote form.
-  result = result.replace(/(\w+)="((?:[^"\\]|\\.)*)"/g, (match, attr, val) => {
-    if (val.includes('\\"')) {
-      const unescaped = val.replace(/\\"/g, '"');
-      return `${attr}='${unescaped}'`;
+function adjustLoc(loc: Record<string, unknown>): Record<string, unknown> {
+  const adjusted: Record<string, unknown> = {};
+  for (const key of Object.keys(loc)) {
+    const val = loc[key];
+    if ((key === 'column' || key === 'index') && typeof val === 'number') {
+      adjusted[key] = val - 1;
+    } else {
+      adjusted[key] = val;
     }
-    return match;
+  }
+  return adjusted;
+}
+
+function adjustDetailLocs(
+  events: Array<Record<string, unknown>>,
+): Array<Record<string, unknown>> {
+  if (!oneBasedColumns) return events;
+  return events.map(event => {
+    if (event.kind !== 'CompileError') return event;
+    const detail = event.detail as Record<string, unknown> | undefined;
+    if (!detail) return event;
+    const newDetail = {...detail};
+    // Adjust loc on legacy CompilerErrorDetail
+    if (newDetail.loc && typeof newDetail.loc === 'object') {
+      const loc = newDetail.loc as Record<string, unknown>;
+      newDetail.loc = {
+        start: loc.start ? adjustLoc(loc.start as Record<string, unknown>) : loc.start,
+        end: loc.end ? adjustLoc(loc.end as Record<string, unknown>) : loc.end,
+      };
+    }
+    // Adjust locs inside details array (CompilerDiagnostic)
+    if (Array.isArray(newDetail.details)) {
+      newDetail.details = (newDetail.details as Array<Record<string, unknown>>).map(d => {
+        if (!d.loc || typeof d.loc !== 'object') return d;
+        const loc = d.loc as Record<string, unknown>;
+        return {
+          ...d,
+          loc: {
+            start: loc.start ? adjustLoc(loc.start as Record<string, unknown>) : loc.start,
+            end: loc.end ? adjustLoc(loc.end as Record<string, unknown>) : loc.end,
+          },
+        };
+      });
+    }
+    return {...event, detail: newDetail};
   });
-
-  // Normalize JSX wrapping with parentheses: prettier may wrap
-  // JSX expressions differently depending on the raw input format.
-  // Remove opening parenthesization of JSX assignments:
-  //   const x = (\n  <Foo  ->  const x = <Foo
-  result = result.replace(/= \(\s*\n(\s*<)/gm, '= $1');
-  // Remove closing paren before semicolon when preceded by JSX:
-  //   </Foo>\n    );  ->  </Foo>;
-  //   />\n    );  ->  />;
-  result = result.replace(/(<\/\w[^>]*>)\s*\n\s*\);/gm, '$1;');
-  result = result.replace(/(\/\>)\s*\n\s*\);/gm, '$1;');
-
-  // Strip parameter type annotations: (name: Type)
-  // Handle simple cases like (arg: number), (arg: string), etc.
-  result = result.replace(/\((\w+):\s*[A-Za-z_]\w*(?:<[^>]*>)?\s*\)/g, '($1)');
-
-  // Strip type annotations in const declarations:
-  //   const THEME_MAP: ReadonlyMap<string, string> = new Map([
-  //   -> const THEME_MAP = new Map([
-  result = result.replace(
-    /^(\s*(?:const|let|var)\s+\w+):\s*[A-Za-z_]\w*(?:<[^>]*>)?\s*=/gm,
-    '$1 =',
-  );
-
-  // First, normalize `as any.prop.chain` patterns where SWC incorrectly
-  // puts the property chain inside the type assertion:
-  //   (x as any.a.value) -> (x as any).a.value -> after stripping -> (x).a.value
-  result = result.replace(/\bas\s+any((?:\.\w+)+)\)/g, 'as any)$1');
-
-  // Strip all `as <Type>` assertions: OXC codegen may drop type assertions
-  // entirely, while TS preserves them. Strip all forms:
-  //   `as const`, `as any`, `as T`, `as MyType`, `as string`, etc.
-  result = result.replace(
-    /\s+as\s+(?:const|any|[A-Za-z_]\w*(?:<[^>]*>)?)\b/g,
-    '',
-  );
-  // Strip unnecessary parentheses left after `as` stripping:
-  //   `(x)` -> `x`, `("pending")` -> `"pending"`
-  // Only strip when the inner expression is a simple value (identifier, string, number).
-  result = result.replace(/\((\w+)\)(\.\w)/g, '$1$2'); // (x).prop -> x.prop
-  result = result.replace(/\(("(?:[^"\\]|\\.)*")\)/g, '$1'); // ("str") -> "str"
-  result = result.replace(/\(('(?:[^'\\]|\\.)*')\)/g, '$1'); // ('str') -> 'str'
-
-  // Collapse multi-line ternary expressions: prettier may break ternaries
-  // across lines while OXC codegen keeps them on one line.
-  //   t1 =\n  t0 === undefined\n  ? { ... }\n  : { ... };
-  //   -> t1 = t0 === undefined ? { ... } : { ... };
-  // Only collapse when followed by `?` or `:` with an expression (not case labels).
-  result = result.replace(
-    /=\s*\n(\s*)(\S.*)\n\s*\?\s*/gm,
-    (_m, _indent, expr) => `= ${expr} ? `,
-  );
-  result = result.replace(/\n\s*\?\s*\{/g, ' ? {');
-  result = result.replace(/\n\s*\?\s*\[/g, ' ? [');
-  result = result.replace(/\n\s*\?\s*"([^"]*)"$/gm, ' ? "$1"');
-  result = result.replace(/\}\s*\n\s*:\s*\{/g, '} : {');
-  result = result.replace(/\}\s*\n\s*:\s*\[/g, '} : [');
-  result = result.replace(/;\s*\n\s*:\s*\{/g, '; : {');
-  // Collapse }: expr; on separate lines (ternary alternate on its own line)
-  result = result.replace(/\}\s*\n\s*:\s*(\S[^;]*;)/gm, '} : $1');
-
-  // Strip parentheses and commas from collapsed JSX expressions.
-  // Prettier wraps JSX in parentheses and puts children on separate lines.
-  // After collapsing, the result has commas between children and parens
-  // around the JSX: `(<Elem, child, </Elem>)` -> `<Elem child </Elem>`
-  // Only match lines that look like they contain JSX (have `<` and `>`).
-  result = result
-    .split('\n')
-    .map(line => {
-      // Only process lines containing JSX elements
-      if (!line.includes('<') || !line.includes('>')) return line;
-      // Remove wrapping parens: = (<JSX />) -> = <JSX />
-      let processed = line.replace(/= \((<[A-Za-z].*\/>)\);/g, '= $1;');
-      processed = processed.replace(/= \((<[A-Za-z].*<\/\w+>)\);/g, '= $1;');
-      // Remove commas between JSX tokens on a single line:
-      // `>, ` -> `> ` and `, />` -> ` />` and `, </` -> ` </`
-      // Also handle commas after tag names: `<Elem, attr` -> `<Elem attr`
-      processed = processed.replace(/>,\s+/g, '> ');
-      processed = processed.replace(/,\s+\/>/g, ' />');
-      processed = processed.replace(/,\s+<\//g, ' </');
-      // Remove commas that appear after JSX tag names or before attributes
-      // e.g., `<Component, data=` -> `<Component data=`
-      processed = processed.replace(/(<\w[\w.-]*),\s+/g, '$1 ');
-      // Remove commas after JSX expression closings: `}, <` -> `} <`
-      processed = processed.replace(/\},\s+</g, '} <');
-      // Normalize space before > in JSX attributes: `" >` -> `">`
-      processed = processed.replace(/"\s+>/g, '">');
-      return processed;
-    })
-    .join('\n');
-
-  // Collapse multi-line JSX self-closing elements to single lines:
-  //   <Component
-  //     attr1={val1}
-  //     attr2="str"
-  //   />
-  //   -> <Component attr1={val1} attr2="str" />
-  // This handles differences in prettier formatting vs OXC codegen.
-  // Run multiple passes: inner JSX elements get collapsed first,
-  // then outer elements can be collapsed in subsequent passes.
-  for (let pass = 0; pass < 4; pass++) {
-    const next = collapseMultiLineJsx(result);
-    if (next === result) break;
-    result = next;
-  }
-
-  // Post-JSX-collapse cleanup: strip spaces before > in JSX attributes
-  // and commas that may remain after collapsing.
-  result = result.replace(/"\s+>/g, '">');
-  result = result.replace(/(<\w[\w:.-]*),\s+/g, '$1 ');
-
-  // Normalize HTML entities in JSX string content: OXC codegen may escape
-  // characters like {, }, <, >, & as HTML entities while Babel preserves them.
-  result = result.replace(/&#123;/g, '{');
-  result = result.replace(/&#125;/g, '}');
-  result = result.replace(/&lt;/g, '<');
-  result = result.replace(/&gt;/g, '>');
-  result = result.replace(/&amp;/g, '&');
-
-  // (as any property access normalization moved above the type stripping)
-
-  return result;
 }
 
-// Strip blank lines and FIXTURE_ENTRYPOINT comments for comparison.
-// Babel's codegen preserves blank lines from original source positions,
-// but SWC/OXC codegen may not.
-//
-// Also normalize comments within FIXTURE_ENTRYPOINT blocks: SWC's codegen
-// may drop inline comments from unmodified code sections (like object
-// literals in FIXTURE_ENTRYPOINT), while Babel preserves them.
-function normalizeBlankLines(code: string): string {
-  const lines = code.split('\n');
-  const result: string[] = [];
-  let inFixtureEntrypoint = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    // Skip blank lines
-    if (trimmed === '') continue;
-
-    // Track FIXTURE_ENTRYPOINT sections
-    if (trimmed.includes('FIXTURE_ENTRYPOINT')) {
-      inFixtureEntrypoint = true;
-    }
-
-    if (inFixtureEntrypoint) {
-      // Strip standalone comment lines within FIXTURE_ENTRYPOINT
-      if (trimmed.startsWith('//')) continue;
-      // Strip trailing line comments within FIXTURE_ENTRYPOINT
-      const commentIdx = line.indexOf(' //');
-      if (commentIdx >= 0) {
-        const beforeComment = line.substring(0, commentIdx);
-        // Only strip if the // is not inside a string
-        if (!isInsideString(line, commentIdx)) {
-          result.push(beforeComment);
-          continue;
-        }
-      }
-    }
-
-    result.push(line);
-  }
-  return result.join('\n');
-}
-
-// Simple heuristic to check if a position is inside a string literal
-function isInsideString(line: string, pos: number): boolean {
-  let inSingle = false;
-  let inDouble = false;
-  let inTemplate = false;
-  for (let i = 0; i < pos; i++) {
-    const ch = line[i];
-    if (ch === '\\') {
-      i++; // skip escaped char
-      continue;
-    }
-    if (ch === "'" && !inDouble && !inTemplate) inSingle = !inSingle;
-    if (ch === '"' && !inSingle && !inTemplate) inDouble = !inDouble;
-    if (ch === '`' && !inSingle && !inDouble) inTemplate = !inTemplate;
-  }
-  return inSingle || inDouble || inTemplate;
-}
-
-// Collapse multi-line objects/arrays within FIXTURE_ENTRYPOINT to single
-// lines. SWC codegen puts small objects on one line while Babel spreads
-// them across multiple lines. Also collapse small function arguments.
-function collapseSmallMultiLineStructures(code: string): string {
-  // Collapse multi-line useRef({...}) and similar small argument objects
-  // Pattern: functionCall(\n  {\n    key: value,\n  }\n)  ->  functionCall({ key: value })
-  let result = code;
-
-  // Collapse multi-line objects/arrays that are small enough to be single-line
-  // This handles cases like:
-  //   useRef({
-  //     size: 5,
-  //   })
-  // -> useRef({ size: 5 })
-  //
-  // And:
-  //   sequentialRenders: [
-  //     input1,
-  //     input2,
-  //   ],
-  // -> sequentialRenders: [input1, input2],
-  result = collapseMultiLineToSingleLine(result);
-  return result;
-}
-
-function collapseMultiLineToSingleLine(code: string): string {
-  // Run multiple passes: each pass collapses only "leaf" structures
-  // (no nested brackets), so inner structures get collapsed first,
-  // then outer structures in subsequent passes.
-  let result = code;
-  for (let pass = 0; pass < 8; pass++) {
-    const next = collapseMultiLinePass(result);
-    if (next === result) break;
-    result = next;
-  }
-  return result;
-}
-
-function collapseMultiLinePass(code: string): string {
-  const lines = code.split('\n');
-  const result: string[] = [];
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // Look for opening brackets at end of line: {, [, or (
-    // But not function bodies or control structures
-    const lastChar = trimmed[trimmed.length - 1];
-    const secondLastChar =
-      trimmed.length > 1 ? trimmed[trimmed.length - 2] : '';
-
-    if (
-      (lastChar === '{' || lastChar === '[' || lastChar === '(') &&
-      !trimmed.startsWith('if ') &&
-      !trimmed.startsWith('if(') &&
-      !trimmed.startsWith('else') &&
-      !trimmed.startsWith('for ') &&
-      !trimmed.startsWith('while ') &&
-      !trimmed.startsWith('function ') &&
-      !trimmed.startsWith('class ') &&
-      !trimmed.endsWith('=>') &&
-      !trimmed.endsWith('=> {') &&
-      !(secondLastChar === ')' && lastChar === '{')
-    ) {
-      // Try to collect lines until closing bracket
-      const closeChar = lastChar === '{' ? '}' : lastChar === '[' ? ']' : ')';
-      const indent = line.length - line.trimStart().length;
-      const items: string[] = [];
-      let j = i + 1;
-      let foundClose = false;
-      let tooComplex = false;
-
-      while (j < lines.length && j - i < 20) {
-        const innerTrimmed = lines[j].trim();
-
-        // Check if this is the closing bracket at the same indent level.
-        // Match the close char at the start of the trimmed line, followed by
-        // any suffix (like `,`, `);`, `) +`, etc.).
-        if (
-          (innerTrimmed === closeChar ||
-            innerTrimmed.startsWith(closeChar + ',') ||
-            innerTrimmed.startsWith(closeChar + ';') ||
-            innerTrimmed.startsWith(closeChar + ')') ||
-            innerTrimmed.startsWith(closeChar + ' ') ||
-            innerTrimmed.startsWith(closeChar + '.') ||
-            innerTrimmed.startsWith(closeChar + '[') ||
-            innerTrimmed.startsWith(closeChar + closeChar)) &&
-          lines[j].length - lines[j].trimStart().length <= indent + 2
-        ) {
-          foundClose = true;
-
-          // Only collapse if items are simple enough
-          if (!tooComplex && items.length > 0 && items.length <= 8) {
-            const suffix = innerTrimmed.substring(closeChar.length);
-            // Use spaces around braces for objects to match prettier
-            const space = lastChar === '{' ? ' ' : '';
-            const collapsed =
-              line.trimEnd() +
-              space +
-              items.join(', ') +
-              space +
-              closeChar +
-              suffix;
-            // Only collapse if the result line is not too long
-            if (collapsed.trimStart().length <= 500) {
-              result.push(' '.repeat(indent) + collapsed.trimStart());
-              i = j + 1;
-            } else {
-              // Too long, keep as-is
-              result.push(line);
-              i++;
-            }
-          } else {
-            // Too complex or too many items, keep as-is
-            result.push(line);
-            i++;
-          }
-          break;
-        }
-
-        // Check if the line contains unbalanced brackets (a bracket that
-        // opens but doesn't close on the same line, or vice versa).
-        // Balanced brackets on a single line (like `{ foo: 1 }`) are OK.
-        let depth = 0;
-        for (const ch of innerTrimmed) {
-          if (ch === '{' || ch === '[' || ch === '(') depth++;
-          else if (ch === '}' || ch === ']' || ch === ')') depth--;
-        }
-        if (depth !== 0) {
-          tooComplex = true;
-        }
-
-        // Strip trailing comma for joining
-        const item = innerTrimmed.endsWith(',')
-          ? innerTrimmed.slice(0, -1)
-          : innerTrimmed;
-        if (item) items.push(item);
-        j++;
-      }
-
-      if (!foundClose) {
-        result.push(line);
-        i++;
-      }
-      continue;
-    }
-
-    result.push(line);
-    i++;
-  }
-
-  return result.join('\n');
-}
-
-// Collapse multi-line JSX self-closing elements and JSX expressions with
-// attributes spread across multiple lines. This handles prettier formatting
-// differences where attributes are on separate lines in TS but inline in OXC.
-function collapseMultiLineJsx(code: string): string {
-  const lines = code.split('\n');
-  const result: string[] = [];
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // Detect JSX opening tag that doesn't close on the same line
-    // e.g., `<Component` or `t0 = <Component` or `t0 = (`
-    // followed by attributes on subsequent lines, ending with `/>` or `>`
-    if (
-      /<\w/.test(trimmed) &&
-      !(trimmed.endsWith('>;') || trimmed.endsWith('/>;'))
-    ) {
-      const indent = line.length - line.trimStart().length;
-      const parts: string[] = [trimmed];
-      let j = i + 1;
-      let found = false;
-
-      // Extract the tag name for matching closing tags
-      const tagMatch = trimmed.match(/<(\w[\w:.-]*)/);
-      const tagName = tagMatch ? tagMatch[1] : null;
-
-      while (j < lines.length && j - i < 30) {
-        const innerTrimmed = lines[j].trim();
-
-        // Self-closing: />
-        if (
-          innerTrimmed === '/>' ||
-          innerTrimmed === '/>;' ||
-          innerTrimmed.startsWith('/>')
-        ) {
-          parts.push(innerTrimmed);
-          found = true;
-
-          const collapsed = parts.join(' ');
-          if (collapsed.length <= 500) {
-            result.push(' '.repeat(indent) + collapsed);
-            i = j + 1;
-          } else {
-            result.push(line);
-            i++;
-          }
-          break;
-        }
-
-        // Closing tag: </TagName> or </TagName>;
-        if (
-          tagName &&
-          (innerTrimmed === `</${tagName}>` ||
-            innerTrimmed === `</${tagName}>;` ||
-            innerTrimmed.startsWith(`</${tagName}>`))
-        ) {
-          parts.push(innerTrimmed);
-          found = true;
-
-          const collapsed = parts.join(' ');
-          if (collapsed.length <= 500) {
-            result.push(' '.repeat(indent) + collapsed);
-            i = j + 1;
-          } else {
-            result.push(line);
-            i++;
-          }
-          break;
-        }
-
-        // Check for unbalanced brackets
-        let depth = 0;
-        for (const ch of innerTrimmed) {
-          if (ch === '{' || ch === '[' || ch === '(') depth++;
-          else if (ch === '}' || ch === ']' || ch === ')') depth--;
-        }
-        if (depth !== 0) {
-          // Too complex, skip
-          break;
-        }
-
-        parts.push(innerTrimmed);
-        j++;
-      }
-
-      if (!found) {
-        result.push(line);
-        i++;
-      }
-      continue;
-    }
-
-    // Also handle multi-line function call arguments where the first arg
-    // is on the next line. e.g.:
-    //   identity(
-    //     { ... }["key"],
-    //   );
-    //   -> identity({ ... }["key"]);
-    // This is already handled by collapseSmallMultiLineStructures but some
-    // patterns escape it due to trailing member access like ["key"].
-
-    result.push(line);
-    i++;
-  }
-
-  return result.join('\n');
+function normalizeEvents(
+  events: Array<Record<string, unknown>>,
+): string {
+  return JSON.stringify(sortAndStrip(adjustDetailLocs(events)), null, 2);
 }
 
 // --- Simple unified diff ---
@@ -904,11 +424,17 @@ async function runVariant(
   variant: Variant,
   fixtureInfos: FixtureInfo[],
   tsBaselines: Map<string, string>,
+  tsRawEvents: Map<string, Array<Record<string, unknown>>>,
   s: VariantStats,
 ): Promise<void> {
   for (let i = 0; i < fixtureInfos.length; i++) {
     const {fixturePath, relPath, source, firstLine, isFlow} = fixtureInfos[i];
     const tsCode = tsBaselines.get(fixturePath)!;
+    // TS baseline uses Babel (0-based columns), no adjustment needed
+    oneBasedColumns = false;
+    const tsEvents = normalizeEvents(tsRawEvents.get(fixturePath)!);
+    // SWC and OXC use 1-based columns; adjust to match Babel's 0-based convention
+    oneBasedColumns = variant !== 'babel';
 
     writeProgress(
       `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${s.failed} failed)`,
@@ -921,7 +447,7 @@ async function runVariant(
       continue;
     }
 
-    let variantResult: {code: string | null; error: string | null};
+    let variantResult: CompileResult;
     if (variant === 'babel') {
       variantResult = compileBabel(rustPlugin, fixturePath, source, firstLine);
     } else {
@@ -929,60 +455,49 @@ async function runVariant(
     }
 
     const variantCode = await formatCode(variantResult.code ?? '', isFlow);
-
-    // Normalize outputs before comparison:
-    // 1. Strip blank lines (Babel preserves from source, SWC does not)
-    // 2. Collapse multi-line small objects/arrays to single lines
-    // 3. Strip comments within FIXTURE_ENTRYPOINT blocks
-    const normalizedTs = normalizeForComparison(tsCode);
-    const normalizedVariant = normalizeForComparison(variantCode);
+    const variantEvents = normalizeEvents(variantResult.events);
 
     // When both TS and the variant error (produce empty/no output), count as pass.
-    // Also when TS errors (empty output) and the variant either errors or produces
-    // passthrough (uncompiled) output — the fixture is an error case and behavior
-    // differences in error detection are acceptable.
-    const tsErrored = normalizedTs.trim() === '';
+    const tsErrored = tsCode.trim() === '';
     const variantErrored =
-      normalizedVariant.trim() === '' || variantResult.error != null;
+      variantCode.trim() === '' || variantResult.error != null;
 
-    if (normalizedTs === normalizedVariant || (tsErrored && variantErrored)) {
-      s.passed++;
-    } else if (tsErrored && normalizedVariant.trim() !== '') {
-      // TS errored but variant produced output — check if the variant output
-      // is just the passthrough (uncompiled) source. If so, the variant didn't
-      // compile the function either (just didn't throw). Count as pass.
+    const codeMatch =
+      tsCode === variantCode || (tsErrored && variantErrored);
+    const eventsMatch = tsEvents === variantEvents;
+
+    // When code doesn't match due to TS error + variant passthrough, check
+    // if the variant output is just uncompiled source (no memoization).
+    let codePassthrough = false;
+    if (!codeMatch && tsErrored && variantCode.trim() !== '') {
       const variantHasMemoization =
-        normalizedVariant.includes('_c(') ||
-        normalizedVariant.includes('useMemoCache');
+        variantCode.includes('_c(') ||
+        variantCode.includes('useMemoCache');
       if (!variantHasMemoization) {
-        s.passed++;
-      } else {
-        s.failed++;
-        s.failedFixtures.push(relPath);
-        if (limitArg === 0 || s.failures.length < limitArg) {
-          s.failures.push({
-            fixture: relPath,
-            detail: unifiedDiff(
-              normalizedTs,
-              normalizedVariant,
-              'TypeScript (normalized)',
-              variant + ' (normalized)',
-            ),
-          });
-        }
+        codePassthrough = true;
       }
+    }
+
+    if ((codeMatch || codePassthrough) && eventsMatch) {
+      s.passed++;
     } else {
       s.failed++;
       s.failedFixtures.push(relPath);
       if (limitArg === 0 || s.failures.length < limitArg) {
+        const details: string[] = [];
+        if (!codeMatch && !codePassthrough) {
+          details.push(
+            unifiedDiff(tsCode, variantCode, 'TypeScript', variant),
+          );
+        }
+        if (!eventsMatch) {
+          details.push(
+            unifiedDiff(tsEvents, variantEvents, 'TS events', variant + ' events'),
+          );
+        }
         s.failures.push({
           fixture: relPath,
-          detail: unifiedDiff(
-            normalizedTs,
-            normalizedVariant,
-            'TypeScript (normalized)',
-            variant + ' (normalized)',
-          ),
+          detail: details.join('\n\n'),
         });
       }
     }
@@ -1010,6 +525,10 @@ async function runVariant(
   // Pre-compute fixture info and TS baselines
   const fixtureInfos: FixtureInfo[] = [];
   const tsBaselines = new Map<string, string>();
+  const tsRawEvents = new Map<
+    string,
+    Array<Record<string, unknown>>
+  >();
 
   console.log('Computing TS baselines...');
   for (let i = 0; i < fixtures.length; i++) {
@@ -1026,6 +545,7 @@ async function runVariant(
 
     fixtureInfos.push({fixturePath, relPath, source, firstLine, isFlow});
     tsBaselines.set(fixturePath, tsCode);
+    tsRawEvents.set(fixturePath, tsResult.events);
   }
   clearProgress();
   console.log(`Computed ${fixtures.length} baselines.`);
@@ -1034,7 +554,13 @@ async function runVariant(
   // Run each variant
   for (const variant of variants) {
     console.log(`Running ${BOLD}${variant}${RESET} variant...`);
-    await runVariant(variant, fixtureInfos, tsBaselines, stats.get(variant)!);
+    await runVariant(
+      variant,
+      fixtureInfos,
+      tsBaselines,
+      tsRawEvents,
+      stats.get(variant)!,
+    );
     const s = stats.get(variant)!;
     console.log(`  ${s.passed} passed, ${s.failed} failed`);
   }
