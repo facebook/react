@@ -91,6 +91,16 @@ async function main() {
     }
   }
 
+  function handleRSC(renderRSC, AppComponent, res) {
+    const result = renderRSC(clientManifest, AppComponent, ITEM_COUNT);
+    if (typeof result.pipe === 'function') {
+      result.pipe(res);
+    } else {
+      // ReadableStream
+      Readable.fromWeb(result).pipe(res);
+    }
+  }
+
   const routes = {
     '/fizz-node-sync': function (res) {
       pipeToRes(renderFizzNode(App, ITEM_COUNT), res);
@@ -116,6 +126,9 @@ async function main() {
         res
       );
     },
+    '/flight-node-sync.rsc': function (res) {
+      handleRSC(renderRSCNode, RSCApp, res);
+    },
     '/flight-node-async': function (res) {
       pipeToRes(
         renderFlightFizzNode(
@@ -127,6 +140,9 @@ async function main() {
         ),
         res
       );
+    },
+    '/flight-node-async.rsc': function (res) {
+      handleRSC(renderRSCNode, RSCAppAsync, res);
     },
     '/flight-edge-sync': function (res) {
       pipeToRes(
@@ -140,6 +156,9 @@ async function main() {
         res
       );
     },
+    '/flight-edge-sync.rsc': function (res) {
+      handleRSC(renderRSCEdge, RSCApp, res);
+    },
     '/flight-edge-async': function (res) {
       pipeToRes(
         renderFlightFizzEdge(
@@ -151,6 +170,9 @@ async function main() {
         ),
         res
       );
+    },
+    '/flight-edge-async.rsc': function (res) {
+      handleRSC(renderRSCEdge, RSCAppAsync, res);
     },
   };
 
@@ -174,7 +196,10 @@ async function main() {
       res.end('Not found');
       return;
     }
-    res.writeHead(200, {'Content-Type': 'text/html'});
+    const contentType = req.url.endsWith('.rsc')
+      ? 'text/x-component'
+      : 'text/html';
+    res.writeHead(200, {'Content-Type': contentType});
     handler(res);
   });
 
