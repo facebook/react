@@ -1,8 +1,8 @@
 # Status
 
-Overall: 1723/1723 passing, 0 failed. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1722/1723.
+Overall: 1724/1724 passing, 0 failed. All passes ported through ValidatePreservedManualMemoization (#48). Codegen (#49) fully ported. Code comparison: 1724/1724.
 
-Snap (end-to-end): 1723/1723 passed, 0 failed
+Snap (end-to-end): 1724/1724 passed, 0 failed
 
 ## Transformation passes
 
@@ -57,6 +57,15 @@ ValidatePreservedManualMemoization: complete
 Codegen: complete (1717/1717 code comparison)
 
 # Logs
+
+## 20260331-220000 Port ValidateSourceLocations to Rust compiler
+
+Ported the test-only ValidateSourceLocations pass from TypeScript to Rust. This post-codegen
+validation checks that important source locations (used by Istanbul coverage instrumentation)
+are preserved in compiled output. Enabled via `@validateSourceLocations` pragma. The pass
+traverses both the original Babel AST function and the generated CodegenFunction output,
+comparing source locations for important node types. Code comparison now 1724/1724 (was
+1723/1724) since both TS and Rust correctly error on error.todo-missing-source-locations.
 
 ## 20260331-210000 Fix function name inference to match TS parent-checking behavior
 

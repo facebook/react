@@ -840,9 +840,11 @@ pub fn compile_fn(
         context.add_memo_cache_import();
     }
 
-    // ValidateSourceLocations: silently skipped in the Rust compiler.
-    // This pass requires the original Babel AST (which the Rust compiler doesn't have access to),
-    // so it cannot be implemented. The pass is simply skipped rather than reporting a Todo error.
+    if env.config.validate_source_locations {
+        super::validate_source_locations::validate_source_locations(
+            func, &codegen_result, &mut env,
+        );
+    }
 
     // Simulate unexpected exception for testing (matches TS Pipeline.ts)
     if env.config.throw_unknown_exception_testonly {
