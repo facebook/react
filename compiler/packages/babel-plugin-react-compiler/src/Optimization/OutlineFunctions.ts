@@ -19,6 +19,13 @@ export function outlineFunctions(
         value.kind === 'FunctionExpression' ||
         value.kind === 'ObjectMethod'
       ) {
+        // Skip functions with 'worklet' directive and all their inner functions as it's not safe to outline them.
+        if (
+          value.loweredFunc.func.directives &&
+          value.loweredFunc.func.directives.includes('worklet')
+        ) {
+          continue;
+        }
         // Recurse in case there are inner functions which can be outlined
         outlineFunctions(value.loweredFunc.func, fbtOperands);
       }
