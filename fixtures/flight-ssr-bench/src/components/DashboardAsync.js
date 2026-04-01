@@ -40,8 +40,8 @@ async function AsyncProductRow({product, delay}) {
   return <TableRow product={resolved} columns={productColumns} />;
 }
 
-function AsyncProductSection({itemCount}) {
-  const products = generateProducts(itemCount);
+async function AsyncProductSection({itemCount}) {
+  const products = await fetchData(generateProducts, itemCount);
   return (
     <div className="product-table-container">
       <div className="table-toolbar">
@@ -89,8 +89,8 @@ async function AsyncActivityItem({activity, delay}) {
   );
 }
 
-function AsyncActivitySection({itemCount}) {
-  const activities = generateActivities(Math.min(itemCount, 50));
+async function AsyncActivitySection({itemCount}) {
+  const activities = await fetchData(generateActivities, Math.min(itemCount, 50));
   return (
     <div className="activity-feed">
       <h3>Recent Activity</h3>
@@ -119,13 +119,17 @@ export default function DashboardAsync({itemCount}) {
       </Suspense>
       <div className="dashboard-grid">
         <div className="dashboard-main">
-          <AsyncProductSection itemCount={itemCount} />
+          <Suspense fallback={<Skeleton type="table" />}>
+            <AsyncProductSection itemCount={itemCount} />
+          </Suspense>
         </div>
         <div className="dashboard-aside">
           <Suspense fallback={<Skeleton type="chart" />}>
             <AsyncChartSection />
           </Suspense>
-          <AsyncActivitySection itemCount={itemCount} />
+          <Suspense fallback={<Skeleton type="feed" />}>
+            <AsyncActivitySection itemCount={itemCount} />
+          </Suspense>
         </div>
       </div>
     </main>
