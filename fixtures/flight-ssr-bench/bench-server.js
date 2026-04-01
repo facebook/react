@@ -6,7 +6,6 @@ require('@babel/register')({
   only: [/\/src\//],
 });
 
-const path = require('path');
 const http = require('http');
 const {Readable} = require('stream');
 const webpack = require('webpack');
@@ -91,16 +90,6 @@ async function main() {
     }
   }
 
-  function handleRSC(renderRSC, AppComponent, res) {
-    const result = renderRSC(clientManifest, AppComponent, ITEM_COUNT);
-    if (typeof result.pipe === 'function') {
-      result.pipe(res);
-    } else {
-      // ReadableStream
-      Readable.fromWeb(result).pipe(res);
-    }
-  }
-
   const routes = {
     '/fizz-node-sync': function (res) {
       pipeToRes(renderFizzNode(App, ITEM_COUNT), res);
@@ -127,7 +116,7 @@ async function main() {
       );
     },
     '/flight-node-sync.rsc': function (res) {
-      handleRSC(renderRSCNode, RSCApp, res);
+      pipeStreamToRes(renderRSCNode(clientManifest, RSCApp, ITEM_COUNT), res);
     },
     '/flight-node-async': function (res) {
       pipeToRes(
@@ -142,7 +131,7 @@ async function main() {
       );
     },
     '/flight-node-async.rsc': function (res) {
-      handleRSC(renderRSCNode, RSCAppAsync, res);
+      pipeStreamToRes(renderRSCNode(clientManifest, RSCAppAsync, ITEM_COUNT), res);
     },
     '/flight-edge-sync': function (res) {
       pipeToRes(
@@ -157,7 +146,7 @@ async function main() {
       );
     },
     '/flight-edge-sync.rsc': function (res) {
-      handleRSC(renderRSCEdge, RSCApp, res);
+      pipeStreamToRes(renderRSCEdge(clientManifest, RSCApp, ITEM_COUNT), res);
     },
     '/flight-edge-async': function (res) {
       pipeToRes(
@@ -172,7 +161,7 @@ async function main() {
       );
     },
     '/flight-edge-async.rsc': function (res) {
-      handleRSC(renderRSCEdge, RSCAppAsync, res);
+      pipeStreamToRes(renderRSCEdge(clientManifest, RSCAppAsync, ITEM_COUNT), res);
     },
   };
 
@@ -246,12 +235,12 @@ async function main() {
     );
 
     const results = {};
-    const labels = Object.keys(routes).map(function (r) {
-      return r.slice(1);
+    const benchRoutes = Object.keys(routes).filter(function (r) {
+      return !r.endsWith('.rsc');
     });
     const labelWidth = Math.max(
-      ...labels.map(function (l) {
-        return l.length;
+      ...benchRoutes.map(function (r) {
+        return r.length - 1;
       })
     );
 
@@ -266,7 +255,7 @@ async function main() {
     console.log('  ' + header);
     console.log('  ' + '-'.repeat(header.length));
 
-    for (const route of Object.keys(routes)) {
+    for (const route of benchRoutes) {
       const label = route.slice(1);
       const benchUrl = 'http://localhost:' + PORT + route;
 
