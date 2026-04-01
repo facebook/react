@@ -7,80 +7,15 @@ require('@babel/register')({
 });
 
 const path = require('path');
-const url = require('url');
 const fs = require('fs');
 const webpack = require('webpack');
 const inspector = require('node:inspector');
 
+const {clientManifest, ssrManifest} = require('./webpack-mock');
+
 const PROFILE_MODE = process.argv.includes('--profile');
 const CONCURRENT_MODE = process.argv.includes('--concurrent');
 const INJECT = !process.argv.includes('--no-injection');
-
-// ---------------------------------------------------------------------------
-// Manifest setup (WebpackMock pattern)
-// ---------------------------------------------------------------------------
-
-const clientModules = {};
-const clientChunkModules = {};
-const clientManifest = {};
-const ssrModuleMap = {};
-let moduleIdx = 0;
-
-function registerClientModule(modulePath) {
-  const id = String(moduleIdx++);
-  const chunkId = 'chunk-' + id;
-  const absPath = path.resolve(__dirname, modulePath);
-  const actualExports = require(absPath);
-  clientModules[id] = actualExports;
-  // Pre-register the chunk so __webpack_chunk_load__ can find it.
-  clientChunkModules[chunkId] = absPath;
-
-  const href = url.pathToFileURL(absPath).href;
-  // Provide chunk IDs like a real webpack build would. The chunks array
-  // format is [chunkId, chunkFilename, ...] in pairs.
-  clientManifest[href] = {id, chunks: [chunkId, absPath], name: '*'};
-  ssrModuleMap[id] = {'*': {id, chunks: [chunkId, absPath], name: '*'}};
-}
-
-// Auto-register all 'use client' components by scanning src/
-const srcDirs = [
-  path.resolve(__dirname, 'src'),
-  path.resolve(__dirname, 'src/components'),
-];
-for (const dir of srcDirs) {
-  if (!fs.existsSync(dir)) continue;
-  for (const file of fs.readdirSync(dir)) {
-    if (!file.endsWith('.js')) continue;
-    const filePath = path.join(dir, file);
-    const source = fs.readFileSync(filePath, 'utf-8');
-    if (
-      source.trimStart().startsWith("'use client'") ||
-      source.trimStart().startsWith('"use client"')
-    ) {
-      registerClientModule(filePath);
-    }
-  }
-}
-
-global.__webpack_require__ = function (id) {
-  if (clientModules[id]) {
-    return clientModules[id];
-  }
-  throw new Error('Unknown module: ' + id);
-};
-global.__webpack_chunk_load__ = function (chunkId) {
-  // Simulate SSR chunk loading: resolve asynchronously like a real
-  // webpack runtime loading a separate chunk file from disk.
-  return new Promise(function (resolve) {
-    setImmediate(resolve);
-  });
-};
-
-const ssrManifest = {
-  moduleMap: ssrModuleMap,
-  moduleLoading: null,
-  serverModuleMap: null,
-};
 
 // ---------------------------------------------------------------------------
 // Build
