@@ -17,7 +17,13 @@
     "webpack": "^5.64.4"
   },
   "scripts": {
-    "prebench": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "copy-modules": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "prebench": "yarn copy-modules",
+    "prebench:bare": "yarn copy-modules",
+    "prebench:profile": "yarn copy-modules",
+    "prebench:concurrent": "yarn copy-modules",
+    "prebench:server": "yarn copy-modules",
+    "prestart": "yarn copy-modules",
     "start": "NODE_ENV=production node bench-server.js",
     "bench": "NODE_ENV=production node --expose-gc bench.js",
     "bench:profile": "NODE_ENV=production node --expose-gc bench.js --profile",
