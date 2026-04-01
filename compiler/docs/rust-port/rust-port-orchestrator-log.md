@@ -17,7 +17,7 @@ InferTypes: complete
 OptimizePropsMethodCalls: complete
 AnalyseFunctions: complete (1649/1649)
 InferMutationAliasingEffects: complete (1643/1643)
-OptimizeForSSR: todo (conditional, outputMode === 'ssr')
+OptimizeForSSR: complete (5/5, conditional, outputMode === 'ssr')
 DeadCodeElimination: complete
 InferMutationAliasingRanges: complete
 InferReactivePlaces: complete
@@ -597,3 +597,12 @@ Fixed 10 more snap test failures:
 - idx-no-outlining (1 fixed): Normalize unused _refN declarations in snap reporter.
 - ValidateSourceLocations: silently skip in Rust (pipeline.rs).
 Pass 1717/1717, Code 1716/1717, Snap 1717/1718. Only remaining: error.todo-missing-source-locations (intentional).
+
+## 20260331-220427 Port OptimizeForSSR pass
+
+Ported OptimizeForSSR (#13) from TypeScript to Rust. The pass optimizes components for
+SSR by inlining useState/useReducer, removing effects and event handlers, and stripping
+known event handler/ref props from builtin JSX. Gated on outputMode === 'ssr'.
+Created optimize_for_ssr.rs in react_compiler_optimization crate. Added is_plain_object_type
+and is_start_transition_type helpers to react_compiler_hir.
+test-rust-port: 1724/1724, Snap --rust: 1725/1725.

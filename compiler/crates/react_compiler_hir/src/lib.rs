@@ -1536,3 +1536,13 @@ pub fn is_use_operator_type(ty: &Type) -> bool {
             if id == BUILT_IN_USE_OPERATOR_ID
     )
 }
+
+/// Returns true if the type is a plain object (BuiltInObject).
+pub fn is_plain_object_type(ty: &Type) -> bool {
+    matches!(ty, Type::Object { shape_id: Some(id) } if id == object_shape::BUILT_IN_OBJECT_ID)
+}
+
+/// Returns true if the type is a startTransition function (BuiltInStartTransition).
+pub fn is_start_transition_type(ty: &Type) -> bool {
+    matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_START_TRANSITION_ID)
+}

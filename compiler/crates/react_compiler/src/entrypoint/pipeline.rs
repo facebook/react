@@ -279,6 +279,19 @@ pub fn compile_fn(
         context.timing.stop();
     }
 
+    if env.output_mode == OutputMode::Ssr {
+        context.timing.start("OptimizeForSSR");
+        react_compiler_optimization::optimize_for_ssr(&mut hir, &env);
+        context.timing.stop();
+
+        if context.debug_enabled {
+            context.timing.start("debug_print:OptimizeForSSR");
+            let debug_ssr = debug_print::debug_hir(&hir, &env);
+            context.log_debug(DebugLogEntry::new("OptimizeForSSR", debug_ssr));
+            context.timing.stop();
+        }
+    }
+
     context.timing.start("DeadCodeElimination");
     react_compiler_optimization::dead_code_elimination(&mut hir, &env);
     context.timing.stop();
@@ -1387,6 +1400,10 @@ fn run_pipeline_passes(
     }
 
     react_compiler_inference::infer_mutation_aliasing_effects(hir, env, false)?;
+
+    if env.output_mode == OutputMode::Ssr {
+        react_compiler_optimization::optimize_for_ssr(hir, env);
+    }
 
     react_compiler_optimization::dead_code_elimination(hir, env);
 
