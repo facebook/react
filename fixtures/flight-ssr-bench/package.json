@@ -17,9 +17,7 @@
     "webpack": "^5.64.4"
   },
   "scripts": {
-    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebench": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "build": "NODE_ENV=production node render.js",
     "start": "NODE_ENV=production node bench-server.js",
     "bench": "NODE_ENV=production node --expose-gc bench.js",
     "bench:profile": "NODE_ENV=production node --expose-gc bench.js --profile",

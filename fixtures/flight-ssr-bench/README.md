@@ -27,7 +27,6 @@ yarn install
 | `yarn bench:profile` | CPU profiling via V8 inspector. Saves `.cpuprofile` files to `build/profiles/`. |
 | `yarn bench:server` | HTTP server benchmark using autocannon. Measures real req/s with TCP overhead. |
 | `yarn start` | Starts the HTTP server for manual browser testing at http://localhost:3001. |
-| `yarn build` | Renders all variants to static HTML files in `build/`. |
 
 ## What it measures
 

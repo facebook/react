@@ -29,7 +29,7 @@ function renderFizzNode(AppComponent, itemCount) {
 
 // ---------------------------------------------------------------------------
 // Fizz (Edge) — renders App directly via web streams.
-// Returns a promise that resolves to a Node Readable stream of HTML.
+// Returns a promise that resolves to a web ReadableStream of HTML.
 // ---------------------------------------------------------------------------
 
 function renderFizzEdge(AppComponent, itemCount) {
@@ -65,6 +65,7 @@ function renderFlightFizzNode(
   );
 
   let flightStream;
+  let flightScripts = '';
   if (inject) {
     // Tee the Flight stream into SSR + script injection
     const trunk = new PassThrough();
@@ -73,7 +74,6 @@ function renderFlightFizzNode(
     trunk.pipe(forSsr);
     trunk.pipe(forInline);
 
-    var flightScripts = '';
     forInline.on('data', function (chunk) {
       flightScripts +=
         '<script>(self.__FLIGHT_DATA||=[]).push(' +
