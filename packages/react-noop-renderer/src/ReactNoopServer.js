@@ -34,6 +34,10 @@ type ActivityInstance = {
   children: Array<Instance | TextInstance | SuspenseInstance>,
 };
 
+type SuspenseListInstance = {
+  children: Array<Instance | TextInstance | SuspenseInstance>,
+};
+
 type SuspenseInstance = {
   state: 'pending' | 'complete' | 'client-render',
   children: Array<Instance | TextInstance | SuspenseInstance>,
@@ -202,6 +206,36 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
+  pushStartSuspenseListBoundary(
+    target: Array<Uint8Array>,
+    renderState: RenderState,
+  ): void {
+    const suspenseListInstance: SuspenseListInstance = {
+      children: [],
+    };
+    target.push(Buffer.from(JSON.stringify(suspenseListInstance), 'utf8'));
+  },
+
+  pushEndSuspenseListBoundary(
+    target: Array<Uint8Array>,
+    renderState: RenderState,
+  ): void {
+    target.push(POP);
+  },
+
+  writePendingSuspenseList(
+    destination: Destination,
+    renderState: RenderState,
+  ): boolean {
+    return true;
+  },
+  writeClientRenderedSuspenseList(
+    destination: Destination,
+    renderState: RenderState,
+  ): boolean {
+    return true;
+  },
+
   writeStartCompletedSuspenseBoundary(
     destination: Destination,
     renderState: RenderState,
@@ -317,6 +351,45 @@ const ReactNoopServer = ReactFizzServer({
     boundary: SuspenseInstance,
   ): boolean {
     // $FlowFixMe[prop-missing]
+    boundary.status = 'client-render';
+    return true;
+  },
+
+  writeAppendListInstruction(
+    destination: Destination,
+    renderState: RenderState,
+    boundary: SuspenseInstance,
+    contentSegmentID: number,
+  ): boolean {
+    const segment = destination.segments.get(contentSegmentID);
+    if (!segment) {
+      throw new Error('Missing segment.');
+    }
+    boundary.children = segment.children;
+    boundary.state = 'appended';
+    return true;
+  },
+
+  writeCompletedListInstruction(
+    destination: Destination,
+    renderState: RenderState,
+    boundary: SuspenseInstance,
+    contentSegmentID: number,
+  ): boolean {
+    const segment = destination.segments.get(contentSegmentID);
+    if (!segment) {
+      throw new Error('Missing segment.');
+    }
+    boundary.children = segment.children;
+    boundary.state = 'complete';
+    return true;
+  },
+
+  writeClientRenderedSuspenseListMarker(
+    destination: Destination,
+    renderState: RenderState,
+    boundary: SuspenseInstance,
+  ): boolean {
     boundary.status = 'client-render';
     return true;
   },
