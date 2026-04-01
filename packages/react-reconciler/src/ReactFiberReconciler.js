@@ -884,29 +884,30 @@ export function injectIntoDevTools(): boolean {
     internals.rendererConfig = (extraDevToolsConfig: RendererInspectionConfig);
   }
   if (__DEV__) {
-    internals.overrideHookState = overrideHookState;
-    internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
-    internals.overrideHookStateRenamePath = overrideHookStateRenamePath;
-    internals.overrideProps = overrideProps;
-    internals.overridePropsDeletePath = overridePropsDeletePath;
-    internals.overridePropsRenamePath = overridePropsRenamePath;
-    internals.scheduleUpdate = scheduleUpdate;
-    internals.scheduleRetry = scheduleRetry;
-    internals.setErrorHandler = setErrorHandler;
-    internals.setSuspenseHandler = setSuspenseHandler;
-    // React Refresh
-    internals.scheduleRefresh = scheduleRefresh;
-    internals.scheduleRoot = scheduleRoot;
-    internals.setRefreshHandler = setRefreshHandler;
-    // Enables DevTools to append owner stacks to error messages in DEV mode.
-    internals.getCurrentFiber = getCurrentFiberForDevTools;
-  }
-  if (enableSchedulingProfiler) {
-    // Conditionally inject these hooks only if Timeline profiler is supported by this build.
-    // This gives DevTools a way to feature detect that isn't tied to version number
-    // (since profiling and timeline are controlled by different feature flags).
-    internals.getLaneLabelMap = getLaneLabelMap;
-    internals.injectProfilingHooks = injectProfilingHooks;
-  }
-  return injectInternals(internals);
+  internals.getCurrentFiber = getCurrentFiberForDevTools;
+}
+if (enableSchedulingProfiler) {
+  internals.getLaneLabelMap = getLaneLabelMap;
+  internals.injectProfilingHooks = injectProfilingHooks;
+}
+return injectInternals(internals);
+if (__DEV__) {
+  Object.defineProperty(internals, 'flushSync', {
+    configurable: false,
+    enumerable: false,
+    get() {
+      console.error(
+        'reconciler.flushSync has been removed. ' +
+          'Use reconciler.updateContainerSync() ' +
+          'followed by reconciler.flushSyncWork() instead.'
+      );
+
+      return function flushSyncDeprecated(fn) {
+        if (typeof fn === 'function') {
+          fn();
+        }
+        internals.flushSyncWork();
+      };
+    },
+  });
 }
