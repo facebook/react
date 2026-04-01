@@ -158,6 +158,8 @@ function renderFlightFizzEdge(renderRSCEdge, AppComponent, itemCount) {
 const canGC = typeof globalThis.gc === 'function';
 
 async function runBenchmark(name, fn, iterations, warmup) {
+  if (canGC) globalThis.gc();
+
   // Warmup
   for (let i = 0; i < warmup; i++) {
     await fn();
