@@ -131,7 +131,10 @@ async function main() {
       );
     },
     '/flight-node-async.rsc': function (res) {
-      pipeStreamToRes(renderRSCNode(clientManifest, RSCAppAsync, ITEM_COUNT), res);
+      pipeStreamToRes(
+        renderRSCNode(clientManifest, RSCAppAsync, ITEM_COUNT),
+        res
+      );
     },
     '/flight-edge-sync': function (res) {
       pipeToRes(
@@ -161,7 +164,10 @@ async function main() {
       );
     },
     '/flight-edge-async.rsc': function (res) {
-      pipeStreamToRes(renderRSCEdge(clientManifest, RSCAppAsync, ITEM_COUNT), res);
+      pipeStreamToRes(
+        renderRSCEdge(clientManifest, RSCAppAsync, ITEM_COUNT),
+        res
+      );
     },
   };
 

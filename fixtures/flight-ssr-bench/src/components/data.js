@@ -46,7 +46,7 @@ export function generateProducts(count) {
       id: i,
       name: 'Product ' + i,
       sku: 'SKU-' + String(i).padStart(6, '0'),
-      price: ((i * 17 + 3) % 9999 / 100).toFixed(2),
+      price: (((i * 17 + 3) % 9999) / 100).toFixed(2),
       category: categories[i % categories.length],
       status: statuses[i % statuses.length],
       stock: (i * 7 + 13) % 500,
@@ -74,16 +74,18 @@ export function generateProducts(count) {
         minOrder: ((i * 3) % 50) + 10,
         contact: 'supplier' + (i % 20) + '@example.com',
         address: {
-          street: (100 + i * 7) % 9999 + ' Industrial Blvd',
+          street: ((100 + i * 7) % 9999) + ' Industrial Blvd',
           city: ['Portland', 'Austin', 'Denver', 'Seattle', 'Boston'][i % 5],
           state: ['OR', 'TX', 'CO', 'WA', 'MA'][i % 5],
           zip: String(10000 + ((i * 37) % 89999)),
         },
       },
       specifications: {
-        material: ['Aluminum', 'Plastic', 'Steel', 'Wood', 'Carbon Fiber'][i % 5],
+        material: ['Aluminum', 'Plastic', 'Steel', 'Wood', 'Carbon Fiber'][
+          i % 5
+        ],
         color: ['Black', 'White', 'Silver', 'Blue', 'Red', 'Green'][i % 6],
-        warranty: ((i % 3) + 1) + ' years',
+        warranty: (i % 3) + 1 + ' years',
         certifications: [
           i % 2 === 0 ? 'CE' : 'FCC',
           i % 3 === 0 ? 'RoHS' : 'UL',
@@ -94,21 +96,33 @@ export function generateProducts(count) {
         {
           author: userNames[(i * 3) % userNames.length],
           rating: ((i * 7 + 3) % 5) + 1,
-          date: '2026-0' + ((i % 3) + 1) + '-' + String((i % 28) + 1).padStart(2, '0'),
+          date:
+            '2026-0' +
+            ((i % 3) + 1) +
+            '-' +
+            String((i % 28) + 1).padStart(2, '0'),
           text: reviewTexts[i % reviewTexts.length],
           helpful: (i * 11 + 2) % 50,
         },
         {
           author: userNames[(i * 3 + 1) % userNames.length],
           rating: ((i * 11 + 1) % 5) + 1,
-          date: '2026-0' + ((i % 3) + 1) + '-' + String(((i + 5) % 28) + 1).padStart(2, '0'),
+          date:
+            '2026-0' +
+            ((i % 3) + 1) +
+            '-' +
+            String(((i + 5) % 28) + 1).padStart(2, '0'),
           text: reviewTexts[(i + 2) % reviewTexts.length],
           helpful: (i * 7 + 5) % 30,
         },
         {
           author: userNames[(i * 3 + 2) % userNames.length],
           rating: ((i * 13 + 2) % 5) + 1,
-          date: '2026-0' + ((i % 3) + 1) + '-' + String(((i + 10) % 28) + 1).padStart(2, '0'),
+          date:
+            '2026-0' +
+            ((i % 3) + 1) +
+            '-' +
+            String(((i + 10) % 28) + 1).padStart(2, '0'),
           text: reviewTexts[(i + 4) % reviewTexts.length],
           helpful: (i * 3 + 1) % 20,
         },
@@ -125,15 +139,22 @@ export function generateActivities(count) {
       id: i,
       type: activityTypes[i % activityTypes.length],
       user: userNames[i % userNames.length],
-      timestamp: '2026-03-' + String((i % 28) + 1).padStart(2, '0') + 'T' +
-        String((i * 7) % 24).padStart(2, '0') + ':' +
-        String((i * 13) % 60).padStart(2, '0') + ':00Z',
+      timestamp:
+        '2026-03-' +
+        String((i % 28) + 1).padStart(2, '0') +
+        'T' +
+        String((i * 7) % 24).padStart(2, '0') +
+        ':' +
+        String((i * 13) % 60).padStart(2, '0') +
+        ':00Z',
       details: {
         orderId: '#' + String(10000 + i),
         amount: '$' + ((i * 23 + 7) % 999).toFixed(2),
         items: ((i * 3 + 1) % 5) + 1,
         shippingMethod: ['Standard', 'Express', 'Overnight', 'Economy'][i % 4],
-        paymentMethod: ['Credit Card', 'PayPal', 'Apple Pay', 'Wire Transfer'][i % 4],
+        paymentMethod: ['Credit Card', 'PayPal', 'Apple Pay', 'Wire Transfer'][
+          i % 4
+        ],
       },
       message:
         userNames[i % userNames.length] +
@@ -211,14 +232,62 @@ export function generateStats() {
       {month: 'Dec 26', value: 130000, orders: 867, returns: 44},
     ],
     topCategories: [
-      {name: 'Electronics', revenue: 420000, orders: 2800, avgPrice: 150, growth: '+15.2%'},
-      {name: 'Clothing', revenue: 310000, orders: 2100, avgPrice: 147.6, growth: '+8.7%'},
-      {name: 'Home & Garden', revenue: 225000, orders: 1500, avgPrice: 150, growth: '+12.1%'},
-      {name: 'Sports', revenue: 180000, orders: 1200, avgPrice: 150, growth: '+5.3%'},
-      {name: 'Books', revenue: 149320, orders: 832, avgPrice: 179.5, growth: '+2.1%'},
-      {name: 'Toys', revenue: 95000, orders: 680, avgPrice: 139.7, growth: '+18.4%'},
-      {name: 'Food', revenue: 82000, orders: 1640, avgPrice: 50, growth: '+6.8%'},
-      {name: 'Health', revenue: 73000, orders: 520, avgPrice: 140.4, growth: '+22.1%'},
+      {
+        name: 'Electronics',
+        revenue: 420000,
+        orders: 2800,
+        avgPrice: 150,
+        growth: '+15.2%',
+      },
+      {
+        name: 'Clothing',
+        revenue: 310000,
+        orders: 2100,
+        avgPrice: 147.6,
+        growth: '+8.7%',
+      },
+      {
+        name: 'Home & Garden',
+        revenue: 225000,
+        orders: 1500,
+        avgPrice: 150,
+        growth: '+12.1%',
+      },
+      {
+        name: 'Sports',
+        revenue: 180000,
+        orders: 1200,
+        avgPrice: 150,
+        growth: '+5.3%',
+      },
+      {
+        name: 'Books',
+        revenue: 149320,
+        orders: 832,
+        avgPrice: 179.5,
+        growth: '+2.1%',
+      },
+      {
+        name: 'Toys',
+        revenue: 95000,
+        orders: 680,
+        avgPrice: 139.7,
+        growth: '+18.4%',
+      },
+      {
+        name: 'Food',
+        revenue: 82000,
+        orders: 1640,
+        avgPrice: 50,
+        growth: '+6.8%',
+      },
+      {
+        name: 'Health',
+        revenue: 73000,
+        orders: 520,
+        avgPrice: 140.4,
+        growth: '+22.1%',
+      },
     ],
   };
 }

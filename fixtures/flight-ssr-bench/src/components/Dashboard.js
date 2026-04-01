@@ -23,11 +23,7 @@ export default function Dashboard({itemCount}) {
           <ProductTable products={products} />
         </div>
         <div className="dashboard-aside">
-          <ChartPanel
-            title="Revenue"
-            data={stats.revenueByMonth}
-            type="bar"
-          />
+          <ChartPanel title="Revenue" data={stats.revenueByMonth} type="bar" />
           <ActivityFeed activities={activities} />
         </div>
       </div>

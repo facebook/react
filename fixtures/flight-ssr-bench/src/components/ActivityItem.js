@@ -1,6 +1,12 @@
 'use client';
 
-export default function ActivityItem({type, user, message, timestamp, details}) {
+export default function ActivityItem({
+  type,
+  user,
+  message,
+  timestamp,
+  details,
+}) {
   return (
     <li className={'activity-item activity-' + type}>
       <div className="activity-icon" data-type={type} />

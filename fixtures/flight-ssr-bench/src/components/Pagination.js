@@ -15,8 +15,7 @@ export default function Pagination({total, pageSize}) {
         {pages.map(page => (
           <button
             key={page}
-            className={'pagination-page' + (page === 1 ? ' active' : '')}
-          >
+            className={'pagination-page' + (page === 1 ? ' active' : '')}>
             {page}
           </button>
         ))}

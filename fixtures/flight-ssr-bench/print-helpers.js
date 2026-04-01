@@ -1,7 +1,11 @@
 'use strict';
 
 function printGrid(colHeaders, rows, getValue, unit, note) {
-  const labelWidth = Math.max(...rows.map(function (r) { return r[0].length; }));
+  const labelWidth = Math.max(
+    ...rows.map(function (r) {
+      return r[0].length;
+    })
+  );
   const suffix = unit ? ' ' + unit : '';
   const fmtVal = function (v) {
     return (v.toFixed(1) + suffix).padStart(10 + suffix.length);
@@ -17,7 +21,11 @@ function printGrid(colHeaders, rows, getValue, unit, note) {
   const header =
     ''.padEnd(labelWidth) +
     '  ' +
-    colHeaders.map(function (h) { return h.padStart(colWidth); }).join('  ') +
+    colHeaders
+      .map(function (h) {
+        return h.padStart(colWidth);
+      })
+      .join('  ') +
     '     Delta   Factor';
   console.log('  ' + header);
   console.log('  ' + '-'.repeat(header.length));

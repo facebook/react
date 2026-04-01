@@ -243,10 +243,7 @@ function renderFlightFizzEdge(
           for (;;) {
             const {done, value} = await reader.read();
             if (done) break;
-            writeFlightChunk(
-              decoder.decode(value, {stream: true}),
-              controller
-            );
+            writeFlightChunk(decoder.decode(value, {stream: true}), controller);
           }
           const remaining = decoder.decode();
           if (remaining.length) {

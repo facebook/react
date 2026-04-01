@@ -58,7 +58,13 @@ async function AsyncProductSection({itemCount}) {
         </thead>
         <tbody>
           {products.map((product, i) => (
-            <Suspense key={product.id} fallback={<tr><td colSpan={7}>Loading...</td></tr>}>
+            <Suspense
+              key={product.id}
+              fallback={
+                <tr>
+                  <td colSpan={7}>Loading...</td>
+                </tr>
+              }>
               <AsyncProductRow product={product} delay={1 + (i % 5)} />
             </Suspense>
           ))}
@@ -71,9 +77,7 @@ async function AsyncProductSection({itemCount}) {
 
 async function AsyncChartSection() {
   const stats = await fetchData(generateStats);
-  return (
-    <ChartPanel title="Revenue" data={stats.revenueByMonth} type="bar" />
-  );
+  return <ChartPanel title="Revenue" data={stats.revenueByMonth} type="bar" />;
 }
 
 async function AsyncActivityItem({activity, delay}) {
@@ -90,7 +94,10 @@ async function AsyncActivityItem({activity, delay}) {
 }
 
 async function AsyncActivitySection({itemCount}) {
-  const activities = await fetchData(generateActivities, Math.min(itemCount, 50));
+  const activities = await fetchData(
+    generateActivities,
+    Math.min(itemCount, 50)
+  );
   return (
     <div className="activity-feed">
       <h3>Recent Activity</h3>

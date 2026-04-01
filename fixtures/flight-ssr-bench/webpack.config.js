@@ -33,9 +33,7 @@ module.exports = {
         exclude: /node_modules/,
         loader: require.resolve('babel-loader'),
         options: {
-          presets: [
-            ['@babel/preset-react', {runtime: 'automatic'}],
-          ],
+          presets: [['@babel/preset-react', {runtime: 'automatic'}]],
         },
       },
     ],

@@ -1,4 +1,7 @@
-import {renderToPipeableStream, renderToReadableStream} from 'react-server-dom-webpack/server';
+import {
+  renderToPipeableStream,
+  renderToReadableStream,
+} from 'react-server-dom-webpack/server';
 import App from './App';
 import AppAsync from './AppAsync';
 

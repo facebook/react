@@ -29,7 +29,8 @@ export default function Footer() {
             <ul>
               {section.links.map(link => (
                 <li key={link}>
-                  <FooterLink href={'/' + link.toLowerCase().replace(/\s+/g, '-')}>
+                  <FooterLink
+                    href={'/' + link.toLowerCase().replace(/\s+/g, '-')}>
                     {link}
                   </FooterLink>
                 </li>

@@ -13,7 +13,9 @@ export default function StatCard({title, value, change, trend, sparkline}) {
           <span
             key={i}
             className="sparkline-bar"
-            style={{height: Math.round((point / Math.max(...sparkline)) * 100) + '%'}}
+            style={{
+              height: Math.round((point / Math.max(...sparkline)) * 100) + '%',
+            }}
           />
         ))}
       </div>
