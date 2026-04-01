@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "test": "yarn snap --rust"
   },
   "dependencies": {
     "@babel/types": "^7.26.0"

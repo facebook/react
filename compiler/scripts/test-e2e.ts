@@ -313,7 +313,10 @@ function normalizeTypeAnnotations(code: string): string {
   result = result.replace(/^\s*\/\/\s*@ts-(?:expect-error|ignore)\s*$/gm, '');
   // Also strip inline @ts-expect-error comments (after collapsing, they can
   // appear mid-line e.g. inside collapsed import statements):
-  result = result.replace(/,?\s*\/\/\s*@ts-(?:expect-error|ignore),?\s*/g, ', ');
+  result = result.replace(
+    /,?\s*\/\/\s*@ts-(?:expect-error|ignore),?\s*/g,
+    ', ',
+  );
 
   // Strip pragma comment lines (// @...) that configure the compiler.
   // Babel preserves these comments in output but SWC may not.
@@ -327,10 +330,7 @@ function normalizeTypeAnnotations(code: string): string {
     '',
   );
   // Also strip simple type aliases like: type Foo = string | number;
-  result = result.replace(
-    /^type\s+\w+\s*=\s*[^;]+;\s*$/gm,
-    '',
-  );
+  result = result.replace(/^type\s+\w+\s*=\s*[^;]+;\s*$/gm, '');
 
   // Normalize useRenderCounter calls: TS plugin includes the full file path
   // as the second argument, while SWC uses an empty string.
@@ -358,24 +358,18 @@ function normalizeTypeAnnotations(code: string): string {
 
   // Normalize quote styles in import statements: Babel preserves original
   // single quotes while SWC always uses double quotes.
-  result = result.replace(
-    /^(import\s+.*\s+from\s+)'([^']+)';/gm,
-    '$1"$2";',
-  );
+  result = result.replace(/^(import\s+.*\s+from\s+)'([^']+)';/gm, '$1"$2";');
 
   // Normalize JSX attribute quoting: Babel may output escaped double
   // quotes in JSX attributes (name="\"x\"") while SWC uses single quotes
   // (name='"x"'). Normalize to single quote form.
-  result = result.replace(
-    /(\w+)="((?:[^"\\]|\\.)*)"/g,
-    (match, attr, val) => {
-      if (val.includes('\\"')) {
-        const unescaped = val.replace(/\\"/g, '"');
-        return `${attr}='${unescaped}'`;
-      }
-      return match;
-    },
-  );
+  result = result.replace(/(\w+)="((?:[^"\\]|\\.)*)"/g, (match, attr, val) => {
+    if (val.includes('\\"')) {
+      const unescaped = val.replace(/\\"/g, '"');
+      return `${attr}='${unescaped}'`;
+    }
+    return match;
+  });
 
   // Normalize JSX wrapping with parentheses: prettier may wrap
   // JSX expressions differently depending on the raw input format.
@@ -390,10 +384,7 @@ function normalizeTypeAnnotations(code: string): string {
 
   // Strip parameter type annotations: (name: Type)
   // Handle simple cases like (arg: number), (arg: string), etc.
-  result = result.replace(
-    /\((\w+):\s*[A-Za-z_]\w*(?:<[^>]*>)?\s*\)/g,
-    '($1)',
-  );
+  result = result.replace(/\((\w+):\s*[A-Za-z_]\w*(?:<[^>]*>)?\s*\)/g, '($1)');
 
   // Strip type annotations in const declarations:
   //   const THEME_MAP: ReadonlyMap<string, string> = new Map([
@@ -406,15 +397,15 @@ function normalizeTypeAnnotations(code: string): string {
   // First, normalize `as any.prop.chain` patterns where SWC incorrectly
   // puts the property chain inside the type assertion:
   //   (x as any.a.value) -> (x as any).a.value -> after stripping -> (x).a.value
-  result = result.replace(
-    /\bas\s+any((?:\.\w+)+)\)/g,
-    'as any)$1',
-  );
+  result = result.replace(/\bas\s+any((?:\.\w+)+)\)/g, 'as any)$1');
 
   // Strip all `as <Type>` assertions: OXC codegen may drop type assertions
   // entirely, while TS preserves them. Strip all forms:
   //   `as const`, `as any`, `as T`, `as MyType`, `as string`, etc.
-  result = result.replace(/\s+as\s+(?:const|any|[A-Za-z_]\w*(?:<[^>]*>)?)\b/g, '');
+  result = result.replace(
+    /\s+as\s+(?:const|any|[A-Za-z_]\w*(?:<[^>]*>)?)\b/g,
+    '',
+  );
   // Strip unnecessary parentheses left after `as` stripping:
   //   `(x)` -> `x`, `("pending")` -> `"pending"`
   // Only strip when the inner expression is a simple value (identifier, string, number).
@@ -671,9 +662,7 @@ function collapseMultiLinePass(code: string): string {
               suffix;
             // Only collapse if the result line is not too long
             if (collapsed.trimStart().length <= 500) {
-              result.push(
-                ' '.repeat(indent) + collapsed.trimStart(),
-              );
+              result.push(' '.repeat(indent) + collapsed.trimStart());
               i = j + 1;
             } else {
               // Too long, keep as-is
@@ -737,7 +726,10 @@ function collapseMultiLineJsx(code: string): string {
     // Detect JSX opening tag that doesn't close on the same line
     // e.g., `<Component` or `t0 = <Component` or `t0 = (`
     // followed by attributes on subsequent lines, ending with `/>` or `>`
-    if (/<\w/.test(trimmed) && !(trimmed.endsWith('>;') || trimmed.endsWith('/>;'))) {
+    if (
+      /<\w/.test(trimmed) &&
+      !(trimmed.endsWith('>;') || trimmed.endsWith('/>;'))
+    ) {
       const indent = line.length - line.trimStart().length;
       const parts: string[] = [trimmed];
       let j = i + 1;
@@ -751,8 +743,11 @@ function collapseMultiLineJsx(code: string): string {
         const innerTrimmed = lines[j].trim();
 
         // Self-closing: />
-        if (innerTrimmed === '/>' || innerTrimmed === '/>;' ||
-            innerTrimmed.startsWith('/>')) {
+        if (
+          innerTrimmed === '/>' ||
+          innerTrimmed === '/>;' ||
+          innerTrimmed.startsWith('/>')
+        ) {
           parts.push(innerTrimmed);
           found = true;
 
@@ -768,8 +763,12 @@ function collapseMultiLineJsx(code: string): string {
         }
 
         // Closing tag: </TagName> or </TagName>;
-        if (tagName && (innerTrimmed === `</${tagName}>` || innerTrimmed === `</${tagName}>;` ||
-            innerTrimmed.startsWith(`</${tagName}>`))) {
+        if (
+          tagName &&
+          (innerTrimmed === `</${tagName}>` ||
+            innerTrimmed === `</${tagName}>;` ||
+            innerTrimmed.startsWith(`</${tagName}>`))
+        ) {
           parts.push(innerTrimmed);
           found = true;
 
@@ -943,7 +942,8 @@ async function runVariant(
     // passthrough (uncompiled) output — the fixture is an error case and behavior
     // differences in error detection are acceptable.
     const tsErrored = normalizedTs.trim() === '';
-    const variantErrored = normalizedVariant.trim() === '' || variantResult.error != null;
+    const variantErrored =
+      normalizedVariant.trim() === '' || variantResult.error != null;
 
     if (normalizedTs === normalizedVariant || (tsErrored && variantErrored)) {
       s.passed++;
@@ -951,7 +951,9 @@ async function runVariant(
       // TS errored but variant produced output — check if the variant output
       // is just the passthrough (uncompiled) source. If so, the variant didn't
       // compile the function either (just didn't throw). Count as pass.
-      const variantHasMemoization = normalizedVariant.includes('_c(') || normalizedVariant.includes('useMemoCache');
+      const variantHasMemoization =
+        normalizedVariant.includes('_c(') ||
+        normalizedVariant.includes('useMemoCache');
       if (!variantHasMemoization) {
         s.passed++;
       } else {
@@ -960,7 +962,12 @@ async function runVariant(
         if (limitArg === 0 || s.failures.length < limitArg) {
           s.failures.push({
             fixture: relPath,
-            detail: unifiedDiff(normalizedTs, normalizedVariant, 'TypeScript (normalized)', variant + ' (normalized)'),
+            detail: unifiedDiff(
+              normalizedTs,
+              normalizedVariant,
+              'TypeScript (normalized)',
+              variant + ' (normalized)',
+            ),
           });
         }
       }
@@ -970,7 +977,12 @@ async function runVariant(
       if (limitArg === 0 || s.failures.length < limitArg) {
         s.failures.push({
           fixture: relPath,
-          detail: unifiedDiff(normalizedTs, normalizedVariant, 'TypeScript (normalized)', variant + ' (normalized)'),
+          detail: unifiedDiff(
+            normalizedTs,
+            normalizedVariant,
+            'TypeScript (normalized)',
+            variant + ' (normalized)',
+          ),
         });
       }
     }
