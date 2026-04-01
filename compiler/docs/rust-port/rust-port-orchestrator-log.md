@@ -606,3 +606,13 @@ known event handler/ref props from builtin JSX. Gated on outputMode === 'ssr'.
 Created optimize_for_ssr.rs in react_compiler_optimization crate. Added is_plain_object_type
 and is_start_transition_type helpers to react_compiler_hir.
 test-rust-port: 1724/1724, Snap --rust: 1725/1725.
+
+## 20260401-105521 Move error formatting to Rust, fix JSXAttribute loc in codegen
+
+Moved error formatting from JS to Rust: added code_frame.rs to react_compiler_diagnostics
+with code frame rendering and format_compiler_error(). Rust now returns pre-formatted error
+messages via formatted_message field on CompilerErrorInfo, eliminating ~160 lines of JS
+formatting code (formatCompilerError, categoryToHeading, printCodeFrame) and the @babel/code-frame
+dependency from babel-plugin-react-compiler-rust. Also fixed JSXExpressionContainer nodes in
+codegen to propagate source locations from place.loc, eliminating the ensureNodeLocs JS post-pass.
+test-rust-port: 1724/1724, Snap: 1725/1725, Snap --rust: 1725/1725.

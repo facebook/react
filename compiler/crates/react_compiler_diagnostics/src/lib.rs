@@ -1,3 +1,5 @@
+pub mod code_frame;
+
 use serde::{Serialize, Deserialize};
 
 /// Error categories matching the TS ErrorCategory enum
@@ -378,7 +380,7 @@ impl std::fmt::Display for CompilerError {
 
 impl std::error::Error for CompilerError {}
 
-fn format_category_heading(category: ErrorCategory) -> &'static str {
+pub fn format_category_heading(category: ErrorCategory) -> &'static str {
     match category {
         ErrorCategory::EffectDependencies
         | ErrorCategory::IncompatibleLibrary

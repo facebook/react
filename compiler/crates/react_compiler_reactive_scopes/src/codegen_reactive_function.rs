@@ -2739,7 +2739,7 @@ fn codegen_jsx_attribute(
                     {
                         Some(JSXAttributeValue::JSXExpressionContainer(
                             JSXExpressionContainer {
-                                base: BaseNode::typed("JSXExpressionContainer"),
+                                base: base_node_with_loc("JSXExpressionContainer", place.loc),
                                 expression: JSXExpressionContainerExpr::Expression(Box::new(
                                     inner_value,
                                 )),
@@ -2762,7 +2762,7 @@ fn codegen_jsx_attribute(
                 }
                 _ => Some(JSXAttributeValue::JSXExpressionContainer(
                     JSXExpressionContainer {
-                        base: BaseNode::typed("JSXExpressionContainer"),
+                        base: base_node_with_loc("JSXExpressionContainer", place.loc),
                         expression: JSXExpressionContainerExpr::Expression(Box::new(inner_value)),
                     },
                 )),

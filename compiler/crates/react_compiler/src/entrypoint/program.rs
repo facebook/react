@@ -1129,6 +1129,20 @@ fn handle_error(
             error_info.raw_message = Some("unexpected error".to_string());
         }
 
+        // Pre-format the error message in Rust when possible, so the JS
+        // shim can use it directly instead of calling formatCompilerError().
+        if error_info.raw_message.is_none() {
+            if let Some(ref source) = context.code {
+                error_info.formatted_message = Some(
+                    react_compiler_diagnostics::code_frame::format_compiler_error(
+                        err,
+                        source,
+                        source_fn.as_deref(),
+                    ),
+                );
+            }
+        }
+
         Some(CompileResult::Error {
             error: error_info,
             events: context.events.clone(),
@@ -1179,6 +1193,7 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
         description,
         details,
         raw_message: None,
+        formatted_message: None,
     }
 }
 

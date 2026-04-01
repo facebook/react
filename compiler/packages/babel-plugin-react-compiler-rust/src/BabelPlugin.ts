@@ -55,19 +55,14 @@ export default function BabelPluginReactCompilerRust(
           try {
             scopeInfo = extractScopeInfo(prog);
           } catch (e) {
-            // Scope extraction can fail on unsupported syntax (e.g., `this` parameters).
-            // Report as CompileUnexpectedThrow + CompileError, matching TS compiler behavior
-            // when compilation throws unexpectedly.
+            // Scope extraction can fail on unsupported syntax (e.g., reserved
+            // word as binding name). Report as CompileUnexpectedThrow +
+            // CompileError, matching TS compiler behavior.
             const errMsg = e instanceof Error ? e.message : String(e);
-            // Parse the Babel error message to extract reason and description
-            // Format: "reason. description"
             const dotIdx = errMsg.indexOf('. ');
             const reason = dotIdx >= 0 ? errMsg.substring(0, dotIdx) : errMsg;
             let description: string | undefined =
               dotIdx >= 0 ? errMsg.substring(dotIdx + 2) : undefined;
-            // Strip trailing period from description (the TS compiler's
-            // CompilerDiagnostic.toString() adds ". description." but the
-            // detail.description field doesn't include the trailing period)
             if (description?.endsWith('.')) {
               description = description.slice(0, -1);
             }
@@ -95,9 +90,6 @@ export default function BabelPluginReactCompilerRust(
                 },
               });
             }
-            // Respect panicThreshold: if set to 'all_errors', throw to match TS behavior.
-            // Format the error like TS CompilerError.printErrorMessage() would:
-            // "Found 1 error:\n\nHeading: reason\n\ndescription."
             const panicThreshold = (pass.opts as PluginOptions).panicThreshold;
             if (
               panicThreshold === 'all_errors' ||
@@ -152,9 +144,9 @@ export default function BabelPluginReactCompilerRust(
             // unknown exceptions from throwUnknownException__testonly which in
             // the TS compiler are plain Error objects, not CompilerErrors)
             const message =
-              (result.error as any).rawMessage != null
-                ? (result.error as any).rawMessage
-                : formatCompilerError(result.error as any, source);
+              (result.error as any).rawMessage ??
+              (result.error as any).formattedMessage ??
+              formatCompilerError(result.error as any, source);
             const err = new Error(message);
             (err as any).details = result.error.details;
             throw err;
@@ -182,13 +174,6 @@ export default function BabelPluginReactCompilerRust(
             // unique comment position, we keep one canonical object and replace
             // all duplicates with references to it.
             deduplicateComments(newProgram);
-
-            // Ensure all AST nodes from the Rust output have a `loc`
-            // property. Downstream Babel plugins (e.g., babel-plugin-fbt)
-            // may read `node.loc.end` without null-checking. Nodes
-            // created during Rust codegen may lack `loc` because the HIR
-            // source location was not available.
-            ensureNodeLocs(newProgram);
 
             // Use Babel's replaceWith() API so that subsequent plugins
             // (babel-plugin-fbt, babel-plugin-fbt-runtime, babel-plugin-idx)
@@ -306,50 +291,6 @@ function deduplicateComments(node: any): void {
   }
 
   visit(node);
-}
-
-/**
- * Ensure JSX attribute value nodes have a `loc` property.
- *
- * Downstream Babel plugins (e.g., babel-plugin-fbt) access
- * `node.loc.end` on JSX attribute values without null-checking.
- * The Rust compiler may produce StringLiteral attribute values
- * without `loc`. This function adds a synthetic `loc` only to
- * JSX attribute value nodes that need it, inheriting from the
- * parent JSXAttribute node's loc.
- */
-function ensureNodeLocs(node: any): void {
-  if (node == null || typeof node !== 'object') return;
-  if (Array.isArray(node)) {
-    for (const item of node) {
-      ensureNodeLocs(item);
-    }
-    return;
-  }
-  if (typeof node.type !== 'string') return;
-
-  // For JSXAttribute nodes, ensure the value child has a loc
-  if (node.type === 'JSXAttribute' && node.value != null) {
-    if (node.value.loc == null && node.loc != null) {
-      node.value.loc = node.loc;
-    } else if (node.value.loc == null && node.name?.loc != null) {
-      node.value.loc = node.name.loc;
-    }
-  }
-
-  for (const key of Object.keys(node)) {
-    if (
-      key === 'loc' ||
-      key === 'start' ||
-      key === 'end' ||
-      key === 'leadingComments' ||
-      key === 'trailingComments' ||
-      key === 'innerComments'
-    ) {
-      continue;
-    }
-    ensureNodeLocs(node[key]);
-  }
 }
 
 const CODEFRAME_LINES_ABOVE = 2;

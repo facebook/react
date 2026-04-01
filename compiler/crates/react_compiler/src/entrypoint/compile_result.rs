@@ -134,6 +134,11 @@ pub struct CompilerErrorInfo {
     /// which in the TS compiler are plain Error objects, not CompilerErrors.
     #[serde(rename = "rawMessage", skip_serializing_if = "Option::is_none")]
     pub raw_message: Option<String>,
+    /// Pre-formatted error message produced by Rust, matching the JS
+    /// formatCompilerError() output. When present, the JS shim uses this
+    /// directly instead of calling formatCompilerError() on the JS side.
+    #[serde(rename = "formattedMessage", skip_serializing_if = "Option::is_none")]
+    pub formatted_message: Option<String>,
 }
 
 /// Serializable error detail — flat plain object matching the TS
