@@ -22,10 +22,10 @@ yarn install
 | Script | Purpose |
 | --- | --- |
 | `yarn bench` | Sequential benchmark with Flight script injection (realistic framework pipeline). Best for measuring Edge vs Node overhead. |
-| `yarn bench:bare` | Sequential benchmark without script injection. Best for measuring React-internal changes (e.g. Flight serialization optimizations) with less noise. |
-| `yarn bench:concurrent` | Concurrent benchmark (50 in-flight renders). Measures throughput under load. |
+| `yarn bench:bare` | Sequential benchmark without script injection. Best for measuring React-internal changes (e.g. Flight serialization optimizations) with less noise from stream plumbing. |
+| `yarn bench:server` | HTTP server benchmark using autocannon at c=1 and c=10. Best for measuring real-world req/s. The c=1 results are also useful for tracking React-internal changes. |
+| `yarn bench:concurrent` | In-process concurrent benchmark (50 in-flight renders). Measures throughput under load without HTTP overhead. |
 | `yarn bench:profile` | CPU profiling via V8 inspector. Saves `.cpuprofile` files to `build/profiles/`. |
-| `yarn bench:server` | HTTP server benchmark using autocannon. Measures real req/s with TCP overhead. |
 | `yarn start` | Starts the HTTP server for manual browser testing at `http://localhost:3001`. Append `.rsc` to any Flight URL to see the raw Flight payload. |
 
 ## What it measures
