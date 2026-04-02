@@ -1070,12 +1070,11 @@ function updateClassInstance(
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing() &&
     !(
+      // prettier-ignore
       // $FlowFixMe[invalid-compare]
-      (
-        current !== null &&
+      (current !== null &&
         current.dependencies !== null &&
-        checkIfContextChanged(current.dependencies)
-      )
+        checkIfContextChanged(current.dependencies))
     )
   ) {
     // If an update was already in progress, we should schedule an Update
