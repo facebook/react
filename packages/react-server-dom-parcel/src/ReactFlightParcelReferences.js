@@ -56,7 +56,7 @@ const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
-  // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {

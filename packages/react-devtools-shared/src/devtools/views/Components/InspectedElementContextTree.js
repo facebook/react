@@ -70,13 +70,16 @@ export default function InspectedElementContextTree({
           <div className={styles.Header}>
             {hasLegacyContext ? 'legacy context' : 'context'}
           </div>
+          {/* $FlowFixMe[constant-condition] */}
           {!isEmpty && (
             <Button onClick={handleCopy} title="Copy to clipboard">
               <ButtonIcon type="copy" />
             </Button>
           )}
         </div>
+        {/* $FlowFixMe[constant-condition] */}
         {isEmpty && <div className={styles.Empty}>None</div>}
+        {/* $FlowFixMe[constant-condition] */}
         {!isEmpty &&
           (entries: any).map(([name, value]) => (
             <KeyValue

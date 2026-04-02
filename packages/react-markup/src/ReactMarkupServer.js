@@ -179,7 +179,7 @@ export function experimental_renderToHTML(
       }
     }
     const flightRequest = createFlightRequest(
-      // $FlowFixMe: This should be a subtype but not everything is typed covariant.
+      // $FlowFixMe[incompatible-type]: This should be a subtype but not everything is typed covariant.
       children,
       null,
       handleFlightError,
@@ -196,7 +196,7 @@ export function experimental_renderToHTML(
     );
     const root = getFlightRoot<ReactNodeList>(flightResponse);
     const fizzRequest = createFizzRequest(
-      // $FlowFixMe: Thenables as children are supported.
+      // $FlowFixMe[incompatible-type]: Thenables as children are supported.
       root,
       resumableState,
       createRenderState(

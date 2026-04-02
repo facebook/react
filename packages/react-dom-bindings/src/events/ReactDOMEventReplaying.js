@@ -216,6 +216,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent.eventSystemFlags |= eventSystemFlags;
   const targetContainers = existingQueuedEvent.targetContainers;
   if (
+    // $FlowFixMe[invalid-compare]
     targetContainer !== null &&
     targetContainers.indexOf(targetContainer) === -1
   ) {

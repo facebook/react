@@ -143,6 +143,7 @@ export function inspectElement(
         // A path has been hydrated.
         // Merge it with the latest copy we have locally and resolve with the merged value.
         inspectedElement = inspectedElementCache.get(id) || null;
+        // $FlowFixMe[invalid-compare]
         if (inspectedElement !== null) {
           // Clone element
           inspectedElement = {...inspectedElement};

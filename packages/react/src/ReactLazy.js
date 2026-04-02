@@ -112,9 +112,11 @@ function lazyInitializer<T>(payload: Payload<T>): T {
               const debugValue =
                 moduleObject == null ? undefined : moduleObject.default;
               resolveDebugValue(debugValue);
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-use]
+              // $FlowFixMe[prop-missing]
               ioInfo.value.status = 'fulfilled';
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-use]
+              // $FlowFixMe[prop-missing]
               ioInfo.value.value = debugValue;
             }
           }
@@ -145,12 +147,14 @@ function lazyInitializer<T>(payload: Payload<T>): T {
               // $FlowFixMe[cannot-write]
               ioInfo.end = performance.now();
               // Hide unhandled rejections.
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-use]
               ioInfo.value.then(noop, noop);
               rejectDebugValue(error);
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-use]
+              // $FlowFixMe[prop-missing]
               ioInfo.value.status = 'rejected';
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-use]
+              // $FlowFixMe[prop-missing]
               ioInfo.value.reason = error;
             }
           }

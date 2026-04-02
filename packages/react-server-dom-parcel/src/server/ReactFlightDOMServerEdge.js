@@ -161,6 +161,7 @@ export function renderToReadableStream(
         },
       },
       // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+      // $FlowFixMe[incompatible-type]
       {highWaterMark: 0},
     );
     debugStream.pipeTo(debugChannelWritable);
@@ -183,6 +184,7 @@ export function renderToReadableStream(
       },
     },
     // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+    // $FlowFixMe[incompatible-type]
     {highWaterMark: 0},
   );
   return stream;
@@ -211,6 +213,7 @@ export function prerender(
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
         {highWaterMark: 0},
       );
       resolve({prelude: stream});
@@ -310,7 +313,7 @@ export function decodeReplyFromAsyncIterable<T>(
     reportGlobalError(response, reason);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[prop-missing] should be able to pass mixed
       iterator.throw(reason).then(error, error);
     }
   }

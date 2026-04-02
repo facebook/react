@@ -80,6 +80,7 @@ export function startTransition(
     }
     if (
       typeof returnValue === 'object' &&
+      // $FlowFixMe[invalid-compare]
       returnValue !== null &&
       typeof returnValue.then === 'function'
     ) {
@@ -140,6 +141,7 @@ export function startGestureTransition(
   if (enableViewTransition) {
     currentTransition.types = null;
   }
+  // $FlowFixMe[constant-condition]
   if (enableGestureTransition) {
     currentTransition.gesture = provider;
   }
@@ -158,6 +160,7 @@ export function startGestureTransition(
     if (__DEV__) {
       if (
         typeof returnValue === 'object' &&
+        // $FlowFixMe[invalid-compare]
         returnValue !== null &&
         typeof returnValue.then === 'function'
       ) {

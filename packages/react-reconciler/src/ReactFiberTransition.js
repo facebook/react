@@ -135,6 +135,7 @@ function chainGestureCancellation(
   prevCancel: null | (() => void),
 ): () => void {
   return function cancelGesture(): void {
+    // $FlowFixMe[invalid-compare]
     if (scheduledGesture !== null) {
       cancelScheduledGesture(root, scheduledGesture);
     }
@@ -245,6 +246,7 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   const freshCache = createCache();
   root.pooledCache = freshCache;
   retainCache(freshCache);
+  // $FlowFixMe[invalid-compare]
   if (freshCache !== null) {
     root.pooledCacheLanes |= renderLanes;
   }
@@ -329,6 +331,7 @@ export function getSuspendedCache(): SpawnedCachePool | null {
   return {
     // We must also save the parent, so that when we resume we can detect
     // a refresh.
+    // $FlowFixMe[constant-condition]
     parent: isPrimaryRenderer
       ? CacheContext._currentValue
       : CacheContext._currentValue2,
@@ -345,6 +348,7 @@ export function getOffscreenDeferredCache(): SpawnedCachePool | null {
   return {
     // We must also store the parent, so that when we resume we can detect
     // a refresh.
+    // $FlowFixMe[constant-condition]
     parent: isPrimaryRenderer
       ? CacheContext._currentValue
       : CacheContext._currentValue2,

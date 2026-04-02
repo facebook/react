@@ -880,6 +880,7 @@ export function injectIntoDevTools(): boolean {
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,
   };
+  // $FlowFixMe[invalid-compare]
   if (extraDevToolsConfig !== null) {
     internals.rendererConfig = (extraDevToolsConfig: RendererInspectionConfig);
   }
