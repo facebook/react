@@ -1082,6 +1082,25 @@ fn log_error(
     // not from plugin options (which may have a different prefix like '/').
     let source_filename = fn_ast_loc.and_then(|loc| loc.filename.as_deref());
     let fn_loc = to_logger_loc(fn_ast_loc, source_filename);
+
+    // Detect simulated unknown exception (throwUnknownException__testonly).
+    // In TS, non-CompilerError exceptions are logged as PipelineError with the
+    // error message as data. Emit the same event shape.
+    let is_simulated_unknown = err.details.len() == 1
+        && err.details.iter().all(|d| match d {
+            CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                d.category == ErrorCategory::Invariant && d.reason == "unexpected error"
+            }
+            _ => false,
+        });
+    if is_simulated_unknown {
+        context.log_event(LoggerEvent::PipelineError {
+            fn_loc: fn_loc.clone(),
+            data: "Error: unexpected error".to_string(),
+        });
+        return;
+    }
+
     for detail in &err.details {
         let detail_info = match detail {
             CompilerErrorOrDiagnostic::Diagnostic(d) => {

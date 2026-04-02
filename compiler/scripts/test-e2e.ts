@@ -335,10 +335,23 @@ function adjustDetailLocs(
   });
 }
 
+function stripPipelineErrorStack(
+  events: Array<Record<string, unknown>>,
+): Array<Record<string, unknown>> {
+  return events.map(event => {
+    if (event.kind !== 'PipelineError') return event;
+    const data = event.data;
+    if (typeof data !== 'string') return event;
+    // Strip JS stack trace: keep only the message (before first "\n    at ")
+    const idx = data.indexOf('\n    at ');
+    return {...event, data: idx >= 0 ? data.substring(0, idx) : data};
+  });
+}
+
 function normalizeEvents(
   events: Array<Record<string, unknown>>,
 ): string {
-  return JSON.stringify(sortAndStrip(adjustDetailLocs(events)), null, 2);
+  return JSON.stringify(sortAndStrip(adjustDetailLocs(stripPipelineErrorStack(events))), null, 2);
 }
 
 // --- Simple unified diff ---

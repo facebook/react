@@ -3298,12 +3298,12 @@ fn base_node_with_loc(type_name: &str, loc: Option<DiagSourceLocation>) -> BaseN
                 start: AstPosition {
                     line: loc.start.line,
                     column: loc.start.column,
-                    index: None,
+                    index: loc.start.index,
                 },
                 end: AstPosition {
                     line: loc.end.line,
                     column: loc.end.column,
-                    index: None,
+                    index: loc.end.index,
                 },
                 filename: None,
                 identifier_name: None,
