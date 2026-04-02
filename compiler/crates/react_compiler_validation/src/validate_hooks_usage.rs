@@ -120,7 +120,7 @@ fn record_conditional_hook_error(
             );
         }
     } else {
-        env.record_error(CompilerErrorDetail {
+        let _ = env.record_error(CompilerErrorDetail {
             category: ErrorCategory::Hooks,
             reason,
             description: None,
@@ -150,7 +150,7 @@ fn record_invalid_hook_usage_error(
             );
         }
     } else {
-        env.record_error(CompilerErrorDetail {
+        let _ = env.record_error(CompilerErrorDetail {
             category: ErrorCategory::Hooks,
             reason,
             description: None,
@@ -180,7 +180,7 @@ fn record_dynamic_hook_usage_error(
             );
         }
     } else {
-        env.record_error(CompilerErrorDetail {
+        let _ = env.record_error(CompilerErrorDetail {
             category: ErrorCategory::Hooks,
             reason,
             description: None,
@@ -422,7 +422,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
 
     // Record all accumulated errors (in insertion order, matching TS Map iteration)
     for (_, error_detail) in errors_by_loc {
-        env.record_error(error_detail);
+        let _ = env.record_error(error_detail);
     }
     Ok(())
 }
@@ -477,7 +477,7 @@ fn visit_function_expression(env: &mut Environment, func_id: FunctionId) {
                             hook_kind_display(&hook_kind)
                         }
                     );
-                    env.record_error(CompilerErrorDetail {
+                    let _ = env.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Hooks,
                         reason: "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)".to_string(),
                         description: Some(description),

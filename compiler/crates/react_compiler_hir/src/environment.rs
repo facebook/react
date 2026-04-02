@@ -299,8 +299,16 @@ impl Environment {
         id
     }
 
-    pub fn record_error(&mut self, detail: CompilerErrorDetail) {
+    pub fn record_error(&mut self, detail: CompilerErrorDetail) -> Result<(), CompilerError> {
+        if detail.category == ErrorCategory::Invariant {
+            let detail_clone = detail.clone();
+            self.errors.push_error_detail(detail);
+            let mut err = CompilerError::new();
+            err.push_error_detail(detail_clone);
+            return Err(err);
+        }
         self.errors.push_error_detail(detail);
+        Ok(())
     }
 
     pub fn record_diagnostic(&mut self, diagnostic: CompilerDiagnostic) {
@@ -327,7 +335,11 @@ impl Environment {
     }
 
     pub fn take_errors(&mut self) -> CompilerError {
-        std::mem::take(&mut self.errors)
+        let mut errors = std::mem::take(&mut self.errors);
+        // Mark as not thrown — these are accumulated errors returned at the end
+        // of the pipeline, not errors thrown by a pass.
+        errors.is_thrown = false;
+        errors
     }
 
     /// Take errors added after position `since_count`, leaving earlier errors in place.
@@ -461,7 +473,7 @@ impl Environment {
                 // Check for module type validation errors (hook-name vs hook-type mismatches)
                 if let Some(errors) = self.module_type_errors.remove(module.as_str()) {
                     if let Some(first_error) = errors.into_iter().next() {
-                        self.record_error(
+                        let _ = self.record_error(
                             CompilerErrorDetail::new(
                                 ErrorCategory::Config,
                                 "Invalid type configuration for module",
@@ -507,7 +519,7 @@ impl Environment {
                 // Check for module type validation errors (hook-name vs hook-type mismatches)
                 if let Some(errors) = self.module_type_errors.remove(module.as_str()) {
                     if let Some(first_error) = errors.into_iter().next() {
-                        self.record_error(
+                        let _ = self.record_error(
                             CompilerErrorDetail::new(
                                 ErrorCategory::Config,
                                 "Invalid type configuration for module",
@@ -533,7 +545,7 @@ impl Environment {
                         let expect_hook = is_hook_name(module);
                         let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
                         if expect_hook != is_hook {
-                            self.record_error(
+                            let _ = self.record_error(
                                 CompilerErrorDetail::new(
                                     ErrorCategory::Config,
                                     "Invalid type configuration for module",

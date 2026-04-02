@@ -68,17 +68,16 @@ export default function BabelPluginReactCompilerRust(
             if (logger) {
               logger.logEvent(filename, {
                 kind: 'CompileUnexpectedThrow',
-                fnName: null,
                 data: `Error: ${errMsg}`,
               });
               logger.logEvent(filename, {
                 kind: 'CompileError',
-                fnName: null,
                 detail: {
                   reason,
                   severity: 'Error',
                   category: 'Syntax',
-                  description,
+                  description: description ?? null,
+                  suggestions: null,
                   details: [
                     {
                       kind: 'error',

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use react_compiler_diagnostics::{
     CompilerDiagnostic, CompilerDiagnosticDetail, CompilerSuggestion,
-    ErrorCategory, SourceLocation,
+    CompilerSuggestionOperation, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::environment_config::ExhaustiveEffectDepsMode;
@@ -1428,15 +1428,34 @@ fn validate_dependencies(
         return Ok(None);
     }
 
-    // Build suggestion
+    // Build suggestion when we have valid index info (matches TS behavior)
     let suggestion = manual_memo_loc.and_then(|loc| {
-        if loc.start.column > 0 || loc.end.column > 0 {
-            // We need start/end index info for suggestions, which we don't have
-            // from SourceLocation alone. Skip suggestion generation.
-            None
-        } else {
-            None
-        }
+        let start_index = loc.start.index?;
+        let end_index = loc.end.index?;
+        let text = format!(
+            "[{}]",
+            inferred
+                .iter()
+                .filter(|dep| {
+                    match dep {
+                        InferredDependency::Local { identifier, .. } => {
+                            let ty = get_identifier_type(*identifier, identifiers, types);
+                            !is_optional_dependency(*identifier, reactive, identifiers, types)
+                                && !is_effect_event_function_type(ty)
+                        }
+                        InferredDependency::Global { .. } => false,
+                    }
+                })
+                .map(|dep| print_inferred_dependency(dep, identifiers))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        Some(CompilerSuggestion {
+            op: CompilerSuggestionOperation::Replace,
+            range: (start_index as usize, end_index as usize),
+            description: "Update dependencies".to_string(),
+            text: Some(text),
+        })
     });
 
     let mut diagnostic = create_diagnostic(
@@ -1546,31 +1565,16 @@ fn validate_dependencies(
         }
     }
 
-    // Add hint showing inferred dependencies
-    // This matches the TS compiler which derives the hint text from the suggestion,
-    // but we compute it directly from the inferred deps since we don't generate
-    // full suggestions (which require source index info we don't have).
-    // The TS compiler only adds this hint when a suggestion is generated, which
-    // requires manual_memo_loc to have valid index information.
-    if manual_memo_loc.map_or(false, |loc| loc.start.index.is_some() && loc.end.index.is_some()) {
-        let hint_deps: Vec<String> = inferred
-            .iter()
-            .filter(|dep| {
-                match dep {
-                    InferredDependency::Global { .. } => false,
-                    InferredDependency::Local { identifier, .. } => {
-                        let ty = get_identifier_type(*identifier, identifiers, types);
-                        !is_optional_dependency(*identifier, reactive, identifiers, types)
-                            && !is_effect_event_function_type(ty)
-                    }
-                }
-            })
-            .map(|dep| print_inferred_dependency(dep, identifiers))
-            .collect();
-        let text = format!("[{}]", hint_deps.join(", "));
-        diagnostic.details.push(CompilerDiagnosticDetail::Hint {
-            message: format!("Inferred dependencies: `{text}`"),
-        });
+    // Add hint showing inferred dependencies when a suggestion was generated
+    // (matches TS: only adds hint when suggestion != null, using suggestion.text)
+    if let Some(ref suggestions) = diagnostic.suggestions {
+        if let Some(suggestion) = suggestions.first() {
+            if let Some(ref text) = suggestion.text {
+                diagnostic.details.push(CompilerDiagnosticDetail::Hint {
+                    message: format!("Inferred dependencies: `{text}`"),
+                });
+            }
+        }
     }
 
     Ok(Some(diagnostic))

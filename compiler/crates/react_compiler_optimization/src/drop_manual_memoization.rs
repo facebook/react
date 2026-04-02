@@ -211,24 +211,25 @@ fn process_manual_memo_call(
     if is_validation_enabled {
         // Bail out when we encounter manual memoization without inline function expressions
         if !sidemap.functions.contains(&fn_place.identifier) {
-            env.record_diagnostic(
-                CompilerDiagnostic::new(
-                    ErrorCategory::UseMemo,
-                    "Expected the first argument to be an inline function expression",
-                    Some(
-                        "Expected the first argument to be an inline function expression"
-                            .to_string(),
-                    ),
-                )
-                .with_detail(CompilerDiagnosticDetail::Error {
-                    loc: fn_place.loc.clone(),
-                    message: Some(
-                        "Expected the first argument to be an inline function expression"
-                            .to_string(),
-                    ),
-                    identifier_name: None,
-                }),
-            );
+            let mut diag = CompilerDiagnostic::new(
+                ErrorCategory::UseMemo,
+                "Expected the first argument to be an inline function expression",
+                Some(
+                    "Expected the first argument to be an inline function expression"
+                        .to_string(),
+                ),
+            )
+            .with_detail(CompilerDiagnosticDetail::Error {
+                loc: fn_place.loc.clone(),
+                message: Some(
+                    "Expected the first argument to be an inline function expression"
+                        .to_string(),
+                ),
+                identifier_name: None,
+            });
+            // Match TS behavior: suggestions is [] (empty array), not null
+            diag.suggestions = Some(vec![]);
+            env.record_diagnostic(diag);
             return;
         }
 

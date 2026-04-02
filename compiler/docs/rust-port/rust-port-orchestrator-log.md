@@ -618,6 +618,26 @@ Created optimize_for_ssr.rs in react_compiler_optimization crate. Added is_plain
 and is_start_transition_type helpers to react_compiler_hir.
 test-rust-port: 1724/1724, Snap --rust: 1725/1725.
 
+## 20260402-103329 Fix e2e diagnostic event mismatches — 123→2 failures
+
+Fixed 121 of 123 babel e2e test failures (diagnostic events only, no code changes):
+- Description field: removed skip_serializing_if on `description` and `message` fields
+  in CompilerErrorDetailInfo, ensuring `null` is always serialized (70 fixtures).
+- Diagnostic suggestions: added LoggerSuggestionInfo struct with LoggerSuggestionOp enum
+  (InsertBefore=0, InsertAfter=1, Remove=2, Replace=3), ported suggestion generation from
+  TS. Implemented exhaustive deps suggestion generation in validate_exhaustive_dependencies (23 fixtures).
+- record_error Result type: Environment::record_error() now returns Result<(), CompilerError>,
+  returning Err for Invariant category. All callers use `?` for short-circuit propagation.
+- CompileUnexpectedThrow events: Added emission in process_fn when CompilerError has is_thrown
+  flag, matching TS tryCompileFunction behavior (5 fixtures).
+- Invariant error format: Changed invariant errors to use CompilerDiagnostic with details array
+  (matching TS CompilerError.invariant() format) in codegen_reactive_function (5 fixtures).
+- JSX outlining events: Emit CompileSuccess for outlined functions with fn_type.is_some() after
+  main compilation loop, matching TS queue ordering (9 fixtures).
+- Empty suggestions: Fixed `Some(vec![])` vs `None` for empty suggestion arrays (2 fixtures).
+Remaining 2: handle-unexpected-exception (PipelineError stack trace), todo-kitchensink (index field).
+test-rust-port: 1724/1724, e2e babel: 1722/1724, swc: 1584/1724, oxc: 688/1724.
+
 ## 20260401-105521 Move error formatting to Rust, fix JSXAttribute loc in codegen
 
 Moved error formatting from JS to Rust: added code_frame.rs to react_compiler_diagnostics

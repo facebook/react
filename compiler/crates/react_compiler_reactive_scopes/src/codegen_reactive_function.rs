@@ -489,8 +489,8 @@ impl<'env> Context<'env> {
         validated
     }
 
-    fn record_error(&mut self, detail: CompilerErrorDetail) {
-        self.env.record_error(detail);
+    fn record_error(&mut self, detail: CompilerErrorDetail) -> Result<(), CompilerError> {
+        self.env.record_error(detail)
     }
 }
 
@@ -1146,7 +1146,7 @@ fn codegen_for_in(
             description: None,
             loc,
             suggestions: None,
-        });
+        })?;
         return Ok(Some(Statement::EmptyStatement(EmptyStatement {
             base: BaseNode::typed("EmptyStatement"),
         })));
@@ -1227,7 +1227,7 @@ fn codegen_for_of(
             description: None,
             loc,
             suggestions: None,
-        });
+        })?;
         return Ok(Some(Statement::EmptyStatement(EmptyStatement {
             base: BaseNode::typed("EmptyStatement"),
         })));
@@ -1281,7 +1281,7 @@ fn extract_for_in_of_lval(
                 description: None,
                 loc,
                 suggestions: None,
-            });
+            })?;
             return Ok((
                 PatternLike::Identifier(make_identifier("_")),
                 VariableDeclarationKind::Let,
@@ -1355,14 +1355,20 @@ fn codegen_for_init(
             } else {
                 let stmt_type = get_statement_type_name(&instr);
                 let stmt_loc = get_statement_loc(&instr);
+                let reason = "Expected a variable declaration".to_string();
                 let mut err = CompilerError::new();
-                err.push_error_detail(CompilerErrorDetail {
-                    category: ErrorCategory::Invariant,
-                    reason: "Expected a variable declaration".to_string(),
-                    description: Some(format!("Got {}", stmt_type)),
-                    loc: stmt_loc,
-                    suggestions: None,
-                });
+                err.push_diagnostic(
+                    CompilerDiagnostic::new(
+                        ErrorCategory::Invariant,
+                        reason.clone(),
+                        Some(format!("Got {}", stmt_type)),
+                    )
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: stmt_loc,
+                        message: Some(reason),
+                        identifier_name: None,
+                    }),
+                );
                 return Err(err);
             }
         }
@@ -1730,7 +1736,7 @@ fn codegen_instruction_value(
                             description: None,
                             loc: None,
                             suggestions: None,
-                        });
+                        })?;
                         expressions.push(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
                             value: format!("TODO handle declaration"),
@@ -1745,7 +1751,7 @@ fn codegen_instruction_value(
                             description: None,
                             loc: None,
                             suggestions: None,
-                        });
+                        })?;
                         expressions.push(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
                             value: format!("TODO handle statement"),
@@ -3084,14 +3090,19 @@ fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<
         Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
         Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
         None => {
+            // Use CompilerDiagnostic (with details array) to match TS CompilerError.invariant()
+            // which creates a CompilerDiagnostic with details: [{kind: "error", loc, message}].
+            let reason = "Expected temporaries to be promoted to named identifiers in an earlier pass".to_string();
+            let description = format!("identifier {} is unnamed", identifier_id.0);
             let mut err = CompilerError::new();
-            err.push_error_detail(CompilerErrorDetail {
-                category: ErrorCategory::Invariant,
-                reason: "Expected temporaries to be promoted to named identifiers in an earlier pass".to_string(),
-                description: Some(format!("identifier {} is unnamed", identifier_id.0)),
-                loc: None,
-                suggestions: None,
-            });
+            err.push_diagnostic(
+                CompilerDiagnostic::new(ErrorCategory::Invariant, reason.clone(), Some(description))
+                    .with_detail(CompilerDiagnosticDetail::Error {
+                        loc: None,
+                        message: Some(reason),
+                        identifier_name: None,
+                    }),
+            );
             return Err(err);
         }
     };
@@ -3567,14 +3578,16 @@ fn invariant(
 }
 
 fn invariant_err(reason: &str, loc: Option<DiagSourceLocation>) -> CompilerError {
+    // Use CompilerDiagnostic (with details array) to match TS CompilerError.invariant()
     let mut err = CompilerError::new();
-    err.push_error_detail(CompilerErrorDetail {
-        category: ErrorCategory::Invariant,
-        reason: reason.to_string(),
-        description: None,
-        loc,
-        suggestions: None,
-    });
+    err.push_diagnostic(
+        CompilerDiagnostic::new(ErrorCategory::Invariant, reason, None::<String>)
+            .with_detail(CompilerDiagnosticDetail::Error {
+                loc,
+                message: Some(reason.to_string()),
+                identifier_name: None,
+            }),
+    );
     err
 }
 

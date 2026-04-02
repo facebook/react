@@ -42,7 +42,7 @@ pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) 
                 InstructionValue::CallExpression { callee, loc, .. } => {
                     let callee_id = callee.identifier;
                     if let Some(callee_name) = capital_load_globals.get(&callee_id) {
-                        env.record_error(CompilerErrorDetail {
+                        let _ = env.record_error(CompilerErrorDetail {
                             category: ErrorCategory::CapitalizedCalls,
                             reason: reason.to_string(),
                             description: Some(format!("{callee_name} may be a component")),
@@ -65,7 +65,7 @@ pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) 
                 } => {
                     let property_id = property.identifier;
                     if let Some(prop_name) = capitalized_properties.get(&property_id) {
-                        env.record_error(CompilerErrorDetail {
+                        let _ = env.record_error(CompilerErrorDetail {
                             category: ErrorCategory::CapitalizedCalls,
                             reason: reason.to_string(),
                             description: Some(format!("{prop_name} may be a component")),

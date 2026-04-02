@@ -242,6 +242,13 @@ impl CompilerErrorDetail {
 #[derive(Debug, Clone)]
 pub struct CompilerError {
     pub details: Vec<CompilerErrorOrDiagnostic>,
+    /// When false, this error was accumulated on the Environment via
+    /// `record_error()` / `record_diagnostic()` and returned at the end
+    /// of the pipeline. In TS, `CompileUnexpectedThrow` is only emitted
+    /// for errors that are **thrown** (not accumulated). Defaults to `true`
+    /// because errors created directly (e.g., via `?` from a pass) are
+    /// analogous to thrown errors in the TS code.
+    pub is_thrown: bool,
 }
 
 /// Either a new-style diagnostic or legacy error detail
@@ -271,6 +278,7 @@ impl CompilerError {
     pub fn new() -> Self {
         Self {
             details: Vec::new(),
+            is_thrown: true,
         }
     }
 
@@ -324,6 +332,37 @@ impl CompilerError {
             };
             cat != ErrorCategory::Invariant
         })
+    }
+
+    /// Format as a string matching the TS `CompilerError.toString()` output.
+    /// Used for the `data` field of `CompileUnexpectedThrow` events.
+    ///
+    /// Format per detail: `"Category: reason. Description. (line:column)"`
+    /// Multiple details are joined with `"\n\n"`.
+    pub fn to_string_for_event(&self) -> String {
+        self.details
+            .iter()
+            .map(|d| {
+                let (category, reason, description, loc) = match d {
+                    CompilerErrorOrDiagnostic::Diagnostic(d) => {
+                        let loc = d.primary_location().cloned();
+                        (d.category, &d.reason, &d.description, loc)
+                    }
+                    CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                        (d.category, &d.reason, &d.description, d.loc)
+                    }
+                };
+                let mut buf = format!("{}: {}", format_category_heading(category), reason);
+                if let Some(desc) = description {
+                    buf.push_str(&format!(". {}.", desc));
+                }
+                if let Some(loc) = loc {
+                    buf.push_str(&format!(" ({}:{})", loc.start.line, loc.start.column));
+                }
+                buf
+            })
+            .collect::<Vec<_>>()
+            .join("\n\n")
     }
 }
 

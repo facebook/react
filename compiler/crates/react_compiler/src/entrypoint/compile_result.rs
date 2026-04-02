@@ -147,14 +147,38 @@ pub struct CompilerErrorInfo {
 pub struct CompilerErrorDetailInfo {
     pub category: String,
     pub reason: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub severity: String,
-    pub suggestions: Option<()>,
+    pub suggestions: Option<Vec<LoggerSuggestionInfo>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<Vec<CompilerErrorItemInfo>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loc: Option<LoggerSourceLocation>,
+}
+
+/// Serializable suggestion info for logger events.
+#[derive(Debug, Clone, Serialize)]
+pub struct LoggerSuggestionInfo {
+    pub description: String,
+    pub op: LoggerSuggestionOp,
+    pub range: (usize, usize),
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+}
+
+/// Numeric enum matching TS `CompilerSuggestionOperation`.
+#[derive(Debug, Clone, Copy)]
+pub enum LoggerSuggestionOp {
+    InsertBefore = 0,
+    InsertAfter = 1,
+    Remove = 2,
+    Replace = 3,
+}
+
+impl serde::Serialize for LoggerSuggestionOp {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_u8(*self as u8)
+    }
 }
 
 /// Individual error or hint item within a CompilerErrorDetailInfo.
@@ -162,7 +186,7 @@ pub struct CompilerErrorDetailInfo {
 pub struct CompilerErrorItemInfo {
     pub kind: String,
     pub loc: Option<LoggerSourceLocation>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Serialized as `null` when None (not omitted), matching TS behavior.
     pub message: Option<String>,
 }
 

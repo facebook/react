@@ -287,7 +287,7 @@ fn lower_identifier(
         _ => {
             if let VariableBinding::Global { ref name } = binding {
                 if name == "eval" {
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         category: ErrorCategory::UnsupportedSyntax,
                         reason: "The 'eval' function is not supported".to_string(),
                         description: Some(
@@ -398,7 +398,7 @@ fn lower_member_expression_with_object(
                 PropertyLiteral::Number(FloatValue::new(lit.value))
             }
             _ => {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: format!(
                         "(BuildHIR::lowerMemberExpression) Handle {:?} property",
@@ -458,7 +458,7 @@ fn lower_member_expression_impl(
                 PropertyLiteral::Number(FloatValue::new(lit.value))
             }
             _ => {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: format!(
                         "(BuildHIR::lowerMemberExpression) Handle {:?} property",
@@ -557,7 +557,7 @@ fn lower_expression(
             let loc = convert_opt_loc(&bin.base.loc);
             // Check for pipeline operator before lowering operands
             if matches!(bin.operator, react_compiler_ast::operators::BinaryOperator::Pipeline) {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerExpression) Pipe operator not supported".to_string(),
                     description: None,
@@ -595,7 +595,7 @@ fn lower_expression(
                                         }
                                     }
                                     _ => {
-                                        builder.record_error(CompilerErrorDetail {
+                                        let _ = builder.record_error(CompilerErrorDetail {
                                             reason: "Unsupported delete target".to_string(),
                                             category: ErrorCategory::Todo,
                                             loc: loc.clone(),
@@ -616,7 +616,7 @@ fn lower_expression(
                         }
                         _ => {
                             // delete on non-member expression (e.g., delete x) - not commonly supported
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 reason: "Unsupported delete target".to_string(),
                                 category: ErrorCategory::Todo,
                                 loc: loc.clone(),
@@ -630,7 +630,7 @@ fn lower_expression(
                 react_compiler_ast::operators::UnaryOperator::Throw => {
                     // throw as unary operator (Babel-specific)
                     let loc = convert_opt_loc(&unary.base.loc);
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         reason: "throw expressions are not supported".to_string(),
                         category: ErrorCategory::Todo,
                         loc: loc.clone(),
@@ -829,7 +829,7 @@ fn lower_expression(
                 Expression::Identifier(ident) => {
                     let start = ident.base.start.unwrap_or(0);
                     if builder.is_context_identifier(&ident.name, start) {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Todo,
                             reason: "(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.".to_string(),
                             description: None,
@@ -843,7 +843,7 @@ fn lower_expression(
                     let binding = builder.resolve_identifier(&ident.name, start, ident_loc.clone());
                     match &binding {
                         VariableBinding::Global { .. } => {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 category: ErrorCategory::Todo,
                                 reason: "UpdateExpression where argument is a global is not yet supported".to_string(),
                                 description: None,
@@ -857,7 +857,7 @@ fn lower_expression(
                     let identifier = match binding {
                         VariableBinding::Identifier { identifier, .. } => identifier,
                         _ => {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 category: ErrorCategory::Todo,
                                 reason: "(BuildHIR::lowerExpression) Support UpdateExpression where argument is a global".to_string(),
                                 description: None,
@@ -897,7 +897,7 @@ fn lower_expression(
 
                 }
                 _ => {
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Todo,
                         reason: format!(
                             "UpdateExpression with unsupported argument type"
@@ -1003,7 +1003,7 @@ fn lower_expression(
                             VariableBinding::Identifier { identifier, binding_kind } => {
                                 // Check for const reassignment
                                 if binding_kind == BindingKind::Const {
-                                    builder.record_error(CompilerErrorDetail {
+                                    let _ = builder.record_error(CompilerErrorDetail {
                                         reason: "Cannot reassign a `const` variable".to_string(),
                                         category: ErrorCategory::Syntax,
                                         loc: ident_loc.clone(),
@@ -1132,7 +1132,7 @@ fn lower_expression(
                     AssignmentOperator::BitAndAssign => Some(BinaryOperator::BitwiseAnd),
                     AssignmentOperator::OrAssign | AssignmentOperator::AndAssign | AssignmentOperator::NullishAssign => {
                         // Logical assignment operators (||=, &&=, ??=) - not yet supported
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             reason: "Logical assignment operators (||=, &&=, ??=) are not yet supported".to_string(),
                             category: ErrorCategory::Todo,
                             loc: loc.clone(),
@@ -1246,7 +1246,7 @@ fn lower_expression(
                         }
                     }
                     _ => {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             reason: "Compound assignment to complex pattern is not yet supported".to_string(),
                             category: ErrorCategory::Todo,
                             loc: loc.clone(),
@@ -1262,7 +1262,7 @@ fn lower_expression(
             let loc = convert_opt_loc(&seq.base.loc);
 
             if seq.expressions.is_empty() {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Syntax,
                     reason: "Expected sequence expression to have at least one expression"
                         .to_string(),
@@ -1398,7 +1398,7 @@ fn lower_expression(
         Expression::TaggedTemplateExpression(tagged) => {
             let loc = convert_opt_loc(&tagged.base.loc);
             if !tagged.quasi.expressions.is_empty() {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerExpression) Handle tagged template with interpolations".to_string(),
                     description: None,
@@ -1414,7 +1414,7 @@ fn lower_expression(
             let quasi = &tagged.quasi.quasis[0];
             // Check if raw and cooked values differ (e.g., graphql tagged templates)
             if quasi.value.raw != quasi.value.cooked.clone().unwrap_or_default() {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value".to_string(),
                     description: None,
@@ -1437,7 +1437,7 @@ fn lower_expression(
         }
         Expression::YieldExpression(yld) => {
             let loc = convert_opt_loc(&yld.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "(BuildHIR::lowerExpression) Handle YieldExpression expressions".to_string(),
                 description: None,
@@ -1460,7 +1460,7 @@ fn lower_expression(
                     loc,
                 }
             } else {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta".to_string(),
                     description: None,
@@ -1472,7 +1472,7 @@ fn lower_expression(
         }
         Expression::ClassExpression(cls) => {
             let loc = convert_opt_loc(&cls.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "class expressions are not yet supported".to_string(),
                 description: None,
@@ -1483,7 +1483,7 @@ fn lower_expression(
         }
         Expression::PrivateName(pn) => {
             let loc = convert_opt_loc(&pn.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "private names are not yet supported".to_string(),
                 description: None,
@@ -1494,7 +1494,7 @@ fn lower_expression(
         }
         Expression::Super(sup) => {
             let loc = convert_opt_loc(&sup.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "super is not supported".to_string(),
                 description: None,
@@ -1505,7 +1505,7 @@ fn lower_expression(
         }
         Expression::Import(imp) => {
             let loc = convert_opt_loc(&imp.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "dynamic import() is not yet supported".to_string(),
                 description: None,
@@ -1516,7 +1516,7 @@ fn lower_expression(
         }
         Expression::ThisExpression(this) => {
             let loc = convert_opt_loc(&this.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "this is not supported".to_string(),
                 description: None,
@@ -1551,7 +1551,7 @@ fn lower_expression(
                             JSXAttributeName::JSXIdentifier(id) => {
                                 let name = &id.name;
                                 if name.contains(':') {
-                                    builder.record_error(CompilerErrorDetail {
+                                    let _ = builder.record_error(CompilerErrorDetail {
                                         category: ErrorCategory::Todo,
                                         reason: format!(
                                             "(BuildHIR::lowerExpression) Unexpected colon in attribute name `{}`",
@@ -1724,7 +1724,7 @@ fn lower_expression(
                 Expression::AssignmentPattern(p) => p.base.loc.clone(),
                 _ => unreachable!(),
             });
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 reason: "AssignmentPattern in expression position is not supported".to_string(),
                 category: ErrorCategory::Todo,
                 loc: loc.clone(),
@@ -1770,7 +1770,7 @@ fn lower_expression(
         }
         Expression::BigIntLiteral(big) => {
             let loc = convert_opt_loc(&big.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "BigInt literals are not yet supported".to_string(),
                 description: None,
@@ -2149,7 +2149,7 @@ fn lower_block_statement_inner(
                         InstructionKind::HoistedFunction
                     } else if info.declaration_type == "VariableDeclarator" {
                         // Unsupported hoisting for this declaration kind
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Todo,
                             reason: "Handle non-const declarations for hoisting".to_string(),
                             description: Some(format!(
@@ -2161,7 +2161,7 @@ fn lower_block_statement_inner(
                         });
                         continue;
                     } else {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Todo,
                             reason: "Unsupported declaration type for hoisting".to_string(),
                             description: Some(format!(
@@ -2280,7 +2280,7 @@ fn lower_statement(
 
             // Check for throw handler (try/catch)
             if let Some(_handler) = builder.resolve_throw_handler() {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch".to_string(),
                     description: None,
@@ -2306,7 +2306,7 @@ fn lower_statement(
             use react_compiler_ast::statements::VariableDeclarationKind;
             use react_compiler_ast::patterns::PatternLike;
             if matches!(var_decl.kind, VariableDeclarationKind::Var) {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     reason: "(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration".to_string(),
                     category: ErrorCategory::Todo,
                     loc: convert_opt_loc(&var_decl.base.loc),
@@ -2345,7 +2345,7 @@ fn lower_statement(
                             };
                             if builder.is_context_identifier(&id.name, id.base.start.unwrap_or(0)) {
                                 if kind == InstructionKind::Const {
-                                    builder.record_error(CompilerErrorDetail {
+                                    let _ = builder.record_error(CompilerErrorDetail {
                                         reason: "Expect `const` declaration not to be reassigned".to_string(),
                                         category: ErrorCategory::Syntax,
                                         loc: id_loc.clone(),
@@ -2367,7 +2367,7 @@ fn lower_statement(
                             }
                         }
                         _ => {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 reason: "Could not find binding for declaration".to_string(),
                                 category: ErrorCategory::Invariant,
                                 loc: id_loc,
@@ -2377,7 +2377,7 @@ fn lower_statement(
                         }
                     }
                 } else {
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         reason: "Expected variable declaration to be an identifier if no initializer was provided".to_string(),
                         category: ErrorCategory::Syntax,
                         loc: convert_opt_loc(&declarator.base.loc),
@@ -2495,7 +2495,7 @@ fn lower_statement(
                             }
                             react_compiler_ast::statements::ForInit::Expression(expr) => {
                                 let init_loc = expression_loc(expr);
-                                builder.record_error(CompilerErrorDetail {
+                                let _ = builder.record_error(CompilerErrorDetail {
                                     category: ErrorCategory::Todo,
                                     reason: "(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement".to_string(),
                                     description: None,
@@ -2581,7 +2581,7 @@ fn lower_statement(
                     continuation_block,
                 );
             } else {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerStatement) Handle empty test in ForStatement".to_string(),
                     description: None,
@@ -2769,7 +2769,7 @@ fn lower_statement(
             let assign_result = match for_in.left.as_ref() {
                 react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
                     if var_decl.declarations.len() != 1 {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Invariant,
                             reason: format!(
                                 "Expected only one declaration in ForInStatement init, got {}",
@@ -2832,7 +2832,7 @@ fn lower_statement(
             let test_block_id = test_block.id;
 
             if for_of.is_await {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerStatement) Handle for-await loops".to_string(),
                     description: None,
@@ -2906,7 +2906,7 @@ fn lower_statement(
             let assign_result = match for_of.left.as_ref() {
                 react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(var_decl) => {
                     if var_decl.declarations.len() != 1 {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Invariant,
                             reason: format!(
                                 "Expected only one declaration in ForOfStatement init, got {}",
@@ -2976,7 +2976,7 @@ fn lower_statement(
 
                 if case.test.is_none() {
                     if has_default {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Syntax,
                             reason: "Expected at most one `default` branch in a switch statement".to_string(),
                             description: None,
@@ -3045,7 +3045,7 @@ fn lower_statement(
             let handler_clause = match &try_stmt.handler {
                 Some(h) => h,
                 None => {
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Todo,
                         reason: "(BuildHIR::lowerStatement) Handle TryStatement without a catch clause".to_string(),
                         description: None,
@@ -3057,7 +3057,7 @@ fn lower_statement(
             };
 
             if try_stmt.finalizer.is_some() {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause".to_string(),
                     description: None,
@@ -3112,7 +3112,7 @@ fn lower_statement(
                         let mut id_locs = Vec::new();
                         collect_identifier_locs(param, &mut id_locs);
                         for id_loc in id_locs {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 reason: "(BuildHIR::lowerAssignment) Could not find binding for declaration.".to_string(),
                                 category: ErrorCategory::Invariant,
                                 loc: id_loc,
@@ -3270,7 +3270,7 @@ fn lower_statement(
         }
         Statement::WithStatement(with_stmt) => {
             let loc = convert_opt_loc(&with_stmt.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::UnsupportedSyntax,
                 reason: "JavaScript 'with' syntax is not supported".to_string(),
                 description: Some("'with' syntax is considered deprecated and removed from JavaScript standards, consider alternatives".to_string()),
@@ -3284,7 +3284,7 @@ fn lower_statement(
         }
         Statement::ClassDeclaration(cls) => {
             let loc = convert_opt_loc(&cls.base.loc);
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::UnsupportedSyntax,
                 reason: "Inline `class` declarations are not supported".to_string(),
                 description: Some("Move class declarations outside of components/hooks".to_string()),
@@ -3304,7 +3304,7 @@ fn lower_statement(
                 Statement::ExportAllDeclaration(s) => convert_opt_loc(&s.base.loc),
                 _ => unreachable!(),
             };
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Syntax,
                 reason: "JavaScript `import` and `export` statements may only appear at the top level of a module".to_string(),
                 description: None,
@@ -3479,7 +3479,7 @@ fn lower_identifier_for_assignment(
                 builder.set_identifier_declaration_loc(identifier, &ident_loc);
             }
             if binding_kind == BindingKind::Const && kind == InstructionKind::Reassign {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     reason: "Cannot reassign a `const` variable".to_string(),
                     category: ErrorCategory::Syntax,
                     loc: loc.clone(),
@@ -3499,7 +3499,7 @@ fn lower_identifier_for_assignment(
             if kind == InstructionKind::Reassign {
                 Some(IdentifierForAssignment::Global { name: gname })
             } else {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     reason: "Could not find binding for declaration".to_string(),
                     category: ErrorCategory::Invariant,
                     loc,
@@ -3514,7 +3514,7 @@ fn lower_identifier_for_assignment(
             if kind == InstructionKind::Reassign {
                 Some(IdentifierForAssignment::Global { name: name.to_string() })
             } else {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     reason: "Could not find binding for declaration".to_string(),
                     category: ErrorCategory::Invariant,
                     loc,
@@ -3570,7 +3570,7 @@ fn lower_assignment(
                             .map(|b| builder.environment().is_hoisted_identifier(b.id.0))
                             .unwrap_or(false);
                         if kind == InstructionKind::Const && !is_hoisted {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 reason: "Expected `const` declaration not to be reassigned".to_string(),
                                 category: ErrorCategory::Syntax,
                                 loc: loc.clone(),
@@ -3583,7 +3583,7 @@ fn lower_assignment(
                             && kind != InstructionKind::Let
                             && kind != InstructionKind::Function
                         {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 reason: "Unexpected context variable kind".to_string(),
                                 category: ErrorCategory::Syntax,
                                 loc: loc.clone(),
@@ -3616,7 +3616,7 @@ fn lower_assignment(
         PatternLike::MemberExpression(member) => {
             // MemberExpression may only appear in an assignment expression (Reassign)
             if kind != InstructionKind::Reassign {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Invariant,
                     reason: "MemberExpression may only appear in an assignment expression".to_string(),
                     description: None,
@@ -3645,7 +3645,7 @@ fn lower_assignment(
                         })
                     }
                     _ => {
-                        builder.record_error(CompilerErrorDetail {
+                        let _ = builder.record_error(CompilerErrorDetail {
                             reason: format!("(BuildHIR::lowerAssignment) Handle {} properties in MemberExpression", expression_type_name(&member.property)),
                             category: ErrorCategory::Todo,
                             loc: expression_loc(&member.property),
@@ -3657,7 +3657,7 @@ fn lower_assignment(
                 }
             } else {
                 if matches!(&*member.property, react_compiler_ast::expressions::Expression::PrivateName(_)) {
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         reason: "(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property".to_string(),
                         category: ErrorCategory::Todo,
                         loc: expression_loc(&member.property),
@@ -3869,7 +3869,7 @@ fn lower_assignment(
                                             properties.push(ObjectPropertyOrSpread::Spread(SpreadPattern { place }));
                                         }
                                         Some(IdentifierForAssignment::Global { .. }) => {
-                                            builder.record_error(CompilerErrorDetail {
+                                            let _ = builder.record_error(CompilerErrorDetail {
                                                 reason: "Expected reassignment of globals to enable forceTemporaries".to_string(),
                                                 category: ErrorCategory::Todo,
                                                 loc: convert_opt_loc(&rest.base.loc),
@@ -3887,7 +3887,7 @@ fn lower_assignment(
                                 }
                             }
                             _ => {
-                                builder.record_error(CompilerErrorDetail {
+                                let _ = builder.record_error(CompilerErrorDetail {
                                     reason: format!("(BuildHIR::lowerAssignment) Handle {} rest element in ObjectPattern",
                                         match &*rest.argument {
                                             PatternLike::ObjectPattern(_) => "ObjectPattern",
@@ -3906,7 +3906,7 @@ fn lower_assignment(
                     }
                     react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(obj_prop) => {
                         if obj_prop.computed {
-                            builder.record_error(CompilerErrorDetail {
+                            let _ = builder.record_error(CompilerErrorDetail {
                                 reason: "(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern".to_string(),
                                 category: ErrorCategory::Todo,
                                 loc: convert_opt_loc(&obj_prop.base.loc),
@@ -3945,7 +3945,7 @@ fn lower_assignment(
                                             }));
                                         }
                                         Some(IdentifierForAssignment::Global { .. }) => {
-                                            builder.record_error(CompilerErrorDetail {
+                                            let _ = builder.record_error(CompilerErrorDetail {
                                                 reason: "Expected reassignment of globals to enable forceTemporaries".to_string(),
                                                 category: ErrorCategory::Todo,
                                                 loc: convert_opt_loc(&id.base.loc),
@@ -4672,7 +4672,7 @@ fn lower_function_declaration(
                     }
                 }
                 _ => {
-                    builder.record_error(CompilerErrorDetail {
+                    let _ = builder.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Invariant,
                         reason: format!("Could not find binding for function declaration `{}`", name),
                         description: None,
@@ -4999,7 +4999,7 @@ fn lower_jsx_element_name(
             let tag = format!("{}:{}", namespace, name);
             let loc = convert_opt_loc(&ns.base.loc);
             if namespace.contains(':') || name.contains(':') {
-                builder.record_error(CompilerErrorDetail {
+                let _ = builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Syntax,
                     reason: "Expected JSXNamespacedName to have no colons in the namespace or name".to_string(),
                     description: Some(format!("Got `{}` : `{}`", namespace, name)),
@@ -5188,7 +5188,7 @@ fn lower_object_method(
             ObjectMethodKind::Set => "set",
             ObjectMethodKind::Method => "method",
         };
-        builder.record_error(CompilerErrorDetail {
+        let _ = builder.record_error(CompilerErrorDetail {
             reason: format!("(BuildHIR::lowerExpression) Handle {} functions in ObjectExpression", kind_str),
             category: ErrorCategory::Todo,
             loc: convert_opt_loc(&method.base.loc),
@@ -5241,7 +5241,7 @@ fn lower_object_property_key(
                 Expression::Identifier(i) => convert_opt_loc(&i.base.loc),
                 _ => None,
             };
-            builder.record_error(CompilerErrorDetail {
+            let _ = builder.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
                 reason: "Unsupported key type in ObjectExpression".to_string(),
                 description: None,
@@ -5258,7 +5258,7 @@ fn lower_reorderable_expression(
     expr: &react_compiler_ast::expressions::Expression,
 ) -> Place {
     if !is_reorderable_expression(builder, expr, true) {
-        builder.record_error(CompilerErrorDetail {
+        let _ = builder.record_error(CompilerErrorDetail {
             category: ErrorCategory::Todo,
             reason: format!(
                 "(BuildHIR::node.lowerReorderableExpression) Expression type `{}` cannot be safely reordered",

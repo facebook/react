@@ -2,7 +2,7 @@ use indexmap::{IndexMap, IndexSet};
 
 use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
 use crate::identifier_loc_index::IdentifierLocIndex;
-use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::*;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors::{each_terminal_successor, terminal_fallthrough};
@@ -592,8 +592,9 @@ impl<'a> HirBuilder<'a> {
     }
 
     /// Record an error on the environment.
-    pub fn record_error(&mut self, error: CompilerErrorDetail) {
-        self.env.record_error(error);
+    /// Returns `Err` for Invariant errors (matching TS throw behavior).
+    pub fn record_error(&mut self, error: CompilerErrorDetail) -> Result<(), CompilerError> {
+        self.env.record_error(error)
     }
 
     /// Record a diagnostic on the environment.
@@ -653,7 +654,7 @@ impl<'a> HirBuilder<'a> {
                         .first()
                         .and_then(|&i| instructions[i.0 as usize].loc.clone())
                         .or_else(|| block.terminal.loc().copied());
-                    self.env.record_error(CompilerErrorDetail {
+                    let _ = self.env.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Todo,
                         reason: "Support functions with unreachable code that may contain hoisted declarations".to_string(),
                         description: None,
@@ -716,7 +717,7 @@ impl<'a> HirBuilder<'a> {
                     .declaration_start
                     .and_then(|start| self.get_identifier_loc(start))
                     .or_else(|| loc.clone());
-                self.env.record_error(CompilerErrorDetail {
+                let _ = self.env.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "Support local variables named `fbt`".to_string(),
                     description: Some(

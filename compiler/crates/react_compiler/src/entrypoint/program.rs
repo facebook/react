@@ -37,7 +37,7 @@ use regex::Regex;
 use super::compile_result::{
     BindingRenameInfo, CodegenFunction, CompileResult, CompilerErrorDetailInfo,
     CompilerErrorInfo, CompilerErrorItemInfo, DebugLogEntry, LoggerEvent, LoggerPosition,
-    LoggerSourceLocation, OrderedLogItem,
+    LoggerSourceLocation, LoggerSuggestionInfo, LoggerSuggestionOp, OrderedLogItem,
 };
 use super::imports::{
     ProgramContext, add_imports_to_program, get_react_compiler_runtime_module,
@@ -1039,6 +1039,39 @@ fn diag_loc_to_logger_loc(
     }
 }
 
+/// Convert diagnostic suggestions to logger suggestion infos.
+fn suggestions_to_logger(
+    suggestions: &Option<Vec<react_compiler_diagnostics::CompilerSuggestion>>,
+) -> Option<Vec<LoggerSuggestionInfo>> {
+    suggestions.as_ref().map(|suggestions| {
+        suggestions
+            .iter()
+            .map(|s| {
+                let op = match s.op {
+                    react_compiler_diagnostics::CompilerSuggestionOperation::InsertBefore => {
+                        LoggerSuggestionOp::InsertBefore
+                    }
+                    react_compiler_diagnostics::CompilerSuggestionOperation::InsertAfter => {
+                        LoggerSuggestionOp::InsertAfter
+                    }
+                    react_compiler_diagnostics::CompilerSuggestionOperation::Remove => {
+                        LoggerSuggestionOp::Remove
+                    }
+                    react_compiler_diagnostics::CompilerSuggestionOperation::Replace => {
+                        LoggerSuggestionOp::Replace
+                    }
+                };
+                LoggerSuggestionInfo {
+                    description: s.description.clone(),
+                    op,
+                    range: s.range,
+                    text: s.text.clone(),
+                }
+            })
+            .collect()
+    })
+}
+
 /// Log an error as LoggerEvent(s) directly onto the ProgramContext.
 fn log_error(
     err: &CompilerError,
@@ -1057,7 +1090,7 @@ fn log_error(
                     reason: d.reason.clone(),
                     description: d.description.clone(),
                     severity: format!("{:?}", d.logged_severity()),
-                    suggestions: None,
+                    suggestions: suggestions_to_logger(&d.suggestions),
                     details: diagnostic_details_to_items(d, source_filename),
                     loc: None,
                 }
@@ -1067,7 +1100,7 @@ fn log_error(
                 reason: d.reason.clone(),
                 description: d.description.clone(),
                 severity: format!("{:?}", d.logged_severity()),
-                suggestions: None,
+                suggestions: suggestions_to_logger(&d.suggestions),
                 details: None,
                 loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, source_filename)),
             },
@@ -1166,7 +1199,7 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
                     reason: d.reason.clone(),
                     description: d.description.clone(),
                     severity: format!("{:?}", d.severity()),
-                    suggestions: None,
+                    suggestions: suggestions_to_logger(&d.suggestions),
                     details: diagnostic_details_to_items(d, filename),
                     loc: None,
                 }
@@ -1176,7 +1209,7 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
                 reason: d.reason.clone(),
                 description: d.description.clone(),
                 severity: format!("{:?}", d.severity()),
-                suggestions: None,
+                suggestions: suggestions_to_logger(&d.suggestions),
                 details: None,
                 loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, filename)),
             },
@@ -1217,7 +1250,11 @@ fn try_compile_function(
         let affecting = filter_suppressions_that_affect_function(&context.suppressions, start, end);
         if !affecting.is_empty() {
             let owned: Vec<SuppressionRange> = affecting.into_iter().cloned().collect();
-            return Err(suppressions_to_compiler_error(&owned));
+            let mut err = suppressions_to_compiler_error(&owned);
+            // Suppression errors are returned (not thrown), so they should NOT
+            // trigger CompileUnexpectedThrow.
+            err.is_thrown = false;
+            return Err(err);
         }
     }
 
@@ -1267,6 +1304,18 @@ fn process_fn(
 
     match compile_result {
         Err(err) => {
+            // Emit CompileUnexpectedThrow for errors that were "thrown" from a pass
+            // (not accumulated via env.record_error) and have all non-Invariant details.
+            // Matches TS tryCompileFunction() catch block behavior.
+            if err.is_thrown && err.is_all_non_invariant() {
+                let source_filename =
+                    source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
+                context.log_event(LoggerEvent::CompileUnexpectedThrow {
+                    fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
+                    data: err.to_string_for_event(),
+                });
+            }
+
             if opt_out.is_some() {
                 // If there's an opt-out, just log the error (don't escalate)
                 log_error(&err, source.fn_ast_loc.as_ref(), context);
@@ -3341,6 +3390,26 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             }
             Err(fatal_result) => {
                 return fatal_result;
+            }
+        }
+    }
+
+    // Emit CompileSuccess events for JSX-outlined functions (fn_type.is_some()).
+    // In TS, outlined functions from outlineJSX are appended to the compilation queue
+    // and processed after all original functions, so their events appear at the end.
+    // Regular outlined functions (from OutlineFunctions pass) don't get separate events.
+    for compiled in &compiled_fns {
+        for outlined in &compiled.codegen_fn.outlined {
+            if outlined.fn_type.is_some() {
+                context.log_event(LoggerEvent::CompileSuccess {
+                    fn_loc: None,
+                    fn_name: outlined.func.id.as_ref().map(|id| id.name.clone()),
+                    memo_slots: outlined.func.memo_slots_used,
+                    memo_blocks: outlined.func.memo_blocks,
+                    memo_values: outlined.func.memo_values,
+                    pruned_memo_blocks: outlined.func.pruned_memo_blocks,
+                    pruned_memo_values: outlined.func.pruned_memo_values,
+                });
             }
         }
     }

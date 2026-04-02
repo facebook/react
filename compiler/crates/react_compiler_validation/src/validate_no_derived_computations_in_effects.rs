@@ -13,7 +13,7 @@
 use std::collections::{HashMap, HashSet};
 
 use react_compiler_diagnostics::{
-    CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, ErrorCategory,
+    CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, CompilerErrorDetail, ErrorCategory,
 };
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
@@ -1202,16 +1202,18 @@ pub fn validate_no_derived_computations_in_effects(
         result
     };
 
-    // Phase 2: Validate each collected effect and record diagnostics
+    // Phase 2: Validate each collected effect and record error details.
+    // Uses ErrorDetail (flat loc format) to match TS behavior where
+    // env.recordError(new CompilerErrorDetail({...})) is used.
     for (func_id, resolved_deps) in effects_to_validate {
-        let diagnostics = validate_effect_non_exp(
+        let details = validate_effect_non_exp(
             &env.functions[func_id.0 as usize],
             &resolved_deps,
             &env.identifiers,
             &env.types,
         );
-        for diag in diagnostics {
-            env.record_diagnostic(diag);
+        for detail in details {
+            let _ = env.record_error(detail);
         }
     }
 }
@@ -1221,7 +1223,7 @@ fn validate_effect_non_exp(
     effect_deps: &[IdentifierId],
     ids: &[Identifier],
     tys: &[Type],
-) -> Vec<CompilerDiagnostic> {
+) -> Vec<CompilerErrorDetail> {
     // Check that the effect function only captures effect deps and setState
     for ctx in &effect_func.context {
         let ctx_ty = &tys[ids[ctx.identifier.0 as usize].type_.0 as usize];
@@ -1355,16 +1357,13 @@ fn validate_effect_non_exp(
     set_state_locs
         .into_iter()
         .map(|loc| {
-            CompilerDiagnostic::new(
-                ErrorCategory::EffectDerivationsOfState,
-                "Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)",
-                None,
-            )
-            .with_detail(CompilerDiagnosticDetail::Error {
+            CompilerErrorDetail {
+                category: ErrorCategory::EffectDerivationsOfState,
+                reason: "Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)".to_string(),
+                description: None,
                 loc: Some(loc),
-                message: Some("Values derived from props and state should be calculated during render, not in an effect. (https://react.dev/learn/you-might-not-need-an-effect#updating-state-based-on-props-or-state)".to_string()),
-                identifier_name: None,
-            })
+                suggestions: None,
+            }
         })
         .collect()
 }
