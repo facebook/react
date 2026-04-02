@@ -446,6 +446,14 @@ export const EnvironmentConfigSchema = z.object({
    */
   enableCustomTypeDefinitionForReanimated: z.boolean().default(false),
 
+
+  /**
+   * The import name of React Native Reanimated library, by default, it's `react-native-reanimated`.
+   * In case if you use a custom wrapper around the library, you can specify it here, so
+   * React Compiler will work with Reanimated Babel plugin
+   */
+  reanimatedImportNames: z.array(z.string()).optional(),
+
   /**
    * If enabled, this will treat objects named as `ref` or if their names end with the substring `Ref`,
    * and contain a property named `current`, as React refs.
@@ -602,7 +610,11 @@ export class Environment {
 
     if (config.enableCustomTypeDefinitionForReanimated) {
       const reanimatedModuleType = getReanimatedModuleType(this.#shapes);
-      this.#moduleTypes.set(REANIMATED_MODULE_NAME, reanimatedModuleType);
+      const reanimatedImportNames: Array<string> = config.reanimatedImportNames ?? [REANIMATED_MODULE_NAME];
+
+      reanimatedImportNames.forEach((importName) => {
+        this.#moduleTypes.set(importName, reanimatedModuleType);
+      });
     }
 
     this.parentFunction = parentFunction;
