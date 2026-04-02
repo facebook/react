@@ -80,6 +80,7 @@ export function loadHookNames(
 ): HookNames | null {
   let record = map.get(element);
 
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.groupCollapsed('loadHookNames() record:');
     console.log(record);
@@ -151,6 +152,7 @@ export function loadHookNames(
               return;
             }
 
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               console.log('[hookNamesCache] onSuccess() hookNames:', hookNames);
             }
@@ -180,6 +182,7 @@ export function loadHookNames(
               return;
             }
 
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               console.log('[hookNamesCache] onError()');
             }
@@ -199,6 +202,7 @@ export function loadHookNames(
 
         // Eventually timeout and stop trying to load names.
         timeoutID = setTimeout(function onTimeout() {
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             console.log('[hookNamesCache] onTimeout()');
           }

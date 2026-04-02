@@ -2119,6 +2119,7 @@ function hydrateAttribute(
           if (__DEV__) {
             checkAttributeStringCoercion(value, propKey);
           }
+          // $FlowFixMe[invalid-compare]
           if (serverValue === '' + value) {
             return;
           }
@@ -2183,6 +2184,7 @@ function hydrateOverloadedBooleanAttribute(
       case 'symbol':
         return;
       default:
+        // $FlowFixMe[invalid-compare]
         if (value === false) {
           return;
         }
@@ -2197,6 +2199,7 @@ function hydrateOverloadedBooleanAttribute(
         case 'symbol':
           break;
         case 'boolean':
+          // $FlowFixMe[invalid-compare]
           if (value === true && serverValue === '') {
             return;
           }
@@ -2205,6 +2208,7 @@ function hydrateOverloadedBooleanAttribute(
           if (__DEV__) {
             checkAttributeStringCoercion(value, propKey);
           }
+          // $FlowFixMe[invalid-compare]
           if (serverValue === '' + value) {
             return;
           }
@@ -2296,6 +2300,7 @@ function hydrateNumericAttribute(
           if (__DEV__) {
             checkAttributeStringCoercion(value, propKey);
           }
+          // $FlowFixMe[invalid-compare]
           if (serverValue === '' + value) {
             return;
           }
@@ -2347,6 +2352,7 @@ function hydratePositiveNumericAttribute(
           if (__DEV__) {
             checkAttributeStringCoercion(value, propKey);
           }
+          // $FlowFixMe[invalid-compare]
           if (serverValue === '' + value) {
             return;
           }

@@ -46,6 +46,7 @@ import {
 } from '../storage';
 
 const debug = (methodName: string, ...args: Array<string>) => {
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log(
       `%cAgent %c${methodName}`,
@@ -1110,6 +1111,7 @@ export default class Agent extends EventEmitter<{
   };
 
   onFastRefreshScheduled: () => void = () => {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('onFastRefreshScheduled');
     }
@@ -1118,6 +1120,7 @@ export default class Agent extends EventEmitter<{
   };
 
   onHookOperations: (operations: Array<number>) => void = operations => {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug(
         'onHookOperations',

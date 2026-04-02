@@ -65,6 +65,7 @@ function describeComponentStackByType(
       return describeFunctionComponentFrame(type);
     }
   }
+  // $FlowFixMe[invalid-compare]
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {

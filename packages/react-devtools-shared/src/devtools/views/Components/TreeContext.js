@@ -552,6 +552,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
 
             // It's possible that multiple tree operations will fire before this action has run.
             // So it's important to check for elements that may have been added and then removed.
+            // $FlowFixMe[invalid-compare]
             if (element !== null) {
               const {displayName} = element;
 
@@ -624,6 +625,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
   }
 
   if (searchText !== prevSearchText) {
+    // $FlowFixMe[incompatible-type]
     const newSearchIndex = searchResults.indexOf(inspectedElementID);
     if (newSearchIndex === -1) {
       // Only move the selection if the new query
@@ -721,6 +723,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
           // If the selected element is outside of the current owners list,
           // exit the list and select the element in the main tree.
           // This supports features like toggling Suspense.
+          // $FlowFixMe[invalid-compare]
           if (inspectedElementIndex !== null && inspectedElementIndex < 0) {
             ownerID = null;
             ownerFlatTree = null;

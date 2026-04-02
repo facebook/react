@@ -52,6 +52,7 @@ function readRecord<T>(record: Thenable<T>): T | null {
 export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
   let record = moduleLoaderFunctionToModuleMap.get(moduleLoaderFunction);
 
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log(
       `[dynamicImportCache] loadModule("${moduleLoaderFunction.name}")`,
@@ -103,6 +104,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
 
     moduleLoaderFunction().then(
       module => {
+        // $FlowFixMe[constant-condition]
         if (__DEBUG__) {
           console.log(
             `[dynamicImportCache] loadModule("${moduleLoaderFunction.name}") then()`,
@@ -120,6 +122,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
         wake();
       },
       error => {
+        // $FlowFixMe[constant-condition]
         if (__DEBUG__) {
           console.log(
             `[dynamicImportCache] loadModule("${moduleLoaderFunction.name}") catch()`,
@@ -142,6 +145,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
 
     // Eventually timeout and stop trying to load the module.
     let timeoutID: null | TimeoutID = setTimeout(function onTimeout() {
+      // $FlowFixMe[constant-condition]
       if (__DEBUG__) {
         console.log(
           `[dynamicImportCache] loadModule("${moduleLoaderFunction.name}") onTimeout()`,

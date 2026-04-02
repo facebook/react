@@ -67,6 +67,7 @@ export default function SidebarSelectedFiberInfo(): React.Node {
   const handleKeyDown = event => {
     switch (event.key) {
       case 'ArrowUp':
+        // $FlowFixMe[invalid-compare]
         if (selectedCommitIndex !== null) {
           const prevIndex = commitIndices.indexOf(selectedCommitIndex);
           const nextIndex =
@@ -76,6 +77,7 @@ export default function SidebarSelectedFiberInfo(): React.Node {
         event.preventDefault();
         break;
       case 'ArrowDown':
+        // $FlowFixMe[invalid-compare]
         if (selectedCommitIndex !== null) {
           const prevIndex = commitIndices.indexOf(selectedCommitIndex);
           const nextIndex =

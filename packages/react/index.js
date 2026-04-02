@@ -13,12 +13,12 @@ export type Element<+C> = React$Element<C>;
 export type MixedElement = React$Element<ElementType>;
 export type Key = React$Key;
 export type Node = React$Node;
-export type Context<T> = React$Context<T>;
+export type Context<T> = React.Context<T>;
 export type Portal = React$Portal;
-export type RefSetter<-I> = React$RefSetter<I>;
-export type ElementProps<C> = React$ElementProps<C>;
+export type RefSetter<-I> = React.RefSetter<I>;
+export type ElementProps<C> = React$ElementConfig<C>;
 export type ElementConfig<C> = React$ElementConfig<C>;
-export type ElementRef<C> = React$ElementRef<C>;
+export type ElementRef<C> = React.ElementRef<C>;
 export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 
 export {

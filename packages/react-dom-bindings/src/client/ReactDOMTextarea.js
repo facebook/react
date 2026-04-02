@@ -138,7 +138,9 @@ export function initTextarea(
   // initial value. In IE10/IE11 there is a bug where the placeholder attribute
   // will populate textContent as well.
   // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+  // $FlowFixMe[invalid-compare]
   if (textContent === stringValue) {
+    // $FlowFixMe[invalid-compare]
     if (textContent !== '' && textContent !== null) {
       node.value = textContent;
     }

@@ -93,7 +93,7 @@ export function dispatchEvent(
     const stateNode = targetFiber.stateNode;
     // Guard against Fiber being unmounted
     if (stateNode != null) {
-      // $FlowExpectedError[incompatible-cast] public instances in Fabric do not implement `EventTarget` yet.
+      // $FlowExpectedError[incompatible-type] public instances in Fabric do not implement `EventTarget` yet.
       eventTarget = (getPublicInstance(stateNode): EventTarget);
     }
   }

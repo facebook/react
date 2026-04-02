@@ -44,7 +44,7 @@ opaque type Stream = {
 };
 
 function renderToStream(children: ReactNodeList, options: Options): Stream {
-  const destination = {
+  const destination: Destination = {
     buffer: '',
     done: false,
     fatal: false,

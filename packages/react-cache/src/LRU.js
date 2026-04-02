@@ -115,6 +115,7 @@ export function createLRU<T>(limit: number): LRU<T> {
 
   function access(entry: Entry<T>): T {
     const next = entry.next;
+    // $FlowFixMe[invalid-compare]
     if (next !== null) {
       // Entry already cached
       const resolvedFirst: Entry<T> = (first: any);
