@@ -372,6 +372,30 @@ impl Default for CompilerError {
     }
 }
 
+/// Allow `?` to convert a `CompilerError` into a `CompilerDiagnostic`
+/// when the enclosing function returns `Result<T, CompilerDiagnostic>`.
+///
+/// This typically happens when `record_error()` returns `Err(CompilerError)`
+/// for an Invariant error, and the calling function already returns
+/// `Result<T, CompilerDiagnostic>`. The conversion extracts the first
+/// error detail from the aggregate error.
+impl From<CompilerError> for CompilerDiagnostic {
+    fn from(err: CompilerError) -> Self {
+        if let Some(first) = err.details.into_iter().next() {
+            match first {
+                CompilerErrorOrDiagnostic::Diagnostic(d) => d,
+                CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerDiagnostic::from_detail(d),
+            }
+        } else {
+            CompilerDiagnostic::new(
+                ErrorCategory::Invariant,
+                "Unknown compiler error",
+                None,
+            )
+        }
+    }
+}
+
 impl From<CompilerDiagnostic> for CompilerError {
     fn from(diagnostic: CompilerDiagnostic) -> Self {
         let mut error = CompilerError::new();

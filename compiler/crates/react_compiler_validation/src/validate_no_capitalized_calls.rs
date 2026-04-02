@@ -1,13 +1,13 @@
 use std::collections::{HashMap, HashSet};
 
-use react_compiler_diagnostics::{CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{HirFunction, IdentifierId, InstructionValue, PropertyLiteral};
 
 /// Validates that capitalized functions are not called directly (they should be rendered as JSX).
 ///
 /// Port of ValidateNoCapitalizedCalls.ts.
-pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) {
+pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerError> {
     // Build the allow list from global registry keys + config entries
     let mut allow_list: HashSet<String> = env.globals().keys().cloned().collect();
     if let Some(config_entries) = &env.config.validate_no_capitalized_calls {
@@ -42,13 +42,13 @@ pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) 
                 InstructionValue::CallExpression { callee, loc, .. } => {
                     let callee_id = callee.identifier;
                     if let Some(callee_name) = capital_load_globals.get(&callee_id) {
-                        let _ = env.record_error(CompilerErrorDetail {
+                        env.record_error(CompilerErrorDetail {
                             category: ErrorCategory::CapitalizedCalls,
                             reason: reason.to_string(),
                             description: Some(format!("{callee_name} may be a component")),
                             loc: *loc,
                             suggestions: None,
-                        });
+                        })?;
                         continue;
                     }
                 }
@@ -65,17 +65,18 @@ pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) 
                 } => {
                     let property_id = property.identifier;
                     if let Some(prop_name) = capitalized_properties.get(&property_id) {
-                        let _ = env.record_error(CompilerErrorDetail {
+                        env.record_error(CompilerErrorDetail {
                             category: ErrorCategory::CapitalizedCalls,
                             reason: reason.to_string(),
                             description: Some(format!("{prop_name} may be a component")),
                             loc: *loc,
                             suggestions: None,
-                        });
+                        })?;
                     }
                 }
                 _ => {}
             }
         }
     }
+    Ok(())
 }

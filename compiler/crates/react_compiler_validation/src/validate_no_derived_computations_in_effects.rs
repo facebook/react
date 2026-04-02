@@ -1122,7 +1122,7 @@ fn validate_effect(
 pub fn validate_no_derived_computations_in_effects(
     func: &HirFunction,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerError> {
     // Phase 1: Collect effect call sites (func_id + resolved deps).
     // Done with only immutable borrows of env fields.
     let effects_to_validate: Vec<(FunctionId, Vec<IdentifierId>)> = {
@@ -1213,9 +1213,10 @@ pub fn validate_no_derived_computations_in_effects(
             &env.types,
         );
         for detail in details {
-            let _ = env.record_error(detail);
+            env.record_error(detail)?;
         }
     }
+    Ok(())
 }
 
 fn validate_effect_non_exp(

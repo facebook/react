@@ -14,7 +14,7 @@ use std::collections::HashMap;
 
 use indexmap::IndexMap;
 use react_compiler_diagnostics::{
-    CompilerDiagnostic, CompilerErrorDetail, ErrorCategory, SourceLocation,
+    CompilerDiagnostic, CompilerError, CompilerErrorDetail, ErrorCategory, SourceLocation,
 };
 use react_compiler_hir::{
     FunctionId, HirFunction, Identifier, IdentifierId,
@@ -90,11 +90,12 @@ fn visit_place(
     value_kinds: &HashMap<IdentifierId, Kind>,
     errors_by_loc: &mut IndexMap<SourceLocation, CompilerErrorDetail>,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerError> {
     let kind = value_kinds.get(&place.identifier).copied();
     if kind == Some(Kind::KnownHook) {
-        record_invalid_hook_usage_error(place, errors_by_loc, env);
+        record_invalid_hook_usage_error(place, errors_by_loc, env)?;
     }
+    Ok(())
 }
 
 fn record_conditional_hook_error(
@@ -102,7 +103,7 @@ fn record_conditional_hook_error(
     value_kinds: &mut HashMap<IdentifierId, Kind>,
     errors_by_loc: &mut IndexMap<SourceLocation, CompilerErrorDetail>,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerError> {
     value_kinds.insert(place.identifier, Kind::Error);
     let reason = "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)".to_string();
     if let Some(loc) = place.loc {
@@ -120,21 +121,22 @@ fn record_conditional_hook_error(
             );
         }
     } else {
-        let _ = env.record_error(CompilerErrorDetail {
+        env.record_error(CompilerErrorDetail {
             category: ErrorCategory::Hooks,
             reason,
             description: None,
             loc: None,
             suggestions: None,
-        });
+        })?;
     }
+    Ok(())
 }
 
 fn record_invalid_hook_usage_error(
     place: &Place,
     errors_by_loc: &mut IndexMap<SourceLocation, CompilerErrorDetail>,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerError> {
     let reason = "Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values".to_string();
     if let Some(loc) = place.loc {
         if !errors_by_loc.contains_key(&loc) {
@@ -150,21 +152,22 @@ fn record_invalid_hook_usage_error(
             );
         }
     } else {
-        let _ = env.record_error(CompilerErrorDetail {
+        env.record_error(CompilerErrorDetail {
             category: ErrorCategory::Hooks,
             reason,
             description: None,
             loc: None,
             suggestions: None,
-        });
+        })?;
     }
+    Ok(())
 }
 
 fn record_dynamic_hook_usage_error(
     place: &Place,
     errors_by_loc: &mut IndexMap<SourceLocation, CompilerErrorDetail>,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerError> {
     let reason = "Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks".to_string();
     if let Some(loc) = place.loc {
         if !errors_by_loc.contains_key(&loc) {
@@ -180,14 +183,15 @@ fn record_dynamic_hook_usage_error(
             );
         }
     } else {
-        let _ = env.record_error(CompilerErrorDetail {
+        env.record_error(CompilerErrorDetail {
             category: ErrorCategory::Hooks,
             reason,
             description: None,
             loc: None,
             suggestions: None,
-        });
+        })?;
     }
+    Ok(())
 }
 
 /// Validates hooks usage rules for a function.
@@ -239,13 +243,13 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                 }
                 InstructionValue::LoadContext { place, .. }
                 | InstructionValue::LoadLocal { place, .. } => {
-                    visit_place(place, &value_kinds, &mut errors_by_loc, env);
+                    visit_place(place, &value_kinds, &mut errors_by_loc, env)?;
                     let kind = get_kind_for_place(place, &value_kinds, &env.identifiers);
                     value_kinds.insert(lvalue_id, kind);
                 }
                 InstructionValue::StoreLocal { lvalue, value, .. }
                 | InstructionValue::StoreContext { lvalue, value, .. } => {
-                    visit_place(value, &value_kinds, &mut errors_by_loc, env);
+                    visit_place(value, &value_kinds, &mut errors_by_loc, env)?;
                     let kind = join_kinds(
                         get_kind_for_place(value, &value_kinds, &env.identifiers),
                         get_kind_for_place(&lvalue.place, &value_kinds, &env.identifiers),
@@ -254,7 +258,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                     value_kinds.insert(lvalue_id, kind);
                 }
                 InstructionValue::ComputedLoad { object, .. } => {
-                    visit_place(object, &value_kinds, &mut errors_by_loc, env);
+                    visit_place(object, &value_kinds, &mut errors_by_loc, env)?;
                     let kind = get_kind_for_place(object, &value_kinds, &env.identifiers);
                     let lvalue_kind =
                         get_kind_for_place(&instr.lvalue, &value_kinds, &env.identifiers);
@@ -307,9 +311,9 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                             &mut value_kinds,
                             &mut errors_by_loc,
                             env,
-                        );
+                        )?;
                     } else if callee_kind == Kind::PotentialHook {
-                        record_dynamic_hook_usage_error(callee, &mut errors_by_loc, env);
+                        record_dynamic_hook_usage_error(callee, &mut errors_by_loc, env)?;
                     }
                     // Visit all operands except callee
                     for arg in args {
@@ -317,7 +321,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                             react_compiler_hir::PlaceOrSpread::Place(p) => p,
                             react_compiler_hir::PlaceOrSpread::Spread(s) => &s.place,
                         };
-                        visit_place(place, &value_kinds, &mut errors_by_loc, env);
+                        visit_place(place, &value_kinds, &mut errors_by_loc, env)?;
                     }
                 }
                 InstructionValue::MethodCall {
@@ -336,26 +340,26 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                             &mut value_kinds,
                             &mut errors_by_loc,
                             env,
-                        );
+                        )?;
                     } else if callee_kind == Kind::PotentialHook {
                         record_dynamic_hook_usage_error(
                             property,
                             &mut errors_by_loc,
                             env,
-                        );
+                        )?;
                     }
                     // Visit receiver and args (not property)
-                    visit_place(receiver, &value_kinds, &mut errors_by_loc, env);
+                    visit_place(receiver, &value_kinds, &mut errors_by_loc, env)?;
                     for arg in args {
                         let place = match arg {
                             react_compiler_hir::PlaceOrSpread::Place(p) => p,
                             react_compiler_hir::PlaceOrSpread::Spread(s) => &s.place,
                         };
-                        visit_place(place, &value_kinds, &mut errors_by_loc, env);
+                        visit_place(place, &value_kinds, &mut errors_by_loc, env)?;
                     }
                 }
                 InstructionValue::Destructure { lvalue, value, .. } => {
-                    visit_place(value, &value_kinds, &mut errors_by_loc, env);
+                    visit_place(value, &value_kinds, &mut errors_by_loc, env)?;
                     let object_kind =
                         get_kind_for_place(value, &value_kinds, &env.identifiers);
                     // Process instr.lvalue and all pattern operands (matching TS eachInstructionLValue)
@@ -389,7 +393,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                 }
                 InstructionValue::ObjectMethod { lowered_func, .. }
                 | InstructionValue::FunctionExpression { lowered_func, .. } => {
-                    visit_function_expression(env, lowered_func.func);
+                    visit_function_expression(env, lowered_func.func)?;
                 }
                 _ => {
                     // For all other instructions: visit operands, set lvalue kinds
@@ -399,7 +403,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
                         &value_kinds,
                         &mut errors_by_loc,
                         env,
-                    );
+                    )?;
                     // Set kind for instr.lvalue
                     let kind =
                         get_kind_for_place(&instr.lvalue, &value_kinds, &env.identifiers);
@@ -416,13 +420,13 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
 
         // Visit terminal operands
         for place in each_terminal_operand(&block.terminal) {
-            visit_place(&place, &value_kinds, &mut errors_by_loc, env);
+            visit_place(&place, &value_kinds, &mut errors_by_loc, env)?;
         }
     }
 
     // Record all accumulated errors (in insertion order, matching TS Map iteration)
     for (_, error_detail) in errors_by_loc {
-        let _ = env.record_error(error_detail);
+        env.record_error(error_detail)?;
     }
     Ok(())
 }
@@ -430,7 +434,7 @@ pub fn validate_hooks_usage(func: &HirFunction, env: &mut Environment) -> Result
 /// Visit a function expression to check for hook calls inside it.
 /// Processes instructions in order, visiting nested functions immediately
 /// (before processing subsequent calls) to match TS error ordering.
-fn visit_function_expression(env: &mut Environment, func_id: FunctionId) {
+fn visit_function_expression(env: &mut Environment, func_id: FunctionId) -> Result<(), CompilerError> {
     // Collect items in instruction order to process them sequentially.
     // Each item is either a call to check or a nested function to visit.
     enum Item {
@@ -477,20 +481,21 @@ fn visit_function_expression(env: &mut Environment, func_id: FunctionId) {
                             hook_kind_display(&hook_kind)
                         }
                     );
-                    let _ = env.record_error(CompilerErrorDetail {
+                    env.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Hooks,
                         reason: "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)".to_string(),
                         description: Some(description),
                         loc,
                         suggestions: None,
-                    });
+                    })?;
                 }
             }
             Item::NestedFunc(nested_func_id) => {
-                visit_function_expression(env, nested_func_id);
+                visit_function_expression(env, nested_func_id)?;
             }
         }
     }
+    Ok(())
 }
 
 fn hook_kind_display(kind: &HookKind) -> &'static str {
@@ -520,10 +525,11 @@ fn visit_all_operands(
     value_kinds: &HashMap<IdentifierId, Kind>,
     errors_by_loc: &mut IndexMap<SourceLocation, CompilerErrorDetail>,
     env: &mut Environment,
-) {
+) -> Result<(), CompilerError> {
     let operands = visitors::each_instruction_value_operand(value, &*env);
     for place in &operands {
-        visit_place(place, value_kinds, errors_by_loc, env);
+        visit_place(place, value_kinds, errors_by_loc, env)?;
     }
+    Ok(())
 }
 

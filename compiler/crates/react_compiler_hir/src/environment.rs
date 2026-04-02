@@ -432,23 +432,23 @@ impl Environment {
         &mut self,
         binding: &NonLocalBinding,
         loc: Option<SourceLocation>,
-    ) -> Option<Global> {
+    ) -> Result<Option<Global>, CompilerError> {
         match binding {
             NonLocalBinding::ModuleLocal { name, .. } => {
                 if is_hook_name(name) {
-                    Some(self.get_custom_hook_type())
+                    Ok(Some(self.get_custom_hook_type()))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
             NonLocalBinding::Global { name, .. } => {
                 if let Some(ty) = self.globals.get(name) {
-                    return Some(ty.clone());
+                    return Ok(Some(ty.clone()));
                 }
                 if is_hook_name(name) {
-                    Some(self.get_custom_hook_type())
+                    Ok(Some(self.get_custom_hook_type()))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
             NonLocalBinding::ImportSpecifier {
@@ -458,12 +458,12 @@ impl Environment {
             } => {
                 if self.is_known_react_module(module) {
                     if let Some(ty) = self.globals.get(imported) {
-                        return Some(ty.clone());
+                        return Ok(Some(ty.clone()));
                     }
                     if is_hook_name(imported) || is_hook_name(name) {
-                        return Some(self.get_custom_hook_type());
+                        return Ok(Some(self.get_custom_hook_type()));
                     }
-                    return None;
+                    return Ok(None);
                 }
 
                 // Try module type provider. We resolve first, then do property
@@ -473,14 +473,14 @@ impl Environment {
                 // Check for module type validation errors (hook-name vs hook-type mismatches)
                 if let Some(errors) = self.module_type_errors.remove(module.as_str()) {
                     if let Some(first_error) = errors.into_iter().next() {
-                        let _ = self.record_error(
+                        self.record_error(
                             CompilerErrorDetail::new(
                                 ErrorCategory::Config,
                                 "Invalid type configuration for module",
                             )
                             .with_description(format!("{}", first_error))
                             .with_loc(loc),
-                        );
+                        )?;
                     }
                 }
 
@@ -490,14 +490,14 @@ impl Environment {
                         &module_type,
                         imported,
                     ) {
-                        return Some(imported_type);
+                        return Ok(Some(imported_type));
                     }
                 }
 
                 if is_hook_name(imported) || is_hook_name(name) {
-                    Some(self.get_custom_hook_type())
+                    Ok(Some(self.get_custom_hook_type()))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
             NonLocalBinding::ImportDefault { name, module }
@@ -506,12 +506,12 @@ impl Environment {
 
                 if self.is_known_react_module(module) {
                     if let Some(ty) = self.globals.get(name) {
-                        return Some(ty.clone());
+                        return Ok(Some(ty.clone()));
                     }
                     if is_hook_name(name) {
-                        return Some(self.get_custom_hook_type());
+                        return Ok(Some(self.get_custom_hook_type()));
                     }
-                    return None;
+                    return Ok(None);
                 }
 
                 let module_type = self.resolve_module_type(module);
@@ -519,14 +519,14 @@ impl Environment {
                 // Check for module type validation errors (hook-name vs hook-type mismatches)
                 if let Some(errors) = self.module_type_errors.remove(module.as_str()) {
                     if let Some(first_error) = errors.into_iter().next() {
-                        let _ = self.record_error(
+                        self.record_error(
                             CompilerErrorDetail::new(
                                 ErrorCategory::Config,
                                 "Invalid type configuration for module",
                             )
                             .with_description(format!("{}", first_error))
                             .with_loc(loc),
-                        );
+                        )?;
                     }
                 }
 
@@ -545,7 +545,7 @@ impl Environment {
                         let expect_hook = is_hook_name(module);
                         let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
                         if expect_hook != is_hook {
-                            let _ = self.record_error(
+                            self.record_error(
                                 CompilerErrorDetail::new(
                                     ErrorCategory::Config,
                                     "Invalid type configuration for module",
@@ -556,16 +556,16 @@ impl Environment {
                                     if expect_hook { "to be a hook" } else { "not to be a hook" }
                                 ))
                                 .with_loc(loc),
-                            );
+                            )?;
                         }
-                        return Some(imported_type);
+                        return Ok(Some(imported_type));
                     }
                 }
 
                 if is_hook_name(name) {
-                    Some(self.get_custom_hook_type())
+                    Ok(Some(self.get_custom_hook_type()))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
         }
@@ -1023,7 +1023,7 @@ mod tests {
         let binding = NonLocalBinding::Global {
             name: "Math".to_string(),
         };
-        let result = env.get_global_declaration(&binding, None);
+        let result = env.get_global_declaration(&binding, None).unwrap();
         assert!(result.is_some());
 
         // Import from react
@@ -1032,21 +1032,21 @@ mod tests {
             module: "react".to_string(),
             imported: "useState".to_string(),
         };
-        let result = env.get_global_declaration(&binding, None);
+        let result = env.get_global_declaration(&binding, None).unwrap();
         assert!(result.is_some());
 
         // Unknown global
         let binding = NonLocalBinding::Global {
             name: "unknownThing".to_string(),
         };
-        let result = env.get_global_declaration(&binding, None);
+        let result = env.get_global_declaration(&binding, None).unwrap();
         assert!(result.is_none());
 
         // Hook-like name gets default hook type
         let binding = NonLocalBinding::Global {
             name: "useCustom".to_string(),
         };
-        let result = env.get_global_declaration(&binding, None);
+        let result = env.get_global_declaration(&binding, None).unwrap();
         assert!(result.is_some());
     }
 }

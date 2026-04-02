@@ -219,7 +219,7 @@ pub fn compile_fn(
 
         if env.config.validate_no_capitalized_calls.is_some() {
             context.timing.start("ValidateNoCapitalizedCalls");
-            react_compiler_validation::validate_no_capitalized_calls(&hir, &mut env);
+            react_compiler_validation::validate_no_capitalized_calls(&hir, &mut env)?;
             if context.debug_enabled {
                 context.log_debug(DebugLogEntry::new("ValidateNoCapitalizedCalls", "ok".to_string()));
             }
@@ -363,7 +363,7 @@ pub fn compile_fn(
             context.timing.stop();
         } else if env.config.validate_no_derived_computations_in_effects {
             context.timing.start("ValidateNoDerivedComputationsInEffects");
-            react_compiler_validation::validate_no_derived_computations_in_effects(&hir, &mut env);
+            react_compiler_validation::validate_no_derived_computations_in_effects(&hir, &mut env)?;
             if context.debug_enabled {
                 context.log_debug(DebugLogEntry::new("ValidateNoDerivedComputationsInEffects", "ok".to_string()));
             }

@@ -82,7 +82,7 @@ fn pre_resolve_globals(
     for &instr_id in func.body.blocks.values().flat_map(|b| &b.instructions) {
         let instr = &func.instructions[instr_id.0 as usize];
         if let InstructionValue::LoadGlobal { binding, loc, .. } = &instr.value {
-            if let Some(global_type) = env.get_global_declaration(binding, *loc) {
+            if let Some(global_type) = env.get_global_declaration(binding, *loc).ok().flatten() {
                 global_types.insert((function_key, instr_id), global_type);
             }
         }
@@ -126,7 +126,7 @@ fn pre_resolve_globals_recursive(
 
     // Now resolve globals (no longer borrowing env.functions)
     for (instr_id, binding, loc) in load_globals {
-        if let Some(global_type) = env.get_global_declaration(&binding, loc) {
+        if let Some(global_type) = env.get_global_declaration(&binding, loc).ok().flatten() {
             global_types.insert((func_id.0, instr_id), global_type);
         }
     }

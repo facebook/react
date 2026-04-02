@@ -631,7 +631,7 @@ impl<'a> HirBuilder<'a> {
     /// 5. Remove unnecessary try-catch
     /// 6. Number all instructions and terminals
     /// 7. Mark predecessor blocks
-    pub fn build(mut self) -> (HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>) {
+    pub fn build(mut self) -> Result<(HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>), CompilerError> {
         let mut hir = HIR {
             blocks: std::mem::take(&mut self.completed),
             entry: self.entry,
@@ -654,13 +654,13 @@ impl<'a> HirBuilder<'a> {
                         .first()
                         .and_then(|&i| instructions[i.0 as usize].loc.clone())
                         .or_else(|| block.terminal.loc().copied());
-                    let _ = self.env.record_error(CompilerErrorDetail {
+                    self.env.record_error(CompilerErrorDetail {
                         category: ErrorCategory::Todo,
                         reason: "Support functions with unreachable code that may contain hoisted declarations".to_string(),
                         description: None,
                         loc,
                         suggestions: None,
-                    });
+                    })?;
                 }
             }
         }
@@ -675,7 +675,7 @@ impl<'a> HirBuilder<'a> {
 
         let used_names = self.used_names;
         let bindings = self.bindings;
-        (hir, instructions, used_names, bindings)
+        Ok((hir, instructions, used_names, bindings))
     }
 
     // -----------------------------------------------------------------------
@@ -689,12 +689,12 @@ impl<'a> HirBuilder<'a> {
     /// Handles name collisions by appending `_0`, `_1`, etc.
     ///
     /// Records errors for variables named 'fbt' or 'this'.
-    pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> IdentifierId {
+    pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> Result<IdentifierId, CompilerError> {
         self.resolve_binding_with_loc(name, binding_id, None)
     }
 
     /// Map a BindingId to an HIR IdentifierId, with an optional source location.
-    pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> IdentifierId {
+    pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> Result<IdentifierId, CompilerError> {
         // Check for unsupported names BEFORE the cache check.
         // In TS, resolveBinding records fbt errors when node.name === 'fbt'. After a name collision
         // causes a rename (e.g., "fbt" -> "fbt_0"), TS's scope.rename changes the AST node's name,
@@ -717,7 +717,7 @@ impl<'a> HirBuilder<'a> {
                     .declaration_start
                     .and_then(|start| self.get_identifier_loc(start))
                     .or_else(|| loc.clone());
-                let _ = self.env.record_error(CompilerErrorDetail {
+                self.env.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
                     reason: "Support local variables named `fbt`".to_string(),
                     description: Some(
@@ -725,13 +725,13 @@ impl<'a> HirBuilder<'a> {
                     ),
                     loc: error_loc,
                     suggestions: None,
-                });
+                })?;
             }
         }
 
         // If we've already resolved this binding, return the cached IdentifierId
         if let Some(&identifier_id) = self.bindings.get(&binding_id) {
-            return identifier_id;
+            return Ok(identifier_id);
         }
 
         if is_reserved_word(name) {
@@ -804,7 +804,7 @@ impl<'a> HirBuilder<'a> {
 
         self.used_names.insert(candidate, binding_id);
         self.bindings.insert(binding_id, id);
-        id
+        Ok(id)
     }
 
     /// Set the loc on an identifier to the declaration-site loc.
@@ -822,15 +822,15 @@ impl<'a> HirBuilder<'a> {
     /// - ImportDefault, ImportSpecifier, ImportNamespace (program-scope import binding)
     /// - ModuleLocal (program-scope non-import binding)
     /// - Identifier (local binding, resolved via resolve_binding)
-    pub fn resolve_identifier(&mut self, name: &str, start_offset: u32, loc: Option<SourceLocation>) -> VariableBinding {
+    pub fn resolve_identifier(&mut self, name: &str, start_offset: u32, loc: Option<SourceLocation>) -> Result<VariableBinding, CompilerError> {
         let binding_data = self.scope_info.resolve_reference(start_offset);
 
         match binding_data {
             None => {
                 // No binding found: this is a global
-                VariableBinding::Global {
+                Ok(VariableBinding::Global {
                     name: name.to_string(),
-                }
+                })
             }
             Some(binding) => {
                 // Treat type-only declarations as globals so the compiler
@@ -842,13 +842,13 @@ impl<'a> HirBuilder<'a> {
                     "TSTypeAliasDeclaration" | "TSInterfaceDeclaration"
                     | "TSEnumDeclaration" | "TSModuleDeclaration"
                 ) {
-                    return VariableBinding::Global {
+                    return Ok(VariableBinding::Global {
                         name: name.to_string(),
-                    };
+                    });
                 }
                 if binding.scope == self.scope_info.program_scope {
                     // Module-level binding: check import info
-                    match &binding.import {
+                    Ok(match &binding.import {
                         Some(import_info) => match import_info.kind {
                             ImportBindingKind::Default => VariableBinding::ImportDefault {
                                 name: name.to_string(),
@@ -870,7 +870,7 @@ impl<'a> HirBuilder<'a> {
                         None => VariableBinding::ModuleLocal {
                             name: name.to_string(),
                         },
-                    }
+                    })
                 } else {
                     // Local binding: resolve via resolve_binding.
                     // When the resolved binding's name doesn't match the identifier
@@ -886,11 +886,11 @@ impl<'a> HirBuilder<'a> {
                     };
                     let binding_id = resolved_binding.id;
                     let binding_kind = crate::convert_binding_kind(&resolved_binding.kind);
-                    let identifier_id = self.resolve_binding_with_loc(name, binding_id, loc);
-                    VariableBinding::Identifier {
+                    let identifier_id = self.resolve_binding_with_loc(name, binding_id, loc)?;
+                    Ok(VariableBinding::Identifier {
                         identifier: identifier_id,
                         binding_kind,
-                    }
+                    })
                 }
             }
         }
