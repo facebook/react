@@ -3266,11 +3266,11 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
         switch (revealOrder.toLowerCase()) {
           // $FlowFixMe[invalid-compare]
           case 'together':
-          // $FlowFixMe[invalid-compare]
+          // $FlowFixMe[invalid-compare] -- falls through
           case 'forwards':
-          // $FlowFixMe[invalid-compare]
+          // $FlowFixMe[invalid-compare] -- falls through
           case 'backwards':
-          // $FlowFixMe[invalid-compare]
+          // $FlowFixMe[invalid-compare] -- falls through
           case 'independent': {
             console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
@@ -3282,7 +3282,7 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
           }
           // $FlowFixMe[invalid-compare]
           case 'forward':
-          // $FlowFixMe[invalid-compare]
+          // $FlowFixMe[invalid-compare] -- falls through
           case 'backward': {
             console.error(
               '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +

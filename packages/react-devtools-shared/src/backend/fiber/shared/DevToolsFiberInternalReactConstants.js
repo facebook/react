@@ -392,9 +392,9 @@ export function getInternalReactConstants(version: string): {
       case CacheComponent:
         return 'Cache';
       case ClassComponent:
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case IncompleteClassComponent:
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case IncompleteFunctionComponent:
       case FunctionComponent:
       case IndeterminateComponent:
@@ -413,9 +413,9 @@ export function getInternalReactConstants(version: string): {
         }
         return null;
       case HostComponent:
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case HostSingleton:
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case HostHoistable:
         return type;
       case HostPortal:
@@ -431,7 +431,7 @@ export function getInternalReactConstants(version: string): {
         return 'Lazy';
       // $FlowFixMe[invalid-compare]
       case MemoComponent:
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case SimpleMemoComponent:
         // Display name in React does not use `Memo` as a wrapper but fallback name.
         return getWrappedDisplayName(

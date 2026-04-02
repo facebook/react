@@ -2951,11 +2951,11 @@ function renderElement(
     // that simulates the old behavior (no hiding, no change to effects).
     // $FlowFixMe[invalid-compare]
     case REACT_LEGACY_HIDDEN_TYPE:
-    // $FlowFixMe[invalid-compare]
+    // $FlowFixMe[invalid-compare] -- falls through
     case REACT_STRICT_MODE_TYPE:
-    // $FlowFixMe[invalid-compare]
+    // $FlowFixMe[invalid-compare] -- falls through
     case REACT_PROFILER_TYPE:
-    // $FlowFixMe[invalid-compare]
+    // $FlowFixMe[invalid-compare] -- falls through
     case REACT_FRAGMENT_TYPE: {
       const prevKeyPath = task.keyPath;
       task.keyPath = keyPath;

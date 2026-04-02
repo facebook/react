@@ -632,20 +632,17 @@ export function createFiberFromTypeAndProps(
         if (enableLegacyHidden) {
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
         }
-      // Fall through
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case REACT_VIEW_TRANSITION_TYPE:
         if (enableViewTransition) {
           return createFiberFromViewTransition(pendingProps, mode, lanes, key);
         }
-      // Fall through
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
-      // Fall through
-      // $FlowFixMe[invalid-compare]
+      // $FlowFixMe[invalid-compare] -- falls through
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
