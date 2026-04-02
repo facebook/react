@@ -58,8 +58,59 @@ const recommendedLatestRuleConfigs: Linter.RulesRecord = {
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: {react: any};
+  plugins: {'react-hooks': ReactHooksPlugin};
   rules: Linter.RulesRecord;
+};
+
+type ReactHooksFlatConfigs = {
+  readonly recommended: ReactHooksFlatConfig;
+  readonly 'recommended-latest': ReactHooksFlatConfig;
+};
+
+type ReactHooksPlugin = {
+  meta: {
+    name: string;
+    version: string;
+  };
+  rules: Record<string, Rule.RuleModule>;
+  configs: {
+    recommended: {
+      plugins: string[];
+      rules: Linter.RulesRecord;
+    };
+    'recommended-latest': {
+      plugins: string[];
+      rules: Linter.RulesRecord;
+    };
+    flat: ReactHooksFlatConfigs;
+  };
+};
+
+let plugin: ReactHooksPlugin;
+let cachedRecommended: ReactHooksFlatConfig | null = null;
+let cachedRecommendedLatest: ReactHooksFlatConfig | null = null;
+
+const flatConfigs: ReactHooksFlatConfigs = {
+  get recommended() {
+    if (cachedRecommended !== null) {
+      return cachedRecommended;
+    }
+    cachedRecommended = {
+      plugins: {'react-hooks': plugin},
+      rules: recommendedRuleConfigs,
+    };
+    return cachedRecommended;
+  },
+  get 'recommended-latest'() {
+    if (cachedRecommendedLatest !== null) {
+      return cachedRecommendedLatest;
+    }
+    cachedRecommendedLatest = {
+      plugins: {'react-hooks': plugin},
+      rules: recommendedLatestRuleConfigs,
+    };
+    return cachedRecommendedLatest;
+  },
 };
 
 const configs = {
@@ -71,13 +122,10 @@ const configs = {
     plugins,
     rules: recommendedLatestRuleConfigs,
   },
-  flat: {} as {
-    recommended: ReactHooksFlatConfig;
-    'recommended-latest': ReactHooksFlatConfig;
-  },
+  flat: flatConfigs,
 };
 
-const plugin = {
+plugin = {
   meta: {
     name: 'eslint-plugin-react-hooks',
     version: '7.0.0',
@@ -85,16 +133,5 @@ const plugin = {
   rules,
   configs,
 };
-
-Object.assign(configs.flat, {
-  'recommended-latest': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest'].rules,
-  },
-  recommended: {
-    plugins: {'react-hooks': plugin},
-    rules: configs.recommended.rules,
-  },
-});
 
 export default plugin;
