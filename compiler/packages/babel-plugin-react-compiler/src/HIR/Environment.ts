@@ -903,8 +903,14 @@ export class Environment {
       case 'ImportNamespace': {
         if (this.#isKnownReactModule(binding.module)) {
           // only resolve imports to modules we know about
+          // For default imports from 'react', always resolve to the React global type
+          // regardless of the local binding name (e.g., import ReactAlias from 'react')
+          const globalType =
+            binding.kind === 'ImportDefault' && binding.module.toLowerCase() === 'react'
+              ? this.#globals.get('React')
+              : this.#globals.get(binding.name);
           return (
-            this.#globals.get(binding.name) ??
+            globalType ??
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
