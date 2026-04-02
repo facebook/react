@@ -527,7 +527,6 @@ type Task = {
   status: 0 | 1 | 3 | 4 | 5,
   model: ReactClientValue,
   ping: () => void,
-  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
   keyPath: ReactKey, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   formatContext: FormatContext, // an approximate parent context from host components
@@ -2733,55 +2732,6 @@ function createTask(
     implicitSlot,
     formatContext: formatContext,
     ping: () => pingTask(request, task),
-    toJSON: function (
-      this:
-        | {+[key: string | number]: ReactClientValue}
-        | $ReadOnlyArray<ReactClientValue>,
-      parentPropertyName: string,
-      value: ReactClientValue,
-    ): ReactJSONValue {
-      const parent = this;
-      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
-      if (__DEV__) {
-        // $FlowFixMe[incompatible-use]
-        const originalValue = parent[parentPropertyName];
-        if (
-          typeof originalValue === 'object' &&
-          originalValue !== value &&
-          !(originalValue instanceof Date)
-        ) {
-          // Call with the server component as the currently rendering component
-          // for context.
-          callWithDebugContextInDEV(request, task, () => {
-            if (objectName(originalValue) !== 'Object') {
-              const jsxParentType = jsxChildrenParents.get(parent);
-              if (typeof jsxParentType === 'string') {
-                console.error(
-                  '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
-                  objectName(originalValue),
-                  describeObjectForErrorMessage(parent, parentPropertyName),
-                );
-              } else {
-                console.error(
-                  'Only plain objects can be passed to Client Components from Server Components. ' +
-                    '%s objects are not supported.%s',
-                  objectName(originalValue),
-                  describeObjectForErrorMessage(parent, parentPropertyName),
-                );
-              }
-            } else {
-              console.error(
-                'Only plain objects can be passed to Client Components from Server Components. ' +
-                  'Objects with toJSON methods are not supported. Convert it manually ' +
-                  'to a simple value before passing it to props.%s',
-                describeObjectForErrorMessage(parent, parentPropertyName),
-              );
-            }
-          });
-        }
-      }
-      return renderModel(request, task, parent, parentPropertyName, value);
-    },
     thenableState: null,
   }: Omit<
     Task,
@@ -2807,6 +2757,98 @@ function createTask(
   }
   abortSet.add(task);
   return task;
+}
+
+function resolveModel(
+  request: Request,
+  task: Task,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+  value: ReactClientValue,
+): ReactJSONValue {
+  // Replicate JSON.stringify's toJSON semantics: if the value has a toJSON
+  // method, call it first. In practice this only matters for Date objects whose
+  // toJSON calls toISOString. Custom toJSON objects are not supported and will
+  // trigger a DEV warning below.
+  let jsonValue: ReactClientValue = value;
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    // $FlowFixMe[method-unbinding]
+    typeof value.toJSON === 'function'
+  ) {
+    // $FlowFixMe[incompatible-use]
+    jsonValue = value.toJSON(parentPropertyName);
+  }
+
+  if (__DEV__) {
+    // $FlowFixMe[incompatible-use]
+    const originalValue = parent[parentPropertyName];
+    if (
+      typeof originalValue === 'object' &&
+      originalValue !== jsonValue &&
+      !(originalValue instanceof Date)
+    ) {
+      // Call with the server component as the currently rendering component
+      // for context.
+      callWithDebugContextInDEV(request, task, () => {
+        if (objectName(originalValue) !== 'Object') {
+          const jsxParentType = jsxChildrenParents.get(parent);
+          if (typeof jsxParentType === 'string') {
+            console.error(
+              '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+              objectName(originalValue),
+              describeObjectForErrorMessage(parent, parentPropertyName),
+            );
+          } else {
+            console.error(
+              'Only plain objects can be passed to Client Components from Server Components. ' +
+                '%s objects are not supported.%s',
+              objectName(originalValue),
+              describeObjectForErrorMessage(parent, parentPropertyName),
+            );
+          }
+        } else {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              'Objects with toJSON methods are not supported. Convert it manually ' +
+              'to a simple value before passing it to props.%s',
+            describeObjectForErrorMessage(parent, parentPropertyName),
+          );
+        }
+      });
+    }
+  }
+
+  const rendered = renderModel(
+    request,
+    task,
+    parent,
+    parentPropertyName,
+    jsonValue,
+  );
+
+  if (rendered === null || typeof rendered !== 'object') {
+    return rendered;
+  }
+
+  if (isArray(rendered)) {
+    const resolved: Array<ReactJSONValue> = [];
+    for (let i = 0; i < rendered.length; i++) {
+      resolved[i] = resolveModel(request, task, rendered, '' + i, rendered[i]);
+    }
+    return resolved;
+  }
+
+  const resolved: {[key: string]: ReactJSONValue} = ({}: any);
+  for (const key in rendered) {
+    if (hasOwnProperty.call(rendered, key)) {
+      resolved[key] = resolveModel(request, task, rendered, key, rendered[key]);
+    }
+  }
+  return resolved;
 }
 
 function serializeByValueID(id: number): string {
@@ -3587,7 +3629,7 @@ function renderModelDestructive(
           // TODO: Pop this. Since we currently don't have a point where we can pop the stack
           // this debug information will be used for errors inside sibling properties that
           // are not elements. Leading to the wrong attribution on the server. We could fix
-          // that if we switch to a proper stack instead of JSON.stringify's trampoline.
+          // that if we switch to a proper stack instead of resolveModel's recursive walk.
           // Attribution on the client is still correct since it has a pop.
         }
 
@@ -5743,8 +5785,11 @@ function emitChunk(
     return;
   }
   // For anything else we need to try to serialize it using JSON.
+  // We resolve the model tree first in pure JS to avoid the C++→JS boundary
+  // overhead of JSON.stringify's replacer callback.
+  const resolvedModel = resolveModel(request, task, {'': value}, '', value);
   // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
-  const json: string = stringify(value, task.toJSON);
+  const json: string = stringify(resolvedModel);
   emitModelChunk(request, task.id, json);
 }
 
@@ -5790,7 +5835,7 @@ function retryTask(request: Request, task: Task): void {
   try {
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
-    // in the same toJSON if it is cyclic.
+    // in the same resolveModel walk if it is cyclic.
     modelRoot = task.model;
 
     if (__DEV__) {
@@ -5849,8 +5894,8 @@ function retryTask(request: Request, task: Task): void {
       // This is simulating what the JSON loop would do if this was part of it.
       emitChunk(request, task, resolvedModel);
     } else {
-      // If the value is a string, it means it's a terminal value and we already escaped it
-      // We don't need to escape it again so it's not passed the toJSON replacer.
+      // If the value is a string, it means it's a terminal value and we already escaped it.
+      // We don't need to escape it again so it's not passed through resolveModel.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
       const json: string = stringify(resolvedModel);
       emitModelChunk(request, task.id, json);
