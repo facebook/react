@@ -90,7 +90,7 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
-export function allocateTag() {
+export function allocateTag(): number {
   const tag = nextReactTag;
   nextReactTag += 2;
   return tag;
