@@ -90,6 +90,11 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+export function allocateTag() {
+  const tag = nextReactTag;
+  nextReactTag += 2;
+  return tag;
+}
 
 type InternalInstanceHandle = Object;
 
@@ -184,8 +189,7 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const viewConfig = getViewConfigForType(type);
 
@@ -235,8 +239,7 @@ export function createTextInstance(
     }
   }
 
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const node = createNode(
     tag, // reactTag

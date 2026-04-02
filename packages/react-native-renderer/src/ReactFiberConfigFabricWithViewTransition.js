@@ -16,8 +16,11 @@ import type {
   GestureTimeline,
 } from './ReactFiberConfigFabric';
 
+import {allocateTag} from './ReactFiberConfigFabric';
+
 const {
   applyViewTransitionName: fabricApplyViewTransitionName,
+  createViewTransitionInstance: fabricCreateViewTransitionInstance,
   startViewTransition: fabricStartViewTransition,
 } = nativeFabricUIManager;
 
@@ -196,6 +199,8 @@ export function addViewTransitionFinishedListener(
 export function createViewTransitionInstance(
   name: string,
 ): ViewTransitionInstance {
+  const tag = allocateTag();
+  fabricCreateViewTransitionInstance(name, tag);
   return {
     name,
     old: new (ViewTransitionPseudoElement: any)('old', name),
