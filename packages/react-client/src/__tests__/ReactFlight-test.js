@@ -657,6 +657,38 @@ describe('ReactFlight', () => {
     expect(readValue).toEqual(date);
   });
 
+  it('should warn in DEV if an object with toJSON is passed as a top-level value', async () => {
+    const obj = {
+      toJSON() {
+        return 123;
+      },
+    };
+
+    const transport = ReactNoopFlightServer.render(obj);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  {: {toJSON: ...}}\n' +
+        '     ^^^^^^^^^^^^^',
+    ]);
+
+    let readValue;
+    await act(async () => {
+      readValue = await ReactNoopFlightClient.read(transport);
+    });
+
+    expect(readValue).toBe(123);
+    assertConsoleErrorDev([
+      'Only plain objects can be passed to Client Components from Server Components. ' +
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  {: {toJSON: ...}}\n' +
+        '     ^^^^^^^^^^^^^\n' +
+        '    at  (<anonymous>)',
+    ]);
+  });
+
   it('can transport Error objects as values', async () => {
     class CustomError extends Error {
       constructor(message) {
@@ -670,7 +702,10 @@ describe('ReactFlight', () => {
         is error: ${prop instanceof Error}
         name: ${prop.name}
         message: ${prop.message}
-        stack: ${normalizeCodeLocInfo(prop.stack).split('\n').slice(0, 2).join('\n')}
+        stack: ${normalizeCodeLocInfo(prop.stack)
+          .split('\n')
+          .slice(0, 2)
+          .join('\n')}
         environmentName: ${prop.environmentName}
       `;
     }
@@ -716,7 +751,10 @@ describe('ReactFlight', () => {
         is error: ${error instanceof Error}
         name: ${error.name}
         message: ${error.message}
-        stack: ${normalizeCodeLocInfo(error.stack).split('\n').slice(0, 2).join('\n')}
+        stack: ${normalizeCodeLocInfo(error.stack)
+          .split('\n')
+          .slice(0, 2)
+          .join('\n')}
         environmentName: ${error.environmentName}
         cause: ${'cause' in error ? renderError(error.cause) : 'no cause'}`;
     }
@@ -782,7 +820,10 @@ describe('ReactFlight', () => {
         is error: true
         name: ${error.name}
         message: ${error.message}
-        stack: ${normalizeCodeLocInfo(error.stack).split('\n').slice(0, 2).join('\n')}
+        stack: ${normalizeCodeLocInfo(error.stack)
+          .split('\n')
+          .slice(0, 2)
+          .join('\n')}
         environmentName: ${error.environmentName}
         cause: ${'cause' in error ? renderError(error.cause) : 'no cause'}`;
     }
