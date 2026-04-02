@@ -462,7 +462,10 @@ class Context {
     }
     let validated = makeIdentifierName(name).value;
     let index = 0;
-    while (this.uniqueIdentifiers.has(validated)) {
+    while (
+      this.uniqueIdentifiers.has(validated) ||
+      this.env.programContext.hasReference(validated)
+    ) {
       validated = makeIdentifierName(`${name}${index++}`).value;
     }
     this.uniqueIdentifiers.add(validated);
