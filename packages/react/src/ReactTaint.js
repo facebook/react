@@ -58,7 +58,7 @@ export function taintUniqueValue(
   value: string | bigint | $ArrayBufferView,
 ): void {
   if (!enableTaint) {
-    throw new Error('Not implemented.');
+    throw new Error('taintUniqueValue() is not implemented in this build.');
   }
   // eslint-disable-next-line react-internal/safe-string-coercion
   message = '' + (message || defaultMessage);
@@ -117,7 +117,7 @@ export function taintObjectReference(
   object: Reference,
 ): void {
   if (!enableTaint) {
-    throw new Error('Not implemented.');
+    throw new Error('taintObjectReference() is not implemented in this build.');
   }
   // eslint-disable-next-line react-internal/safe-string-coercion
   message = '' + (message || defaultMessage);

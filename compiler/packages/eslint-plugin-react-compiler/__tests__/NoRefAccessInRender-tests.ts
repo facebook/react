@@ -16,7 +16,38 @@ testRule(
   'no ref access in render rule',
   allRules[getRuleForCategory(ErrorCategory.Refs).name].rule,
   {
-    valid: [],
+    valid: [
+      {
+        name: 'allow ref access in callback functions (IntersectionObserver case)',
+        code: normalizeIndent`
+      function useIntersectionObserver(options) {
+        const callbacks = useRef(new Map());
+        const onIntersect = useCallback((entries) => {
+          entries.forEach(entry => callbacks.current.get(entry.target.id)?.(entry.isIntersecting));
+        }, []);
+        const observer = useMemo(() => new IntersectionObserver(onIntersect, options), [onIntersect, options]);
+        return observer;
+      }
+    `,
+      },
+      {
+        name: 'allow ref access in user exact code example',
+        code: normalizeIndent`
+      function useIntersectionObserver(options) {
+        const callbacks = useRef(new Map());
+        const onIntersect = useCallback((entries) => {
+          entries.forEach(entry =>
+            callbacks.current.get(entry.target.id)?.(entry.isIntersecting)
+          );
+        }, []);
+        const observer = useMemo(() =>
+          new IntersectionObserver(onIntersect, options),
+          [onIntersect, options]
+        );
+      }
+    `,
+      },
+    ],
     invalid: [
       {
         name: 'validate against simple ref access in render',

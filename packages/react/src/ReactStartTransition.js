@@ -132,7 +132,7 @@ export function startGestureTransition(
     // use null as a signal internally so it would lead it to be treated as a
     // regular transition otherwise.
     throw new Error(
-      'A Timeline is required as the first argument to startGestureTransition.',
+      'startGestureTransition(): A Timeline is required as the first argument.',
     );
   }
   const prevTransition = ReactSharedInternals.T;
