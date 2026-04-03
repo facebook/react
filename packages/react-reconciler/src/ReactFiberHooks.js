@@ -1181,7 +1181,7 @@ function useMemoCache(size: number): Array<mixed> {
       if (currentUpdateQueue !== null) {
         const currentMemoCache: ?MemoCache = currentUpdateQueue.memoCache;
         if (currentMemoCache != null) {
-          let clonedData;
+          let clonedData: Array<Array<any>>;
           if (enableNoCloningMemoCache) {
             clonedData = currentMemoCache.data;
           } else {

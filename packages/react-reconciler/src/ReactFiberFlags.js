@@ -86,9 +86,6 @@ export const ViewTransitionStatic = /*         */ 0b0000010000000000000000000000
 // Tracks whether a HostPortal is present in the tree.
 export const PortalStatic = /*                 */ 0b0000100000000000000000000000000;
 
-export const ViewTransitionMask: number =
-  BeforeAndAfterMutationTransitionMask | PassiveTransitionMask;
-
 // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 export const PlacementDEV = /*                 */ 0b0001000000000000000000000000000;
 export const MountLayoutDev = /*               */ 0b0010000000000000000000000000000;
@@ -133,6 +130,9 @@ export const PassiveMask = Passive | Visibility | ChildDeletion;
 // For View Transitions we need to visit anything we visited in the snapshot phase to
 // restore the view-transition-name after committing the transition.
 export const PassiveTransitionMask: number = PassiveMask | Update | Placement;
+
+export const ViewTransitionMask: number =
+  BeforeAndAfterMutationTransitionMask | PassiveTransitionMask;
 
 // Union of tags that don't get reset on clones.
 // This allows certain concepts to persist without recalculating them,

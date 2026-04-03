@@ -3503,12 +3503,17 @@ export function commitPassiveMountEffects(
 ): void {
   resetComponentEffectTimers();
 
+  const isViewTransitionEligible =
+    enableViewTransition &&
+    includesOnlyViewTransitionEligibleLanes(committedLanes);
+
   commitPassiveMountOnFiber(
     root,
     finishedWork,
     committedLanes,
     committedTransitions,
     enableProfilerTimer && enableComponentPerformanceTrack ? renderEndTime : 0,
+    isViewTransitionEligible,
   );
 }
 
@@ -3781,8 +3786,8 @@ function commitPassiveMountOnFiber(
           committedLanes,
           committedTransitions,
           endTime,
+          isViewTransitionEligible,
         );
-
         const profilerInstance = finishedWork.stateNode;
 
         if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -3808,8 +3813,8 @@ function commitPassiveMountOnFiber(
           committedLanes,
           committedTransitions,
           endTime,
-        );
-      }
+          isViewTransitionEligible,
+        );      }
       break;
     }
     case ActivityComponent: {
@@ -3934,8 +3939,8 @@ function commitPassiveMountOnFiber(
           committedLanes,
           committedTransitions,
           endTime,
+          isViewTransitionEligible,
         );
-
         if (flags & Passive) {
           const current = finishedWork.alternate;
           const instance: OffscreenInstance = finishedWork.stateNode;
@@ -3971,8 +3976,8 @@ function commitPassiveMountOnFiber(
             committedLanes,
             committedTransitions,
             endTime,
-          );
-        } else {
+            isViewTransitionEligible,
+          );        } else {
           if (disableLegacyMode || finishedWork.mode & ConcurrentMode) {
             // The effects are currently disconnected. Since the tree is hidden,
             // don't connect them. This also applies to the initial render.
@@ -3995,8 +4000,8 @@ function commitPassiveMountOnFiber(
               committedLanes,
               committedTransitions,
               endTime,
-            );
-          }
+              isViewTransitionEligible,
+            );          }
         }
       } else {
         // Tree is visible
@@ -4018,8 +4023,8 @@ function commitPassiveMountOnFiber(
             committedLanes,
             committedTransitions,
             endTime,
-          );
-        } else {
+            isViewTransitionEligible,
+          );        } else {
           // The effects are currently disconnected. Reconnect them, while also
           // firing effects inside newly mounted trees. This also applies to
           // the initial render.
@@ -4109,8 +4114,8 @@ function commitPassiveMountOnFiber(
           committedLanes,
           committedTransitions,
           endTime,
-        );
-        break;
+          isViewTransitionEligible,
+        );        break;
       }
       // Fallthrough
     }
@@ -4122,6 +4127,7 @@ function commitPassiveMountOnFiber(
           committedLanes,
           committedTransitions,
           endTime,
+          isViewTransitionEligible,
         );
         if (flags & Passive) {
           commitTracingMarkerPassiveMountEffect(finishedWork);
