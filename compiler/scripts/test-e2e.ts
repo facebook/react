@@ -146,7 +146,14 @@ const rustPlugin =
 // --- Format code with prettier ---
 async function formatCode(code: string, isFlow: boolean): Promise<string> {
   try {
-    return await prettier.format(code, {
+    // Two-pass: printWidth=1 erases single-vs-multi-line style differences,
+    // then default width re-compacts what fits on one line.
+    const expanded = await prettier.format(code, {
+      semi: true,
+      parser: isFlow ? 'flow' : 'babel-ts',
+      printWidth: 1,
+    });
+    return await prettier.format(expanded, {
       semi: true,
       parser: isFlow ? 'flow' : 'babel-ts',
     });
@@ -202,7 +209,11 @@ function compileBabel(
     });
     return {code: result?.code ?? null, error: null, events};
   } catch (e) {
-    return {code: null, error: e instanceof Error ? e.message : String(e), events};
+    return {
+      code: null,
+      error: e instanceof Error ? e.message : String(e),
+      events,
+    };
   }
 }
 
@@ -313,20 +324,28 @@ function adjustDetailLocs(
     if (newDetail.loc && typeof newDetail.loc === 'object') {
       const loc = newDetail.loc as Record<string, unknown>;
       newDetail.loc = {
-        start: loc.start ? adjustLoc(loc.start as Record<string, unknown>) : loc.start,
+        start: loc.start
+          ? adjustLoc(loc.start as Record<string, unknown>)
+          : loc.start,
         end: loc.end ? adjustLoc(loc.end as Record<string, unknown>) : loc.end,
       };
     }
     // Adjust locs inside details array (CompilerDiagnostic)
     if (Array.isArray(newDetail.details)) {
-      newDetail.details = (newDetail.details as Array<Record<string, unknown>>).map(d => {
+      newDetail.details = (
+        newDetail.details as Array<Record<string, unknown>>
+      ).map(d => {
         if (!d.loc || typeof d.loc !== 'object') return d;
         const loc = d.loc as Record<string, unknown>;
         return {
           ...d,
           loc: {
-            start: loc.start ? adjustLoc(loc.start as Record<string, unknown>) : loc.start,
-            end: loc.end ? adjustLoc(loc.end as Record<string, unknown>) : loc.end,
+            start: loc.start
+              ? adjustLoc(loc.start as Record<string, unknown>)
+              : loc.start,
+            end: loc.end
+              ? adjustLoc(loc.end as Record<string, unknown>)
+              : loc.end,
           },
         };
       });
@@ -348,10 +367,12 @@ function stripPipelineErrorStack(
   });
 }
 
-function normalizeEvents(
-  events: Array<Record<string, unknown>>,
-): string {
-  return JSON.stringify(sortAndStrip(adjustDetailLocs(stripPipelineErrorStack(events))), null, 2);
+function normalizeEvents(events: Array<Record<string, unknown>>): string {
+  return JSON.stringify(
+    sortAndStrip(adjustDetailLocs(stripPipelineErrorStack(events))),
+    null,
+    2,
+  );
 }
 
 // --- Simple unified diff ---
@@ -475,8 +496,7 @@ async function runVariant(
     const variantErrored =
       variantCode.trim() === '' || variantResult.error != null;
 
-    const codeMatch =
-      tsCode === variantCode || (tsErrored && variantErrored);
+    const codeMatch = tsCode === variantCode || (tsErrored && variantErrored);
     const eventsMatch = tsEvents === variantEvents;
 
     // When code doesn't match due to TS error + variant passthrough, check
@@ -484,8 +504,7 @@ async function runVariant(
     let codePassthrough = false;
     if (!codeMatch && tsErrored && variantCode.trim() !== '') {
       const variantHasMemoization =
-        variantCode.includes('_c(') ||
-        variantCode.includes('useMemoCache');
+        variantCode.includes('_c(') || variantCode.includes('useMemoCache');
       if (!variantHasMemoization) {
         codePassthrough = true;
       }
@@ -499,13 +518,16 @@ async function runVariant(
       if (limitArg === 0 || s.failures.length < limitArg) {
         const details: string[] = [];
         if (!codeMatch && !codePassthrough) {
-          details.push(
-            unifiedDiff(tsCode, variantCode, 'TypeScript', variant),
-          );
+          details.push(unifiedDiff(tsCode, variantCode, 'TypeScript', variant));
         }
         if (!eventsMatch) {
           details.push(
-            unifiedDiff(tsEvents, variantEvents, 'TS events', variant + ' events'),
+            unifiedDiff(
+              tsEvents,
+              variantEvents,
+              'TS events',
+              variant + ' events',
+            ),
           );
         }
         s.failures.push({
@@ -538,10 +560,7 @@ async function runVariant(
   // Pre-compute fixture info and TS baselines
   const fixtureInfos: FixtureInfo[] = [];
   const tsBaselines = new Map<string, string>();
-  const tsRawEvents = new Map<
-    string,
-    Array<Record<string, unknown>>
-  >();
+  const tsRawEvents = new Map<string, Array<Record<string, unknown>>>();
 
   console.log('Computing TS baselines...');
   for (let i = 0; i < fixtures.length; i++) {
