@@ -260,4 +260,85 @@ describe('commit tree', () => {
       }
     });
   });
+
+  it('should tolerate malformed operations without throwing', () => {
+    const {getCommitTree, invalidateCommitTrees} = require('react-devtools-shared/src/devtools/views/Profiler/CommitTreeBuilder');
+    const {
+      ElementTypeFunction,
+      ElementTypeRoot,
+    } = require('react-devtools-shared/src/frontend/types');
+
+    const rootID = 1;
+    const snapshots = new Map();
+    snapshots.set(rootID, {
+      id: rootID,
+      children: [2],
+      displayName: 'Root',
+      hocDisplayNames: null,
+      key: null,
+      type: ElementTypeRoot,
+      compiledWithForget: false,
+    });
+    snapshots.set(2, {
+      id: 2,
+      children: [],
+      displayName: 'Child',
+      hocDisplayNames: null,
+      key: null,
+      type: ElementTypeFunction,
+      compiledWithForget: false,
+    });
+    const initialTreeBaseDurations = new Map();
+    initialTreeBaseDurations.set(rootID, 0);
+    initialTreeBaseDurations.set(2, 0);
+
+    const ops0 = [0, rootID, 0];
+    const ops1 = [
+      0, rootID, 0,
+      1, 2, ElementTypeFunction, rootID, 0, 0, 0,
+      2, 1, 999,
+      6,
+      99,
+    ];
+
+    const profilingData = {
+      dataForRoots: new Map([
+        [
+          rootID,
+          {
+            commitData: [],
+            displayName: 'root',
+            initialTreeBaseDurations,
+            operations: [ops0, ops1],
+            rootID,
+            snapshots,
+          },
+        ],
+      ]),
+      imported: false,
+      timelineData: [],
+    };
+
+    const fakeProfilerStore = {profilingData};
+
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    invalidateCommitTrees();
+    expect(() => {
+      const commitTree = getCommitTree({
+        commitIndex: 1,
+        profilerStore: fakeProfilerStore,
+        rootID,
+      });
+      expect(commitTree.nodes.size).toBe(2);
+    }).not.toThrow();
+
+    expect(errorSpy).toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+    warnSpy.mockRestore();
+  });
+
 });
