@@ -1,0 +1,371 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 16px 20px;
+  background: #fafafa;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* App header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 65% 35%;
+  gap: 16px;
+}
+.layout-full {
+  grid-template-columns: 1fr;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 250px;
+}
+
+.filter-select {
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+}
+
+.filter-count {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.commit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.commit-table th {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 2px solid #e5e7eb;
+  background: #f8f9fa;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.commit-table td {
+  padding: 6px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+/* Center-align checkbox columns */
+.commit-table th:nth-child(1),
+.commit-table th:nth-child(2),
+.commit-table td:nth-child(1),
+.commit-table td:nth-child(2) {
+  text-align: center;
+}
+
+.commit-table a {
+  color: #0969da;
+  text-decoration: none;
+}
+.commit-table a:hover {
+  text-decoration: underline;
+}
+
+.reviewed-row {
+  opacity: 0.35;
+}
+
+/* Row checkboxes */
+.row-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #0969da;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Toolbar buttons */
+.toolbar-btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+.toolbar-btn:hover {
+  background: #f0f0f0;
+}
+
+.sidebar-toggle-btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+.sidebar-toggle-btn:hover {
+  background: #f0f0f0;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 450px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #666;
+  line-height: 1;
+}
+.modal-close-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Release notes sidebar */
+.release-notes-panel {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.release-notes-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.release-notes-panel pre {
+  white-space: pre-wrap;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.copy-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  background: #f0f0f0;
+}
+
+/* View toggle (raw/preview) */
+.view-toggle {
+  display: flex;
+  gap: 0;
+}
+.view-toggle button {
+  padding: 3px 10px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+.view-toggle button:first-child {
+  border-radius: 3px 0 0 3px;
+}
+.view-toggle button:last-child {
+  border-radius: 0 3px 3px 0;
+  border-left: none;
+}
+.view-toggle button.active {
+  background: #0969da;
+  color: white;
+  border-color: #0969da;
+}
+
+/* Markdown preview */
+.markdown-preview {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.markdown-preview h2 {
+  font-size: 1.2em;
+  margin: 16px 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #eee;
+}
+.markdown-preview h3 {
+  font-size: 1em;
+  margin: 12px 0 6px 0;
+}
+.markdown-preview li {
+  margin-bottom: 4px;
+  list-style-type: disc;
+  margin-left: 20px;
+}
+.markdown-preview a {
+  color: #0969da;
+  text-decoration: none;
+}
+.markdown-preview a:hover {
+  text-decoration: underline;
+}
+.markdown-preview code {
+  background: #f0f2f5;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.9em;
+}
+
+/* Manager panels */
+.manager-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.manager-row input[type="text"] {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.manager-row input[type="color"] {
+  width: 28px;
+  height: 28px;
+  border: none;
+  cursor: pointer;
+}
+.feature-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #666;
+  white-space: nowrap;
+}
+.feature-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+.delete-btn {
+  background: none;
+  border: none;
+  color: #cf222e;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+}
+.delete-btn:hover {
+  background: #fee;
+  border-radius: 4px;
+}
+
+/* Tag picker (in-row) */
+.tag-picker {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.tag-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  opacity: 0.5;
+  color: black;
+  transition: opacity 0.1s;
+}
+.tag-btn.active {
+  opacity: 1;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
