@@ -31,6 +31,7 @@ The documentation is divided into several sections:
 * [Describing the UI](https://react.dev/learn/describing-the-ui)
 * [Adding Interactivity](https://react.dev/learn/adding-interactivity)
 * [Managing State](https://react.dev/learn/managing-state)
+* [Using TypeScript](https://react.dev/learn/typescript)
 * [Advanced Guides](https://react.dev/learn/escape-hatches)
 * [API Reference](https://react.dev/reference/react)
 * [Where to Get Support](https://react.dev/community)
