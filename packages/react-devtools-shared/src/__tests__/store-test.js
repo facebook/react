@@ -2157,6 +2157,11 @@ describe('Store', () => {
     ForwardRefComponentWithCustomDisplayName.displayName = 'Custom';
     const MyComponent4 = (props, ref) => null;
     const MemoComponent = React.memo(MyComponent4);
+    const MyComponent5 = (props, ref) => null;
+    const MemoComponentWithCustomCompare = React.memo(
+      MyComponent5,
+      (a, b) => a === b,
+    );
     const MemoForwardRefComponent = React.memo(ForwardRefComponent);
 
     const FakeHigherOrderComponent = () => null;
@@ -2186,6 +2191,7 @@ describe('Store', () => {
         <ForwardRefComponentWithAnonymousFunction />
         <ForwardRefComponentWithCustomDisplayName />
         <MemoComponent />
+        <MemoComponentWithCustomCompare />
         <MemoForwardRefComponent />
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
@@ -2212,6 +2218,7 @@ describe('Store', () => {
               <MyComponent2>
             <Custom>
             <MyComponent4> [Memo]
+            <MyComponent5> [Memo]
           ▾ <MyComponent> [Memo]
               <MyComponent> [ForwardRef]
             <Baz> [withFoo][withBar]
