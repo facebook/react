@@ -1520,7 +1520,12 @@ function parseAsyncIterable<T>(
           buffer[nextReadIndex] =
             createPendingChunk<IteratorResult<T, T>>(response);
         }
-        return buffer[nextReadIndex++];
+        const result = buffer[nextReadIndex++];
+        if (iterator) {
+          // $FlowFixMe[incompatible-type]
+          buffer[nextReadIndex - 1] = (null: any);
+        }
+        return result;
       });
     },
   };

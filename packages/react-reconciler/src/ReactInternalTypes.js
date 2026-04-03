@@ -242,6 +242,7 @@ type BaseFiberRootProperties = {
   callbackNode: any,
   callbackPriority: Lane,
   expirationTimes: LaneMap<number>,
+  earliestPendingTime: number,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
 
   pendingLanes: Lanes,

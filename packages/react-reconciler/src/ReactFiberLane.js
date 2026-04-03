@@ -542,14 +542,21 @@ export function markStarvedLanesAsExpired(
   root: FiberRoot,
   currentTime: number,
 ): void {
-  // TODO: This gets called every time we yield. We can optimize by storing
-  // the earliest expiration time on the root. Then use that to quickly bail out
-  // of this function.
+  // O(1) Bailout: If the earliest expiration time is in the future, we don't
+  // need to check all lanes.
+  if (
+    root.earliestPendingTime !== NoTimestamp &&
+    root.earliestPendingTime > currentTime
+  ) {
+    return;
+  }
 
   const pendingLanes = root.pendingLanes;
   const suspendedLanes = root.suspendedLanes;
   const pingedLanes = root.pingedLanes;
   const expirationTimes = root.expirationTimes;
+
+  let earliestPendingTime = NoTimestamp;
 
   // Iterate through the pending lanes and check if we've reached their
   // expiration time. If so, we'll assume the update is being starved and mark
@@ -566,7 +573,7 @@ export function markStarvedLanesAsExpired(
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
-    const expirationTime = expirationTimes[index];
+    let expirationTime = expirationTimes[index];
     if (expirationTime === NoTimestamp) {
       // Found a pending lane with no expiration time. If it's not suspended, or
       // if it's pinged, assume it's CPU-bound. Compute a new expiration time
@@ -576,15 +583,29 @@ export function markStarvedLanesAsExpired(
         (lane & pingedLanes) !== NoLanes
       ) {
         // Assumes timestamps are monotonically increasing.
-        expirationTimes[index] = computeExpirationTime(lane, currentTime);
+        expirationTime = computeExpirationTime(lane, currentTime);
+        expirationTimes[index] = expirationTime;
       }
-    } else if (expirationTime <= currentTime) {
-      // This lane expired
-      root.expiredLanes |= lane;
+    }
+    
+    if (expirationTime !== NoTimestamp) {
+      if (expirationTime <= currentTime) {
+        // This lane expired
+        root.expiredLanes |= lane;
+      } else {
+        if (
+          earliestPendingTime === NoTimestamp ||
+          expirationTime < earliestPendingTime
+        ) {
+          earliestPendingTime = expirationTime;
+        }
+      }
     }
 
     lanes &= ~lane;
   }
+  
+  root.earliestPendingTime = earliestPendingTime;
 }
 
 // This returns the highest priority pending lanes regardless of whether they
@@ -824,6 +845,7 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
 
 export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   root.pendingLanes |= updateLane;
+  root.earliestPendingTime = NoTimestamp;
   if (enableDefaultTransitionIndicator) {
     // Mark that this lane might need a loading indicator to be shown.
     root.indicatorLanes |= updateLane & TransitionLanes;
@@ -1062,6 +1084,7 @@ export function upgradePendingLanesToSync(
   // Same as upgradePendingLaneToSync but accepts multiple lanes, so it's a
   // bit slower.
   root.pendingLanes |= SyncLane;
+  root.earliestPendingTime = NoTimestamp;
   root.entangledLanes |= SyncLane;
   let lanes = lanesToUpgrade;
   while (lanes) {

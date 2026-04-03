@@ -1181,6 +1181,18 @@ function useMemoCache(size: number): Array<mixed> {
       if (currentUpdateQueue !== null) {
         const currentMemoCache: ?MemoCache = currentUpdateQueue.memoCache;
         if (currentMemoCache != null) {
+          let clonedData;
+          if (enableNoCloningMemoCache) {
+            clonedData = currentMemoCache.data;
+          } else {
+            // Clone the memo cache before each render (copy-on-write)
+            const data = currentMemoCache.data;
+            const len = data.length;
+            clonedData = new Array(len);
+            for (let i = 0; i < len; i++) {
+              clonedData[i] = data[i].slice();
+            }
+          }
           memoCache = {
             // When enableNoCloningMemoCache is enabled, instead of treating the
             // cache as copy-on-write, like we do with fibers, we share the same
@@ -1204,10 +1216,7 @@ function useMemoCache(size: number): Array<mixed> {
             // However, this alone is pretty useful — it happens whenever you
             // update the UI with fresh data after a mutation/action, which is
             // extremely common in a Suspense-driven (e.g. RSC or Relay) app.
-            data: enableNoCloningMemoCache
-              ? currentMemoCache.data
-              : // Clone the memo cache before each render (copy-on-write)
-                currentMemoCache.data.map(array => array.slice()),
+            data: clonedData,
             index: 0 as number,
           };
         }

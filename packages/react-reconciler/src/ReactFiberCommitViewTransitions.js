@@ -647,6 +647,9 @@ export function restoreUpdateViewTransitionForGesture(
 }
 
 export function restoreNestedViewTransitions(changedParent: Fiber): void {
+  if ((changedParent.subtreeFlags & ViewTransitionStatic) === NoFlags) {
+    return;
+  }
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
@@ -879,9 +882,12 @@ export function measureUpdateViewTransition(
     if (clones === null) {
       previousMeasurements = null;
     } else {
-      previousMeasurements = clones.map(measureClonedInstance);
-    }
-  } else {
+      const clonesLength = clones.length;
+      previousMeasurements = new Array(clonesLength);
+      for (let i = 0; i < clonesLength; i++) {
+        previousMeasurements[i] = measureClonedInstance(clones[i]);
+      }
+    }  } else {
     previousMeasurements = oldFiber.memoizedState;
     oldFiber.memoizedState = null; // Clear it. We won't need it anymore.
   }
@@ -909,6 +915,9 @@ export function measureNestedViewTransitions(
   changedParent: Fiber,
   gesture: boolean,
 ): void {
+  if ((changedParent.subtreeFlags & ViewTransitionStatic) === NoFlags) {
+    return;
+  }
   let child = changedParent.child;
   while (child !== null) {
     if (child.tag === ViewTransitionComponent) {
@@ -925,7 +934,11 @@ export function measureNestedViewTransitions(
         if (clones === null) {
           previousMeasurements = null;
         } else {
-          previousMeasurements = clones.map(measureClonedInstance);
+          const clonesLength = clones.length;
+          previousMeasurements = new Array(clonesLength);
+          for (let i = 0; i < clonesLength; i++) {
+            previousMeasurements[i] = measureClonedInstance(clones[i]);
+          }
         }
       } else {
         previousMeasurements = child.memoizedState;

@@ -3518,10 +3518,8 @@ function recursivelyTraversePassiveMountEffects(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
   endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
+  isViewTransitionEligible: boolean,
 ) {
-  const isViewTransitionEligible =
-    enableViewTransition &&
-    includesOnlyViewTransitionEligibleLanes(committedLanes);
   // TODO: We could optimize this by marking these with the Passive subtree flag in the render phase.
   const subtreeMask = isViewTransitionEligible
     ? PassiveTransitionMask
@@ -3547,6 +3545,7 @@ function recursivelyTraversePassiveMountEffects(
           nextSibling !== null
             ? ((nextSibling.actualStartTime: any): number)
             : endTime,
+          isViewTransitionEligible,
         );
         child = nextSibling;
       } else {
@@ -3555,7 +3554,8 @@ function recursivelyTraversePassiveMountEffects(
           child,
           committedLanes,
           committedTransitions,
-          0,
+          endTime,
+          isViewTransitionEligible,
         );
         child = child.sibling;
       }
@@ -3577,16 +3577,13 @@ function commitPassiveMountOnFiber(
   committedLanes: Lanes,
   committedTransitions: Array<Transition> | null,
   endTime: number, // Profiling-only. The start time of the next Fiber or root completion.
+  isViewTransitionEligible: boolean,
 ): void {
   const prevEffectStart = pushComponentEffectStart();
   const prevEffectDuration = pushComponentEffectDuration();
   const prevEffectErrors = pushComponentEffectErrors();
   const prevEffectDidSpawnUpdate = pushComponentEffectDidSpawnUpdate();
   const prevDeepEquality = pushDeepEquality();
-
-  const isViewTransitionEligible = enableViewTransition
-    ? includesOnlyViewTransitionEligibleLanes(committedLanes)
-    : false;
 
   if (
     isViewTransitionEligible &&
@@ -3637,6 +3634,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
       if (flags & Passive) {
         commitHookPassiveMountEffects(
@@ -3683,6 +3681,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
       break;
     }
@@ -3705,6 +3704,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
 
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3859,6 +3859,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
 
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3917,6 +3918,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
 
       if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -4078,6 +4080,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
       if (flags & Passive) {
         // TODO: Pass `current` as argument to this function
@@ -4134,6 +4137,7 @@ function commitPassiveMountOnFiber(
         committedLanes,
         committedTransitions,
         endTime,
+        isViewTransitionEligible,
       );
       break;
     }
