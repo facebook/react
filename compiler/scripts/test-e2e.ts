@@ -18,6 +18,7 @@
  */
 
 import * as babel from '@babel/core';
+import generate from '@babel/generator';
 import {execSync, spawnSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -143,17 +144,23 @@ const tsPlugin = require('../packages/babel-plugin-react-compiler/src').default;
 const rustPlugin =
   require('../packages/babel-plugin-react-compiler-rust/src').default;
 
-// --- Format code with prettier ---
+// --- Normalize code for comparison ---
+// Reparse with Babel and regenerate with compact:true to erase all
+// whitespace/formatting differences, then Prettier for readable output.
 async function formatCode(code: string, isFlow: boolean): Promise<string> {
   try {
-    // Two-pass: printWidth=1 erases single-vs-multi-line style differences,
-    // then default width re-compacts what fits on one line.
-    const expanded = await prettier.format(code, {
-      semi: true,
-      parser: isFlow ? 'flow' : 'babel-ts',
-      printWidth: 1,
+    const parserPlugins: string[] = isFlow
+      ? ['flow', 'jsx']
+      : ['typescript', 'jsx'];
+    const ast = babel.parseSync(code, {
+      sourceType: 'module',
+      parserOpts: {plugins: parserPlugins},
+      configFile: false,
+      babelrc: false,
     });
-    return await prettier.format(expanded, {
+    if (!ast) return code;
+    const compact = generate(ast, {compact: true}).code;
+    return await prettier.format(compact, {
       semi: true,
       parser: isFlow ? 'flow' : 'babel-ts',
     });
@@ -282,8 +289,8 @@ function compileCli(
 // --- Event normalization ---
 // Strip identifierName (Babel-specific SourceLocation property), sort
 // keys for stable comparison, then JSON.stringify.
-// For 1-based frontends (SWC, OXC), adjust column and index values
-// inside error detail locations to match Babel's 0-based convention.
+// SWC uses 1-based columns/indices (from BytePos); adjust to match
+// Babel's 0-based convention.  OXC is natively 0-based, no adjustment needed.
 const STRIP_KEYS = new Set(['identifierName', 'fnLoc']);
 let oneBasedColumns = false;
 
@@ -467,8 +474,8 @@ async function runVariant(
     // TS baseline uses Babel (0-based columns), no adjustment needed
     oneBasedColumns = false;
     const tsEvents = normalizeEvents(tsRawEvents.get(fixturePath)!);
-    // SWC and OXC use 1-based columns; adjust to match Babel's 0-based convention
-    oneBasedColumns = variant !== 'babel';
+    // SWC uses 1-based columns/indices (BytePos); OXC is 0-based like Babel
+    oneBasedColumns = variant === 'swc';
 
     writeProgress(
       `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${s.failed} failed)`,

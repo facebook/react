@@ -100,7 +100,7 @@ impl<'a> ConvertCtx<'a> {
         Position {
             line: (line_idx + 1) as u32,
             column: offset - line_start,
-            index: None,
+            index: Some(offset),
         }
     }
 
