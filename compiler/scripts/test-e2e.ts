@@ -431,12 +431,25 @@ if (fixtures.length === 0) {
 interface VariantStats {
   passed: number;
   failed: number;
+  codePassed: number;
+  codeFailed: number;
+  eventsPassed: number;
+  eventsFailed: number;
   failures: Array<{fixture: string; detail: string}>;
   failedFixtures: string[];
 }
 
 function makeStats(): VariantStats {
-  return {passed: 0, failed: 0, failures: [], failedFixtures: []};
+  return {
+    passed: 0,
+    failed: 0,
+    codePassed: 0,
+    codeFailed: 0,
+    eventsPassed: 0,
+    eventsFailed: 0,
+    failures: [],
+    failedFixtures: [],
+  };
 }
 
 // --- Progress helper ---
@@ -485,6 +498,8 @@ async function runVariant(
     // Flow parser, so Flow type cast syntax (e.g., `(x: Type)`) fails.
     if (variant !== 'babel' && isFlow) {
       s.passed++;
+      s.codePassed++;
+      s.eventsPassed++;
       continue;
     }
 
@@ -517,14 +532,26 @@ async function runVariant(
       }
     }
 
-    if ((codeMatch || codePassthrough) && eventsMatch) {
+    const codeOk = codeMatch || codePassthrough;
+    if (codeOk) {
+      s.codePassed++;
+    } else {
+      s.codeFailed++;
+    }
+    if (eventsMatch) {
+      s.eventsPassed++;
+    } else {
+      s.eventsFailed++;
+    }
+
+    if (codeOk && eventsMatch) {
       s.passed++;
     } else {
       s.failed++;
       s.failedFixtures.push(relPath);
       if (limitArg === 0 || s.failures.length < limitArg) {
         const details: string[] = [];
-        if (!codeMatch && !codePassthrough) {
+        if (!codeOk) {
           details.push(unifiedDiff(tsCode, variantCode, 'TypeScript', variant));
         }
         if (!eventsMatch) {
@@ -611,9 +638,11 @@ async function runVariant(
     const s = stats.get(variantArg)!;
     const total = fixtures.length;
     const summaryColor = s.failed === 0 ? GREEN : RED;
-    console.log(
-      `${summaryColor}Results: ${s.passed} passed, ${s.failed} failed (${total} total)${RESET}`,
-    );
+    const summary =
+      `Code: ${s.codePassed}/${total} passed  ` +
+      `Events: ${s.eventsPassed}/${total} passed  ` +
+      `Total: ${s.passed}/${total} passed`;
+    console.log(`${summaryColor}${summary}${RESET}`);
     console.log('');
 
     for (const failure of s.failures) {
@@ -629,21 +658,33 @@ async function runVariant(
     }
 
     console.log('---');
-    console.log(
-      `${summaryColor}Results: ${s.passed} passed, ${s.failed} failed (${total} total)${RESET}`,
-    );
+    console.log(`${summaryColor}${summary}${RESET}`);
   } else {
     // Summary table mode
     const total = fixtures.length;
 
+    function fmtCell(passed: number, total: number): string {
+      const pct = ((passed / total) * 100).toFixed(1);
+      return `${passed}/${total} (${pct}%)`;
+    }
+
     // Table header
-    const hdr = `${'Variant'.padEnd(10)} ${'Passed'.padEnd(8)} ${'Failed'.padEnd(8)} Total`;
+    const colW = 22;
+    const hdr =
+      `${'Variant'.padEnd(10)} ` +
+      `${'Code'.padEnd(colW)} ` +
+      `${'Events'.padEnd(colW)} ` +
+      `${'Total'.padEnd(colW)}`;
     console.log(`${BOLD}${hdr}${RESET}`);
 
     for (const variant of ALL_VARIANTS) {
       const s = stats.get(variant)!;
+      const line =
+        `${variant.padEnd(10)} ` +
+        `${fmtCell(s.codePassed, total).padEnd(colW)} ` +
+        `${fmtCell(s.eventsPassed, total).padEnd(colW)} ` +
+        `${fmtCell(s.passed, total)}`;
       const color = s.failed === 0 ? GREEN : s.passed === 0 ? RED : YELLOW;
-      const line = `${variant.padEnd(10)} ${String(s.passed).padEnd(8)} ${String(s.failed).padEnd(8)} ${total}`;
       console.log(`${color}${line}${RESET}`);
     }
   }
