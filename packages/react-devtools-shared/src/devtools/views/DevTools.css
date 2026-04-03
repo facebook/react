@@ -14,6 +14,7 @@
   display: flex;
   align-items: center;
   padding: 0 0.5rem;
+  overflow-x: auto;
   background-color: var(--color-background);
   border-top: 1px solid var(--color-border);
   font-family: var(--font-family-sans);
