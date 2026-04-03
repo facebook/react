@@ -957,6 +957,53 @@ export function resetHooksOnUnwind(workInProgress: Fiber): void {
     didScheduleRenderPhaseUpdate = false;
   }
 
+  // If a render unwinds after processing only part of the hook list, the
+  // work-in-progress fiber is left with a truncated chain. If that truncated
+  // chain is later committed, it replaces the current fiber's complete list and
+  // subsequent renders can remount later hooks or throw because their entries
+  // are missing.
+  //
+  // Complete the hook list after render phase updates are cleaned up:
+  // - If some tracked hooks were processed, append the remaining current hooks.
+  // - If we suspended before the first tracked hook, clone the entire current
+  //   list so the next render still reuses the existing hooks.
+  const current = workInProgress.alternate;
+  if (current !== null) {
+    let nextCurrentHook: Hook | null;
+    let tail: Hook | null;
+
+    if (workInProgressHook !== null) {
+      nextCurrentHook = currentHook !== null ? currentHook.next : null;
+      tail = workInProgressHook;
+    } else if (workInProgress.memoizedState === null) {
+      nextCurrentHook = current.memoizedState;
+      tail = null;
+    } else {
+      nextCurrentHook = null;
+      tail = null;
+    }
+
+    while (nextCurrentHook !== null) {
+      const clone: Hook = {
+        memoizedState: nextCurrentHook.memoizedState,
+
+        baseState: nextCurrentHook.baseState,
+        baseQueue: nextCurrentHook.baseQueue,
+        queue: nextCurrentHook.queue,
+
+        next: null,
+      };
+
+      if (tail === null) {
+        workInProgress.memoizedState = tail = clone;
+      } else {
+        tail = tail.next = clone;
+      }
+
+      nextCurrentHook = nextCurrentHook.next;
+    }
+  }
+
   renderLanes = NoLanes;
   currentlyRenderingFiber = (null: any);
 
