@@ -20,14 +20,18 @@ import {
 
 import styles from './SettingsShared.css';
 
+type OpenInEditorURLPreset = 'vscode' | 'custom';
+
 export default function CodeEditorOptions({
   environmentNames,
 }: {
   environmentNames: Promise<Array<string>>,
 }): React.Node {
-  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
-    'vscode' | 'custom',
-  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, getDefaultPreset());
+  const [openInEditorURLPreset, setOpenInEditorURLPreset] =
+    useLocalStorage<OpenInEditorURLPreset>(
+      LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+      getDefaultPreset(),
+    );
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
@@ -39,7 +43,17 @@ export default function CodeEditorOptions({
       <select
         value={openInEditorURLPreset}
         onChange={({currentTarget}) => {
-          const selectedValue = currentTarget.value;
+          // Casting here allows an exhaustive check so that devs adding new
+          // presets will get a Flow error if they forget to update options.
+          // $FlowFixMe[incompatible-cast] We're checking the value below
+          const selectedValue = (currentTarget.value: OpenInEditorURLPreset);
+          switch (selectedValue) {
+            case 'vscode':
+            case 'custom':
+              break;
+            default:
+              (selectedValue: empty);
+          }
           setOpenInEditorURLPreset(selectedValue);
         }}>
         <option value="vscode">VS Code</option>
@@ -52,7 +66,7 @@ export default function CodeEditorOptions({
           placeholder={getDefaultOpenInEditorURL()}
           value={openInEditorURL}
           onChange={event => {
-            setOpenInEditorURL(event.target.value);
+            setOpenInEditorURL(event.currentTarget.value);
           }}
         />
       )}
