@@ -28,6 +28,7 @@ export const {
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   enableViewTransition,
+  enableViewTransitionNested,
   enableScrollEndPolyfill,
   enableFragmentRefs,
   enableFragmentRefsScrollIntoView,

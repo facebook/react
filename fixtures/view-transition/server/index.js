@@ -20,12 +20,14 @@ if (process.env.NODE_ENV === 'development') {
     for (var key in require.cache) {
       delete require.cache[key];
     }
-    import('./render.js').then(({default: render}) => {
+    import('./render.js').then(mod => {
+      const render = mod.default.__esModule ? mod.default.default : mod.default;
       render(req.url, res);
     });
   });
 } else {
-  import('./render.js').then(({default: render}) => {
+  import('./render.js').then(mod => {
+    const render = mod.default.__esModule ? mod.default.default : mod.default;
     app.get('/', function (req, res) {
       render(req.url, res);
     });
