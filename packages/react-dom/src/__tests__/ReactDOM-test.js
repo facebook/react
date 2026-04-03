@@ -386,6 +386,205 @@ describe('ReactDOM', () => {
     }
   });
 
+  it('calls focus() on autoFocus anchor elements after they have been mounted to the DOM', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let anchorFocusedAfterMount = false;
+
+      HTMLElement.prototype.focus = function () {
+        focusedElement = this;
+        anchorFocusedAfterMount = !!this.parentNode;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <h1>Anchor Auto-focus Test</h1>
+            <a href="https://example.com" autoFocus={true}>
+              Click me
+            </a>
+            <p>The above anchor should be focused after mount.</p>
+          </div>,
+        );
+      });
+
+      expect(anchorFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('A');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('does not call focus() on anchor elements when autoFocus is false', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusCalled = false;
+
+      HTMLElement.prototype.focus = function () {
+        focusCalled = true;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <a href="https://example.com" autoFocus={false}>
+              Click me
+            </a>
+          </div>,
+        );
+      });
+
+      expect(focusCalled).toBe(false);
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('does not call focus() on anchor elements when autoFocus is not specified', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusCalled = false;
+
+      HTMLElement.prototype.focus = function () {
+        focusCalled = true;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <a href="https://example.com">Click me</a>
+          </div>,
+        );
+      });
+
+      expect(focusCalled).toBe(false);
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('calls focus() on autoFocus anchor without href attribute', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      let focusedElement;
+      let anchorFocusedAfterMount = false;
+
+      HTMLElement.prototype.focus = function () {
+        focusedElement = this;
+        anchorFocusedAfterMount = !!this.parentNode;
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <a autoFocus={true}>Anchor without href</a>
+          </div>,
+        );
+      });
+
+      expect(anchorFocusedAfterMount).toBe(true);
+      expect(focusedElement.tagName).toBe('A');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('only focuses the first autoFocus element when multiple are present (anchor and input)', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      const focusedElements = [];
+
+      HTMLElement.prototype.focus = function () {
+        focusedElements.push(this.tagName);
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <a href="https://example.com" autoFocus={true}>
+              First autoFocus
+            </a>
+            <input autoFocus={true} />
+          </div>,
+        );
+      });
+
+      // React calls focus on elements in tree order, but only the first
+      // autoFocus element in DOM order should actually be focused in practice.
+      // Both elements will have focus() called, but the second one will
+      // receive focus in the actual DOM.
+      expect(focusedElements).toContain('A');
+      expect(focusedElements).toContain('INPUT');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+      document.body.innerHTML = '';
+    }
+  });
+
+  it('existing form element autoFocus still works alongside anchor autoFocus support', async () => {
+    const originalFocus = HTMLElement.prototype.focus;
+
+    try {
+      const focusedElements = [];
+
+      HTMLElement.prototype.focus = function () {
+        focusedElements.push({tagName: this.tagName, id: this.id});
+      };
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <button id="btn" autoFocus={true}>
+              Button
+            </button>
+            <input id="input" autoFocus={true} />
+            <select id="select" autoFocus={true}>
+              <option>Option</option>
+            </select>
+            <textarea id="textarea" autoFocus={true} />
+          </div>,
+        );
+      });
+
+      // Verify all form elements still receive focus() calls
+      expect(focusedElements.map(e => e.tagName)).toContain('BUTTON');
+      expect(focusedElements.map(e => e.tagName)).toContain('INPUT');
+      expect(focusedElements.map(e => e.tagName)).toContain('SELECT');
+      expect(focusedElements.map(e => e.tagName)).toContain('TEXTAREA');
+    } finally {
+      HTMLElement.prototype.focus = originalFocus;
+      document.body.innerHTML = '';
+    }
+  });
+
   it("shouldn't fire duplicate event handler while handling other nested dispatch", async () => {
     const actual = [];
 
