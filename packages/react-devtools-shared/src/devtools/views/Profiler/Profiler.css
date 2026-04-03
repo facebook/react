@@ -19,18 +19,32 @@
 .LeftColumn {
   display: flex;
   flex-direction: column;
-  flex: 2 1 200px;
+  flex: 0 0 var(--horizontal-resize-percentage);
+  min-width: 0;
+  overflow: hidden;
   border-top: 1px solid var(--color-border);
 }
 
 .RightColumn {
   display: flex;
   flex-direction: column;
-  flex: 1 1 100px;
-  max-width: 300px;
+  flex: 1 1 35%;
   overflow-x: hidden;
   border-left: 1px solid var(--color-border);
   border-top: 1px solid var(--color-border);
+}
+
+.ResizeBarWrapper {
+  flex: 0 0 0px;
+  position: relative;
+}
+
+.ResizeBar {
+  position: absolute;
+  left: 1px;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
 }
 
 .Content {
@@ -73,6 +87,16 @@
 }
 
 .Toolbar {
+  height: 2.25rem;
+  padding: 0 0.25rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.SnapshotSelectorWrapper {
+  width: 100%;
   height: 2.25rem;
   padding: 0 0.25rem;
   flex: 0 0 auto;
@@ -133,3 +157,28 @@
   margin-left: 0.25rem;
   margin-right: 0.25rem;
 }
+
+/* Must match VERTICAL_MODE_MAX_WIDTH in useResizableColumns.js */
+@container devtools (width < 600px) {
+  .Profiler {
+    flex-direction: column;
+  }
+
+  .LeftColumn {
+    flex: 0 0 var(--vertical-resize-percentage);
+  }
+
+  .RightColumn {
+    flex: 1 1 50%;
+    border-left: none;
+  }
+
+  .ResizeBar {
+    top: 1px;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    cursor: ns-resize;
+  }
+}
+

@@ -42,7 +42,7 @@ export default function RootSelector(_: {}): React.Node {
   return (
     <Fragment>
       <div className={styles.Spacer} />
-      <select value={rootID} onChange={handleChange}>
+      <select className={styles.Select} value={rootID} onChange={handleChange}>
         {options}
       </select>
     </Fragment>

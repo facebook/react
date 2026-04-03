@@ -93,6 +93,10 @@
   margin-left: 0.25rem;
 }
 
+.IconCompact {
+  margin-right: 0;
+}
+
 @media screen and (max-width: 525px) {
   .IconSizeNavigation {
     margin-right: 0;
