@@ -777,6 +777,90 @@ describe('ReactDOMFiberAsync', () => {
     });
   });
 
+  it('popstate transition with Suspense boundary should not show fallback', async () => {
+    // When startTransition is called inside a popstate event and the component
+    // suspends inside a Suspense boundary, the previous UI should remain
+    // visible instead of showing the fallback. This matches the behavior of
+    // startTransition outside of popstate events.
+    let resolvePromise;
+    const promise = new Promise(res => {
+      resolvePromise = res;
+    });
+
+    function Text({text}) {
+      Scheduler.log(text);
+      return text;
+    }
+
+    function SuspendingChild({pathname}) {
+      if (pathname !== '/path/a') {
+        try {
+          React.use(promise);
+        } catch (e) {
+          Scheduler.log(`Suspend! [${pathname}]`);
+          throw e;
+        }
+      }
+      return <Text text={pathname} />;
+    }
+
+    function App() {
+      const [pathname, setPathname] = React.useState('/path/a');
+
+      React.useEffect(() => {
+        function onPopstate() {
+          React.startTransition(() => {
+            setPathname('/path/b');
+          });
+        }
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+
+      return (
+        <React.Suspense fallback={<Text text="Loading..." />}>
+          <SuspendingChild pathname={pathname} />
+        </React.Suspense>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['/path/a']);
+    expect(container.textContent).toBe('/path/a');
+
+    // Simulate a popstate event
+    await act(async () => {
+      const popStateEvent = new Event('popstate');
+
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      await waitForMicrotasks();
+      window.event = undefined;
+
+      // The transition lane should have been attempted synchronously (in
+      // a microtask). It suspended inside the Suspense boundary.
+      assertLog(['Suspend! [/path/b]']);
+      // The previous UI should remain visible - no fallback shown.
+      expect(container.textContent).toBe('/path/a');
+    });
+    // pre-warming also renders the fallback tree (but does not commit it)
+    assertLog(['Suspend! [/path/b]', 'Loading...']);
+    // Still showing previous UI, not the fallback
+    expect(container.textContent).toBe('/path/a');
+
+    await act(async () => {
+      resolvePromise();
+    });
+    assertLog(['/path/b']);
+    expect(container.textContent).toBe('/path/b');
+    await act(() => {
+      root.unmount();
+    });
+  });
+
   it('regression: useDeferredValue in popState leads to infinite deferral loop', async () => {
     // At the time this test was written, it simulated a particular crash that
     // was happened due to a combination of very subtle implementation details.

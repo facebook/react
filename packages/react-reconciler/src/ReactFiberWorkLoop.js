@@ -403,6 +403,7 @@ import {
   flushSyncWorkOnAllRoots,
   flushSyncWorkOnLegacyRootsOnly,
   requestTransitionLane,
+  isCurrentSyncFlushPopstateTransition,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberLegacyContext';
 import {logUncaughtError} from './ReactFiberErrorLogger';
@@ -466,6 +467,12 @@ let workInProgressRootDidSkipSuspendedSiblings: boolean = false;
 // This tells us whether or not we should render the siblings after
 // something suspends.
 let workInProgressRootIsPrerendering: boolean = false;
+
+// Whether the current render was initiated as a popstate eager transition.
+// When true, the render lanes include an artificial SyncLane but the actual
+// update is a transition. This flag ensures that suspension is handled like
+// a normal transition (keeping previous UI) instead of showing fallbacks.
+let workInProgressRootIsEagerPopstateTransition: boolean = false;
 
 // Whether a ping listener was attached during this render. This is slightly
 // different that whether something suspended, because we don't add multiple
@@ -1411,7 +1418,15 @@ function finishConcurrentRender(
       throw new Error('Root did not complete. This is a bug in React.');
     }
     case RootSuspendedWithDelay: {
-      if (!includesOnlyTransitions(lanes) && !includesOnlyRetries(lanes)) {
+      if (
+        !includesOnlyTransitions(lanes) &&
+        !includesOnlyRetries(lanes) &&
+        // A popstate eager transition includes an artificial SyncLane but
+        // the actual update is a transition. If it suspended, don't commit
+        // the fallback — fall through to suspend indefinitely like a
+        // normal transition.
+        !workInProgressRootIsEagerPopstateTransition
+      ) {
         // Commit the placeholder.
         break;
       }
@@ -2238,6 +2253,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressThrownValue = null;
   workInProgressRootDidSkipSuspendedSiblings = false;
   workInProgressRootIsPrerendering = checkIfRootIsPrerendering(root, lanes);
+  workInProgressRootIsEagerPopstateTransition =
+    isCurrentSyncFlushPopstateTransition();
   workInProgressRootDidAttachPingListener = false;
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootSkippedLanes = NoLanes;
@@ -2537,6 +2554,10 @@ export function renderDidSuspendDelayIfPossible(): void {
     // we should only set the exit status to RootSuspendedWithDelay if this
     // condition is true? And remove the equivalent checks elsewhere.
     (includesOnlyTransitions(workInProgressRootRenderLanes) ||
+      // A popstate eager transition includes an artificial SyncLane but the
+      // actual update is a transition. If it suspends, fall back to async
+      // behavior instead of showing a Suspense fallback.
+      workInProgressRootIsEagerPopstateTransition ||
       getSuspenseHandler() === null)
   ) {
     // This render may not have originally been scheduled as a prerender, but

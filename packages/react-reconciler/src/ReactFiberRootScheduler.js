@@ -113,6 +113,15 @@ let isFlushingWork: boolean = false;
 
 let currentEventTransitionLane: Lane = NoLane;
 
+// Tracks whether the current sync flush is a popstate eager transition.
+// Used by the work loop to determine whether a suspended transition should
+// fall back to async behavior instead of showing a Suspense fallback.
+let currentSyncTransitionIsPopstate: boolean = false;
+
+export function isCurrentSyncFlushPopstateTransition(): boolean {
+  return currentSyncTransitionIsPopstate;
+}
+
 export function ensureRootIsScheduled(root: FiberRoot): void {
   // This function is called whenever a root receives an update. It does two
   // things 1) it ensures the root is in the root schedule, and 2) it ensures
@@ -274,6 +283,7 @@ function processRootScheduleInMicrotask() {
       // render it synchronously anyway. We do this during a popstate event to
       // preserve the scroll position of the previous page.
       syncTransitionLanes = currentEventTransitionLane;
+      currentSyncTransitionIsPopstate = true;
     } else if (enableDefaultTransitionIndicator) {
       // If we have a Transition scheduled by this event it might be paired
       // with Default lane scheduled loading indicators. To unbatch it from
@@ -339,6 +349,8 @@ function processRootScheduleInMicrotask() {
   if (!hasPendingCommitEffects()) {
     flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
   }
+
+  currentSyncTransitionIsPopstate = false;
 
   if (currentEventTransitionLane !== NoLane) {
     // Reset Event Transition Lane so that we allocate a new one next time.
