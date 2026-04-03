@@ -3109,4 +3109,78 @@ describe('ReactDOMInput', () => {
     expect(log).toEqual(['']);
     expect(node.value).toBe('a');
   });
+
+  // @see https://github.com/facebook/react/issues/1159
+  it('should detect autofilled value on focus for controlled inputs', async () => {
+    const log = [];
+    function onChange(e) {
+      log.push(e.target.value);
+    }
+    await act(() => {
+      root.render(<input type="text" value="" onChange={onChange} />);
+    });
+
+    const node = container.firstChild;
+
+    // Simulate browser autofill: set value bypassing React's tracked setter.
+    // This mimics what happens when the browser fills a field without firing
+    // input or change events (e.g., Chrome on iOS, password managers).
+    setUntrackedValue.call(node, 'autofilled@example.com');
+
+    // No input or change event was fired, so React hasn't noticed yet.
+    expect(log).toEqual([]);
+
+    // When the user focuses the field, React should detect the changed value.
+    await act(() => {
+      dispatchEventOnNode(node, 'focusin');
+    });
+
+    expect(log).toEqual(['autofilled@example.com']);
+  });
+
+  it('should not fire extra onChange on focus when value has not changed', async () => {
+    const log = [];
+    function onChange(e) {
+      log.push(e.target.value);
+    }
+    await act(() => {
+      root.render(<input type="text" value="hello" onChange={onChange} />);
+    });
+
+    const node = container.firstChild;
+
+    // Focus without changing value — should not fire onChange.
+    await act(() => {
+      dispatchEventOnNode(node, 'focusin');
+    });
+
+    expect(log).toEqual([]);
+  });
+
+  it('should not fire duplicate onChange on focus after input event', async () => {
+    const log = [];
+    function onChange(e) {
+      log.push(e.target.value);
+    }
+    await act(() => {
+      root.render(<input type="text" value="" onChange={onChange} />);
+    });
+
+    const node = container.firstChild;
+
+    // Simulate autofill that fires an input event (normal browser behavior).
+    setUntrackedValue.call(node, 'test@test.com');
+    await act(() => {
+      dispatchEventOnNode(node, 'input');
+    });
+
+    expect(log).toEqual(['test@test.com']);
+
+    // Focus should not fire a second onChange since the tracker is in sync.
+    await act(() => {
+      dispatchEventOnNode(node, 'focusin');
+    });
+
+    expect(log).toEqual(['test@test.com']);
+  });
 });
