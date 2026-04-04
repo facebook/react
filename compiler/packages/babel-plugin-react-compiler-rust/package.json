@@ -13,7 +13,9 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "snap": "yarn workspace snap run snap",
-    "test": "yarn snap --rust"
+    "snap:build": "yarn workspace snap run build",
+    "snap:ci": "yarn snap:build && yarn snap --rust",
+    "test": "yarn snap:ci"
   },
   "dependencies": {
     "@babel/types": "^7.26.0"
