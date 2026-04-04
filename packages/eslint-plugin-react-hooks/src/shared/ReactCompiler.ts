@@ -8,6 +8,7 @@
 
 import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import {
+  type CompilerSuggestion,
   CompilerSuggestionOperation,
   LintRules,
   type LintRule,
@@ -54,7 +55,7 @@ function makeSuggestions(
 ): Array<Rule.SuggestionReportDescriptor> {
   const suggest: Array<Rule.SuggestionReportDescriptor> = [];
   if (Array.isArray(detail.suggestions)) {
-    for (const suggestion of detail.suggestions as Array<any>) {
+    for (const suggestion of detail.suggestions as Array<CompilerSuggestion>) {
       switch (suggestion.op) {
         case CompilerSuggestionOperation.InsertBefore:
           suggest.push({
