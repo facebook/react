@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
+    "snap": "yarn workspace snap run snap",
     "test": "yarn snap --rust"
   },
   "dependencies": {
