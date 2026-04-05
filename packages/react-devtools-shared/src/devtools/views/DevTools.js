@@ -13,7 +13,14 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import Store from '../store';
 import {
   BridgeContext,
@@ -27,7 +34,10 @@ import SuspenseTab from './SuspenseTab/SuspenseTab';
 import TabBar from './TabBar';
 import EditorPane from './Editor/EditorPane';
 import InspectedElementPane from './InspectedElement/InspectedElementPane';
-import {SettingsContextController} from './Settings/SettingsContext';
+import {
+  SettingsContext,
+  SettingsContextController,
+} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
@@ -135,7 +145,46 @@ const suspenseTab = {
   title: 'React Suspense',
 };
 
-const tabs = [componentsTab, profilerTab, suspenseTab];
+const allTabs = [componentsTab, profilerTab, suspenseTab];
+
+function DevToolsNavigationTabBar({
+  currentTab,
+  selectTab,
+}: {
+  currentTab: TabID,
+  selectTab: (tabId: TabID) => void,
+}): React.Node {
+  const {hideProfilerTab, hideSuspenseTab} = useContext(SettingsContext);
+  const visibleTabs = useMemo(
+    () =>
+      allTabs.filter(
+        t =>
+          !(hideProfilerTab && t.id === 'profiler') &&
+          !(hideSuspenseTab && t.id === 'suspense'),
+      ),
+    [hideProfilerTab, hideSuspenseTab],
+  );
+
+  // If the active tab is hidden, switch to components
+  useEffect(() => {
+    if (
+      (hideProfilerTab && currentTab === 'profiler') ||
+      (hideSuspenseTab && currentTab === 'suspense')
+    ) {
+      selectTab('components');
+    }
+  }, [hideProfilerTab, hideSuspenseTab, currentTab, selectTab]);
+
+  return (
+    <TabBar
+      currentTab={currentTab}
+      id="DevTools"
+      selectTab={selectTab}
+      tabs={visibleTabs}
+      type="navigation"
+    />
+  );
+}
 
 export default function DevTools({
   bridge,
@@ -248,18 +297,18 @@ export default function DevTools({
       if (event.ctrlKey || event.metaKey) {
         switch (event.key) {
           case '1':
-            selectTab(tabs[0].id);
+            selectTab(allTabs[0].id);
             event.preventDefault();
             event.stopPropagation();
             break;
           case '2':
-            selectTab(tabs[1].id);
+            selectTab(allTabs[1].id);
             event.preventDefault();
             event.stopPropagation();
             break;
           case '3':
-            if (tabs.length > 2) {
-              selectTab(tabs[2].id);
+            if (allTabs.length > 2) {
+              selectTab(allTabs[2].id);
               event.preventDefault();
               event.stopPropagation();
             }
@@ -321,12 +370,9 @@ export default function DevTools({
                                           {process.env.DEVTOOLS_VERSION}
                                         </span>
                                         <div className={styles.Spacer} />
-                                        <TabBar
+                                        <DevToolsNavigationTabBar
                                           currentTab={tab}
-                                          id="DevTools"
                                           selectTab={selectTab}
-                                          tabs={tabs}
-                                          type="navigation"
                                         />
                                       </div>
                                     )}
