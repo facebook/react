@@ -14,10 +14,17 @@ import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 import {BABEL_PLUGIN_ROOT, PROJECT_ROOT} from './constants';
 import {TestFilter, getFixtures} from './fixture-utils';
-import {TestResult, TestResults, report, update} from './reporter';
+import {
+  TestResult,
+  TestResults,
+  normalizeCodeBlankLines,
+  report,
+  update,
+} from './reporter';
 import {
   RunnerAction,
   RunnerState,
+  buildRust,
   makeWatchRunner,
   watchSrc,
 } from './runner-watch';
@@ -48,6 +55,7 @@ type TestOptions = {
   pattern?: string;
   debug: boolean;
   verbose: boolean;
+  rust: boolean;
 };
 
 type MinimizeOptions = {
@@ -61,6 +69,12 @@ type CompileOptions = {
 };
 
 async function runTestCommand(opts: TestOptions): Promise<void> {
+  // Rust native module doesn't load in jest-worker child processes,
+  // so force sync mode when using the Rust backend.
+  if (opts.rust) {
+    opts.sync = true;
+  }
+
   const worker: Worker & typeof runnerWorker = new Worker(WORKER_PATH, {
     enableWorkerThreads: opts.workerThreads,
     numWorkers: NUM_WORKERS,
@@ -73,9 +87,10 @@ async function runTestCommand(opts: TestOptions): Promise<void> {
 
   if (shouldWatch) {
     makeWatchRunner(
-      state => onChange(worker, state, opts.sync, opts.verbose),
+      state => onChange(worker, state, opts.sync, opts.verbose, opts.rust),
       opts.debug,
       opts.pattern,
+      opts.rust,
     );
     if (opts.pattern) {
       /**
@@ -101,6 +116,7 @@ async function runTestCommand(opts: TestOptions): Promise<void> {
           0,
           false,
           false,
+          opts.rust,
         );
       }
     }
@@ -121,6 +137,10 @@ async function runTestCommand(opts: TestOptions): Promise<void> {
               execSync('yarn build', {cwd: BABEL_PLUGIN_ROOT});
               console.log('Built compiler successfully with tsup');
 
+              if (opts.rust && !buildRust()) {
+                throw new Error('Failed to build Rust compiler');
+              }
+
               // Determine which filter to use
               let testFilter: TestFilter | null = null;
               if (opts.pattern) {
@@ -136,12 +156,13 @@ async function runTestCommand(opts: TestOptions): Promise<void> {
                 opts.debug,
                 false, // no requireSingleFixture in non-watch mode
                 opts.sync,
+                opts.rust,
               );
               if (opts.update) {
                 update(results);
                 isSuccess = true;
               } else {
-                isSuccess = report(results, opts.verbose);
+                isSuccess = report(results, opts.verbose, opts.rust);
               }
             } catch (e) {
               console.warn('Failed to build compiler with tsup:', e);
@@ -372,7 +393,10 @@ yargs(hideBin(process.argv))
         .boolean('verbose')
         .alias('v', 'verbose')
         .describe('verbose', 'Print individual test results')
-        .default('verbose', false);
+        .default('verbose', false)
+        .boolean('rust')
+        .describe('rust', 'Use the Rust compiler backend instead of TypeScript')
+        .default('rust', false);
     },
     async argv => {
       await runTestCommand(argv as TestOptions);
@@ -434,6 +458,7 @@ async function runFixtures(
   debug: boolean,
   requireSingleFixture: boolean,
   sync: boolean,
+  enableRust: boolean = false,
 ): Promise<TestResults> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
@@ -449,7 +474,13 @@ async function runFixtures(
     for (const [fixtureName, fixture] of fixtures) {
       work.push(
         worker
-          .transformFixture(fixture, compilerVersion, shouldLog, true)
+          .transformFixture(
+            fixture,
+            compilerVersion,
+            shouldLog,
+            true,
+            enableRust,
+          )
           .then(result => [fixtureName, result]),
       );
     }
@@ -463,6 +494,7 @@ async function runFixtures(
         compilerVersion,
         shouldLog,
         true,
+        enableRust,
       );
       entries.push([fixtureName, output]);
     }
@@ -477,6 +509,7 @@ async function onChange(
   state: RunnerState,
   sync: boolean,
   verbose: boolean,
+  enableRust: boolean = false,
 ) {
   const {compilerVersion, isCompilerBuildValid, mode, filter, debug} = state;
   if (isCompilerBuildValid) {
@@ -495,13 +528,21 @@ async function onChange(
       debug,
       true, // requireSingleFixture in watch mode
       sync,
+      enableRust,
     );
     const end = performance.now();
 
     // Track fixture status for autocomplete suggestions
     for (const [basename, result] of results) {
-      const failed =
-        result.actual !== result.expected || result.unexpectedError != null;
+      const actual =
+        enableRust && result.actual
+          ? normalizeCodeBlankLines(result.actual)
+          : result.actual;
+      const expected =
+        enableRust && result.expected
+          ? normalizeCodeBlankLines(result.expected)
+          : result.expected;
+      const failed = actual !== expected || result.unexpectedError != null;
       state.fixtureLastRunStatus.set(basename, failed ? 'fail' : 'pass');
     }
 
@@ -509,7 +550,7 @@ async function onChange(
       update(results);
       state.lastUpdate = end;
     } else {
-      report(results, verbose);
+      report(results, verbose, enableRust);
     }
     console.log(`Completed in ${Math.floor(end - start)} ms`);
   } else {
