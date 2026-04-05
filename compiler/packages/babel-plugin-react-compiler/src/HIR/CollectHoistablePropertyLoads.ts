@@ -448,8 +448,24 @@ function collectNonNullsInBlocks(
           const innerHoistables = assertNonNull(
             innerHoistableMap.get(innerFn.func.body.entry),
           );
+          
+          // Collect the set of identifiers that are captured from outer scope
+          const capturedIdentifiers = new Set<IdentifierId>();
+          for (const place of innerFn.func.context) {
+            capturedIdentifiers.add(place.identifier.id);
+          }
+          
+          // Only propagate non-null assumptions for identifiers that are NOT
+          // captured from the outer scope. This prevents incorrect nullability
+          // inference when the inner function is only called conditionally.
+          // For example:
+          //   if (currentDevice) { log(); }  // where log uses currentDevice.os
+          // We should NOT assume currentDevice is non-null in the outer scope
+          // just because it's used non-optionally inside log().
           for (const entry of innerHoistables.assumedNonNullObjects) {
-            assumedNonNullObjects.add(entry);
+            if (!capturedIdentifiers.has(entry.fullPath.identifier.id)) {
+              assumedNonNullObjects.add(entry);
+            }
           }
         }
       } else if (
