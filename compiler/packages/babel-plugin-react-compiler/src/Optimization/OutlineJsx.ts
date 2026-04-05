@@ -6,6 +6,7 @@
  */
 
 import invariant from 'invariant';
+import {isValidIdentifier} from '@babel/types';
 import {Environment} from '../HIR';
 import {
   BasicBlock,
@@ -222,9 +223,19 @@ function collectProps(
   let id = 1;
 
   function generateName(oldName: string): string {
-    let newName = oldName;
+    // Sanitize names that aren't valid JS identifiers (e.g. "aria-label" -> "ariaLabel")
+    let baseName = oldName;
+    if (!isValidIdentifier(baseName)) {
+      baseName = baseName.replace(/[^a-zA-Z0-9$_]+(.)?/g, (_, char) =>
+        char != null ? char.toUpperCase() : '',
+      );
+      if (!isValidIdentifier(baseName)) {
+        baseName = `_${baseName}`;
+      }
+    }
+    let newName = baseName;
     while (seen.has(newName)) {
-      newName = `${oldName}${id++}`;
+      newName = `${baseName}${id++}`;
     }
     seen.add(newName);
     env.programContext.addNewReference(newName);
