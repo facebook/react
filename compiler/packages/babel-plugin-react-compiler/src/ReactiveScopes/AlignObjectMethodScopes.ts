@@ -20,6 +20,11 @@ import DisjointSet from '../Utils/DisjointSet';
  * Align scopes of object method values to that of their enclosing object expressions.
  * To produce a well-formed JS program in Codegen, object methods and object expressions
  * must be in the same ReactiveBlock as object method definitions must be inlined.
+ *
+ * This also applies to FunctionExpression values (arrow functions and named function
+ * expressions) used as object properties: merging their scopes ensures all captured
+ * dependencies flow into the enclosing object's reactive scope, avoiding stale
+ * memoization when any of those deps change.
  */
 
 function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
@@ -28,7 +33,10 @@ function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
 
   for (const [_, block] of fn.body.blocks) {
     for (const {lvalue, value} of block.instructions) {
-      if (value.kind === 'ObjectMethod') {
+      if (
+        value.kind === 'ObjectMethod' ||
+        value.kind === 'FunctionExpression'
+      ) {
         objectMethodDecls.add(lvalue.identifier);
       } else if (value.kind === 'ObjectExpression') {
         for (const operand of eachInstructionValueOperand(value)) {
@@ -40,7 +48,7 @@ function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
               operandScope != null && lvalueScope != null,
               {
                 reason:
-                  'Internal error: Expected all ObjectExpressions and ObjectMethods to have non-null scope.',
+                  'Internal error: Expected all ObjectExpressions, ObjectMethods, and FunctionExpression object properties to have non-null scope.',
                 loc: GeneratedSource,
               },
             );
