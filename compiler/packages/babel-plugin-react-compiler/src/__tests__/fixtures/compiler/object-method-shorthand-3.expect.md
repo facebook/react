@@ -34,7 +34,7 @@ function useHook(a) {
   if ($[0] !== a) {
     const x = { a };
     const obj = {
-      method() {
+      method: function () {
         mutate(x);
         return x;
       },

@@ -45,7 +45,7 @@ function Foo(t0) {
     t1 = (
       <Stringify
         objectMethod={{
-          method() {
+          method: function () {
             if (shouldReadA) {
               return a.b.c;
             }

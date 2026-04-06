@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 import { createHookWrapper } from "shared-runtime";
 function useHook(t0) {
-  const $ = _c(5);
+  const $ = _c(7);
   const { a, b } = t0;
   let t1;
   if ($[0] !== a) {
@@ -40,20 +40,25 @@ function useHook(t0) {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== b || $[3] !== t1) {
-    t2 = {
-      x: t1,
-      y() {
-        return [b];
-      },
+  if ($[2] !== b) {
+    t2 = function () {
+      return [b];
     };
     $[2] = b;
-    $[3] = t1;
-    $[4] = t2;
+    $[3] = t2;
   } else {
-    t2 = $[4];
+    t2 = $[3];
   }
-  return t2;
+  let t3;
+  if ($[4] !== t1 || $[5] !== t2) {
+    t3 = { x: t1, y: t2 };
+    $[4] = t1;
+    $[5] = t2;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

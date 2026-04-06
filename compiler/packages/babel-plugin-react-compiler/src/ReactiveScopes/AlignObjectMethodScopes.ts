@@ -5,62 +5,33 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError} from '..';
-import {
-  GeneratedSource,
-  HIRFunction,
-  Identifier,
-  ReactiveScope,
-  makeInstructionId,
-} from '../HIR';
-import {eachInstructionValueOperand} from '../HIR/visitors';
+import {HIRFunction, ReactiveScope, makeInstructionId} from '../HIR';
 import DisjointSet from '../Utils/DisjointSet';
 
 /**
  * Align scopes of object method values to that of their enclosing object expressions.
  * To produce a well-formed JS program in Codegen, object methods and object expressions
  * must be in the same ReactiveBlock as object method definitions must be inlined.
+ *
+ * Note: ObjectMethod nodes are now lowered to FunctionExpression nodes in BuildHIR,
+ * so they receive per-function reactive scopes automatically. This pass is retained
+ * as a no-op for forward compatibility.
  */
 
-function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
-  const objectMethodDecls: Set<Identifier> = new Set();
-  const mergeScopesBuilder = new DisjointSet<ReactiveScope>();
-
-  for (const [_, block] of fn.body.blocks) {
-    for (const {lvalue, value} of block.instructions) {
-      if (value.kind === 'ObjectMethod') {
-        objectMethodDecls.add(lvalue.identifier);
-      } else if (value.kind === 'ObjectExpression') {
-        for (const operand of eachInstructionValueOperand(value)) {
-          if (objectMethodDecls.has(operand.identifier)) {
-            const operandScope = operand.identifier.scope;
-            const lvalueScope = lvalue.identifier.scope;
-
-            CompilerError.invariant(
-              operandScope != null && lvalueScope != null,
-              {
-                reason:
-                  'Internal error: Expected all ObjectExpressions and ObjectMethods to have non-null scope.',
-                loc: GeneratedSource,
-              },
-            );
-            mergeScopesBuilder.union([operandScope, lvalueScope]);
-          }
-        }
-      }
-    }
-  }
-  return mergeScopesBuilder;
+function findScopesToMerge(_fn: HIRFunction): DisjointSet<ReactiveScope> {
+  /*
+   * ObjectMethod nodes are now lowered to FunctionExpression during HIR
+   * construction (see BuildHIR.ts lowerObjectMethod). Each function expression
+   * receives its own reactive scope, so no scope merging is needed here.
+   */
+  return new DisjointSet<ReactiveScope>();
 }
 
 export function alignObjectMethodScopes(fn: HIRFunction): void {
   // Handle inner functions: we assume that Scopes are disjoint across functions
   for (const [_, block] of fn.body.blocks) {
     for (const {value} of block.instructions) {
-      if (
-        value.kind === 'ObjectMethod' ||
-        value.kind === 'FunctionExpression'
-      ) {
+      if (value.kind === 'FunctionExpression') {
         alignObjectMethodScopes(value.loweredFunc.func);
       }
     }
