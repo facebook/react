@@ -295,24 +295,11 @@ export default function DevTools({
     const ownerWindow = div.ownerDocument.defaultView;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey) {
-        switch (event.key) {
-          case '1':
-            selectTab(allTabs[0].id);
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case '2':
-            selectTab(allTabs[1].id);
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case '3':
-            if (allTabs.length > 2) {
-              selectTab(allTabs[2].id);
-              event.preventDefault();
-              event.stopPropagation();
-            }
-            break;
+        const tabIndex = parseInt(event.key, 10) - 1;
+        if (tabIndex >= 0 && tabIndex < visibleTabs.length) {
+          selectTab(visibleTabs[tabIndex].id);
+          event.preventDefault();
+          event.stopPropagation();
         }
       }
     };
@@ -320,7 +307,7 @@ export default function DevTools({
     return () => {
       ownerWindow.removeEventListener('keydown', handleKeyDown);
     };
-  }, [showTabBar]);
+  }, [showTabBar, visibleTabs]);
 
   useLayoutEffect(() => {
     return () => {
