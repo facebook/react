@@ -175,6 +175,24 @@ function DevToolsNavigationTabBar({
     }
   }, [hideProfilerTab, hideSuspenseTab, currentTab, selectTab]);
 
+  // Override keyboard shortcuts to use visible tabs only
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        const tabIndex = parseInt(event.key, 10) - 1;
+        if (tabIndex >= 0 && tabIndex < visibleTabs.length) {
+          selectTab(visibleTabs[tabIndex].id);
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [visibleTabs, selectTab]);
+
   return (
     <TabBar
       currentTab={currentTab}
@@ -282,32 +300,8 @@ export default function DevTools({
 
   const devToolsRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!showTabBar) {
-      return;
-    }
-
-    const div = devToolsRef.current;
-    if (div === null) {
-      return;
-    }
-
-    const ownerWindow = div.ownerDocument.defaultView;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.metaKey) {
-        const tabIndex = parseInt(event.key, 10) - 1;
-        if (tabIndex >= 0 && tabIndex < visibleTabs.length) {
-          selectTab(visibleTabs[tabIndex].id);
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      }
-    };
-    ownerWindow.addEventListener('keydown', handleKeyDown);
-    return () => {
-      ownerWindow.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showTabBar, visibleTabs]);
+  // Keyboard shortcuts (Ctrl/Cmd+1/2/3) are handled in
+  // DevToolsNavigationTabBar to operate on visible tabs only.
 
   useLayoutEffect(() => {
     return () => {
