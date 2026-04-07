@@ -1104,7 +1104,9 @@ function codegenInstructionNullable(
         });
         CompilerError.invariant(value?.type === 'FunctionExpression', {
           reason: 'Expected a function as a function declaration value',
-          description: `Got ${value == null ? String(value) : value.type} at ${printInstruction(instr)}`,
+          description: `Got ${
+            value == null ? String(value) : value.type
+          } at ${printInstruction(instr)}`,
           loc: instr.value.loc,
         });
         return createFunctionDeclaration(

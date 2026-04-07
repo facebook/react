@@ -223,7 +223,9 @@ type OutlinedJsxAttribute = {
  * and use a quoted key in the destructuring pattern.
  */
 function isHyphenatedJsxProp(originalName: string): boolean {
-  return !isValidIdentifier(originalName) && /^[a-zA-Z_][\w.-]*$/.test(originalName);
+  return (
+    !isValidIdentifier(originalName) && /^[a-zA-Z_][\w.-]*$/.test(originalName)
+  );
 }
 
 function collectProps(
