@@ -216,6 +216,16 @@ type OutlinedJsxAttribute = {
   place: Place;
 };
 
+/**
+ * Returns true when the original JSX attribute name contains non-identifier
+ * characters (e.g. `aria-label`) but is still a valid JSX attribute name.
+ * These props should keep their original name in the outlined JSX call site
+ * and use a quoted key in the destructuring pattern.
+ */
+function isHyphenatedJsxProp(originalName: string): boolean {
+  return !isValidIdentifier(originalName) && /^[a-zA-Z_][\w.-]*$/.test(originalName);
+}
+
 function collectProps(
   env: Environment,
   instructions: Array<JsxInstruction>,
@@ -291,7 +301,13 @@ function emitOutlinedJsx(
 ): Array<Instruction> {
   const props: Array<JsxAttribute> = outlinedProps.map(p => ({
     kind: 'JsxAttribute',
-    name: p.newName,
+    /*
+     * Use the original name when it's a valid JSX attribute name (e.g. `aria-label`
+     * is a valid JSX attr even though it's not a valid JS identifier).
+     * Fall back to newName for internal temp names (e.g. `#t16`) and for
+     * deduplicated props where originalName would conflict.
+     */
+    name: isHyphenatedJsxProp(p.originalName) ? p.originalName : p.newName,
     place: p.place,
   }));
 
@@ -505,12 +521,18 @@ function emitDestructureProps(
 ): Instruction {
   const properties: Array<ObjectProperty> = [];
   for (const [_, prop] of oldToNewProps) {
+    /*
+     * When the original prop name is a valid identifier (e.g. `disabled`),
+     * use newName as the key (handles deduplication like `k` → `k1`).
+     * When the original prop name is NOT a valid identifier (e.g. `aria-label`),
+     * use originalName as the string key so we get `'aria-label': ariaLabel`
+     * instead of `ariaLabel: ariaLabel`.
+     */
     properties.push({
       kind: 'ObjectProperty',
-      key: {
-        kind: 'string',
-        name: prop.newName,
-      },
+      key: isHyphenatedJsxProp(prop.originalName)
+        ? {kind: 'string', name: prop.originalName}
+        : {kind: 'identifier', name: prop.newName},
       type: 'property',
       place: prop.place,
     });

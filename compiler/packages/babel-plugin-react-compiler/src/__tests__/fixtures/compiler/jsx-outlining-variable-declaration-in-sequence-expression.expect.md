@@ -34,7 +34,7 @@ function Component() {
       return (
         <T0
           disabled={isSubmitting}
-          ariaLabel={`Toggle ${provider.displayName}`}
+          aria-label={`Toggle ${provider.displayName}`}
           key={provider.providerId}
         />
       );
@@ -48,7 +48,7 @@ function Component() {
 }
 function _temp(t0) {
   const $ = _c(3);
-  const { disabled: disabled, ariaLabel: ariaLabel } = t0;
+  const { disabled, "aria-label": ariaLabel } = t0;
   let t1;
   if ($[0] !== ariaLabel || $[1] !== disabled) {
     t1 = (
