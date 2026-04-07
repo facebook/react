@@ -175,6 +175,12 @@ const forks = Object.freeze({
             return './packages/shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
         return './packages/shared/forks/ReactFeatureFlags.test-renderer.js';
+      case 'eslint-plugin-react-hooks/src/index.ts':
+        // Use www feature flags for the eslint plugin regardless of
+        // bundleType. The NODE_DEV wrapper ensures process.env.NODE_ENV is
+        // used instead of __DEV__, avoiding ReferenceErrors in Node.js
+        // environments (Jest, arc lint) that don't define __DEV__.
+        return './packages/shared/forks/ReactFeatureFlags.www.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:

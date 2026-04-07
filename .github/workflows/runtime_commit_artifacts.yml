@@ -116,13 +116,11 @@ jobs:
         run: |
           sed -i -e 's/ @license React*//' \
             build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
-            build/facebook-www/ESLintPluginReactHooks-dev.modern.js \
             build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
       - name: Insert @headers into eslint plugin and react-refresh
         run: |
           sed -i -e 's/ LICENSE file in the root directory of this source tree./ LICENSE file in the root directory of this source tree.\n *\n * @noformat\n * @nolint\n * @lightSyntaxTransform\n * @preventMunge\n * @oncall react_core/' \
             build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
-            build/facebook-www/ESLintPluginReactHooks-dev.modern.js \
             build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
       - name: Move relevant files for React in www into compiled
         run: |
@@ -134,9 +132,9 @@ jobs:
           mkdir ./compiled/facebook-www/__test_utils__
           mv build/__test_utils__/ReactAllWarnings.js ./compiled/facebook-www/__test_utils__/ReactAllWarnings.js
 
-          # Copy eslint-plugin-react-hooks (www build with feature flags)
+          # Copy eslint-plugin-react-hooks
           mkdir ./compiled/eslint-plugin-react-hooks
-          cp ./compiled/facebook-www/ESLintPluginReactHooks-dev.modern.js \
+          cp build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/eslint-plugin-react-hooks/index.js
 
           # Move unstable_server-external-runtime.js into facebook-www
