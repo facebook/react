@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<326dca1649d5332c957937db6c788ac5>>
+ * @generated SignedSource<<c9afb8bf50ccffc685695d39ab47d449>>
  */
 
 'use strict';
@@ -25225,6 +25225,16 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
             return (callee.isExpression() &&
                 isReorderableExpression(builder, callee, allowLocalIdentifiers) &&
                 call
+                    .get('arguments')
+                    .every(arg => arg.isExpression() &&
+                    isReorderableExpression(builder, arg, allowLocalIdentifiers)));
+        }
+        case 'NewExpression': {
+            const newExpr = expr;
+            const callee = newExpr.get('callee');
+            return (callee.isExpression() &&
+                isReorderableExpression(builder, callee, allowLocalIdentifiers) &&
+                newExpr
                     .get('arguments')
                     .every(arg => arg.isExpression() &&
                     isReorderableExpression(builder, arg, allowLocalIdentifiers)));

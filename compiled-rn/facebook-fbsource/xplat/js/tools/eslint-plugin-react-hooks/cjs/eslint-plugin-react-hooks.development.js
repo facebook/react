@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<4dec150011ecb366d3af3ea3e2051a95>>
+ * @generated SignedSource<<93cc2fec7bb722122f1d9e68f0b8db4e>>
  */
 
 'use strict';
@@ -25240,6 +25240,16 @@ function isReorderableExpression(builder, expr, allowLocalIdentifiers) {
             return (callee.isExpression() &&
                 isReorderableExpression(builder, callee, allowLocalIdentifiers) &&
                 call
+                    .get('arguments')
+                    .every(arg => arg.isExpression() &&
+                    isReorderableExpression(builder, arg, allowLocalIdentifiers)));
+        }
+        case 'NewExpression': {
+            const newExpr = expr;
+            const callee = newExpr.get('callee');
+            return (callee.isExpression() &&
+                isReorderableExpression(builder, callee, allowLocalIdentifiers) &&
+                newExpr
                     .get('arguments')
                     .every(arg => arg.isExpression() &&
                     isReorderableExpression(builder, arg, allowLocalIdentifiers)));
