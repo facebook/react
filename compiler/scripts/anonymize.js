@@ -14,7 +14,6 @@ const BabelCore = require('@babel/core');
 const invariant = require('invariant');
 const {argv, stdin} = require('process');
 const prettier = require('prettier');
-const {JSXText} = require('hermes-parser/dist/generated/ESTreeVisitorKeys');
 
 function runPlugin(text, file, language) {
   let ast;
@@ -96,7 +95,6 @@ const GLOBALS = new Set([
   'RegExp',
   'Date',
   'Error',
-  'Function',
   'TypeError',
   'RangeError',
   'ReferenceError',
@@ -154,7 +152,7 @@ function AnonymizePlugin(_babel) {
     name: 'anonymize',
     visitor: {
       JSXNamespacedName(path) {
-        throw error('TODO: handle JSXNamedspacedName');
+        throw new Error('TODO: handle JSXNamedspacedName');
       },
       JSXIdentifier(path) {
         const name = path.node.name;
