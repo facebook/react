@@ -12,7 +12,7 @@
 
 'use strict';
 
-if (__DEV__) {
+if (process.env.NODE_ENV !== "production") {
   (function() {
 'use strict';
 
