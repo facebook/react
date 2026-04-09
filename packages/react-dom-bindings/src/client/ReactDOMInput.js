@@ -98,23 +98,43 @@ export function updateInput(
 ) {
   const node: HTMLInputElement = (element: any);
 
-  // Temporarily disconnect the input from any radio buttons.
-  // Changing the type or name as the same time as changing the checked value
-  // needs to be atomically applied. We can only ensure that by disconnecting
-  // the name while do the mutations and then reapply the name after that's done.
-  node.name = '';
-
-  if (
+  const isTypeValid =
     type != null &&
     typeof type !== 'function' &&
     typeof type !== 'symbol' &&
-    typeof type !== 'boolean'
-  ) {
+    typeof type !== 'boolean';
+  const isNameValid =
+    name != null &&
+    typeof name !== 'function' &&
+    typeof name !== 'symbol' &&
+    typeof name !== 'boolean';
+
+  // Determine if type or name is actually changing compared to the DOM.
+  const typeChanged = isTypeValid
+    ? // $FlowFixMe[incompatible-type]
+      node.type !== type
+    : node.hasAttribute('type');
+  const nameStr = isNameValid ? toString(getToStringValue(name)) : null;
+  const nameChanged =
+    nameStr !== null ? node.name !== nameStr : node.hasAttribute('name');
+
+  // Temporarily disconnect the input from any radio buttons.
+  // Changing the type or name at the same time as changing the checked value
+  // needs to be atomically applied. We can only ensure that by disconnecting
+  // the name while doing the mutations and then reapply the name after that's done.
+  // We only need to do this if type or name is actually changing.
+  if (typeChanged || nameChanged) {
+    node.name = '';
+  }
+
+  if (isTypeValid) {
     if (__DEV__) {
       checkAttributeStringCoercion(type, 'type');
     }
-    node.type = type;
-  } else {
+    if (typeChanged) {
+      node.type = type;
+    }
+  } else if (typeChanged) {
     node.removeAttribute('type');
   }
 
@@ -188,17 +208,14 @@ export function updateInput(
       checked && typeof checked !== 'function' && typeof checked !== 'symbol';
   }
 
-  if (
-    name != null &&
-    typeof name !== 'function' &&
-    typeof name !== 'symbol' &&
-    typeof name !== 'boolean'
-  ) {
+  if (isNameValid) {
     if (__DEV__) {
       checkAttributeStringCoercion(name, 'name');
     }
-    node.name = toString(getToStringValue(name));
-  } else {
+    if (typeChanged || nameChanged) {
+      node.name = (nameStr: any);
+    }
+  } else if (typeChanged || nameChanged) {
     node.removeAttribute('name');
   }
 }
