@@ -1970,19 +1970,11 @@ function codegenInstructionValue(
           return [stmt.expression];
         } else if (t.isVariableDeclaration(stmt)) {
           return stmt.declarations.map(declarator => {
-            if (declarator.init != null) {
-              return t.assignmentExpression(
-                '=',
-                declarator.id as t.LVal,
-                declarator.init,
-              );
-            } else {
-              return t.assignmentExpression(
-                '=',
-                declarator.id as t.LVal,
-                t.identifier('undefined'),
-              );
-            }
+            return t.assignmentExpression(
+              '=',
+              declarator.id as t.LVal,
+              declarator.init != null ? declarator.init : t.identifier('undefined'),
+            );
           });
         } else {
           cx.recordError(
