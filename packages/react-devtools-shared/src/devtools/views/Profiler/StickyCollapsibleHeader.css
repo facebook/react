@@ -1,0 +1,55 @@
+.StickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  background: var(--color-background);
+}
+
+.StickyHeader::after {
+  content: "";
+  position: absolute;
+  inset-inline: -0.5rem;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.HeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  padding: 0.25rem 0;
+}
+
+.HeaderRow:hover .RenderSummary {
+  text-decoration: underline;
+}
+
+.HeaderRow:focus-visible {
+  background: var(--color-button-background-focus);
+  outline: none;
+}
+
+.HeaderRowControls {
+  flex: 0 0 auto;
+}
+
+.RenderSummary {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text-secondary);
+}
+
+.CollapsibleContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
