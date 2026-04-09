@@ -76,3 +76,38 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+
+---
+
+## 🚀 Project Overview
+Enhanced README documentation for clarity, badges, and contribution guidance.
+
+## ✨ Features
+- Improved documentation structure
+- Repository metadata and badges
+- Automated activity insights
+- Contribution guidance
+
+## 🤝 Contributing
+Contributions are welcome.  
+Feel free to open issues or submit pull requests.
+
+## 📊 Repository Statistics
+![Stars](https://shields.io)
+![Forks](https://shields.io)
+![Issues](https://shields.io)
+![License](https://shields.io)
+
+## 📜 Recent Repository Activity
+- 1b45e24392 Add Flight SSR benchmark fixture (#36180) (Hendrik Liebau, 2026-04-02)
+- 80b1cab397 Fix typos: occured->occurred, teh->the, accomodate->accommodate (#35616) (Bodhi Russell Silberling, 2026-03-31)
+- 044d56f390 docs: fix typos and improve abbreviation usage in DESIGN_GOALS.md (#36170) (ALİ DENİZ TARTMA, 2026-03-31)
+- 2c2fd9d12c [compiler][playground] parse compiler configs using json5 (#36159) (mofeiZ, 2026-03-30)
+- 74568e8627 [Flight] Transport `AggregateErrors.errors` (#36156) (Sebastian "Sebbie" Silbermann, 2026-03-28)
+
+## 🕒 Last Updated
+Wed Apr  8 11:41:08 +04 2026
+
+---
+
+### 🤖 Automated Documentation Update
