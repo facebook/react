@@ -60,6 +60,7 @@ const {
   unstable_ContinuousEventPriority: FabricContinuousPriority,
   unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  suspendOnActiveViewTransition: fabricSuspendOnActiveViewTransition,
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
@@ -669,7 +670,9 @@ export function suspendInstance(
 export function suspendOnActiveViewTransition(
   state: SuspendedState,
   container: Container,
-): void {}
+): void {
+  fabricSuspendOnActiveViewTransition();
+}
 
 export function waitForCommitToBeReady(
   state: SuspendedState,
