@@ -453,7 +453,8 @@ function getPlugins(
             globalName,
             filename,
             moduleType,
-            bundle.wrapWithModuleBoundaries
+            bundle.wrapWithModuleBoundaries,
+            bundle.wrapWithNodeDevGuard
           );
         },
       },
