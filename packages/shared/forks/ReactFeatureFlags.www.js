@@ -114,13 +114,16 @@ export const enableFragmentRefsInstanceHandles: boolean = true;
 
 export const enableOptimisticKey: boolean = false;
 
-export const eprh_enableUseKeyedStateCompilerLint: boolean = true;
-export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = true;
+// These flags are only used by eslint-plugin-react-hooks, which has its own
+// fork at ReactFeatureFlags.eslint-plugin.www.js with the www-specific values.
+// Edit that file to change the www values for these flags.
+export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;
 export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
   | 'off'
   | 'all'
   | 'extra-only'
-  | 'missing-only' = 'extra-only';
+  | 'missing-only' = 'off';
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
