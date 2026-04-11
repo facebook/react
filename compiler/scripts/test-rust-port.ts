@@ -18,9 +18,11 @@
  *   --json       Output a single JSON object to stdout (machine-readable)
  *   --failures   Print only failing fixture paths, one per line
  *   --limit N    Max failures to display with diffs (default: 50, 0 = all)
+ *   --mode MODE  Compilation mode (default: use implementation default)
  */
 
 import * as babel from '@babel/core';
+import hermesParserPlugin from 'babel-plugin-syntax-hermes-parser';
 import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -40,10 +42,16 @@ const jsonMode = rawArgs.includes('--json');
 const failuresMode = rawArgs.includes('--failures');
 const limitIdx = rawArgs.indexOf('--limit');
 const limitArg = limitIdx >= 0 ? parseInt(rawArgs[limitIdx + 1], 10) : 50;
+const modeIdx = rawArgs.indexOf('--mode');
+const compilationModeArg: string | null =
+  modeIdx >= 0 ? rawArgs[modeIdx + 1] : null;
 
 // Extract positional args (strip flags and flag values)
+const flagValueIndices = new Set<number>();
+if (limitIdx >= 0) flagValueIndices.add(limitIdx + 1);
+if (modeIdx >= 0) flagValueIndices.add(modeIdx + 1);
 const positional = rawArgs.filter(
-  (a, i) => !a.startsWith('--') && (limitIdx < 0 || i !== limitIdx + 1),
+  (a, i) => !a.startsWith('--') && !flagValueIndices.has(i),
 );
 
 // --- ANSI colors ---
@@ -315,21 +323,28 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
     },
   };
 
-  // Determine parser plugins
-  const isFlow = firstLine.includes('@flow');
+  // Determine parser plugins — scan the leading comment block for pragmas
+  // since @flow is typically on line 3-4 inside a doc comment, not the first line.
+  const headerBlock = source.substring(0, source.indexOf('*/') + 2 || 200);
+  const isFlow = headerBlock.includes('@flow');
   const isScript = firstLine.includes('@script');
-  const parserPlugins: string[] = isFlow
-    ? ['flow', 'jsx']
-    : ['typescript', 'jsx'];
 
   const plugin = mode === 'ts' ? tsPlugin : rustPlugin;
 
   const pluginOptions = {
     ...pragmaOpts,
-    compilationMode: 'all' as const,
+    ...(compilationModeArg != null
+      ? {compilationMode: compilationModeArg}
+      : {}),
     panicThreshold: 'all_errors' as const,
     logger,
   };
+
+  // For Flow files, use hermes-parser which supports component syntax.
+  // For TypeScript files, use @babel/parser with typescript+jsx plugins.
+  const babelPlugins: Array<babel.PluginItem> = isFlow
+    ? [hermesParserPlugin, [plugin, pluginOptions]]
+    : [[plugin, pluginOptions]];
 
   let error: string | null = null;
   let code: string | null = null;
@@ -337,10 +352,10 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
     const result = babel.transformSync(source, {
       filename: fixturePath,
       sourceType: isScript ? 'script' : 'module',
-      parserOpts: {
-        plugins: parserPlugins,
-      },
-      plugins: [[plugin, pluginOptions]],
+      ...(isFlow
+        ? {}
+        : {parserOpts: {plugins: ['typescript', 'jsx']}}),
+      plugins: babelPlugins,
       configFile: false,
       babelrc: false,
     });
@@ -656,7 +671,8 @@ function findDivergencePass(tsLog: LogItem[], rustLog: LogItem[]): string {
 
     // Compare final code output
     const source = fs.readFileSync(fixturePath, 'utf8');
-    const isFlow = source.substring(0, source.indexOf('\n')).includes('@flow');
+    const headerBlock = source.substring(0, source.indexOf('*/') + 2 || 200);
+    const isFlow = headerBlock.includes('@flow');
     try {
       const tsCode = await formatCode(ts.code ?? '', isFlow);
       const rustCode = await formatCode(rust.code ?? '', isFlow);

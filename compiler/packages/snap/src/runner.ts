@@ -32,7 +32,7 @@ import * as runnerWorker from './runner-worker';
 import {execSync} from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import {minimize} from './minimize';
+import {minimize, minimizeRustDelta} from './minimize';
 import {parseInput, parseLanguage, parseSourceType} from './compiler';
 import {
   PARSE_CONFIG_PRAGMA_IMPORT,
@@ -59,6 +59,12 @@ type TestOptions = {
 };
 
 type MinimizeOptions = {
+  path: string;
+  update: boolean;
+  rust: boolean;
+};
+
+type MinimizeRustDeltaOptions = {
   path: string;
   update: boolean;
 };
@@ -195,12 +201,19 @@ async function runMinimizeCommand(opts: MinimizeOptions): Promise<void> {
   const language = parseLanguage(firstLine);
   const sourceType = parseSourceType(firstLine);
 
-  console.log(`Minimizing: ${inputPath}`);
+  if (opts.rust && !buildRust()) {
+    console.error('Error: Failed to build Rust compiler');
+    process.exit(1);
+  }
+
+  console.log(
+    `Minimizing: ${inputPath}${opts.rust ? ' (using Rust compiler)' : ''}`,
+  );
 
   const originalLines = input.split('\n').length;
 
   // Run the minimization
-  const result = minimize(input, filename, language, sourceType);
+  const result = minimize(input, filename, language, sourceType, opts.rust);
 
   if (result.kind === 'success') {
     console.log('Could not minimize: the input compiles successfully.');
@@ -215,6 +228,65 @@ async function runMinimizeCommand(opts: MinimizeOptions): Promise<void> {
   }
 
   // Output the minimized code
+  console.log('--- Minimized Code ---');
+  console.log(result.source);
+
+  const minimizedLines = result.source.split('\n').length;
+  console.log(
+    `\nReduced from ${originalLines} lines to ${minimizedLines} lines`,
+  );
+
+  if (opts.update) {
+    fs.writeFileSync(inputPath, result.source, 'utf-8');
+    console.log(`\nUpdated ${inputPath} with minimized code.`);
+  }
+}
+
+async function runMinimizeRustDeltaCommand(
+  opts: MinimizeRustDeltaOptions,
+): Promise<void> {
+  const inputPath = path.isAbsolute(opts.path)
+    ? opts.path
+    : path.resolve(PROJECT_ROOT, opts.path);
+
+  if (!fs.existsSync(inputPath)) {
+    console.error(`Error: File not found: ${inputPath}`);
+    process.exit(1);
+  }
+
+  // Build both compilers
+  execSync('yarn build', {cwd: BABEL_PLUGIN_ROOT});
+  if (!buildRust()) {
+    console.error('Error: Failed to build Rust compiler');
+    process.exit(1);
+  }
+
+  const input = fs.readFileSync(inputPath, 'utf-8');
+  const filename = path.basename(inputPath);
+  const firstLine = input.substring(0, input.indexOf('\n'));
+  const language = parseLanguage(firstLine);
+  const sourceType = parseSourceType(firstLine);
+
+  console.log(`Minimizing TS/Rust delta: ${inputPath}`);
+
+  const originalLines = input.split('\n').length;
+
+  const result = minimizeRustDelta(input, filename, language, sourceType);
+
+  if (result.kind === 'no_delta') {
+    console.log(
+      'Could not minimize: TS and Rust compilers produce the same output.',
+    );
+    process.exit(0);
+  }
+
+  if (result.kind === 'minimal') {
+    console.log(
+      'Could not minimize: the delta exists but the input is already minimal.',
+    );
+    process.exit(0);
+  }
+
   console.log('--- Minimized Code ---');
   console.log(result.source);
 
@@ -418,10 +490,37 @@ yargs(hideBin(process.argv))
           'update',
           'Update the input file in-place with the minimized version',
         )
-        .default('update', false);
+        .default('update', false)
+        .boolean('rust')
+        .describe('rust', 'Use the Rust compiler backend instead of TypeScript')
+        .default('rust', false);
     },
     async argv => {
       await runMinimizeCommand(argv as unknown as MinimizeOptions);
+    },
+  )
+  .command(
+    'minimize-rust-delta <path>',
+    'Minimize a test case to the smallest code that still produces different output between TS and Rust compilers',
+    yargs => {
+      return yargs
+        .positional('path', {
+          describe: 'Path to the file to minimize',
+          type: 'string',
+          demandOption: true,
+        })
+        .boolean('update')
+        .alias('u', 'update')
+        .describe(
+          'update',
+          'Update the input file in-place with the minimized version',
+        )
+        .default('update', false);
+    },
+    async argv => {
+      await runMinimizeRustDeltaCommand(
+        argv as unknown as MinimizeRustDeltaOptions,
+      );
     },
   )
   .command(
