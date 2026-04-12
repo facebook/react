@@ -110,10 +110,17 @@ export function updateInput(
     typeof name !== 'boolean';
 
   // Determine if type or name is actually changing compared to the DOM.
-  const typeChanged = isTypeValid
-    ? // $FlowFixMe[incompatible-type]
-      node.type !== type
-    : node.hasAttribute('type');
+  // node.type is always lowercased by the browser per the HTML spec, so we
+  // lowercase the prop value to avoid false positives from casing differences.
+  let typeChanged;
+  if (isTypeValid) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(type, 'type');
+    }
+    typeChanged = node.type !== ('' + type).toLowerCase();
+  } else {
+    typeChanged = node.hasAttribute('type');
+  }
   const nameStr = isNameValid ? toString(getToStringValue(name)) : null;
   const nameChanged =
     nameStr !== null ? node.name !== nameStr : node.hasAttribute('name');
