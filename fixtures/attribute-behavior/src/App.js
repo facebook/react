@@ -807,64 +807,62 @@ class App extends React.Component {
   };
 
   async componentDidMount() {
-    /**
-     * @type (readonly {namespace: string; specifier: string; url: string}[])
-     */
     const sources = [
       {
-        namespace: 'SchedulerStable',
-        specifier: 'scheduler',
+        globalName: 'SchedulerStable',
+        moduleName: 'scheduler',
         url: 'https://unpkg.com/scheduler@latest/cjs/scheduler.development.js',
       },
       {
-        namespace: 'ReactStable',
-        specifier: 'react',
+        globalName: 'ReactStable',
+        moduleName: 'react',
         url: 'https://unpkg.com/react@latest/cjs/react.development.js',
       },
       {
-        namespace: 'ReactDOMStable',
-        specifier: 'react-dom',
+        globalName: 'ReactDOMStable',
+        moduleName: 'react-dom',
         url: 'https://unpkg.com/react-dom@latest/cjs/react-dom.development.js',
       },
       {
-        namespace: 'ReactDOMClientStable',
-        specifier: 'react-dom/client',
+        globalName: 'ReactDOMClientStable',
+        moduleName: 'react-dom/client',
         url: 'https://unpkg.com/react-dom@latest/cjs/react-dom-client.development.js',
       },
       {
-        namespace: 'ReactDOMServerStable',
-        specifier: 'react-dom/server',
+        globalName: 'ReactDOMServerStable',
+        moduleName: 'react-dom/server',
         url: 'https://unpkg.com/react-dom@latest/cjs/react-dom-server.browser.development.js',
       },
       {
-        namespace: 'SchedulerNext',
-        specifier: 'scheduler',
+        globalName: 'SchedulerNext',
+        moduleName: 'scheduler',
         url: '/scheduler.development.js',
       },
       {
-        namespace: 'ReactNext',
-        specifier: 'react',
+        globalName: 'ReactNext',
+        moduleName: 'react',
         url: '/react.development.js',
       },
       {
-        namespace: 'ReactDOMNext',
-        specifier: 'react-dom',
+        globalName: 'ReactDOMNext',
+        moduleName: 'react-dom',
         url: '/react-dom.development.js',
       },
       {
-        namespace: 'ReactDOMClientNext',
-        specifier: 'react-dom/client',
+        globalName: 'ReactDOMClientNext',
+        moduleName: 'react-dom/client',
         url: '/react-dom-client.development.js',
       },
       {
-        namespace: 'ReactDOMServerNext',
-        specifier: 'react-dom/server',
+        globalName: 'ReactDOMServerNext',
+        moduleName: 'react-dom/server',
         url: '/react-dom-server.browser.development.js',
       },
     ];
-
     const codePromises = sources.map(({url}) =>
-      fetch(url).then(res => res.text())
+      fetch(url)
+        .then(res => res.text())
+        .then(code => code.replaceAll('process.env.NODE_ENV', '"development"'))
     );
     const codesByIndex = await Promise.all(codePromises);
 
@@ -894,23 +892,15 @@ class App extends React.Component {
       let globals = {};
 
       for (let i = 0; i < sources.length; i++) {
-        const {namespace, specifier} = sources[i];
-        const code = codesByIndex[i].replaceAll(
-          'process.env.NODE_ENV',
-          '"development"'
-        );
-
-        window.requirejs.undef(specifier);
-        // eslint-disable-next-line no-eval
-        eval.call(
-          window,
-          `window.define("${specifier}", function (require, exports, module) {${code}});`
-        );
-
-        await new Promise(resolve => {
-          window.require([specifier], resolve);
-        }).then(module => {
-          globals[namespace] = module;
+        const {globalName, moduleName} = sources[i];
+        globals[globalName] = await new Promise(resolve => {
+          window.requirejs.undef(moduleName);
+          // eslint-disable-next-line no-eval
+          eval.call(
+            window,
+            `window.define("${moduleName}", function (require, exports, module) {${codesByIndex[i]}});`
+          );
+          window.require([moduleName], resolve);
         });
       }
 
