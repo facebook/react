@@ -1125,7 +1125,22 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // This can happen if the browser paused execution mid-render (e.g. a
+    // debugger breakpoint or alert() call in Firefox). The scheduler may fire
+    // a new callback while React thinks it's still inside a render or commit.
+    // Since JavaScript is single-threaded, this isn't true concurrency — the
+    // previous work was interrupted by a browser-level pause. Reset the
+    // execution context so we can continue safely.
+    if (__DEV__) {
+      console.error(
+        'Warning: React detected that work was scheduled while an existing ' +
+          'render or commit was in progress. This is likely caused by a ' +
+          'browser debugger breakpoint or alert() call. React will try to ' +
+          'recover, but this may indicate a bug in your application if you ' +
+          'are not using a debugger.',
+      );
+    }
+    executionContext = NoContext;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3517,7 +3532,19 @@ function completeRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // Same as above: a browser-level pause (debugger breakpoint, alert()) can
+    // cause the scheduler to fire a callback while React's execution context
+    // still looks like it's mid-work. Reset it so the commit can proceed.
+    if (__DEV__) {
+      console.error(
+        'Warning: React detected that work was scheduled while an existing ' +
+          'render or commit was in progress. This is likely caused by a ' +
+          'browser debugger breakpoint or alert() call. React will try to ' +
+          'recover, but this may indicate a bug in your application if you ' +
+          'are not using a debugger.',
+      );
+    }
+    executionContext = NoContext;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
