@@ -387,7 +387,7 @@ export opaque type Request = {
   trackedPostpones: null | PostponedHoles, // Gets set to non-null while we want to track postponed holes. I.e. during a prerender.
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
-  // Returning null/undefined will cause a defualt error message in production
+  // Returning null/undefined will cause a default error message in production
   onError: (error: mixed, errorInfo: ThrownInfo) => ?string,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
@@ -479,7 +479,7 @@ function isEligibleForOutlining(
   // outlining.
   return (
     (boundary.byteSize > 500 ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, /* flushingInShell */ false) ||
       boundary.defer) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
@@ -5593,7 +5593,7 @@ function flushSegment(
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, flushingShell) ||
       boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
@@ -5826,6 +5826,7 @@ function flushPartiallyCompletedSegment(
 }
 
 let flushingPartialBoundaries = false;
+let flushingShell = false;
 
 function flushCompletedQueues(
   request: Request,
@@ -5885,7 +5886,9 @@ function flushCompletedQueues(
         completedPreambleSegments,
         skipBlockingShell,
       );
+      flushingShell = true;
       flushSegment(request, destination, completedRootSegment, null);
+      flushingShell = false;
       request.completedRootSegment = null;
       const isComplete =
         request.allPendingTasks === 0 &&

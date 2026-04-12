@@ -1584,6 +1584,9 @@ function updateClassComponent(
     // This is used by DevTools to force a boundary to error.
     switch (shouldError(workInProgress)) {
       case false: {
+        // We previously simulated an error on this boundary
+        // so the instance must have been constructed in a previous
+        // commit.
         const instance = workInProgress.stateNode;
         const ctor = workInProgress.type;
         // TODO This way of resetting the error boundary state is a hack.
@@ -3991,9 +3994,23 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         // whether to retry the primary children, or to skip over it and
         // go straight to the fallback. Check the priority of the primary
         // child fragment.
+        //
+        // Propagate context changes first. If a parent context changed
+        // and the primary children's consumer fibers were discarded
+        // during initial mount suspension, normal propagation can't find
+        // them. In that case we conservatively retry the boundary — the
+        // re-mounted children will read the updated context value.
+        const contextChanged = lazilyPropagateParentContextChanges(
+          current,
+          workInProgress,
+          renderLanes,
+        );
         const primaryChildFragment: Fiber = (workInProgress.child: any);
         const primaryChildLanes = primaryChildFragment.childLanes;
-        if (includesSomeLane(renderLanes, primaryChildLanes)) {
+        if (
+          contextChanged ||
+          includesSomeLane(renderLanes, primaryChildLanes)
+        ) {
           // The primary children have pending work. Use the normal path
           // to attempt to render the primary children again.
           return updateSuspenseComponent(current, workInProgress, renderLanes);

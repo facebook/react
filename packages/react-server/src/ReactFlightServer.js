@@ -467,14 +467,6 @@ function getCurrentStackInDEV(): string {
 
 const ObjectPrototype = Object.prototype;
 
-type JSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | {+[key: string]: JSONValue}
-  | $ReadOnlyArray<JSONValue>;
-
 const stringify = JSON.stringify;
 
 type ReactJSONValue =
@@ -498,6 +490,7 @@ export type ReactClientValue =
   | React$Element<string>
   | React$Element<ClientReference<any> & any>
   | ReactComponentInfo
+  | ReactErrorInfo
   | string
   | boolean
   | number
@@ -4171,6 +4164,19 @@ function serializeErrorValue(request: Request, error: Error): string {
       stack = [];
     }
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
+    if ('cause' in error) {
+      const cause: ReactClientValue = (error.cause: any);
+      const causeId = outlineModel(request, cause);
+      errorInfo.cause = serializeByValueID(causeId);
+    }
+    if (
+      typeof AggregateError !== 'undefined' &&
+      error instanceof AggregateError
+    ) {
+      const errors: ReactClientValue = (error.errors: any);
+      const errorsId = outlineModel(request, errors);
+      errorInfo.errors = serializeByValueID(errorsId);
+    }
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
   } else {
@@ -4181,7 +4187,11 @@ function serializeErrorValue(request: Request, error: Error): string {
   }
 }
 
-function serializeDebugErrorValue(request: Request, error: Error): string {
+function serializeDebugErrorValue(
+  request: Request,
+  counter: {objectLimit: number},
+  error: Error,
+): string {
   if (__DEV__) {
     let name: string = 'Error';
     let message: string;
@@ -4203,6 +4213,21 @@ function serializeDebugErrorValue(request: Request, error: Error): string {
       stack = [];
     }
     const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
+    if ('cause' in error) {
+      counter.objectLimit--;
+      const cause: ReactClientValue = (error.cause: any);
+      const causeId = outlineDebugModel(request, counter, cause);
+      errorInfo.cause = serializeByValueID(causeId);
+    }
+    if (
+      typeof AggregateError !== 'undefined' &&
+      error instanceof AggregateError
+    ) {
+      counter.objectLimit--;
+      const errors: ReactClientValue = (error.errors: any);
+      const errorsId = outlineDebugModel(request, counter, errors);
+      errorInfo.errors = serializeByValueID(errorsId);
+    }
     const id = outlineDebugModel(
       request,
       {objectLimit: stack.length * 2 + 1},
@@ -4231,6 +4256,8 @@ function emitErrorChunk(
     let message: string;
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
+    let causeReference: null | string = null;
+    let errorsReference: null | string = null;
     try {
       if (error instanceof Error) {
         name = error.name;
@@ -4242,6 +4269,23 @@ function emitErrorChunk(
           // This probably came from another FlightClient as a pass through.
           // Keep the environment name.
           env = errorEnv;
+        }
+        if ('cause' in error) {
+          const cause: ReactClientValue = (error.cause: any);
+          const causeId = debug
+            ? outlineDebugModel(request, {objectLimit: 5}, cause)
+            : outlineModel(request, cause);
+          causeReference = serializeByValueID(causeId);
+        }
+        if (
+          typeof AggregateError !== 'undefined' &&
+          error instanceof AggregateError
+        ) {
+          const errors: ReactClientValue = (error.errors: any);
+          const errorsId = debug
+            ? outlineDebugModel(request, {objectLimit: 5}, errors)
+            : outlineModel(request, errors);
+          errorsReference = serializeByValueID(errorsId);
         }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
@@ -4258,6 +4302,12 @@ function emitErrorChunk(
     const ownerRef =
       owner == null ? null : outlineComponentInfo(request, owner);
     errorInfo = {digest, name, message, stack, env, owner: ownerRef};
+    if (causeReference !== null) {
+      (errorInfo: ReactErrorInfoDev).cause = causeReference;
+    }
+    if (errorsReference !== null) {
+      (errorInfo: ReactErrorInfoDev).errors = errorsReference;
+    }
   } else {
     errorInfo = {digest};
   }
@@ -4969,7 +5019,7 @@ function renderDebugModel(
       return serializeDebugFormData(request, value);
     }
     if (value instanceof Error) {
-      return serializeDebugErrorValue(request, value);
+      return serializeDebugErrorValue(request, counter, value);
     }
     if (value instanceof ArrayBuffer) {
       return serializeDebugTypedArray(request, 'A', new Uint8Array(value));

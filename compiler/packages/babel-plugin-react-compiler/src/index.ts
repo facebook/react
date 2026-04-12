@@ -34,7 +34,6 @@ export {
   type Logger,
   type LoggerEvent,
   type PluginOptions,
-  type AutoDepsDecorationsEvent,
   type CompileSuccessEvent,
 } from './Entrypoint';
 export {

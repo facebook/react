@@ -48,7 +48,6 @@ import {
   alwaysThrottleRetries,
   enableCreateEventHandleAPI,
   enableEffectEventMutationPhase,
-  enableHiddenSubtreeInsertionEffectCleanup,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseCallback,
@@ -1663,17 +1662,12 @@ function commitDeletionEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      if (
-        enableHiddenSubtreeInsertionEffectCleanup ||
-        !offscreenSubtreeWasHidden
-      ) {
-        // TODO: Use a commitHookInsertionUnmountEffects wrapper to record timings.
-        commitHookEffectListUnmount(
-          HookInsertion,
-          deletedFiber,
-          nearestMountedAncestor,
-        );
-      }
+      // TODO: Use a commitHookInsertionUnmountEffects wrapper to record timings.
+      commitHookEffectListUnmount(
+        HookInsertion,
+        deletedFiber,
+        nearestMountedAncestor,
+      );
       if (!offscreenSubtreeWasHidden) {
         commitHookLayoutUnmountEffects(
           deletedFiber,

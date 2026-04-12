@@ -707,6 +707,337 @@ describe('ReactFlight', () => {
     }
   });
 
+  it('can transport Error.cause', async () => {
+    function renderError(error) {
+      if (!(error instanceof Error)) {
+        return `${JSON.stringify(error)}`;
+      }
+      return `
+        is error: ${error instanceof Error}
+        name: ${error.name}
+        message: ${error.message}
+        stack: ${normalizeCodeLocInfo(error.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${error.environmentName}
+        cause: ${'cause' in error ? renderError(error.cause) : 'no cause'}`;
+    }
+    function ComponentClient({error}) {
+      return renderError(error);
+    }
+    const Component = clientReference(ComponentClient);
+
+    function ServerComponent() {
+      const cause = new TypeError('root cause', {
+        cause: {type: 'object cause'},
+      });
+      const error = new Error('hello', {cause});
+      return <Component error={error} />;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        return `digest("${x.message}")`;
+      },
+    });
+
+    await act(() => {
+      ReactNoop.render(ReactNoopFlightClient.read(transport));
+    });
+
+    if (__DEV__) {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        name: Error
+        message: hello
+        stack: Error: hello
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: 
+        is error: true
+        name: TypeError
+        message: root cause
+        stack: TypeError: root cause
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: {"type":"object cause"}`);
+    } else {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: true
+        name: Error
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+        cause: no cause`);
+    }
+  });
+
+  it('includes Error.cause in thrown errors', async () => {
+    function renderError(error) {
+      if (!(error instanceof Error)) {
+        return `${JSON.stringify(error)}`;
+      }
+      return `
+        is error: true
+        name: ${error.name}
+        message: ${error.message}
+        stack: ${normalizeCodeLocInfo(error.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${error.environmentName}
+        cause: ${'cause' in error ? renderError(error.cause) : 'no cause'}`;
+    }
+
+    function ServerComponent() {
+      const cause = new TypeError('root cause', {
+        cause: {type: 'object cause'},
+      });
+      const error = new Error('hello', {cause});
+      throw error;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        return `digest("${x.message}")`;
+      },
+    });
+
+    let error;
+    try {
+      await act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+    } catch (x) {
+      error = x;
+    }
+
+    if (__DEV__) {
+      expect(renderError(error)).toEqual(`
+        is error: true
+        name: Error
+        message: hello
+        stack: Error: hello
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: 
+        is error: true
+        name: TypeError
+        message: root cause
+        stack: TypeError: root cause
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: {"type":"object cause"}`);
+    } else {
+      expect(renderError(error)).toEqual(`
+        is error: true
+        name: Error
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+        cause: no cause`);
+    }
+  });
+
+  it('can transport AggregateError', async () => {
+    function renderError(error) {
+      if (!(error instanceof Error)) {
+        return `${JSON.stringify(error)}`;
+      }
+      let result = `
+        is error: ${error instanceof AggregateError ? 'AggregateError' : 'Error'}
+        name: ${error.name}
+        message: ${error.message}
+        stack: ${normalizeCodeLocInfo(error.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${error.environmentName}
+        cause: ${'cause' in error ? renderError(error.cause) : 'no cause'}`;
+      if ('errors' in error) {
+        result += `
+        errors: [${error.errors.map(e => renderError(e)).join(',\n')}]`;
+      }
+      return result;
+    }
+    function ComponentClient({error}) {
+      return renderError(error);
+    }
+    const Component = clientReference(ComponentClient);
+
+    function ServerComponent() {
+      const error1 = new TypeError('first error');
+      const error2 = new RangeError('second error');
+      const error = new AggregateError([error1, error2], 'aggregate');
+      return <Component error={error} />;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        return `digest("${x.message}")`;
+      },
+    });
+
+    await act(() => {
+      ReactNoop.render(ReactNoopFlightClient.read(transport));
+    });
+
+    if (__DEV__) {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: AggregateError
+        name: AggregateError
+        message: aggregate
+        stack: AggregateError: aggregate
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause
+        errors: [
+        is error: Error
+        name: TypeError
+        message: first error
+        stack: TypeError: first error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause,
+
+        is error: Error
+        name: RangeError
+        message: second error
+        stack: RangeError: second error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause]`);
+    } else {
+      expect(ReactNoop).toMatchRenderedOutput(`
+        is error: Error
+        name: Error
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+        cause: no cause`);
+    }
+  });
+
+  it('includes AggregateError.errors in thrown errors', async () => {
+    function renderError(error) {
+      if (!(error instanceof Error)) {
+        return `${JSON.stringify(error)}`;
+      }
+      let result = `
+        is error: ${error instanceof AggregateError ? 'AggregateError' : 'Error'}
+        name: ${error.name}
+        message: ${error.message}
+        stack: ${normalizeCodeLocInfo(error.stack).split('\n').slice(0, 2).join('\n')}
+        environmentName: ${error.environmentName}
+        cause: ${'cause' in error ? renderError(error.cause) : 'no cause'}`;
+      if ('errors' in error) {
+        result += `
+        errors: [${error.errors.map(e => renderError(e)).join(',\n')}]`;
+      }
+      return result;
+    }
+
+    function ServerComponent() {
+      const error1 = new TypeError('first error');
+      const error2 = new RangeError('second error');
+      const error3 = new Error('third error');
+      const error4 = new Error('fourth error');
+      const error5 = new Error('fifth error');
+      const error6 = new Error('sixth error');
+      const error = new AggregateError(
+        [error1, error2, error3, error4, error5, error6],
+        'aggregate',
+      );
+      throw error;
+    }
+
+    const transport = ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        return `digest("${x.message}")`;
+      },
+    });
+
+    let error;
+    try {
+      await act(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+    } catch (x) {
+      error = x;
+    }
+
+    if (__DEV__) {
+      expect(renderError(error)).toEqual(`
+        is error: AggregateError
+        name: AggregateError
+        message: aggregate
+        stack: AggregateError: aggregate
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause
+        errors: [
+        is error: Error
+        name: TypeError
+        message: first error
+        stack: TypeError: first error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause,
+
+        is error: Error
+        name: RangeError
+        message: second error
+        stack: RangeError: second error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause,
+
+        is error: Error
+        name: Error
+        message: third error
+        stack: Error: third error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause,
+
+        is error: Error
+        name: Error
+        message: fourth error
+        stack: Error: fourth error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause,
+
+        is error: Error
+        name: Error
+        message: fifth error
+        stack: Error: fifth error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause,
+
+        is error: Error
+        name: Error
+        message: sixth error
+        stack: Error: sixth error
+    in ServerComponent (at **)
+        environmentName: Server
+        cause: no cause]`);
+    } else {
+      expect(renderError(error)).toEqual(`
+        is error: Error
+        name: Error
+        message: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        stack: Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.
+        environmentName: undefined
+        cause: no cause`);
+    }
+  });
+
   it('can transport cyclic objects', async () => {
     function ComponentClient({prop}) {
       expect(prop.obj.obj.obj).toBe(prop.obj.obj);

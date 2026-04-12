@@ -1235,12 +1235,15 @@ const bundles = [
     // currently required in order for the package to be copied over correctly.
     // So, it would be worth improving that flow.
     name: 'eslint-plugin-react-hooks',
-    bundleTypes: [NODE_DEV, NODE_PROD, CJS_DTS],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, CJS_DTS],
     moduleType: ISOMORPHIC,
     entry: 'eslint-plugin-react-hooks/src/index.ts',
     global: 'ESLintPluginReactHooks',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
+    // This is a Node.js build tool (ESLint plugin), not a www runtime bundle.
+    // Use process.env.NODE_ENV guard instead of __DEV__ for the dev wrapper.
+    wrapWithNodeDevGuard: true,
     preferBuiltins: true,
     externals: [
       '@babel/core',

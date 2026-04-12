@@ -751,6 +751,11 @@ let rootWithNestedUpdates: FiberRoot | null = null;
 let isFlushingPassiveEffects = false;
 let didScheduleUpdateDuringPassiveEffects = false;
 
+const NO_NESTED_UPDATE = 0;
+const NESTED_UPDATE_SYNC_LANE = 1;
+const NESTED_UPDATE_PHASE_SPAWN = 2;
+let nestedUpdateKind: 0 | 1 | 2 = NO_NESTED_UPDATE;
+
 const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
 let rootWithPassiveNestedUpdates: FiberRoot | null = null;
@@ -3029,7 +3034,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes): RootExitStatus {
 function workLoopConcurrent(nonIdle: boolean) {
   // We yield every other "frame" when rendering Transition or Retries. Those are blocking
   // revealing new content. The purpose of this yield is not to avoid the overhead of yielding,
-  // which is very low, but rather to intentionally block any frequently occuring other main
+  // which is very low, but rather to intentionally block any frequently occurring other main
   // thread work like animations from starving our work. In other words, the purpose of this
   // is to reduce the framerate of animations to 30 frames per second.
   // For Idle work we yield every 5ms to keep animations going smooth.
@@ -4313,15 +4318,10 @@ function flushSpawnedWork(): void {
   // hydration lanes in this check, because render triggered by selective
   // hydration is conceptually not an update.
   if (
-    // Check if there was a recursive update spawned by this render, in either
-    // the render phase or the commit phase. We track these explicitly because
-    // we can't infer from the remaining lanes alone.
-    (enableInfiniteRenderLoopDetection &&
-      (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
     // Was the finished render the result of an update (not hydration)?
-    (includesSomeLane(lanes, UpdateLanes) &&
-      // Did it schedule a sync update?
-      includesSomeLane(remainingLanes, SyncUpdateLanes))
+    includesSomeLane(lanes, UpdateLanes) &&
+    // Did it schedule a sync update?
+    includesSomeLane(remainingLanes, SyncUpdateLanes)
   ) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
@@ -4335,8 +4335,31 @@ function flushSpawnedWork(): void {
       nestedUpdateCount = 0;
       rootWithNestedUpdates = root;
     }
+    nestedUpdateKind = NESTED_UPDATE_SYNC_LANE;
+  } else if (
+    // Check if there was a recursive update spawned by this render, in either
+    // the render phase or the commit phase. We track these explicitly because
+    // we can't infer from the remaining lanes alone.
+    enableInfiniteRenderLoopDetection &&
+    (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)
+  ) {
+    if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+      markNestedUpdateScheduled();
+    }
+
+    // Count the number of times the root synchronously re-renders without
+    // finishing. If there are too many, it indicates an infinite update loop.
+    if (root === rootWithNestedUpdates) {
+      nestedUpdateCount++;
+    } else {
+      nestedUpdateCount = 0;
+      rootWithNestedUpdates = root;
+    }
+    nestedUpdateKind = NESTED_UPDATE_PHASE_SPAWN;
   } else {
     nestedUpdateCount = 0;
+    rootWithNestedUpdates = null;
+    nestedUpdateKind = NO_NESTED_UPDATE;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -5017,6 +5040,13 @@ function pingSuspendedRoot(
         // the special internal exception that we use to interrupt the stack for
         // selective hydration. That was temporarily reverted but we once we add
         // it back we can use it here.
+        //
+        // In the meantime, record the pinged lanes so markRootSuspended won't
+        // mark them as suspended, allowing a retry.
+        workInProgressRootPingedLanes = mergeLanes(
+          workInProgressRootPingedLanes,
+          pingedLanes,
+        );
       }
     } else {
       // Even though we can't restart right now, we might get an
@@ -5152,25 +5182,47 @@ export function throwIfInfiniteUpdateLoopDetected() {
     rootWithNestedUpdates = null;
     rootWithPassiveNestedUpdates = null;
 
-    if (enableInfiniteRenderLoopDetection) {
-      if (executionContext & RenderContext && workInProgressRoot !== null) {
-        // We're in the render phase. Disable the concurrent error recovery
-        // mechanism to ensure that the error we're about to throw gets handled.
-        // We need it to trigger the nearest error boundary so that the infinite
-        // update loop is broken.
-        workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
-          workInProgressRoot.errorRecoveryDisabledLanes,
-          workInProgressRootRenderLanes,
-        );
-      }
-    }
+    const updateKind = nestedUpdateKind;
+    nestedUpdateKind = NO_NESTED_UPDATE;
 
-    throw new Error(
-      'Maximum update depth exceeded. This can happen when a component ' +
-        'repeatedly calls setState inside componentWillUpdate or ' +
-        'componentDidUpdate. React limits the number of nested updates to ' +
-        'prevent infinite loops.',
-    );
+    if (enableInfiniteRenderLoopDetection) {
+      if (updateKind === NESTED_UPDATE_SYNC_LANE) {
+        if (executionContext & RenderContext && workInProgressRoot !== null) {
+          // This loop was identified only because of the instrumentation gated with enableInfiniteRenderLoopDetection, warn instead of throwing.
+          if (__DEV__) {
+            console.error(
+              'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
+                'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
+                'causing infinite render loop. React limits the number of nested updates to ' +
+                'prevent infinite loops.',
+            );
+          }
+        } else {
+          throw new Error(
+            'Maximum update depth exceeded. This can happen when a component ' +
+              'repeatedly calls setState inside componentWillUpdate or ' +
+              'componentDidUpdate. React limits the number of nested updates to ' +
+              'prevent infinite loops.',
+          );
+        }
+      } else if (updateKind === NESTED_UPDATE_PHASE_SPAWN) {
+        if (__DEV__) {
+          console.error(
+            'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
+              'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
+              'causing infinite render loop. React limits the number of nested updates to ' +
+              'prevent infinite loops.',
+          );
+        }
+      }
+    } else {
+      throw new Error(
+        'Maximum update depth exceeded. This can happen when a component ' +
+          'repeatedly calls setState inside componentWillUpdate or ' +
+          'componentDidUpdate. React limits the number of nested updates to ' +
+          'prevent infinite loops.',
+      );
+    }
   }
 
   if (__DEV__) {
