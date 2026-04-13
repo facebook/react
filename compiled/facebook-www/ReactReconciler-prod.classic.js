@@ -2662,7 +2662,7 @@ module.exports = function ($$$config) {
       : null;
   }
   function getRootForUpdatedFiber(sourceFiber) {
-    throwIfInfiniteUpdateLoopDetected();
+    throwIfInfiniteUpdateLoopDetected(!1);
     for (var parent = sourceFiber.return; null !== parent; )
       (sourceFiber = parent), (parent = sourceFiber.return);
     return 3 === sourceFiber.tag ? sourceFiber.stateNode : null;
@@ -11682,7 +11682,7 @@ module.exports = function ($$$config) {
       (executionContext & 2
         ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
         : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
-      throwIfInfiniteUpdateLoopDetected());
+      throwIfInfiniteUpdateLoopDetected(!0));
   }
   function markRootSuspended(
     root,
@@ -12642,7 +12642,7 @@ module.exports = function ($$$config) {
       (executionContext & 2
         ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
         : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
-      throwIfInfiniteUpdateLoopDetected());
+      throwIfInfiniteUpdateLoopDetected(!0));
     workInProgressRoot === root &&
       (workInProgressRootRenderLanes & pingedLanes) === pingedLanes &&
       (4 === workInProgressRootExitStatus ||
@@ -12692,7 +12692,9 @@ module.exports = function ($$$config) {
     null !== retryCache && retryCache.delete(wakeable);
     retryTimedOutBoundary(boundaryFiber, retryLane);
   }
-  function throwIfInfiniteUpdateLoopDetected() {
+  function throwIfInfiniteUpdateLoopDetected(
+    isFromInfiniteRenderLoopDetectionInstrumentation
+  ) {
     if (50 < nestedUpdateCount) {
       nestedUpdateCount = 0;
       rootWithNestedUpdates = null;
@@ -12701,7 +12703,10 @@ module.exports = function ($$$config) {
       if (enableInfiniteRenderLoopDetection) {
         if (
           1 === updateKind &&
-          !(executionContext & 2 && null !== workInProgressRoot)
+          !(
+            isFromInfiniteRenderLoopDetectionInstrumentation ||
+            (executionContext & 2 && null !== workInProgressRoot)
+          )
         )
           throw Error(formatProdErrorMessage(185));
       } else throw Error(formatProdErrorMessage(185));
@@ -14461,7 +14466,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-705268dc-20260409"
+      reconcilerVersion: "19.3.0-www-classic-fef12a01-20260413"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
