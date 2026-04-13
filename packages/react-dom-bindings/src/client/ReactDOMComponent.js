@@ -950,37 +950,43 @@ function setProp(
     case 'innerText':
     case 'textContent':
       return;
-    case 'commandFor':
-    case 'popoverTarget':
-      if (__DEV__) {
-        if (key === 'popoverTarget') {
-          if (
-            !didWarnPopoverTargetObject &&
-            value != null &&
-            typeof value === 'object'
-          ) {
-            didWarnPopoverTargetObject = true;
-            console.error(
-              'The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.',
-              value,
-            );
-          }
-        } else {
-          if (
-            !didWarnCommandForObject &&
-            value != null &&
-            typeof value === 'object'
-          ) {
-            didWarnCommandForObject = true;
-            console.error(
-              'The `commandFor` prop expects the ID of an Element as a string. Received %s instead.',
-              value,
-            );
-          }
-        }
-      }
     // Fall through
     default: {
+      switch (key) {
+        case 'commandFor': {
+          if (__DEV__) {
+            if (
+              !didWarnCommandForObject &&
+              value != null &&
+              typeof value === 'object'
+            ) {
+              didWarnCommandForObject = true;
+              console.error(
+                'The `commandFor` prop expects the ID of an Element as a string. Received %s instead.',
+                value,
+              );
+            }
+          }
+          break;
+        }
+        case 'popoverTarget': {
+          if (__DEV__) {
+            if (
+              !didWarnPopoverTargetObject &&
+              value != null &&
+              typeof value === 'object'
+            ) {
+              didWarnPopoverTargetObject = true;
+              console.error(
+                'The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.',
+                value,
+              );
+            }
+          }
+          break;
+        }
+      }
+
       if (
         key.length > 2 &&
         (key[0] === 'o' || key[0] === 'O') &&
