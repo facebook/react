@@ -1973,7 +1973,9 @@ function codegenInstructionValue(
             return t.assignmentExpression(
               '=',
               declarator.id as t.LVal,
-              declarator.init != null ? declarator.init : t.identifier('undefined'),
+              declarator.init != null
+                ? declarator.init
+                : t.identifier('undefined'),
             );
           });
         } else {
