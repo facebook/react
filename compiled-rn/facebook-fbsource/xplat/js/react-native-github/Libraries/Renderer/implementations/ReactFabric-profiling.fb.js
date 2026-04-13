@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0151630fa219936a6dc6598ec65e3b87>>
+ * @generated SignedSource<<d80e28d8743dd44aac21bd7cf592de53>>
  */
 
 "use strict";
@@ -14263,16 +14263,16 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  internals$jscomp$inline_1680 = {
+  internals$jscomp$inline_1681 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-404b38c7-20260408",
+    version: "19.3.0-native-fb-fef12a01-20260413",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-404b38c7-20260408"
+    reconcilerVersion: "19.3.0-native-fb-fef12a01-20260413"
   };
 null !== extraDevToolsConfig &&
-  (internals$jscomp$inline_1680.rendererConfig = extraDevToolsConfig);
-internals$jscomp$inline_1680.getLaneLabelMap = function () {
+  (internals$jscomp$inline_1681.rendererConfig = extraDevToolsConfig);
+internals$jscomp$inline_1681.getLaneLabelMap = function () {
   for (
     var map = new Map(), lane = 1, index$184 = 0;
     31 > index$184;
@@ -14284,20 +14284,20 @@ internals$jscomp$inline_1680.getLaneLabelMap = function () {
   }
   return map;
 };
-internals$jscomp$inline_1680.injectProfilingHooks = function (profilingHooks) {
+internals$jscomp$inline_1681.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2074 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2075 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2074.isDisabled &&
-    hook$jscomp$inline_2074.supportsFiber
+    !hook$jscomp$inline_2075.isDisabled &&
+    hook$jscomp$inline_2075.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2074.inject(
-        internals$jscomp$inline_1680
+      (rendererID = hook$jscomp$inline_2075.inject(
+        internals$jscomp$inline_1681
       )),
-        (injectedHook = hook$jscomp$inline_2074);
+        (injectedHook = hook$jscomp$inline_2075);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
