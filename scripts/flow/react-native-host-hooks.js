@@ -204,6 +204,11 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function getInternalInstanceHandleFromPublicInstance(
     publicInstance: PublicInstance,
   ): ?Object;
+  declare export function dispatchNativeEvent(
+    target: EventTarget,
+    type: string,
+    eventData: {[string]: mixed},
+  ): void;
   declare export function createAttributePayload(
     props: Object,
     validAttributes: __AttributeConfiguration,
@@ -227,6 +232,11 @@ declare module 'react-native' {
 
 // eslint-disable-next-line no-unused-vars
 declare const RN$enableMicrotasksInReact: boolean;
+
+// eslint-disable-next-line no-unused-vars
+declare const RN$isNativeEventTargetEventDispatchingEnabled:
+  | (() => boolean)
+  | void;
 
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info
