@@ -65,4 +65,5 @@ module.exports = {
   get diffAttributePayloads() {
     return require('./diffAttributePayloads').default;
   },
+  dispatchNativeEvent() {},
 };
