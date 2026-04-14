@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c0ce000edeacd431eae464574bf03f74>>
+ * @generated SignedSource<<d1f2c59dd3c73c08c8cd7af811508392>>
  */
 
 "use strict";
@@ -307,16 +307,16 @@ __DEV__ &&
                 } else {
                   try {
                     Fake.call();
-                  } catch (x$1) {
-                    control = x$1;
+                  } catch (x$2) {
+                    control = x$2;
                   }
                   fn.call(Fake.prototype);
                 }
               } else {
                 try {
                   throw Error();
-                } catch (x$2) {
-                  control = x$2;
+                } catch (x$3) {
+                  control = x$3;
                 }
                 (Fake = fn()) &&
                   "function" === typeof Fake.catch &&
@@ -871,10 +871,10 @@ __DEV__ &&
       EventConstructor.eventPool = [];
       EventConstructor.release = releasePooledEvent;
     }
-    function isStartish(topLevelType) {
+    function isStartish$1(topLevelType) {
       return "topTouchStart" === topLevelType;
     }
-    function isMoveish(topLevelType) {
+    function isMoveish$1(topLevelType) {
       return "topTouchMove" === topLevelType;
     }
     function timestampForTouch(touch) {
@@ -994,7 +994,7 @@ __DEV__ &&
     function forEachAccumulated(arr, cb, scope) {
       Array.isArray(arr) ? arr.forEach(cb, scope) : arr && cb.call(scope, arr);
     }
-    function changeResponder(nextResponderInst, blockHostResponder) {
+    function changeResponder$1(nextResponderInst, blockHostResponder) {
       var oldResponderInst = responderInst;
       responderInst = nextResponderInst;
       if (null !== ResponderEventPlugin.GlobalResponderHandler)
@@ -1004,13 +1004,13 @@ __DEV__ &&
           blockHostResponder
         );
     }
-    function getParent$1(inst) {
+    function getParent$2(inst) {
       do inst = inst.return;
       while (inst && 5 !== inst.tag);
       return inst ? inst : null;
     }
     function traverseTwoPhase$1(inst, fn, arg) {
-      for (var path = []; inst; ) path.push(inst), (inst = getParent$1(inst));
+      for (var path = []; inst; ) path.push(inst), (inst = getParent$2(inst));
       for (inst = path.length; 0 < inst--; ) fn(path[inst], "captured", arg);
       for (inst = 0; inst < path.length; inst++) fn(path[inst], "bubbled", arg);
     }
@@ -1069,7 +1069,7 @@ __DEV__ &&
     function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
       if (event && event.dispatchConfig.phasedRegistrationNames) {
         var targetInst = event._targetInst;
-        targetInst = targetInst ? getParent$1(targetInst) : null;
+        targetInst = targetInst ? getParent$2(targetInst) : null;
         traverseTwoPhase$1(
           targetInst,
           accumulateDirectionalDispatches$1,
@@ -1277,49 +1277,459 @@ __DEV__ &&
         e.isPersistent() || e.constructor.release(e);
       }
     }
-    function dispatchEvent(target, topLevelType, nativeEvent) {
-      var eventTarget = null;
-      if (null != target) {
-        var stateNode = target.stateNode;
-        null != stateNode && (eventTarget = getPublicInstance(stateNode));
+    function _construct(t, e, r) {
+      if (_isNativeReflectConstruct())
+        return Reflect.construct.apply(null, arguments);
+      var o = [null];
+      o.push.apply(o, e);
+      o = new (t.bind.apply(t, o))();
+      return r && _setPrototypeOf(o, r.prototype), o;
+    }
+    function _isNativeReflectConstruct() {
+      try {
+        var t = !Boolean.prototype.valueOf.call(
+          Reflect.construct(Boolean, [], function () {})
+        );
+      } catch (t$4) {}
+      return (_isNativeReflectConstruct = function () {
+        return !!t;
+      })();
+    }
+    function _defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || !1;
+        descriptor.configurable = !0;
+        "value" in descriptor && (descriptor.writable = !0);
+        var JSCompiler_temp_const = Object,
+          JSCompiler_temp_const$jscomp$0 = JSCompiler_temp_const.defineProperty;
+        a: {
+          var i$jscomp$0 = descriptor.key;
+          if ("object" == typeof i$jscomp$0 && i$jscomp$0) {
+            var e = i$jscomp$0[Symbol.toPrimitive];
+            if (void 0 !== e) {
+              i$jscomp$0 = e.call(i$jscomp$0, "string");
+              if ("object" != typeof i$jscomp$0) break a;
+              throw new TypeError(
+                "@@toPrimitive must return a primitive value."
+              );
+            }
+            i$jscomp$0 = String(i$jscomp$0);
+          }
+        }
+        JSCompiler_temp_const$jscomp$0.call(
+          JSCompiler_temp_const,
+          target,
+          "symbol" == typeof i$jscomp$0 ? i$jscomp$0 : i$jscomp$0 + "",
+          descriptor
+        );
       }
+    }
+    function _createClass(Constructor, protoProps, staticProps) {
+      protoProps && _defineProperties(Constructor.prototype, protoProps);
+      staticProps && _defineProperties(Constructor, staticProps);
+      Object.defineProperty(Constructor, "prototype", { writable: !1 });
+      return Constructor;
+    }
+    function _inheritsLoose(subClass, superClass) {
+      subClass.prototype = Object.create(superClass.prototype);
+      subClass.prototype.constructor = subClass;
+      _setPrototypeOf(subClass, superClass);
+    }
+    function _getPrototypeOf(o$jscomp$0) {
+      _getPrototypeOf = Object.setPrototypeOf
+        ? Object.getPrototypeOf.bind()
+        : function (o) {
+            return o.__proto__ || Object.getPrototypeOf(o);
+          };
+      return _getPrototypeOf(o$jscomp$0);
+    }
+    function _setPrototypeOf(o$jscomp$0, p$jscomp$0) {
+      _setPrototypeOf = Object.setPrototypeOf
+        ? Object.setPrototypeOf.bind()
+        : function (o, p) {
+            o.__proto__ = p;
+            return o;
+          };
+      return _setPrototypeOf(o$jscomp$0, p$jscomp$0);
+    }
+    function _isNativeFunction(fn) {
+      try {
+        return -1 !== Function.toString.call(fn).indexOf("[native code]");
+      } catch (e) {
+        return "function" === typeof fn;
+      }
+    }
+    function _wrapNativeSuper(Class$jscomp$0) {
+      var _cache = "function" === typeof Map ? new Map() : void 0;
+      _wrapNativeSuper = function (Class) {
+        function Wrapper() {
+          return _construct(
+            Class,
+            arguments,
+            _getPrototypeOf(this).constructor
+          );
+        }
+        if (null === Class || !_isNativeFunction(Class)) return Class;
+        if ("function" !== typeof Class)
+          throw new TypeError(
+            "Super expression must either be null or a function"
+          );
+        if ("undefined" !== typeof _cache) {
+          if (_cache.has(Class)) return _cache.get(Class);
+          _cache.set(Class, Wrapper);
+        }
+        Wrapper.prototype = Object.create(Class.prototype, {
+          constructor: {
+            value: Wrapper,
+            enumerable: !1,
+            writable: !0,
+            configurable: !0
+          }
+        });
+        return _setPrototypeOf(Wrapper, Class);
+      };
+      return _wrapNativeSuper(Class$jscomp$0);
+    }
+    function isStartish(topLevelType) {
+      return "topTouchStart" === topLevelType;
+    }
+    function isEndish(topLevelType) {
+      return (
+        "topTouchEnd" === topLevelType || "topTouchCancel" === topLevelType
+      );
+    }
+    function getParent(inst) {
+      for (inst = inst.return; null != inst; ) {
+        if (5 === inst.tag) return inst;
+        inst = inst.return;
+      }
+      return null;
+    }
+    function changeResponder(nextResponderFiber, blockNativeResponder) {
+      var oldResponderFiber = responderFiber;
+      responderFiber = nextResponderFiber;
+      null != oldResponderFiber &&
+        null != oldResponderFiber.stateNode &&
+        nativeFabricUIManager.setIsJSResponder(
+          oldResponderFiber.stateNode.node,
+          !1,
+          blockNativeResponder
+        );
+      null != nextResponderFiber &&
+        null != nextResponderFiber.stateNode &&
+        nativeFabricUIManager.setIsJSResponder(
+          nextResponderFiber.stateNode.node,
+          !0,
+          blockNativeResponder
+        );
+    }
+    function negotiateResponder(targetFiber, topLevelType, nativeEvent) {
+      topLevelType = isStartish(topLevelType)
+        ? "startShouldSetResponder"
+        : "topTouchMove" === topLevelType
+          ? "moveShouldSetResponder"
+          : "topSelectionChange" === topLevelType
+            ? "selectionChangeShouldSetResponder"
+            : "scrollShouldSetResponder";
+      var skipSelf = !1;
+      if (null != responderFiber) {
+        a: {
+          for (
+            var instA = responderFiber, depthA = 0, tempA = instA;
+            tempA;
+            tempA = getParent(tempA)
+          )
+            depthA++;
+          tempA = 0;
+          for (var tempB = targetFiber; tempB; tempB = getParent(tempB))
+            tempA++;
+          for (; 0 < depthA - tempA; ) (instA = getParent(instA)), depthA--;
+          for (; 0 < tempA - depthA; )
+            (targetFiber = getParent(targetFiber)), tempA--;
+          for (; depthA--; ) {
+            if (instA === targetFiber || instA === targetFiber.alternate) {
+              targetFiber = instA;
+              break a;
+            }
+            instA = getParent(instA);
+            targetFiber = getParent(targetFiber);
+          }
+          targetFiber = null;
+        }
+        if (null == targetFiber) return null;
+        targetFiber === responderFiber && (skipSelf = !0);
+      }
+      targetFiber = skipSelf ? getParent(targetFiber) : targetFiber;
+      if (null == targetFiber) return null;
+      for (skipSelf = []; null != targetFiber; )
+        skipSelf.unshift(targetFiber), (targetFiber = getParent(targetFiber));
+      nativeEvent = new LegacySyntheticEvent(
+        topLevelType,
+        { bubbles: !0, cancelable: !0 },
+        nativeEvent
+      );
+      nativeEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
+      topLevelType =
+        "on" + topLevelType.charAt(0).toUpperCase() + topLevelType.slice(1);
+      targetFiber = topLevelType + "Capture";
+      for (depthA = 0; depthA < skipSelf.length; depthA++)
+        if (
+          ((tempA = skipSelf[depthA].stateNode),
+          null != tempA &&
+            ((tempA = tempA.canonical.currentProps[targetFiber]),
+            "function" === typeof tempA && !0 === tempA(nativeEvent)))
+        )
+          return skipSelf[depthA];
+      for (targetFiber = skipSelf.length - 1; 0 <= targetFiber; targetFiber--)
+        if (
+          ((depthA = skipSelf[targetFiber].stateNode),
+          null != depthA &&
+            ((depthA = depthA.canonical.currentProps[topLevelType]),
+            "function" === typeof depthA && !0 === depthA(nativeEvent)))
+        )
+          return skipSelf[targetFiber];
+      return null;
+    }
+    function dispatchResponderEvent(fiber, eventName, nativeEvent) {
+      fiber = fiber.stateNode;
+      if (null != fiber) {
+        var propName =
+          "on" + eventName.charAt(0).toUpperCase() + eventName.slice(1);
+        fiber = fiber.canonical.currentProps[propName];
+        if ("function" === typeof fiber)
+          return (
+            (eventName = new LegacySyntheticEvent(
+              eventName,
+              { bubbles: !1, cancelable: !0 },
+              nativeEvent
+            )),
+            (eventName.touchHistory = ResponderTouchHistoryStore.touchHistory),
+            fiber(eventName)
+          );
+      }
+    }
+    function dispatchEvent(target$jscomp$0, topLevelType, nativeEventParam) {
+      var nativeEvent =
+          null != nativeEventParam && "object" === typeof nativeEventParam
+            ? nativeEventParam
+            : {},
+        eventTarget = null;
+      null != target$jscomp$0 &&
+        ((nativeEventParam = target$jscomp$0.stateNode),
+        null != nativeEventParam &&
+          (eventTarget = getPublicInstance(nativeEventParam)));
       batchedUpdates$1(function () {
         var event = { eventName: topLevelType, nativeEvent: nativeEvent };
         ReactNativePrivateInterface.RawEventEmitter.emit(topLevelType, event);
         ReactNativePrivateInterface.RawEventEmitter.emit("*", event);
-        event = eventTarget;
-        for (
-          var events = null, legacyPlugins = plugins, i = 0;
-          i < legacyPlugins.length;
-          i++
-        ) {
-          var possiblePlugin = legacyPlugins[i];
-          possiblePlugin &&
-            (possiblePlugin = possiblePlugin.extractEvents(
+        null == _enableNativeEventTargetEventDispatching &&
+          (_enableNativeEventTargetEventDispatching =
+            "function" ===
+              typeof RN$isNativeEventTargetEventDispatchingEnabled &&
+            RN$isNativeEventTargetEventDispatchingEnabled());
+        if (_enableNativeEventTargetEventDispatching) {
+          a: {
+            if (isStartish(topLevelType)) trackedTouchCount += 1;
+            else if (isEndish(topLevelType))
+              if (0 <= trackedTouchCount) --trackedTouchCount;
+              else {
+                console.warn(
+                  "Ended a touch event which was not counted in `trackedTouchCount`."
+                );
+                break a;
+              }
+            ResponderTouchHistoryStore.recordTouchTrack(
               topLevelType,
-              target,
-              nativeEvent,
-              event
-            )) &&
-            (events = accumulateInto(events, possiblePlugin));
-        }
-        event = events;
-        null !== event && (eventQueue = accumulateInto(eventQueue, event));
-        event = eventQueue;
-        eventQueue = null;
-        if (event) {
-          forEachAccumulated(event, executeDispatchesAndReleaseTopLevel);
-          if (eventQueue)
-            throw Error(
-              "processEventQueue(): Additional events were enqueued while processing an event queue. Support for this has not yet been implemented."
+              nativeEvent
             );
-          if (hasError)
-            throw (
-              ((event = caughtError),
-              (hasError = !1),
-              (caughtError = null),
-              event)
+            if (
+              null != target$jscomp$0 &&
+              (("topScroll" === topLevelType &&
+                !nativeEvent.responderIgnoreScroll) ||
+                (0 < trackedTouchCount &&
+                  "topSelectionChange" === topLevelType) ||
+                isStartish(topLevelType) ||
+                "topTouchMove" === topLevelType) &&
+              null != target$jscomp$0 &&
+              ((event = negotiateResponder(
+                target$jscomp$0,
+                topLevelType,
+                nativeEvent
+              )),
+              null != event && event !== responderFiber)
+            ) {
+              var blockNativeResponder =
+                !0 ===
+                dispatchResponderEvent(event, "responderGrant", nativeEvent);
+              if (null != responderFiber) {
+                var currentResponder = responderFiber;
+                !1 !==
+                dispatchResponderEvent(
+                  currentResponder,
+                  "responderTerminationRequest",
+                  nativeEvent
+                )
+                  ? (dispatchResponderEvent(
+                      currentResponder,
+                      "responderTerminate",
+                      nativeEvent
+                    ),
+                    changeResponder(event, blockNativeResponder))
+                  : dispatchResponderEvent(
+                      event,
+                      "responderReject",
+                      nativeEvent
+                    );
+              } else changeResponder(event, blockNativeResponder);
+            }
+            if (null != responderFiber)
+              if (((event = responderFiber), isStartish(topLevelType)))
+                dispatchResponderEvent(event, "responderStart", nativeEvent);
+              else if ("topTouchMove" === topLevelType)
+                dispatchResponderEvent(event, "responderMove", nativeEvent);
+              else if (isEndish(topLevelType))
+                if (
+                  (dispatchResponderEvent(event, "responderEnd", nativeEvent),
+                  "topTouchCancel" === topLevelType)
+                )
+                  dispatchResponderEvent(
+                    event,
+                    "responderTerminate",
+                    nativeEvent
+                  ),
+                    changeResponder(null, !1);
+                else {
+                  b: {
+                    if (
+                      (blockNativeResponder = nativeEvent.touches) &&
+                      0 !== blockNativeResponder.length
+                    )
+                      for (
+                        currentResponder = 0;
+                        currentResponder < blockNativeResponder.length;
+                        currentResponder++
+                      ) {
+                        var target =
+                          blockNativeResponder[currentResponder].target;
+                        if (
+                          null !== target &&
+                          void 0 !== target &&
+                          0 !== target
+                        ) {
+                          target = getInstanceFromNode(target);
+                          var JSCompiler_temp;
+                          if (
+                            (JSCompiler_temp =
+                              null != responderFiber && null != target)
+                          )
+                            c: {
+                              for (
+                                JSCompiler_temp = responderFiber;
+                                null != target;
+
+                              ) {
+                                if (
+                                  JSCompiler_temp === target ||
+                                  JSCompiler_temp === target.alternate
+                                ) {
+                                  JSCompiler_temp = !0;
+                                  break c;
+                                }
+                                target = getParent(target);
+                              }
+                              JSCompiler_temp = !1;
+                            }
+                          if (JSCompiler_temp) {
+                            blockNativeResponder = !1;
+                            break b;
+                          }
+                        }
+                      }
+                    blockNativeResponder = !0;
+                  }
+                  blockNativeResponder &&
+                    (dispatchResponderEvent(
+                      event,
+                      "responderRelease",
+                      nativeEvent
+                    ),
+                    changeResponder(null, !1));
+                }
+          }
+          if (
+            null != eventTarget &&
+            ((blockNativeResponder = customDirectEventTypes[topLevelType]),
+            (event = null != customBubblingEventTypes[topLevelType]) ||
+              null != blockNativeResponder)
+          ) {
+            blockNativeResponder = topLevelType.charCodeAt(3);
+            blockNativeResponder =
+              topLevelType.startsWith("top") &&
+              65 <= blockNativeResponder &&
+              90 >= blockNativeResponder
+                ? topLevelType.slice(3).toLowerCase()
+                : topLevelType;
+            event = { bubbles: event, cancelable: !0 };
+            var $jscomp$nullish$tmp0;
+            currentResponder =
+              null != ($jscomp$nullish$tmp0 = nativeEvent.timeStamp)
+                ? $jscomp$nullish$tmp0
+                : nativeEvent.timestamp;
+            "number" === typeof currentResponder &&
+              ReactNativePrivateInterface.setEventInitTimeStamp(
+                event,
+                currentResponder
+              );
+            $jscomp$nullish$tmp0 = new LegacySyntheticEvent(
+              blockNativeResponder,
+              event,
+              nativeEvent
             );
+            ReactNativePrivateInterface.dispatchTrustedEvent(
+              eventTarget,
+              $jscomp$nullish$tmp0
+            );
+          }
+        } else {
+          $jscomp$nullish$tmp0 = eventTarget;
+          event = null;
+          blockNativeResponder = plugins;
+          for (
+            currentResponder = 0;
+            currentResponder < blockNativeResponder.length;
+            currentResponder++
+          )
+            (target = blockNativeResponder[currentResponder]) &&
+              (target = target.extractEvents(
+                topLevelType,
+                target$jscomp$0,
+                nativeEvent,
+                $jscomp$nullish$tmp0
+              )) &&
+              (event = accumulateInto(event, target));
+          $jscomp$nullish$tmp0 = event;
+          null !== $jscomp$nullish$tmp0 &&
+            (eventQueue = accumulateInto(eventQueue, $jscomp$nullish$tmp0));
+          $jscomp$nullish$tmp0 = eventQueue;
+          eventQueue = null;
+          if ($jscomp$nullish$tmp0) {
+            forEachAccumulated(
+              $jscomp$nullish$tmp0,
+              executeDispatchesAndReleaseTopLevel
+            );
+            if (eventQueue)
+              throw Error(
+                "processEventQueue(): Additional events were enqueued while processing an event queue. Support for this has not yet been implemented."
+              );
+            if (hasError)
+              throw (
+                (($jscomp$nullish$tmp0 = caughtError),
+                (hasError = !1),
+                (caughtError = null),
+                $jscomp$nullish$tmp0)
+              );
+          }
         }
       });
     }
@@ -6796,8 +7206,8 @@ __DEV__ &&
         try {
           (currentTransition = action(prevState, payload)),
             handleActionReturnValue(actionQueue, node, currentTransition);
-        } catch (error$3) {
-          onActionError(actionQueue, node, error$3);
+        } catch (error$5) {
+          onActionError(actionQueue, node, error$5);
         }
     }
     function handleActionReturnValue(actionQueue, node, returnValue) {
@@ -11662,8 +12072,8 @@ __DEV__ &&
                 recordEffectDuration(current);
               }
             else runWithFiberInDEV(current, ref, null);
-          } catch (error$4) {
-            captureCommitPhaseError(current, nearestMountedAncestor, error$4);
+          } catch (error$6) {
+            captureCommitPhaseError(current, nearestMountedAncestor, error$6);
           }
         else ref.current = null;
     }
@@ -15621,8 +16031,8 @@ __DEV__ &&
           workLoopSync();
           memoizedUpdaters = workInProgressRootExitStatus;
           break;
-        } catch (thrownValue$5) {
-          handleThrow(root, thrownValue$5);
+        } catch (thrownValue$7) {
+          handleThrow(root, thrownValue$7);
         }
       while (1);
       lanes && root.shellSuspendCounter++;
@@ -15785,8 +16195,8 @@ __DEV__ &&
             ? workLoopSync()
             : workLoopConcurrentByScheduler();
           break;
-        } catch (thrownValue$6) {
-          handleThrow(root, thrownValue$6);
+        } catch (thrownValue$8) {
+          handleThrow(root, thrownValue$8);
         }
       while (1);
       resetContextDependencies();
@@ -17653,7 +18063,7 @@ __DEV__ &&
         try {
           testStringCoercion(key);
           var JSCompiler_inline_result = !1;
-        } catch (e$7) {
+        } catch (e$9) {
           JSCompiler_inline_result = !0;
         }
         JSCompiler_inline_result &&
@@ -17955,15 +18365,15 @@ __DEV__ &&
     function getPublicInstance(instance) {
       if (null != instance.canonical) {
         if (null == instance.canonical.publicInstance) {
-          var $jscomp$nullish$tmp0;
+          var $jscomp$nullish$tmp1;
           instance.canonical.publicInstance =
             ReactNativePrivateInterface.createPublicInstance(
               instance.canonical.nativeTag,
               instance.canonical.viewConfig,
               instance.canonical.internalInstanceHandle,
               null !=
-                ($jscomp$nullish$tmp0 = instance.canonical.publicRootInstance)
-                ? $jscomp$nullish$tmp0
+                ($jscomp$nullish$tmp1 = instance.canonical.publicRootInstance)
+                ? $jscomp$nullish$tmp1
                 : null
             );
           instance.canonical.publicRootInstance = null;
@@ -18086,6 +18496,12 @@ __DEV__ &&
         enableFragmentRefsInstanceHandles &&
           addFragmentHandleToInstance(publicInstance, fragmentInstance);
       }
+    }
+    function getInstanceFromNode(node) {
+      return null != node.canonical &&
+        null != node.canonical.internalInstanceHandle
+        ? node.canonical.internalInstanceHandle
+        : node;
     }
     function nativeOnUncaughtError(error, errorInfo) {
       !1 !==
@@ -18344,9 +18760,9 @@ __DEV__ &&
         recordTouchTrack: function (topLevelType, nativeEvent) {
           null != instrumentationCallback &&
             instrumentationCallback(topLevelType, nativeEvent);
-          if (isMoveish(topLevelType))
+          if (isMoveish$1(topLevelType))
             nativeEvent.changedTouches.forEach(recordTouchMove);
-          else if (isStartish(topLevelType))
+          else if (isStartish$1(topLevelType))
             nativeEvent.changedTouches.forEach(recordTouchStart),
               (touchHistory.numberActiveTouches = nativeEvent.touches.length),
               1 === touchHistory.numberActiveTouches &&
@@ -18381,7 +18797,7 @@ __DEV__ &&
         touchHistory: touchHistory
       },
       responderInst = null,
-      trackedTouchCount = 0,
+      trackedTouchCount$1 = 0,
       eventTypes = {
         startShouldSetResponder: {
           phasedRegistrationNames: {
@@ -18455,12 +18871,12 @@ __DEV__ &&
           nativeEvent,
           nativeEventTarget
         ) {
-          if (isStartish(topLevelType)) trackedTouchCount += 1;
+          if (isStartish$1(topLevelType)) trackedTouchCount$1 += 1;
           else if (
             "topTouchEnd" === topLevelType ||
             "topTouchCancel" === topLevelType
           )
-            if (0 <= trackedTouchCount) --trackedTouchCount;
+            if (0 <= trackedTouchCount$1) --trackedTouchCount$1;
             else
               return (
                 console.warn(
@@ -18476,14 +18892,14 @@ __DEV__ &&
             targetInst &&
             (("topScroll" === topLevelType &&
               !nativeEvent.responderIgnoreScroll) ||
-              (0 < trackedTouchCount &&
+              (0 < trackedTouchCount$1 &&
                 "topSelectionChange" === topLevelType) ||
-              isStartish(topLevelType) ||
-              isMoveish(topLevelType))
+              isStartish$1(topLevelType) ||
+              isMoveish$1(topLevelType))
           ) {
-            var shouldSetEventType = isStartish(topLevelType)
+            var shouldSetEventType = isStartish$1(topLevelType)
               ? eventTypes.startShouldSetResponder
-              : isMoveish(topLevelType)
+              : isMoveish$1(topLevelType)
                 ? eventTypes.moveShouldSetResponder
                 : "topSelectionChange" === topLevelType
                   ? eventTypes.selectionChangeShouldSetResponder
@@ -18494,24 +18910,24 @@ __DEV__ &&
                 for (
                   var depthA = 0, tempA = JSCompiler_temp;
                   tempA;
-                  tempA = getParent$1(tempA)
+                  tempA = getParent$2(tempA)
                 )
                   depthA++;
                 tempA = 0;
-                for (var tempB = targetInst; tempB; tempB = getParent$1(tempB))
+                for (var tempB = targetInst; tempB; tempB = getParent$2(tempB))
                   tempA++;
                 for (; 0 < depthA - tempA; )
-                  (JSCompiler_temp = getParent$1(JSCompiler_temp)), depthA--;
+                  (JSCompiler_temp = getParent$2(JSCompiler_temp)), depthA--;
                 for (; 0 < tempA - depthA; )
-                  (targetInst = getParent$1(targetInst)), tempA--;
+                  (targetInst = getParent$2(targetInst)), tempA--;
                 for (; depthA--; ) {
                   if (
                     JSCompiler_temp === targetInst ||
                     JSCompiler_temp === targetInst.alternate
                   )
                     break b;
-                  JSCompiler_temp = getParent$1(JSCompiler_temp);
-                  targetInst = getParent$1(targetInst);
+                  JSCompiler_temp = getParent$2(JSCompiler_temp);
+                  targetInst = getParent$2(targetInst);
                 }
                 JSCompiler_temp = null;
               }
@@ -18619,7 +19035,7 @@ __DEV__ &&
                     JSCompiler_temp$jscomp$0,
                     [JSCompiler_temp, depthA]
                   );
-                  changeResponder(shouldSetEventType, targetInst);
+                  changeResponder$1(shouldSetEventType, targetInst);
                 } else
                   (shouldSetEventType = ResponderSyntheticEvent.getPooled(
                     eventTypes.responderReject,
@@ -18642,11 +19058,11 @@ __DEV__ &&
                   JSCompiler_temp$jscomp$0,
                   JSCompiler_temp
                 )),
-                  changeResponder(shouldSetEventType, targetInst);
+                  changeResponder$1(shouldSetEventType, targetInst);
             else JSCompiler_temp$jscomp$0 = null;
           } else JSCompiler_temp$jscomp$0 = null;
-          shouldSetEventType = responderInst && isStartish(topLevelType);
-          JSCompiler_temp = responderInst && isMoveish(topLevelType);
+          shouldSetEventType = responderInst && isStartish$1(topLevelType);
+          JSCompiler_temp = responderInst && isMoveish$1(topLevelType);
           targetInst =
             responderInst &&
             ("topTouchEnd" === topLevelType ||
@@ -18711,7 +19127,7 @@ __DEV__ &&
                           targetInst = !0;
                           break b;
                         }
-                        depthA = getParent$1(depthA);
+                        depthA = getParent$2(depthA);
                       }
                       targetInst = !1;
                     }
@@ -18745,7 +19161,7 @@ __DEV__ &&
                 JSCompiler_temp$jscomp$0,
                 nativeEvent
               )),
-              changeResponder(null);
+              changeResponder$1(null);
           return JSCompiler_temp$jscomp$0;
         },
         GlobalResponderHandler: null,
@@ -18761,10 +19177,10 @@ __DEV__ &&
       plugins = [],
       eventNameDispatchConfigs = {},
       registrationNameModules = {},
-      customBubblingEventTypes =
+      customBubblingEventTypes$1 =
         ReactNativePrivateInterface.ReactNativeViewConfigRegistry
           .customBubblingEventTypes,
-      customDirectEventTypes =
+      customDirectEventTypes$1 =
         ReactNativePrivateInterface.ReactNativeViewConfigRegistry
           .customDirectEventTypes;
     if (eventPluginOrder)
@@ -18807,8 +19223,8 @@ __DEV__ &&
           nativeEventTarget
         ) {
           if (null == targetInst) return null;
-          var bubbleDispatchConfig = customBubblingEventTypes[topLevelType],
-            directDispatchConfig = customDirectEventTypes[topLevelType];
+          var bubbleDispatchConfig = customBubblingEventTypes$1[topLevelType],
+            directDispatchConfig = customDirectEventTypes$1[topLevelType];
           if (!bubbleDispatchConfig && !directDispatchConfig)
             throw Error(
               'Unsupported top level event type "' +
@@ -18846,6 +19262,48 @@ __DEV__ &&
     });
     var isInsideEventHandler = !1,
       eventQueue = null,
+      LegacySyntheticEvent = (function (_Event) {
+        function LegacySyntheticEvent(type, options, nativeEvent) {
+          type = _Event.call(this, type, options) || this;
+          type._nativeEvent = nativeEvent;
+          type._propagationStopped = !1;
+          return type;
+        }
+        _inheritsLoose(LegacySyntheticEvent, _Event);
+        var _proto = LegacySyntheticEvent.prototype;
+        _proto.stopPropagation = function () {
+          _Event.prototype.stopPropagation.call(this);
+          this._propagationStopped = !0;
+        };
+        _proto.stopImmediatePropagation = function () {
+          _Event.prototype.stopImmediatePropagation.call(this);
+          this._propagationStopped = !0;
+        };
+        _proto.persist = function () {};
+        _proto.isDefaultPrevented = function () {
+          return this.defaultPrevented;
+        };
+        _proto.isPropagationStopped = function () {
+          return this._propagationStopped;
+        };
+        return _createClass(LegacySyntheticEvent, [
+          {
+            key: "nativeEvent",
+            get: function () {
+              return this._nativeEvent;
+            }
+          }
+        ]);
+      })(_wrapNativeSuper(Event)),
+      responderFiber = null,
+      trackedTouchCount = 0,
+      _enableNativeEventTargetEventDispatching = null,
+      customBubblingEventTypes =
+        ReactNativePrivateInterface.ReactNativeViewConfigRegistry
+          .customBubblingEventTypes,
+      customDirectEventTypes =
+        ReactNativePrivateInterface.ReactNativeViewConfigRegistry
+          .customDirectEventTypes,
       BeforeMutationMask = 1024 | (enableEffectEventMutationPhase ? 0 : 4),
       scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
       cancelCallback$1 = Scheduler.unstable_cancelCallback,
@@ -21168,12 +21626,7 @@ __DEV__ &&
       function (instance) {
         return instance.canonical.currentProps;
       },
-      function (node) {
-        return null != node.canonical &&
-          null != node.canonical.internalInstanceHandle
-          ? node.canonical.internalInstanceHandle
-          : node;
-      },
+      getInstanceFromNode,
       function (fiber) {
         fiber = getPublicInstance(fiber.stateNode);
         if (null == fiber)
@@ -21223,10 +21676,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-fef12a01-20260413",
+        version: "19.3.0-native-fb-56824423-20260414",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-fef12a01-20260413"
+        reconcilerVersion: "19.3.0-native-fb-56824423-20260414"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
