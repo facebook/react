@@ -97,7 +97,7 @@ function App() {
 ```js
 import {hydrateRoot} from 'react-dom/client';
 
-hydrateRoot(document, <App />, {
+hydrateRoot(document.getElementById('root'), <App />, {
   onRecoverableError(error, errorInfo) {
     console.error('Hydration recoverable error:', error.message);
     console.error(errorInfo.componentStack);
