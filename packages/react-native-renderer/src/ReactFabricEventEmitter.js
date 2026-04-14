@@ -30,20 +30,12 @@ import {runEventsInBatch} from './legacy-events/EventBatching';
 
 import {
   RawEventEmitter,
-  ReactNativeViewConfigRegistry,
-  dispatchTrustedEvent,
-  setEventInitTimeStamp,
+  dispatchNativeEvent,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {getPublicInstance} from './ReactFiberConfigFabric';
-import LegacySyntheticEvent from './LegacySyntheticEvent';
-import {topLevelTypeToEventName} from './ReactNativeEventTypeMapping';
-import {processResponderEvent} from './ReactNativeResponder';
 import {enableNativeEventTargetEventDispatching} from './ReactNativeFeatureFlags';
 
 export {getListener, registrationNameModules as registrationNames};
-
-const {customBubblingEventTypes, customDirectEventTypes} =
-  ReactNativeViewConfigRegistry;
 
 /**
  * Allows registered plugins an opportunity to extract events from top-level
@@ -143,38 +135,8 @@ export function dispatchEvent(
     RawEventEmitter.emit('*', event);
 
     if (enableNativeEventTargetEventDispatching()) {
-      // Process responder events before normal event dispatch.
-      // This handles touch negotiation (onStartShouldSetResponder, etc.)
-      processResponderEvent(topLevelType, targetFiber, nativeEvent);
-
-      // New EventTarget-based dispatch path
       if (eventTarget != null) {
-        const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
-        const directDispatchConfig = customDirectEventTypes[topLevelType];
-        const bubbles = bubbleDispatchConfig != null;
-
-        // Skip events that are not registered in the view config
-        if (bubbles || directDispatchConfig != null) {
-          const eventName = topLevelTypeToEventName(topLevelType);
-          const options = {
-            bubbles,
-            cancelable: true,
-          };
-          // Preserve the native event timestamp for backwards compatibility.
-          // The legacy SyntheticEvent system used nativeEvent.timeStamp || nativeEvent.timestamp.
-          const nativeTimestamp =
-            nativeEvent.timeStamp ?? nativeEvent.timestamp;
-          if (typeof nativeTimestamp === 'number') {
-            setEventInitTimeStamp(options, nativeTimestamp);
-          }
-          const syntheticEvent = new LegacySyntheticEvent(
-            eventName,
-            options,
-            nativeEvent,
-          );
-          // $FlowFixMe[incompatible-call]
-          dispatchTrustedEvent(eventTarget, syntheticEvent);
-        }
+        dispatchNativeEvent(eventTarget, topLevelType, nativeEvent);
       }
     } else {
       // Heritage plugin event system

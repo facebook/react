@@ -204,13 +204,10 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function getInternalInstanceHandleFromPublicInstance(
     publicInstance: PublicInstance,
   ): ?Object;
-  declare export function dispatchTrustedEvent(
+  declare export function dispatchNativeEvent(
     target: EventTarget,
-    event: Event,
-  ): void;
-  declare export function setEventInitTimeStamp(
-    eventInit: {[string]: mixed},
-    timeStamp: number,
+    type: string,
+    eventData: {[string]: mixed},
   ): void;
   declare export function createAttributePayload(
     props: Object,
