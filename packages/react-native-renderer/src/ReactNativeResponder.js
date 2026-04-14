@@ -140,7 +140,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import LegacySyntheticEvent from './LegacySyntheticEvent';
+import {LegacySyntheticEvent} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import ResponderTouchHistoryStore from './legacy-events/ResponderTouchHistoryStore';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import {getInstanceFromNode} from './ReactFabricComponentTree';

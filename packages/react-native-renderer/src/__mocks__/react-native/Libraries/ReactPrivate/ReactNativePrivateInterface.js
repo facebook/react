@@ -65,4 +65,31 @@ module.exports = {
   get diffAttributePayloads() {
     return require('./diffAttributePayloads').default;
   },
+  get LegacySyntheticEvent() {
+    return class LegacySyntheticEvent extends Event {
+      constructor(type, options, nativeEvent) {
+        super(type, options);
+        this._nativeEvent = nativeEvent;
+        this._propagationStopped = false;
+      }
+      get nativeEvent() {
+        return this._nativeEvent;
+      }
+      stopPropagation() {
+        super.stopPropagation();
+        this._propagationStopped = true;
+      }
+      stopImmediatePropagation() {
+        super.stopImmediatePropagation();
+        this._propagationStopped = true;
+      }
+      persist() {}
+      isDefaultPrevented() {
+        return this.defaultPrevented;
+      }
+      isPropagationStopped() {
+        return this._propagationStopped;
+      }
+    };
+  },
 };

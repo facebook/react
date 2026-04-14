@@ -33,9 +33,9 @@ import {
   ReactNativeViewConfigRegistry,
   dispatchTrustedEvent,
   setEventInitTimeStamp,
+  LegacySyntheticEvent,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {getPublicInstance} from './ReactFiberConfigFabric';
-import LegacySyntheticEvent from './LegacySyntheticEvent';
 import {topLevelTypeToEventName} from './ReactNativeEventTypeMapping';
 import {processResponderEvent} from './ReactNativeResponder';
 import {enableNativeEventTargetEventDispatching} from './ReactNativeFeatureFlags';

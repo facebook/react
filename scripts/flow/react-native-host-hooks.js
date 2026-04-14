@@ -212,6 +212,17 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     eventInit: {[string]: mixed},
     timeStamp: number,
   ): void;
+  declare export class LegacySyntheticEvent extends Event {
+    constructor(
+      type: string,
+      options: {bubbles?: boolean, cancelable?: boolean, ...},
+      nativeEvent: {[string]: mixed},
+    ): void;
+    get nativeEvent(): {[string]: mixed};
+    persist(): void;
+    isDefaultPrevented(): boolean;
+    isPropagationStopped(): boolean;
+  }
   declare export function createAttributePayload(
     props: Object,
     validAttributes: __AttributeConfiguration,
