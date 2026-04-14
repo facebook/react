@@ -47,7 +47,7 @@ function handleRequest(res) {
 
 ## Debugging hydration mismatches
 
-If you see warnings like "Text content does not match server-rendered HTML", it usually means the HTML from the server is different from what React renders first in the browser.
+If you see a hydration mismatch error like "Hydration failed because the server rendered HTML didn't match the client" in the console or via `onRecoverableError`, it usually means the HTML from the server is different from what React renders first in the browser.
 
 ### Common causes
 
@@ -97,7 +97,7 @@ function App() {
 ```js
 import { hydrateRoot } from 'react-dom/client';
 
-hydrateRoot(document, <App />, {
+hydrateRoot(document.getElementById('root'), <App />, {
   onRecoverableError(error, errorInfo) {
     console.error('Hydration recoverable error:', error.message);
     console.error(errorInfo.componentStack);
