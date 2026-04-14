@@ -52,7 +52,7 @@ If you see warnings like "Text content does not match server-rendered HTML", it 
 ### Common causes
 
 - Values that change every time, like `Math.random()` or `Date.now()`.
-- Code that checks browser-only APIs during render, like `window`, `document`, or `navigator`.
+- Conditional rendering based on browser-only APIs (for example `typeof window !== 'undefined'`) that produces different HTML on server and browser.
 - Data is different on the server and browser during the first render.
 - Invalid HTML structure that the browser auto-fixes.
 - Third-party scripts changing the DOM before hydration finishes.
@@ -79,7 +79,7 @@ This will usually cause a mismatch because server and browser generate different
 ### Safer pattern
 
 ```js
-import {useEffect, useState} from 'react';
+import { useEffect, useState } from 'react';
 
 function App() {
   const [value, setValue] = useState(null);
@@ -95,7 +95,7 @@ function App() {
 ### Instrumentation tip
 
 ```js
-import {hydrateRoot} from 'react-dom/client';
+import { hydrateRoot } from 'react-dom/client';
 
 hydrateRoot(document, <App />, {
   onRecoverableError(error, errorInfo) {
