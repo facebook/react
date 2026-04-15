@@ -78,6 +78,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
+  enableSuspenseyImages = dynamicFeatureFlags.enableSuspenseyImages,
   enableViewTransition = dynamicFeatureFlags.enableViewTransition,
   enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
   enableParallelTransitions = dynamicFeatureFlags.enableParallelTransitions;
@@ -11284,7 +11285,8 @@ function createFiberFromTypeAndProps(
       case REACT_VIEW_TRANSITION_TYPE:
         if (enableViewTransition)
           return (
-            (type = mode | 32),
+            (type = mode),
+            enableSuspenseyImages || (type |= 32),
             (type = createFiber(30, pendingProps, key, type)),
             (type.elementType = REACT_VIEW_TRANSITION_TYPE),
             (type.lanes = lanes),
@@ -11616,10 +11618,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1629 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-fef12a01-20260413",
+  version: "19.3.0-www-classic-00f063c3-20260415",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-fef12a01-20260413"
+  reconcilerVersion: "19.3.0-www-classic-00f063c3-20260415"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1630 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11645,4 +11647,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-fef12a01-20260413";
+exports.version = "19.3.0-www-classic-00f063c3-20260415";

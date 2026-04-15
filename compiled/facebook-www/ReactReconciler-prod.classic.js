@@ -7001,7 +7001,7 @@ module.exports = function ($$$config) {
     renderLanes
   ) {
     if (
-      0 !== (workInProgress.mode & 32) &&
+      (enableSuspenseyImages || 0 !== (workInProgress.mode & 32)) &&
       (null === oldProps
         ? maySuspendCommit(type, newProps)
         : maySuspendCommitOnUpdate(type, oldProps, newProps))
@@ -12928,7 +12928,8 @@ module.exports = function ($$$config) {
         case REACT_VIEW_TRANSITION_TYPE:
           if (enableViewTransition)
             return (
-              (type = mode | 32),
+              (type = mode),
+              enableSuspenseyImages || (type |= 32),
               (type = createFiber(30, pendingProps, key, type)),
               (type.elementType = REACT_VIEW_TRANSITION_TYPE),
               (type.lanes = lanes),
@@ -13226,6 +13227,7 @@ module.exports = function ($$$config) {
     retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
     syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
     transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
+    enableSuspenseyImages = dynamicFeatureFlags.enableSuspenseyImages,
     enableViewTransition = dynamicFeatureFlags.enableViewTransition,
     enableFragmentRefs = dynamicFeatureFlags.enableFragmentRefs,
     enableFragmentRefsTextNodes =
@@ -14466,7 +14468,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-fef12a01-20260413"
+      reconcilerVersion: "19.3.0-www-classic-00f063c3-20260415"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
