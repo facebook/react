@@ -12,6 +12,10 @@ import {basename, join, isAbsolute} from 'path';
 import {execSync, spawn} from 'child_process';
 import {parse} from 'shell-quote';
 
+// Characters that cmd.exe interprets as shell operators, enabling OS command
+// injection (CWE-78) when user-controlled strings are passed via /C.
+const SHELL_METACHARACTERS_RE = /[;&|`$<>()\n\r]/;
+
 function isTerminalEditor(editor: string): boolean {
   switch (editor) {
     case 'vim':
@@ -97,11 +101,13 @@ function guessEditor(): Array<string> {
     }
   }
 
-  // Last resort, use old-school env vars
+  // Last resort, use old-school env vars.
+  // Parse via shell-quote (same as REACT_EDITOR) so the value is split on
+  // spaces but shell metacharacters are not expanded into a shell command.
   if (process.env.VISUAL) {
-    return [process.env.VISUAL];
+    return parse(process.env.VISUAL);
   } else if (process.env.EDITOR) {
-    return [process.env.EDITOR];
+    return parse(process.env.EDITOR);
   }
 
   return [];
@@ -116,6 +122,14 @@ export function getValidFilePath(
   // We use relative paths at Facebook with deterministic builds.
   // This is why our internal tooling calls React DevTools with absoluteProjectRoots.
   // If the filename is absolute then we don't need to care about this.
+
+  // Reject paths containing shell metacharacters to prevent CWE-78 OS Command
+  // Injection. On Windows, file paths are passed through cmd.exe which
+  // interprets characters like &, |, ; as shell operators.
+  if (SHELL_METACHARACTERS_RE.test(maybeRelativePath)) {
+    return null;
+  }
+
   if (isAbsolute(maybeRelativePath)) {
     if (existsSync(maybeRelativePath)) {
       return maybeRelativePath;
@@ -158,6 +172,13 @@ export function launchEditor(
 
   const [editor, ...destructuredArgs] = guessEditor();
   if (!editor) {
+    return;
+  }
+
+  // Reject editor binaries containing shell metacharacters to prevent CWE-78.
+  // On Windows the editor string is passed to cmd.exe /C which would interpret
+  // operators like & and | as command separators.
+  if (SHELL_METACHARACTERS_RE.test(editor)) {
     return;
   }
 
