@@ -311,5 +311,6 @@ declare const nativeFabricUIManager: {
     finished: Promise<void>,
     ready: Promise<void>,
   },
+  suspendOnActiveViewTransition: () => void,
   ...
 };
