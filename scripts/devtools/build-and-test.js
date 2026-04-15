@@ -94,7 +94,7 @@ async function buildAndTestExtensions() {
   );
 
   console.log('');
-  console.log(`Extensions have been build for Chrome, Edge, and Firefox.`);
+  console.log(`Extensions have been built for Chrome, Edge, and Firefox.`);
   console.log('');
   console.log('Smoke test each extension before continuing:');
   console.log(`  ${chalk.bold.green('cd ' + extensionsPackagePath)}`);
@@ -105,7 +105,7 @@ async function buildAndTestExtensions() {
   console.log(`  ${chalk.dim('# Test Edge extension')}`);
   console.log(`  ${chalk.bold.green('yarn test:edge')}`);
   console.log('');
-  console.log(`  ${chalk.dim('# Firefox Chrome extension')}`);
+  console.log(`  ${chalk.dim('# Test Firefox extension')}`);
   console.log(`  ${chalk.bold.green('yarn test:firefox')}`);
 
   await confirmContinue();
@@ -236,4 +236,7 @@ function printFinalInstructions() {
   console.log(chalk.bold.green('  ' + pathToPrint));
 }
 
-main();
+main().catch(err => {
+  console.error(chalk.red('Release failed:'), err.message);
+  process.exit(1);
+});
