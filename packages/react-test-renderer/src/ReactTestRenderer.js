@@ -67,6 +67,7 @@ import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
 const defaultOnDefaultTransitionIndicator: () => void | (() => void) = noop;
 
 // $FlowFixMe[prop-missing]: This is only in the development export.
+// $FlowFixMe[missing-export]
 const act = React.act;
 
 // TODO: Remove from public bundle
@@ -179,7 +180,7 @@ function flatten(arr) {
       // $FlowFixMe[incompatible-use]
       n.i += 1;
       if (isArray(el)) {
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         stack.push(n);
         stack.push({i: 0, array: el});
         break;
@@ -494,6 +495,7 @@ function create(
     global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true;
   let isConcurrent = isConcurrentOnly;
   let isStrictMode = false;
+  // $FlowFixMe[invalid-compare]
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
       // $FlowFixMe[incompatible-type] found when upgrading Flow
@@ -529,6 +531,7 @@ function create(
     throw new Error('something went wrong');
   }
 
+  // $FlowFixMe[incompatible-type]
   updateContainer(element, root, null, null);
 
   const entry = {
@@ -580,6 +583,7 @@ function create(
       if (root == null || root.current == null) {
         return;
       }
+      // $FlowFixMe[incompatible-type]
       updateContainer(newElement, root, null, null);
     },
     unmount() {

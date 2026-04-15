@@ -84,6 +84,7 @@ function prerender(
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
         {highWaterMark: 0},
       );
 
@@ -170,6 +171,7 @@ function resumeAndPrerender(
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
         {highWaterMark: 0},
       );
 

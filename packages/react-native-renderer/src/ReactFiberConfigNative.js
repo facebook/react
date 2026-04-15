@@ -308,7 +308,7 @@ export function getPublicInstance(instance: Instance): PublicInstance {
     }
 
     // $FlowExpectedError[prop-missing]
-    // $FlowExpectedError[incompatible-return]
+    // $FlowExpectedError[incompatible-type]
     return instance.canonical.publicInstance;
   }
 

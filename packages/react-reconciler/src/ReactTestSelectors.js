@@ -130,6 +130,7 @@ function findFiberRootForHostRoot(hostRoot: Instance): Fiber {
   } else {
     const fiberRoot = findFiberRoot(hostRoot);
 
+    // $FlowFixMe[invalid-compare]
     if (fiberRoot === null) {
       throw new Error(
         'Could not find React container within specified host subtree.',
@@ -177,7 +178,9 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
         tag === HostSingleton
       ) {
         const textContent = getTextContent(fiber);
+        // $FlowFixMe[invalid-compare]
         if (
+          // $FlowFixMe[invalid-compare]
           textContent !== null &&
           textContent.indexOf(((selector: any): TextSelector).value) >= 0
         ) {
@@ -307,6 +310,7 @@ export function findAllNodes(
   hostRoot: Instance,
   selectors: Array<Selector>,
 ): Array<Instance> {
+  // $FlowFixMe[constant-condition]
   if (!supportsTestSelectors) {
     throw new Error('Test selector API is not supported by this renderer.');
   }
@@ -346,6 +350,7 @@ export function getFindAllNodesFailureDescription(
   hostRoot: Instance,
   selectors: Array<Selector>,
 ): string | null {
+  // $FlowFixMe[constant-condition]
   if (!supportsTestSelectors) {
     throw new Error('Test selector API is not supported by this renderer.');
   }
@@ -417,6 +422,7 @@ export function findBoundingRects(
   hostRoot: Instance,
   selectors: Array<Selector>,
 ): Array<BoundingRect> {
+  // $FlowFixMe[constant-condition]
   if (!supportsTestSelectors) {
     throw new Error('Test selector API is not supported by this renderer.');
   }
@@ -507,6 +513,7 @@ export function focusWithin(
   hostRoot: Instance,
   selectors: Array<Selector>,
 ): boolean {
+  // $FlowFixMe[constant-condition]
   if (!supportsTestSelectors) {
     throw new Error('Test selector API is not supported by this renderer.');
   }
@@ -545,6 +552,7 @@ export function focusWithin(
 const commitHooks: Array<Function> = [];
 
 export function onCommitRoot(): void {
+  // $FlowFixMe[constant-condition]
   if (supportsTestSelectors) {
     commitHooks.forEach(commitHook => commitHook());
   }
@@ -562,6 +570,7 @@ export function observeVisibleRects(
   callback: (intersections: Array<{ratio: number, rect: BoundingRect}>) => void,
   options?: IntersectionObserverOptions,
 ): {disconnect: () => void} {
+  // $FlowFixMe[constant-condition]
   if (!supportsTestSelectors) {
     throw new Error('Test selector API is not supported by this renderer.');
   }

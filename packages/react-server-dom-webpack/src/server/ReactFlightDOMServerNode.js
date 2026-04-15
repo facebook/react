@@ -129,11 +129,11 @@ function startReadingFromDebugChannelReadable(
     const ws: WebSocket = (stream: any);
     ws.binaryType = 'arraybuffer';
     ws.addEventListener('message', event => {
-      // $FlowFixMe
+      // $FlowFixMe[incompatible-type]
       onData(event.data);
     });
     ws.addEventListener('error', event => {
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       onError(event.error);
     });
     ws.addEventListener('close', onClose);
@@ -380,6 +380,7 @@ function renderToReadableStream(
         },
       },
       // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+      // $FlowFixMe[incompatible-type]
       {highWaterMark: 0},
     );
     debugStream.pipeTo(debugChannelWritable);
@@ -404,6 +405,7 @@ function renderToReadableStream(
       },
     },
     // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+    // $FlowFixMe[incompatible-type]
     {highWaterMark: 0},
   );
   return stream;
@@ -516,6 +518,7 @@ function prerender(
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
         {highWaterMark: 0},
       );
       resolve({prelude: stream});
@@ -621,6 +624,7 @@ function decodeReplyFromBusboy<T>(
     reportGlobalError(
       response,
       // $FlowFixMe[incompatible-call] types Error and mixed are incompatible
+      // $FlowFixMe[incompatible-type]
       err,
     );
   });
@@ -692,7 +696,7 @@ function decodeReplyFromAsyncIterable<T>(
     reportGlobalError(response, reason);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[prop-missing] should be able to pass mixed
       iterator.throw(reason).then(error, error);
     }
   }

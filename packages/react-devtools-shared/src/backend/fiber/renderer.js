@@ -765,6 +765,7 @@ export function attach(
     parentInstance: null | DevToolsInstance,
     extraString: string = '',
   ): void {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       const displayName =
         instance.kind === VIRTUAL_INSTANCE
@@ -807,6 +808,7 @@ export function attach(
 
   // eslint-disable-next-line no-unused-vars
   function debugTree(instance: DevToolsInstance, indent: number = 0) {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       const name =
         (instance.kind !== VIRTUAL_INSTANCE
@@ -1768,6 +1770,7 @@ export function attach(
     }
     idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('recordMount()', fiberInstance, parentInstance);
     }
@@ -2078,6 +2081,7 @@ export function attach(
     const isSuspended =
       fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.log('recordSuspenseMount()', suspenseInstance);
     }
@@ -2106,6 +2110,7 @@ export function attach(
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('recordUnmount()', fiberInstance, reconcilingParent);
     }
@@ -2140,6 +2145,7 @@ export function attach(
   }
 
   function recordSuspenseResize(suspenseNode: SuspenseNode): void {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.log('recordSuspenseResize()', suspenseNode);
     }
@@ -2167,6 +2173,7 @@ export function attach(
   }
 
   function recordSuspenseSuspenders(suspenseNode: SuspenseNode): void {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.log('recordSuspenseSuspenders()', suspenseNode);
     }
@@ -2187,6 +2194,7 @@ export function attach(
   }
 
   function recordSuspenseUnmount(suspenseInstance: SuspenseNode): void {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.log(
         'recordSuspenseUnmount()',
@@ -2335,6 +2343,7 @@ export function attach(
       return;
     }
     let node: SuspenseNode = firstChild;
+    // $FlowFixMe[invalid-compare]
     while (node !== null) {
       if (node.suspendedBy.has(ioInfo)) {
         // We have found a child boundary that depended on the unblocked I/O.
@@ -2993,7 +3002,7 @@ export function attach(
       start,
       end,
       value: promise,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
     if (byteSize > 0) {
@@ -3002,7 +3011,7 @@ export function attach(
     }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber._debugOwner == null ? null : fiber._debugOwner,
       debugStack: fiber._debugStack == null ? null : fiber._debugStack,
       debugTask: fiber._debugTask == null ? null : fiber._debugTask,
@@ -3109,7 +3118,7 @@ export function attach(
       start,
       end,
       value: promise,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber, // Allow linking to the <link> if it's not filtered.
     };
     if (byteSize > 0) {
@@ -3118,7 +3127,7 @@ export function attach(
     }
     const asyncInfo: ReactAsyncInfo = {
       awaited: ioInfo,
-      // $FlowFixMe: This field doesn't usually take a Fiber but we're only using inside this file.
+      // $FlowFixMe[incompatible-type]: This field doesn't usually take a Fiber but we're only using inside this file.
       owner: fiber._debugOwner == null ? null : fiber._debugOwner,
       debugStack: fiber._debugStack == null ? null : fiber._debugStack,
       debugTask: fiber._debugTask == null ? null : fiber._debugTask,
@@ -3360,6 +3369,7 @@ export function attach(
         recordSuspenseMount(newSuspenseNode, reconcilingParentSuspenseNode);
       }
       insertChild(newInstance);
+      // $FlowFixMe[constant-condition]
       if (__DEBUG__) {
         debug('mountFiberRecursively()', newInstance, reconcilingParent);
       }
@@ -3420,6 +3430,7 @@ export function attach(
         }
       }
       insertChild(newInstance);
+      // $FlowFixMe[constant-condition]
       if (__DEBUG__) {
         debug('mountFiberRecursively()', newInstance, reconcilingParent);
       }
@@ -3620,6 +3631,7 @@ export function attach(
   // We use this to simulate unmounting for Suspense trees
   // when we switch from primary to fallback, or deleting a subtree.
   function unmountInstanceRecursively(instance: DevToolsInstance) {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('unmountInstanceRecursively()', instance, reconcilingParent);
     }
@@ -3655,6 +3667,7 @@ export function attach(
         isInFocusedActivity = true;
       } else if (
         instance.kind === FIBER_INSTANCE &&
+        // $FlowFixMe[invalid-compare]
         instance.data !== null &&
         instance.data.tag === ActivityComponent
       ) {
@@ -3871,6 +3884,7 @@ export function attach(
   function recordResetChildren(
     parentInstance: FiberInstance | VirtualInstance,
   ) {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       if (parentInstance.firstChild !== null) {
         debug(
@@ -3916,6 +3930,7 @@ export function attach(
   }
 
   function recordResetSuspenseChildren(parentInstance: SuspenseNode) {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       if (parentInstance.firstChild !== null) {
         console.log(
@@ -3939,6 +3954,7 @@ export function attach(
     }
     pushOperation(SUSPENSE_TREE_OPERATION_REORDER_CHILDREN);
     // $FlowFixMe[incompatible-call] TODO: Allow filtering SuspenseNode
+    // $FlowFixMe[incompatible-type]
     pushOperation(parentInstance.instance.id);
     pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {
@@ -4365,6 +4381,7 @@ export function attach(
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): UpdateFlags {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       if (fiberInstance !== null) {
         debug('updateFiberRecursively()', fiberInstance, reconcilingParent);
@@ -5341,7 +5358,7 @@ export function attach(
   function getNearestMountedDOMNode(publicInstance: Element): null | Element {
     let domNode: null | Element = publicInstance;
     while (domNode && !publicInstanceToDevToolsInstanceMap.has(domNode)) {
-      // $FlowFixMe: In practice this is either null or Element.
+      // $FlowFixMe[incompatible-type]: In practice this is either null or Element.
       domNode = domNode.parentNode;
     }
     return domNode;
@@ -6045,6 +6062,7 @@ export function attach(
     }
 
     const fiber = devtoolsInstance.data;
+    // $FlowFixMe[invalid-compare]
     if (fiber !== null) {
       instance = fiber.stateNode;
 
@@ -7025,6 +7043,7 @@ export function attach(
       return;
     }
     const fiber = devtoolsInstance.data;
+    // $FlowFixMe[invalid-compare]
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -7095,6 +7114,7 @@ export function attach(
       return;
     }
     const fiber = devtoolsInstance.data;
+    // $FlowFixMe[invalid-compare]
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -7178,6 +7198,7 @@ export function attach(
       return;
     }
     const fiber = devtoolsInstance.data;
+    // $FlowFixMe[invalid-compare]
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -8102,7 +8123,7 @@ export function attach(
       return (instance.source = extractLocationFromComponentStack(lastLine));
     }
 
-    // $FlowFixMe: refined.
+    // $FlowFixMe[incompatible-type]: refined.
     return unresolvedSource;
   }
 

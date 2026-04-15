@@ -584,7 +584,7 @@ export function processReply(
       }
 
       if (isArray(value)) {
-        // $FlowFixMe[incompatible-return]
+        // $FlowFixMe[incompatible-type]
         return value;
       }
       // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
@@ -601,7 +601,7 @@ export function processReply(
         const prefix = formFieldPrefix + refId + '_';
         // $FlowFixMe[prop-missing]: FormData has forEach.
         value.forEach((originalValue: string | File, originalKey: string) => {
-          // $FlowFixMe[incompatible-call]
+          // $FlowFixMe[incompatible-type]
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
@@ -695,6 +695,7 @@ export function processReply(
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
         const iterator = iteratorFn.call(value);
+        // $FlowFixMe[invalid-compare]
         if (iterator === value) {
           // Iterator, not Iterable
           const iteratorId = nextPartId++;
@@ -885,7 +886,7 @@ export function processReply(
       }
     }
     modelRoot = model;
-    // $FlowFixMe[incompatible-return] it's not going to be undefined because we'll encode it.
+    // $FlowFixMe[incompatible-type] it's not going to be undefined because we'll encode it.
     return JSON.stringify(model, resolveToJSON);
   }
 
@@ -911,7 +912,7 @@ export function processReply(
     // Otherwise, we use FormData to let us stream in the result.
     formData.set(formFieldPrefix + '0', json);
     if (pendingParts === 0) {
-      // $FlowFixMe[incompatible-call] this has already been refined.
+      // $FlowFixMe[incompatible-type] this has already been refined.
       resolve(formData);
     }
   }
@@ -990,7 +991,7 @@ function defaultEncodeFormAction(
     const prefixedData = new FormData();
     // $FlowFixMe[prop-missing]
     encodedFormData.forEach((value: string | File, key: string) => {
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
     });
     data = prefixedData;
@@ -1021,6 +1022,7 @@ function customEncodeFormAction(
     );
   }
   let boundPromise: Promise<Array<any>> = (referenceClosure.bound: any);
+  // $FlowFixMe[invalid-compare]
   if (boundPromise === null) {
     boundPromise = Promise.resolve([]);
   }
@@ -1200,6 +1202,7 @@ export function registerBoundServerReference<T: Function>(
 
   // Expose encoder for use by SSR, as well as a special bind that can be used to
   // keep server capabilities.
+  // $FlowFixMe[constant-condition]
   if (usedWithSSR) {
     // Only expose this in builds that would actually use it. Not needed in the browser.
     const $$FORM_ACTION =
@@ -1240,7 +1243,7 @@ function bind(this: Function): Function {
   const referenceClosure = knownServerReferences.get(this);
 
   if (!referenceClosure) {
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     return FunctionBind.apply(this, arguments);
   }
 
@@ -1276,6 +1279,7 @@ function bind(this: Function): Function {
 
   // Expose encoder for use by SSR, as well as a special bind that can be used to
   // keep server capabilities.
+  // $FlowFixMe[constant-condition]
   if (usedWithSSR) {
     // Only expose this in builds that would actually use it. Not needed on the client.
     Object.defineProperties((newFn: any), {

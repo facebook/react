@@ -281,12 +281,12 @@ ReactPromise.prototype.then = function <T>(
     const rejectCallback = reject;
     const wrapperPromise: Promise<T> = new Promise((res, rej) => {
       resolve = value => {
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         wrapperPromise._debugInfo = this._debugInfo;
         res(value);
       };
       reject = reason => {
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         wrapperPromise._debugInfo = this._debugInfo;
         rej(reason);
       };
@@ -499,6 +499,7 @@ function filterDebugInfo(
   response: Response,
   value: {_debugInfo: ReactDebugInfo, ...},
 ) {
+  // $FlowFixMe[invalid-compare]
   if (response._debugEndTime === null) {
     // No end time was defined, so we keep all debug info entries.
     return;
@@ -722,7 +723,7 @@ function triggerErrorOnChunk<T>(
     // a stream chunk since any other row shouldn't have more than one entry.
     const streamChunk: InitializedStreamChunk<any> = (chunk: any);
     const controller = streamChunk.reason;
-    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    // $FlowFixMe[incompatible-type]: The error method should accept mixed.
     controller.error(error);
     return;
   }
@@ -3294,7 +3295,7 @@ function startReadableStream<T>(
       }
       closed = true;
       if (previousBlockedChunk === null) {
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         controller.error(error);
       } else {
         const blockedChunk = previousBlockedChunk;
@@ -3526,11 +3527,12 @@ function resolveErrorDev(
   let error;
   const errorOptions =
     // We don't serialize Error.cause in prod so we never need to deserialize
+    // $FlowFixMe[constant-condition]
     __DEV__ && 'cause' in errorInfo
       ? {
           cause: reviveModel(
             response,
-            // $FlowFixMe[incompatible-cast] -- Flow thinks `cause` in `cause?: JSONValue` can be undefined after `in` check.
+            // $FlowFixMe[incompatible-type] -- Flow thinks `cause` in `cause?: JSONValue` can be undefined after `in` check.
             (errorInfo.cause: JSONValue),
             errorInfo,
             'cause',
@@ -3544,7 +3546,7 @@ function resolveErrorDev(
     __DEV__ && isAggregateError
       ? reviveModel(
           response,
-          // $FlowFixMe[incompatible-cast]
+          // $FlowFixMe[incompatible-type]
           (errorInfo.errors: JSONValue),
           errorInfo,
           'errors',
@@ -4059,7 +4061,7 @@ function initializeDebugInfo(
   }
   if (debugInfo.owner == null && response._debugRootOwner != null) {
     const componentInfoOrAsyncInfo: ReactComponentInfo | ReactAsyncInfo =
-      // $FlowFixMe: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
+      // $FlowFixMe[incompatible-type]: By narrowing `owner` to `null`, we narrowed `debugInfo` to `ReactComponentInfo`
       debugInfo;
     // $FlowFixMe[cannot-write]
     componentInfoOrAsyncInfo.owner = response._debugRootOwner;
@@ -4411,7 +4413,7 @@ function logComponentInfo(
   childrenEndTime: number,
   isLastComponent: boolean,
 ): void {
-  // $FlowFixMe: Refined.
+  // $FlowFixMe[incompatible-type]: Refined.
   if (
     isLastComponent &&
     root.status === ERRORED &&
@@ -4590,7 +4592,7 @@ function flushComponentPerformance(
             if (componentEndTime > childrenEndTime) {
               childrenEndTime = componentEndTime;
             }
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             const componentInfo: ReactComponentInfo = candidateInfo;
             logComponentInfo(
               response,
@@ -4614,7 +4616,7 @@ function flushComponentPerformance(
             if (endTime > childrenEndTime) {
               childrenEndTime = endTime;
             }
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             const asyncInfo: ReactAsyncInfo = candidateInfo;
             const env = response._rootEnvironmentName;
             const promise = asyncInfo.awaited.value;
@@ -4677,7 +4679,7 @@ function flushComponentPerformance(
             if (componentEndTime > childrenEndTime) {
               childrenEndTime = componentEndTime;
             }
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             const componentInfo: ReactComponentInfo = candidateInfo;
             const env = response._rootEnvironmentName;
             logComponentAborted(
@@ -5323,6 +5325,7 @@ function reviveModel(
     for (let i = 0; i < value.length; i++) {
       (value: any)[i] = reviveModel(response, value[i], value, '' + i);
     }
+    // $FlowFixMe[invalid-compare]
     if (value[0] === REACT_ELEMENT_TYPE) {
       // React element tuple
       return parseModelTuple(response, value);

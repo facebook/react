@@ -511,6 +511,7 @@ function logComponentEffectErrored(
           performance.measure.bind(performance, measureName, options),
         );
       } else {
+        // $FlowFixMe[incompatible-type]
         performance.measure(measureName, options);
       }
       performance.clearMeasures(measureName);
@@ -783,6 +784,7 @@ export function logBlockingStart(
             performance.measure.bind(performance, label, measureOptions),
           );
         } else {
+          // $FlowFixMe[incompatible-type]
           performance.measure(label, measureOptions);
         }
         performance.clearMeasures(label);
@@ -889,6 +891,7 @@ export function logGestureStart(
             performance.measure.bind(performance, label, measureOptions),
           );
         } else {
+          // $FlowFixMe[incompatible-type]
           performance.measure(label, measureOptions);
         }
         performance.clearMeasures(label);
@@ -1030,6 +1033,7 @@ export function logTransitionStart(
             performance.measure.bind(performance, label, measureOptions),
           );
         } else {
+          // $FlowFixMe[incompatible-type]
           performance.measure(label, measureOptions);
         }
         performance.clearMeasures(label);

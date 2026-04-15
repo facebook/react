@@ -1070,9 +1070,11 @@ function updateClassInstance(
     !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing() &&
     !(
-      current !== null &&
-      current.dependencies !== null &&
-      checkIfContextChanged(current.dependencies)
+      // prettier-ignore
+      // $FlowFixMe[invalid-compare]
+      (current !== null &&
+        current.dependencies !== null &&
+        checkIfContextChanged(current.dependencies))
     )
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -1121,6 +1123,7 @@ function updateClassInstance(
     // both before and after `shouldComponentUpdate` has been called. Not ideal,
     // but I'm loath to refactor this function. This only happens for memoized
     // components so it's not that common.
+    // $FlowFixMe[invalid-compare]
     (current !== null &&
       current.dependencies !== null &&
       checkIfContextChanged(current.dependencies));

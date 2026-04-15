@@ -83,6 +83,7 @@ log.error = (...args: Array<mixed>) =>
   console.error('[React DevTools]', ...args);
 
 function debug(methodName: string, ...args: Array<mixed>) {
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log(
       `%c[core/standalone] %c${methodName}`,
@@ -225,6 +226,7 @@ function initialize(socket: WebSocket) {
       if (typeof event.data === 'string') {
         data = JSON.parse(event.data);
 
+        // $FlowFixMe[constant-condition]
         if (__DEBUG__) {
           debug('WebSocket.onmessage', data);
         }
@@ -265,7 +267,7 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  // $FlowFixMe[incompatible-call] found when upgrading Flow
+  // $FlowFixMe[incompatible-type] found when upgrading Flow
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,

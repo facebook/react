@@ -153,6 +153,7 @@ export type RendererInspectionConfig = $ReadOnly<{
 }>;
 
 // TODO: Remove this conditional once all changes have propagated.
+// $FlowFixMe[constant-condition]
 if (registerEventHandler) {
   /**
    * Register the event emitter with the native bridge
@@ -402,6 +403,7 @@ export function resolveUpdatePriority(): EventPriority {
     return currentUpdatePriority;
   }
 
+  // $FlowFixMe[constant-condition]
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;
@@ -711,8 +713,9 @@ FragmentInstance.prototype.observeUsing = function (
   traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
 };
 function observeChild(child: Fiber, observer: IntersectionObserver) {
+  // $FlowFixMe[incompatible-type]
   const publicInstance = getPublicInstanceFromHostFiber(child);
-  // $FlowFixMe[incompatible-call] DOM types expect Element
+  // $FlowFixMe[incompatible-type] DOM types expect Element
   observer.observe(publicInstance);
   return false;
 }
@@ -735,8 +738,9 @@ FragmentInstance.prototype.unobserveUsing = function (
   }
 };
 function unobserveChild(child: Fiber, observer: IntersectionObserver) {
+  // $FlowFixMe[incompatible-type]
   const publicInstance = getPublicInstanceFromHostFiber(child);
-  // $FlowFixMe[incompatible-call] DOM types expect Element
+  // $FlowFixMe[incompatible-type] DOM types expect Element
   observer.unobserve(publicInstance);
   return false;
 }
@@ -899,8 +903,9 @@ export function commitNewChildToFragmentInstance(
     if (publicInstance == null) {
       throw new Error('Expected to find a host node. This is a bug in React.');
     }
+    // $FlowFixMe[incompatible-type]
     fragmentInstance._observers.forEach(observer => {
-      // $FlowFixMe[incompatible-call] Element types are behind a flag in RN
+      // $FlowFixMe[incompatible-type] Element types are behind a flag in RN
       observer.observe(publicInstance);
     });
   }

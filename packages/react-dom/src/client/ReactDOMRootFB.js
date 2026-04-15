@@ -255,7 +255,7 @@ function legacyCreateRootFromDOMContainer(
       !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
         ? container.parentNode
         : container;
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     listenToAllSupportedEvents(rootContainerElement);
 
     flushSyncWork();
@@ -292,7 +292,7 @@ function legacyCreateRootFromDOMContainer(
       !disableCommentsAsDOMContainers && container.nodeType === COMMENT_NODE
         ? container.parentNode
         : container;
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     listenToAllSupportedEvents(rootContainerElement);
 
     // Initial mount should not be batched.
@@ -425,6 +425,7 @@ export function render(
   }
   return legacyRenderSubtreeIntoContainer(
     null,
+    // $FlowFixMe[incompatible-type]
     element,
     container,
     false,

@@ -140,6 +140,7 @@ ReactPromise.prototype.then = function <T>(
         while (inspectedValue instanceof ReactPromise) {
           cycleProtection++;
           if (
+            // $FlowFixMe[invalid-compare]
             inspectedValue === chunk ||
             visited.has(inspectedValue) ||
             cycleProtection > 1000
@@ -150,6 +151,7 @@ ReactPromise.prototype.then = function <T>(
             return;
           }
           visited.add(inspectedValue);
+          // $FlowFixMe[invalid-compare]
           if (inspectedValue.status === INITIALIZED) {
             inspectedValue = inspectedValue.value;
           } else {
@@ -290,7 +292,7 @@ function triggerErrorOnChunk<T>(
     // a stream chunk since any other row shouldn't have more than one entry.
     const streamChunk: InitializedStreamChunk<any> = (chunk: any);
     const controller = streamChunk.reason;
-    // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+    // $FlowFixMe[incompatible-type]: The error method should accept mixed.
     controller.error(error);
     return;
   }
@@ -788,7 +790,7 @@ export function reportGlobalError(response: Response, error: Error): void {
       triggerErrorOnChunk(response, chunk, error);
     } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
       const maybeController = chunk.reason;
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       if (typeof maybeController.error === 'function') {
         maybeController.error(error);
       }
@@ -1391,7 +1393,7 @@ function parseReadableStream<T>(
       }
       closed = true;
       if (previousBlockedChunk === null) {
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         controller.error(error);
       } else {
         const blockedChunk = previousBlockedChunk;
@@ -1614,7 +1616,7 @@ function parseModelString(
             const entries = backingFormData.getAll(entryKey);
             const newKey = entryKey.slice(formPrefix.length);
             for (let j = 0; j < entries.length; j++) {
-              // $FlowFixMe[incompatible-call]
+              // $FlowFixMe[incompatible-type]
               data.append(newKey, entries[j]);
             }
             // These entries have now all been consumed. Let's free it.

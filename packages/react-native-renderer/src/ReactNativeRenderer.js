@@ -170,6 +170,7 @@ function render(
     );
     roots.set(containerTag, root);
   }
+  // $FlowFixMe[incompatible-type]
   updateContainer(element, root, null, callback);
 
   return getPublicRootInstance(root);

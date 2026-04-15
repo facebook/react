@@ -123,11 +123,11 @@ function startReadingFromDebugChannelReadable(
     const ws: WebSocket = (stream: any);
     ws.binaryType = 'arraybuffer';
     ws.addEventListener('message', event => {
-      // $FlowFixMe
+      // $FlowFixMe[incompatible-type]
       onData(event.data);
     });
     ws.addEventListener('error', event => {
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       onError(event.error);
     });
     ws.addEventListener('close', onClose);
@@ -398,7 +398,7 @@ function decodeReplyFromBusboy<T>(
   busboyStream.on('error', err => {
     reportGlobalError(
       response,
-      // $FlowFixMe[incompatible-call] types Error and mixed are incompatible
+      // $FlowFixMe[incompatible-type] types Error and mixed are incompatible
       err,
     );
   });
