@@ -60,6 +60,7 @@ const {
   unstable_ContinuousEventPriority: FabricContinuousPriority,
   unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  suspendOnActiveViewTransition: fabricSuspendOnActiveViewTransition,
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
@@ -88,6 +89,11 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+export function allocateTag(): number {
+  const tag = nextReactTag;
+  nextReactTag += 2;
+  return tag;
+}
 
 type InternalInstanceHandle = Object;
 
@@ -180,8 +186,7 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const viewConfig = getViewConfigForType(type);
 
@@ -231,8 +236,7 @@ export function createTextInstance(
     }
   }
 
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const node = createNode(
     tag, // reactTag
@@ -652,7 +656,9 @@ export function suspendInstance(
 export function suspendOnActiveViewTransition(
   state: SuspendedState,
   container: Container,
-): void {}
+): void {
+  fabricSuspendOnActiveViewTransition();
+}
 
 export function waitForCommitToBeReady(
   state: SuspendedState,
