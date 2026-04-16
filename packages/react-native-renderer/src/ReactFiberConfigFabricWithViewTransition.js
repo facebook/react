@@ -22,6 +22,7 @@ const {
   applyViewTransitionName: fabricApplyViewTransitionName,
   createViewTransitionInstance: fabricCreateViewTransitionInstance,
   startViewTransition: fabricStartViewTransition,
+  startViewTransitionReadyFinished: fabricStartViewTransitionReadyFinished,
 } = nativeFabricUIManager;
 
 export type InstanceMeasurement = {
@@ -256,6 +257,7 @@ export function startViewTransition(
 
   transition.ready.then(() => {
     spawnedWorkCallback();
+    fabricStartViewTransitionReadyFinished();
   });
 
   transition.finished.finally(() => {
