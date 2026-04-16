@@ -216,18 +216,6 @@ type OutlinedJsxAttribute = {
   place: Place;
 };
 
-/**
- * Returns true when the original JSX attribute name contains non-identifier
- * characters (e.g. `aria-label`) but is still a valid JSX attribute name.
- * These props should keep their original name in the outlined JSX call site
- * and use a quoted key in the destructuring pattern.
- */
-function isHyphenatedJsxProp(originalName: string): boolean {
-  return (
-    !isValidIdentifier(originalName) && /^[a-zA-Z_][\w.-]*$/.test(originalName)
-  );
-}
-
 function collectProps(
   env: Environment,
   instructions: Array<JsxInstruction>,
@@ -309,7 +297,7 @@ function emitOutlinedJsx(
      * Fall back to newName for internal temp names (e.g. `#t16`) and for
      * deduplicated props where originalName would conflict.
      */
-    name: isHyphenatedJsxProp(p.originalName) ? p.originalName : p.newName,
+    name: p.originalName !== p.newName ? p.originalName : p.newName,
     place: p.place,
   }));
 
@@ -532,7 +520,7 @@ function emitDestructureProps(
      */
     properties.push({
       kind: 'ObjectProperty',
-      key: isHyphenatedJsxProp(prop.originalName)
+      key: prop.originalName !== prop.newName
         ? {kind: 'string', name: prop.originalName}
         : {kind: 'identifier', name: prop.newName},
       type: 'property',
