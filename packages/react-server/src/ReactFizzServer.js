@@ -4955,8 +4955,14 @@ function finishedTask(
           hoistHoistables(boundaryRow.hoistables, boundary.contentState);
         }
         if (!isEligibleForOutlining(request, boundary)) {
+          // abortTaskSoft reenters finishedTask for each aborted task, which
+          // decrements allPendingTasks. Ensure that these reentrant finsihedTask
+          // calls do not call `completeAll` too early by forcing the task counter
+          // above zero for their duration.
+          request.allPendingTasks++;
           boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
           boundary.fallbackAbortableTasks.clear();
+          request.allPendingTasks--;
           if (boundaryRow !== null) {
             // If we aren't eligible for outlining, we don't have to wait until we flush it.
             if (--boundaryRow.pendingTasks === 0) {
