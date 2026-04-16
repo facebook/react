@@ -2006,6 +2006,115 @@ describe('ReactUpdates', () => {
     ]);
   });
 
+  it('warns instead of throwing when infinite Suspense ping loop is detected via enableInfiniteRenderLoopDetection during commit phase', async () => {
+    if (!__DEV__ || gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+      return;
+    }
+
+    // When a Suspense child throws a thenable, React registers two listeners:
+    // 1. ping (attachPingListener, render) → pingSuspendedRoot → markRootPinged
+    // 2. retry (attachSuspenseRetryListeners, commit) → resolveRetryWakeable
+    //
+    // The ping path calls throwIfInfiniteUpdateLoopDetected(true) via
+    // markRootPinged WITHOUT a prior getRootForUpdatedFiber(false) check.
+    // When this fires during CommitContext (not RenderContext),
+    // the isFromInfiniteRenderLoopDetectionInstrumentation=true parameter
+    // ensures we warn instead of throw.
+    //
+    // Without the fix (passing false), the condition
+    //   false || (executionContext & RenderContext && ...)
+    // evaluates to false in CommitContext, causing a throw.
+    let currentResolve = null;
+    let shouldStop = false;
+
+    function App() {
+      const [, setState] = React.useState(0);
+
+      React.useLayoutEffect(() => {
+        if (shouldStop) {
+          return;
+        }
+        // Resolve the suspended thenable during commit phase (CommitContext).
+        // The ping callback (registered first during render) fires first,
+        // triggering markRootPinged → throwIfInfiniteUpdateLoopDetected(true).
+        if (currentResolve !== null) {
+          const resolve = currentResolve;
+          currentResolve = null;
+          resolve();
+        }
+        // Schedule a sync update to ensure nestedUpdateKind is
+        // NESTED_UPDATE_SYNC_LANE at commitRootImpl epilogue.
+        setState(n => n + 1);
+      });
+
+      return (
+        <React.Suspense fallback="loading">
+          <SuspendingChild />
+        </React.Suspense>
+      );
+    }
+
+    function SuspendingChild() {
+      if (shouldStop) {
+        return null;
+      }
+      // Each render throws a new thenable. React calls .then() on it twice
+      // (ping during render, retry during commit). We collect all callbacks
+      // so resolve() fires them in registration order: ping first.
+      const callbacks = [];
+      const thenable = {
+        then(onFulfilled) {
+          callbacks.push(onFulfilled);
+          currentResolve = () => {
+            for (let i = 0; i < callbacks.length; i++) {
+              callbacks[i]();
+            }
+          };
+        },
+      };
+
+      throw thenable;
+    }
+
+    const container = document.createElement('div');
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: error => {
+        errors.push(error.message);
+      },
+    });
+
+    const originalConsoleError = console.error;
+    console.error = e => {
+      if (
+        typeof e === 'string' &&
+        e.startsWith(
+          'Maximum update depth exceeded. This could be an infinite loop.',
+        )
+      ) {
+        // Stop the loop after the first warning so act() can finish.
+        shouldStop = true;
+      }
+    };
+
+    try {
+      await act(() => {
+        root.render(<App />);
+      });
+    } finally {
+      console.error = originalConsoleError;
+    }
+
+    // With the fix (throwIfInfiniteUpdateLoopDetected(true) in markRootPinged):
+    // the loop is discovered via enableInfiniteRenderLoopDetection instrumentation
+    // and produces a warning.
+    // Without the fix (throwIfInfiniteUpdateLoopDetected(false)):
+    // the same check throws because executionContext is CommitContext, not
+    // RenderContext.
+    expect(shouldStop).toBe(true);
+    expect(errors).toEqual([]);
+  });
+
   it('prevents infinite update loop triggered by too many updates in ref callbacks', async () => {
     let scheduleUpdate;
     function TooManyRefUpdates() {

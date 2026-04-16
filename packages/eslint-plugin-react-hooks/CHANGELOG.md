@@ -1,3 +1,24 @@
+## 7.2.0
+
+This release adds ESLint v10 support, improves performance by skipping compilation for non-React files, and includes compiler lint improvements including `useMemo`/`useCallback` lint auto-fixes, better `setState-in-effects` detection, and more helpful error reporting.
+
+- Add ESLint v10 support. ([@nicolo-ribaudo](https://github.com/nicolo-ribaudo) in [#35720](https://github.com/facebook/react/pull/35720))
+- Add `ReactFeatureFlags` support to eslint-plugin-react-hooks. ([@jackpope](https://github.com/jackpope) in [#35951](https://github.com/facebook/react/pull/35951))
+- Skip compilation for non-React files to improve performance. ([@josephsavona](https://github.com/josephsavona) in [#35589](https://github.com/facebook/react/pull/35589))
+- Deprecate `noEmit`, add `outputMode` option. ([@josephsavona](https://github.com/josephsavona) in [#35112](https://github.com/facebook/react/pull/35112))
+- Add reporting modes for `react-hooks/exhaustive-effect-dependencies`. ([@jackpope](https://github.com/jackpope) in [#35365](https://github.com/facebook/react/pull/35365))
+- Fix exhaustive deps bug with Flow type casting. ([@jorge-cab](https://github.com/jorge-cab) in [#35691](https://github.com/facebook/react/pull/35691))
+- Fix `useEffectEvent` checks in component syntax. ([@jbrown215](https://github.com/jbrown215) in [#35041](https://github.com/facebook/react/pull/35041))
+- Fix react-compiler rules missing `meta.docs.url` property. ([@k-yle](https://github.com/k-yle) in [#35258](https://github.com/facebook/react/pull/35258))
+- Validate `useMemo`/`useCallback` dependencies in the compiler, with auto-fix support. ([@josephsavona](https://github.com/josephsavona) in [#34394](https://github.com/facebook/react/pull/34394), [#34471](https://github.com/facebook/react/pull/34471), [#34472](https://github.com/facebook/react/pull/34472), [#35185](https://github.com/facebook/react/pull/35185), [#35186](https://github.com/facebook/react/pull/35186), [#35190](https://github.com/facebook/react/pull/35190), [#35201](https://github.com/facebook/react/pull/35201), [#35917](https://github.com/facebook/react/pull/35917))
+- Improved `setState-in-effects` validation with fewer false negatives. ([@jorge-cab](https://github.com/jorge-cab) in [#34967](https://github.com/facebook/react/pull/34967), [#34995](https://github.com/facebook/react/pull/35044), [#35134](https://github.com/facebook/react/pull/35134), [#35135](https://github.com/facebook/react/pull/35135), [@josephsavona](https://github.com/josephsavona) in [#35147](https://github.com/facebook/react/pull/35147), [@jackpope](https://github.com/jackpope) in [#35214](https://github.com/facebook/react/pull/35214), [@chesnokov-tony](https://github.com/chesnokov-tony) in [#35419](https://github.com/facebook/react/pull/35419), [@jsleitor](https://github.com/jsleitor) in [#36107](https://github.com/facebook/react/pull/36107))
+- Improved `no-derived-computations-in-effects` error messages. ([@jorge-cab](https://github.com/jorge-cab) in [#34580](https://github.com/facebook/react/pull/34580), [@poteto](https://github.com/poteto) in [#35230](https://github.com/facebook/react/pull/35230), [#35306](https://github.com/facebook/react/pull/35306))
+- Improved ref validation for non-mutating functions and event handler props. ([@josephsavona](https://github.com/josephsavona) in [#35893](https://github.com/facebook/react/pull/35893), [@kolvian](https://github.com/kolvian) in [#35062](https://github.com/facebook/react/pull/35062))
+- Consider setter from `useOptimistic` non-reactive. ([@rickhanlonii](https://github.com/rickhanlonii) in [#35141](https://github.com/facebook/react/pull/35141))
+- Compiler now reports all errors instead of stopping at the first. ([@josephsavona](https://github.com/josephsavona) in [#35873](https://github.com/facebook/react/pull/35873)–[#35884](https://github.com/facebook/react/pull/35884))
+- Fix compiler handling of `for` loops and optional/logical expressions within `try/catch`. ([@josephsavona](https://github.com/josephsavona) in [#35686](https://github.com/facebook/react/pull/35686), [#35606](https://github.com/facebook/react/pull/35606))
+- Improved source locations and error display in compiler diagnostics. ([@nathanmarks](https://github.com/nathanmarks) in [#35660](https://github.com/facebook/react/pull/35660), [#35348](https://github.com/facebook/react/pull/35348), [@josephsavona](https://github.com/josephsavona) in [#34963](https://github.com/facebook/react/pull/34963), [#35794](https://github.com/facebook/react/pull/35794))
+
 ## 7.0.1
 
 - Disallowed passing inline `useEffectEvent` values as JSX props to guard against accidental propagation. ([#34820](https://github.com/facebook/react/pull/34820) by [@jf-eirinha](https://github.com/jf-eirinha))

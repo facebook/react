@@ -4169,6 +4169,14 @@ function serializeErrorValue(request: Request, error: Error): string {
       const causeId = outlineModel(request, cause);
       errorInfo.cause = serializeByValueID(causeId);
     }
+    if (
+      typeof AggregateError !== 'undefined' &&
+      error instanceof AggregateError
+    ) {
+      const errors: ReactClientValue = (error.errors: any);
+      const errorsId = outlineModel(request, errors);
+      errorInfo.errors = serializeByValueID(errorsId);
+    }
     const id = outlineModel(request, errorInfo);
     return '$Z' + id.toString(16);
   } else {
@@ -4211,6 +4219,15 @@ function serializeDebugErrorValue(
       const causeId = outlineDebugModel(request, counter, cause);
       errorInfo.cause = serializeByValueID(causeId);
     }
+    if (
+      typeof AggregateError !== 'undefined' &&
+      error instanceof AggregateError
+    ) {
+      counter.objectLimit--;
+      const errors: ReactClientValue = (error.errors: any);
+      const errorsId = outlineDebugModel(request, counter, errors);
+      errorInfo.errors = serializeByValueID(errorsId);
+    }
     const id = outlineDebugModel(
       request,
       {objectLimit: stack.length * 2 + 1},
@@ -4240,6 +4257,7 @@ function emitErrorChunk(
     let stack: ReactStackTrace;
     let env = (0, request.environmentName)();
     let causeReference: null | string = null;
+    let errorsReference: null | string = null;
     try {
       if (error instanceof Error) {
         name = error.name;
@@ -4259,6 +4277,16 @@ function emitErrorChunk(
             : outlineModel(request, cause);
           causeReference = serializeByValueID(causeId);
         }
+        if (
+          typeof AggregateError !== 'undefined' &&
+          error instanceof AggregateError
+        ) {
+          const errors: ReactClientValue = (error.errors: any);
+          const errorsId = debug
+            ? outlineDebugModel(request, {objectLimit: 5}, errors)
+            : outlineModel(request, errors);
+          errorsReference = serializeByValueID(errorsId);
+        }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
         stack = [];
@@ -4276,6 +4304,9 @@ function emitErrorChunk(
     errorInfo = {digest, name, message, stack, env, owner: ownerRef};
     if (causeReference !== null) {
       (errorInfo: ReactErrorInfoDev).cause = causeReference;
+    }
+    if (errorsReference !== null) {
+      (errorInfo: ReactErrorInfoDev).errors = errorsReference;
     }
   } else {
     errorInfo = {digest};

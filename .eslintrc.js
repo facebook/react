@@ -463,6 +463,7 @@ module.exports = {
       globals: {
         nativeFabricUIManager: 'readonly',
         RN$enableMicrotasksInReact: 'readonly',
+        RN$isNativeEventTargetEventDispatchingEnabled: 'readonly',
       },
     },
     {
@@ -566,6 +567,7 @@ module.exports = {
     CallSite: 'readonly',
     ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
     ReturnType: 'readonly',
+    AggregateError: 'readonly',
     AnimationFrameID: 'readonly',
     WeakRef: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
