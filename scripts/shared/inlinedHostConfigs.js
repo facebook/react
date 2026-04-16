@@ -622,16 +622,6 @@ module.exports = [
     isFlightSupported: false,
   },
   {
-    shortName: 'native',
-    entryPoints: ['react-native-renderer'],
-    paths: [
-      'react-native-renderer',
-      'react-server/src/ReactFlightServerConfigDebugNoop.js',
-    ],
-    isFlowTyped: true,
-    isServerSupported: false,
-  },
-  {
     shortName: 'fabric',
     entryPoints: ['react-native-renderer/fabric'],
     paths: [
