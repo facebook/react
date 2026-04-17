@@ -14,15 +14,16 @@ If that works, then some currently forbidden programs stop being fundamentally i
 
 ## First Prototype
 
-The first branch prototype is intentionally tiny and does not integrate with React hooks directly.
+The first branch prototype started as a tiny runtime-only model and now has a second layer that hosts the same keyed cells behind one real React hook call.
 
 - keyed state cells
 - keyed memo cells
 - dormant branch-local cells stay stored while the branch is hidden
 - duplicate keys in one render throw
 - changing a key from one hook kind to another throws
+- a React-hosted variant can rerender through a single top-level hook
 
-This is enough to prove the core claim: branch-local hook state can survive disappear/reappear cycles when identity is stable and explicit.
+This is enough to prove the core claim: branch-local hook state can survive disappear/reappear cycles when identity is stable and explicit. More importantly, it shows a plausible compiler target that still obeys React's runtime contract by collapsing the experiment to one actual hook call.
 
 ## Why It Matters
 

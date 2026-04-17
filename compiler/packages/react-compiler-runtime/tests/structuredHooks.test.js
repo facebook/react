@@ -1,9 +1,46 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const React = require('react');
+const {JSDOM} = require('jsdom');
+const {createRoot} = require('react-dom/client');
 
 const {
   experimental_createStructuredHookSession,
+  experimental_useStructuredHooks,
 } = require('../dist/index.js');
+
+const act = React.act ?? require('react-dom/test-utils').act;
+
+async function withDom(callback) {
+  const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>');
+  const previousGlobals = {
+    document: global.document,
+    HTMLElement: global.HTMLElement,
+    IS_REACT_ACT_ENVIRONMENT: global.IS_REACT_ACT_ENVIRONMENT,
+    Node: global.Node,
+    navigator: global.navigator,
+    window: global.window,
+  };
+
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.navigator = dom.window.navigator;
+  global.HTMLElement = dom.window.HTMLElement;
+  global.Node = dom.window.Node;
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
+  try {
+    return await callback(dom.window.document.getElementById('root'));
+  } finally {
+    dom.window.close();
+    global.window = previousGlobals.window;
+    global.document = previousGlobals.document;
+    global.navigator = previousGlobals.navigator;
+    global.HTMLElement = previousGlobals.HTMLElement;
+    global.Node = previousGlobals.Node;
+    global.IS_REACT_ACT_ENVIRONMENT = previousGlobals.IS_REACT_ACT_ENVIRONMENT;
+  }
+}
 
 test('retains conditional state cells across branch toggles', () => {
   const session = experimental_createStructuredHookSession((hooks, input) => {
@@ -95,4 +132,65 @@ test('reset clears dormant cells and restarts initialization', () => {
   session.reset();
   assert.deepEqual(session.getStoredKeys(), []);
   assert.equal(session.update({bump: false}), 10);
+});
+
+test('react-hosted structured hooks preserve conditional state across rerenders', async () => {
+  await withDom(async container => {
+    let latest = null;
+
+    function App({showDetail}) {
+      latest = experimental_useStructuredHooks(hooks => {
+        const [count, setCount] = hooks.state('count', 0);
+        let detail = 'hidden';
+        let rename = null;
+
+        if (showDetail) {
+          const [label, setLabel] = hooks.state('detail.label', () => 'Ada');
+          detail = label;
+          rename = () => setLabel(prev => prev + '!');
+        }
+
+        return {
+          count,
+          detail,
+          increment: () => setCount(prev => prev + 1),
+          rename,
+        };
+      });
+
+      return React.createElement('div', null, `${latest.count}:${latest.detail}`);
+    }
+
+    const root = createRoot(container);
+    try {
+      await act(async () => {
+        root.render(React.createElement(App, {showDetail: true}));
+      });
+      assert.equal(container.textContent, '0:Ada');
+
+      await act(async () => {
+        latest.rename();
+      });
+      assert.equal(container.textContent, '0:Ada!');
+
+      await act(async () => {
+        root.render(React.createElement(App, {showDetail: false}));
+      });
+      assert.equal(container.textContent, '0:hidden');
+
+      await act(async () => {
+        latest.increment();
+      });
+      assert.equal(container.textContent, '1:hidden');
+
+      await act(async () => {
+        root.render(React.createElement(App, {showDetail: true}));
+      });
+      assert.equal(container.textContent, '1:Ada!');
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+    }
+  });
 });

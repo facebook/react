@@ -9,6 +9,7 @@ import * as React from 'react';
 
 export {
   createStructuredHookSession as experimental_createStructuredHookSession,
+  useStructuredHooks as experimental_useStructuredHooks,
 } from './structuredHooks';
 export type {
   StructuredHookContext as ExperimentalStructuredHookContext,

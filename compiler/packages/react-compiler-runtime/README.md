@@ -7,6 +7,7 @@ Backwards compatible shim for runtime APIs used by React Compiler. Primarily mea
 This package now includes an experimental keyed-hooks prototype:
 
 - `experimental_createStructuredHookSession(...)`
+- `experimental_useStructuredHooks(...)`
 
 The hypothesis is that the famous “hooks must be top-level” rule is partly an implementation artifact of cursor-based hook identity. If a compiler can lower a tiny structured subset into stable keyed cells instead, then some conditional hook patterns stop being fundamentally impossible.
 
@@ -18,6 +19,11 @@ The current prototype is intentionally narrow and runtime-only:
 - duplicate keys in the same render throw
 - changing a key from one hook kind to another throws
 
-This is not React hook integration. It is a proof-of-concept target for future compiler lowering experiments.
+There are now two layers:
+
+- a pure session API for isolated experiments
+- a single real React hook that hosts those keyed cells inside one top-level hook call
+
+This is still not React hook replacement. It is a proof-of-concept target for future compiler lowering experiments.
 
 See also https://github.com/reactwg/react-compiler/discussions/6.

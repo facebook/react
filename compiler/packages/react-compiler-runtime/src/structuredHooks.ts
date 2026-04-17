@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 export type StructuredStateAction<T> = T | ((prev: T) => T);
 
 export type StructuredStateSetter<T> = (
@@ -17,6 +19,12 @@ export type StructuredHookSession<TInput, TOutput> = {
   getStoredKeys(): Array<string>;
   reset(): void;
   update(input: TInput): TOutput;
+};
+
+type StructuredHookStore = {
+  activeKeys: Set<string>;
+  cells: Map<string, StructuredHookCell>;
+  scheduleUpdate: null | (() => void);
 };
 
 type StructuredStateCell = {
@@ -54,6 +62,14 @@ function resolveInitialState<T>(initialState: T | (() => T)): T {
     : initialState;
 }
 
+function createStore(scheduleUpdate: null | (() => void)): StructuredHookStore {
+  return {
+    activeKeys: new Set(),
+    cells: new Map(),
+    scheduleUpdate,
+  };
+}
+
 function markKeyVisited(
   key: string,
   activeKeys: Set<string>,
@@ -85,80 +101,122 @@ function getCell<T extends StructuredHookCell['kind']>(
   return cell as Extract<StructuredHookCell, {kind: T}>;
 }
 
+function createHookContext(
+  store: StructuredHookStore,
+  nextActiveKeys: Set<string>,
+  visitedKeys: Set<string>,
+): StructuredHookContext {
+  return {
+    memo(key, deps, compute) {
+      markKeyVisited(key, nextActiveKeys, visitedKeys);
+
+      const existingCell = getCell(store.cells, key, 'memo');
+      if (existingCell == null) {
+        const value = compute();
+        store.cells.set(key, {
+          deps: [...deps],
+          kind: 'memo',
+          value,
+        });
+        return value;
+      }
+
+      if (!areDepsEqual(existingCell.deps, deps)) {
+        existingCell.deps = [...deps];
+        existingCell.value = compute();
+      }
+
+      return existingCell.value as any;
+    },
+
+    state(key, initialState) {
+      markKeyVisited(key, nextActiveKeys, visitedKeys);
+
+      let cell = getCell(store.cells, key, 'state');
+      if (cell == null) {
+        cell = {
+          kind: 'state',
+          value: resolveInitialState(initialState),
+        };
+        store.cells.set(key, cell);
+      }
+
+      const setState: StructuredStateSetter<any> = action => {
+        const prevValue = cell.value;
+        const nextValue =
+          typeof action === 'function'
+            ? (action as (prev: unknown) => unknown)(prevValue)
+            : action;
+        if (Object.is(prevValue, nextValue)) {
+          return;
+        }
+        cell.value = nextValue;
+        store.scheduleUpdate?.();
+      };
+
+      return [cell.value as any, setState];
+    },
+  };
+}
+
+function runStructuredRender<TOutput>(
+  store: StructuredHookStore,
+  render: (hooks: StructuredHookContext) => TOutput,
+): TOutput {
+  const nextActiveKeys = new Set<string>();
+  const visitedKeys = new Set<string>();
+  const output = render(createHookContext(store, nextActiveKeys, visitedKeys));
+  store.activeKeys = nextActiveKeys;
+  return output;
+}
+
+export function useStructuredHooks<TOutput>(
+  render: (hooks: StructuredHookContext) => TOutput,
+): TOutput {
+  const [, scheduleUpdate] = React.useReducer((version: number) => version + 1, 0);
+  const storeRef = React.useRef<StructuredHookStore | null>(null);
+
+  if (storeRef.current == null) {
+    storeRef.current = createStore(null);
+  }
+
+  React.useEffect(() => {
+    const store = storeRef.current;
+    if (store == null) {
+      return;
+    }
+    store.scheduleUpdate = () => {
+      scheduleUpdate();
+    };
+    return () => {
+      store.scheduleUpdate = null;
+    };
+  }, [scheduleUpdate]);
+
+  return runStructuredRender(storeRef.current, render);
+}
+
 export function createStructuredHookSession<TInput, TOutput>(
   render: (hooks: StructuredHookContext, input: TInput) => TOutput,
 ): StructuredHookSession<TInput, TOutput> {
-  const cells = new Map<string, StructuredHookCell>();
-  let activeKeys = new Set<string>();
+  const store = createStore(null);
 
   return {
     getActiveKeys() {
-      return sortKeys(activeKeys);
+      return sortKeys(store.activeKeys);
     },
 
     getStoredKeys() {
-      return sortKeys(cells.keys());
+      return sortKeys(store.cells.keys());
     },
 
     reset() {
-      cells.clear();
-      activeKeys = new Set();
+      store.cells.clear();
+      store.activeKeys = new Set();
     },
 
     update(input) {
-      const nextActiveKeys = new Set<string>();
-      const visitedKeys = new Set<string>();
-
-      const hooks: StructuredHookContext = {
-        memo(key, deps, compute) {
-          markKeyVisited(key, nextActiveKeys, visitedKeys);
-
-          const existingCell = getCell(cells, key, 'memo');
-          if (existingCell == null) {
-            const value = compute();
-            cells.set(key, {
-              deps: [...deps],
-              kind: 'memo',
-              value,
-            });
-            return value;
-          }
-
-          if (!areDepsEqual(existingCell.deps, deps)) {
-            existingCell.deps = [...deps];
-            existingCell.value = compute();
-          }
-
-          return existingCell.value as T;
-        },
-
-        state(key, initialState) {
-          markKeyVisited(key, nextActiveKeys, visitedKeys);
-
-          let cell = getCell(cells, key, 'state');
-          if (cell == null) {
-            cell = {
-              kind: 'state',
-              value: resolveInitialState(initialState),
-            };
-            cells.set(key, cell);
-          }
-
-          const setState: StructuredStateSetter<T> = action => {
-            const prevValue = cell.value as T;
-            cell.value =
-              typeof action === 'function'
-                ? (action as (prev: T) => T)(prevValue)
-                : action;
-          };
-
-          return [cell.value as T, setState];
-        },
-      };
-
-      const output = render(hooks, input);
-      activeKeys = nextActiveKeys;
-      return output;
+      return runStructuredRender(store, hooks => render(hooks, input));
     },
   };
 }
