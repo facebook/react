@@ -13,6 +13,7 @@ declare const plugin: {
         version: string;
     };
     rules: {
+        'component-hook-factories': Rule.RuleModule;
         'exhaustive-deps': {
             meta: {
                 type: "suggestion";
