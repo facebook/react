@@ -10159,7 +10159,7 @@ __DEV__ &&
         null === workInProgress
           ? ((returnFiber.deletions = [current]), (returnFiber.flags |= 16))
           : workInProgress.push(current);
-        renderLanes.flags |= 2;
+        renderLanes.flags |= 134217730;
         return renderLanes;
       }
       if (null !== current)
@@ -23101,7 +23101,7 @@ __DEV__ &&
         version: rendererVersion,
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-67e47593-20260417"
+        reconcilerVersion: "19.3.0-www-classic-da9325b5-20260417"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

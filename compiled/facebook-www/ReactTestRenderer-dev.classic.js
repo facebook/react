@@ -8095,7 +8095,7 @@ __DEV__ &&
         null === workInProgress
           ? ((returnFiber.deletions = [current]), (returnFiber.flags |= 16))
           : workInProgress.push(current);
-        renderLanes.flags |= 2;
+        renderLanes.flags |= 134217730;
         return renderLanes;
       }
       if (null !== current)
@@ -16733,10 +16733,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-67e47593-20260417",
+        version: "19.3.0-www-classic-da9325b5-20260417",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-67e47593-20260417"
+        reconcilerVersion: "19.3.0-www-classic-da9325b5-20260417"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16872,5 +16872,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-classic-67e47593-20260417";
+    exports.version = "19.3.0-www-classic-da9325b5-20260417";
   })();
