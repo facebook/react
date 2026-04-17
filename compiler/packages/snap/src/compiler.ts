@@ -15,7 +15,6 @@ import type {
   Logger,
   LoggerEvent,
   PluginOptions,
-  CompilerReactTarget,
   CompilerPipelineValue,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {
@@ -59,7 +58,6 @@ function makePluginOptions(
 } {
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let target: CompilerReactTarget = '19';
 
   /**
    * Snap currently runs all fixtures without `validatePreserveExistingMemo` as
@@ -97,7 +95,6 @@ function makePluginOptions(
     },
     logger,
     enableReanimatedCheck: false,
-    target,
   };
   return {options, loggerTestOnly, logs};
 }

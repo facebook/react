@@ -14,7 +14,7 @@ If that works, then some currently forbidden programs stop being fundamentally i
 
 ## First Prototype
 
-The first branch prototype started as a tiny runtime-only model and now has a second layer that hosts the same keyed cells behind one real React hook call.
+The first branch prototype started as a tiny runtime-only model, then added a React-hosted layer that keeps the same keyed cells behind one real React hook call.
 
 - keyed state cells
 - keyed memo cells
@@ -25,12 +25,20 @@ The first branch prototype started as a tiny runtime-only model and now has a se
 
 This is enough to prove the core claim: branch-local hook state can survive disappear/reappear cycles when identity is stable and explicit. More importantly, it shows a plausible compiler target that still obeys React's runtime contract by collapsing the experiment to one actual hook call.
 
+There is now also a tiny compiler seam for that target. When `enableEmitStructuredHooks` is enabled and a function uses `'use structured hooks'`, the compiler can lower a deliberately small subset into `experimental_useStructuredHooks(...)`:
+
+- `useState()` / `React.useState()` in direct variable initializers
+- `useMemo()` / `React.useMemo()` in direct variable initializers with inline zero-argument callbacks and literal dependency arrays
+- structured control flow built from blocks, `if`, variable declarations, expression statements, and returns
+
+Anything outside that subset currently errors on purpose. The experiment is trying to prove the representation shift first, not pretend arbitrary conditional hooks are solved.
+
 ## Why It Matters
 
 If this line of research holds, a future compiler experiment could target a small opt-in subset such as:
 
 - statically provable `if` branches
-- fixed loop bounds known at compile time
 - direct hook calls with compiler-assigned stable keys
+- carefully widened loop or switch forms once key assignment and dormant-cell semantics stay clear
 
 That would not abolish the Rules of Hooks for ordinary JavaScript. It would show that React can carve out a new space where some of those rules become compilation constraints instead of universal language laws.

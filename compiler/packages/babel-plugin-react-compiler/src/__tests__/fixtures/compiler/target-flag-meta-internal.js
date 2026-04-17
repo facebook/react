@@ -1,4 +1,4 @@
-// @target="donotuse_meta_internal"
+// @target:"donotuse_meta_internal"
 
 function Component() {
   return <div>Hello world</div>;
