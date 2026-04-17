@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d2059cc01fe02afe5823ebd5a57b2188>>
+ * @generated SignedSource<<179244073836dc9253c1f76206fad441>>
  */
 
 "use strict";
@@ -10536,7 +10536,9 @@ function completeRootWhenReady(
   )
     (appearingViewTransitions = suspendedState = null),
       accumulateSuspenseyCommitOnFiber(finishedWork),
-      isViewTransitionEligible && fabricSuspendOnActiveViewTransition(),
+      isViewTransitionEligible &&
+        null != fabricSuspendOnActiveViewTransition &&
+        fabricSuspendOnActiveViewTransition(),
       (lanes & 62914560) === lanes
         ? globalMostRecentFallbackTime - now()
         : (lanes & 4194048) === lanes
@@ -12274,10 +12276,10 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1363 = {
     bundleType: 0,
-    version: "19.3.0-native-fb-bc249804-20260417",
+    version: "19.3.0-native-fb-1ddff43c-20260417",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
-    reconcilerVersion: "19.3.0-native-fb-bc249804-20260417"
+    reconcilerVersion: "19.3.0-native-fb-1ddff43c-20260417"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1363.rendererConfig = extraDevToolsConfig);

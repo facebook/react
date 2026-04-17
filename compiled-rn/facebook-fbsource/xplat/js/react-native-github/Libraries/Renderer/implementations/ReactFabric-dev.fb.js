@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9a1c157f3d8f744915c42fdfe13bb07a>>
+ * @generated SignedSource<<0e3da50321ad2cec6c5ace1b1c9883d9>>
  */
 
 "use strict";
@@ -14947,7 +14947,9 @@ __DEV__ &&
       )
         (appearingViewTransitions = suspendedState = null),
           accumulateSuspenseyCommitOnFiber(finishedWork),
-          isViewTransitionEligible && fabricSuspendOnActiveViewTransition(),
+          isViewTransitionEligible &&
+            null != fabricSuspendOnActiveViewTransition &&
+            fabricSuspendOnActiveViewTransition(),
           (lanes & 62914560) === lanes
             ? globalMostRecentFallbackTime - now$1()
             : (lanes & 4194048) === lanes
@@ -21150,10 +21152,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-bc249804-20260417",
+        version: "19.3.0-native-fb-1ddff43c-20260417",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-bc249804-20260417"
+        reconcilerVersion: "19.3.0-native-fb-1ddff43c-20260417"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
