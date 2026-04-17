@@ -14,7 +14,8 @@
   },
   "scripts": {
     "build": "rimraf dist && tsup",
-    "test": "echo 'no tests'",
+    "benchmark:trace-tape": "yarn build && node ./scripts/traceTape.benchmark.js",
+    "test": "yarn build && node --test ./tests/*.test.js",
     "watch": "yarn build --watch"
   },
   "repository": {
