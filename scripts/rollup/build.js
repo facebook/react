@@ -403,7 +403,7 @@ function getPlugins(
       // Use Node resolution mechanism.
       resolve({
         // `external` rollup config takes care of marking builtins as externals
-        preferBuiltins: false,
+        preferBuiltins: bundle.preferBuiltins === true,
       }),
       // Remove license headers from individual modules
       stripBanner({
