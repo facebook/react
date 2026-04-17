@@ -55396,7 +55396,22 @@ function last(array) {
     return array[array.length - 1];
 }
 
-const rules = Object.assign({ 'exhaustive-deps': rule$1, 'rules-of-hooks': rule }, Object.fromEntries(Object.entries(allRules).map(([name, config]) => [name, config.rule])));
+function makeDeprecatedRule(version) {
+    return {
+        meta: {
+            type: 'suggestion',
+            docs: {
+                description: `Deprecated: this rule has been removed in ${version}.`,
+            },
+            schema: [],
+            deprecated: true,
+        },
+        create() {
+            return {};
+        },
+    };
+}
+const rules = Object.assign(Object.assign({ 'exhaustive-deps': rule$1, 'rules-of-hooks': rule }, Object.fromEntries(Object.entries(allRules).map(([name, config]) => [name, config.rule]))), { 'component-hook-factories': makeDeprecatedRule('7.1.0') });
 const basicRuleConfigs = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
