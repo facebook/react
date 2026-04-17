@@ -7,7 +7,7 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<c0e57723772ea5f1aa8c3c897ac3c216>>
+ * @generated SignedSource<<4ab83fd2606d6a4d374ef914f231d9c1>>
  */
 
 import type {
@@ -136,36 +136,6 @@ export type RenderRootOptions = {
     errorInfo: {+componentStack?: ?string},
   ) => void,
   onDefaultTransitionIndicator?: () => void | (() => void),
-};
-
-/**
- * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
- * Provide minimal Flow typing for the high-level RN API and call it a day.
- */
-export type ReactNativeType = {
-  findHostInstance_DEPRECATED<TElementType: React.ElementType>(
-    componentOrHandle: ?(React.ElementRef<TElementType> | number),
-  ): ?PublicInstance,
-  findNodeHandle<TElementType: React.ElementType>(
-    componentOrHandle: ?(React.ElementRef<TElementType> | number),
-  ): ?number,
-  isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
-  dispatchCommand(
-    handle: PublicInstance,
-    command: string,
-    args: Array<mixed>,
-  ): void,
-  sendAccessibilityEvent(handle: PublicInstance, eventType: string): void,
-  render(
-    element: React.MixedElement,
-    containerTag: number,
-    callback: ?() => void,
-    options: ?RenderRootOptions,
-  ): ?React.ElementRef<React.ElementType>,
-  unmountComponentAtNode(containerTag: number): void,
-  unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
-  +unstable_batchedUpdates: <T>(fn: (T) => void, bookkeeping: T) => void,
-  ...
 };
 
 export opaque type Node = mixed;
