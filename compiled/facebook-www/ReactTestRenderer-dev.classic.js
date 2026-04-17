@@ -7479,7 +7479,7 @@ __DEV__ &&
                 workInProgress,
                 nextProps.children
               )),
-              (workInProgress.flags |= 4096));
+              (workInProgress.flags |= 134221824));
         return workInProgress;
       }
       if (showFallback) {
@@ -8488,7 +8488,7 @@ __DEV__ &&
                   workInProgress,
                   prevSibling
                 )),
-                  (workInProgress.flags |= 4096);
+                  (workInProgress.flags |= 134221824);
             }
           else
             (current = updateWorkInProgressOffscreenFiber(current.child, {
@@ -13723,7 +13723,7 @@ __DEV__ &&
                   isStrictModeFiber
                 )
             : null === fiber.memoizedState &&
-              (isStrictModeFiber && fiber.flags & 8192
+              (isStrictModeFiber && fiber.flags & 134225920
                 ? runWithFiberInDEV(
                     fiber,
                     doubleInvokeEffectsOnFiber,
@@ -16733,10 +16733,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-classic-bf45a68d-20260417",
+        version: "19.3.0-www-classic-67e47593-20260417",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-classic-bf45a68d-20260417"
+        reconcilerVersion: "19.3.0-www-classic-67e47593-20260417"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16872,5 +16872,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
-    exports.version = "19.3.0-www-classic-bf45a68d-20260417";
+    exports.version = "19.3.0-www-classic-67e47593-20260417";
   })();

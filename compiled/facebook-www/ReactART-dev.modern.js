@@ -8694,7 +8694,7 @@ __DEV__ &&
                 workInProgress,
                 nextProps.children
               )),
-              (workInProgress.flags |= 4096));
+              (workInProgress.flags |= 134221824));
         return workInProgress;
       }
       if (showFallback) {
@@ -9791,7 +9791,7 @@ __DEV__ &&
                   workInProgress,
                   prevSibling
                 )),
-                  (workInProgress.flags |= 4096);
+                  (workInProgress.flags |= 134221824);
             }
           else
             (returnFiber = current.child),
@@ -17218,7 +17218,7 @@ __DEV__ &&
                   isStrictModeFiber
                 )
             : null === fiber.memoizedState &&
-              (isStrictModeFiber && fiber.flags & 8192
+              (isStrictModeFiber && fiber.flags & 134225920
                 ? runWithFiberInDEV(
                     fiber,
                     doubleInvokeEffectsOnFiber,
@@ -20205,10 +20205,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-www-modern-bf45a68d-20260417",
+        version: "19.3.0-www-modern-67e47593-20260417",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-www-modern-bf45a68d-20260417"
+        reconcilerVersion: "19.3.0-www-modern-67e47593-20260417"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -20243,7 +20243,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.3.0-www-modern-bf45a68d-20260417";
+    exports.version = "19.3.0-www-modern-67e47593-20260417";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

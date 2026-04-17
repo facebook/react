@@ -5720,7 +5720,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             workInProgress,
             nextProps.children
           )),
-          (workInProgress.flags |= 4096));
+          (workInProgress.flags |= 134221824));
     return workInProgress;
   }
   if (showFallback) {
@@ -6525,7 +6525,7 @@ function beginWork(current, workInProgress, renderLanes) {
             );
           } else
             (workInProgress = mountActivityChildren(workInProgress, $$typeof)),
-              (workInProgress.flags |= 4096);
+              (workInProgress.flags |= 134221824);
         }
       else
         (renderLanes = updateWorkInProgressOffscreenFiber(current.child, {
@@ -11618,10 +11618,10 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1629 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-bf45a68d-20260417",
+  version: "19.3.0-www-classic-67e47593-20260417",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-bf45a68d-20260417"
+  reconcilerVersion: "19.3.0-www-classic-67e47593-20260417"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1630 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -11647,4 +11647,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.3.0-www-classic-bf45a68d-20260417";
+exports.version = "19.3.0-www-classic-67e47593-20260417";

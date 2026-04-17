@@ -4807,7 +4807,7 @@ module.exports = function ($$$config) {
             null !== current &&
               restoreSuspendedTreeContext(workInProgress, current)),
           (workInProgress = mountActivityChildren(workInProgress, nextProps)),
-          (workInProgress.flags |= 4096);
+          (workInProgress.flags |= 134221824);
       return workInProgress;
     }
     current = createWorkInProgress(current.child, {
@@ -5406,7 +5406,7 @@ module.exports = function ($$$config) {
               workInProgress,
               nextProps.children
             )),
-            (workInProgress.flags |= 4096));
+            (workInProgress.flags |= 134221824));
       return workInProgress;
     }
     if (showFallback)
@@ -6100,7 +6100,7 @@ module.exports = function ($$$config) {
                 renderLanes;
 
               )
-                (renderLanes.flags = (renderLanes.flags & -3) | 4096),
+                (renderLanes.flags = (renderLanes.flags & -3) | 134221824),
                   (renderLanes = renderLanes.sibling);
           else {
             resetHydrationState();
@@ -14183,7 +14183,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-bf45a68d-20260417"
+      reconcilerVersion: "19.3.0-www-modern-67e47593-20260417"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
