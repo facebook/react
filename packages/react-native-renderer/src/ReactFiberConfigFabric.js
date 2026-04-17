@@ -657,7 +657,9 @@ export function suspendOnActiveViewTransition(
   state: SuspendedState,
   container: Container,
 ): void {
-  fabricSuspendOnActiveViewTransition();
+  if (fabricSuspendOnActiveViewTransition != null) {
+    fabricSuspendOnActiveViewTransition();
+  }
 }
 
 export function waitForCommitToBeReady(
