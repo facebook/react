@@ -171,6 +171,12 @@ export type PluginOptions = Partial<{
   enableReanimatedCheck: boolean;
 
   /**
+   * Experimental research surface. When enabled, functions annotated with
+   * 'use trace tape' may emit a tiny trace-tape companion artifact.
+   */
+  enableEmitTraceTape: boolean;
+
+  /**
    * The minimum major version of React that the compiler should emit code for. If the target is 19
    * or higher, the compiler emits direct imports of React runtime APIs needed by the compiler. On
    * versions prior to 19, an extra runtime package react-compiler-runtime is necessary to provide
@@ -317,6 +323,7 @@ export const defaultOptions: ParsedPluginOptions = {
     return filename.indexOf('node_modules') === -1;
   },
   enableReanimatedCheck: true,
+  enableEmitTraceTape: false,
   customOptOutDirectives: null,
   target: '19',
 };
