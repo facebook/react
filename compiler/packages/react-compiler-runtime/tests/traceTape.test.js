@@ -84,6 +84,8 @@ test('records the initial render as mutations', () => {
     guardInvalidations: 0,
     patchMutations: 0,
     patchRecomputations: 0,
+    selectorCacheHits: 2,
+    selectorReads: 7,
     variantEvictions: 0,
     variantRestores: 0,
   });
@@ -111,6 +113,8 @@ test('replays stable-path updates without re-running the render callback', () =>
     guardInvalidations: 0,
     patchMutations: 1,
     patchRecomputations: 2,
+    selectorCacheHits: 6,
+    selectorReads: 14,
     variantEvictions: 0,
     variantRestores: 0,
   });
@@ -133,6 +137,8 @@ test('invalidates and re-records when a branch guard changes', () => {
     guardInvalidations: 1,
     patchMutations: 0,
     patchRecomputations: 0,
+    selectorCacheHits: 5,
+    selectorReads: 16,
     variantEvictions: 0,
     variantRestores: 0,
   });
@@ -162,6 +168,8 @@ test('restores a cached branch variant without re-running the render callback', 
     guardInvalidations: 2,
     patchMutations: 1,
     patchRecomputations: 0,
+    selectorCacheHits: 10,
+    selectorReads: 23,
     variantEvictions: 0,
     variantRestores: 1,
   });
@@ -182,6 +190,61 @@ test('supports selector equality functions to suppress noisy recomputations', ()
     guardInvalidations: 0,
     patchMutations: 0,
     patchRecomputations: 0,
+    selectorCacheHits: 6,
+    selectorReads: 14,
+    variantEvictions: 0,
+    variantRestores: 0,
+  });
+});
+
+test('caches shared selector reads across guards and operations in one update', () => {
+  let derivedReads = 0;
+  let themeReads = 0;
+
+  const themeSelector = experimental_createTraceSelector('theme', input => {
+    themeReads++;
+    return input.theme;
+  });
+  const isDarkSelector = experimental_createDerivedTraceSelector(
+    'isDark',
+    [themeSelector],
+    theme => {
+      derivedReads++;
+      return theme === 'dark';
+    },
+  );
+  const session = experimental_createRenderTraceSession((trace, input) => {
+    if (trace.guard(isDarkSelector)) {
+      trace.attr('root', 'color', [themeSelector], () => '#fff');
+    }
+
+    trace.text('theme', [themeSelector], data => data.theme);
+  });
+
+  let result = session.update({theme: 'dark'});
+  assert.equal(themeReads, 1);
+  assert.equal(derivedReads, 1);
+  assert.deepEqual(result.stats, {
+    fullRenders: 1,
+    guardInvalidations: 0,
+    patchMutations: 0,
+    patchRecomputations: 0,
+    selectorCacheHits: 2,
+    selectorReads: 2,
+    variantEvictions: 0,
+    variantRestores: 0,
+  });
+
+  result = session.update({theme: 'dark'});
+  assert.equal(themeReads, 2);
+  assert.equal(derivedReads, 2);
+  assert.deepEqual(result.stats, {
+    fullRenders: 1,
+    guardInvalidations: 0,
+    patchMutations: 0,
+    patchRecomputations: 0,
+    selectorCacheHits: 5,
+    selectorReads: 4,
     variantEvictions: 0,
     variantRestores: 0,
   });
@@ -222,6 +285,8 @@ test('evicts old variants when maxVariants is capped', () => {
   assert.equal(session.getRecordedVariantCount(), 2);
   assert.equal(result.stats.variantEvictions, 2);
   assert.equal(result.stats.variantRestores, 0);
+  assert.ok(result.stats.selectorReads > 0);
+  assert.ok(result.stats.selectorCacheHits > 0);
 });
 
 test('reset drops the recorded tape and starts over on the next update', () => {
@@ -239,6 +304,8 @@ test('reset drops the recorded tape and starts over on the next update', () => {
     guardInvalidations: 0,
     patchMutations: 0,
     patchRecomputations: 0,
+    selectorCacheHits: 2,
+    selectorReads: 7,
     variantEvictions: 0,
     variantRestores: 0,
   });

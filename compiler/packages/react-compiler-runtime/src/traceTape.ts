@@ -22,6 +22,14 @@ export type TraceSelector<TInput, TValue = unknown> = {
   isEqual?: TraceEqualityFn<TValue>;
 };
 
+type InternalDerivedTraceSelector<TInput, TValue> = TraceSelector<
+  TInput,
+  TValue
+> & {
+  __traceDerivedDeps?: Array<TraceSelector<TInput, unknown>>;
+  __traceDerive?: (...values: Array<unknown>) => TValue;
+};
+
 export type TraceSlot = number | string;
 
 export type TraceMutation = {
@@ -37,6 +45,8 @@ export type TraceTapeStats = {
   guardInvalidations: number;
   patchMutations: number;
   patchRecomputations: number;
+  selectorCacheHits: number;
+  selectorReads: number;
   variantEvictions: number;
   variantRestores: number;
 };
@@ -124,6 +134,8 @@ const emptyStats = (): TraceTapeStats => ({
   guardInvalidations: 0,
   patchMutations: 0,
   patchRecomputations: 0,
+  selectorCacheHits: 0,
+  selectorReads: 0,
   variantEvictions: 0,
   variantRestores: 0,
 });
@@ -144,11 +156,49 @@ function isEqualValue<T>(
   return isEqual == null ? Object.is(prev, next) : isEqual(prev, next);
 }
 
+type InternalSelectorCache<TInput> = Map<
+  TraceSelector<TInput, unknown>,
+  unknown
+>;
+
+function getSelectorValue<TInput, TValue>(
+  selector: TraceSelector<TInput, TValue>,
+  input: TInput,
+  selectorCache: InternalSelectorCache<TInput>,
+  stats: TraceTapeStats,
+): TValue {
+  if (selectorCache.has(selector)) {
+    stats.selectorCacheHits++;
+    return selectorCache.get(selector) as TValue;
+  }
+
+  const derivedSelector = selector as InternalDerivedTraceSelector<TInput, TValue>;
+  const value =
+    derivedSelector.__traceDerivedDeps != null &&
+    derivedSelector.__traceDerive != null
+      ? derivedSelector.__traceDerive(
+          ...readDependencyValues(
+            derivedSelector.__traceDerivedDeps,
+            input,
+            selectorCache,
+            stats,
+          ),
+        )
+      : (stats.selectorReads++, selector.read(input));
+  if (derivedSelector.__traceDerivedDeps != null) {
+    stats.selectorReads++;
+  }
+  selectorCache.set(selector as TraceSelector<TInput, unknown>, value);
+  return value;
+}
+
 function readDependencyValues<TInput>(
   deps: Array<TraceSelector<TInput, unknown>>,
   input: TInput,
+  selectorCache: InternalSelectorCache<TInput>,
+  stats: TraceTapeStats,
 ): Array<unknown> {
-  return deps.map(dep => dep.read(input));
+  return deps.map(dep => getSelectorValue(dep, input, selectorCache, stats));
 }
 
 export function createTraceSelector<TInput, TValue>(
@@ -169,11 +219,14 @@ export function createDerivedTraceSelector<TInput, TValue>(
   derive: (...values: Array<unknown>) => TValue,
   isEqual?: TraceEqualityFn<TValue>,
 ): TraceSelector<TInput, TValue> {
-  return createTraceSelector(
+  const selector = createTraceSelector(
     key,
-    input => derive(...readDependencyValues(deps, input)),
+    input => derive(...deps.map(dep => dep.read(input))),
     isEqual,
-  );
+  ) as InternalDerivedTraceSelector<TInput, TValue>;
+  selector.__traceDerivedDeps = deps;
+  selector.__traceDerive = derive;
+  return selector;
 }
 
 function getOperationKey<TInput>(
@@ -225,12 +278,14 @@ function rebuildVariantTree<TInput>(
 function findRecordedVariant<TInput>(
   root: InternalTraceVariantNode<TInput>,
   input: TInput,
+  selectorCache: InternalSelectorCache<TInput>,
+  stats: TraceTapeStats,
 ): InternalTraceVariant<TInput> | null {
   let node = root;
 
   while (node.selector != null) {
     const selector = node.selector;
-    const value = selector.read(input);
+    const value = getSelectorValue(selector, input, selectorCache, stats);
     const branch = node.branches.find(candidate =>
       isEqualValue(candidate.value, value, selector.isEqual),
     );
@@ -246,9 +301,11 @@ function findRecordedVariant<TInput>(
 function syncGuardValues<TInput>(
   variant: InternalTraceVariant<TInput>,
   input: TInput,
+  selectorCache: InternalSelectorCache<TInput>,
+  stats: TraceTapeStats,
 ): void {
   for (const guard of variant.guards) {
-    guard.value = guard.selector.read(input);
+    guard.value = getSelectorValue(guard.selector, input, selectorCache, stats);
   }
 }
 
@@ -303,6 +360,7 @@ export function createRenderTraceSession<TInput>(
     nextVariant: InternalTraceVariant<TInput>,
     mode: 'replay' | 'restore',
     invalidatedBy: string | null,
+    selectorCache: InternalSelectorCache<TInput>,
   ): TraceUpdateResult {
     const previousVariant = activeVariant;
     const previousOperations =
@@ -325,7 +383,12 @@ export function createRenderTraceSession<TInput>(
         (previousVariant === nextVariant ? operation.value : undefined);
       const existedBefore =
         previousVariant === nextVariant || previousOperation != null;
-      const nextDepValues = readDependencyValues(operation.deps, input);
+      const nextDepValues = readDependencyValues(
+        operation.deps,
+        input,
+        selectorCache,
+        stats,
+      );
       let isDirty = false;
 
       seenOperationKeys.add(operationKey);
@@ -391,7 +454,7 @@ export function createRenderTraceSession<TInput>(
       }
     }
 
-    syncGuardValues(nextVariant, input);
+    syncGuardValues(nextVariant, input, selectorCache, stats);
     touchVariant(nextVariant);
     activeVariant = nextVariant;
 
@@ -408,6 +471,10 @@ export function createRenderTraceSession<TInput>(
     mode: 'invalidate' | 'record',
     invalidatedBy: string | null,
   ): TraceUpdateResult {
+    const selectorCache = new Map<
+      TraceSelector<TInput, unknown>,
+      unknown
+    >();
     const nextGuards: Array<InternalTraceGuard<TInput>> = [];
     const nextOperations: Array<InternalTraceOperation<TInput>> = [];
     const mutations: Array<TraceMutation> = [];
@@ -422,7 +489,7 @@ export function createRenderTraceSession<TInput>(
       const value = compute(input);
       nextOperations.push({
         compute: compute as (value: TInput) => unknown,
-        depValues: readDependencyValues(deps, input),
+        depValues: readDependencyValues(deps, input, selectorCache, stats),
         deps,
         isEqual: options?.isEqual as TraceEqualityFn<unknown> | undefined,
         kind,
@@ -448,7 +515,7 @@ export function createRenderTraceSession<TInput>(
         return recordOperation(kind, slot, deps, compute, options);
       },
       guard(selector) {
-        const value = selector.read(input);
+        const value = getSelectorValue(selector, input, selectorCache, stats);
         nextGuards.push({
           selector: selector as TraceSelector<TInput, unknown>,
           value,
@@ -505,15 +572,29 @@ export function createRenderTraceSession<TInput>(
     },
 
     update(input) {
+      const selectorCache = new Map<
+        TraceSelector<TInput, unknown>,
+        unknown
+      >();
       if (activeVariant === null) {
         return record(input, 'record', null);
       }
 
       for (const guard of activeVariant.guards) {
-        const nextValue = guard.selector.read(input);
+        const nextValue = getSelectorValue(
+          guard.selector,
+          input,
+          selectorCache,
+          stats,
+        );
         if (!isEqualValue(guard.value, nextValue, guard.selector.isEqual)) {
           stats.guardInvalidations++;
-          const cachedVariant = findRecordedVariant(variantTree, input);
+          const cachedVariant = findRecordedVariant(
+            variantTree,
+            input,
+            selectorCache,
+            stats,
+          );
           if (cachedVariant != null) {
             stats.variantRestores++;
             return reconcileVariant(
@@ -521,13 +602,14 @@ export function createRenderTraceSession<TInput>(
               cachedVariant,
               'restore',
               guard.selector.key,
+              selectorCache,
             );
           }
           return record(input, 'invalidate', guard.selector.key);
         }
       }
 
-      return reconcileVariant(input, activeVariant, 'replay', null);
+      return reconcileVariant(input, activeVariant, 'replay', null, selectorCache);
     },
   };
 }

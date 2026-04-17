@@ -23,6 +23,8 @@ The prototype now has two important escape hatches beyond the initial cut:
 - cached branch variants can be restored without re-running the render callback when a previously seen guard path becomes active again
 - variant storage can be capped with `{maxVariants}` to keep the memory model bounded during research
 
+Replay now also caches selector reads for the duration of a single update. That keeps shared guards and patch operations from re-reading the same selector over and over, and the exposed stats now report `selectorReads` and `selectorCacheHits` so benchmark output can show whether a tape is actually getting that benefit.
+
 It also supports derived selectors so a trace can depend on small pure computations instead of only direct field reads.
 
 This is intentionally a small research surface inside the compiler runtime, not a React reconciler feature.
