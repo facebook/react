@@ -72,6 +72,21 @@ const traceSession = experimental_createRenderTraceSession((trace, input) => {
   }
 });
 
+const branchToggleSnapshot = createSnapshotRenderer(snapshotRender);
+const branchToggleTraceSession = experimental_createRenderTraceSession(
+  (trace, input) => {
+    trace.text('title', [titleSelector], data => data.title);
+    trace.text('body', [prefixSelector, bodySelector], data => data.prefix + data.count);
+
+    if (trace.guard(themeSelector) === 'dark') {
+      trace.attr('root', 'color', [themeSelector], () => '#fff');
+    } else {
+      trace.attr('root', 'color', [themeSelector], () => '#111');
+    }
+  },
+  {maxVariants: 4},
+);
+
 const snapshot = createSnapshotRenderer(snapshotRender);
 const iterations = 20000;
 
@@ -87,9 +102,32 @@ for (let iteration = 0; iteration < iterations; iteration++) {
 }
 const traceDurationMs = Number(process.hrtime.bigint() - start) / 1e6;
 
+start = process.hrtime.bigint();
+for (let iteration = 0; iteration < iterations; iteration++) {
+  branchToggleSnapshot.update({
+    ...createInput(iteration),
+    theme: iteration % 2 === 0 ? 'dark' : 'light',
+  });
+}
+const branchToggleSnapshotDurationMs =
+  Number(process.hrtime.bigint() - start) / 1e6;
+
+start = process.hrtime.bigint();
+for (let iteration = 0; iteration < iterations; iteration++) {
+  branchToggleTraceSession.update({
+    ...createInput(iteration),
+    theme: iteration % 2 === 0 ? 'dark' : 'light',
+  });
+}
+const branchToggleTraceDurationMs = Number(process.hrtime.bigint() - start) / 1e6;
+
 console.log(
   JSON.stringify(
     {
+      branchToggleSnapshot: branchToggleSnapshot.stats(),
+      branchToggleSnapshotDurationMs,
+      branchToggleTraceDurationMs,
+      branchToggleTraceSession: branchToggleTraceSession.stats(),
       iterations,
       snapshot: snapshot.stats(),
       snapshotDurationMs,
