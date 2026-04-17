@@ -1,3 +1,9 @@
+## 7.1.1
+
+**Note:** 7.1.0 accidentally removed the `component-hook-factories` rule, causing errors for users who referenced it in their ESLint config. This is now fixed.
+
+- Add deprecated no-op `component-hook-factories` rule for backwards compatibility. ([@mofeiZ](https://github.com/mofeiZ) in [#36307](https://github.com/facebook/react/pull/36307))
+
 ## 7.1.0
 
 This release adds ESLint v10 support, improves performance by skipping compilation for non-React files, and includes compiler lint improvements including better `set-state-in-effect` detection, improved ref validation, and more helpful error reporting.
