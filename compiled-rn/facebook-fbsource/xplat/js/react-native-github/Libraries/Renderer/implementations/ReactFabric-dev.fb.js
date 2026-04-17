@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1d71bdba1c8d58062d774155d55a40ba>>
+ * @generated SignedSource<<3d758f62a75a477684f0a62577866cd3>>
  */
 
 "use strict";
@@ -9809,7 +9809,7 @@ __DEV__ &&
         null === workInProgress
           ? ((returnFiber.deletions = [current]), (returnFiber.flags |= 16))
           : workInProgress.push(current);
-        renderLanes.flags |= 2;
+        renderLanes.flags |= 134217730;
         return renderLanes;
       }
       if (null !== current)
@@ -21150,10 +21150,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-67e47593-20260417",
+        version: "19.3.0-native-fb-da9325b5-20260417",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-67e47593-20260417"
+        reconcilerVersion: "19.3.0-native-fb-da9325b5-20260417"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
