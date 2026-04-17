@@ -141,11 +141,11 @@ export function trackUsedThenable<T>(
           // granular warnings.
           thenableStateDev.didWarnAboutUncachedPromise = true;
 
-          // TODO: This warning should link to a corresponding docs page.
           console.error(
             'A component was suspended by an uncached promise. Creating ' +
               'promises inside a Client Component or hook is not yet ' +
-              'supported, except via a Suspense-compatible library or framework.',
+              'supported, except via a Suspense-compatible library or framework.\n' +
+              'See https://react.dev/reference/react/use',
           );
         }
       }

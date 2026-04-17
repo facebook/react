@@ -3574,6 +3574,7 @@ describe('ReactSuspenseList', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in Foo (at **)',
     ]);
   });
@@ -3630,11 +3631,13 @@ describe('ReactSuspenseList', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in SuspenseList (at **)\n' +
         '    in Foo (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in SuspenseList (at **)\n' +
         '    in Foo (at **)',
     ]);
@@ -3654,11 +3657,13 @@ describe('ReactSuspenseList', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in SuspenseList (at **)\n' +
         '    in Foo (at **)',
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in SuspenseList (at **)\n' +
         '    in Foo (at **)',
     ]);
@@ -3678,6 +3683,7 @@ describe('ReactSuspenseList', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in SuspenseList (at **)\n' +
         '    in Foo (at **)',
     ]);
@@ -3733,6 +3739,7 @@ describe('ReactSuspenseList', () => {
       'A component was suspended by an uncached promise. ' +
         'Creating promises inside a Client Component or hook is not yet supported, ' +
         'except via a Suspense-compatible library or framework.\n' +
+        'See https://react.dev/reference/react/use\n' +
         '    in Foo (at **)',
     ]);
   });
