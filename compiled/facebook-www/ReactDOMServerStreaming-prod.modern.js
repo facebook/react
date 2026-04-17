@@ -5866,11 +5866,13 @@ function finishedTask(request, boundary, row, segment) {
           null !== row &&
             hoistHoistables(row.hoistables, boundary.contentState),
           isEligibleForOutlining(request, boundary) ||
-            (boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request),
+            (request.allPendingTasks++,
+            boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request),
             boundary.fallbackAbortableTasks.clear(),
             null !== row &&
               0 === --row.pendingTasks &&
-              finishSuspenseListRow(request, row)),
+              finishSuspenseListRow(request, row),
+            request.allPendingTasks--),
           0 === request.pendingRootTasks &&
             null === request.trackedPostpones &&
             null !== boundary.preamble &&
@@ -5897,8 +5899,10 @@ function finishedTask(request, boundary, row, segment) {
                 finishedTask(request, postponedBoundary, null, null);
               }
           }
+          request.allPendingTasks++;
           0 === --boundary.pendingTasks &&
             finishSuspenseListRow(request, boundary);
+          request.allPendingTasks--;
         }
       }
     else
@@ -6811,8 +6815,10 @@ exports.renderNextChunk = function (stream) {
                   untrackBoundary(request, boundary$jscomp$0);
                   var boundaryRow = boundary$jscomp$0.row;
                   null !== boundaryRow &&
+                    (request.allPendingTasks++,
                     0 === --boundaryRow.pendingTasks &&
-                    finishSuspenseListRow(request, boundaryRow);
+                      finishSuspenseListRow(request, boundaryRow),
+                    request.allPendingTasks--);
                   boundary$jscomp$0.parentFlushed &&
                     request.clientRenderedBoundaries.push(boundary$jscomp$0);
                   0 === request.pendingRootTasks &&
