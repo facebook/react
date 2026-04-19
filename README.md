@@ -76,3 +76,34 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+
+---
+
+## 🚀 Project Overview
+Enhanced README documentation for clarity, badges, and contribution guidance.
+
+## ✨ Features
+- Improved documentation structure
+- Repository metadata and badges
+- Automated activity insights
+- Contribution guidance
+
+## 🤝 Contributing
+Contributions are welcome.  
+Feel free to open issues or submit pull requests.
+
+## 📊 Repository Statistics
+![Stars](https://shields.io)
+![Forks](https://shields.io)
+![Issues](https://shields.io)
+![License](https://shields.io)
+
+## 📜 Recent Repository Activity
+- 1b45e24 Add Flight SSR benchmark fixture (#36180) (Hendrik Liebau, 2026-04-02)
+
+## 🕒 Last Updated
+Wed Apr  8 17:54:50 +04 2026
+
+---
+
+### 🤖 Automated Documentation Update
