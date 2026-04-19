@@ -1754,7 +1754,7 @@ function markRootUpdated(root: FiberRoot, updatedLanes: Lanes) {
       didIncludeCommitPhaseUpdate = true;
     }
 
-    throwIfInfiniteUpdateLoopDetected();
+    throwIfInfiniteUpdateLoopDetected(true);
   }
 }
 
@@ -1773,7 +1773,7 @@ function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
       didIncludeCommitPhaseUpdate = true;
     }
 
-    throwIfInfiniteUpdateLoopDetected();
+    throwIfInfiniteUpdateLoopDetected(true);
   }
 }
 
@@ -5175,7 +5175,9 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 
-export function throwIfInfiniteUpdateLoopDetected() {
+export function throwIfInfiniteUpdateLoopDetected(
+  isFromInfiniteRenderLoopDetectionInstrumentation: boolean,
+) {
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
     nestedUpdateCount = 0;
     nestedPassiveUpdateCount = 0;
@@ -5187,7 +5189,10 @@ export function throwIfInfiniteUpdateLoopDetected() {
 
     if (enableInfiniteRenderLoopDetection) {
       if (updateKind === NESTED_UPDATE_SYNC_LANE) {
-        if (executionContext & RenderContext && workInProgressRoot !== null) {
+        if (
+          isFromInfiniteRenderLoopDetectionInstrumentation ||
+          (executionContext & RenderContext && workInProgressRoot !== null)
+        ) {
           // This loop was identified only because of the instrumentation gated with enableInfiniteRenderLoopDetection, warn instead of throwing.
           if (__DEV__) {
             console.error(
@@ -5307,9 +5312,11 @@ function doubleInvokeEffectsInDEVIfNecessary(
   if (fiber.memoizedState === null) {
     // Only consider Offscreen that is visible.
     // TODO (Offscreen) Handle manual mode.
-    if (isInStrictMode && fiber.flags & Visibility) {
-      // Double invoke effects on Offscreen's subtree only
+    if (isInStrictMode && fiber.flags & (Visibility | PlacementDEV)) {
+      // Double invoke effects on Offscreen's subtree
       // if it is visible and its visibility has changed.
+      // However, we also need to consider newly hydrated Offscreen because their
+      // visibility flags might not have changed.
       runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
     } else if (fiber.subtreeFlags & PlacementDEV) {
       // Something in the subtree could have been suspended.

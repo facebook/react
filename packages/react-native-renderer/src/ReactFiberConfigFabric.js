@@ -60,13 +60,13 @@ const {
   unstable_ContinuousEventPriority: FabricContinuousPriority,
   unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  suspendOnActiveViewTransition: fabricSuspendOnActiveViewTransition,
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 import {
-  getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
@@ -79,7 +79,6 @@ export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Conside
 export const rendererPackageName = 'react-native-renderer';
 export const extraDevToolsConfig = {
   getInspectorDataForInstance,
-  getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
 };
 
@@ -90,6 +89,11 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+export function allocateTag(): number {
+  const tag = nextReactTag;
+  nextReactTag += 2;
+  return tag;
+}
 
 type InternalInstanceHandle = Object;
 
@@ -142,8 +146,6 @@ export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   getInspectorDataForInstance?: (instance: Fiber | null) => InspectorData,
-  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
-  getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
     inspectedView: Object,
     locationX: number,
@@ -184,8 +186,7 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const viewConfig = getViewConfigForType(type);
 
@@ -235,8 +236,7 @@ export function createTextInstance(
     }
   }
 
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const node = createNode(
     tag, // reactTag
@@ -313,17 +313,7 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
 
   // Handle root containers
   if (instance.containerInfo != null) {
-    if (instance.containerInfo.publicInstance != null) {
-      return instance.containerInfo.publicInstance;
-    }
-  }
-
-  // For compatibility with the legacy renderer, in case it's used with Fabric
-  // in the same app.
-  // $FlowExpectedError[prop-missing]
-  if (instance._nativeTag != null) {
-    // $FlowExpectedError[incompatible-return]
-    return instance;
+    return instance.containerInfo.publicInstance;
   }
 
   return null;
@@ -666,7 +656,11 @@ export function suspendInstance(
 export function suspendOnActiveViewTransition(
   state: SuspendedState,
   container: Container,
-): void {}
+): void {
+  if (fabricSuspendOnActiveViewTransition != null) {
+    fabricSuspendOnActiveViewTransition();
+  }
+}
 
 export function waitForCommitToBeReady(
   state: SuspendedState,
