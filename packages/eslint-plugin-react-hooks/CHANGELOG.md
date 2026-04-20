@@ -8,7 +8,7 @@
 
 This release adds ESLint v10 support, improves performance by skipping compilation for non-React files, and includes compiler lint improvements including better `set-state-in-effect` detection, improved ref validation, and more helpful error reporting.
 
-- Add ESLint v10 support. ([@nicolo-ribaudo](https://github.com/nicolo-ribaudo) in [#35720](https://github.com/facebook/react/pull/35720))
+- Add ESLint v10 support. ([@azat-io](https://github.com/azat-io) in [#35720](https://github.com/facebook/react/pull/35720))
 - Skip compilation for non-React files to improve performance. ([@josephsavona](https://github.com/josephsavona) in [#35589](https://github.com/facebook/react/pull/35589))
 - Fix exhaustive deps bug with Flow type casting. ([@jorge-cab](https://github.com/jorge-cab) in [#35691](https://github.com/facebook/react/pull/35691))
 - Fix `useEffectEvent` checks in component syntax. ([@jbrown215](https://github.com/jbrown215) in [#35041](https://github.com/facebook/react/pull/35041))
