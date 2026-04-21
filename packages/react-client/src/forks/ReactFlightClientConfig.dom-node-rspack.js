@@ -11,6 +11,7 @@ export const rendererPackageName = 'react-server-dom-rspack';
 
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
 export * from 'react-client/src/ReactClientConsoleConfigServer';
+export * from 'react-client/src/ReactClientDebugConfigNode';
 export * from 'react-server-dom-rspack/src/client/ReactFlightClientConfigBundlerRspack';
 export * from 'react-server-dom-rspack/src/client/ReactFlightClientConfigBundlerRspackServer';
 export * from 'react-server-dom-rspack/src/client/ReactFlightClientConfigTargetRspackServer';
