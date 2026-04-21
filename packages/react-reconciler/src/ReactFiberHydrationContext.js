@@ -998,6 +998,4 @@ export {
   prepareToHydrateHostActivityInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
-  prepareToHydrateHostPortal,
-  popHydrationStateAfterPortal,
 };
