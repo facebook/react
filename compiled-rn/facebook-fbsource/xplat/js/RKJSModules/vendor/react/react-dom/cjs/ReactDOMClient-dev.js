@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a72152db42805b05f9c19c086c9f5994>>
+ * @generated SignedSource<<96407ddfaf7e881d959a28f9e5a34686>>
  */
 
 /*
@@ -28159,6 +28159,7 @@ __DEV__ &&
         controls: "controls",
         controlslist: "controlsList",
         coords: "coords",
+        credentialless: "credentialless",
         crossorigin: "crossOrigin",
         dangerouslysetinnerhtml: "dangerouslySetInnerHTML",
         data: "data",
@@ -31911,11 +31912,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-306a01b4-20260420" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-94643c3b-20260421" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-306a01b4-20260420\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-94643c3b-20260421\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -31952,10 +31953,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-306a01b4-20260420",
+          version: "19.3.0-native-fb-94643c3b-20260421",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-306a01b4-20260420"
+          reconcilerVersion: "19.3.0-native-fb-94643c3b-20260421"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32105,5 +32106,5 @@ __DEV__ &&
       listenToAllSupportedEvents(container);
       return new ReactDOMHydrationRoot(initialChildren);
     };
-    exports.version = "19.3.0-native-fb-306a01b4-20260420";
+    exports.version = "19.3.0-native-fb-94643c3b-20260421";
   })();
