@@ -1168,6 +1168,30 @@ const allTests = {
       code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
+        function ComponentWithHookInLoopCondition() {
+          while (useHookInsideLoop()) {
+            foo();
+          }
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function ComponentWithHookInForCondition() {
+          for (; useHookInsideLoop(); ) {
+            foo();
+          }
+        }
+      `,
+      errors: [loopError('useHookInsideLoop')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
         function renderItem() {
           useState();
         }
