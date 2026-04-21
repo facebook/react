@@ -8550,6 +8550,7 @@ __DEV__ &&
         controls: "controls",
         controlslist: "controlsList",
         coords: "coords",
+        credentialless: "credentialless",
         crossorigin: "crossOrigin",
         dangerouslysetinnerhtml: "dangerouslySetInnerHTML",
         data: "data",
