@@ -72,6 +72,7 @@ const aliases = new Map([
   ['textAnchor', 'text-anchor'],
   ['textDecoration', 'text-decoration'],
   ['textRendering', 'text-rendering'],
+  ['transformBox', 'transform-box'],
   ['transformOrigin', 'transform-origin'],
   ['underlinePosition', 'underline-position'],
   ['underlineThickness', 'underline-thickness'],
