@@ -2779,11 +2779,15 @@ describe('FragmentRefs', () => {
         const logs = [];
         const handler = () => logs.push('fired');
 
+        const child = document.querySelector('#child');
+        const spy = jest.spyOn(child, 'addEventListener');
         // Per DOM spec, listener identity is (type, callback, capture).
         // passive is NOT part of the key, so these are the SAME listener.
         fragmentRef.current.addEventListener('click', handler, {passive: false});
         // Second add is a no-op: same (type, callback, capture) identity.
         fragmentRef.current.addEventListener('click', handler, {passive: true});
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith('click', handler, {passive: false});
 
         document.querySelector('#child').click();
         // First handler fires once (second add was a no-op).
