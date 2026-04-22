@@ -1470,13 +1470,18 @@ function updateReducerImpl<S, A>(
             // has finished. Pretend the update doesn't exist by skipping
             // over it.
             //
-            // Note: We don't check if this update is part of a pending async
-            // action here (by comparing revertLane to peekEntangledActionLane).
-            // The revert mechanism for useOptimistic should be isolated to the
-            // specific action that triggered it, not blocked by the global
-            // entangled pending count. This allows Component B's optimistic UI
-            // to revert even when Component A has a slower, overlapping async
-            // action.
+            // Note: We intentionally don't check if this update is part of a
+            // pending async action here (by comparing revertLane to
+            // peekEntangledActionLane). The revert mechanism for useOptimistic
+            // should be isolated to the specific transition that triggered it,
+            // not blocked by the global entangled pending count. This allows
+            // Component B's optimistic UI to revert even when Component A has
+            // a slower, overlapping async action.
+            //
+            // Unlike non-optimistic updates, which use didReadFromEntangledAsyncAction
+            // to batch updates within the same async action scope, optimistic updates
+            // have their own revert mechanism via revertLane. The revertLane already
+            // encodes which transition the optimistic update is associated with.
             update = update.next;
             continue;
           } else {
