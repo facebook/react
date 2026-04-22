@@ -1469,14 +1469,15 @@ function updateReducerImpl<S, A>(
             // The transition that this optimistic update is associated with
             // has finished. Pretend the update doesn't exist by skipping
             // over it.
+            //
+            // Note: We don't check if this update is part of a pending async
+            // action here (by comparing revertLane to peekEntangledActionLane).
+            // The revert mechanism for useOptimistic should be isolated to the
+            // specific action that triggered it, not blocked by the global
+            // entangled pending count. This allows Component B's optimistic UI
+            // to revert even when Component A has a slower, overlapping async
+            // action.
             update = update.next;
-
-            // Check if this update is part of a pending async action. If so,
-            // we'll need to suspend until the action has finished, so that it's
-            // batched together with future updates in the same action.
-            if (revertLane === peekEntangledActionLane()) {
-              didReadFromEntangledAsyncAction = true;
-            }
             continue;
           } else {
             const clone: Update<S, A> = {
