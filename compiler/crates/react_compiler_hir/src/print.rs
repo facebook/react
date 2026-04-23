@@ -10,13 +10,25 @@
 
 use std::collections::HashSet;
 
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorOrDiagnostic;
+use react_compiler_diagnostics::SourceLocation;
+
+use crate::AliasingEffect;
+use crate::HirFunction;
+use crate::IdentifierId;
+use crate::IdentifierName;
+use crate::InstructionValue;
+use crate::LValue;
+use crate::MutationReason;
+use crate::Pattern;
+use crate::Place;
+use crate::PlaceOrSpreadOrHole;
+use crate::ScopeId;
+use crate::Type;
 use crate::environment::Environment;
-use crate::type_config::{ValueKind, ValueReason};
-use crate::{
-    AliasingEffect, HirFunction, IdentifierId, IdentifierName, InstructionValue, LValue,
-    MutationReason, Pattern, Place, PlaceOrSpreadOrHole, ScopeId, Type,
-};
-use react_compiler_diagnostics::{CompilerError, CompilerErrorOrDiagnostic, SourceLocation};
+use crate::type_config::ValueKind;
+use crate::type_config::ValueReason;
 
 // =============================================================================
 // Standalone formatting functions (no state needed)
@@ -36,6 +48,30 @@ pub fn format_loc_value(loc: &SourceLocation) -> String {
     )
 }
 
+/// Format a string like JS `JSON.stringify`: escape control chars and quotes
+/// but preserve non-ASCII unicode (e.g. U+00A0 nbsp) as literal characters.
+pub fn format_js_string(s: &str) -> String {
+            let mut result = String::with_capacity(s.len() + 2);
+            result.push('"');
+            for c in s.chars() {
+                match c {
+                    '"' => result.push_str("\\\""),
+                    '\\' => result.push_str("\\\\"),
+                    '\n' => result.push_str("\\n"),
+                    '\r' => result.push_str("\\r"),
+                    '\t' => result.push_str("\\t"),
+            '\u{0008}' => result.push_str("\\b"),
+            '\u{000c}' => result.push_str("\\f"),
+                    c if c.is_control() => {
+                result.push_str(&format!("\\u{:04x}", c as u32));
+                    }
+                    c => result.push(c),
+                }
+            }
+            result.push('"');
+            result
+        }
+
 pub fn format_primitive(prim: &crate::PrimitiveValue) -> String {
     match prim {
         crate::PrimitiveValue::Null => "null".to_string(),
@@ -50,26 +86,7 @@ pub fn format_primitive(prim: &crate::PrimitiveValue) -> String {
                 format!("{}", v)
             }
         }
-        crate::PrimitiveValue::String(s) => {
-            // Format like JS JSON.stringify: escape control chars and quotes but NOT non-ASCII unicode
-            let mut result = String::with_capacity(s.len() + 2);
-            result.push('"');
-            for c in s.chars() {
-                match c {
-                    '"' => result.push_str("\\\""),
-                    '\\' => result.push_str("\\\\"),
-                    '\n' => result.push_str("\\n"),
-                    '\r' => result.push_str("\\r"),
-                    '\t' => result.push_str("\\t"),
-                    c if c.is_control() => {
-                        result.push_str(&format!("\\u{{{:04x}}}", c as u32));
-                    }
-                    c => result.push(c),
-                }
-            }
-            result.push('"');
-            result
-        }
+        crate::PrimitiveValue::String(s) => format_js_string(s),
     }
 }
 
@@ -263,7 +280,11 @@ impl<'a> PrintFormatter<'a> {
                     into.identifier.0, from.identifier.0
                 )
             }
-            AliasingEffect::Create { into, value, reason } => {
+            AliasingEffect::Create {
+                into,
+                value,
+                reason,
+            } => {
                 format!(
                     "Create {{ into: {}, value: {}, reason: {} }}",
                     into.identifier.0,
@@ -313,8 +334,10 @@ impl<'a> PrintFormatter<'a> {
                 function_id: _,
                 into,
             } => {
-                let cap_str: Vec<String> =
-                    captures.iter().map(|p| p.identifier.0.to_string()).collect();
+                let cap_str: Vec<String> = captures
+                    .iter()
+                    .map(|p| p.identifier.0.to_string())
+                    .collect();
                 format!(
                     "CreateFunction {{ into: {}, captures: [{}] }}",
                     into.identifier.0,
@@ -461,11 +484,7 @@ impl<'a> PrintFormatter<'a> {
                                     format!("{}", n.value())
                                 }
                             };
-                            format!(
-                                "{}{}",
-                                if p.optional { "?." } else { "." },
-                                prop
-                            )
+                            format!("{}{}", if p.optional { "?." } else { "." }, prop)
                         })
                         .collect();
                     self.line(&format!(
@@ -507,8 +526,7 @@ impl<'a> PrintFormatter<'a> {
                 }
 
                 // merged
-                let merged_str: Vec<String> =
-                    merged.iter().map(|s| s.0.to_string()).collect();
+                let merged_str: Vec<String> = merged.iter().map(|s| s.0.to_string()).collect();
                 self.line(&format!("merged: [{}]", merged_str.join(", ")));
 
                 // loc
@@ -648,10 +666,7 @@ impl<'a> PrintFormatter<'a> {
                         crate::ObjectPropertyOrSpread::Property(p) => {
                             self.line(&format!("[{}] ObjectProperty {{", i));
                             self.indent();
-                            self.line(&format!(
-                                "key: {}",
-                                format_object_property_key(&p.key)
-                            ));
+                            self.line(&format!("key: {}", format_object_property_key(&p.key)));
                             self.line(&format!("type: \"{}\"", p.property_type));
                             self.format_place_field("place", &p.place);
                             self.dedent();
@@ -837,8 +852,8 @@ impl<'a> PrintFormatter<'a> {
             }
             InstructionValue::JSXText { value: val, loc } => {
                 self.line(&format!(
-                    "JSXText {{ value: {:?}, loc: {} }}",
-                    val,
+                    "JSXText {{ value: {}, loc: {} }}",
+                    format_js_string(val),
                     format_loc(loc)
                 ));
             }
@@ -1211,15 +1226,19 @@ impl<'a> PrintFormatter<'a> {
                 self.dedent();
                 self.line("}");
             }
-            InstructionValue::TaggedTemplateExpression { tag, value: val, loc } => {
+            InstructionValue::TaggedTemplateExpression {
+                tag,
+                value: val,
+                loc,
+            } => {
                 self.line("TaggedTemplateExpression {");
                 self.indent();
                 self.format_place_field("tag", tag);
-                self.line(&format!("raw: {:?}", val.raw));
+                self.line(&format!("raw: {}", format_js_string(&val.raw)));
                 self.line(&format!(
                     "cooked: {}",
                     match &val.cooked {
-                        Some(c) => format!("{:?}", c),
+                        Some(c) => format_js_string(c),
                         None => "undefined".to_string(),
                     }
                 ));
@@ -1244,11 +1263,11 @@ impl<'a> PrintFormatter<'a> {
                 self.indent();
                 for (i, q) in quasis.iter().enumerate() {
                     self.line(&format!(
-                        "[{}] {{ raw: {:?}, cooked: {} }}",
+                        "[{}] {{ raw: {}, cooked: {} }}",
                         i,
-                        q.raw,
+                        format_js_string(&q.raw),
                         match &q.cooked {
-                            Some(c) => format!("{:?}", c),
+                            Some(c) => format_js_string(c),
                             None => "undefined".to_string(),
                         }
                     ));
@@ -1368,9 +1387,7 @@ impl<'a> PrintFormatter<'a> {
                         self.indent();
                         for (i, dep) in d.iter().enumerate() {
                             let root_str = match &dep.root {
-                                crate::ManualMemoDependencyRoot::Global {
-                                    identifier_name,
-                                } => {
+                                crate::ManualMemoDependencyRoot::Global { identifier_name } => {
                                     format!("Global(\"{}\")", identifier_name)
                                 }
                                 crate::ManualMemoDependencyRoot::NamedLocal {
