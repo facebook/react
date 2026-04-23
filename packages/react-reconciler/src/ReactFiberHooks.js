@@ -3240,6 +3240,7 @@ export function startHostTransition<F>(
   pendingState: TransitionStatus,
   action: (F => mixed) | null,
   formData: F,
+  autoReset: boolean = true,
 ): void {
   if (formFiber.tag !== HostComponent) {
     throw new Error(
@@ -3271,8 +3272,10 @@ export function startHostTransition<F>(
         // set the pending form status.
         noop
       : () => {
-          // Automatically reset the form when the action completes.
-          requestFormReset(formFiber);
+          if (autoReset) {
+            // Automatically reset the form when the action completes.
+            requestFormReset(formFiber);
+          }
           return action(formData);
         },
   );
