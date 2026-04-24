@@ -66,7 +66,6 @@ import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 import {
-  getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
@@ -79,7 +78,6 @@ export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Conside
 export const rendererPackageName = 'react-native-renderer';
 export const extraDevToolsConfig = {
   getInspectorDataForInstance,
-  getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
 };
 
@@ -142,8 +140,6 @@ export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   getInspectorDataForInstance?: (instance: Fiber | null) => InspectorData,
-  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
-  getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
     inspectedView: Object,
     locationX: number,
@@ -313,17 +309,7 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
 
   // Handle root containers
   if (instance.containerInfo != null) {
-    if (instance.containerInfo.publicInstance != null) {
-      return instance.containerInfo.publicInstance;
-    }
-  }
-
-  // For compatibility with the legacy renderer, in case it's used with Fabric
-  // in the same app.
-  // $FlowExpectedError[prop-missing]
-  if (instance._nativeTag != null) {
-    // $FlowExpectedError[incompatible-return]
-    return instance;
+    return instance.containerInfo.publicInstance;
   }
 
   return null;
