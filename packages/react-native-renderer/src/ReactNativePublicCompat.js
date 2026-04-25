@@ -13,8 +13,6 @@ import type {PublicInstance} from 'react-native/Libraries/ReactPrivate/ReactNati
 
 // Modules provided by RN:
 import {
-  UIManager,
-  legacySendAccessibilityEvent,
   getNodeFromPublicInstance,
   getNativeTagFromPublicInstance,
   getInternalInstanceHandleFromPublicInstance,
@@ -65,13 +63,6 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
     return componentOrHandle.canonical.publicInstance;
   }
 
-  // For compatibility with legacy renderer instances
-  if (componentOrHandle._nativeTag) {
-    // $FlowFixMe[incompatible-exact] Necessary when running Flow on Fabric
-    // $FlowFixMe[incompatible-return]
-    return componentOrHandle;
-  }
-
   let hostInstance;
   if (__DEV__) {
     hostInstance = findHostInstanceWithWarning(
@@ -116,11 +107,6 @@ export function findNodeHandle(componentOrHandle: any): ?number {
     return componentOrHandle;
   }
 
-  // For compatibility with legacy renderer instances
-  if (componentOrHandle._nativeTag) {
-    return componentOrHandle._nativeTag;
-  }
-
   // For compatibility with Fabric instances
   if (
     componentOrHandle.canonical != null &&
@@ -150,11 +136,6 @@ export function findNodeHandle(componentOrHandle: any): ?number {
     return hostInstance;
   }
 
-  if (hostInstance._nativeTag != null) {
-    // $FlowFixMe[incompatible-return] For compatibility with legacy renderer instances
-    return hostInstance._nativeTag;
-  }
-
   // $FlowFixMe[incompatible-call] Necessary when running Flow on the legacy renderer
   return getNativeTagFromPublicInstance(hostInstance);
 }
@@ -164,49 +145,32 @@ export function dispatchCommand(
   command: string,
   args: Array<any>,
 ) {
-  const nativeTag =
-    handle._nativeTag != null
-      ? handle._nativeTag
-      : getNativeTagFromPublicInstance(handle);
-  if (nativeTag == null) {
+  const node = getNodeFromPublicInstance(handle);
+
+  if (node != null) {
+    nativeFabricUIManager.dispatchCommand(node, command, args);
+  } else {
     if (__DEV__) {
       console.error(
         "dispatchCommand was called with a ref that isn't a " +
           'native component. Use React.forwardRef to get access to the underlying native component',
       );
     }
-    return;
-  }
-
-  const node = getNodeFromPublicInstance(handle);
-
-  if (node != null) {
-    nativeFabricUIManager.dispatchCommand(node, command, args);
-  } else {
-    UIManager.dispatchViewManagerCommand(nativeTag, command, args);
   }
 }
 
 export function sendAccessibilityEvent(handle: any, eventType: string) {
-  const nativeTag =
-    handle._nativeTag != null
-      ? handle._nativeTag
-      : getNativeTagFromPublicInstance(handle);
-  if (nativeTag == null) {
+  const node = getNodeFromPublicInstance(handle);
+
+  if (node != null) {
+    nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
+  } else {
     if (__DEV__) {
       console.error(
         "sendAccessibilityEvent was called with a ref that isn't a " +
           'native component. Use React.forwardRef to get access to the underlying native component',
       );
     }
-    return;
-  }
-
-  const node = getNodeFromPublicInstance(handle);
-  if (node != null) {
-    nativeFabricUIManager.sendAccessibilityEvent(node, eventType);
-  } else {
-    legacySendAccessibilityEvent(nativeTag, eventType);
   }
 }
 
@@ -223,29 +187,11 @@ export function getNodeFromInternalInstanceHandle(
   );
 }
 
-// Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
 export function isChildPublicInstance(
   parentInstance: PublicInstance,
   childInstance: PublicInstance,
 ): boolean {
   if (__DEV__) {
-    // Paper
-    if (
-      // $FlowExpectedError[incompatible-type]
-      // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
-      parentInstance._internalFiberInstanceHandleDEV &&
-      // $FlowExpectedError[incompatible-type]
-      // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
-      childInstance._internalFiberInstanceHandleDEV
-    ) {
-      return doesFiberContain(
-        // $FlowExpectedError[incompatible-call]
-        parentInstance._internalFiberInstanceHandleDEV,
-        // $FlowExpectedError[incompatible-call]
-        childInstance._internalFiberInstanceHandleDEV,
-      );
-    }
-
     const parentInternalInstanceHandle =
       // $FlowExpectedError[incompatible-call] Type for parentInstance should have been PublicInstance from ReactFiberConfigFabric.
       getInternalInstanceHandleFromPublicInstance(parentInstance);
@@ -253,7 +199,6 @@ export function isChildPublicInstance(
       // $FlowExpectedError[incompatible-call] Type for childInstance should have been PublicInstance from ReactFiberConfigFabric.
       getInternalInstanceHandleFromPublicInstance(childInstance);
 
-    // Fabric
     if (
       parentInternalInstanceHandle != null &&
       childInternalInstanceHandle != null
@@ -264,7 +209,6 @@ export function isChildPublicInstance(
       );
     }
 
-    // Means that one instance is from Fabric and other is from Paper.
     return false;
   } else {
     throw new Error('isChildPublicInstance() is not available in production.');

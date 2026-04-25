@@ -133,21 +133,6 @@ const forks = Object.freeze({
   // We have a few forks for different environments.
   './packages/shared/ReactFeatureFlags.js': (bundleType, entry) => {
     switch (entry) {
-      case 'react-native-renderer':
-        switch (bundleType) {
-          case RN_FB_DEV:
-          case RN_FB_PROD:
-          case RN_FB_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.native-fb.js';
-          case RN_OSS_DEV:
-          case RN_OSS_PROD:
-          case RN_OSS_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.native-oss.js';
-          default:
-            throw Error(
-              `Unexpected entry (${entry}) and bundleType (${bundleType})`
-            );
-        }
       case 'react-native-renderer/fabric':
         switch (bundleType) {
           case RN_FB_DEV:
