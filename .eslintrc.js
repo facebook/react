@@ -463,6 +463,7 @@ module.exports = {
       globals: {
         nativeFabricUIManager: 'readonly',
         RN$enableMicrotasksInReact: 'readonly',
+        RN$isNativeEventTargetEventDispatchingEnabled: 'readonly',
       },
     },
     {
@@ -507,7 +508,6 @@ module.exports = {
         __IS_FIREFOX__: 'readonly',
         __IS_EDGE__: 'readonly',
         __IS_NATIVE__: 'readonly',
-        __IS_INTERNAL_MCP_BUILD__: 'readonly',
         __IS_INTERNAL_VERSION__: 'readonly',
         chrome: 'readonly',
       },
@@ -567,6 +567,7 @@ module.exports = {
     CallSite: 'readonly',
     ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
     ReturnType: 'readonly',
+    AggregateError: 'readonly',
     AnimationFrameID: 'readonly',
     WeakRef: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
@@ -627,6 +628,7 @@ module.exports = {
     FinalizationRegistry: 'readonly',
     Exclude: 'readonly',
     Omit: 'readonly',
+    Pick: 'readonly',
     Keyframe: 'readonly',
     PropertyIndexedKeyframes: 'readonly',
     KeyframeAnimationOptions: 'readonly',

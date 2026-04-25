@@ -622,16 +622,6 @@ module.exports = [
     isFlightSupported: false,
   },
   {
-    shortName: 'native',
-    entryPoints: ['react-native-renderer'],
-    paths: [
-      'react-native-renderer',
-      'react-server/src/ReactFlightServerConfigDebugNoop.js',
-    ],
-    isFlowTyped: true,
-    isServerSupported: false,
-  },
-  {
     shortName: 'fabric',
     entryPoints: ['react-native-renderer/fabric'],
     paths: [
@@ -660,6 +650,25 @@ module.exports = [
     ],
     isFlowTyped: false, // TODO: type it.
     isServerSupported: false,
+  },
+  {
+    shortName: 'noop',
+    entryPoints: [
+      'react-noop-renderer',
+      'react-noop-renderer/persistent',
+      'react-noop-renderer/server',
+      'react-noop-renderer/flight-server',
+      'react-noop-renderer/flight-client',
+    ],
+    paths: [
+      'react-noop-renderer',
+      'react-client/flight',
+      'react-server/flight',
+      'react-server/src/ReactFlightServerConfigDebugNoop.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+    isFlightSupported: true,
   },
   {
     shortName: 'custom',

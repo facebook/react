@@ -1415,6 +1415,8 @@ declare class Document extends Node {
   links: HTMLCollection<HTMLLinkElement>;
   media: string;
   open(url?: string, name?: string, features?: string, replace?: boolean): any;
+  /** @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/prerendering} */
+  prerendering: boolean;
   readyState: string;
   referrer: string;
   scripts: HTMLCollection<HTMLScriptElement>;

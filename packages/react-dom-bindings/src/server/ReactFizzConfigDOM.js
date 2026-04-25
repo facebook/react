@@ -1695,6 +1695,7 @@ function pushAttribute(
     case 'async':
     case 'autoPlay':
     case 'controls':
+    case 'credentialless':
     case 'default':
     case 'defer':
     case 'disabled':
@@ -5328,7 +5329,7 @@ export function writeHoistablesForBoundary(
   hoistableState.stylesheets.forEach(hasStylesToHoist);
 
   // We don't actually want to flush any hoistables until the boundary is complete so we omit
-  // any further writing here. This is becuase unlike Resources, Hoistable Elements act more like
+  // any further writing here. This is because unlike Resources, Hoistable Elements act more like
   // regular elements, each rendered element has a unique representation in the DOM. We don't want
   // these elements to appear in the DOM early, before the boundary has actually completed
 
@@ -7041,7 +7042,17 @@ export function hoistHoistables(
   }
 }
 
-export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
+export function hasSuspenseyContent(
+  hoistableState: HoistableState,
+  flushingInShell: boolean,
+): boolean {
+  if (flushingInShell) {
+    // When flushing the shell, stylesheets with precedence are already emitted
+    // in the <head> which blocks paint. There's no benefit to outlining for CSS
+    // alone during the shell flush. However, suspensey images (for ViewTransition
+    // animation reveals) should still trigger outlining even during the shell.
+    return hoistableState.suspenseyImages;
+  }
   return hoistableState.stylesheets.size > 0 || hoistableState.suspenseyImages;
 }
 

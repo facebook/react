@@ -26,14 +26,13 @@ export const disableInputAttributeSyncing: boolean = false;
 export const enableScopeAPI: boolean = false;
 export const enableCreateEventHandleAPI: boolean = false;
 export const enableSuspenseCallback: boolean = false;
-export const enableTrustedTypesIntegration: boolean = false;
+export const enableTrustedTypesIntegration: boolean = true;
 export const disableTextareaChildren: boolean = false;
 export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableCPUSuspense: boolean = false;
 export const enableNoCloningMemoCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableMoveBefore: boolean = false;
-export const enableHiddenSubtreeInsertionEffectCleanup: boolean = false;
 
 export const enableRetryLaneExpiration: boolean = false;
 export const retryLaneExpirationMs = 5000;
@@ -61,6 +60,7 @@ export const enableYieldingBeforePassive: boolean = true;
 
 export const enableThrottledScheduling: boolean = false;
 export const enableViewTransition: boolean = true;
+export const enableViewTransitionForPersistenceMode: boolean = false;
 export const enableGestureTransition: boolean = false;
 export const enableScrollEndPolyfill: boolean = true;
 export const enableSuspenseyImages: boolean = false;
@@ -72,7 +72,7 @@ export const ownerStackLimit = 1e4;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
-export const enableFragmentRefsInstanceHandles: boolean = false;
+export const enableFragmentRefsInstanceHandles: boolean = true;
 export const enableFragmentRefsTextNodes: boolean = true;
 
 export const enableInternalInstanceMap: boolean = false;
@@ -93,6 +93,14 @@ export const enableObjectFiber: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
 export const enableParallelTransitions: boolean = false;
+
+export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'off';
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
