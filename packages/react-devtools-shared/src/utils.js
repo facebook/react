@@ -708,6 +708,7 @@ export type DataType =
   | 'html_all_collection'
   | 'html_element'
   | 'infinity'
+  | '-infinity'
   | 'iterator'
   | 'opaque_iterator'
   | 'nan'
@@ -765,7 +766,7 @@ export function getDataType(data: Object): DataType {
       if (Number.isNaN(data)) {
         return 'nan';
       } else if (!Number.isFinite(data)) {
-        return 'infinity';
+        return data > 0 ? 'infinity' : '-infinity';
       } else {
         return 'number';
       }
@@ -1219,6 +1220,7 @@ export function formatDataForPreview(
     case 'boolean':
     case 'number':
     case 'infinity':
+    case '-infinity':
     case 'nan':
     case 'null':
     case 'undefined':
