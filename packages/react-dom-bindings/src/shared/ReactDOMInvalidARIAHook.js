@@ -69,12 +69,14 @@ function validateProperty(tagName, name, value) {
         warnedProperties[name] = true;
         return true;
       }
-      // NaN is never a valid aria attribute value. The DOM will stringify it
-      // to "NaN" which violates the ARIA spec for every attribute type.
-      if (typeof value === 'number' && isNaN(value)) {
+      // NaN and Infinity are never valid aria attribute values. The DOM will
+      // stringify them (e.g. "NaN", "Infinity") which violates the ARIA spec
+      // for every attribute type.
+      if (typeof value === 'number' && !isFinite(value)) {
         console.error(
-          'Received NaN for the `%s` attribute. If this is expected, cast ' +
+          'Received `%s` for the `%s` attribute. If this is expected, cast ' +
             'the value to a string.',
+          value,
           name,
         );
         warnedProperties[name] = true;
