@@ -77,11 +77,29 @@ export function trackUsedThenable<T>(
   // a listener that will update its status and result when it resolves.
   switch (thenable.status) {
     case 'fulfilled': {
+      // This could be a bad instrumentation that doesn't set .value.
+      // We're not type-checking since this is a hot path where you can
+      // track down easily when something becomes `undefined` unexpectedly.
       const fulfilledValue: T = thenable.value;
       return fulfilledValue;
     }
     case 'rejected': {
       const rejectedError = thenable.reason;
+
+      // Rejected Promises are rarer so we're doing an extra type-check in
+      // case of a bad instrumentation that doesn't set .reason
+      // If we end up throwing `undefined` it becomes hard to track down
+      // where that throw originated because no callstack would exist.
+      // React would still have a Component stack but that could only be used
+      // as an approximation.
+      if (rejectedError === undefined && !('reason' in thenable)) {
+        throw new Error(
+          'A rejected Promise was passed to React without a `reason` property. ' +
+            'React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. ' +
+            "Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`.",
+        );
+      }
+
       throw rejectedError;
     }
     default: {
