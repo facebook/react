@@ -939,7 +939,8 @@ export function emitPendingHydrationWarnings() {
           `Warning: Hydration attribute mismatch${componentContext}\n` +
             '\n' +
             'The HTML attributes rendered on the server differed from the client. ' +
-            'While the tree structure matched, this can cause visual or behavioral inconsistencies.\n' +
+            "React won't patch up these mismatched attributes, even though the tree structure matched, " +
+            'so this can cause visual or behavioral inconsistencies.\n' +
             '\n' +
             'This typically happens when a Client Component uses:\n' +
             "- Conditional attributes based on `typeof window !== 'undefined'`\n" +
