@@ -5005,11 +5005,18 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           as === 'script' &&
           ownerDocument.querySelector(getScriptSelectorFromKey(key))
         ) {
-          // We already have a stylesheet for this key. We don't need to preload it.
+          // We already have a script for this key. We don't need to preload it.
           return;
         }
         const instance = ownerDocument.createElement('link');
         setInitialProperties(instance, 'link', preloadProps);
+        if (as === 'style') {
+          // Stash a loading state on the preload link. it will clean itself up once settled
+          (instance: any)._p = true;
+          instance.onload = instance.onerror = () => {
+            (instance: any)._p = undefined;
+          };
+        }
         markNodeAsHoistable(instance);
         (ownerDocument.head: any).appendChild(instance);
       }
@@ -5357,19 +5364,16 @@ export function getResource(
               resource.instance = instance;
               resource.state.loading = Loaded | Inserted;
             }
-          }
-
-          if (!preloadPropsMap.has(key)) {
-            const preloadProps = preloadPropsFromStylesheet(qualifiedProps);
-            preloadPropsMap.set(key, preloadProps);
-            if (!instance) {
-              preloadStylesheet(
-                ownerDocument,
-                key,
-                preloadProps,
-                resource.state,
-              );
+          } else {
+            // We don't have an instance we need to preload it instead
+            // $FlowFixMe[incompatible-type] -- the key we use here can only match non module preloads
+            let preloadProps: void | PreloadProps = preloadPropsMap.get(key);
+            if (!preloadProps) {
+              preloadProps = preloadPropsFromStylesheet(qualifiedProps);
+              preloadPropsMap.set(key, preloadProps);
             }
+
+            preloadStylesheet(ownerDocument, key, preloadProps, resource.state);
           }
         }
         if (currentProps && currentResource === null) {
@@ -5540,22 +5544,31 @@ function preloadStylesheet(
   preloadProps: PreloadProps,
   state: StylesheetState,
 ) {
-  const preloadEl = ownerDocument.querySelector(
+  let instance = ownerDocument.querySelector(
     getPreloadStylesheetSelectorFromKey(key),
   );
-  if (preloadEl) {
-    // If we find a preload already it was SSR'd and we won't have an actual
-    // loading state to track. For now we will just assume it is loaded
-    state.loading = Loaded;
+  if (instance) {
+    const isPending: true | void = (instance: any)._p;
+    if (!isPending) {
+      // If we find a preload already it was SSR'd and we won't have an actual
+      // loading state to track. For now we will just assume it is loaded
+      state.loading = Loaded;
+      return;
+    } else {
+      // fall through and attach loading listeners
+    }
   } else {
-    const instance = ownerDocument.createElement('link');
-    state.preload = instance;
-    instance.addEventListener('load', () => (state.loading |= Loaded));
-    instance.addEventListener('error', () => (state.loading |= Errored));
+    instance = ownerDocument.createElement('link');
+    (instance: any)._p = true;
+    instance.onload = instance.onerror = () => ((instance: any)._p = undefined);
     setInitialProperties(instance, 'link', preloadProps);
     markNodeAsHoistable(instance);
     (ownerDocument.head: any).appendChild(instance);
   }
+  // $FlowFixMe: [incompatible-type] -- if instance is an Element it will also be an HTMLLinkElement
+  state.preload = instance;
+  instance.addEventListener('load', () => (state.loading |= Loaded));
+  instance.addEventListener('error', () => (state.loading |= Errored));
 }
 
 function preloadPropsFromStylesheet(
