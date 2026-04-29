@@ -4438,9 +4438,15 @@ function erroredTask(
       const boundaryRow = boundary.row;
       if (boundaryRow !== null) {
         // Unblock the SuspenseListRow that was blocked by this boundary.
+        // finishSuspenseListRow → unblockSuspenseListRow → finishedTask reenters
+        // and decrements allPendingTasks. Pin the counter above zero so those
+        // nested calls can't trip completeAll before this outer frame's own
+        // zero check at the end.
+        request.allPendingTasks++;
         if (--boundaryRow.pendingTasks === 0) {
           finishSuspenseListRow(request, boundaryRow);
         }
+        request.allPendingTasks--;
       }
 
       // Regardless of what happens next, this boundary won't be displayed,
@@ -4955,6 +4961,12 @@ function finishedTask(
           hoistHoistables(boundaryRow.hoistables, boundary.contentState);
         }
         if (!isEligibleForOutlining(request, boundary)) {
+          // abortTaskSoft (below) and finishSuspenseListRow → unblockSuspenseListRow
+          // → finishedTask (further below) both reenter finishedTask and decrement
+          // allPendingTasks. Pin the counter above zero for the duration of these
+          // fan-outs so a nested finishedTask can't observe 0 and call completeAll
+          // before this outer call reaches its own zero check.
+          request.allPendingTasks++;
           boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
           boundary.fallbackAbortableTasks.clear();
           if (boundaryRow !== null) {
@@ -4963,6 +4975,7 @@ function finishedTask(
               finishSuspenseListRow(request, boundaryRow);
             }
           }
+          request.allPendingTasks--;
         }
 
         if (
@@ -4988,11 +5001,17 @@ function finishedTask(
               boundaryRow.next,
             );
           }
+          // finishSuspenseListRow → unblockSuspenseListRow → finishedTask reenters
+          // and decrements allPendingTasks. Pin the counter above zero so those
+          // nested calls can't trip completeAll before this outer frame's own
+          // zero check at the end.
+          request.allPendingTasks++;
           if (--boundaryRow.pendingTasks === 0) {
             // This is really unnecessary since we've already postponed the boundaries but
             // for pairity with other track+finish paths. We might end up using the hoisting.
             finishSuspenseListRow(request, boundaryRow);
           }
+          request.allPendingTasks--;
         }
       }
     } else {
