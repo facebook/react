@@ -42,6 +42,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.enableEffectEventMutationPhase,
   enableInfiniteRenderLoopDetection =
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
+  enableInfiniteRenderLoopDetectionForceThrow =
+    dynamicFeatureFlags.enableInfiniteRenderLoopDetectionForceThrow,
   enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
   enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
@@ -14294,6 +14296,10 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   null !== retryCache && retryCache.delete(wakeable);
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
+function throwForcedInfiniteRenderLoopError(root, renderLanes) {
+  null !== root && (root.errorRecoveryDisabledLanes |= renderLanes);
+  throw Error(formatProdErrorMessage(598));
+}
 function throwIfInfiniteUpdateLoopDetected(
   isFromInfiniteRenderLoopDetectionInstrumentation
 ) {
@@ -14302,16 +14308,26 @@ function throwIfInfiniteUpdateLoopDetected(
     rootWithNestedUpdates = null;
     var updateKind = nestedUpdateKind;
     nestedUpdateKind = 0;
-    if (enableInfiniteRenderLoopDetection) {
-      if (
-        1 === updateKind &&
-        !(
+    if (enableInfiniteRenderLoopDetection)
+      if (1 === updateKind)
+        if (
           isFromInfiniteRenderLoopDetectionInstrumentation ||
-          (executionContext & 2 && null !== workInProgressRoot)
+          0 !== (executionContext & 2)
         )
-      )
-        throw Error(formatProdErrorMessage(185));
-    } else throw Error(formatProdErrorMessage(185));
+          enableInfiniteRenderLoopDetectionForceThrow &&
+            throwForcedInfiniteRenderLoopError(
+              workInProgressRoot,
+              workInProgressRootRenderLanes
+            );
+        else throw Error(formatProdErrorMessage(185));
+      else
+        2 === updateKind &&
+          enableInfiniteRenderLoopDetectionForceThrow &&
+          throwForcedInfiniteRenderLoopError(
+            workInProgressRoot,
+            workInProgressRootRenderLanes
+          );
+    else throw Error(formatProdErrorMessage(185));
   }
 }
 function scheduleCallback(priorityLevel, callback) {
@@ -20574,14 +20590,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2085 = React.version;
 if (
-  "19.3.0-www-classic-ad5dfc82-20260427" !==
+  "19.3.0-www-classic-f4e0d4ed-20260429" !==
   isomorphicReactPackageVersion$jscomp$inline_2085
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2085,
-      "19.3.0-www-classic-ad5dfc82-20260427"
+      "19.3.0-www-classic-f4e0d4ed-20260429"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20599,10 +20615,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2656 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-ad5dfc82-20260427",
+  version: "19.3.0-www-classic-f4e0d4ed-20260429",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-ad5dfc82-20260427"
+  reconcilerVersion: "19.3.0-www-classic-f4e0d4ed-20260429"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2657 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -21182,4 +21198,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-ad5dfc82-20260427";
+exports.version = "19.3.0-www-classic-f4e0d4ed-20260429";

@@ -21300,6 +21300,12 @@ __DEV__ &&
       null !== retryCache && retryCache.delete(wakeable);
       retryTimedOutBoundary(boundaryFiber, retryLane);
     }
+    function throwForcedInfiniteRenderLoopError(root, renderLanes) {
+      null !== root && (root.errorRecoveryDisabledLanes |= renderLanes);
+      throw Error(
+        "Maximum update depth exceeded. This could be an infinite loop. This can happen when a component repeatedly calls setState during render phase or inside useLayoutEffect, causing infinite render loop. React limits the number of nested updates to prevent infinite loops."
+      );
+    }
     function throwIfInfiniteUpdateLoopDetected(
       isFromInfiniteRenderLoopDetectionInstrumentation
     ) {
@@ -21312,20 +21318,30 @@ __DEV__ &&
           if (updateKind === NESTED_UPDATE_SYNC_LANE)
             if (
               isFromInfiniteRenderLoopDetectionInstrumentation ||
-              (executionContext & RenderContext && null !== workInProgressRoot)
+              (executionContext & RenderContext) !== NoContext
             )
-              console.error(
-                "Maximum update depth exceeded. This could be an infinite loop. This can happen when a component repeatedly calls setState during render phase or inside useLayoutEffect, causing infinite render loop. React limits the number of nested updates to prevent infinite loops."
-              );
+              enableInfiniteRenderLoopDetectionForceThrow
+                ? throwForcedInfiniteRenderLoopError(
+                    workInProgressRoot,
+                    workInProgressRootRenderLanes
+                  )
+                : console.error(
+                    "Maximum update depth exceeded. This could be an infinite loop. This can happen when a component repeatedly calls setState during render phase or inside useLayoutEffect, causing infinite render loop. React limits the number of nested updates to prevent infinite loops."
+                  );
             else
               throw Error(
                 "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
               );
           else
             updateKind === NESTED_UPDATE_PHASE_SPAWN &&
-              console.error(
-                "Maximum update depth exceeded. This could be an infinite loop. This can happen when a component repeatedly calls setState during render phase or inside useLayoutEffect, causing infinite render loop. React limits the number of nested updates to prevent infinite loops."
-              );
+              (enableInfiniteRenderLoopDetectionForceThrow
+                ? throwForcedInfiniteRenderLoopError(
+                    workInProgressRoot,
+                    workInProgressRootRenderLanes
+                  )
+                : console.error(
+                    "Maximum update depth exceeded. This could be an infinite loop. This can happen when a component repeatedly calls setState during render phase or inside useLayoutEffect, causing infinite render loop. React limits the number of nested updates to prevent infinite loops."
+                  ));
         else
           throw Error(
             "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
@@ -28945,6 +28961,8 @@ __DEV__ &&
         dynamicFeatureFlags.enableEffectEventMutationPhase,
       enableInfiniteRenderLoopDetection =
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
+      enableInfiniteRenderLoopDetectionForceThrow =
+        dynamicFeatureFlags.enableInfiniteRenderLoopDetectionForceThrow,
       enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
       enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
@@ -33179,11 +33197,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-ad5dfc82-20260427" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-f4e0d4ed-20260429" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-ad5dfc82-20260427\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-f4e0d4ed-20260429\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33226,10 +33244,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-ad5dfc82-20260427",
+          version: "19.3.0-www-classic-f4e0d4ed-20260429",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-ad5dfc82-20260427"
+          reconcilerVersion: "19.3.0-www-classic-f4e0d4ed-20260429"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -33842,7 +33860,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-ad5dfc82-20260427";
+    exports.version = "19.3.0-www-classic-f4e0d4ed-20260429";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

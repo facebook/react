@@ -12692,6 +12692,10 @@ module.exports = function ($$$config) {
     null !== retryCache && retryCache.delete(wakeable);
     retryTimedOutBoundary(boundaryFiber, retryLane);
   }
+  function throwForcedInfiniteRenderLoopError(root, renderLanes) {
+    null !== root && (root.errorRecoveryDisabledLanes |= renderLanes);
+    throw Error(formatProdErrorMessage(598));
+  }
   function throwIfInfiniteUpdateLoopDetected(
     isFromInfiniteRenderLoopDetectionInstrumentation
   ) {
@@ -12700,16 +12704,26 @@ module.exports = function ($$$config) {
       rootWithNestedUpdates = null;
       var updateKind = nestedUpdateKind;
       nestedUpdateKind = 0;
-      if (enableInfiniteRenderLoopDetection) {
-        if (
-          1 === updateKind &&
-          !(
+      if (enableInfiniteRenderLoopDetection)
+        if (1 === updateKind)
+          if (
             isFromInfiniteRenderLoopDetectionInstrumentation ||
-            (executionContext & 2 && null !== workInProgressRoot)
+            0 !== (executionContext & 2)
           )
-        )
-          throw Error(formatProdErrorMessage(185));
-      } else throw Error(formatProdErrorMessage(185));
+            enableInfiniteRenderLoopDetectionForceThrow &&
+              throwForcedInfiniteRenderLoopError(
+                workInProgressRoot,
+                workInProgressRootRenderLanes
+              );
+          else throw Error(formatProdErrorMessage(185));
+        else
+          2 === updateKind &&
+            enableInfiniteRenderLoopDetectionForceThrow &&
+            throwForcedInfiniteRenderLoopError(
+              workInProgressRoot,
+              workInProgressRootRenderLanes
+            );
+      else throw Error(formatProdErrorMessage(185));
     }
   }
   function scheduleCallback(priorityLevel, callback) {
@@ -13220,6 +13234,8 @@ module.exports = function ($$$config) {
       dynamicFeatureFlags.enableEffectEventMutationPhase,
     enableInfiniteRenderLoopDetection =
       dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
+    enableInfiniteRenderLoopDetectionForceThrow =
+      dynamicFeatureFlags.enableInfiniteRenderLoopDetectionForceThrow,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
     enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
     enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
@@ -14468,7 +14484,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-ad5dfc82-20260427"
+      reconcilerVersion: "19.3.0-www-classic-f4e0d4ed-20260429"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
