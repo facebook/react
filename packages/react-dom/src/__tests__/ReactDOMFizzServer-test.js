@@ -6289,6 +6289,100 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
+  // Regression: finishedTask aborting remaining fallback tasks from a
+  // completed boundary could reenter itself via abortTaskSoft and fire
+  // onAllReady twice (the inner call drained allPendingTasks to 0 and
+  // called completeAll, then the outer call re-observed the same 0).
+  it('only fires onAllReady once when a boundary with an instrumented sync-resolving thenable completes', async () => {
+    // Mirrors Flight-client chunk behavior: the status-probe .then() in
+    // trackUsedThenable stays pending, but the ping-attaching .then() in
+    // renderNode's catch resolves synchronously. This reorders the work
+    // queue so the fallback task is still in fallbackAbortableTasks when
+    // the content task completes.
+    function createDeferredSyncThenable(value) {
+      let thenCallCount = 0;
+      return {
+        status: 'pending',
+        value: undefined,
+        then(resolve) {
+          thenCallCount++;
+          if (thenCallCount > 1) {
+            this.status = 'fulfilled';
+            this.value = value;
+            resolve(value);
+          }
+        },
+      };
+    }
+
+    const thenable = createDeferredSyncThenable('hello');
+    function AsyncContent() {
+      return <Text text={use(thenable)} />;
+    }
+
+    let allReadyCount = 0;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncContent />
+        </Suspense>,
+        {
+          onAllReady() {
+            allReadyCount++;
+          },
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(allReadyCount).toBe(1);
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
+  // Same bug, hit without any sync-thenable trickery: if the fallback
+  // also suspends, its spawned sub-task lives in fallbackAbortableTasks
+  // and can still be there when the content task completes first.
+  it('only fires onAllReady once when both content and fallback suspend on real promises', async () => {
+    let resolveContent;
+    const contentPromise = new Promise(r => (resolveContent = r));
+    // The fallback promise never resolves — the fallback-sub-task gets
+    // soft-aborted when the content completes, so we never need it.
+    const fallbackPromise = new Promise(() => {});
+
+    function AsyncContent() {
+      return <Text text={use(contentPromise)} />;
+    }
+    function AsyncFallback() {
+      return <Text text={use(fallbackPromise)} />;
+    }
+
+    let allReadyCount = 0;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <Suspense fallback={<AsyncFallback />}>
+          <AsyncContent />
+        </Suspense>,
+        {
+          onAllReady() {
+            allReadyCount++;
+          },
+        },
+      );
+      pipe(writable);
+    });
+
+    // Resolving content alone is enough: the fallback-sub-task is still
+    // in fallbackAbortableTasks when the content task completes, and
+    // abortTaskSoft on it reenters finishedTask.
+    await act(async () => {
+      resolveContent('hello');
+      await contentPromise;
+    });
+
+    expect(allReadyCount).toBe(1);
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
   it('promise as node', async () => {
     const promise = Promise.resolve('Hi');
     await act(async () => {
@@ -6710,7 +6804,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate enableHalt
   it('can resume a prerender that was aborted', async () => {
     const promise = new Promise(r => {});
 
@@ -9242,7 +9335,7 @@ describe('ReactDOMFizzServer', () => {
 
   it('should always flush the boundaries contributing the preamble regardless of their size', async () => {
     const longDescription =
-      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+      `I need to make this segment somewhat large because it needs to be large enough to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
 
 Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
 
@@ -9278,7 +9371,7 @@ Unfortunately that previous paragraph wasn't quite long enough so I'll continue 
 
   it('should track byte size of shells that may contribute to the preamble when determining if the blocking render exceeds the max size', async () => {
     const longDescription =
-      `I need to make this segment somewhat large because it needs to be large enought to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
+      `I need to make this segment somewhat large because it needs to be large enough to be outlined during the initial flush. Setting the progressive chunk size to near zero isn't enough because there is a fixed minimum size that we use to avoid doing the size tracking altogether and this needs to be larger than that at least.
 
 Unfortunately that previous paragraph wasn't quite long enough so I'll continue with some more prose and maybe throw on some repeated additional strings at the end for good measure.
 

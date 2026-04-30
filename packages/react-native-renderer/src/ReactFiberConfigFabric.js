@@ -40,7 +40,10 @@ import {
   type PublicTextInstance,
   type PublicRootInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {enableFragmentRefsInstanceHandles} from 'shared/ReactFeatureFlags';
+import {
+  enableFragmentRefsInstanceHandles,
+  enableFragmentRefsTextNodes,
+} from 'shared/ReactFeatureFlags';
 
 const {
   createNode,
@@ -57,13 +60,13 @@ const {
   unstable_ContinuousEventPriority: FabricContinuousPriority,
   unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
+  suspendOnActiveViewTransition: fabricSuspendOnActiveViewTransition,
 } = nativeFabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
 
 import {
-  getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
@@ -76,7 +79,6 @@ export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Conside
 export const rendererPackageName = 'react-native-renderer';
 export const extraDevToolsConfig = {
   getInspectorDataForInstance,
-  getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
 };
 
@@ -87,6 +89,11 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+export function allocateTag(): number {
+  const tag = nextReactTag;
+  nextReactTag += 2;
+  return tag;
+}
 
 type InternalInstanceHandle = Object;
 
@@ -121,7 +128,7 @@ export type TextInstance = {
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 type PublicInstanceWithFragmentHandles = PublicInstance & {
-  unstable_reactFragments?: Set<FragmentInstanceType>,
+  reactFragments?: Set<FragmentInstanceType>,
 };
 export type Container = {
   containerTag: number,
@@ -139,8 +146,6 @@ export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   getInspectorDataForInstance?: (instance: Fiber | null) => InspectorData,
-  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
-  getInspectorDataForViewTag?: (tag: number) => Object,
   getInspectorDataForViewAtPoint?: (
     inspectedView: Object,
     locationX: number,
@@ -163,6 +168,7 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
+export * from './ReactFiberConfigFabricWithViewTransition';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -180,8 +186,7 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const viewConfig = getViewConfigForType(type);
 
@@ -231,8 +236,7 @@ export function createTextInstance(
     }
   }
 
-  const tag = nextReactTag;
-  nextReactTag += 2;
+  const tag = allocateTag();
 
   const node = createNode(
     tag, // reactTag
@@ -275,6 +279,7 @@ export function getChildHostContext(
     const isInAParentText =
       type === 'AndroidTextInput' || // Android
       type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSelectableText' ||
       type === 'RCTSinglelineTextInputView' || // iOS
       type === 'RCTText' ||
       type === 'RCTVirtualText';
@@ -308,17 +313,7 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
 
   // Handle root containers
   if (instance.containerInfo != null) {
-    if (instance.containerInfo.publicInstance != null) {
-      return instance.containerInfo.publicInstance;
-    }
-  }
-
-  // For compatibility with the legacy renderer, in case it's used with Fabric
-  // in the same app.
-  // $FlowExpectedError[prop-missing]
-  if (instance._nativeTag != null) {
-    // $FlowExpectedError[incompatible-return]
-    return instance;
+    return instance.containerInfo.publicInstance;
   }
 
   return null;
@@ -418,14 +413,48 @@ export function resolveUpdatePriority(): EventPriority {
   return DefaultEventPriority;
 }
 
-export function trackSchedulerEvent(): void {}
+let schedulerEvent: void | Event = undefined;
+export function trackSchedulerEvent(): void {
+  schedulerEvent = global.event;
+}
+
+function getEventType(event: Event): null | string {
+  if (event.type) {
+    return event.type;
+  }
+
+  // Legacy implementation. RN does not define the `type` property on the event object yet.
+  // $FlowExpectedError[prop-missing]
+  const dispatchConfig = event.dispatchConfig;
+  if (
+    dispatchConfig == null ||
+    dispatchConfig.phasedRegistrationNames == null
+  ) {
+    return null;
+  }
+
+  const rawEventType =
+    dispatchConfig.phasedRegistrationNames.bubbled ||
+    dispatchConfig.phasedRegistrationNames.captured;
+  if (!rawEventType) {
+    return null;
+  }
+
+  if (rawEventType.startsWith('on')) {
+    return rawEventType.slice(2).toLowerCase();
+  }
+
+  return rawEventType.toLowerCase();
+}
 
 export function resolveEventType(): null | string {
-  return null;
+  const event = global.event;
+  return event && event !== schedulerEvent ? getEventType(event) : null;
 }
 
 export function resolveEventTimeStamp(): number {
-  return -1.1;
+  const event = global.event;
+  return event && event !== schedulerEvent ? event.timeStamp : -1.1;
 }
 
 export function shouldAttemptEagerTransition(): boolean {
@@ -627,7 +656,11 @@ export function suspendInstance(
 export function suspendOnActiveViewTransition(
   state: SuspendedState,
   container: Container,
-): void {}
+): void {
+  if (fabricSuspendOnActiveViewTransition != null) {
+    fabricSuspendOnActiveViewTransition();
+  }
+}
 
 export function waitForCommitToBeReady(
   state: SuspendedState,
@@ -818,10 +851,10 @@ function addFragmentHandleToInstance(
   fragmentInstance: FragmentInstanceType,
 ): void {
   if (enableFragmentRefsInstanceHandles) {
-    if (instance.unstable_reactFragments == null) {
-      instance.unstable_reactFragments = new Set();
+    if (instance.reactFragments == null) {
+      instance.reactFragments = new Set();
     }
-    instance.unstable_reactFragments.add(fragmentInstance);
+    instance.reactFragments.add(fragmentInstance);
   }
 }
 
@@ -847,10 +880,15 @@ export function updateFragmentInstanceFiber(
 }
 
 export function commitNewChildToFragmentInstance(
-  childInstance: Instance,
+  childInstance: Instance | TextInstance,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  const publicInstance = getPublicInstance(childInstance);
+  // Text nodes are not observable
+  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+    return;
+  }
+  const instance: Instance = (childInstance: any);
+  const publicInstance = getPublicInstance(instance);
   if (fragmentInstance._observers !== null) {
     if (publicInstance == null) {
       throw new Error('Expected to find a host node. This is a bug in React.');
@@ -869,15 +907,20 @@ export function commitNewChildToFragmentInstance(
 }
 
 export function deleteChildFromFragmentInstance(
-  childInstance: Instance,
+  childInstance: Instance | TextInstance,
   fragmentInstance: FragmentInstanceType,
 ): void {
+  // Text nodes are not observable
+  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+    return;
+  }
+  const instance: Instance = (childInstance: any);
   const publicInstance = ((getPublicInstance(
-    childInstance,
+    instance,
   ): any): PublicInstanceWithFragmentHandles);
   if (enableFragmentRefsInstanceHandles) {
-    if (publicInstance.unstable_reactFragments != null) {
-      publicInstance.unstable_reactFragments.delete(fragmentInstance);
+    if (publicInstance.reactFragments != null) {
+      publicInstance.reactFragments.delete(fragmentInstance);
     }
   }
 }

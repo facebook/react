@@ -3044,7 +3044,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate enableActivity
     it('warns when setState is called from offscreen deleted insertion effect cleanup', async () => {
       function App(props) {
         const [, setX] = useState(0);
@@ -3071,14 +3070,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       await act(() => {
         root.render(<Activity mode="hidden" />);
       });
-      assertConsoleErrorDev(
-        gate('enableHiddenSubtreeInsertionEffectCleanup')
-          ? [
-              'useInsertionEffect must not schedule updates.\n' +
-                '    in App (at **)',
-            ]
-          : [],
-      );
+      assertConsoleErrorDev([
+        'useInsertionEffect must not schedule updates.\n' +
+          '    in App (at **)',
+      ]);
 
       // Should not warn for regular effects after throw.
       function NotInsertion() {

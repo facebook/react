@@ -43,6 +43,7 @@ function Component(props) {
     t0 = props.b;
   }
   const x = t0;
+
   return x;
 }
 

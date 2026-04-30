@@ -80,6 +80,7 @@ function Component(props) {
     t3 = $[8];
   }
   const items = t3;
+
   return items;
 }
 function _temp(x) {

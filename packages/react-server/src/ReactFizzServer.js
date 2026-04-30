@@ -178,7 +178,6 @@ import {
   disableLegacyContext,
   disableLegacyContextForFunctionComponents,
   enableScopeAPI,
-  enableHalt,
   enableAsyncIterableChildren,
   enableViewTransition,
   enableFizzBlockingRender,
@@ -388,7 +387,7 @@ export opaque type Request = {
   trackedPostpones: null | PostponedHoles, // Gets set to non-null while we want to track postponed holes. I.e. during a prerender.
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
-  // Returning null/undefined will cause a defualt error message in production
+  // Returning null/undefined will cause a default error message in production
   onError: (error: mixed, errorInfo: ThrownInfo) => ?string,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
@@ -480,7 +479,7 @@ function isEligibleForOutlining(
   // outlining.
   return (
     (boundary.byteSize > 500 ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, /* flushingInShell */ false) ||
       boundary.defer) &&
     // For boundaries that can possibly contribute to the preamble we don't want to outline
     // them regardless of their size since the fallbacks should only be emitted if we've
@@ -4439,9 +4438,15 @@ function erroredTask(
       const boundaryRow = boundary.row;
       if (boundaryRow !== null) {
         // Unblock the SuspenseListRow that was blocked by this boundary.
+        // finishSuspenseListRow → unblockSuspenseListRow → finishedTask reenters
+        // and decrements allPendingTasks. Pin the counter above zero so those
+        // nested calls can't trip completeAll before this outer frame's own
+        // zero check at the end.
+        request.allPendingTasks++;
         if (--boundaryRow.pendingTasks === 0) {
           finishSuspenseListRow(request, boundaryRow);
         }
+        request.allPendingTasks--;
       }
 
       // Regardless of what happens next, this boundary won't be displayed,
@@ -4643,11 +4648,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       if (replay === null) {
         // We didn't complete the root so we have nothing to show. We can close
         // the request;
-        if (
-          enableHalt &&
-          request.trackedPostpones !== null &&
-          segment !== null
-        ) {
+        if (request.trackedPostpones !== null && segment !== null) {
           const trackedPostpones = request.trackedPostpones;
           // We are aborting a prerender and must treat the shell as halted
           // We log the error but we still resolve the prerender
@@ -4693,20 +4694,18 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // boundary the message is referring to
     const trackedPostpones = request.trackedPostpones;
     if (boundary.status !== CLIENT_RENDERED) {
-      if (enableHalt) {
-        if (trackedPostpones !== null && segment !== null) {
-          // We are aborting a prerender and must halt this boundary.
-          // We treat this like other postpones during prerendering
-          logRecoverableError(request, error, errorInfo, task.debugTask);
-          trackPostpone(request, trackedPostpones, task, segment);
-          // If this boundary was still pending then we haven't already cancelled its fallbacks.
-          // We'll need to abort the fallbacks, which will also error that parent boundary.
-          boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-            abortTask(fallbackTask, request, error),
-          );
-          boundary.fallbackAbortableTasks.clear();
-          return finishedTask(request, boundary, task.row, segment);
-        }
+      if (trackedPostpones !== null && segment !== null) {
+        // We are aborting a prerender and must halt this boundary.
+        // We treat this like other postpones during prerendering
+        logRecoverableError(request, error, errorInfo, task.debugTask);
+        trackPostpone(request, trackedPostpones, task, segment);
+        // If this boundary was still pending then we haven't already cancelled its fallbacks.
+        // We'll need to abort the fallbacks, which will also error that parent boundary.
+        boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+          abortTask(fallbackTask, request, error),
+        );
+        boundary.fallbackAbortableTasks.clear();
+        return finishedTask(request, boundary, task.row, segment);
       }
       boundary.status = CLIENT_RENDERED;
       // We are aborting a render or resume which should put boundaries
@@ -4962,6 +4961,12 @@ function finishedTask(
           hoistHoistables(boundaryRow.hoistables, boundary.contentState);
         }
         if (!isEligibleForOutlining(request, boundary)) {
+          // abortTaskSoft (below) and finishSuspenseListRow → unblockSuspenseListRow
+          // → finishedTask (further below) both reenter finishedTask and decrement
+          // allPendingTasks. Pin the counter above zero for the duration of these
+          // fan-outs so a nested finishedTask can't observe 0 and call completeAll
+          // before this outer call reaches its own zero check.
+          request.allPendingTasks++;
           boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
           boundary.fallbackAbortableTasks.clear();
           if (boundaryRow !== null) {
@@ -4970,6 +4975,7 @@ function finishedTask(
               finishSuspenseListRow(request, boundaryRow);
             }
           }
+          request.allPendingTasks--;
         }
 
         if (
@@ -4995,11 +5001,17 @@ function finishedTask(
               boundaryRow.next,
             );
           }
+          // finishSuspenseListRow → unblockSuspenseListRow → finishedTask reenters
+          // and decrements allPendingTasks. Pin the counter above zero so those
+          // nested calls can't trip completeAll before this outer frame's own
+          // zero check at the end.
+          request.allPendingTasks++;
           if (--boundaryRow.pendingTasks === 0) {
             // This is really unnecessary since we've already postponed the boundaries but
             // for pairity with other track+finish paths. We might end up using the hoisting.
             finishSuspenseListRow(request, boundaryRow);
           }
+          request.allPendingTasks--;
         }
       }
     } else {
@@ -5110,11 +5122,7 @@ function retryRenderTask(
           ? request.fatalError
           : thrownValue;
 
-    if (
-      enableHalt &&
-      request.status === ABORTING &&
-      request.trackedPostpones !== null
-    ) {
+    if (request.status === ABORTING && request.trackedPostpones !== null) {
       // We are aborting a prerender and need to halt this task.
       const trackedPostpones = request.trackedPostpones;
       const thrownInfo = getThrownInfo(task.componentStack);
@@ -5604,7 +5612,7 @@ function flushSegment(
     !flushingPartialBoundaries &&
     isEligibleForOutlining(request, boundary) &&
     (flushedByteSize + boundary.byteSize > request.progressiveChunkSize ||
-      hasSuspenseyContent(boundary.contentState) ||
+      hasSuspenseyContent(boundary.contentState, flushingShell) ||
       boundary.defer)
   ) {
     // Inlining this boundary would make the current sequence being written too large
@@ -5837,6 +5845,7 @@ function flushPartiallyCompletedSegment(
 }
 
 let flushingPartialBoundaries = false;
+let flushingShell = false;
 
 function flushCompletedQueues(
   request: Request,
@@ -5896,7 +5905,9 @@ function flushCompletedQueues(
         completedPreambleSegments,
         skipBlockingShell,
       );
+      flushingShell = true;
       flushSegment(request, destination, completedRootSegment, null);
+      flushingShell = false;
       request.completedRootSegment = null;
       const isComplete =
         request.allPendingTasks === 0 &&

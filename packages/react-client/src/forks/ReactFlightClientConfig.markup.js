@@ -14,6 +14,7 @@ import type {Thenable} from 'shared/ReactTypes';
 
 export * from 'react-markup/src/ReactMarkupLegacyClientStreamConfig.js';
 export * from 'react-client/src/ReactClientConsoleConfigPlain';
+export * from 'react-client/src/ReactClientDebugConfigPlain';
 
 export type ModuleLoading = null;
 export type ServerConsumerModuleMap = null;

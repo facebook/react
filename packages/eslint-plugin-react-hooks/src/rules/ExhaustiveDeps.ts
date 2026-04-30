@@ -21,7 +21,7 @@ import type {
   VariableDeclarator,
 } from 'estree';
 
-import { getAdditionalEffectHooksFromSettings } from '../shared/Utils';
+import {getAdditionalEffectHooksFromSettings} from '../shared/Utils';
 
 type DeclaredDependency = {
   key: string;
@@ -82,7 +82,6 @@ const rule = {
   create(context: Rule.RuleContext) {
     const rawOptions = context.options && context.options[0];
     const settings = context.settings || {};
-
 
     // Parse the `additionalHooks` regex.
     // Use rule-level additionalHooks if provided, otherwise fall back to settings
@@ -574,8 +573,12 @@ const rule = {
             continue;
           }
           // Ignore Flow type parameters
-          // @ts-expect-error We don't have flow types
-          if (def.type === 'TypeParameter') {
+          if (
+            // @ts-expect-error We don't have flow types
+            def.type === 'TypeParameter' ||
+            // @ts-expect-error Flow-specific AST node type
+            dependencyNode.parent?.type === 'GenericTypeAnnotation'
+          ) {
             continue;
           }
 

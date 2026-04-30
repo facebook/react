@@ -39,7 +39,10 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 
 const ObjectPrototype = Object.prototype;
 
-import {usedWithSSR} from './ReactFlightClientConfig';
+import {
+  usedWithSSR,
+  checkEvalAvailabilityOnceDev,
+} from './ReactFlightClientConfig';
 
 type ReactJSONValue =
   | string
@@ -189,6 +192,14 @@ export function processReply(
   let formData: null | FormData = null;
   const writtenObjects: WeakMap<Reference, string> = new WeakMap();
   let modelRoot: null | ReactServerValue = root;
+
+  if (__DEV__) {
+    // We use eval to create fake function stacks which includes Component stacks.
+    // A warning would be noise if you used Flight without Components and don't encounter
+    // errors. We're warning eagerly so that you configure your environment accordingly
+    // before you encounter an error.
+    checkEvalAvailabilityOnceDev();
+  }
 
   function serializeTypedArray(
     tag: string,
@@ -417,6 +428,14 @@ export function processReply(
               writeTemporaryReference(temporaryReferences, reference, value);
               return serializeTemporaryReferenceMarker();
             }
+          }
+          // This element is the root of a serializeModel call (e.g. JSX
+          // passed directly to encodeReply, or a promise that resolved to
+          // JSX). It was already registered as a temporary reference by
+          // serializeModel so we just need to emit the marker.
+          if (temporaryReferences !== undefined && modelRoot === value) {
+            modelRoot = null;
+            return serializeTemporaryReferenceMarker();
           }
           throw new Error(
             'React Element cannot be passed to Server Functions from the Client without a ' +
