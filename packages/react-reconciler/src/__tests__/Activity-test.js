@@ -1527,6 +1527,87 @@ describe('Activity', () => {
     expect(root).toMatchRenderedOutput(<span prop={2} />);
   });
 
+  // @gate enableActivity
+  it('getSnapshotBeforeUpdate does not run in hidden trees', async () => {
+    let setState;
+
+    class Child extends React.Component {
+      getSnapshotBeforeUpdate(prevProps) {
+        const snapshot = `snapshot-${prevProps.value}-to-${this.props.value}`;
+        Scheduler.log(`getSnapshotBeforeUpdate: ${snapshot}`);
+        return snapshot;
+      }
+      componentDidUpdate(prevProps, prevState, snapshot) {
+        Scheduler.log(`componentDidUpdate: ${snapshot}`);
+      }
+      componentDidMount() {
+        Scheduler.log('componentDidMount');
+      }
+      componentWillUnmount() {
+        Scheduler.log('componentWillUnmount');
+      }
+      render() {
+        Scheduler.log(`render: ${this.props.value}`);
+        return <span prop={this.props.value} />;
+      }
+    }
+
+    function Wrapper({show}) {
+      const [value, _setState] = useState(1);
+      setState = _setState;
+      return (
+        <Activity mode={show ? 'visible' : 'hidden'}>
+          <Child value={value} />
+        </Activity>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Initial render
+    await act(() => {
+      root.render(<Wrapper show={true} />);
+    });
+    assertLog(['render: 1', 'componentDidMount']);
+
+    // Hide the Activity
+    await act(() => {
+      root.render(<Wrapper show={false} />);
+    });
+    assertLog([
+      'componentWillUnmount',
+      'render: 1',
+      // Bugfix: snapshots for hidden trees should not need to be read.
+      ...(gate('enableViewTransition')
+        ? []
+        : ['getSnapshotBeforeUpdate: snapshot-1-to-1']),
+    ]);
+
+    // Trigger an update while hidden by calling setState
+    await act(() => {
+      setState(2);
+    });
+    assertLog([
+      'render: 2',
+      ...(gate('enableViewTransition')
+        ? []
+        : ['getSnapshotBeforeUpdate: snapshot-1-to-2']),
+    ]);
+
+    // This is treated as a new mount so the snapshot also shouldn't be read.
+    await act(() => {
+      root.render(<Wrapper show={true} />);
+    });
+    assertLog([
+      'render: 2',
+      ...(gate('enableViewTransition')
+        ? []
+        : ['getSnapshotBeforeUpdate: snapshot-2-to-2']),
+      'componentDidMount',
+    ]);
+  });
+
+  // @gate enableActivity
   it('warns if you pass a hidden prop', async () => {
     function App() {
       return (

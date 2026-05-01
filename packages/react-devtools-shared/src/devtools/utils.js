@@ -10,6 +10,7 @@
 import JSON5 from 'json5';
 
 import type {ReactFunctionLocation} from 'shared/ReactTypes';
+import {ElementTypeActivity} from 'react-devtools-shared/src/frontend/types';
 import type {
   Element,
   SuspenseNode,
@@ -44,6 +45,11 @@ export function printElement(
   const hocs =
     hocDisplayNames === null ? '' : ` [${hocDisplayNames.join('][')}]`;
 
+  let mode = '';
+  if (element.type === ElementTypeActivity) {
+    mode = ` mode="${element.isActivityHidden ? 'hidden' : 'visible'}"`;
+  }
+
   let suffix = '';
   if (includeWeight) {
     suffix = ` (${element.isCollapsed ? 1 : element.weight})`;
@@ -51,7 +57,7 @@ export function printElement(
 
   return `${'  '.repeat(element.depth + 1)}${prefix} <${
     element.displayName || 'null'
-  }${key}${name}>${hocs}${suffix}`;
+  }${key}${name}${mode}>${hocs}${suffix}`;
 }
 
 function printRects(rects: SuspenseNode['rects']): string {
@@ -64,9 +70,10 @@ function printRects(rects: SuspenseNode['rects']): string {
 
 function printSuspense(suspense: SuspenseNode): string {
   const name = ` name="${suspense.name || 'Unknown'}"`;
+  const hasUniqueSuspenders = ` uniqueSuspenders={${suspense.hasUniqueSuspenders ? 'true' : 'false'}}`;
   const printedRects = printRects(suspense.rects);
 
-  return `<Suspense${name}${printedRects}>`;
+  return `<Suspense${name}${hasUniqueSuspenders}${printedRects}>`;
 }
 
 function printSuspenseWithChildren(

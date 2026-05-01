@@ -429,6 +429,14 @@ export function processReply(
               return serializeTemporaryReferenceMarker();
             }
           }
+          // This element is the root of a serializeModel call (e.g. JSX
+          // passed directly to encodeReply, or a promise that resolved to
+          // JSX). It was already registered as a temporary reference by
+          // serializeModel so we just need to emit the marker.
+          if (temporaryReferences !== undefined && modelRoot === value) {
+            modelRoot = null;
+            return serializeTemporaryReferenceMarker();
+          }
           throw new Error(
             'React Element cannot be passed to Server Functions from the Client without a ' +
               'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
