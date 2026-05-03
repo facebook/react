@@ -274,26 +274,44 @@ export function useAsyncEffect(
 
   useEffect(() => {
     const controller = new AbortControllerLocal();
+    let isActive = true;
+    let effectCleanup: (() => void) | void = undefined;
+
+    if (typeof cleanupRef.current === 'function') {
+      cleanupRef.current();
+      cleanupRef.current = undefined;
+    }
 
     const result = create(controller.signal);
 
     Promise.resolve(result).then(
       cleanup => {
-        if (!controller.signal.aborted) {
+        if (isActive) {
+          effectCleanup = cleanup;
           cleanupRef.current = cleanup;
+        } else {
+          if (typeof cleanup === 'function') {
+            cleanup();
+          }
         }
       },
       error => {
-        if (!controller.signal.aborted) {
+        if (isActive) {
           throw error;
         }
       },
     );
 
     return () => {
+      isActive = false;
       controller.abort();
-      if (typeof cleanupRef.current === 'function') {
-        cleanupRef.current();
+
+      if (typeof effectCleanup === 'function') {
+        effectCleanup();
+        effectCleanup = undefined;
+      }
+
+      if (cleanupRef.current === effectCleanup) {
         cleanupRef.current = undefined;
       }
     };
