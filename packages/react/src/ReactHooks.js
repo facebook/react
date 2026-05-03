@@ -18,6 +18,24 @@ import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+const AbortControllerLocal: typeof AbortController =
+  typeof AbortController !== 'undefined'
+    ? AbortController
+    : function AbortControllerShim() {
+        const listeners: Array<() => void> = [];
+        const signal = (this.signal = {
+          aborted: false as boolean,
+          addEventListener: (type: string, listener: () => void) => {
+            listeners.push(listener);
+          },
+        });
+
+        this.abort = () => {
+          signal.aborted = true;
+          listeners.forEach(listener => listener());
+        };
+      };
+
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
@@ -238,4 +256,46 @@ export function useActionState<S, P>(
 ): [Awaited<S>, (P) => void, boolean] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useActionState(action, initialState, permalink);
+}
+
+export function useAsyncEffect(
+  create: (signal: AbortSignal) => (() => void) | void | Promise<(() => void) | void>,
+  deps: Array<mixed> | void | null,
+): void {
+  if (__DEV__) {
+    if (create == null) {
+      console.warn(
+        'React Hook useAsyncEffect requires an effect callback. Did you forget to pass a callback to the hook?',
+      );
+    }
+  }
+
+  const cleanupRef = useRef<(() => void) | void>(undefined);
+
+  useEffect(() => {
+    const controller = new AbortControllerLocal();
+
+    const result = create(controller.signal);
+
+    Promise.resolve(result).then(
+      cleanup => {
+        if (!controller.signal.aborted) {
+          cleanupRef.current = cleanup;
+        }
+      },
+      error => {
+        if (!controller.signal.aborted) {
+          throw error;
+        }
+      },
+    );
+
+    return () => {
+      controller.abort();
+      if (typeof cleanupRef.current === 'function') {
+        cleanupRef.current();
+        cleanupRef.current = undefined;
+      }
+    };
+  }, deps);
 }

@@ -57,6 +57,7 @@ import {
   use,
   useOptimistic,
   useActionState,
+  useAsyncEffect,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition, startGestureTransition} from './ReactStartTransition';
@@ -88,6 +89,7 @@ export {
   useContext,
   useEffect,
   useEffectEvent,
+  useAsyncEffect,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,

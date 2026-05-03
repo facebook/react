@@ -52,6 +52,7 @@ export {
   useDebugValue,
   useDeferredValue,
   useEffect,
+  useAsyncEffect,
   useId,
   useImperativeHandle,
   useInsertionEffect,

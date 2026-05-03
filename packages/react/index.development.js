@@ -59,6 +59,7 @@ export {
   useDeferredValue,
   useEffect,
   useEffectEvent,
+  useAsyncEffect,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,
