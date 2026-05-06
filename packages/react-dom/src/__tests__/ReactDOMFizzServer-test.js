@@ -6289,6 +6289,100 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('Hi');
   });
 
+  // Regression: finishedTask aborting remaining fallback tasks from a
+  // completed boundary could reenter itself via abortTaskSoft and fire
+  // onAllReady twice (the inner call drained allPendingTasks to 0 and
+  // called completeAll, then the outer call re-observed the same 0).
+  it('only fires onAllReady once when a boundary with an instrumented sync-resolving thenable completes', async () => {
+    // Mirrors Flight-client chunk behavior: the status-probe .then() in
+    // trackUsedThenable stays pending, but the ping-attaching .then() in
+    // renderNode's catch resolves synchronously. This reorders the work
+    // queue so the fallback task is still in fallbackAbortableTasks when
+    // the content task completes.
+    function createDeferredSyncThenable(value) {
+      let thenCallCount = 0;
+      return {
+        status: 'pending',
+        value: undefined,
+        then(resolve) {
+          thenCallCount++;
+          if (thenCallCount > 1) {
+            this.status = 'fulfilled';
+            this.value = value;
+            resolve(value);
+          }
+        },
+      };
+    }
+
+    const thenable = createDeferredSyncThenable('hello');
+    function AsyncContent() {
+      return <Text text={use(thenable)} />;
+    }
+
+    let allReadyCount = 0;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncContent />
+        </Suspense>,
+        {
+          onAllReady() {
+            allReadyCount++;
+          },
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(allReadyCount).toBe(1);
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
+  // Same bug, hit without any sync-thenable trickery: if the fallback
+  // also suspends, its spawned sub-task lives in fallbackAbortableTasks
+  // and can still be there when the content task completes first.
+  it('only fires onAllReady once when both content and fallback suspend on real promises', async () => {
+    let resolveContent;
+    const contentPromise = new Promise(r => (resolveContent = r));
+    // The fallback promise never resolves — the fallback-sub-task gets
+    // soft-aborted when the content completes, so we never need it.
+    const fallbackPromise = new Promise(() => {});
+
+    function AsyncContent() {
+      return <Text text={use(contentPromise)} />;
+    }
+    function AsyncFallback() {
+      return <Text text={use(fallbackPromise)} />;
+    }
+
+    let allReadyCount = 0;
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <Suspense fallback={<AsyncFallback />}>
+          <AsyncContent />
+        </Suspense>,
+        {
+          onAllReady() {
+            allReadyCount++;
+          },
+        },
+      );
+      pipe(writable);
+    });
+
+    // Resolving content alone is enough: the fallback-sub-task is still
+    // in fallbackAbortableTasks when the content task completes, and
+    // abortTaskSoft on it reenters finishedTask.
+    await act(async () => {
+      resolveContent('hello');
+      await contentPromise;
+    });
+
+    expect(allReadyCount).toBe(1);
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
   it('promise as node', async () => {
     const promise = Promise.resolve('Hi');
     await act(async () => {
