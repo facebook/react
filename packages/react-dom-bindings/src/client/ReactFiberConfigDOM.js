@@ -56,6 +56,9 @@ import {
   getResourcesFromRoot,
   isMarkedHoistable,
   markNodeAsHoistable,
+  markNodeAsPendingLoad,
+  clearPendingLoadOnNode,
+  isNodePendingLoad,
   isOwnedInstance,
 } from './ReactDOMComponentTree';
 import {
@@ -5012,9 +5015,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         setInitialProperties(instance, 'link', preloadProps);
         if (as === 'style') {
           // Stash a loading state on the preload link. it will clean itself up once settled
-          (instance: any)._p = true;
+          markNodeAsPendingLoad(instance);
           instance.onload = instance.onerror = () => {
-            (instance: any)._p = undefined;
+            clearPendingLoadOnNode(instance);
           };
         }
         markNodeAsHoistable(instance);
@@ -5548,8 +5551,7 @@ function preloadStylesheet(
     getPreloadStylesheetSelectorFromKey(key),
   );
   if (instance) {
-    const isPending: true | void = (instance: any)._p;
-    if (!isPending) {
+    if (!isNodePendingLoad(instance)) {
       // If we find a preload already it was SSR'd and we won't have an actual
       // loading state to track. For now we will just assume it is loaded
       state.loading = Loaded;
@@ -5559,8 +5561,11 @@ function preloadStylesheet(
     }
   } else {
     instance = ownerDocument.createElement('link');
-    (instance: any)._p = true;
-    instance.onload = instance.onerror = () => ((instance: any)._p = undefined);
+    markNodeAsPendingLoad(instance);
+    instance.onload = instance.onerror = clearPendingLoadOnNode.bind(
+      null,
+      instance,
+    );
     setInitialProperties(instance, 'link', preloadProps);
     markNodeAsHoistable(instance);
     (ownerDocument.head: any).appendChild(instance);
