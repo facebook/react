@@ -75,34 +75,32 @@ function getValue() {
 }
 
 function ImageLibraryPicker() {
-  const $ = _c(5);
+  const $ = _c(3);
   const boolString = getValue();
   const [, setImages] = useState("");
   useState(JSON.parse(boolString));
   let t0;
-  if ($[0] !== setImages) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       setImages("");
     };
-    $[0] = setImages;
-    $[1] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
   const search = t0;
   let t1;
   let t2;
-  if ($[2] !== search) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       search();
     };
     t2 = [search];
-    $[2] = search;
-    $[3] = t1;
-    $[4] = t2;
+    $[1] = t1;
+    $[2] = t2;
   } else {
-    t1 = $[3];
-    t2 = $[4];
+    t1 = $[1];
+    t2 = $[2];
   }
   useEffect(t1, t2);
 
