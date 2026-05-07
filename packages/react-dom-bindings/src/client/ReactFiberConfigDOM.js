@@ -5359,17 +5359,29 @@ export function getResource(
             }
           }
 
-          if (!preloadPropsMap.has(key)) {
-            const preloadProps = preloadPropsFromStylesheet(qualifiedProps);
+          let preloadProps: PreloadProps;
+          const existingPreloadProps = preloadPropsMap.get(key);
+          if (existingPreloadProps) {
+            // A matching preload was already registered (e.g. via
+            // ReactDOM.preload). Reuse its props so we still query for the
+            // existing <link rel="preload"> below and update state.loading.
+            preloadProps = (existingPreloadProps: any);
+          } else {
+            preloadProps = preloadPropsFromStylesheet(qualifiedProps);
             preloadPropsMap.set(key, preloadProps);
-            if (!instance) {
-              preloadStylesheet(
-                ownerDocument,
-                key,
-                preloadProps,
-                resource.state,
-              );
-            }
+          }
+          if (!instance) {
+            // Always look up (or create) the matching preload regardless of
+            // whether preloadPropsMap already had an entry. Otherwise a prior
+            // ReactDOM.preload call would short-circuit this branch and leave
+            // state.loading at NotLoaded, causing the boundary to suspend
+            // even though the bytes are already in the browser's cache.
+            preloadStylesheet(
+              ownerDocument,
+              key,
+              preloadProps,
+              resource.state,
+            );
           }
         }
         if (currentProps && currentResource === null) {
