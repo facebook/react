@@ -1045,6 +1045,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::Expression::NumericLiteral(n) => Expression::NumericLiteral(NumericLiteral {
                 base: self.make_base_node(n.span),
                 value: n.value,
+                extra: None,
             }),
             oxc::Expression::BigIntLiteral(b) => Expression::BigIntLiteral(BigIntLiteral {
                 base: self.make_base_node(b.span),
@@ -2784,6 +2785,7 @@ macro_rules! impl_expression_like {
                     Self::NumericLiteral(e) => Expression::NumericLiteral(NumericLiteral {
                         base: ctx.make_base_node(e.span),
                         value: e.value,
+                        extra: None,
                     }),
                     Self::BigIntLiteral(e) => Expression::BigIntLiteral(BigIntLiteral {
                         base: ctx.make_base_node(e.span),

@@ -412,7 +412,7 @@ fn lower_member_expression_with_object(
     if !member.computed {
         let prop_literal = match member.property.as_ref() {
             Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
-            Expression::NumericLiteral(lit) => PropertyLiteral::Number(FloatValue::new(lit.value)),
+            Expression::NumericLiteral(lit) => PropertyLiteral::Number(FloatValue::new(lit.precise_value())),
             _ => {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
@@ -447,7 +447,7 @@ fn lower_member_expression_with_object(
         })
     } else {
         if let Expression::NumericLiteral(lit) = member.property.as_ref() {
-            let prop_literal = PropertyLiteral::Number(FloatValue::new(lit.value));
+            let prop_literal = PropertyLiteral::Number(FloatValue::new(lit.precise_value()));
             let value = InstructionValue::PropertyLoad {
                 object: object.clone(),
                 property: prop_literal.clone(),
@@ -489,7 +489,7 @@ fn lower_member_expression_impl(
         // Non-computed: property must be an identifier or numeric literal
         let prop_literal = match member.property.as_ref() {
             Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
-            Expression::NumericLiteral(lit) => PropertyLiteral::Number(FloatValue::new(lit.value)),
+            Expression::NumericLiteral(lit) => PropertyLiteral::Number(FloatValue::new(lit.precise_value())),
             _ => {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
@@ -525,7 +525,7 @@ fn lower_member_expression_impl(
     } else {
         // Computed: check for numeric literal first (treated as PropertyLoad in TS)
         if let Expression::NumericLiteral(lit) = member.property.as_ref() {
-            let prop_literal = PropertyLiteral::Number(FloatValue::new(lit.value));
+            let prop_literal = PropertyLiteral::Number(FloatValue::new(lit.precise_value()));
             let value = InstructionValue::PropertyLoad {
                 object: object.clone(),
                 property: prop_literal.clone(),
@@ -591,7 +591,7 @@ fn lower_expression(
         Expression::NumericLiteral(lit) => {
             let loc = convert_opt_loc(&lit.base.loc);
             Ok(InstructionValue::Primitive {
-                value: PrimitiveValue::Number(FloatValue::new(lit.value)),
+                value: PrimitiveValue::Number(FloatValue::new(lit.precise_value())),
                 loc,
             })
         }
@@ -4172,7 +4172,7 @@ fn lower_assignment(
                             builder,
                             InstructionValue::PropertyStore {
                             object,
-                            property: PropertyLiteral::Number(FloatValue::new(num.value)),
+                            property: PropertyLiteral::Number(FloatValue::new(num.precise_value())),
                             value,
                             loc,
                             },

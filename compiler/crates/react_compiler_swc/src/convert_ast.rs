@@ -632,7 +632,7 @@ impl<'a> ConvertCtx<'a> {
             swc::Lit::Str(s) => Expression::StringLiteral(StringLiteral { base: self.make_base_node(s.span), value: wtf8_to_string(&s.value) }),
             swc::Lit::Bool(b) => Expression::BooleanLiteral(BooleanLiteral { base: self.make_base_node(b.span), value: b.value }),
             swc::Lit::Null(n) => Expression::NullLiteral(NullLiteral { base: self.make_base_node(n.span) }),
-            swc::Lit::Num(n) => Expression::NumericLiteral(NumericLiteral { base: self.make_base_node(n.span), value: n.value }),
+            swc::Lit::Num(n) => Expression::NumericLiteral(NumericLiteral { base: self.make_base_node(n.span), value: n.value, extra: None }),
             swc::Lit::BigInt(b) => Expression::BigIntLiteral(BigIntLiteral { base: self.make_base_node(b.span), value: b.value.to_string() }),
             swc::Lit::Regex(r) => Expression::RegExpLiteral(RegExpLiteral { base: self.make_base_node(r.span), pattern: r.exp.to_string(), flags: r.flags.to_string() }),
             swc::Lit::JSXText(t) => Expression::StringLiteral(StringLiteral { base: self.make_base_node(t.span), value: t.value.to_string() }),
@@ -1259,7 +1259,7 @@ impl<'a> ConvertCtx<'a> {
         match key {
             swc::PropName::Ident(id) => Expression::Identifier(Identifier { base: self.make_base_node(id.span), name: id.sym.to_string(), type_annotation: None, optional: None, decorators: None }),
             swc::PropName::Str(s) => Expression::StringLiteral(StringLiteral { base: self.make_base_node(s.span), value: wtf8_to_string(&s.value) }),
-            swc::PropName::Num(n) => Expression::NumericLiteral(NumericLiteral { base: self.make_base_node(n.span), value: n.value }),
+            swc::PropName::Num(n) => Expression::NumericLiteral(NumericLiteral { base: self.make_base_node(n.span), value: n.value, extra: None }),
             swc::PropName::Computed(c) => self.convert_expression(&c.expr),
             swc::PropName::BigInt(b) => Expression::BigIntLiteral(BigIntLiteral { base: self.make_base_node(b.span), value: b.value.to_string() }),
         }

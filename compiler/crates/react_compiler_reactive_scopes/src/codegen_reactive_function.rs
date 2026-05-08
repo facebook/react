@@ -181,6 +181,7 @@ pub fn codegen_function(
                         arguments: vec![Expression::NumericLiteral(NumericLiteral {
                             base: BaseNode::typed("NumericLiteral"),
                             value: cache_count as f64,
+                            extra: None,
                         })],
                         type_parameters: None,
                         type_arguments: None,
@@ -208,6 +209,7 @@ pub fn codegen_function(
                         property: Box::new(Expression::NumericLiteral(NumericLiteral {
                             base: BaseNode::typed("NumericLiteral"),
                             value: cache_index as f64,
+                            extra: None,
                         })),
                         computed: true,
                     })),
@@ -230,6 +232,7 @@ pub fn codegen_function(
                                     init: Some(Box::new(Expression::NumericLiteral(NumericLiteral {
                                         base: BaseNode::typed("NumericLiteral"),
                                         value: 0.0,
+                                        extra: None,
                                     }))),
                                     definite: None,
                                 }],
@@ -243,6 +246,7 @@ pub fn codegen_function(
                                 right: Box::new(Expression::NumericLiteral(NumericLiteral {
                                     base: BaseNode::typed("NumericLiteral"),
                                     value: cache_count as f64,
+                                    extra: None,
                                 })),
                             }))),
                             update: Some(Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
@@ -252,6 +256,7 @@ pub fn codegen_function(
                                 right: Box::new(Expression::NumericLiteral(NumericLiteral {
                                     base: BaseNode::typed("NumericLiteral"),
                                     value: 1.0,
+                                    extra: None,
                                 })),
                             }))),
                             body: Box::new(Statement::BlockStatement(BlockStatement {
@@ -300,6 +305,7 @@ pub fn codegen_function(
                                     property: Box::new(Expression::NumericLiteral(NumericLiteral {
                                         base: BaseNode::typed("NumericLiteral"),
                                         value: cache_index as f64,
+                                        extra: None,
                                     })),
                                     computed: true,
                                 })),
@@ -688,6 +694,7 @@ fn codegen_reactive_scope(
                 property: Box::new(Expression::NumericLiteral(NumericLiteral {
                     base: BaseNode::typed("NumericLiteral"),
                     value: index as f64,
+                    extra: None,
                 })),
                 computed: true,
             })),
@@ -712,6 +719,7 @@ fn codegen_reactive_scope(
                             property: Box::new(Expression::NumericLiteral(NumericLiteral {
                                 base: BaseNode::typed("NumericLiteral"),
                                 value: index as f64,
+                                extra: None,
                             })),
                             computed: true,
                         },
@@ -784,6 +792,7 @@ fn codegen_reactive_scope(
                 property: Box::new(Expression::NumericLiteral(NumericLiteral {
                     base: BaseNode::typed("NumericLiteral"),
                     value: first_idx as f64,
+                    extra: None,
                 })),
                 computed: true,
             })),
@@ -823,6 +832,7 @@ fn codegen_reactive_scope(
                             property: Box::new(Expression::NumericLiteral(NumericLiteral {
                                 base: BaseNode::typed("NumericLiteral"),
                                 value: *index as f64,
+                                extra: None,
                             })),
                             computed: true,
                         },
@@ -847,6 +857,7 @@ fn codegen_reactive_scope(
                             property: Box::new(Expression::NumericLiteral(NumericLiteral {
                                 base: BaseNode::typed("NumericLiteral"),
                                 value: *index as f64,
+                                extra: None,
                             })),
                             computed: true,
                         },
@@ -2597,6 +2608,7 @@ fn codegen_object_property_key(
             Ok(Expression::NumericLiteral(NumericLiteral {
                 base: BaseNode::typed("NumericLiteral"),
                 value: name.value(),
+                extra: None,
             }))
         }
     }
@@ -3511,12 +3523,14 @@ fn codegen_primitive_value(
                     argument: Box::new(Expression::NumericLiteral(NumericLiteral {
                         base: base_node_with_loc("NumericLiteral", loc),
                         value: -f,
+                        extra: None,
                     })),
                 })
             } else {
                 Expression::NumericLiteral(NumericLiteral {
                     base: base_node_with_loc("NumericLiteral", loc),
                     value: f,
+                    extra: None,
                 })
             }
         }
@@ -3542,6 +3556,7 @@ fn property_literal_to_expression(prop: &PropertyLiteral) -> (Expression, bool) 
             Expression::NumericLiteral(NumericLiteral {
                 base: BaseNode::typed("NumericLiteral"),
                 value: n.value(),
+                extra: None,
             }),
             true,
         ),
@@ -3765,6 +3780,7 @@ fn wrap_hook_call_with_guard(
                 arguments: vec![Expression::NumericLiteral(NumericLiteral {
                     base: BaseNode::typed("NumericLiteral"),
                     value: kind as f64,
+                    extra: None,
                 })],
                 type_parameters: None,
                 type_arguments: None,
@@ -3836,6 +3852,7 @@ fn create_function_body_hook_guard(
                 arguments: vec![Expression::NumericLiteral(NumericLiteral {
                     base: BaseNode::typed("NumericLiteral"),
                     value: kind as f64,
+                    extra: None,
                 })],
                 type_parameters: None,
                 type_arguments: None,
