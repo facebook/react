@@ -189,6 +189,33 @@ impl ScopeInfo {
         None
     }
 
+    /// Like find_binding_in_descendants, but returns the BindingData with its id
+    /// for use in resolve_binding.
+    pub fn find_binding_id_in_descendants(&self, name: &str, ancestor: ScopeId) -> Option<(BindingId, &BindingData)> {
+        let mut descendants = std::collections::HashSet::new();
+        descendants.insert(ancestor);
+        let mut changed = true;
+        while changed {
+            changed = false;
+            for (i, scope) in self.scopes.iter().enumerate() {
+                let sid = ScopeId(i as u32);
+                if let Some(parent) = scope.parent {
+                    if descendants.contains(&parent) && !descendants.contains(&sid) {
+                        descendants.insert(sid);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        for sid in &descendants {
+            let scope = &self.scopes[sid.0 as usize];
+            if let Some(&id) = scope.bindings.get(name) {
+                return Some((id, &self.bindings[id.0 as usize]));
+            }
+        }
+        None
+    }
+
     /// Get all bindings declared in a scope (for hoisting iteration).
     pub fn scope_bindings(&self, scope_id: ScopeId) -> impl Iterator<Item = &BindingData> {
         self.scopes[scope_id.0 as usize]

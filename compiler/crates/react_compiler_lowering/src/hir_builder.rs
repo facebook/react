@@ -1007,9 +1007,23 @@ impl<'a> HirBuilder<'a> {
                     // params with the same start position (e.g., both _$$empty_props_placeholder$$
                     // and ref have start=106 after the Flow component transform).
                     let resolved_binding = if binding.name != name {
-                        self.scope_info
-                            .resolve_reference_by_name(name, start_offset)
-                            .unwrap_or(binding)
+                        // First try: walk UP the scope chain from the binding's scope
+                        if let Some(b) = self.scope_info.resolve_reference_by_name(name, start_offset) {
+                            b
+                        }
+                        // Second try: search ALL descendant scopes from the function scope.
+                        // This handles synthetic match IIFE params ($$gen$m0, $$gen$m1) that
+                        // share position 0 and may be in sibling scopes, not ancestor/descendant.
+                        else if let Some(b) = self.scope_info.find_binding_in_descendants(name, self.function_scope()) {
+                            b
+                        }
+                        // Not found anywhere: truly a global (e.g., Error from match
+                        // exhaustive check at synthetic position 0)
+                        else {
+                            return Ok(VariableBinding::Global {
+                                name: name.to_string(),
+                            });
+                        }
                     } else {
                         binding
                     };

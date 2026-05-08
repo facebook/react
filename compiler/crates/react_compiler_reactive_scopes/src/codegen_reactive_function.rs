@@ -3515,7 +3515,20 @@ fn codegen_primitive_value(
     match value {
         PrimitiveValue::Number(n) => {
             let f = n.value();
-            if f < 0.0 {
+            if f.is_nan() {
+                Expression::Identifier(make_identifier("NaN"))
+            } else if f.is_infinite() {
+                if f > 0.0 {
+                    Expression::Identifier(make_identifier("Infinity"))
+                } else {
+                    Expression::UnaryExpression(ast_expr::UnaryExpression {
+                        base: base_node_with_loc("UnaryExpression", loc),
+                        operator: AstUnaryOperator::Neg,
+                        prefix: true,
+                        argument: Box::new(Expression::Identifier(make_identifier("Infinity"))),
+                    })
+                }
+            } else if f < 0.0 {
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
                     base: base_node_with_loc("UnaryExpression", loc),
                     operator: AstUnaryOperator::Neg,

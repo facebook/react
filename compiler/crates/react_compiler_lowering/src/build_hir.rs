@@ -1939,14 +1939,17 @@ fn lower_expression(
                     if is_local_binding {
                         // Record as a Diagnostic (not ErrorDetail) to match TS behavior
                         // where CompilerError.invariant creates a CompilerDiagnostic.
+                        // TS invariant() throws immediately, so only the first fbt error
+                        // is reported. We return Err to match this behavior.
                         let reason = format!("<{}> tags should be module-level imports", tag_name);
-                        builder.record_diagnostic(
+                        return Err(
                             CompilerDiagnostic::new(ErrorCategory::Invariant, &reason, None)
                                 .with_detail(CompilerDiagnosticDetail::Error {
                                     loc: id_loc.clone(),
                                     message: Some(reason.clone()),
                                     identifier_name: None,
-                                }),
+                                })
+                                .into(),
                         );
                     }
                 }
@@ -2816,11 +2819,30 @@ fn lower_statement(
                 } else if let PatternLike::Identifier(id) = &declarator.id {
                     // No init: emit DeclareLocal or DeclareContext
                     let id_loc = convert_opt_loc(&id.base.loc);
-                    let binding = builder.resolve_identifier(
+                    let mut binding = builder.resolve_identifier(
                         &id.name,
                         id.base.start.unwrap_or(0),
                         id_loc.clone(),
                     )?;
+                    if !matches!(binding, VariableBinding::Identifier { .. }) {
+                        // Position-based resolution failed (synthetic $$gen vars
+                        // at position 0). Try scope lookup including descendants.
+                        if let Some((binding_id, binding_data)) = builder.scope_info().find_binding_id_in_descendants(
+                            &id.name,
+                            builder.function_scope(),
+                        ) {
+                            let binding_kind = crate::convert_binding_kind(&binding_data.kind);
+                            let identifier = builder.resolve_binding_with_loc(
+                                &id.name,
+                                binding_id,
+                                id_loc.clone(),
+                            )?;
+                            binding = VariableBinding::Identifier {
+                                identifier,
+                                binding_kind,
+                            };
+                        }
+                    }
                     match binding {
                         VariableBinding::Identifier { identifier, .. } => {
                             // Update the identifier's loc to the declaration site
@@ -4041,7 +4063,24 @@ fn lower_identifier_for_assignment(
     name: &str,
     start: u32,
 ) -> Result<Option<IdentifierForAssignment>, CompilerError> {
-    let binding = builder.resolve_identifier(name, start, ident_loc.clone())?;
+    let mut binding = builder.resolve_identifier(name, start, ident_loc.clone())?;
+    if !matches!(binding, VariableBinding::Identifier { .. }) && kind != InstructionKind::Reassign {
+        if let Some((binding_id, binding_data)) = builder.scope_info().find_binding_id_in_descendants(
+            name,
+            builder.function_scope(),
+        ) {
+            let bk = crate::convert_binding_kind(&binding_data.kind);
+            let identifier = builder.resolve_binding_with_loc(
+                name,
+                binding_id,
+                ident_loc.clone(),
+            )?;
+            binding = VariableBinding::Identifier {
+                identifier,
+                binding_kind: bk,
+            };
+        }
+    }
     match binding {
         VariableBinding::Identifier {
             identifier,
@@ -5630,10 +5669,29 @@ fn lower_inner(
             react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
                 let start = ident.base.start.unwrap_or(0);
                 let param_loc = convert_opt_loc(&ident.base.loc);
-                let binding = builder.resolve_identifier(&ident.name, start, param_loc.clone())?;
+                let mut binding = builder.resolve_identifier(&ident.name, start, param_loc.clone())?;
+                if !matches!(binding, VariableBinding::Identifier { .. }) {
+                    // Position-based resolution failed (common for synthetic params
+                    // like $$gen$m0 at position 0). Try lookup in function scope
+                    // and descendants.
+                    if let Some((binding_id, binding_data)) = builder.scope_info().find_binding_id_in_descendants(
+                        &ident.name,
+                        builder.function_scope(),
+                    ) {
+                        let binding_kind = crate::convert_binding_kind(&binding_data.kind);
+                        let identifier = builder.resolve_binding_with_loc(
+                            &ident.name,
+                            binding_id,
+                            param_loc.clone(),
+                        )?;
+                        binding = VariableBinding::Identifier {
+                            identifier,
+                            binding_kind,
+                        };
+                    }
+                }
                 match binding {
                     VariableBinding::Identifier { identifier, .. } => {
-                        // Set the identifier's loc from the declaration (param) site
                         builder.set_identifier_declaration_loc(identifier, &param_loc);
                         let place = Place {
                             identifier,
