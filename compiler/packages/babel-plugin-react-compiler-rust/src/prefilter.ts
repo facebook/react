@@ -30,7 +30,11 @@ export function hasReactLikeFunctions(program: NodePath<t.Program>): boolean {
     FunctionDeclaration(path) {
       if (found) return;
       const name = path.node.id?.name;
-      if ((name && isReactLikeName(name)) || hasOptInDirective(path.node)) {
+      if (
+        (name && isReactLikeName(name)) ||
+        hasOptInDirective(path.node) ||
+        isComponentOrHookDeclaration(path.node)
+      ) {
         found = true;
         path.stop();
       }
@@ -116,6 +120,13 @@ function hasOptInDirective(
 
 function isReactLikeName(name: string): boolean {
   return /^[A-Z]/.test(name) || /^use[A-Z0-9]/.test(name);
+}
+
+function isComponentOrHookDeclaration(node: t.FunctionDeclaration): boolean {
+  return (
+    Object.prototype.hasOwnProperty.call(node, '__componentDeclaration') ||
+    Object.prototype.hasOwnProperty.call(node, '__hookDeclaration')
+  );
 }
 
 /**
