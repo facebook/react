@@ -171,10 +171,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const babelBinding = ownBindings[name];
       if (!babelBinding) continue;
 
-      // Validate identifier name (match TS compiler's makeIdentifierName/validateIdentifierName).
-      // The trailing period in the message is intentional - it matches the TS compiler's
-      // CompilerDiagnostic.toString() format: "reason. description."
-      if (isReservedWord(name)) {
+      if (isAlwaysReservedWord(name)) {
         throw new Error(
           `Expected a non-reserved identifier name. \`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name.`,
         );
@@ -266,14 +263,16 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       }
     }
 
-    // Map AST node to scope
+    // Map AST node to scope.
+    // Skip zero-width nodes (e.g., synthetic IIFEs from Hermes match desugar
+    // where start === end === 0) — they would collide with real scopes at position 0.
+    // The Rust compiler handles missing entries via parent-based scope lookup.
     if (path != null) {
       const nodeStart = path.node.start;
-      if (nodeStart != null) {
+      const nodeEnd = path.node.end;
+      if (nodeStart != null && nodeEnd != null && nodeEnd > nodeStart) {
         nodeToScope[nodeStart] = scopeId;
-        if (path.node.end != null) {
-          nodeToScopeEnd[nodeStart] = path.node.end;
-        }
+        nodeToScopeEnd[nodeStart] = nodeEnd;
       }
     }
 
@@ -379,16 +378,20 @@ function getImportData(binding: {
   return undefined;
 }
 
-// Reserved words matching Babel's t.isValidIdentifier check
-const RESERVED_WORDS = new Set([
+const ALWAYS_RESERVED_WORDS = new Set([
   'break',
   'case',
   'catch',
   'continue',
   'debugger',
   'default',
+  'delete',
   'do',
   'else',
+  'enum',
+  'export',
+  'extends',
+  'false',
   'finally',
   'for',
   'function',
@@ -396,10 +399,13 @@ const RESERVED_WORDS = new Set([
   'in',
   'instanceof',
   'new',
+  'null',
   'return',
+  'super',
   'switch',
   'this',
   'throw',
+  'true',
   'try',
   'typeof',
   'var',
@@ -408,26 +414,8 @@ const RESERVED_WORDS = new Set([
   'with',
   'class',
   'const',
-  'enum',
-  'export',
-  'extends',
-  'import',
-  'super',
-  'implements',
-  'interface',
-  'let',
-  'package',
-  'private',
-  'protected',
-  'public',
-  'static',
-  'yield',
-  'null',
-  'true',
-  'false',
-  'delete',
 ]);
 
-function isReservedWord(name: string): boolean {
-  return RESERVED_WORDS.has(name);
+function isAlwaysReservedWord(name: string): boolean {
+  return ALWAYS_RESERVED_WORDS.has(name);
 }

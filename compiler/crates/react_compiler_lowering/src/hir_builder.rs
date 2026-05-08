@@ -20,54 +20,14 @@ use crate::identifier_loc_index::IdentifierLocIndex;
 // Reserved word check (matches TS isReservedWord)
 // ---------------------------------------------------------------------------
 
-fn is_reserved_word(s: &str) -> bool {
-    matches!(
-        s,
-        "break"
-            | "case"
-            | "catch"
-            | "continue"
-            | "debugger"
-            | "default"
-            | "do"
-            | "else"
-            | "finally"
-            | "for"
-            | "function"
-            | "if"
-            | "in"
-            | "instanceof"
-            | "new"
-            | "return"
-            | "switch"
-            | "this"
-            | "throw"
-            | "try"
-            | "typeof"
-            | "var"
-            | "void"
-            | "while"
-            | "with"
-            | "class"
-            | "const"
-            | "enum"
-            | "export"
-            | "extends"
-            | "import"
-            | "super"
-            | "implements"
-            | "interface"
-            | "let"
-            | "package"
-            | "private"
-            | "protected"
-            | "public"
-            | "static"
-            | "yield"
-            | "null"
-            | "true"
-            | "false"
-            | "delete"
+fn is_always_reserved_word(s: &str) -> bool {
+    matches!(s,
+        "break" | "case" | "catch" | "continue" | "debugger" | "default" | "do" |
+        "else" | "finally" | "for" | "function" | "if" | "in" | "instanceof" |
+        "new" | "return" | "switch" | "this" | "throw" | "try" | "typeof" |
+        "var" | "void" | "while" | "with" | "class" | "const" | "enum" |
+        "export" | "extends" | "import" | "super" |
+        "null" | "true" | "false" | "delete"
     )
 }
 
@@ -881,7 +841,7 @@ impl<'a> HirBuilder<'a> {
             return Ok(identifier_id);
         }
 
-        if is_reserved_word(name) {
+        if is_always_reserved_word(name) {
             // Match TS behavior: makeIdentifierName throws for reserved words,
             // which propagates as a CompileUnexpectedThrow + CompileError.
             // Note: this is normally caught earlier in scope.ts, but kept as a safety net.
