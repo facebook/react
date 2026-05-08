@@ -231,8 +231,6 @@ function applyRenames(
       }
     },
   } as BabelCore.Visitor);
-
-
 }
 
 function deduplicateComments(node: any): void {

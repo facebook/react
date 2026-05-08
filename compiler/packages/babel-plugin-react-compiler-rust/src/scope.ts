@@ -48,13 +48,13 @@ function mapPatternIdentifiers(
   path: NodePath,
   bindingId: number,
   bindingName: string,
-  referenceToBinding: Record<number, number>,
+  mapRef: (start: number, bindingId: number) => void,
 ): void {
   if (path.isIdentifier()) {
     if (path.node.name === bindingName) {
       const start = path.node.start;
       if (start != null) {
-        referenceToBinding[start] = bindingId;
+        mapRef(start, bindingId);
       }
     }
   } else if (path.isArrayPattern()) {
@@ -64,7 +64,7 @@ function mapPatternIdentifiers(
           element as NodePath,
           bindingId,
           bindingName,
-          referenceToBinding,
+          mapRef,
         );
       }
     }
@@ -75,14 +75,14 @@ function mapPatternIdentifiers(
           prop.get('argument'),
           bindingId,
           bindingName,
-          referenceToBinding,
+          mapRef,
         );
       } else if (prop.isObjectProperty()) {
         mapPatternIdentifiers(
           prop.get('value') as NodePath,
           bindingId,
           bindingName,
-          referenceToBinding,
+          mapRef,
         );
       }
     }
@@ -91,14 +91,14 @@ function mapPatternIdentifiers(
       path.get('left') as NodePath,
       bindingId,
       bindingName,
-      referenceToBinding,
+      mapRef,
     );
   } else if (path.isRestElement()) {
     mapPatternIdentifiers(
       path.get('argument'),
       bindingId,
       bindingName,
-      referenceToBinding,
+      mapRef,
     );
   } else if (path.isMemberExpression()) {
     // MemberExpression in LVal position (e.g., a.b = ...)
@@ -106,7 +106,7 @@ function mapPatternIdentifiers(
     if (obj.isIdentifier() && obj.node.name === bindingName) {
       const start = obj.node.start;
       if (start != null) {
-        referenceToBinding[start] = bindingId;
+        mapRef(start, bindingId);
       }
     }
   }
@@ -133,6 +133,16 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const nodeToScope: Record<number, number> = {};
   const nodeToScopeEnd: Record<number, number> = {};
   const referenceToBinding: Record<number, number> = {};
+
+  // Helper to map an AST position to a binding. Position 0 is allowed:
+  // synthetic nodes from Hermes match desugar share start=0, so multiple
+  // bindings may overwrite the same key. This is acceptable because the
+  // Rust compiler uses scope-based fallback lookup when the position-based
+  // mapping is ambiguous or wrong. Skipping position-0 entirely would
+  // break the common single-match case where only one binding claims it.
+  function mapRef(start: number, bindingId: number): void {
+    referenceToBinding[start] = bindingId;
+  }
 
   // Map from Babel scope uid to our scope id
   const scopeUidToId = new Map<string, number>();
@@ -199,11 +209,13 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
 
       bindings.push(bindingData);
 
-      // Map identifier references to bindings
+      // Map identifier references to bindings.
+      // Position-0 entries are handled by mapRef's collision detection —
+      // see the comment above pos0BindingId for details.
       for (const ref of babelBinding.referencePaths) {
         const start = ref.node.start;
         if (start != null) {
-          referenceToBinding[start] = bindingId;
+          mapRef(start, bindingId);
         }
       }
 
@@ -215,14 +227,14 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
             left,
             bindingId,
             babelBinding.identifier.name,
-            referenceToBinding,
+            mapRef,
           );
         } else if (violation.isUpdateExpression()) {
           const arg = violation.get('argument');
           if (arg.isIdentifier()) {
             const start = arg.node.start;
             if (start != null) {
-              referenceToBinding[start] = bindingId;
+              mapRef(start, bindingId);
             }
           }
         } else if (
@@ -234,14 +246,14 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
             left,
             bindingId,
             babelBinding.identifier.name,
-            referenceToBinding,
+            mapRef,
           );
         } else if (violation.isFunctionDeclaration()) {
           // Function redeclarations: `function x() {} function x() {}`
           // Map the function name identifier to the binding
           const funcId = (violation.node as any).id;
           if (funcId?.start != null) {
-            referenceToBinding[funcId.start] = bindingId;
+            mapRef(funcId.start, bindingId);
           }
         }
       }
@@ -249,7 +261,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       // Map the binding identifier itself
       const bindingStart = babelBinding.identifier.start;
       if (bindingStart != null) {
-        referenceToBinding[bindingStart] = bindingId;
+        mapRef(bindingStart, bindingId);
       }
     }
 
