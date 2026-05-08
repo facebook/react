@@ -3,11 +3,14 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
+use std::collections::HashMap;
+use std::collections::HashSet;
+
 use indexmap::IndexMap;
 use react_compiler_ast::scope::*;
-use std::collections::{HashMap, HashSet};
 use swc_ecma_ast::*;
-use swc_ecma_visit::{Visit, VisitWith};
+use swc_ecma_visit::Visit;
+use swc_ecma_visit::VisitWith;
 
 /// Helper to convert an SWC `Str` node's value to a Rust String.
 /// `Str.value` is a `Wtf8Atom` which doesn't implement `Display`,
@@ -49,6 +52,7 @@ pub fn build_scope_info(module: &Module) -> ScopeInfo {
         scopes: collector.scopes,
         bindings: collector.bindings,
         node_to_scope: collector.node_to_scope,
+        node_to_scope_end: std::collections::HashMap::new(),
         reference_to_binding,
         program_scope: ScopeId(0),
     }
@@ -497,12 +501,7 @@ impl Visit for ScopeCollector {
         self.push_scope(ScopeKind::Catch, catch.span.lo.0);
 
         if let Some(param) = &catch.param {
-            self.collect_pat_bindings(
-                param,
-                BindingKind::Let,
-                self.current_scope(),
-                "CatchClause",
-            );
+            self.collect_pat_bindings(param, BindingKind::Let, self.current_scope(), "CatchClause");
         }
 
         // Mark catch body as already scoped (the catch scope covers it)

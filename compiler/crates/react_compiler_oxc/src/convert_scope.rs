@@ -3,14 +3,15 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
+use std::collections::HashMap;
+
 use indexmap::IndexMap;
-use oxc_ast::ast::Program;
 use oxc_ast::AstKind;
+use oxc_ast::ast::Program;
 use oxc_semantic::Semantic;
 use oxc_span::GetSpan;
 use oxc_syntax::symbol::SymbolFlags;
 use react_compiler_ast::scope::*;
-use std::collections::HashMap;
 
 /// Convert OXC's semantic analysis into React Compiler's ScopeInfo.
 pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo {
@@ -86,7 +87,13 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                 let parent_node_id = nodes.parent_id(node_id);
                 let parent_node = nodes.get_node(parent_node_id);
                 match parent_node.kind() {
-                    AstKind::ObjectProperty(prop) if prop.method || matches!(prop.kind, oxc_ast::ast::PropertyKind::Get | oxc_ast::ast::PropertyKind::Set) => {
+                    AstKind::ObjectProperty(prop)
+                        if prop.method
+                            || matches!(
+                                prop.kind,
+                                oxc_ast::ast::PropertyKind::Get | oxc_ast::ast::PropertyKind::Set
+                            ) =>
+                    {
                         let prop_start = parent_node.kind().span().start;
                         if prop_start != start {
                             node_to_scope.insert(prop_start, our_scope_id);
@@ -134,6 +141,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         scopes,
         bindings,
         node_to_scope,
+        node_to_scope_end: std::collections::HashMap::new(),
         reference_to_binding,
         program_scope,
     }
@@ -321,8 +329,7 @@ fn find_binding_identifier_start(kind: AstKind, name: &str) -> Option<u32> {
                 None
             }
         }
-        AstKind::TSModuleDeclaration(decl) => {
-            match &decl.id {
+        AstKind::TSModuleDeclaration(decl) => match &decl.id {
                 oxc_ast::ast::TSModuleDeclarationName::Identifier(id) => {
                     if id.name.as_str() == name {
                         Some(id.span.start)
@@ -331,17 +338,13 @@ fn find_binding_identifier_start(kind: AstKind, name: &str) -> Option<u32> {
                     }
                 }
                 _ => None,
-            }
-        }
+        },
         _ => None,
     }
 }
 
 /// Recursively find a binding identifier within a binding pattern.
-fn find_identifier_in_pattern(
-    pattern: &oxc_ast::ast::BindingPattern,
-    name: &str,
-) -> Option<u32> {
+fn find_identifier_in_pattern(pattern: &oxc_ast::ast::BindingPattern, name: &str) -> Option<u32> {
     use oxc_ast::ast::BindingPattern;
 
     match pattern {
@@ -378,9 +381,7 @@ fn find_identifier_in_pattern(
             }
             None
         }
-        BindingPattern::AssignmentPattern(assign) => {
-            find_identifier_in_pattern(&assign.left, name)
-        }
+        BindingPattern::AssignmentPattern(assign) => find_identifier_in_pattern(&assign.left, name),
     }
 }
 

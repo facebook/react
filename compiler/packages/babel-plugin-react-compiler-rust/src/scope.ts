@@ -35,6 +35,7 @@ export interface ScopeInfo {
   scopes: Array<ScopeData>;
   bindings: Array<BindingData>;
   nodeToScope: Record<number, number>;
+  nodeToScopeEnd: Record<number, number>;
   referenceToBinding: Record<number, number>;
   programScope: number;
 }
@@ -130,6 +131,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const scopes: Array<ScopeData> = [];
   const bindings: Array<BindingData> = [];
   const nodeToScope: Record<number, number> = {};
+  const nodeToScopeEnd: Record<number, number> = {};
   const referenceToBinding: Record<number, number> = {};
 
   // Map from Babel scope uid to our scope id
@@ -204,6 +206,16 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       for (const ref of babelBinding.referencePaths) {
         const start = ref.node.start;
         if (start != null) {
+          // Skip references inside type annotations (Flow/TypeScript) —
+          // these are type-level only and should not appear in
+          // referenceToBinding for the compiler.
+          if (
+            ref.findParent(
+              (p: NodePath) => p.isTypeAnnotation() || p.isTSTypeAnnotation(),
+            )
+          ) {
+            continue;
+          }
           referenceToBinding[start] = bindingId;
         }
       }
@@ -259,6 +271,9 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const nodeStart = path.node.start;
       if (nodeStart != null) {
         nodeToScope[nodeStart] = scopeId;
+        if (path.node.end != null) {
+          nodeToScopeEnd[nodeStart] = path.node.end;
+        }
       }
     }
 
@@ -288,6 +303,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     scopes,
     bindings,
     nodeToScope,
+    nodeToScopeEnd,
     referenceToBinding,
     programScope: programScopeId,
   };

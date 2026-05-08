@@ -1,6 +1,8 @@
-use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use indexmap::IndexMap;
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Identifies a scope in the scope table. Copy-able, used as an index.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -104,6 +106,13 @@ pub struct ScopeInfo {
     /// Maps an AST node's start offset to the scope it creates.
     pub node_to_scope: HashMap<u32, ScopeId>,
 
+    /// Maps an AST node's start offset to the node's end offset.
+    /// Parallel to node_to_scope — same keys, but stores the end position
+    /// of the scope-creating AST node. Used to determine if a source position
+    /// falls within a particular scope's AST range.
+    #[serde(default)]
+    pub node_to_scope_end: HashMap<u32, u32>,
+
     /// Maps an Identifier AST node's start offset to the binding it resolves to.
     /// Only present for identifiers that resolve to a binding (not globals).
     /// Uses IndexMap to preserve insertion order (source order from serialization).
@@ -142,11 +151,12 @@ impl ScopeInfo {
     /// creates multiple params with the same start position.
     pub fn resolve_reference_by_name(&self, name: &str, start: u32) -> Option<&BindingData> {
         // Find which scope contains this position
-        let scope_id = self.resolve_reference(start)
-            .map(|b| b.scope)?;
+        let scope_id = self.resolve_reference(start).map(|b| b.scope)?;
         // Look for a binding with the matching name in that scope
         let scope = &self.scopes[scope_id.0 as usize];
-        scope.bindings.get(name)
+        scope
+            .bindings
+            .get(name)
             .map(|id| &self.bindings[id.0 as usize])
     }
 
