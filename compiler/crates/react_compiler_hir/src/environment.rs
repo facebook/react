@@ -855,18 +855,18 @@ impl Environment {
         let mut i = 1u32;
         let uid = loop {
             let candidate = if i == 1 {
-            format!("_{}", uid_base)
-        } else {
+                format!("_{}", uid_base)
+            } else {
                 format!("_{}{}", uid_base, i)
             };
             i += 1;
-            if !self.uid_known_names.as_ref().expect("uid_known_names initialized above").contains(&candidate) {
+            if !self.uid_known_names.as_ref().unwrap().contains(&candidate) {
                 break candidate;
-        }
+            }
         };
 
         // Register the generated name so subsequent calls see it
-        self.uid_known_names.as_mut().expect("uid_known_names initialized above").insert(uid.clone());
+        self.uid_known_names.as_mut().unwrap().insert(uid.clone());
 
         uid
     }

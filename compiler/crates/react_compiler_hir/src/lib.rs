@@ -130,10 +130,8 @@ pub fn format_js_number(n: f64) -> String {
         // Rust's {:e} uses "e" (lowercase) like JS, but formats as e.g. "1.5e21" not "1.5e+21"
         let formatted = format!("{:e}", abs);
         // Split into coefficient and exponent parts
-        let (coeff, exp_str) = formatted
-            .split_once('e')
-            .expect("should contain 'e' from {:e} format");
-        let exp: i32 = exp_str.parse().expect("should be a valid integer exponent");
+        let (coeff, exp_str) = formatted.split_once('e').unwrap();
+        let exp: i32 = exp_str.parse().unwrap();
         // JS uses e+N for positive exponents, e-N for negative
         if exp >= 0 {
             format!("{}{}e+{}", sign, coeff, exp)
