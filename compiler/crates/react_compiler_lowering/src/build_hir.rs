@@ -2167,31 +2167,40 @@ fn lower_expression(
 
 /// Check if a binding's declaration is a direct statement of the block
 /// (not inside a nested control flow block like if/for/while).
-/// Uses AST structure: checks if the binding's name appears as a declarator
-/// in one of the block's direct VariableDeclaration or FunctionDeclaration statements.
+/// Uses the binding's declaration_start position to check if it falls within
+/// one of the block's direct VariableDeclaration, FunctionDeclaration, or
+/// ClassDeclaration statements. This avoids false positives when two bindings
+/// share the same name but are declared in different scopes (e.g., `const x`
+/// inside an if-branch and `const x` after it).
 fn is_binding_in_block_direct_statements(
     binding: &react_compiler_ast::scope::BindingData,
     stmts: &[react_compiler_ast::statements::Statement],
 ) -> bool {
-    use react_compiler_ast::patterns::PatternLike;
     use react_compiler_ast::statements::Statement;
-    let name = &binding.name;
+    let decl_start = match binding.declaration_start {
+        Some(pos) => pos,
+        None => return false,
+    };
     for stmt in stmts {
         match stmt {
             Statement::VariableDeclaration(vd) => {
-                for decl in &vd.declarations {
-                    if pattern_declares_name(&decl.id, name) {
-                        return true;
-                    }
+                let start = vd.base.start.unwrap_or(0);
+                let end = vd.base.end.unwrap_or(u32::MAX);
+                if decl_start >= start && decl_start < end {
+                    return true;
                 }
             }
             Statement::FunctionDeclaration(fd) => {
-                if fd.id.as_ref().map_or(false, |id| id.name == *name) {
+                let start = fd.base.start.unwrap_or(0);
+                let end = fd.base.end.unwrap_or(u32::MAX);
+                if decl_start >= start && decl_start < end {
                     return true;
                 }
             }
             Statement::ClassDeclaration(cd) => {
-                if cd.id.as_ref().map_or(false, |id| id.name == *name) {
+                let start = cd.base.start.unwrap_or(0);
+                let end = cd.base.end.unwrap_or(u32::MAX);
+                if decl_start >= start && decl_start < end {
                     return true;
                 }
             }
@@ -2201,6 +2210,7 @@ fn is_binding_in_block_direct_statements(
     false
 }
 
+#[allow(dead_code)]
 fn pattern_declares_name(pattern: &react_compiler_ast::patterns::PatternLike, name: &str) -> bool {
     use react_compiler_ast::patterns::PatternLike;
     match pattern {
