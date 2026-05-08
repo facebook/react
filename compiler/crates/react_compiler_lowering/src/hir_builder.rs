@@ -211,6 +211,25 @@ impl<'a> HirBuilder<'a> {
         }
     }
 
+    /// Check if a scope is the component scope or a descendant of it.
+    /// Used to determine whether a binding is local to the compiled function
+    /// or belongs to an ancestor function scope (e.g., a factory function
+    /// wrapping a nested component declaration).
+    /// Uses component_scope (the outermost compiled function's scope) rather
+    /// than function_scope because inner function expressions within the
+    /// compiled function have their own function_scope but still consider
+    /// the outer component's variables as local.
+    fn is_scope_within_compiled_function(&self, scope_id: ScopeId) -> bool {
+        let mut current = Some(scope_id);
+        while let Some(id) = current {
+            if id == self.component_scope {
+                return true;
+            }
+            current = self.scope_info.scopes[id.0 as usize].parent;
+        }
+        false
+    }
+
     /// Access the environment.
     pub fn environment(&self) -> &Environment {
         self.env
@@ -819,15 +838,15 @@ impl<'a> HirBuilder<'a> {
             // Check if this binding was previously resolved to a renamed version
             let should_record_fbt_error =
                 if let Some(&identifier_id) = self.bindings.get(&binding_id) {
-                // Already resolved - check if the resolved name is still "fbt"
-                match &self.env.identifiers[identifier_id.0 as usize].name {
-                    Some(IdentifierName::Named(resolved_name)) => resolved_name == "fbt",
-                    _ => false,
-                }
-            } else {
-                // First resolution - always record
-                true
-            };
+                    // Already resolved - check if the resolved name is still "fbt"
+                    match &self.env.identifiers[identifier_id.0 as usize].name {
+                        Some(IdentifierName::Named(resolved_name)) => resolved_name == "fbt",
+                        _ => false,
+                    }
+                } else {
+                    // First resolution - always record
+                    true
+                };
             if should_record_fbt_error {
                 let error_loc = self.scope_info.bindings[binding_id.0 as usize]
                     .declaration_start
@@ -896,10 +915,10 @@ impl<'a> HirBuilder<'a> {
                 self.env
                     .renames
                     .push(react_compiler_hir::environment::BindingRename {
-                    original: name.to_string(),
-                    renamed: candidate.clone(),
-                    declaration_start: decl_start,
-                });
+                        original: name.to_string(),
+                        renamed: candidate.clone(),
+                        declaration_start: decl_start,
+                    });
             }
         }
 
@@ -1001,6 +1020,13 @@ impl<'a> HirBuilder<'a> {
                             name: name.to_string(),
                         },
                     })
+                } else if !self.is_scope_within_compiled_function(binding.scope) {
+                    // Binding is in an ancestor function scope outside the compiled
+                    // function. Treat as ModuleLocal, matching TS behavior where
+                    // captured outer-function variables become LoadGlobal(module).
+                    Ok(VariableBinding::ModuleLocal {
+                        name: name.to_string(),
+                    })
                 } else {
                     // Local binding: resolve via resolve_binding.
                     // When the resolved binding's name doesn't match the identifier
@@ -1062,7 +1088,6 @@ impl<'a> HirBuilder<'a> {
         }
     }
 }
-
 
 // ---------------------------------------------------------------------------
 // Post-build helper functions

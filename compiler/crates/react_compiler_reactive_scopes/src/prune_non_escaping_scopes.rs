@@ -8,23 +8,39 @@
 //!
 //! Corresponds to `src/ReactiveScopes/PruneNonEscapingScopes.ts`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use react_compiler_hir::{
-    ArrayPatternElement, DeclarationId, Effect, EvaluationOrder, IdentifierId, InstructionKind,
-    InstructionValue, JsxAttribute, JsxTag, ObjectPropertyOrSpread, Pattern, Place,
-    PlaceOrSpread, ReactiveFunction, ReactiveInstruction,
-    ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue,
-    ReactiveScopeBlock, ScopeId,
-    environment::Environment,
-};
-
+use indexmap::IndexSet;
+use react_compiler_hir::ArrayPatternElement;
+use react_compiler_hir::DeclarationId;
+use react_compiler_hir::Effect;
+use react_compiler_hir::EvaluationOrder;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::InstructionKind;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::JsxAttribute;
+use react_compiler_hir::JsxTag;
+use react_compiler_hir::ObjectPropertyOrSpread;
+use react_compiler_hir::Pattern;
+use react_compiler_hir::Place;
+use react_compiler_hir::PlaceOrSpread;
+use react_compiler_hir::ReactiveFunction;
+use react_compiler_hir::ReactiveInstruction;
+use react_compiler_hir::ReactiveScopeBlock;
+use react_compiler_hir::ReactiveStatement;
+use react_compiler_hir::ReactiveTerminal;
+use react_compiler_hir::ReactiveTerminalStatement;
+use react_compiler_hir::ReactiveValue;
+use react_compiler_hir::ScopeId;
+use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors::each_instruction_value_operand;
 
-use crate::visitors::{
-    ReactiveFunctionTransform, ReactiveFunctionVisitor, Transformed,
-    transform_reactive_function, visit_reactive_function,
-};
+use crate::visitors::ReactiveFunctionTransform;
+use crate::visitors::ReactiveFunctionVisitor;
+use crate::visitors::Transformed;
+use crate::visitors::transform_reactive_function;
+use crate::visitors::visit_reactive_function;
 
 // =============================================================================
 // Public entry point
@@ -32,7 +48,10 @@ use crate::visitors::{
 
 /// Prunes reactive scopes whose outputs don't escape.
 /// TS: `pruneNonEscapingScopes`
-pub fn prune_non_escaping_scopes(func: &mut ReactiveFunction, env: &mut Environment) -> Result<(), react_compiler_diagnostics::CompilerError> {
+pub fn prune_non_escaping_scopes(
+    func: &mut ReactiveFunction,
+    env: &mut Environment,
+) -> Result<(), react_compiler_diagnostics::CompilerError> {
     // First build up a map of which instructions are involved in creating which values,
     // and which values are returned.
     let mut state = CollectState::new();
@@ -101,8 +120,8 @@ fn join_aliases(kind1: MemoizationLevel, kind2: MemoizationLevel) -> Memoization
 struct IdentifierNode {
     level: MemoizationLevel,
     memoized: bool,
-    dependencies: HashSet<DeclarationId>,
-    scopes: HashSet<ScopeId>,
+    dependencies: IndexSet<DeclarationId>,
+    scopes: IndexSet<ScopeId>,
     seen: bool,
 }
 
@@ -121,7 +140,7 @@ struct CollectState {
     definitions: HashMap<DeclarationId, DeclarationId>,
     identifiers: HashMap<DeclarationId, IdentifierNode>,
     scopes: HashMap<ScopeId, ScopeNode>,
-    escaping_values: HashSet<DeclarationId>,
+    escaping_values: IndexSet<DeclarationId>,
 }
 
 impl CollectState {
@@ -130,7 +149,7 @@ impl CollectState {
             definitions: HashMap::new(),
             identifiers: HashMap::new(),
             scopes: HashMap::new(),
-            escaping_values: HashSet::new(),
+            escaping_values: IndexSet::new(),
         }
     }
 
@@ -141,8 +160,8 @@ impl CollectState {
             IdentifierNode {
                 level: MemoizationLevel::Never,
                 memoized: false,
-                dependencies: HashSet::new(),
-                scopes: HashSet::new(),
+                dependencies: IndexSet::new(),
+                scopes: IndexSet::new(),
                 seen: false,
             },
         );
@@ -163,9 +182,7 @@ impl CollectState {
                 let dependencies = scope_data
                     .dependencies
                     .iter()
-                    .map(|dep| {
-                        env.identifiers[dep.identifier.0 as usize].declaration_id
-                    })
+                    .map(|dep| env.identifiers[dep.identifier.0 as usize].declaration_id)
                     .collect();
                 ScopeNode {
                     dependencies,
@@ -226,7 +243,6 @@ fn get_place_scope(
 // =============================================================================
 // Helper: get_function_call_signature (for noAlias check)
 // =============================================================================
-
 
 // =============================================================================
 // Helper: compute pattern lvalues
@@ -313,8 +329,7 @@ impl<'a> CollectDependenciesVisitor<'a> {
             } => {
                 let (_, cons_rvalues) =
                     self.compute_memoization_inputs(id, consequent, None, state);
-                let (_, alt_rvalues) =
-                    self.compute_memoization_inputs(id, alternate, None, state);
+                let (_, alt_rvalues) = self.compute_memoization_inputs(id, alternate, None, state);
                 let mut rvalues = cons_rvalues;
                 rvalues.extend(alt_rvalues);
                 let lvalues = if let Some(lv) = lvalue {
@@ -328,10 +343,8 @@ impl<'a> CollectDependenciesVisitor<'a> {
                 (lvalues, rvalues)
             }
             ReactiveValue::LogicalExpression { left, right, .. } => {
-                let (_, left_rvalues) =
-                    self.compute_memoization_inputs(id, left, None, state);
-                let (_, right_rvalues) =
-                    self.compute_memoization_inputs(id, right, None, state);
+                let (_, left_rvalues) = self.compute_memoization_inputs(id, left, None, state);
+                let (_, right_rvalues) = self.compute_memoization_inputs(id, right, None, state);
                 let mut rvalues = left_rvalues;
                 rvalues.extend(right_rvalues);
                 let lvalues = if let Some(lv) = lvalue {
@@ -357,8 +370,7 @@ impl<'a> CollectDependenciesVisitor<'a> {
                         state,
                     );
                 }
-                let (_, rvalues) =
-                    self.compute_memoization_inputs(id, inner, None, state);
+                let (_, rvalues) = self.compute_memoization_inputs(id, inner, None, state);
                 let lvalues = if let Some(lv) = lvalue {
                     vec![LValueMemoization {
                         place_identifier: lv,
@@ -370,8 +382,7 @@ impl<'a> CollectDependenciesVisitor<'a> {
                 (lvalues, rvalues)
             }
             ReactiveValue::OptionalExpression { value: inner, .. } => {
-                let (_, rvalues) =
-                    self.compute_memoization_inputs(id, inner, None, state);
+                let (_, rvalues) = self.compute_memoization_inputs(id, inner, None, state);
                 let lvalues = if let Some(lv) = lvalue {
                     vec![LValueMemoization {
                         place_identifier: lv,
@@ -805,8 +816,7 @@ impl<'a> CollectDependenciesVisitor<'a> {
                     operands.iter().map(|p| (p.identifier, id)).collect();
                 (lvalues, rvalues)
             }
-            InstructionValue::ObjectMethod { .. }
-            | InstructionValue::FunctionExpression { .. } => {
+            InstructionValue::ObjectMethod { .. } | InstructionValue::FunctionExpression { .. } => {
                 // The canonical each_instruction_value_operand already includes context
                 // (captured variables) for FunctionExpression/ObjectMethod.
                 let operands = each_instruction_value_operand(value, env);
@@ -867,28 +877,33 @@ impl<'a> CollectDependenciesVisitor<'a> {
 
         for (identifier_id, operand_id) in &rvalue_data {
             // Build the Place data needed for get_place_scope
-            state.visit_operand(env, id, &Place {
-                identifier: *identifier_id,
-                effect: Effect::Read,
-                reactive: false,
-                loc: None,
-            }, *operand_id);
+            state.visit_operand(
+                env,
+                id,
+                &Place {
+                    identifier: *identifier_id,
+                    effect: Effect::Read,
+                    reactive: false,
+                    loc: None,
+                },
+                *operand_id,
+            );
         }
 
         // Add the operands as dependencies of all lvalues
         for lv in &aliasing_lvalues {
-            let lvalue_decl_id =
-                env.identifiers[lv.place_identifier.0 as usize].declaration_id;
+            let lvalue_decl_id = env.identifiers[lv.place_identifier.0 as usize].declaration_id;
             let lvalue_id = state.resolve(lvalue_decl_id);
-            let node = state.identifiers.entry(lvalue_id).or_insert_with(|| {
-                IdentifierNode {
+            let node = state
+                .identifiers
+                .entry(lvalue_id)
+                .or_insert_with(|| IdentifierNode {
                     level: MemoizationLevel::Never,
                     memoized: false,
-                    dependencies: HashSet::new(),
-                    scopes: HashSet::new(),
+                    dependencies: IndexSet::new(),
+                    scopes: IndexSet::new(),
                     seen: false,
-                }
-            });
+                });
             node.level = join_aliases(node.level, lv.level);
             for (_, operand_id) in &rvalue_data {
                 if *operand_id == lvalue_id {
@@ -897,55 +912,61 @@ impl<'a> CollectDependenciesVisitor<'a> {
                 node.dependencies.insert(*operand_id);
             }
 
-            state.visit_operand(env, id, &Place {
-                identifier: lv.place_identifier,
-                effect: Effect::Read,
-                reactive: false,
-                loc: None,
-            }, lvalue_id);
+            state.visit_operand(
+                env,
+                id,
+                &Place {
+                    identifier: lv.place_identifier,
+                    effect: Effect::Read,
+                    reactive: false,
+                    loc: None,
+                },
+                lvalue_id,
+            );
         }
 
         // Handle LoadLocal definitions and hook calls
         if let ReactiveValue::Instruction(instr_value) = value {
             if let InstructionValue::LoadLocal { place, .. } = instr_value {
                 if let Some(lv_id) = lvalue {
-                    let lv_decl =
-                        env.identifiers[lv_id.0 as usize].declaration_id;
-                    let place_decl =
-                        env.identifiers[place.identifier.0 as usize].declaration_id;
+                    let lv_decl = env.identifiers[lv_id.0 as usize].declaration_id;
+                    let place_decl = env.identifiers[place.identifier.0 as usize].declaration_id;
                     state.definitions.insert(lv_decl, place_decl);
                 }
             } else if let InstructionValue::CallExpression { callee, args, .. } = instr_value {
-                if env.get_hook_kind_for_id(callee.identifier).ok().flatten().is_some() {
-                    let no_alias =
-                        env.has_no_alias_signature(callee.identifier);
+                if env
+                    .get_hook_kind_for_id(callee.identifier)
+                    .ok()
+                    .flatten()
+                    .is_some()
+                {
+                    let no_alias = env.has_no_alias_signature(callee.identifier);
                     if !no_alias {
                         for arg in args {
                             let place = match arg {
                                 PlaceOrSpread::Spread(spread) => &spread.place,
                                 PlaceOrSpread::Place(place) => place,
                             };
-                            let decl =
-                                env.identifiers[place.identifier.0 as usize].declaration_id;
+                            let decl = env.identifiers[place.identifier.0 as usize].declaration_id;
                             state.escaping_values.insert(decl);
                         }
                     }
                 }
-            } else if let InstructionValue::MethodCall {
-                property, args, ..
-            } = instr_value
-            {
-                if env.get_hook_kind_for_id(property.identifier).ok().flatten().is_some() {
-                    let no_alias =
-                        env.has_no_alias_signature(property.identifier);
+            } else if let InstructionValue::MethodCall { property, args, .. } = instr_value {
+                if env
+                    .get_hook_kind_for_id(property.identifier)
+                    .ok()
+                    .flatten()
+                    .is_some()
+                {
+                    let no_alias = env.has_no_alias_signature(property.identifier);
                     if !no_alias {
                         for arg in args {
                             let place = match arg {
                                 PlaceOrSpread::Spread(spread) => &spread.place,
                                 PlaceOrSpread::Place(place) => place,
                             };
-                            let decl =
-                                env.identifiers[place.identifier.0 as usize].declaration_id;
+                            let decl = env.identifiers[place.identifier.0 as usize].declaration_id;
                             state.escaping_values.insert(decl);
                         }
                     }
@@ -966,11 +987,7 @@ impl<'a> ReactiveFunctionVisitor for CollectDependenciesVisitor<'a> {
         self.env
     }
 
-    fn visit_instruction(
-        &self,
-        instruction: &ReactiveInstruction,
-        state: &mut Self::State,
-    ) {
+    fn visit_instruction(&self, instruction: &ReactiveInstruction, state: &mut Self::State) {
         self.visit_value_for_memoization(
             instruction.id,
             &instruction.value,
@@ -979,11 +996,7 @@ impl<'a> ReactiveFunctionVisitor for CollectDependenciesVisitor<'a> {
         );
     }
 
-    fn visit_terminal(
-        &self,
-        stmt: &ReactiveTerminalStatement,
-        state: &mut Self::State,
-    ) {
+    fn visit_terminal(&self, stmt: &ReactiveTerminalStatement, state: &mut Self::State) {
         // Traverse terminal blocks first (TS: this.traverseTerminal(stmt, scopes))
         self.traverse_terminal(stmt, state);
 
@@ -1005,11 +1018,7 @@ impl<'a> ReactiveFunctionVisitor for CollectDependenciesVisitor<'a> {
         }
     }
 
-    fn visit_scope(
-        &self,
-        scope: &ReactiveScopeBlock,
-        state: &mut Self::State,
-    ) {
+    fn visit_scope(&self, scope: &ReactiveScopeBlock, state: &mut Self::State) {
         let env = self.env;
         let scope_id = scope.scope;
         let scope_data = &env.scopes[scope_id.0 as usize];
@@ -1044,20 +1053,51 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
     let mut memoized = HashSet::new();
 
     // We need mutable access to the nodes, so we clone the state into mutable structures
-    let mut identifier_nodes: HashMap<DeclarationId, (MemoizationLevel, bool, HashSet<DeclarationId>, HashSet<ScopeId>, bool)> =
-        state.identifiers.iter().map(|(id, node)| {
-            (*id, (node.level, node.memoized, node.dependencies.clone(), node.scopes.clone(), node.seen))
-        }).collect();
+    let mut identifier_nodes: HashMap<
+        DeclarationId,
+        (
+            MemoizationLevel,
+            bool,
+            IndexSet<DeclarationId>,
+            IndexSet<ScopeId>,
+            bool,
+        ),
+    > = state
+        .identifiers
+        .iter()
+        .map(|(id, node)| {
+            (
+                *id,
+                (
+                    node.level,
+                    node.memoized,
+                    node.dependencies.clone(),
+                    node.scopes.clone(),
+                    node.seen,
+                ),
+            )
+        })
+        .collect();
 
-    let mut scope_nodes: HashMap<ScopeId, (Vec<DeclarationId>, bool)> =
-        state.scopes.iter().map(|(id, node)| {
-            (*id, (node.dependencies.clone(), node.seen))
-        }).collect();
+    let mut scope_nodes: HashMap<ScopeId, (Vec<DeclarationId>, bool)> = state
+        .scopes
+        .iter()
+        .map(|(id, node)| (*id, (node.dependencies.clone(), node.seen)))
+        .collect();
 
     fn visit(
         id: DeclarationId,
         force_memoize: bool,
-        identifier_nodes: &mut HashMap<DeclarationId, (MemoizationLevel, bool, HashSet<DeclarationId>, HashSet<ScopeId>, bool)>,
+        identifier_nodes: &mut HashMap<
+            DeclarationId,
+            (
+                MemoizationLevel,
+                bool,
+                IndexSet<DeclarationId>,
+                IndexSet<ScopeId>,
+                bool,
+            ),
+        >,
         scope_nodes: &mut HashMap<ScopeId, (Vec<DeclarationId>, bool)>,
         memoized: &mut HashSet<DeclarationId>,
     ) -> bool {
@@ -1073,7 +1113,13 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
         identifier_nodes.get_mut(&id).unwrap().1 = false; // memoized = false
 
         // Visit dependencies
-        let deps: Vec<DeclarationId> = identifier_nodes.get(&id).unwrap().2.iter().copied().collect();
+        let deps: Vec<DeclarationId> = identifier_nodes
+            .get(&id)
+            .unwrap()
+            .2
+            .iter()
+            .copied()
+            .collect();
         let mut has_memoized_dependency = false;
         for dep in deps {
             let is_dep_memoized = visit(dep, false, identifier_nodes, scope_nodes, memoized);
@@ -1087,7 +1133,13 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
         {
             identifier_nodes.get_mut(&id).unwrap().1 = true; // memoized = true
             memoized.insert(id);
-            let scopes: Vec<ScopeId> = identifier_nodes.get(&id).unwrap().3.iter().copied().collect();
+            let scopes: Vec<ScopeId> = identifier_nodes
+                .get(&id)
+                .unwrap()
+                .3
+                .iter()
+                .copied()
+                .collect();
             for scope_id in scopes {
                 force_memoize_scope_dependencies(scope_id, identifier_nodes, scope_nodes, memoized);
             }
@@ -1097,7 +1149,16 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
 
     fn force_memoize_scope_dependencies(
         id: ScopeId,
-        identifier_nodes: &mut HashMap<DeclarationId, (MemoizationLevel, bool, HashSet<DeclarationId>, HashSet<ScopeId>, bool)>,
+        identifier_nodes: &mut HashMap<
+            DeclarationId,
+            (
+                MemoizationLevel,
+                bool,
+                IndexSet<DeclarationId>,
+                IndexSet<ScopeId>,
+                bool,
+            ),
+        >,
         scope_nodes: &mut HashMap<ScopeId, (Vec<DeclarationId>, bool)>,
         memoized: &mut HashSet<DeclarationId>,
     ) {
@@ -1119,7 +1180,13 @@ fn compute_memoized_identifiers(state: &CollectState) -> HashSet<DeclarationId> 
     // Walk from the "roots" aka returned/escaping identifiers
     let escaping: Vec<DeclarationId> = state.escaping_values.iter().copied().collect();
     for value in escaping {
-        visit(value, false, &mut identifier_nodes, &mut scope_nodes, &mut memoized);
+        visit(
+            value,
+            false,
+            &mut identifier_nodes,
+            &mut scope_nodes,
+            &mut memoized,
+        );
     }
 
     memoized
@@ -1138,7 +1205,9 @@ struct PruneScopesTransform<'a> {
 impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
     type State = HashSet<DeclarationId>;
 
-    fn env(&self) -> &Environment { self.env }
+    fn env(&self) -> &Environment {
+        self.env
+    }
 
     fn transform_scope(
         &mut self,
@@ -1158,23 +1227,21 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
             return Ok(Transformed::Keep);
         }
 
-        let has_memoized_output = scope_data
-            .declarations
-            .iter()
-            .any(|(_, decl)| {
-                let decl_id = self.env.identifiers[decl.identifier.0 as usize].declaration_id;
-                state.contains(&decl_id)
-            })
-            || scope_data.reassignments.iter().any(|reassign_id| {
-                let decl_id = self.env.identifiers[reassign_id.0 as usize].declaration_id;
-                state.contains(&decl_id)
-            });
+        let has_memoized_output = scope_data.declarations.iter().any(|(_, decl)| {
+            let decl_id = self.env.identifiers[decl.identifier.0 as usize].declaration_id;
+            state.contains(&decl_id)
+        }) || scope_data.reassignments.iter().any(|reassign_id| {
+            let decl_id = self.env.identifiers[reassign_id.0 as usize].declaration_id;
+            state.contains(&decl_id)
+        });
 
         if has_memoized_output {
             Ok(Transformed::Keep)
         } else {
             self.pruned_scopes.insert(scope_id);
-            Ok(Transformed::ReplaceMany(std::mem::take(&mut scope.instructions)))
+            Ok(Transformed::ReplaceMany(std::mem::take(
+                &mut scope.instructions,
+            )))
         }
     }
 
@@ -1200,17 +1267,21 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
                 ids.insert(store_value.identifier);
             }
             ReactiveValue::Instruction(InstructionValue::LoadLocal { place, .. }) => {
-                let has_scope =
-                    self.env.identifiers[place.identifier.0 as usize].scope.is_some();
+                let has_scope = self.env.identifiers[place.identifier.0 as usize]
+                    .scope
+                    .is_some();
                 let lvalue_no_scope = instruction
                     .lvalue
                     .as_ref()
-                    .map(|lv| self.env.identifiers[lv.identifier.0 as usize].scope.is_none())
+                    .map(|lv| {
+                        self.env.identifiers[lv.identifier.0 as usize]
+                            .scope
+                            .is_none()
+                    })
                     .unwrap_or(false);
                 if has_scope && lvalue_no_scope {
                     if let Some(lv) = &instruction.lvalue {
-                        let decl_id =
-                            self.env.identifiers[lv.identifier.0 as usize].declaration_id;
+                        let decl_id = self.env.identifiers[lv.identifier.0 as usize].declaration_id;
                         let ids = self
                             .reassignments
                             .entry(decl_id)
@@ -1222,13 +1293,13 @@ impl<'a> ReactiveFunctionTransform for PruneScopesTransform<'a> {
             ReactiveValue::Instruction(InstructionValue::FinishMemoize {
                 decl, pruned, ..
             }) => {
-                let decl_has_scope =
-                    self.env.identifiers[decl.identifier.0 as usize].scope.is_some();
+                let decl_has_scope = self.env.identifiers[decl.identifier.0 as usize]
+                    .scope
+                    .is_some();
                 if !decl_has_scope {
                     // If the manual memo was a useMemo that got inlined, iterate through
                     // all reassignments to the iife temporary to ensure they're memoized.
-                    let decl_id =
-                        self.env.identifiers[decl.identifier.0 as usize].declaration_id;
+                    let decl_id = self.env.identifiers[decl.identifier.0 as usize].declaration_id;
                     let decls: Vec<IdentifierId> = self
                         .reassignments
                         .get(&decl_id)

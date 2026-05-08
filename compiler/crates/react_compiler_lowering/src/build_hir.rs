@@ -297,10 +297,10 @@ fn lower_identifier(
     let binding = builder.resolve_identifier(name, start, loc.clone())?;
     match binding {
         VariableBinding::Identifier { identifier, .. } => Ok(Place {
-                identifier,
-                effect: Effect::Unknown,
-                reactive: false,
-                loc,
+            identifier,
+            effect: Effect::Unknown,
+            reactive: false,
+            loc,
         }),
         _ => {
             if let VariableBinding::Global { ref name } = binding {
@@ -412,7 +412,9 @@ fn lower_member_expression_with_object(
     if !member.computed {
         let prop_literal = match member.property.as_ref() {
             Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
-            Expression::NumericLiteral(lit) => PropertyLiteral::Number(FloatValue::new(lit.precise_value())),
+            Expression::NumericLiteral(lit) => {
+                PropertyLiteral::Number(FloatValue::new(lit.precise_value()))
+            }
             _ => {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
@@ -489,7 +491,9 @@ fn lower_member_expression_impl(
         // Non-computed: property must be an identifier or numeric literal
         let prop_literal = match member.property.as_ref() {
             Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
-            Expression::NumericLiteral(lit) => PropertyLiteral::Number(FloatValue::new(lit.precise_value())),
+            Expression::NumericLiteral(lit) => {
+                PropertyLiteral::Number(FloatValue::new(lit.precise_value()))
+            }
             _ => {
                 builder.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
@@ -763,13 +767,13 @@ fn lower_expression(
                 lower_value_to_temporary(
                     builder,
                     InstructionValue::StoreLocal {
-                    lvalue: LValue {
-                        kind: InstructionKind::Const,
-                        place: place.clone(),
-                    },
-                    value: left_place.clone(),
-                    type_annotation: None,
-                    loc: left_place.loc.clone(),
+                        lvalue: LValue {
+                            kind: InstructionKind::Const,
+                            place: place.clone(),
+                        },
+                        value: left_place.clone(),
+                        type_annotation: None,
+                        loc: left_place.loc.clone(),
                     },
                 )?;
                 Ok(Terminal::Goto {
@@ -787,13 +791,13 @@ fn lower_expression(
                 lower_value_to_temporary(
                     builder,
                     InstructionValue::StoreLocal {
-                    lvalue: LValue {
-                        kind: InstructionKind::Const,
-                        place: place.clone(),
-                    },
-                    value: right,
-                    type_annotation: None,
-                    loc: right_loc.clone(),
+                        lvalue: LValue {
+                            kind: InstructionKind::Const,
+                            place: place.clone(),
+                        },
+                        value: right,
+                        type_annotation: None,
+                        loc: right_loc.clone(),
                     },
                 )?;
                 Ok(Terminal::Goto {
@@ -876,17 +880,17 @@ fn lower_expression(
                     let one = lower_value_to_temporary(
                         builder,
                         InstructionValue::Primitive {
-                        value: PrimitiveValue::Number(FloatValue::new(1.0)),
-                        loc: None,
+                            value: PrimitiveValue::Number(FloatValue::new(1.0)),
+                            loc: None,
                         },
                     )?;
                     let updated = lower_value_to_temporary(
                         builder,
                         InstructionValue::BinaryExpression {
-                        operator: binary_op,
-                        left: prev_value.clone(),
-                        right: one,
-                        loc: member_loc.clone(),
+                            operator: binary_op,
+                            left: prev_value.clone(),
+                            right: one,
+                            loc: member_loc.clone(),
                         },
                     )?;
 
@@ -1038,13 +1042,13 @@ fn lower_expression(
                 lower_value_to_temporary(
                     builder,
                     InstructionValue::StoreLocal {
-                    lvalue: LValue {
-                        kind: InstructionKind::Const,
-                        place: place.clone(),
-                    },
-                    value: consequent,
-                    type_annotation: None,
-                    loc: loc.clone(),
+                        lvalue: LValue {
+                            kind: InstructionKind::Const,
+                            place: place.clone(),
+                        },
+                        value: consequent,
+                        type_annotation: None,
+                        loc: loc.clone(),
                     },
                 )?;
                 Ok(Terminal::Goto {
@@ -1062,13 +1066,13 @@ fn lower_expression(
                 lower_value_to_temporary(
                     builder,
                     InstructionValue::StoreLocal {
-                    lvalue: LValue {
-                        kind: InstructionKind::Const,
-                        place: place.clone(),
-                    },
-                    value: alternate,
-                    type_annotation: None,
-                    loc: loc.clone(),
+                        lvalue: LValue {
+                            kind: InstructionKind::Const,
+                            place: place.clone(),
+                        },
+                        value: alternate,
+                        type_annotation: None,
+                        loc: loc.clone(),
                     },
                 )?;
                 Ok(Terminal::Goto {
@@ -1155,12 +1159,12 @@ fn lower_expression(
                                     let temp = lower_value_to_temporary(
                                         builder,
                                         InstructionValue::StoreContext {
-                                        lvalue: LValue {
-                                            kind: InstructionKind::Reassign,
-                                            place: place.clone(),
-                                        },
-                                        value: right,
-                                        loc: place.loc.clone(),
+                                            lvalue: LValue {
+                                                kind: InstructionKind::Reassign,
+                                                place: place.clone(),
+                                            },
+                                            value: right,
+                                            loc: place.loc.clone(),
                                         },
                                     )?;
                                     Ok(InstructionValue::LoadLocal {
@@ -1171,13 +1175,13 @@ fn lower_expression(
                                     let temp = lower_value_to_temporary(
                                         builder,
                                         InstructionValue::StoreLocal {
-                                        lvalue: LValue {
-                                            kind: InstructionKind::Reassign,
-                                            place: place.clone(),
-                                        },
-                                        value: right,
-                                        type_annotation: None,
-                                        loc: place.loc.clone(),
+                                            lvalue: LValue {
+                                                kind: InstructionKind::Reassign,
+                                                place: place.clone(),
+                                            },
+                                            value: right,
+                                            type_annotation: None,
+                                            loc: place.loc.clone(),
                                         },
                                     )?;
                                     Ok(InstructionValue::LoadLocal {
@@ -1192,9 +1196,9 @@ fn lower_expression(
                                 let temp = lower_value_to_temporary(
                                     builder,
                                     InstructionValue::StoreGlobal {
-                                    name,
-                                    value: right,
-                                    loc: ident_loc,
+                                        name,
+                                        value: right,
+                                        loc: ident_loc,
                                     },
                                 )?;
                                 Ok(InstructionValue::LoadLocal {
@@ -1245,10 +1249,10 @@ fn lower_expression(
                                     lower_value_to_temporary(
                                         builder,
                                         InstructionValue::ComputedStore {
-                                        object,
-                                        property: prop,
-                                        value: right,
-                                        loc: left_loc,
+                                            object,
+                                            property: prop,
+                                            value: right,
+                                            loc: left_loc,
                                         },
                                     )?
                                 }
@@ -1258,10 +1262,10 @@ fn lower_expression(
                             lower_value_to_temporary(
                                 builder,
                                 InstructionValue::ComputedStore {
-                                object,
-                                property: prop,
-                                value: right,
-                                loc: left_loc,
+                                    object,
+                                    property: prop,
+                                    value: right,
+                                    loc: left_loc,
                                 },
                             )?
                         };
@@ -1349,10 +1353,10 @@ fn lower_expression(
                         let binary_place = lower_value_to_temporary(
                             builder,
                             InstructionValue::BinaryExpression {
-                            operator: binary_op,
-                            left: left_place,
-                            right,
-                            loc: loc.clone(),
+                                operator: binary_op,
+                                left: left_place,
+                                right,
+                                loc: loc.clone(),
                             },
                         )?;
                         let ident_loc = convert_opt_loc(&ident.base.loc);
@@ -1370,12 +1374,12 @@ fn lower_expression(
                                     lower_value_to_temporary(
                                         builder,
                                         InstructionValue::StoreContext {
-                                        lvalue: LValue {
-                                            kind: InstructionKind::Reassign,
-                                            place: place.clone(),
-                                        },
-                                        value: binary_place,
-                                        loc: loc.clone(),
+                                            lvalue: LValue {
+                                                kind: InstructionKind::Reassign,
+                                                place: place.clone(),
+                                            },
+                                            value: binary_place,
+                                            loc: loc.clone(),
                                         },
                                     )?;
                                     Ok(InstructionValue::LoadContext { place, loc })
@@ -1383,13 +1387,13 @@ fn lower_expression(
                                     lower_value_to_temporary(
                                         builder,
                                         InstructionValue::StoreLocal {
-                                        lvalue: LValue {
-                                            kind: InstructionKind::Reassign,
-                                            place: place.clone(),
-                                        },
-                                        value: binary_place,
-                                        type_annotation: None,
-                                        loc: loc.clone(),
+                                            lvalue: LValue {
+                                                kind: InstructionKind::Reassign,
+                                                place: place.clone(),
+                                            },
+                                            value: binary_place,
+                                            type_annotation: None,
+                                            loc: loc.clone(),
                                         },
                                     )?;
                                     Ok(InstructionValue::LoadLocal { place, loc })
@@ -1401,9 +1405,9 @@ fn lower_expression(
                                 let temp = lower_value_to_temporary(
                                     builder,
                                     InstructionValue::StoreGlobal {
-                                    name,
-                                    value: binary_place,
-                                    loc: loc.clone(),
+                                        name,
+                                        value: binary_place,
+                                        loc: loc.clone(),
                                     },
                                 )?;
                                 Ok(InstructionValue::LoadLocal {
@@ -1426,10 +1430,10 @@ fn lower_expression(
                         let result = lower_value_to_temporary(
                             builder,
                             InstructionValue::BinaryExpression {
-                            operator: binary_op,
-                            left: current_value,
-                            right,
-                            loc: member_loc.clone(),
+                                operator: binary_op,
+                                left: current_value,
+                                right,
+                                loc: member_loc.clone(),
                             },
                         )?;
                         // Return the store instruction value directly (matching TS behavior)
@@ -1502,13 +1506,13 @@ fn lower_expression(
                     lower_value_to_temporary(
                         builder,
                         InstructionValue::StoreLocal {
-                        lvalue: LValue {
-                            kind: InstructionKind::Const,
-                            place: place.clone(),
-                        },
-                        value: last,
-                        type_annotation: None,
-                        loc: loc.clone(),
+                            lvalue: LValue {
+                                kind: InstructionKind::Const,
+                                place: place.clone(),
+                            },
+                            value: last,
+                            type_annotation: None,
+                            loc: loc.clone(),
                         },
                     )?;
                 }
@@ -1539,7 +1543,7 @@ fn lower_expression(
                 expr,
                 FunctionExpressionType::ArrowFunctionExpression,
             )
-                .expect("lower_function_to_value called with ArrowFunctionExpression"))
+            .expect("lower_function_to_value called with ArrowFunctionExpression"))
         }
         Expression::FunctionExpression(_) => {
             Ok(
@@ -1857,8 +1861,8 @@ fn lower_expression(
                                 lower_value_to_temporary(
                                     builder,
                                     InstructionValue::Primitive {
-                                    value: PrimitiveValue::String(s.value.clone()),
-                                    loc: str_loc,
+                                        value: PrimitiveValue::String(s.value.clone()),
+                                        loc: str_loc,
                                     },
                                 )?
                             }
@@ -1898,8 +1902,8 @@ fn lower_expression(
                                 lower_value_to_temporary(
                                     builder,
                                     InstructionValue::Primitive {
-                                    value: PrimitiveValue::Boolean(true),
-                                    loc: attr_loc,
+                                        value: PrimitiveValue::Boolean(true),
+                                        loc: attr_loc,
                                     },
                                 )?
                             }
@@ -1938,11 +1942,11 @@ fn lower_expression(
                         let reason = format!("<{}> tags should be module-level imports", tag_name);
                         builder.record_diagnostic(
                             CompilerDiagnostic::new(ErrorCategory::Invariant, &reason, None)
-                            .with_detail(CompilerDiagnosticDetail::Error {
-                                loc: id_loc.clone(),
-                                message: Some(reason.clone()),
-                                identifier_name: None,
-                            }),
+                                .with_detail(CompilerDiagnosticDetail::Error {
+                                    loc: id_loc.clone(),
+                                    message: Some(reason.clone()),
+                                    identifier_name: None,
+                                }),
                         );
                     }
                 }
@@ -2471,7 +2475,8 @@ fn lower_block_statement_inner(
         } else {
             let scope_info = builder.scope_info();
             scope_info
-                .node_to_scope.iter()
+                .node_to_scope
+                .iter()
                 .filter(|&(&pos, &sid)| {
                     pos > stmt_start
                         && pos < stmt_end
@@ -2629,7 +2634,7 @@ fn lower_block_statement_inner(
                         kind: hoist_kind,
                         place,
                     },
-                loc: ref_loc,
+                    loc: ref_loc,
                 },
             )?;
             builder
@@ -2827,7 +2832,7 @@ fn lower_statement(
                                             kind: InstructionKind::Let,
                                             place,
                                         },
-                                    loc: id_loc,
+                                        loc: id_loc,
                                     },
                                 )?;
                             } else {
@@ -2836,9 +2841,9 @@ fn lower_statement(
                                 lower_value_to_temporary(
                                     builder,
                                     InstructionValue::DeclareLocal {
-                                    lvalue: LValue { kind, place },
-                                    type_annotation,
-                                    loc: id_loc,
+                                        lvalue: LValue { kind, place },
+                                        type_annotation,
+                                        loc: id_loc,
                                     },
                                 )?;
                             }
@@ -3242,8 +3247,8 @@ fn lower_statement(
             let next_property = lower_value_to_temporary(
                 builder,
                 InstructionValue::NextPropertyOf {
-                value,
-                loc: left_loc.clone(),
+                    value,
+                    loc: left_loc.clone(),
                 },
             )?;
 
@@ -3275,12 +3280,12 @@ fn lower_statement(
                     }
                 }
                 react_compiler_ast::statements::ForInOfLeft::Pattern(pattern) => lower_assignment(
-                        builder,
-                        left_loc.clone(),
-                        InstructionKind::Reassign,
-                        pattern,
-                        next_property.clone(),
-                        AssignmentStyle::Assignment,
+                    builder,
+                    left_loc.clone(),
+                    InstructionKind::Reassign,
+                    pattern,
+                    next_property.clone(),
+                    AssignmentStyle::Assignment,
                 )?,
             };
             // Use the assign result (StoreLocal temp) as the test, matching TS behavior
@@ -3288,8 +3293,8 @@ fn lower_statement(
             let test = lower_value_to_temporary(
                 builder,
                 InstructionValue::LoadLocal {
-                place: test_value,
-                loc: left_loc.clone(),
+                    place: test_value,
+                    loc: left_loc.clone(),
                 },
             )?;
             builder.terminate_with_continuation(
@@ -3359,8 +3364,8 @@ fn lower_statement(
             let iterator = lower_value_to_temporary(
                 builder,
                 InstructionValue::GetIterator {
-                collection: value.clone(),
-                loc: value.loc.clone(),
+                    collection: value.clone(),
+                    loc: value.loc.clone(),
                 },
             )?;
             builder.terminate_with_continuation(
@@ -3385,9 +3390,9 @@ fn lower_statement(
             let advance_iterator = lower_value_to_temporary(
                 builder,
                 InstructionValue::IteratorNext {
-                iterator: iterator.clone(),
-                collection: value.clone(),
-                loc: left_loc.clone(),
+                    iterator: iterator.clone(),
+                    collection: value.clone(),
+                    loc: left_loc.clone(),
                 },
             )?;
 
@@ -3419,12 +3424,12 @@ fn lower_statement(
                     }
                 }
                 react_compiler_ast::statements::ForInOfLeft::Pattern(pattern) => lower_assignment(
-                        builder,
-                        left_loc.clone(),
-                        InstructionKind::Reassign,
-                        pattern,
-                        advance_iterator.clone(),
-                        AssignmentStyle::Assignment,
+                    builder,
+                    left_loc.clone(),
+                    InstructionKind::Reassign,
+                    pattern,
+                    advance_iterator.clone(),
+                    AssignmentStyle::Assignment,
                 )?,
             };
             // Use the assign result (StoreLocal temp) as the test, matching TS behavior
@@ -3432,8 +3437,8 @@ fn lower_statement(
             let test = lower_value_to_temporary(
                 builder,
                 InstructionValue::LoadLocal {
-                place: test_value,
-                loc: left_loc.clone(),
+                    place: test_value,
+                    loc: left_loc.clone(),
                 },
             )?;
             builder.terminate_with_continuation(
@@ -3481,15 +3486,15 @@ fn lower_statement(
                 let fallthrough_target = fallthrough;
                 let block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                     builder.switch_scope(label.map(|s| s.to_string()), continuation_id, |builder| {
-                            for consequent in &case.consequent {
-                                lower_statement(builder, consequent, None)?;
-                            }
-                            Ok(Terminal::Goto {
-                                block: fallthrough_target,
-                                variant: GotoVariant::Break,
-                                id: EvaluationOrder(0),
-                                loc: case_loc.clone(),
-                            })
+                        for consequent in &case.consequent {
+                            lower_statement(builder, consequent, None)?;
+                        }
+                        Ok(Terminal::Goto {
+                            block: fallthrough_target,
+                            variant: GotoVariant::Break,
+                            id: EvaluationOrder(0),
+                            loc: case_loc.clone(),
+                        })
                     })
                 })?;
 
@@ -3566,7 +3571,7 @@ fn lower_statement(
                     let is_destructuring = matches!(
                         param,
                         react_compiler_ast::patterns::PatternLike::ObjectPattern(_)
-                        | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
+                            | react_compiler_ast::patterns::PatternLike::ArrayPattern(_)
                     );
                     if is_destructuring {
                         // Iterate the pattern to find all identifier locs for error reporting
@@ -3626,12 +3631,12 @@ fn lower_statement(
                         lower_value_to_temporary(
                             builder,
                             InstructionValue::DeclareLocal {
-                            lvalue: LValue {
-                                kind: InstructionKind::Catch,
-                                place: place.clone(),
-                            },
-                            type_annotation: None,
-                            loc: param_loc,
+                                lvalue: LValue {
+                                    kind: InstructionKind::Catch,
+                                    place: place.clone(),
+                                },
+                                type_annotation: None,
+                                loc: param_loc,
                             },
                         )?;
                         Some((place, param.clone()))
@@ -3742,8 +3747,8 @@ fn lower_statement(
 
                     let block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                         builder.label_scope(label_name.clone(), continuation_id, |builder| {
-                                lower_statement(builder, &labeled_stmt.body, None)?;
-                                Ok(())
+                            lower_statement(builder, &labeled_stmt.body, None)?;
+                            Ok(())
                         })?;
                         Ok(Terminal::Goto {
                             block: continuation_id,
@@ -3983,8 +3988,8 @@ pub fn lower(
         loc,
         scope_info,
         env,
-        None,          // no pre-existing bindings for top-level
-        None,          // no pre-existing used_names for top-level
+        None, // no pre-existing bindings for top-level
+        None, // no pre-existing used_names for top-level
         context_map,
         scope_id,
         scope_id, // component_scope = function_scope for top-level
@@ -4158,9 +4163,9 @@ fn lower_assignment(
                         let temp = lower_value_to_temporary(
                             builder,
                             InstructionValue::StoreContext {
-                            lvalue: LValue { place, kind },
-                            value,
-                            loc,
+                                lvalue: LValue { place, kind },
+                                value,
+                                loc,
                             },
                         )?;
                         return Ok(Some(temp));
@@ -4169,10 +4174,10 @@ fn lower_assignment(
                         let temp = lower_value_to_temporary(
                             builder,
                             InstructionValue::StoreLocal {
-                            lvalue: LValue { place, kind },
-                            value,
-                            type_annotation,
-                            loc,
+                                lvalue: LValue { place, kind },
+                                value,
+                                type_annotation,
+                                loc,
                             },
                         )?;
                         return Ok(Some(temp));
@@ -4205,10 +4210,10 @@ fn lower_assignment(
                         lower_value_to_temporary(
                             builder,
                             InstructionValue::PropertyStore {
-                            object,
-                            property: PropertyLiteral::String(prop_id.name.clone()),
-                            value,
-                            loc,
+                                object,
+                                property: PropertyLiteral::String(prop_id.name.clone()),
+                                value,
+                                loc,
                             },
                         )?
                     }
@@ -4216,10 +4221,12 @@ fn lower_assignment(
                         lower_value_to_temporary(
                             builder,
                             InstructionValue::PropertyStore {
-                            object,
-                            property: PropertyLiteral::Number(FloatValue::new(num.precise_value())),
-                            value,
-                            loc,
+                                object,
+                                property: PropertyLiteral::Number(FloatValue::new(
+                                    num.precise_value(),
+                                )),
+                                value,
+                                loc,
                             },
                         )?
                     }
@@ -4266,10 +4273,10 @@ fn lower_assignment(
                     lower_value_to_temporary(
                         builder,
                         InstructionValue::ComputedStore {
-                        object,
-                        property: property_place,
-                        value,
-                        loc,
+                            object,
+                            property: property_place,
+                            value,
+                            loc,
                         },
                     )?
                 }
@@ -4303,12 +4310,11 @@ fn lower_assignment(
                             }
                         }
                         _ => {
-                            // Non-identifier element (including None/holes) or RestElement
-                            // Only non-None non-identifier elements trigger forceTemporaries
-                            if elem.is_some() && !matches!(elem, Some(PatternLike::Identifier(_))) {
-                                found = true;
-                                break;
-                            }
+                            // Non-identifier elements (including None/holes and RestElements)
+                            // trigger forceTemporaries, matching TS where `!element.isIdentifier()`
+                            // returns true for null elements
+                            found = true;
+                            break;
                         }
                     }
                 }
@@ -4438,15 +4444,15 @@ fn lower_assignment(
             let temporary = lower_value_to_temporary(
                 builder,
                 InstructionValue::Destructure {
-                lvalue: LValuePattern {
-                    pattern: Pattern::Array(ArrayPattern {
-                        items,
-                        loc: convert_opt_loc(&pattern.base.loc),
-                    }),
-                    kind,
-                },
-                value: value.clone(),
-                loc: loc.clone(),
+                    lvalue: LValuePattern {
+                        pattern: Pattern::Array(ArrayPattern {
+                            items,
+                            loc: convert_opt_loc(&pattern.base.loc),
+                        }),
+                        kind,
+                    },
+                    value: value.clone(),
+                    loc: loc.clone(),
                 },
             )?;
 
@@ -4472,11 +4478,11 @@ fn lower_assignment(
                             break;
                         }
                         ObjectPatternProperty::ObjectProperty(obj_prop) => match &*obj_prop.value {
-                                PatternLike::Identifier(id) => {
-                                    let start = id.base.start.unwrap_or(0);
-                                    let ident_loc = convert_opt_loc(&id.base.loc);
-                                    match builder.resolve_identifier(&id.name, start, ident_loc)? {
-                                        VariableBinding::Identifier { .. } => {}
+                            PatternLike::Identifier(id) => {
+                                let start = id.base.start.unwrap_or(0);
+                                let ident_loc = convert_opt_loc(&id.base.loc);
+                                match builder.resolve_identifier(&id.name, start, ident_loc)? {
+                                    VariableBinding::Identifier { .. } => {}
                                     _ => {
                                         found = true;
                                         break;
@@ -4486,7 +4492,7 @@ fn lower_assignment(
                             _ => {
                                 found = true;
                                 break;
-                        }
+                            }
                         },
                     }
                 }
@@ -4600,9 +4606,9 @@ fn lower_assignment(
                                         Some(IdentifierForAssignment::Place(place)) => {
                                             properties.push(ObjectPropertyOrSpread::Property(
                                                 ObjectProperty {
-                                                key,
-                                                property_type: ObjectPropertyType::Property,
-                                                place,
+                                                    key,
+                                                    property_type: ObjectPropertyType::Property,
+                                                    place,
                                                 },
                                             ));
                                         }
@@ -4628,9 +4634,9 @@ fn lower_assignment(
                                     promote_temporary(builder, temp.identifier);
                                     properties.push(ObjectPropertyOrSpread::Property(
                                         ObjectProperty {
-                                        key,
-                                        property_type: ObjectPropertyType::Property,
-                                        place: temp.clone(),
+                                            key,
+                                            property_type: ObjectPropertyType::Property,
+                                            place: temp.clone(),
                                         },
                                     ));
                                     followups.push((temp, &*obj_prop.value));
@@ -4656,15 +4662,15 @@ fn lower_assignment(
             let temporary = lower_value_to_temporary(
                 builder,
                 InstructionValue::Destructure {
-                lvalue: LValuePattern {
-                    pattern: Pattern::Object(ObjectPattern {
-                        properties,
-                        loc: convert_opt_loc(&pattern.base.loc),
-                    }),
-                    kind,
-                },
-                value: value.clone(),
-                loc: loc.clone(),
+                    lvalue: LValuePattern {
+                        pattern: Pattern::Object(ObjectPattern {
+                            properties,
+                            loc: convert_opt_loc(&pattern.base.loc),
+                        }),
+                        kind,
+                    },
+                    value: value.clone(),
+                    loc: loc.clone(),
                 },
             )?;
 
@@ -4694,9 +4700,9 @@ fn lower_assignment(
                             place: temp.clone(),
                             kind: InstructionKind::Const,
                         },
-                    value: default_value,
-                    type_annotation: None,
-                    loc: pat_loc.clone(),
+                        value: default_value,
+                        type_annotation: None,
+                        loc: pat_loc.clone(),
                     },
                 )?;
                 Ok(Terminal::Goto {
@@ -4716,9 +4722,9 @@ fn lower_assignment(
                             place: temp.clone(),
                             kind: InstructionKind::Const,
                         },
-                    value: value.clone(),
-                    type_annotation: None,
-                    loc: pat_loc.clone(),
+                        value: value.clone(),
+                        type_annotation: None,
+                        loc: pat_loc.clone(),
                     },
                 )?;
                 Ok(Terminal::Goto {
@@ -4744,17 +4750,17 @@ fn lower_assignment(
             let undef = lower_value_to_temporary(
                 builder,
                 InstructionValue::Primitive {
-                value: PrimitiveValue::Undefined,
-                loc: pat_loc.clone(),
+                    value: PrimitiveValue::Undefined,
+                    loc: pat_loc.clone(),
                 },
             )?;
             let test = lower_value_to_temporary(
                 builder,
                 InstructionValue::BinaryExpression {
-                left: value,
-                operator: BinaryOperator::StrictEqual,
-                right: undef,
-                loc: pat_loc.clone(),
+                    left: value,
+                    operator: BinaryOperator::StrictEqual,
+                    right: undef,
+                    loc: pat_loc.clone(),
                 },
             )?;
             builder.terminate_with_continuation(
@@ -4835,20 +4841,20 @@ fn lower_optional_member_expression_impl(
             let temp = lower_value_to_temporary(
                 builder,
                 InstructionValue::Primitive {
-                value: PrimitiveValue::Undefined,
-                loc: loc.clone(),
+                    value: PrimitiveValue::Undefined,
+                    loc: loc.clone(),
                 },
             )?;
             lower_value_to_temporary(
                 builder,
                 InstructionValue::StoreLocal {
-                lvalue: LValue {
-                    kind: InstructionKind::Const,
-                    place: place.clone(),
-                },
-                value: temp,
-                type_annotation: None,
-                loc: loc.clone(),
+                    lvalue: LValue {
+                        kind: InstructionKind::Const,
+                        place: place.clone(),
+                    },
+                    value: temp,
+                    type_annotation: None,
+                    loc: loc.clone(),
                 },
             )?;
             Ok(Terminal::Goto {
@@ -4898,13 +4904,13 @@ fn lower_optional_member_expression_impl(
         lower_value_to_temporary(
             builder,
             InstructionValue::StoreLocal {
-            lvalue: LValue {
-                kind: InstructionKind::Const,
-                place: place.clone(),
-            },
-            value: temp,
-            type_annotation: None,
-            loc: loc.clone(),
+                lvalue: LValue {
+                    kind: InstructionKind::Const,
+                    place: place.clone(),
+                },
+                value: temp,
+                type_annotation: None,
+                loc: loc.clone(),
             },
         )?;
         Ok(Terminal::Goto {
@@ -4957,20 +4963,20 @@ fn lower_optional_call_expression_impl(
             let temp = lower_value_to_temporary(
                 builder,
                 InstructionValue::Primitive {
-                value: PrimitiveValue::Undefined,
-                loc: loc.clone(),
+                    value: PrimitiveValue::Undefined,
+                    loc: loc.clone(),
                 },
             )?;
             lower_value_to_temporary(
                 builder,
                 InstructionValue::StoreLocal {
-                lvalue: LValue {
-                    kind: InstructionKind::Const,
-                    place: place.clone(),
-                },
-                value: temp,
-                type_annotation: None,
-                loc: loc.clone(),
+                    lvalue: LValue {
+                        kind: InstructionKind::Const,
+                        place: place.clone(),
+                    },
+                    value: temp,
+                    type_annotation: None,
+                    loc: loc.clone(),
                 },
             )?;
             Ok(Terminal::Goto {
@@ -5077,13 +5083,13 @@ fn lower_optional_call_expression_impl(
         lower_value_to_temporary(
             builder,
             InstructionValue::StoreLocal {
-            lvalue: LValue {
-                kind: InstructionKind::Const,
-                place: place.clone(),
-            },
-            value: temp,
-            type_annotation: None,
-            loc: loc.clone(),
+                lvalue: LValue {
+                    kind: InstructionKind::Const,
+                    place: place.clone(),
+                },
+                value: temp,
+                type_annotation: None,
+                loc: loc.clone(),
             },
         )?;
         Ok(Terminal::Goto {
@@ -5386,25 +5392,25 @@ fn lower_function_declaration(
                         lower_value_to_temporary(
                             builder,
                             InstructionValue::StoreContext {
-                            lvalue: LValue {
-                                kind: InstructionKind::Function,
-                                place,
-                            },
-                            value: fn_place,
-                            loc,
+                                lvalue: LValue {
+                                    kind: InstructionKind::Function,
+                                    place,
+                                },
+                                value: fn_place,
+                                loc,
                             },
                         )?;
                     } else {
                         lower_value_to_temporary(
                             builder,
                             InstructionValue::StoreLocal {
-                            lvalue: LValue {
-                                kind: InstructionKind::Function,
-                                place,
-                            },
-                            value: fn_place,
-                            type_annotation: None,
-                            loc,
+                                lvalue: LValue {
+                                    kind: InstructionKind::Function,
+                                    place,
+                                },
+                                value: fn_place,
+                                type_annotation: None,
+                                loc,
                             },
                         )?;
                     }
@@ -5584,9 +5590,9 @@ fn lower_inner(
                             )
                             .with_detail(
                                 CompilerDiagnosticDetail::Error {
-                                loc: convert_opt_loc(&ident.base.loc),
-                                message: Some("Could not find binding".to_string()),
-                                identifier_name: None,
+                                    loc: convert_opt_loc(&ident.base.loc),
+                                    message: Some("Could not find binding".to_string()),
+                                    identifier_name: None,
                                 },
                             ),
                         );
@@ -5698,24 +5704,24 @@ fn lower_inner(
 
     Ok((
         HirFunction {
-        loc,
-        id: id.map(|s| s.to_string()),
-        name_hint: None,
+            loc,
+            id: id.map(|s| s.to_string()),
+            name_hint: None,
             fn_type: if is_top_level {
                 env.fn_type
             } else {
                 ReactFunctionType::Other
             },
-        params: hir_params,
-        return_type_annotation: None,
-        returns,
-        context,
-        body: hir_body,
-        instructions,
-        generator,
-        is_async,
-        directives,
-        aliasing_effects: None,
+            params: hir_params,
+            return_type_annotation: None,
+            returns,
+            context,
+            body: hir_body,
+            instructions,
+            generator,
+            is_async,
+            directives,
+            aliasing_effects: None,
         },
         used_names,
         child_bindings,
@@ -5772,8 +5778,8 @@ fn lower_jsx_element_name(
             let place = lower_value_to_temporary(
                 builder,
                 InstructionValue::Primitive {
-                value: PrimitiveValue::String(tag),
-                loc: loc.clone(),
+                    value: PrimitiveValue::String(tag),
+                    loc: loc.clone(),
                 },
             )?;
             Ok(JsxTag::Place(place))
@@ -5863,10 +5869,10 @@ fn lower_jsx_element(
             Ok(Some(lower_value_to_temporary(builder, value)?))
         }
         JSXChild::JSXExpressionContainer(container) => match &container.expression {
-                JSXExpressionContainerExpr::JSXEmptyExpression(_) => Ok(None),
-                JSXExpressionContainerExpr::Expression(expr) => {
-                    Ok(Some(lower_expression_to_temporary(builder, expr)?))
-                }
+            JSXExpressionContainerExpr::JSXEmptyExpression(_) => Ok(None),
+            JSXExpressionContainerExpr::Expression(expr) => {
+                Ok(Some(lower_expression_to_temporary(builder, expr)?))
+            }
         },
         JSXChild::JSXSpreadChild(spread) => Ok(Some(lower_expression_to_temporary(
             builder,
@@ -6106,10 +6112,10 @@ fn is_reorderable_expression(
             })
         }
         Expression::ObjectExpression(obj) => obj.properties.iter().all(|prop| match prop {
-                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+            react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
                 !p.computed && is_reorderable_expression(builder, &p.value, allow_local_identifiers)
-                    }
-                    _ => false,
+            }
+            _ => false,
         }),
         Expression::MemberExpression(member) => {
             // Allow member expressions where the innermost object is a global or module-local
