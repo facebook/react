@@ -2462,14 +2462,28 @@ fn lower_block_statement_inner(
         let stmt_end = statement_end(body_stmt).unwrap_or(u32::MAX);
         let is_function_decl = matches!(body_stmt, Statement::FunctionDeclaration(_));
 
-        // Check if statement contains nested function scopes
-        let has_nested_functions = is_function_decl || {
+        // Collect ranges of nested function scopes within this statement.
+        // Used to check per-reference whether a reference is inside a nested function,
+        // rather than checking once per-statement.
+        let nested_function_ranges: Vec<(u32, u32)> = if is_function_decl {
+            // For function declarations, fnDepth starts at 1 (all refs are inside)
+            vec![(stmt_start, stmt_end)]
+        } else {
             let scope_info = builder.scope_info();
-            scope_info.node_to_scope.iter().any(|(&pos, &sid)| {
-                pos > stmt_start
-                    && pos < stmt_end
-                    && matches!(scope_info.scopes[sid.0 as usize].kind, ScopeKind::Function)
-            })
+            scope_info
+                .node_to_scope.iter()
+                .filter(|&(&pos, &sid)| {
+                    pos > stmt_start
+                        && pos < stmt_end
+                        && matches!(scope_info.scopes[sid.0 as usize].kind, ScopeKind::Function)
+                })
+                .filter_map(|(&pos, _)| {
+                    scope_info
+                        .node_to_scope_end
+                        .get(&pos)
+                        .map(|&end| (pos, end))
+                })
+                .collect()
         };
 
         // Find references to not-yet-declared hoistable bindings within this statement
@@ -2490,7 +2504,14 @@ fn lower_block_statement_inner(
             // Find the first reference (not declaration) to this binding in the statement's range.
             // Exclude JSX identifier references since TS hoisting traversal only visits
             // Identifier nodes, not JSXIdentifier nodes.
-            let first_ref = builder
+            //
+            // The decl_start filter excludes the binding's own declaration position from
+            // counting as a reference. For hoisted bindings (function declarations), this
+            // filter is only applied when the current statement IS a FunctionDeclaration,
+            // since that's the only statement type where decl_start is a declaration, not
+            // a reference.
+            let apply_decl_filter = !matches!(kind, AstBindingKind::Hoisted) || is_function_decl;
+            let refs_in_stmt: Vec<u32> = builder
                 .scope_info()
                 .reference_to_binding
                 .iter()
@@ -2498,25 +2519,49 @@ fn lower_block_statement_inner(
                     **ref_start >= stmt_start
                         && **ref_start < stmt_end
                         && **ref_binding_id == *binding_id
-                        && Some(**ref_start) != *decl_start
+                        && (!apply_decl_filter || Some(**ref_start) != *decl_start)
                         && !builder.is_jsx_identifier(**ref_start)
                 })
                 .map(|(ref_start, _)| *ref_start)
-                .min();
+                .collect();
 
-            if let Some(first_ref_pos) = first_ref {
-                // Hoist if: (1) binding is "hoisted" kind (function declaration), or
-                // (2) reference is inside a nested function
-                let should_hoist = matches!(kind, AstBindingKind::Hoisted) || has_nested_functions;
-                if should_hoist {
-                    will_hoist.push(HoistInfo {
-                        binding_id: *binding_id,
-                        name: name.clone(),
-                        kind: kind.clone(),
-                        declaration_type: decl_type.clone(),
-                        first_ref_pos,
-                    });
-                }
+            if refs_in_stmt.is_empty() {
+                continue;
+            }
+
+            let first_ref_pos = *refs_in_stmt.iter().min().unwrap();
+
+            // Hoist if: (1) binding is "hoisted" kind (function declaration), or
+            // (2) any reference to this binding is inside a nested function scope.
+            // Check per-reference rather than per-statement to correctly handle
+            // statements that contain both nested functions and top-level code.
+            let is_hoisted_kind = matches!(kind, AstBindingKind::Hoisted);
+            let refs_in_nested_fn: Vec<u32> = refs_in_stmt
+                .iter()
+                .copied()
+                .filter(|&ref_pos| {
+                    nested_function_ranges
+                        .iter()
+                        .any(|&(fn_start, fn_end)| ref_pos >= fn_start && ref_pos < fn_end)
+                })
+                .collect();
+            let should_hoist = is_hoisted_kind || !refs_in_nested_fn.is_empty();
+            if should_hoist {
+                // For hoisted bindings (function declarations), use the first reference
+                // overall. For non-hoisted bindings, use the first reference inside a
+                // nested function.
+                let hoist_ref_pos = if is_hoisted_kind {
+                    first_ref_pos
+                } else {
+                    *refs_in_nested_fn.iter().min().unwrap()
+                };
+                will_hoist.push(HoistInfo {
+                    binding_id: *binding_id,
+                    name: name.clone(),
+                    kind: kind.clone(),
+                    declaration_type: decl_type.clone(),
+                    first_ref_pos: hoist_ref_pos,
+                });
             }
         }
 
