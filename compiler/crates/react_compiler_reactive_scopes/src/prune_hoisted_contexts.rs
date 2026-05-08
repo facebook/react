@@ -159,10 +159,14 @@ impl<'a> ReactiveFunctionTransform for Transform<'a> {
                         lvalue.kind = InstructionKind::Reassign;
                     } else if lvalue.kind == InstructionKind::Function {
                         if let Some(kind) = state.uninitialized.get(&lvalue_id) {
-                            assert!(
-                                matches!(kind, UninitializedKind::Func { .. }),
-                                "[PruneHoistedContexts] Unexpected hoisted function"
-                            );
+                            if !matches!(kind, UninitializedKind::Func { .. }) {
+                                let mut err = CompilerError::new();
+                                err.push_error_detail(
+                                    CompilerErrorDetail::new(ErrorCategory::Invariant, "[PruneHoistedContexts] Unexpected hoisted function".to_string())
+                                        .with_loc(instruction.loc)
+                                );
+                                return Err(err);
+                            }
                             // References to hoisted functions are now "safe" as
                             // variable assignments have finished.
                             state.uninitialized.remove(&lvalue_id);

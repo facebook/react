@@ -1979,6 +1979,14 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
             self.skip_body = true;
         }
     }
+
+    fn enter_object_method(
+        &mut self,
+        _node: &'ast react_compiler_ast::expressions::ObjectMethod,
+        _scope_stack: &[ScopeId],
+    ) {
+        self.skip_body = false;
+    }
 }
 
 /// Find all functions in the program that should be compiled.

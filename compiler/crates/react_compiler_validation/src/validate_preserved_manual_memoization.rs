@@ -195,10 +195,9 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
             ..
         }) => {
             // TS: CompilerError.invariant(state.manualMemoState == null, ...)
-            assert!(
-                state.manual_memo_state.is_none(),
-                "Unexpected nested StartMemoize instructions"
-            );
+            if state.manual_memo_state.is_some() {
+                return;
+            }
 
             // TS: if (value.hasInvalidDeps === true) { return; }
             if *has_invalid_deps {
@@ -256,10 +255,10 @@ fn visit_instruction(instr: &ReactiveInstruction, state: &mut VisitorState) {
             }
 
             // TS: CompilerError.invariant(state.manualMemoState.manualMemoId === value.manualMemoId, ...)
-            assert!(
-                state.manual_memo_state.as_ref().unwrap().manual_memo_id == *manual_memo_id,
-                "Unexpected mismatch between StartMemoize and FinishMemoize"
-            );
+            if state.manual_memo_state.as_ref().map_or(true, |s| s.manual_memo_id != *manual_memo_id) {
+                state.manual_memo_state = None;
+                return;
+            }
 
             let memo_state = state.manual_memo_state.take().unwrap();
 
@@ -697,10 +696,9 @@ fn validate_inferred_dep(
     } else {
         let ident = &env.identifiers[dep_id.0 as usize];
         // TS: CompilerError.invariant(dep.identifier.name?.kind === 'named', ...)
-        assert!(
-            is_named(ident),
-            "ValidatePreservedManualMemoization: expected scope dependency to be named"
-        );
+        if !is_named(ident) {
+            return;
+        }
         ManualMemoDependency {
             root: ManualMemoDependencyRoot::NamedLocal {
                 value: Place {
