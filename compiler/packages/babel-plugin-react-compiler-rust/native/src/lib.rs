@@ -6,6 +6,14 @@ use react_compiler::entrypoint::compile_program;
 use react_compiler::timing::TimingEntry;
 use react_compiler_ast::File;
 use react_compiler_ast::scope::ScopeInfo;
+use serde::Deserialize;
+
+/// Deserialize JSON with no recursion limit (for deeply nested ASTs).
+fn from_json_str<'de, T: Deserialize<'de>>(s: &'de str) -> serde_json::Result<T> {
+    let mut deserializer = serde_json::Deserializer::from_str(s);
+    deserializer.disable_recursion_limit();
+    T::deserialize(&mut deserializer)
+}
 
 /// Main entry point for the React Compiler.
 ///
@@ -47,13 +55,13 @@ fn compile_inner(
 
     let deser_start = Instant::now();
 
-    let ast: File = serde_json::from_str(&ast_json)
+    let ast: File = from_json_str(&ast_json)
         .map_err(|e| napi::Error::from_reason(format!("Failed to parse AST JSON: {}", e)))?;
 
-    let scope: ScopeInfo = serde_json::from_str(&scope_json)
+    let scope: ScopeInfo = from_json_str(&scope_json)
         .map_err(|e| napi::Error::from_reason(format!("Failed to parse scope JSON: {}", e)))?;
 
-    let opts: PluginOptions = serde_json::from_str(&options_json)
+    let opts: PluginOptions = from_json_str(&options_json)
         .map_err(|e| napi::Error::from_reason(format!("Failed to parse options JSON: {}", e)))?;
 
     let deser_duration = deser_start.elapsed();

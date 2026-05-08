@@ -1276,6 +1276,7 @@ dependencies = [
  "napi-derive",
  "react_compiler",
  "react_compiler_ast",
+ "serde",
  "serde_json",
 ]
 
