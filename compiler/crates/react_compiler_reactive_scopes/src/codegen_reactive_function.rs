@@ -10,63 +10,127 @@
 //!
 //! Corresponds to `src/ReactiveScopes/CodegenReactiveFunction.ts` in the TS compiler.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use react_compiler_ast::common::{BaseNode, SourceLocation as AstSourceLocation, Position as AstPosition};
-use react_compiler_ast::expressions::{
-    self as ast_expr, ArrowFunctionBody, Expression, Identifier as AstIdentifier,
-};
-use react_compiler_ast::jsx::{
-    JSXAttribute as AstJSXAttribute, JSXAttributeItem, JSXAttributeName, JSXAttributeValue,
-    JSXChild, JSXClosingElement, JSXClosingFragment, JSXElement, JSXElementName,
-    JSXExpressionContainer, JSXExpressionContainerExpr, JSXFragment, JSXIdentifier,
-    JSXMemberExprObject, JSXMemberExpression, JSXNamespacedName, JSXOpeningElement,
-    JSXOpeningFragment, JSXSpreadAttribute, JSXText,
-};
-use react_compiler_ast::literals::{
-    BooleanLiteral, NullLiteral, NumericLiteral, RegExpLiteral as AstRegExpLiteral, StringLiteral,
-    TemplateElement, TemplateElementValue,
-};
-use react_compiler_ast::operators::{
-    AssignmentOperator, BinaryOperator as AstBinaryOperator, LogicalOperator as AstLogicalOperator,
-    UnaryOperator as AstUnaryOperator, UpdateOperator as AstUpdateOperator,
-};
-use react_compiler_ast::patterns::{
-    ArrayPattern as AstArrayPattern, ObjectPatternProp, ObjectPatternProperty,
-    PatternLike, RestElement,
-};
-use react_compiler_ast::statements::{
-    BlockStatement, BreakStatement, CatchClause, ContinueStatement, DebuggerStatement, Directive,
-    DirectiveLiteral, DoWhileStatement, EmptyStatement, ExpressionStatement, ForInStatement,
-    ForInit, ForOfStatement, ForStatement, IfStatement, LabeledStatement, ReturnStatement,
-    Statement, SwitchCase, SwitchStatement, ThrowStatement, TryStatement, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator, WhileStatement, FunctionDeclaration,
-};
-use react_compiler_diagnostics::{
-    CompilerDiagnostic, CompilerDiagnosticDetail,
-    CompilerError, CompilerErrorDetail, ErrorCategory,
-    SourceLocation as DiagSourceLocation,
-};
+use react_compiler_ast::common::BaseNode;
+use react_compiler_ast::common::Position as AstPosition;
+use react_compiler_ast::common::SourceLocation as AstSourceLocation;
+use react_compiler_ast::expressions::ArrowFunctionBody;
+use react_compiler_ast::expressions::Expression;
+use react_compiler_ast::expressions::Identifier as AstIdentifier;
+use react_compiler_ast::expressions::{self as ast_expr};
+use react_compiler_ast::jsx::JSXAttribute as AstJSXAttribute;
+use react_compiler_ast::jsx::JSXAttributeItem;
+use react_compiler_ast::jsx::JSXAttributeName;
+use react_compiler_ast::jsx::JSXAttributeValue;
+use react_compiler_ast::jsx::JSXChild;
+use react_compiler_ast::jsx::JSXClosingElement;
+use react_compiler_ast::jsx::JSXClosingFragment;
+use react_compiler_ast::jsx::JSXElement;
+use react_compiler_ast::jsx::JSXElementName;
+use react_compiler_ast::jsx::JSXExpressionContainer;
+use react_compiler_ast::jsx::JSXExpressionContainerExpr;
+use react_compiler_ast::jsx::JSXFragment;
+use react_compiler_ast::jsx::JSXIdentifier;
+use react_compiler_ast::jsx::JSXMemberExprObject;
+use react_compiler_ast::jsx::JSXMemberExpression;
+use react_compiler_ast::jsx::JSXNamespacedName;
+use react_compiler_ast::jsx::JSXOpeningElement;
+use react_compiler_ast::jsx::JSXOpeningFragment;
+use react_compiler_ast::jsx::JSXSpreadAttribute;
+use react_compiler_ast::jsx::JSXText;
+use react_compiler_ast::literals::BooleanLiteral;
+use react_compiler_ast::literals::NullLiteral;
+use react_compiler_ast::literals::NumericLiteral;
+use react_compiler_ast::literals::RegExpLiteral as AstRegExpLiteral;
+use react_compiler_ast::literals::StringLiteral;
+use react_compiler_ast::literals::TemplateElement;
+use react_compiler_ast::literals::TemplateElementValue;
+use react_compiler_ast::operators::AssignmentOperator;
+use react_compiler_ast::operators::BinaryOperator as AstBinaryOperator;
+use react_compiler_ast::operators::LogicalOperator as AstLogicalOperator;
+use react_compiler_ast::operators::UnaryOperator as AstUnaryOperator;
+use react_compiler_ast::operators::UpdateOperator as AstUpdateOperator;
+use react_compiler_ast::patterns::ArrayPattern as AstArrayPattern;
+use react_compiler_ast::patterns::ObjectPatternProp;
+use react_compiler_ast::patterns::ObjectPatternProperty;
+use react_compiler_ast::patterns::PatternLike;
+use react_compiler_ast::patterns::RestElement;
+use react_compiler_ast::statements::BlockStatement;
+use react_compiler_ast::statements::BreakStatement;
+use react_compiler_ast::statements::CatchClause;
+use react_compiler_ast::statements::ContinueStatement;
+use react_compiler_ast::statements::DebuggerStatement;
+use react_compiler_ast::statements::Directive;
+use react_compiler_ast::statements::DirectiveLiteral;
+use react_compiler_ast::statements::DoWhileStatement;
+use react_compiler_ast::statements::EmptyStatement;
+use react_compiler_ast::statements::ExpressionStatement;
+use react_compiler_ast::statements::ForInStatement;
+use react_compiler_ast::statements::ForInit;
+use react_compiler_ast::statements::ForOfStatement;
+use react_compiler_ast::statements::ForStatement;
+use react_compiler_ast::statements::FunctionDeclaration;
+use react_compiler_ast::statements::IfStatement;
+use react_compiler_ast::statements::LabeledStatement;
+use react_compiler_ast::statements::ReturnStatement;
+use react_compiler_ast::statements::Statement;
+use react_compiler_ast::statements::SwitchCase;
+use react_compiler_ast::statements::SwitchStatement;
+use react_compiler_ast::statements::ThrowStatement;
+use react_compiler_ast::statements::TryStatement;
+use react_compiler_ast::statements::VariableDeclaration;
+use react_compiler_ast::statements::VariableDeclarationKind;
+use react_compiler_ast::statements::VariableDeclarator;
+use react_compiler_ast::statements::WhileStatement;
+use react_compiler_diagnostics::CompilerDiagnostic;
+use react_compiler_diagnostics::CompilerDiagnosticDetail;
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorDetail;
+use react_compiler_diagnostics::ErrorCategory;
+use react_compiler_diagnostics::SourceLocation as DiagSourceLocation;
+use react_compiler_hir::ArrayElement;
+use react_compiler_hir::ArrayPattern;
+use react_compiler_hir::BlockId;
+use react_compiler_hir::DeclarationId;
+use react_compiler_hir::FunctionExpressionType;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::InstructionKind;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::JsxAttribute;
+use react_compiler_hir::JsxTag;
+use react_compiler_hir::LogicalOperator;
+use react_compiler_hir::ObjectPattern;
+use react_compiler_hir::ObjectPropertyKey;
+use react_compiler_hir::ObjectPropertyOrSpread;
+use react_compiler_hir::ObjectPropertyType;
+use react_compiler_hir::ParamPattern;
+use react_compiler_hir::Pattern;
+use react_compiler_hir::Place;
+use react_compiler_hir::PlaceOrSpread;
+use react_compiler_hir::PrimitiveValue;
+use react_compiler_hir::PropertyLiteral;
+use react_compiler_hir::ScopeId;
+use react_compiler_hir::SpreadPattern;
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::reactive::{
-    PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction, ReactiveInstruction,
-    ReactiveStatement, ReactiveTerminal, ReactiveTerminalTargetKind, ReactiveValue,
-    ReactiveScopeBlock,
-};
-use react_compiler_hir::{
-    ArrayElement, ArrayPattern, BlockId, DeclarationId, FunctionExpressionType, IdentifierId,
-    InstructionKind, InstructionValue, JsxAttribute, JsxTag,
-    LogicalOperator, ObjectPattern, ObjectPropertyKey, ObjectPropertyOrSpread,
-    ObjectPropertyType, ParamPattern, Pattern, Place, PlaceOrSpread, PrimitiveValue,
-    PropertyLiteral, ScopeId, SpreadPattern,
-};
+use react_compiler_hir::reactive::PrunedReactiveScopeBlock;
+use react_compiler_hir::reactive::ReactiveBlock;
+use react_compiler_hir::reactive::ReactiveFunction;
+use react_compiler_hir::reactive::ReactiveInstruction;
+use react_compiler_hir::reactive::ReactiveScopeBlock;
+use react_compiler_hir::reactive::ReactiveStatement;
+use react_compiler_hir::reactive::ReactiveTerminal;
+use react_compiler_hir::reactive::ReactiveTerminalTargetKind;
+use react_compiler_hir::reactive::ReactiveValue;
 
 use crate::build_reactive_function::build_reactive_function;
 use crate::prune_hoisted_contexts::prune_hoisted_contexts;
 use crate::prune_unused_labels::prune_unused_labels;
 use crate::prune_unused_lvalues::prune_unused_lvalues;
 use crate::rename_variables::rename_variables;
-use crate::visitors::{ReactiveFunctionVisitor, visit_reactive_function};
+use crate::visitors::ReactiveFunctionVisitor;
+use crate::visitors::visit_reactive_function;
 
 // =============================================================================
 // Public API
@@ -124,24 +188,26 @@ pub fn codegen_function(
     let mut cx = Context::new(env, fn_name.to_string(), unique_identifiers, fbt_operands);
 
     // Fast Refresh: compute source hash and reserve a cache slot if enabled
-    let fast_refresh_state: Option<(u32, String)> = if cx.env.config.enable_reset_cache_on_source_file_changes == Some(true) {
-        if let Some(ref code) = cx.env.code {
-            use sha2::Sha256;
-            use hmac::{Hmac, Mac};
-            type HmacSha256 = Hmac<Sha256>;
-            // Match TS: createHmac('sha256', code).digest('hex')
-            // Node's createHmac uses the code as the HMAC key and hashes empty data.
-            let mac = HmacSha256::new_from_slice(code.as_bytes())
-                .expect("HMAC can take key of any size");
-            let hash = format!("{:x}", mac.finalize().into_bytes());
-            let cache_index = cx.alloc_cache_index(); // Reserve slot 0 for the hash check
-            Some((cache_index, hash))
+    let fast_refresh_state: Option<(u32, String)> =
+        if cx.env.config.enable_reset_cache_on_source_file_changes == Some(true) {
+            if let Some(ref code) = cx.env.code {
+                use hmac::Hmac;
+                use hmac::Mac;
+                use sha2::Sha256;
+                type HmacSha256 = Hmac<Sha256>;
+                // Match TS: createHmac('sha256', code).digest('hex')
+                // Node's createHmac uses the code as the HMAC key and hashes empty data.
+                let mac = HmacSha256::new_from_slice(code.as_bytes())
+                    .expect("HMAC can take key of any size");
+                let hash = format!("{:x}", mac.finalize().into_bytes());
+                let cache_index = cx.alloc_cache_index(); // Reserve slot 0 for the hash check
+                Some((cache_index, hash))
+            } else {
+                None
+            }
         } else {
             None
-        }
-    } else {
-        None
-    };
+        };
 
     let mut compiled = codegen_reactive_function(&mut cx, func)?;
 
@@ -152,12 +218,12 @@ pub fn codegen_function(
         && cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client
     {
         let guard_name = cx.env.hook_guard_name.as_ref().unwrap().clone();
-        let body_stmts = std::mem::replace(
-            &mut compiled.body.body,
-            Vec::new(),
-        );
+        let body_stmts = std::mem::replace(&mut compiled.body.body, Vec::new());
         compiled.body.body = vec![create_function_body_hook_guard(
-            &guard_name, body_stmts, 0, 1,
+            &guard_name,
+            body_stmts,
+            0,
+            1,
         )];
     }
 
@@ -175,9 +241,7 @@ pub fn codegen_function(
                 init: Some(Box::new(Expression::CallExpression(
                     ast_expr::CallExpression {
                         base: BaseNode::typed("CallExpression"),
-                        callee: Box::new(Expression::Identifier(make_identifier(
-                            "useMemoCache",
-                        ))),
+                        callee: Box::new(Expression::Identifier(make_identifier("useMemoCache"))),
                         arguments: vec![Expression::NumericLiteral(NumericLiteral {
                             base: BaseNode::typed("NumericLiteral"),
                             value: cache_count as f64,
@@ -224,71 +288,107 @@ pub fn codegen_function(
                         // for (let $i = 0; $i < N; $i += 1) { $[$i] = Symbol.for("react.memo_cache_sentinel"); }
                         Statement::ForStatement(ForStatement {
                             base: BaseNode::typed("ForStatement"),
-                            init: Some(Box::new(ForInit::VariableDeclaration(VariableDeclaration {
-                                base: BaseNode::typed("VariableDeclaration"),
-                                declarations: vec![VariableDeclarator {
-                                    base: BaseNode::typed("VariableDeclarator"),
-                                    id: PatternLike::Identifier(make_identifier(&index_var)),
-                                    init: Some(Box::new(Expression::NumericLiteral(NumericLiteral {
+                            init: Some(Box::new(ForInit::VariableDeclaration(
+                                VariableDeclaration {
+                                    base: BaseNode::typed("VariableDeclaration"),
+                                    declarations: vec![VariableDeclarator {
+                                        base: BaseNode::typed("VariableDeclarator"),
+                                        id: PatternLike::Identifier(make_identifier(&index_var)),
+                                        init: Some(Box::new(Expression::NumericLiteral(
+                                            NumericLiteral {
+                                                base: BaseNode::typed("NumericLiteral"),
+                                                value: 0.0,
+                                                extra: None,
+                                            },
+                                        ))),
+                                        definite: None,
+                                    }],
+                                    kind: VariableDeclarationKind::Let,
+                                    declare: None,
+                                },
+                            ))),
+                            test: Some(Box::new(Expression::BinaryExpression(
+                                ast_expr::BinaryExpression {
+                                    base: BaseNode::typed("BinaryExpression"),
+                                    operator: AstBinaryOperator::Lt,
+                                    left: Box::new(Expression::Identifier(make_identifier(
+                                        &index_var,
+                                    ))),
+                                    right: Box::new(Expression::NumericLiteral(NumericLiteral {
                                         base: BaseNode::typed("NumericLiteral"),
-                                        value: 0.0,
+                                        value: cache_count as f64,
                                         extra: None,
-                                    }))),
-                                    definite: None,
-                                }],
-                                kind: VariableDeclarationKind::Let,
-                                declare: None,
-                            }))),
-                            test: Some(Box::new(Expression::BinaryExpression(ast_expr::BinaryExpression {
-                                base: BaseNode::typed("BinaryExpression"),
-                                operator: AstBinaryOperator::Lt,
-                                left: Box::new(Expression::Identifier(make_identifier(&index_var))),
-                                right: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                    base: BaseNode::typed("NumericLiteral"),
-                                    value: cache_count as f64,
-                                    extra: None,
-                                })),
-                            }))),
-                            update: Some(Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                                base: BaseNode::typed("AssignmentExpression"),
-                                operator: AssignmentOperator::AddAssign,
-                                left: Box::new(PatternLike::Identifier(make_identifier(&index_var))),
-                                right: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                    base: BaseNode::typed("NumericLiteral"),
-                                    value: 1.0,
-                                    extra: None,
-                                })),
-                            }))),
+                                    })),
+                                },
+                            ))),
+                            update: Some(Box::new(Expression::AssignmentExpression(
+                                ast_expr::AssignmentExpression {
+                                    base: BaseNode::typed("AssignmentExpression"),
+                                    operator: AssignmentOperator::AddAssign,
+                                    left: Box::new(PatternLike::Identifier(make_identifier(
+                                        &index_var,
+                                    ))),
+                                    right: Box::new(Expression::NumericLiteral(NumericLiteral {
+                                        base: BaseNode::typed("NumericLiteral"),
+                                        value: 1.0,
+                                        extra: None,
+                                    })),
+                                },
+                            ))),
                             body: Box::new(Statement::BlockStatement(BlockStatement {
                                 base: BaseNode::typed("BlockStatement"),
                                 body: vec![Statement::ExpressionStatement(ExpressionStatement {
                                     base: BaseNode::typed("ExpressionStatement"),
-                                    expression: Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                                        base: BaseNode::typed("AssignmentExpression"),
-                                        operator: AssignmentOperator::Assign,
-                                        left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
-                                            base: BaseNode::typed("MemberExpression"),
-                                            object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
-                                            property: Box::new(Expression::Identifier(make_identifier(&index_var))),
-                                            computed: true,
-                                        })),
-                                        right: Box::new(Expression::CallExpression(ast_expr::CallExpression {
-                                            base: BaseNode::typed("CallExpression"),
-                                            callee: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
-                                                base: BaseNode::typed("MemberExpression"),
-                                                object: Box::new(Expression::Identifier(make_identifier("Symbol"))),
-                                                property: Box::new(Expression::Identifier(make_identifier("for"))),
-                                                computed: false,
-                                            })),
-                                            arguments: vec![Expression::StringLiteral(StringLiteral {
-                                                base: BaseNode::typed("StringLiteral"),
-                                                value: MEMO_CACHE_SENTINEL.to_string(),
-                                            })],
-                                            type_parameters: None,
-                                            type_arguments: None,
-                                            optional: None,
-                                        })),
-                                    })),
+                                    expression: Box::new(Expression::AssignmentExpression(
+                                        ast_expr::AssignmentExpression {
+                                            base: BaseNode::typed("AssignmentExpression"),
+                                            operator: AssignmentOperator::Assign,
+                                            left: Box::new(PatternLike::MemberExpression(
+                                                ast_expr::MemberExpression {
+                                                    base: BaseNode::typed("MemberExpression"),
+                                                    object: Box::new(Expression::Identifier(
+                                                        make_identifier(&cache_name),
+                                                    )),
+                                                    property: Box::new(Expression::Identifier(
+                                                        make_identifier(&index_var),
+                                                    )),
+                                                    computed: true,
+                                                },
+                                            )),
+                                            right: Box::new(Expression::CallExpression(
+                                                ast_expr::CallExpression {
+                                                    base: BaseNode::typed("CallExpression"),
+                                                    callee: Box::new(Expression::MemberExpression(
+                                                        ast_expr::MemberExpression {
+                                                            base: BaseNode::typed(
+                                                                "MemberExpression",
+                                                            ),
+                                                            object: Box::new(
+                                                                Expression::Identifier(
+                                                                    make_identifier("Symbol"),
+                                                                ),
+                                                            ),
+                                                            property: Box::new(
+                                                                Expression::Identifier(
+                                                                    make_identifier("for"),
+                                                                ),
+                                                            ),
+                                                            computed: false,
+                                                        },
+                                                    )),
+                                                    arguments: vec![Expression::StringLiteral(
+                                                        StringLiteral {
+                                                            base: BaseNode::typed("StringLiteral"),
+                                                            value: MEMO_CACHE_SENTINEL.to_string(),
+                                                        },
+                                                    )],
+                                                    type_parameters: None,
+                                                    type_arguments: None,
+                                                    optional: None,
+                                                },
+                                            )),
+                                        },
+                                    )),
                                 })],
                                 directives: Vec::new(),
                             })),
@@ -296,24 +396,32 @@ pub fn codegen_function(
                         // $[cacheIndex] = "hash"
                         Statement::ExpressionStatement(ExpressionStatement {
                             base: BaseNode::typed("ExpressionStatement"),
-                            expression: Box::new(Expression::AssignmentExpression(ast_expr::AssignmentExpression {
-                                base: BaseNode::typed("AssignmentExpression"),
-                                operator: AssignmentOperator::Assign,
-                                left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
-                                    base: BaseNode::typed("MemberExpression"),
-                                    object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
-                                    property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                        base: BaseNode::typed("NumericLiteral"),
-                                        value: cache_index as f64,
-                                        extra: None,
+                            expression: Box::new(Expression::AssignmentExpression(
+                                ast_expr::AssignmentExpression {
+                                    base: BaseNode::typed("AssignmentExpression"),
+                                    operator: AssignmentOperator::Assign,
+                                    left: Box::new(PatternLike::MemberExpression(
+                                        ast_expr::MemberExpression {
+                                            base: BaseNode::typed("MemberExpression"),
+                                            object: Box::new(Expression::Identifier(
+                                                make_identifier(&cache_name),
+                                            )),
+                                            property: Box::new(Expression::NumericLiteral(
+                                                NumericLiteral {
+                                                    base: BaseNode::typed("NumericLiteral"),
+                                                    value: cache_index as f64,
+                                                    extra: None,
+                                                },
+                                            )),
+                                            computed: true,
+                                        },
+                                    )),
+                                    right: Box::new(Expression::StringLiteral(StringLiteral {
+                                        base: BaseNode::typed("StringLiteral"),
+                                        value: hash.clone(),
                                     })),
-                                    computed: true,
-                                })),
-                                right: Box::new(Expression::StringLiteral(StringLiteral {
-                                    base: BaseNode::typed("StringLiteral"),
-                                    value: hash.clone(),
-                                })),
-                            })),
+                                },
+                            )),
                         }),
                     ],
                     directives: Vec::new(),
@@ -331,30 +439,39 @@ pub fn codegen_function(
     // Instrument forget: emit instrumentation call at the top of the function body
     let emit_instrument_forget = cx.env.config.enable_emit_instrument_forget.clone();
     if let Some(ref instrument_config) = emit_instrument_forget {
-        if func.id.is_some() && cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client {
+        if func.id.is_some()
+            && cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client
+        {
             // Use pre-resolved import names from environment (set by program-level code)
-            let instrument_fn_local = cx.env.instrument_fn_name.clone()
+            let instrument_fn_local = cx
+                .env
+                .instrument_fn_name
+                .clone()
                 .unwrap_or_else(|| instrument_config.fn_.import_specifier_name.clone());
             let instrument_gating_local = cx.env.instrument_gating_name.clone();
 
             // Build the gating condition
-            let gating_expr: Option<Expression> = instrument_gating_local.map(|name| {
-                Expression::Identifier(make_identifier(&name))
-            });
-            let global_gating_expr: Option<Expression> = instrument_config.global_gating.as_ref().map(|g| {
-                Expression::Identifier(make_identifier(g))
-            });
+            let gating_expr: Option<Expression> =
+                instrument_gating_local.map(|name| Expression::Identifier(make_identifier(&name)));
+            let global_gating_expr: Option<Expression> = instrument_config
+                .global_gating
+                .as_ref()
+                .map(|g| Expression::Identifier(make_identifier(g)));
 
             let if_test = match (gating_expr, global_gating_expr) {
-                (Some(gating), Some(global)) => Expression::LogicalExpression(ast_expr::LogicalExpression {
-                    base: BaseNode::typed("LogicalExpression"),
-                    operator: AstLogicalOperator::And,
-                    left: Box::new(global),
-                    right: Box::new(gating),
-                }),
+                (Some(gating), Some(global)) => {
+                    Expression::LogicalExpression(ast_expr::LogicalExpression {
+                        base: BaseNode::typed("LogicalExpression"),
+                        operator: AstLogicalOperator::And,
+                        left: Box::new(global),
+                        right: Box::new(gating),
+                    })
+                }
                 (Some(gating), None) => gating,
                 (None, Some(global)) => global,
-                (None, None) => unreachable!("InstrumentationConfig requires at least one of gating or globalGating"),
+                (None, None) => unreachable!(
+                    "InstrumentationConfig requires at least one of gating or globalGating"
+                ),
             };
 
             let fn_name_str = func.id.as_deref().unwrap_or("");
@@ -404,7 +521,11 @@ pub fn codegen_function(
         let identifiers = rename_variables(&mut reactive_fn_mut, cx.env);
         let mut outlined_cx = Context::new(
             cx.env,
-            reactive_fn_mut.id.as_deref().unwrap_or("[[ anonymous ]]").to_string(),
+            reactive_fn_mut
+                .id
+                .as_deref()
+                .unwrap_or("[[ anonymous ]]")
+                .to_string(),
             identifiers,
             cx.fbt_operands.clone(),
         );
@@ -438,7 +559,13 @@ struct Context<'env> {
     next_cache_index: u32,
     declarations: HashSet<DeclarationId>,
     temp: Temporaries,
-    object_methods: HashMap<IdentifierId, (InstructionValue, Option<react_compiler_diagnostics::SourceLocation>)>,
+    object_methods: HashMap<
+        IdentifierId,
+        (
+            InstructionValue,
+            Option<react_compiler_diagnostics::SourceLocation>,
+        ),
+    >,
     unique_identifiers: HashSet<String>,
     fbt_operands: HashSet<IdentifierId>,
     synthesized_names: HashMap<String, String>,
@@ -491,7 +618,8 @@ impl<'env> Context<'env> {
             index += 1;
         }
         self.unique_identifiers.insert(validated.clone());
-        self.synthesized_names.insert(name.to_string(), validated.clone());
+        self.synthesized_names
+            .insert(name.to_string(), validated.clone());
         validated
     }
 
@@ -519,7 +647,11 @@ fn codegen_reactive_function(
         cx.declare(place.identifier);
     }
 
-    let params: Vec<PatternLike> = func.params.iter().map(|p| convert_parameter(p, cx.env)).collect::<Result<_, _>>()?;
+    let params: Vec<PatternLike> = func
+        .params
+        .iter()
+        .map(|p| convert_parameter(p, cx.env))
+        .collect::<Result<_, _>>()?;
     let mut body = codegen_block(cx, &func.body)?;
 
     // Add directives
@@ -563,11 +695,15 @@ fn codegen_reactive_function(
     })
 }
 
-fn convert_parameter(param: &ParamPattern, env: &Environment) -> Result<PatternLike, CompilerError> {
+fn convert_parameter(
+    param: &ParamPattern,
+    env: &Environment,
+) -> Result<PatternLike, CompilerError> {
     match param {
-        ParamPattern::Place(place) => {
-            Ok(PatternLike::Identifier(convert_identifier(place.identifier, env)?))
-        }
+        ParamPattern::Place(place) => Ok(PatternLike::Identifier(convert_identifier(
+            place.identifier,
+            env,
+        )?)),
         ParamPattern::Spread(spread) => Ok(PatternLike::RestElement(RestElement {
             base: BaseNode::typed("RestElement"),
             argument: Box::new(PatternLike::Identifier(convert_identifier(
@@ -603,9 +739,7 @@ fn codegen_block_no_reset(
                     statements.push(stmt);
                 }
             }
-            ReactiveStatement::PrunedScope(PrunedReactiveScopeBlock {
-                instructions, ..
-            }) => {
+            ReactiveStatement::PrunedScope(PrunedReactiveScopeBlock { instructions, .. }) => {
                 let scope_block = codegen_block_no_reset(cx, instructions)?;
                 statements.extend(scope_block.body);
             }
@@ -710,20 +844,16 @@ fn codegen_reactive_scope(
                 ast_expr::AssignmentExpression {
                     base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
-                    left: Box::new(PatternLike::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(Expression::Identifier(make_identifier(
-                                &cache_name,
-                            ))),
-                            property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                base: BaseNode::typed("NumericLiteral"),
-                                value: index as f64,
-                                extra: None,
-                            })),
-                            computed: true,
-                        },
-                    )),
+                    left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                        property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                            base: BaseNode::typed("NumericLiteral"),
+                            value: index as f64,
+                            extra: None,
+                        })),
+                        computed: true,
+                    })),
                     right: Box::new(dep_value),
                 },
             )),
@@ -823,20 +953,16 @@ fn codegen_reactive_scope(
                 ast_expr::AssignmentExpression {
                     base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
-                    left: Box::new(PatternLike::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(Expression::Identifier(make_identifier(
-                                &cache_name,
-                            ))),
-                            property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                base: BaseNode::typed("NumericLiteral"),
-                                value: *index as f64,
-                                extra: None,
-                            })),
-                            computed: true,
-                        },
-                    )),
+                    left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                        property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                            base: BaseNode::typed("NumericLiteral"),
+                            value: *index as f64,
+                            extra: None,
+                        })),
+                        computed: true,
+                    })),
                     right: Box::new(value.clone()),
                 },
             )),
@@ -848,20 +974,16 @@ fn codegen_reactive_scope(
                     base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
                     left: Box::new(PatternLike::Identifier(name.clone())),
-                    right: Box::new(Expression::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(Expression::Identifier(make_identifier(
-                                &cache_name,
-                            ))),
-                            property: Box::new(Expression::NumericLiteral(NumericLiteral {
-                                base: BaseNode::typed("NumericLiteral"),
-                                value: *index as f64,
-                                extra: None,
-                            })),
-                            computed: true,
-                        },
-                    )),
+                    right: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(Expression::Identifier(make_identifier(&cache_name))),
+                        property: Box::new(Expression::NumericLiteral(NumericLiteral {
+                            base: BaseNode::typed("NumericLiteral"),
+                            value: *index as f64,
+                            extra: None,
+                        })),
+                        computed: true,
+                    })),
                 },
             )),
         }));
@@ -882,7 +1004,9 @@ fn codegen_reactive_scope(
     statements.push(memo_stmt);
 
     // Handle early return
-    let early_return_value = cx.env.scopes[scope_id.0 as usize].early_return_value.clone();
+    let early_return_value = cx.env.scopes[scope_id.0 as usize]
+        .early_return_value
+        .clone();
     if let Some(ref early_return) = early_return_value {
         let early_ident = &cx.env.identifiers[early_return.value.0 as usize];
         let name = match &early_ident.name {
@@ -890,9 +1014,9 @@ fn codegen_reactive_scope(
             Some(react_compiler_hir::IdentifierName::Promoted(n)) => n.clone(),
             None => {
                 return Err(invariant_err(
-                        "Expected early return value to be promoted to a named variable",
-                        early_return.loc,
-                    ));
+                    "Expected early return value to be promoted to a named variable",
+                    early_return.loc,
+                ));
             }
         };
         statements.push(Statement::IfStatement(IfStatement {
@@ -1011,7 +1135,9 @@ fn codegen_terminal(
                 alternate: alternate_stmt,
             })))
         }
-        ReactiveTerminal::Switch { test, cases, loc, .. } => {
+        ReactiveTerminal::Switch {
+            test, cases, loc, ..
+        } => {
             let test_expr = codegen_place_to_expression(cx, test)?;
             let switch_cases: Vec<SwitchCase> = cases
                 .iter()
@@ -1045,7 +1171,10 @@ fn codegen_terminal(
             })))
         }
         ReactiveTerminal::DoWhile {
-            loop_block, test, loc, ..
+            loop_block,
+            test,
+            loc,
+            ..
         } => {
             let test_expr = codegen_instruction_value_to_expression(cx, test)?;
             let body = codegen_block(cx, loop_block)?;
@@ -1056,7 +1185,10 @@ fn codegen_terminal(
             })))
         }
         ReactiveTerminal::While {
-            test, loop_block, loc, ..
+            test,
+            loop_block,
+            loc,
+            ..
         } => {
             let test_expr = codegen_instruction_value_to_expression(cx, test)?;
             let body = codegen_block(cx, loop_block)?;
@@ -1090,19 +1222,18 @@ fn codegen_terminal(
             })))
         }
         ReactiveTerminal::ForIn {
-            init, loop_block, loc, ..
-        } => {
-            codegen_for_in(cx, init, loop_block, *loc)
-        }
+            init,
+            loop_block,
+            loc,
+            ..
+        } => codegen_for_in(cx, init, loop_block, *loc),
         ReactiveTerminal::ForOf {
             init,
             test,
             loop_block,
             loc,
             ..
-        } => {
-            codegen_for_of(cx, init, test, loop_block, *loc)
-        }
+        } => codegen_for_of(cx, init, test, loop_block, *loc),
         ReactiveTerminal::Label { block, .. } => {
             let body = codegen_block(cx, block)?;
             Ok(Some(Statement::BlockStatement(body)))
@@ -1118,7 +1249,10 @@ fn codegen_terminal(
                 Some(binding) => {
                     let ident = &cx.env.identifiers[binding.identifier.0 as usize];
                     cx.temp.insert(ident.declaration_id, None);
-                    Some(PatternLike::Identifier(convert_identifier(binding.identifier, cx.env)?))
+                    Some(PatternLike::Identifier(convert_identifier(
+                        binding.identifier,
+                        cx.env,
+                    )?))
                 }
                 None => None,
             };
@@ -1165,14 +1299,13 @@ fn codegen_for_in(
     let iterable_collection = &instructions[0];
     let iterable_item = &instructions[1];
     let instr_value = get_instruction_value(&iterable_item.value)?;
-    let (lval, var_decl_kind) =
-        extract_for_in_of_lval(cx, instr_value, "for..in", loc)?;
+    let (lval, var_decl_kind) = extract_for_in_of_lval(cx, instr_value, "for..in", loc)?;
     let right = codegen_instruction_value_to_expression(cx, &iterable_collection.value)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForInStatement(ForInStatement {
         base: base_node_with_loc("ForInStatement", loc),
-        left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
-            VariableDeclaration {
+        left: Box::new(
+            react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![VariableDeclarator {
                     base: BaseNode::typed("VariableDeclarator"),
@@ -1182,8 +1315,8 @@ fn codegen_for_in(
                 }],
                 kind: var_decl_kind,
                 declare: None,
-            },
-        )),
+            }),
+        ),
         right: Box::new(right),
         body: Box::new(Statement::BlockStatement(body)),
     })))
@@ -1215,10 +1348,7 @@ fn codegen_for_of(
     }
     let get_iter_value = get_instruction_value(&init_instrs[0].value)?;
     let InstructionValue::GetIterator { collection, .. } = get_iter_value else {
-        return Err(invariant_err(
-            "Expected GetIterator in for..of init",
-            None,
-        ));
+        return Err(invariant_err("Expected GetIterator in for..of init", None));
     };
 
     let ReactiveValue::SequenceExpression {
@@ -1245,15 +1375,14 @@ fn codegen_for_of(
     }
     let iterable_item = &test_instrs[1];
     let instr_value = get_instruction_value(&iterable_item.value)?;
-    let (lval, var_decl_kind) =
-        extract_for_in_of_lval(cx, instr_value, "for..of", loc)?;
+    let (lval, var_decl_kind) = extract_for_in_of_lval(cx, instr_value, "for..of", loc)?;
 
     let right = codegen_place_to_expression(cx, collection)?;
     let body = codegen_block(cx, loop_block)?;
     Ok(Some(Statement::ForOfStatement(ForOfStatement {
         base: base_node_with_loc("ForOfStatement", loc),
-        left: Box::new(react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(
-            VariableDeclaration {
+        left: Box::new(
+            react_compiler_ast::statements::ForInOfLeft::VariableDeclaration(VariableDeclaration {
                 base: BaseNode::typed("VariableDeclaration"),
                 declarations: vec![VariableDeclarator {
                     base: BaseNode::typed("VariableDeclarator"),
@@ -1263,8 +1392,8 @@ fn codegen_for_of(
                 }],
                 kind: var_decl_kind,
                 declare: None,
-            },
-        )),
+            }),
+        ),
         right: Box::new(right),
         body: Box::new(Statement::BlockStatement(body)),
         is_await: false,
@@ -1279,12 +1408,14 @@ fn extract_for_in_of_lval(
     loc: Option<DiagSourceLocation>,
 ) -> Result<(PatternLike, VariableDeclarationKind), CompilerError> {
     let (lval, kind) = match instr_value {
-        InstructionValue::StoreLocal { lvalue, .. } => {
-            (codegen_lvalue(cx, &LvalueRef::Place(&lvalue.place))?, lvalue.kind)
-        }
-        InstructionValue::Destructure { lvalue, .. } => {
-            (codegen_lvalue(cx, &LvalueRef::Pattern(&lvalue.pattern))?, lvalue.kind)
-        }
+        InstructionValue::StoreLocal { lvalue, .. } => (
+            codegen_lvalue(cx, &LvalueRef::Place(&lvalue.place))?,
+            lvalue.kind,
+        ),
+        InstructionValue::Destructure { lvalue, .. } => (
+            codegen_lvalue(cx, &LvalueRef::Pattern(&lvalue.pattern))?,
+            lvalue.kind,
+        ),
         InstructionValue::StoreContext { .. } => {
             cx.record_error(CompilerErrorDetail {
                 category: ErrorCategory::Todo,
@@ -1302,7 +1433,8 @@ fn extract_for_in_of_lval(
             return Err(invariant_err(
                 &format!(
                     "Expected a StoreLocal or Destructure in {} collection, found {:?}",
-                    context_name, std::mem::discriminant(instr_value)
+                    context_name,
+                    std::mem::discriminant(instr_value)
                 ),
                 None,
             ));
@@ -1313,7 +1445,10 @@ fn extract_for_in_of_lval(
         InstructionKind::Let => VariableDeclarationKind::Let,
         _ => {
             return Err(invariant_err(
-                &format!("Unexpected {:?} variable in {} collection", kind, context_name),
+                &format!(
+                    "Unexpected {:?} variable in {} collection",
+                    kind, context_name
+                ),
                 None,
             ));
         }
@@ -1337,18 +1472,18 @@ fn codegen_for_init(
             // Check if this is an assignment that can be folded into the last declarator
             if let Statement::ExpressionStatement(ref expr_stmt) = instr {
                 if let Expression::AssignmentExpression(ref assign) = *expr_stmt.expression {
-                if matches!(assign.operator, AssignmentOperator::Assign) {
-                    if let PatternLike::Identifier(ref left_ident) = *assign.left {
-                        if let Some(top) = declarators.last_mut() {
-                            if let PatternLike::Identifier(ref top_ident) = top.id {
-                                if top_ident.name == left_ident.name && top.init.is_none() {
-                                    top.init = Some(assign.right.clone());
-                                    continue;
+                    if matches!(assign.operator, AssignmentOperator::Assign) {
+                        if let PatternLike::Identifier(ref left_ident) = *assign.left {
+                            if let Some(top) = declarators.last_mut() {
+                                if let PatternLike::Identifier(ref top_ident) = top.id {
+                                    if top_ident.name == left_ident.name && top.init.is_none() {
+                                        top.init = Some(assign.right.clone());
+                                        continue;
+                                    }
                                 }
                             }
                         }
                     }
-                }
                 }
             }
 
@@ -1356,7 +1491,10 @@ fn codegen_for_init(
                 match var_decl.kind {
                     VariableDeclarationKind::Let | VariableDeclarationKind::Const => {}
                     _ => {
-                        return Err(invariant_err("Expected a let or const variable declaration", None));
+                        return Err(invariant_err(
+                            "Expected a let or const variable declaration",
+                            None,
+                        ));
                     }
                 }
                 if matches!(var_decl.kind, VariableDeclarationKind::Let) {
@@ -1384,7 +1522,10 @@ fn codegen_for_init(
             }
         }
         if declarators.is_empty() {
-            return Err(invariant_err("Expected a variable declaration in for-init", None));
+            return Err(invariant_err(
+                "Expected a variable declaration in for-init",
+                None,
+            ));
         }
         Ok(Some(ForInit::VariableDeclaration(VariableDeclaration {
             base: BaseNode::typed("VariableDeclaration"),
@@ -1424,20 +1565,28 @@ fn codegen_instruction_nullable(
                     base: base_node_with_loc("DebuggerStatement", instr.loc),
                 })));
             }
-            InstructionValue::UnsupportedNode { original_node: Some(node), .. } => {
+            InstructionValue::UnsupportedNode {
+                original_node: Some(node),
+                ..
+            } => {
                 // We have the original AST node serialized as JSON; deserialize and emit it directly
                 let stmt: Statement = serde_json::from_value(node.clone()).map_err(|e| {
-                    invariant_err(&format!("Failed to deserialize original AST node: {}", e), None)
+                    invariant_err(
+                        &format!("Failed to deserialize original AST node: {}", e),
+                        None,
+                    )
                 })?;
                 return Ok(Some(stmt));
             }
             InstructionValue::ObjectMethod { loc, .. } => {
-                invariant(instr.lvalue.is_some(), "Expected object methods to have a temp lvalue", None)?;
+                invariant(
+                    instr.lvalue.is_some(),
+                    "Expected object methods to have a temp lvalue",
+                    None,
+                )?;
                 let lvalue = instr.lvalue.as_ref().unwrap();
-                cx.object_methods.insert(
-                    lvalue.identifier,
-                    (value.clone(), *loc),
-                );
+                cx.object_methods
+                    .insert(lvalue.identifier, (value.clone(), *loc));
                 return Ok(None);
             }
             _ => {} // fall through to general codegen
@@ -1459,7 +1608,9 @@ fn codegen_store_or_declare(
     value: &InstructionValue,
 ) -> Result<Option<Statement>, CompilerError> {
     match value {
-        InstructionValue::StoreLocal { lvalue, value: val, .. } => {
+        InstructionValue::StoreLocal {
+            lvalue, value: val, ..
+        } => {
             let mut kind = lvalue.kind;
             if cx.has_declared(lvalue.place.identifier) {
                 kind = InstructionKind::Reassign;
@@ -1467,7 +1618,9 @@ fn codegen_store_or_declare(
             let rhs = codegen_place_to_expression(cx, val)?;
             emit_store(cx, instr, kind, &LvalueRef::Place(&lvalue.place), Some(rhs))
         }
-        InstructionValue::StoreContext { lvalue, value: val, .. } => {
+        InstructionValue::StoreContext {
+            lvalue, value: val, ..
+        } => {
             let rhs = codegen_place_to_expression(cx, val)?;
             let kind = convert_hoisted_kind(lvalue.kind);
             emit_store(cx, instr, kind, &LvalueRef::Place(&lvalue.place), Some(rhs))
@@ -1480,7 +1633,9 @@ fn codegen_store_or_declare(
             let kind = convert_hoisted_kind(lvalue.kind);
             emit_store(cx, instr, kind, &LvalueRef::Place(&lvalue.place), None)
         }
-        InstructionValue::Destructure { lvalue, value: val, .. } => {
+        InstructionValue::Destructure {
+            lvalue, value: val, ..
+        } => {
             let kind = lvalue.kind;
             // Register temporaries for unnamed pattern operands
             for place in react_compiler_hir::visitors::each_pattern_operand(&lvalue.pattern) {
@@ -1490,7 +1645,13 @@ fn codegen_store_or_declare(
                 }
             }
             let rhs = codegen_place_to_expression(cx, val)?;
-            emit_store(cx, instr, kind, &LvalueRef::Pattern(&lvalue.pattern), Some(rhs))
+            emit_store(
+                cx,
+                instr,
+                kind,
+                &LvalueRef::Pattern(&lvalue.pattern),
+                Some(rhs),
+            )
         }
         _ => unreachable!(),
     }
@@ -1534,10 +1695,16 @@ fn emit_store(
         InstructionKind::Function => {
             let lval = codegen_lvalue(cx, lvalue)?;
             let PatternLike::Identifier(fn_id) = lval else {
-                return Err(invariant_err("Expected an identifier as function declaration lvalue", None));
+                return Err(invariant_err(
+                    "Expected an identifier as function declaration lvalue",
+                    None,
+                ));
             };
             let Some(rhs) = value else {
-                return Err(invariant_err("Expected a function value for function declaration", None));
+                return Err(invariant_err(
+                    "Expected a function value for function declaration",
+                    None,
+                ));
             };
             match rhs {
                 Expression::FunctionExpression(func_expr) => {
@@ -1556,7 +1723,10 @@ fn emit_store(
                         hook_declaration: false,
                     })))
                 }
-                _ => Err(invariant_err("Expected a function expression for function declaration", None)),
+                _ => Err(invariant_err(
+                    "Expected a function expression for function declaration",
+                    None,
+                )),
             }
         }
         InstructionKind::Let => {
@@ -1588,13 +1758,20 @@ fn emit_store(
                 right: Box::new(rhs),
             });
             if let Some(ref lvalue_place) = instr.lvalue {
-                let is_store_context = matches!(&instr.value, ReactiveValue::Instruction(InstructionValue::StoreContext { .. }));
+                let is_store_context = matches!(
+                    &instr.value,
+                    ReactiveValue::Instruction(InstructionValue::StoreContext { .. })
+                );
                 if !is_store_context {
                     let ident = &cx.env.identifiers[lvalue_place.identifier.0 as usize];
-                    cx.temp.insert(ident.declaration_id, Some(ExpressionOrJsxText::Expression(expr)));
+                    cx.temp.insert(
+                        ident.declaration_id,
+                        Some(ExpressionOrJsxText::Expression(expr)),
+                    );
                     return Ok(None);
                 } else {
-                    let stmt = codegen_instruction(cx, instr, ExpressionOrJsxText::Expression(expr))?;
+                    let stmt =
+                        codegen_instruction(cx, instr, ExpressionOrJsxText::Expression(expr))?;
                     if matches!(stmt, Statement::EmptyStatement(_)) {
                         return Ok(None);
                     }
@@ -1606,17 +1783,18 @@ fn emit_store(
                 expression: Box::new(expr),
             })))
         }
-        InstructionKind::Catch => {
-            Ok(Some(Statement::EmptyStatement(EmptyStatement {
-                base: BaseNode::typed("EmptyStatement"),
-            })))
-        }
-        InstructionKind::HoistedLet | InstructionKind::HoistedConst | InstructionKind::HoistedFunction => {
-            Err(invariant_err(
-                &format!("Expected {:?} to have been pruned in PruneHoistedContexts", kind),
-                None,
-            ))
-        }
+        InstructionKind::Catch => Ok(Some(Statement::EmptyStatement(EmptyStatement {
+            base: BaseNode::typed("EmptyStatement"),
+        }))),
+        InstructionKind::HoistedLet
+        | InstructionKind::HoistedConst
+        | InstructionKind::HoistedFunction => Err(invariant_err(
+            &format!(
+                "Expected {:?} to have been pruned in PruneHoistedContexts",
+                kind
+            ),
+            None,
+        )),
     }
 }
 
@@ -1799,56 +1977,44 @@ fn codegen_instruction_value(
         } => {
             let opt_value = codegen_instruction_value_to_expression(cx, value)?;
             match opt_value {
-                Expression::OptionalCallExpression(oce) => {
-                    Ok(ExpressionOrJsxText::Expression(
-                        Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
-                            base: BaseNode::typed("OptionalCallExpression"),
-                            callee: oce.callee,
-                            arguments: oce.arguments,
-                            optional: *optional,
-                            type_parameters: oce.type_parameters,
-                            type_arguments: oce.type_arguments,
-                        }),
-                    ))
-                }
-                Expression::CallExpression(ce) => {
-                    Ok(ExpressionOrJsxText::Expression(
-                        Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
-                            base: BaseNode::typed("OptionalCallExpression"),
-                            callee: ce.callee,
-                            arguments: ce.arguments,
-                            optional: *optional,
-                            type_parameters: None,
-                            type_arguments: None,
-                        }),
-                    ))
-                }
-                Expression::OptionalMemberExpression(ome) => {
-                    Ok(ExpressionOrJsxText::Expression(
-                        Expression::OptionalMemberExpression(
-                            ast_expr::OptionalMemberExpression {
-                                base: BaseNode::typed("OptionalMemberExpression"),
-                                object: ome.object,
-                                property: ome.property,
-                                computed: ome.computed,
-                                optional: *optional,
-                            },
-                        ),
-                    ))
-                }
-                Expression::MemberExpression(me) => {
-                    Ok(ExpressionOrJsxText::Expression(
-                        Expression::OptionalMemberExpression(
-                            ast_expr::OptionalMemberExpression {
-                                base: BaseNode::typed("OptionalMemberExpression"),
-                                object: me.object,
-                                property: me.property,
-                                computed: me.computed,
-                                optional: *optional,
-                            },
-                        ),
-                    ))
-                }
+                Expression::OptionalCallExpression(oce) => Ok(ExpressionOrJsxText::Expression(
+                    Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
+                        base: BaseNode::typed("OptionalCallExpression"),
+                        callee: oce.callee,
+                        arguments: oce.arguments,
+                        optional: *optional,
+                        type_parameters: oce.type_parameters,
+                        type_arguments: oce.type_arguments,
+                    }),
+                )),
+                Expression::CallExpression(ce) => Ok(ExpressionOrJsxText::Expression(
+                    Expression::OptionalCallExpression(ast_expr::OptionalCallExpression {
+                        base: BaseNode::typed("OptionalCallExpression"),
+                        callee: ce.callee,
+                        arguments: ce.arguments,
+                        optional: *optional,
+                        type_parameters: None,
+                        type_arguments: None,
+                    }),
+                )),
+                Expression::OptionalMemberExpression(ome) => Ok(ExpressionOrJsxText::Expression(
+                    Expression::OptionalMemberExpression(ast_expr::OptionalMemberExpression {
+                        base: BaseNode::typed("OptionalMemberExpression"),
+                        object: ome.object,
+                        property: ome.property,
+                        computed: ome.computed,
+                        optional: *optional,
+                    }),
+                )),
+                Expression::MemberExpression(me) => Ok(ExpressionOrJsxText::Expression(
+                    Expression::OptionalMemberExpression(ast_expr::OptionalMemberExpression {
+                        base: BaseNode::typed("OptionalMemberExpression"),
+                        object: me.object,
+                        property: me.property,
+                        computed: me.computed,
+                        optional: *optional,
+                    }),
+                )),
                 other => Err(invariant_err(
                     &format!(
                         "Expected optional value to resolve to call or member expression, got {:?}",
@@ -1866,9 +2032,9 @@ fn codegen_base_instruction_value(
     iv: &InstructionValue,
 ) -> Result<ExpressionOrJsxText, CompilerError> {
     match iv {
-        InstructionValue::Primitive { value, loc } => {
-            Ok(ExpressionOrJsxText::Expression(codegen_primitive_value(value, *loc)))
-        }
+        InstructionValue::Primitive { value, loc } => Ok(ExpressionOrJsxText::Expression(
+            codegen_primitive_value(value, *loc),
+        )),
         InstructionValue::BinaryExpression {
             operator,
             left,
@@ -1886,7 +2052,9 @@ fn codegen_base_instruction_value(
                 }),
             ))
         }
-        InstructionValue::UnaryExpression { operator, value, .. } => {
+        InstructionValue::UnaryExpression {
+            operator, value, ..
+        } => {
             let arg = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
                 Expression::UnaryExpression(ast_expr::UnaryExpression {
@@ -1901,12 +2069,14 @@ fn codegen_base_instruction_value(
             let expr = codegen_place_to_expression(cx, place)?;
             Ok(ExpressionOrJsxText::Expression(expr))
         }
-        InstructionValue::LoadGlobal { binding, .. } => {
-            Ok(ExpressionOrJsxText::Expression(Expression::Identifier(
-                make_identifier(binding.name()),
-            )))
-        }
-        InstructionValue::CallExpression { callee, args, loc: _ } => {
+        InstructionValue::LoadGlobal { binding, .. } => Ok(ExpressionOrJsxText::Expression(
+            Expression::Identifier(make_identifier(binding.name())),
+        )),
+        InstructionValue::CallExpression {
+            callee,
+            args,
+            loc: _,
+        } => {
             let callee_expr = codegen_place_to_expression(cx, callee)?;
             let arguments = args
                 .iter()
@@ -1932,12 +2102,15 @@ fn codegen_base_instruction_value(
         } => {
             let member_expr = codegen_place_to_expression(cx, property)?;
             // Invariant: MethodCall::property must resolve to a MemberExpression
-            if !matches!(member_expr, Expression::MemberExpression(_) | Expression::OptionalMemberExpression(_)) {
+            if !matches!(
+                member_expr,
+                Expression::MemberExpression(_) | Expression::OptionalMemberExpression(_)
+            ) {
                 let expr_type = match &member_expr {
                     Expression::Identifier(_) => "Identifier",
                     _ => "unknown",
                 };
-{
+                {
                     let msg = format!("Got: '{}'", expr_type);
                     let mut err = CompilerError::new();
                     err.push_diagnostic(
@@ -1991,9 +2164,7 @@ fn codegen_base_instruction_value(
             let elems: Vec<Option<Expression>> = elements
                 .iter()
                 .map(|el| match el {
-                    ArrayElement::Place(place) => {
-                        Ok(Some(codegen_place_to_expression(cx, place)?))
-                    }
+                    ArrayElement::Place(place) => Ok(Some(codegen_place_to_expression(cx, place)?)),
                     ArrayElement::Spread(spread) => {
                         let arg = codegen_place_to_expression(cx, &spread.place)?;
                         Ok(Some(Expression::SpreadElement(ast_expr::SpreadElement {
@@ -2014,7 +2185,9 @@ fn codegen_base_instruction_value(
         InstructionValue::ObjectExpression { properties, .. } => {
             codegen_object_expression(cx, properties)
         }
-        InstructionValue::PropertyLoad { object, property, .. } => {
+        InstructionValue::PropertyLoad {
+            object, property, ..
+        } => {
             let obj = codegen_place_to_expression(cx, object)?;
             let (prop, computed) = property_literal_to_expression(property);
             Ok(ExpressionOrJsxText::Expression(
@@ -2039,19 +2212,19 @@ fn codegen_base_instruction_value(
                 Expression::AssignmentExpression(ast_expr::AssignmentExpression {
                     base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
-                    left: Box::new(PatternLike::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(obj),
-                            property: Box::new(prop),
-                            computed,
-                        },
-                    )),
+                    left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(obj),
+                        property: Box::new(prop),
+                        computed,
+                    })),
                     right: Box::new(val),
                 }),
             ))
         }
-        InstructionValue::PropertyDelete { object, property, .. } => {
+        InstructionValue::PropertyDelete {
+            object, property, ..
+        } => {
             let obj = codegen_place_to_expression(cx, object)?;
             let (prop, computed) = property_literal_to_expression(property);
             Ok(ExpressionOrJsxText::Expression(
@@ -2059,18 +2232,18 @@ fn codegen_base_instruction_value(
                     base: BaseNode::typed("UnaryExpression"),
                     operator: AstUnaryOperator::Delete,
                     prefix: true,
-                    argument: Box::new(Expression::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(obj),
-                            property: Box::new(prop),
-                            computed,
-                        },
-                    )),
+                    argument: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(obj),
+                        property: Box::new(prop),
+                        computed,
+                    })),
                 }),
             ))
         }
-        InstructionValue::ComputedLoad { object, property, .. } => {
+        InstructionValue::ComputedLoad {
+            object, property, ..
+        } => {
             let obj = codegen_place_to_expression(cx, object)?;
             let prop = codegen_place_to_expression(cx, property)?;
             Ok(ExpressionOrJsxText::Expression(
@@ -2095,19 +2268,19 @@ fn codegen_base_instruction_value(
                 Expression::AssignmentExpression(ast_expr::AssignmentExpression {
                     base: BaseNode::typed("AssignmentExpression"),
                     operator: AssignmentOperator::Assign,
-                    left: Box::new(PatternLike::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(obj),
-                            property: Box::new(prop),
-                            computed: true,
-                        },
-                    )),
+                    left: Box::new(PatternLike::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(obj),
+                        property: Box::new(prop),
+                        computed: true,
+                    })),
                     right: Box::new(val),
                 }),
             ))
         }
-        InstructionValue::ComputedDelete { object, property, .. } => {
+        InstructionValue::ComputedDelete {
+            object, property, ..
+        } => {
             let obj = codegen_place_to_expression(cx, object)?;
             let prop = codegen_place_to_expression(cx, property)?;
             Ok(ExpressionOrJsxText::Expression(
@@ -2115,35 +2288,29 @@ fn codegen_base_instruction_value(
                     base: BaseNode::typed("UnaryExpression"),
                     operator: AstUnaryOperator::Delete,
                     prefix: true,
-                    argument: Box::new(Expression::MemberExpression(
-                        ast_expr::MemberExpression {
-                            base: BaseNode::typed("MemberExpression"),
-                            object: Box::new(obj),
-                            property: Box::new(prop),
-                            computed: true,
-                        },
-                    )),
+                    argument: Box::new(Expression::MemberExpression(ast_expr::MemberExpression {
+                        base: BaseNode::typed("MemberExpression"),
+                        object: Box::new(obj),
+                        property: Box::new(prop),
+                        computed: true,
+                    })),
                 }),
             ))
         }
-        InstructionValue::RegExpLiteral { pattern, flags, .. } => {
-            Ok(ExpressionOrJsxText::Expression(Expression::RegExpLiteral(
-                AstRegExpLiteral {
-                    base: BaseNode::typed("RegExpLiteral"),
-                    pattern: pattern.clone(),
-                    flags: flags.clone(),
-                },
-            )))
-        }
-        InstructionValue::MetaProperty { meta, property, .. } => {
-            Ok(ExpressionOrJsxText::Expression(Expression::MetaProperty(
-                ast_expr::MetaProperty {
-                    base: BaseNode::typed("MetaProperty"),
-                    meta: make_identifier(meta),
-                    property: make_identifier(property),
-                },
-            )))
-        }
+        InstructionValue::RegExpLiteral { pattern, flags, .. } => Ok(
+            ExpressionOrJsxText::Expression(Expression::RegExpLiteral(AstRegExpLiteral {
+                base: BaseNode::typed("RegExpLiteral"),
+                pattern: pattern.clone(),
+                flags: flags.clone(),
+            })),
+        ),
+        InstructionValue::MetaProperty { meta, property, .. } => Ok(
+            ExpressionOrJsxText::Expression(Expression::MetaProperty(ast_expr::MetaProperty {
+                base: BaseNode::typed("MetaProperty"),
+                meta: make_identifier(meta),
+                property: make_identifier(property),
+            })),
+        ),
         InstructionValue::Await { value, .. } => {
             let arg = codegen_place_to_expression(cx, value)?;
             Ok(ExpressionOrJsxText::Expression(
@@ -2225,9 +2392,7 @@ fn codegen_base_instruction_value(
             lowered_func,
             expr_type,
             ..
-        } => {
-            codegen_function_expression(cx, name, name_hint, lowered_func, expr_type)
-        }
+        } => codegen_function_expression(cx, name, name_hint, lowered_func, expr_type),
         InstructionValue::TaggedTemplateExpression { tag, value, .. } => {
             let tag_expr = codegen_place_to_expression(cx, tag)?;
             Ok(ExpressionOrJsxText::Expression(
@@ -2250,7 +2415,9 @@ fn codegen_base_instruction_value(
                 }),
             ))
         }
-        InstructionValue::TemplateLiteral { subexprs, quasis, .. } => {
+        InstructionValue::TemplateLiteral {
+            subexprs, quasis, ..
+        } => {
             let exprs: Vec<Expression> = subexprs
                 .iter()
                 .map(|p| codegen_place_to_expression(cx, p))
@@ -2314,12 +2481,10 @@ fn codegen_base_instruction_value(
             };
             Ok(ExpressionOrJsxText::Expression(wrapped))
         }
-        InstructionValue::JSXText { value, loc } => {
-            Ok(ExpressionOrJsxText::JsxText(JSXText {
-                base: base_node_with_loc("JSXText", *loc),
-                value: value.clone(),
-            }))
-        }
+        InstructionValue::JSXText { value, loc } => Ok(ExpressionOrJsxText::JsxText(JSXText {
+            base: base_node_with_loc("JSXText", *loc),
+            value: value.clone(),
+        })),
         InstructionValue::JsxExpression {
             tag,
             props,
@@ -2327,9 +2492,7 @@ fn codegen_base_instruction_value(
             loc,
             opening_loc,
             closing_loc,
-        } => {
-            codegen_jsx_expression(cx, tag, props, children, *loc, *opening_loc, *closing_loc)
-        }
+        } => codegen_jsx_expression(cx, tag, props, children, *loc, *opening_loc, *closing_loc),
         InstructionValue::JsxFragment { children, .. } => {
             let child_elems: Vec<JSXChild> = children
                 .iter()
@@ -2348,7 +2511,11 @@ fn codegen_base_instruction_value(
                 },
             )))
         }
-        InstructionValue::UnsupportedNode { original_node, node_type, .. } => {
+        InstructionValue::UnsupportedNode {
+            original_node,
+            node_type,
+            ..
+        } => {
             // Try to deserialize the original AST node from JSON (mirrors statement-level handler)
             match original_node {
                 Some(node) => {
@@ -2383,15 +2550,13 @@ fn codegen_base_instruction_value(
         | InstructionValue::DeclareContext { .. }
         | InstructionValue::Destructure { .. }
         | InstructionValue::ObjectMethod { .. }
-        | InstructionValue::StoreContext { .. } => {
-            Err(invariant_err(
-                &format!(
-                    "Unexpected {:?} in codegenInstructionValue",
-                    std::mem::discriminant(iv)
-                ),
-                None,
-            ))
-        }
+        | InstructionValue::StoreContext { .. } => Err(invariant_err(
+            &format!(
+                "Unexpected {:?} in codegenInstructionValue",
+                std::mem::discriminant(iv)
+            ),
+            None,
+        )),
     }
 }
 
@@ -2415,7 +2580,11 @@ fn codegen_function_expression(
 
     let mut inner_cx = Context::new(
         cx.env,
-        reactive_fn_mut.id.as_deref().unwrap_or("[[ anonymous ]]").to_string(),
+        reactive_fn_mut
+            .id
+            .as_deref()
+            .unwrap_or("[[ anonymous ]]")
+            .to_string(),
         cx.unique_identifiers.clone(),
         cx.fbt_operands.clone(),
     );
@@ -2428,9 +2597,7 @@ fn codegen_function_expression(
             let mut body: ArrowFunctionBody =
                 ArrowFunctionBody::BlockStatement(fn_result.body.clone());
             // Optimize single-return arrow functions
-            if fn_result.body.body.len() == 1
-                && reactive_fn_mut.directives.is_empty()
-            {
+            if fn_result.body.body.len() == 1 && reactive_fn_mut.directives.is_empty() {
                 if let Statement::ReturnStatement(ret) = &fn_result.body.body[0] {
                     if let Some(ref arg) = ret.argument {
                         body = ArrowFunctionBody::Expression(arg.clone());
@@ -2451,25 +2618,20 @@ fn codegen_function_expression(
                 predicate: None,
             })
         }
-        _ => {
-            Expression::FunctionExpression(ast_expr::FunctionExpression {
-                base: BaseNode::typed("FunctionExpression"),
-                params: fn_result.params,
-                body: fn_result.body,
-                id: name.as_ref().map(|n| make_identifier(n)),
-                generator: fn_result.generator,
-                is_async: fn_result.is_async,
-                return_type: None,
-                type_parameters: None,
-            })
-        }
+        _ => Expression::FunctionExpression(ast_expr::FunctionExpression {
+            base: BaseNode::typed("FunctionExpression"),
+            params: fn_result.params,
+            body: fn_result.body,
+            id: name.as_ref().map(|n| make_identifier(n)),
+            generator: fn_result.generator,
+            is_async: fn_result.is_async,
+            return_type: None,
+            type_parameters: None,
+        }),
     };
 
     // Handle enableNameAnonymousFunctions
-    if cx.env.config.enable_name_anonymous_functions
-        && name.is_none()
-        && name_hint.is_some()
-    {
+    if cx.env.config.enable_name_anonymous_functions && name.is_none() && name_hint.is_some() {
         let hint = name_hint.as_ref().unwrap();
         let wrapped = Expression::MemberExpression(ast_expr::MemberExpression {
             base: BaseNode::typed("MemberExpression"),
@@ -2520,24 +2682,27 @@ fn codegen_object_expression(
                         let value = codegen_place_to_expression(cx, &obj_prop.place)?;
                         let is_shorthand = matches!(&key, Expression::Identifier(k_id)
                             if matches!(&value, Expression::Identifier(v_id) if v_id.name == k_id.name));
-                        ast_properties.push(
-                            ast_expr::ObjectExpressionProperty::ObjectProperty(
-                                ast_expr::ObjectProperty {
-                                    base: BaseNode::typed("ObjectProperty"),
-                                    key: Box::new(key),
-                                    value: Box::new(value),
-                                    computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
-                                    shorthand: is_shorthand,
-                                    decorators: None,
-                                    method: None,
-                                },
-                            ),
-                        );
+                        ast_properties.push(ast_expr::ObjectExpressionProperty::ObjectProperty(
+                            ast_expr::ObjectProperty {
+                                base: BaseNode::typed("ObjectProperty"),
+                                key: Box::new(key),
+                                value: Box::new(value),
+                                computed: matches!(
+                                    obj_prop.key,
+                                    ObjectPropertyKey::Computed { .. }
+                                ),
+                                shorthand: is_shorthand,
+                                decorators: None,
+                                method: None,
+                            },
+                        ));
                     }
                     ObjectPropertyType::Method => {
                         let method_data = cx.object_methods.get(&obj_prop.place.identifier);
                         let method_data = method_data.cloned();
-                        let Some((InstructionValue::ObjectMethod { lowered_func, .. }, _)) = method_data else {
+                        let Some((InstructionValue::ObjectMethod { lowered_func, .. }, _)) =
+                            method_data
+                        else {
                             return Err(invariant_err("Expected ObjectMethod instruction", None));
                         };
 
@@ -2549,7 +2714,11 @@ fn codegen_object_expression(
 
                         let mut inner_cx = Context::new(
                             cx.env,
-                            reactive_fn_mut.id.as_deref().unwrap_or("[[ anonymous ]]").to_string(),
+                            reactive_fn_mut
+                                .id
+                                .as_deref()
+                                .unwrap_or("[[ anonymous ]]")
+                                .to_string(),
                             cx.unique_identifiers.clone(),
                             cx.fbt_operands.clone(),
                         );
@@ -2557,25 +2726,26 @@ fn codegen_object_expression(
 
                         let fn_result = codegen_reactive_function(&mut inner_cx, &reactive_fn_mut)?;
 
-                        ast_properties.push(
-                            ast_expr::ObjectExpressionProperty::ObjectMethod(
-                                ast_expr::ObjectMethod {
-                                    base: BaseNode::typed("ObjectMethod"),
-                                    method: true,
-                                    kind: ast_expr::ObjectMethodKind::Method,
-                                    key: Box::new(key),
-                                    params: fn_result.params,
-                                    body: fn_result.body,
-                                    computed: matches!(obj_prop.key, ObjectPropertyKey::Computed { .. }),
-                                    id: None,
-                                    generator: fn_result.generator,
-                                    is_async: fn_result.is_async,
-                                    decorators: None,
-                                    return_type: None,
-                                    type_parameters: None,
-                                },
-                            ),
-                        );
+                        ast_properties.push(ast_expr::ObjectExpressionProperty::ObjectMethod(
+                            ast_expr::ObjectMethod {
+                                base: BaseNode::typed("ObjectMethod"),
+                                method: true,
+                                kind: ast_expr::ObjectMethodKind::Method,
+                                key: Box::new(key),
+                                params: fn_result.params,
+                                body: fn_result.body,
+                                computed: matches!(
+                                    obj_prop.key,
+                                    ObjectPropertyKey::Computed { .. }
+                                ),
+                                id: None,
+                                generator: fn_result.generator,
+                                is_async: fn_result.is_async,
+                                decorators: None,
+                                return_type: None,
+                                type_parameters: None,
+                            },
+                        ));
                     }
                 }
             }
@@ -2607,25 +2777,22 @@ fn codegen_object_property_key(
             base: BaseNode::typed("StringLiteral"),
             value: name.clone(),
         })),
-        ObjectPropertyKey::Identifier { name } => {
-            Ok(Expression::Identifier(make_identifier(name)))
-        }
+        ObjectPropertyKey::Identifier { name } => Ok(Expression::Identifier(make_identifier(name))),
         ObjectPropertyKey::Computed { name } => {
             let expr = codegen_place(cx, name)?;
             match expr {
                 ExpressionOrJsxText::Expression(e) => Ok(e),
-                ExpressionOrJsxText::JsxText(_) => {
-                    Err(invariant_err("Expected object property key to be an expression", None))
-                }
+                ExpressionOrJsxText::JsxText(_) => Err(invariant_err(
+                    "Expected object property key to be an expression",
+                    None,
+                )),
             }
         }
-        ObjectPropertyKey::Number { name } => {
-            Ok(Expression::NumericLiteral(NumericLiteral {
-                base: BaseNode::typed("NumericLiteral"),
-                value: name.value(),
-                extra: None,
-            }))
-        }
+        ObjectPropertyKey::Number { name } => Ok(Expression::NumericLiteral(NumericLiteral {
+            base: BaseNode::typed("NumericLiteral"),
+            value: name.value(),
+            extra: None,
+        })),
     }
 }
 
@@ -2648,15 +2815,14 @@ fn codegen_jsx_expression(
     }
 
     let (tag_value, _tag_loc) = match tag {
-        JsxTag::Place(place) => {
-            (codegen_place_to_expression(cx, place)?, place.loc)
-        }
-        JsxTag::Builtin(builtin) => {
-            (Expression::StringLiteral(StringLiteral {
+        JsxTag::Place(place) => (codegen_place_to_expression(cx, place)?, place.loc),
+        JsxTag::Builtin(builtin) => (
+            Expression::StringLiteral(StringLiteral {
                 base: BaseNode::typed("StringLiteral"),
                 value: builtin.name.clone(),
-            }), None)
-        }
+            }),
+            None,
+        ),
     };
 
     let jsx_tag = expression_to_jsx_tag(&tag_value, jsx_tag_loc(tag))?;
@@ -2727,11 +2893,7 @@ fn string_requires_expr_container(s: &str) -> bool {
         }
         // Check for control chars and non-basic-latin
         let code = c as u32;
-        if code <= 0x1F
-            || code == 0x7F
-            || (code >= 0x80 && code <= 0x9F)
-            || (code >= 0xA0)
-        {
+        if code <= 0x1F || code == 0x7F || (code >= 0x80 && code <= 0x9F) || (code >= 0xA0) {
             return true;
         }
     }
@@ -2882,11 +3044,9 @@ fn expression_to_jsx_tag(
             base: base_node_with_loc("JSXIdentifier", loc),
             name: ident.name.clone(),
         })),
-        Expression::MemberExpression(me) => {
-            Ok(JSXElementName::JSXMemberExpression(
-                convert_member_expression_to_jsx(me)?,
-            ))
-        }
+        Expression::MemberExpression(me) => Ok(JSXElementName::JSXMemberExpression(
+            convert_member_expression_to_jsx(me)?,
+        )),
         Expression::StringLiteral(s) => {
             if s.value.contains(':') {
                 let parts: Vec<&str> = s.value.splitn(2, ':').collect();
@@ -2964,12 +3124,10 @@ enum LvalueRef<'a> {
 
 fn codegen_lvalue(cx: &mut Context, pattern: &LvalueRef) -> Result<PatternLike, CompilerError> {
     match pattern {
-        LvalueRef::Place(place) => {
-            Ok(PatternLike::Identifier(convert_identifier(
-                place.identifier,
-                cx.env,
-            )?))
-        }
+        LvalueRef::Place(place) => Ok(PatternLike::Identifier(convert_identifier(
+            place.identifier,
+            cx.env,
+        )?)),
         LvalueRef::Pattern(pat) => match pat {
             Pattern::Array(arr) => codegen_array_pattern(cx, arr),
             Pattern::Object(obj) => codegen_object_pattern(cx, obj),
@@ -3067,10 +3225,7 @@ fn codegen_place_to_expression(
     Ok(convert_value_to_expression(value))
 }
 
-fn codegen_place(
-    cx: &mut Context,
-    place: &Place,
-) -> Result<ExpressionOrJsxText, CompilerError> {
+fn codegen_place(cx: &mut Context, place: &Place) -> Result<ExpressionOrJsxText, CompilerError> {
     let ident = &cx.env.identifiers[place.identifier.0 as usize];
     if let Some(tmp) = cx.temp.get(&ident.declaration_id) {
         if let Some(val) = tmp {
@@ -3111,7 +3266,10 @@ fn codegen_place(
     )))
 }
 
-fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<AstIdentifier, CompilerError> {
+fn convert_identifier(
+    identifier_id: IdentifierId,
+    env: &Environment,
+) -> Result<AstIdentifier, CompilerError> {
     let ident = &env.identifiers[identifier_id.0 as usize];
     let name = match &ident.name {
         Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
@@ -3119,16 +3277,22 @@ fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<
         None => {
             // Use CompilerDiagnostic (with details array) to match TS CompilerError.invariant()
             // which creates a CompilerDiagnostic with details: [{kind: "error", loc, message}].
-            let reason = "Expected temporaries to be promoted to named identifiers in an earlier pass".to_string();
+            let reason =
+                "Expected temporaries to be promoted to named identifiers in an earlier pass"
+                    .to_string();
             let description = format!("identifier {} is unnamed", identifier_id.0);
             let mut err = CompilerError::new();
             err.push_diagnostic(
-                CompilerDiagnostic::new(ErrorCategory::Invariant, reason.clone(), Some(description))
-                    .with_detail(CompilerDiagnosticDetail::Error {
-                        loc: None,
-                        message: Some(reason),
-                        identifier_name: None,
-                    }),
+                CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    reason.clone(),
+                    Some(description),
+                )
+                .with_detail(CompilerDiagnosticDetail::Error {
+                    loc: None,
+                    message: Some(reason),
+                    identifier_name: None,
+                }),
             );
             return Err(err);
         }
@@ -3136,10 +3300,7 @@ fn convert_identifier(identifier_id: IdentifierId, env: &Environment) -> Result<
     Ok(make_identifier_with_loc(&name, ident.loc))
 }
 
-fn codegen_argument(
-    cx: &mut Context,
-    arg: &PlaceOrSpread,
-) -> Result<Expression, CompilerError> {
+fn codegen_argument(cx: &mut Context, arg: &PlaceOrSpread) -> Result<Expression, CompilerError> {
     match arg {
         PlaceOrSpread::Place(place) => codegen_place_to_expression(cx, place),
         PlaceOrSpread::Spread(spread) => {
@@ -3167,15 +3328,13 @@ fn codegen_dependency(
         for path_entry in &dep.path {
             let (property, is_computed) = property_literal_to_expression(&path_entry.property);
             if has_optional {
-                object = Expression::OptionalMemberExpression(
-                    ast_expr::OptionalMemberExpression {
-                        base: BaseNode::typed("OptionalMemberExpression"),
-                        object: Box::new(object),
-                        property: Box::new(property),
-                        computed: is_computed,
-                        optional: path_entry.optional,
-                    },
-                );
+                object = Expression::OptionalMemberExpression(ast_expr::OptionalMemberExpression {
+                    base: BaseNode::typed("OptionalMemberExpression"),
+                    object: Box::new(object),
+                    property: Box::new(property),
+                    computed: is_computed,
+                    optional: path_entry.optional,
+                });
             } else {
                 object = Expression::MemberExpression(ast_expr::MemberExpression {
                     base: BaseNode::typed("MemberExpression"),
@@ -3232,10 +3391,7 @@ impl<'a> ReactiveFunctionVisitor for CountMemoBlockVisitor<'a> {
     }
 }
 
-fn count_memo_blocks(
-    func: &ReactiveFunction,
-    env: &Environment,
-) -> (u32, u32, u32, u32) {
+fn count_memo_blocks(func: &ReactiveFunction, env: &Environment) -> (u32, u32, u32, u32) {
     let visitor = CountMemoBlockVisitor { env };
     let mut state = CountMemoBlockState {
         memo_blocks: 0,
@@ -3366,7 +3522,9 @@ fn make_var_declarator(id: PatternLike, init: Option<Expression>) -> VariableDec
     // matching TS createVariableDeclarator behavior for retainLines support.
     let loc = get_pattern_loc(&id).and_then(|id_loc| {
         let end = match &init {
-            Some(expr) => get_expression_loc(expr).map(|l| l.end.clone()).unwrap_or_else(|| id_loc.end.clone()),
+            Some(expr) => get_expression_loc(expr)
+                .map(|l| l.end.clone())
+                .unwrap_or_else(|| id_loc.end.clone()),
             None => id_loc.end.clone(),
         };
         Some(AstSourceLocation {
@@ -3523,10 +3681,7 @@ fn symbol_for(name: &str) -> Expression {
     })
 }
 
-fn codegen_primitive_value(
-    value: &PrimitiveValue,
-    loc: Option<DiagSourceLocation>,
-) -> Expression {
+fn codegen_primitive_value(value: &PrimitiveValue, loc: Option<DiagSourceLocation>) -> Expression {
     match value {
         PrimitiveValue::Number(n) => {
             let f = n.value();
@@ -3601,7 +3756,9 @@ fn convert_value_to_expression(value: ExpressionOrJsxText) -> Expression {
     }
 }
 
-fn get_instruction_value(reactive_value: &ReactiveValue) -> Result<&InstructionValue, CompilerError> {
+fn get_instruction_value(
+    reactive_value: &ReactiveValue,
+) -> Result<&InstructionValue, CompilerError> {
     match reactive_value {
         ReactiveValue::Instruction(iv) => Ok(iv),
         _ => Err(invariant_err("Expected base instruction value", None)),
@@ -3624,32 +3781,38 @@ fn invariant_err(reason: &str, loc: Option<DiagSourceLocation>) -> CompilerError
     // Use CompilerDiagnostic (with details array) to match TS CompilerError.invariant()
     let mut err = CompilerError::new();
     err.push_diagnostic(
-        CompilerDiagnostic::new(ErrorCategory::Invariant, reason, None::<String>)
-            .with_detail(CompilerDiagnosticDetail::Error {
+        CompilerDiagnostic::new(ErrorCategory::Invariant, reason, None::<String>).with_detail(
+            CompilerDiagnosticDetail::Error {
                 loc,
                 message: Some(reason.to_string()),
                 identifier_name: None,
-            }),
+            },
+        ),
     );
     err
 }
 
-fn invariant_err_with_detail_message(reason: &str, message: &str, loc: Option<DiagSourceLocation>) -> CompilerError {
+fn invariant_err_with_detail_message(
+    reason: &str,
+    message: &str,
+    loc: Option<DiagSourceLocation>,
+) -> CompilerError {
     let mut err = CompilerError::new();
     let diagnostic = react_compiler_diagnostics::CompilerDiagnostic::new(
         ErrorCategory::Invariant,
         reason,
         None::<String>,
-    ).with_detail(react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
-        loc,
-        message: Some(message.to_string()),
-        identifier_name: None,
-    });
+    )
+    .with_detail(
+        react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
+            loc,
+            message: Some(message.to_string()),
+            identifier_name: None,
+        },
+    );
     err.push_diagnostic(diagnostic);
     err
 }
-
-
 
 fn get_statement_type_name(stmt: &Statement) -> &'static str {
     match stmt {
@@ -3723,10 +3886,7 @@ fn compare_scope_dependency(
     a_name.cmp(&b_name)
 }
 
-fn dep_to_sort_key(
-    dep: &react_compiler_hir::ReactiveScopeDependency,
-    env: &Environment,
-) -> String {
+fn dep_to_sort_key(dep: &react_compiler_hir::ReactiveScopeDependency, env: &Environment) -> String {
     let ident = &env.identifiers[dep.identifier.0 as usize];
     let base = match &ident.name {
         Some(react_compiler_hir::IdentifierName::Named(n)) => n.clone(),
@@ -3773,7 +3933,11 @@ fn jsx_tag_loc(tag: &JsxTag) -> Option<DiagSourceLocation> {
 
 /// Conditionally wrap a call expression in a hook guard IIFE if enableEmitHookGuards
 /// is enabled and the callee is a hook.
-fn maybe_wrap_hook_call(cx: &Context<'_>, call_expr: Expression, callee_id: IdentifierId) -> Expression {
+fn maybe_wrap_hook_call(
+    cx: &Context<'_>,
+    call_expr: Expression,
+    callee_id: IdentifierId,
+) -> Expression {
     if let Some(ref guard_name) = cx.env.hook_guard_name {
         if cx.env.output_mode == react_compiler_hir::environment::OutputMode::Client
             && is_hook_identifier(cx, callee_id)
@@ -3788,7 +3952,11 @@ fn maybe_wrap_hook_call(cx: &Context<'_>, call_expr: Expression, callee_id: Iden
 fn is_hook_identifier(cx: &Context<'_>, identifier_id: IdentifierId) -> bool {
     let identifier = &cx.env.identifiers[identifier_id.0 as usize];
     let type_ = &cx.env.types[identifier.type_.0 as usize];
-    cx.env.get_hook_kind_for_type(type_).ok().flatten().is_some()
+    cx.env
+        .get_hook_kind_for_type(type_)
+        .ok()
+        .flatten()
+        .is_some()
 }
 
 /// Create the hook guard IIFE wrapper for a hook call expression.
@@ -3938,31 +4106,26 @@ fn apply_renames_to_json_inner(
             if (node_type == "Identifier" || node_type == "GenericTypeAnnotation")
                 && !is_property_key
             {
-                let ident_start = map
-                    .get("start")
-                    .and_then(|v| v.as_u64())
-                    .unwrap_or(0) as u32;
+                let ident_start = map.get("start").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
                 // Only rename identifiers that Babel considers actual references
                 // to bindings. Type-level labels (e.g., ObjectTypeIndexer params)
                 // are NOT in the reference set and keep their original names.
                 let is_reference = ident_start > 0 && reference_positions.contains(&ident_start);
                 let maybe_rename = if is_reference {
-                    map.get("name")
-                        .and_then(|v| v.as_str())
-                        .and_then(|name| {
-                            renames.iter()
-                                .filter(|r| r.original == name && r.declaration_start <= ident_start)
-                                .max_by_key(|r| r.declaration_start)
-                                .map(|r| r.renamed.clone())
-                        })
+                    map.get("name").and_then(|v| v.as_str()).and_then(|name| {
+                        renames
+                            .iter()
+                            .filter(|r| r.original == name && r.declaration_start <= ident_start)
+                            .max_by_key(|r| r.declaration_start)
+                            .map(|r| r.renamed.clone())
+                    })
                 } else if ident_start == 0 {
-                    map.get("name")
-                        .and_then(|v| v.as_str())
-                        .and_then(|name| {
-                            renames.iter()
-                                .find(|r| r.original == name)
-                                .map(|r| r.renamed.clone())
-                        })
+                    map.get("name").and_then(|v| v.as_str()).and_then(|name| {
+                        renames
+                            .iter()
+                            .find(|r| r.original == name)
+                            .map(|r| r.renamed.clone())
+                    })
                 } else {
                     None
                 };
@@ -3973,8 +4136,8 @@ fn apply_renames_to_json_inner(
                     apply_renames_to_json_inner(id, renames, reference_positions, false);
                 }
             }
-            let is_obj_type_prop = node_type == "ObjectTypeProperty"
-                || node_type == "ObjectTypeIndexer";
+            let is_obj_type_prop =
+                node_type == "ObjectTypeProperty" || node_type == "ObjectTypeIndexer";
             for (key, val) in map.iter_mut() {
                 let child_is_key = is_obj_type_prop && key == "key";
                 apply_renames_to_json_inner(val, renames, reference_positions, child_is_key);

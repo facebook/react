@@ -1,3 +1,4 @@
+
 ## Input
 
 ```javascript
@@ -90,6 +91,7 @@ export const FIXTURE_ENTRYPOINT = {
     },
   }],
 };
+
 ```
 
 ## Code
@@ -99,10 +101,17 @@ import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 import * as React from "react";
 import { useState } from "react";
+
+// Minimized from MusicPartnerManagerMusicWorkDocumentStoreRenderer.react.js
+// Tests AlignMethodCallScopes mutable_range sync after scope merging.
+
 function nullthrows(x) {
-  if (x != null) return x;
+  if (x != null) {
+    return x;
+  }
   throw new Error("nullthrows");
 }
+
 function Component(t0) {
   const $ = _c(37);
   const { store } = t0;
@@ -137,9 +146,10 @@ function Component(t0) {
         break bb0;
       }
       t8 = store.id;
-      const t10 = fbt(
-        `Directory: ${fbt.param("store URI", storeUri.replace("sftp://sftp.fb.com", ""))}`,
-        "directory info",
+      const t10 = fbt._(
+        "Directory: {store URI}",
+        [fbt._param("store URI", storeUri.replace("sftp://sftp.fb.com", ""))],
+        { hk: "y1DI6" },
       );
       if ($[10] !== t10) {
         t4 = <span>{t10}</span>;
@@ -150,8 +160,13 @@ function Component(t0) {
       }
       t5 = (
         <span>
-          {fbt(`Schema: ${fbt.param("schema", documentSchema)}`, "schema")},{" "}
-          {fbt(`Geos: ${fbt.param("geos", licensedGeos.length)}`, "geos count")}
+          {fbt._("Schema: {schema}", [fbt._param("schema", documentSchema)], {
+            hk: "1Ua9F9",
+          })}
+          ,{" "}
+          {fbt._("Geos: {geos}", [fbt._param("geos", licensedGeos.length)], {
+            hk: "1PRSzD",
+          })}
           ,{" "}
         </span>
       );
@@ -296,6 +311,7 @@ function Component(t0) {
 function _temp() {
   console.log("copied");
 }
+
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [
@@ -311,7 +327,11 @@ export const FIXTURE_ENTRYPOINT = {
     },
   ],
 };
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: exception) A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime.

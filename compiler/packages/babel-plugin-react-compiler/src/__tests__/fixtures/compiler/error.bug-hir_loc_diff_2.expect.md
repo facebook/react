@@ -75,14 +75,14 @@ Invariant: [InferMutationAliasingEffects] Expected value kind to be initialized
 
 <unknown> AdHocStore$16:TFunction.
 
-error.bug-hir_loc_diff_2.ts:52:25
-  50 |   }
-  51 |
-> 52 |   const adHocStore = new AdHocStore(storeName, DataAtom);
+error.bug-hir_loc_diff_2.ts:49:25
+  47 |   }
+  48 |
+> 49 |   const adHocStore = new AdHocStore(storeName, DataAtom);
      |                          ^^^^^^^^^^ this is uninitialized
-  53 |
-  54 |   return createLoadObjectSelector([storeToSelector(adHocStore)], () =>
-  55 |     adHocStore.getData(),
+  50 |
+  51 |   return createLoadObjectSelector([storeToSelector(adHocStore)], () =>
+  52 |     adHocStore.getData(),
 ```
           
       

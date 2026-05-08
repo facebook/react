@@ -1942,15 +1942,17 @@ fn lower_expression(
                         // TS invariant() throws immediately, so only the first fbt error
                         // is reported. We return Err to match this behavior.
                         let reason = format!("<{}> tags should be module-level imports", tag_name);
-                        return Err(
-                            CompilerDiagnostic::new(ErrorCategory::Invariant, &reason, None)
-                                .with_detail(CompilerDiagnosticDetail::Error {
-                                    loc: id_loc.clone(),
-                                    message: Some(reason.clone()),
-                                    identifier_name: None,
-                                })
-                                .into(),
-                        );
+                        return Err(CompilerDiagnostic::new(
+                            ErrorCategory::Invariant,
+                            &reason,
+                            None,
+                        )
+                        .with_detail(CompilerDiagnosticDetail::Error {
+                            loc: id_loc.clone(),
+                            message: Some(reason.clone()),
+                            identifier_name: None,
+                        })
+                        .into());
                     }
                 }
             }
@@ -2160,6 +2162,64 @@ fn lower_expression(
                 loc,
             })
         }
+    }
+}
+
+/// Check if a binding's declaration is a direct statement of the block
+/// (not inside a nested control flow block like if/for/while).
+/// Uses AST structure: checks if the binding's name appears as a declarator
+/// in one of the block's direct VariableDeclaration or FunctionDeclaration statements.
+fn is_binding_in_block_direct_statements(
+    binding: &react_compiler_ast::scope::BindingData,
+    stmts: &[react_compiler_ast::statements::Statement],
+) -> bool {
+    use react_compiler_ast::patterns::PatternLike;
+    use react_compiler_ast::statements::Statement;
+    let name = &binding.name;
+    for stmt in stmts {
+        match stmt {
+            Statement::VariableDeclaration(vd) => {
+                for decl in &vd.declarations {
+                    if pattern_declares_name(&decl.id, name) {
+                        return true;
+                    }
+                }
+            }
+            Statement::FunctionDeclaration(fd) => {
+                if fd.id.as_ref().map_or(false, |id| id.name == *name) {
+                    return true;
+                }
+            }
+            Statement::ClassDeclaration(cd) => {
+                if cd.id.as_ref().map_or(false, |id| id.name == *name) {
+                    return true;
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+fn pattern_declares_name(pattern: &react_compiler_ast::patterns::PatternLike, name: &str) -> bool {
+    use react_compiler_ast::patterns::PatternLike;
+    match pattern {
+        PatternLike::Identifier(id) => id.name == name,
+        PatternLike::ObjectPattern(op) => op.properties.iter().any(|prop| match prop {
+            react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(p) => {
+                pattern_declares_name(&p.value, name)
+            }
+            react_compiler_ast::patterns::ObjectPatternProperty::RestElement(r) => {
+                pattern_declares_name(&r.argument, name)
+            }
+        }),
+        PatternLike::ArrayPattern(ap) => ap.elements.iter().any(|el| {
+            el.as_ref()
+                .map_or(false, |e| pattern_declares_name(e, name))
+        }),
+        PatternLike::AssignmentPattern(ap) => pattern_declares_name(&ap.left, name),
+        PatternLike::RestElement(r) => pattern_declares_name(&r.argument, name),
+        PatternLike::MemberExpression(_) => false,
     }
 }
 
@@ -2404,10 +2464,14 @@ fn lower_block_statement_inner(
     // Use the scope override if provided (for function body blocks that share the function's scope).
     let block_scope_id = scope_override.or_else(|| {
         let found = block.base.start.and_then(|start| {
-            if start == 0 { return None; }
+            if start == 0 {
+                return None;
+            }
             builder.scope_info().node_to_scope.get(&start).copied()
         });
-        if found.is_some() { return found; }
+        if found.is_some() {
+            return found;
+        }
         // Fallback for synthetic blocks (start=0 from Hermes match desugar):
         // find a descendant scope of the parent that contains the block's declarations.
         let mut decl_names = Vec::new();
@@ -2420,11 +2484,16 @@ fn lower_block_statement_inner(
                 }
             }
         }
-        if decl_names.is_empty() { return None; }
+        if decl_names.is_empty() {
+            return None;
+        }
         let search_parent = parent_scope.unwrap_or_else(|| builder.function_scope());
-        let found = builder.scope_info().find_block_scope_by_bindings(&decl_names, search_parent, |sid| {
-            builder.is_synthetic_scope_claimed(sid)
-        });
+        let found =
+            builder
+                .scope_info()
+                .find_block_scope_by_bindings(&decl_names, search_parent, |sid| {
+                    builder.is_synthetic_scope_claimed(sid)
+                });
         if let Some(sid) = found {
             builder.claim_synthetic_scope(sid);
         }
@@ -2447,18 +2516,26 @@ fn lower_block_statement_inner(
     // may split them: function scope has params/var, child block scope has const/let.
     // Including child block scope bindings matches TS behavior where
     // stmt.scope.bindings includes all bindings accessible in the block.
+    //
+    // IMPORTANT: Only include bindings whose declaration falls within THIS block's
+    // statement range. Bindings declared in nested blocks (e.g., inside an `if`
+    // branch) should NOT be hoisted at the parent level — they'll be handled when
+    // that nested block is recursively lowered. This prevents DeclareContext from
+    // being emitted before an `if` terminal for variables declared within the branch.
+    let block_start = block.base.start.unwrap_or(0);
+    let block_end = block.base.end.unwrap_or(u32::MAX);
     let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder
         .scope_info()
         .scope_bindings_with_children(scope_id)
         .filter(|b| {
             !matches!(b.kind, AstBindingKind::Param | AstBindingKind::Module)
-            && b.declaration_type != "FunctionExpression"
-            && b.declaration_type != "TypeAlias"
-            && b.declaration_type != "OpaqueType"
-            && b.declaration_type != "InterfaceDeclaration"
-            && b.declaration_type != "TSTypeAliasDeclaration"
-            && b.declaration_type != "TSInterfaceDeclaration"
-            && b.declaration_type != "TSEnumDeclaration"
+                && b.declaration_type != "FunctionExpression"
+                && b.declaration_type != "TypeAlias"
+                && b.declaration_type != "OpaqueType"
+                && b.declaration_type != "InterfaceDeclaration"
+                && b.declaration_type != "TSTypeAliasDeclaration"
+                && b.declaration_type != "TSInterfaceDeclaration"
+                && b.declaration_type != "TSEnumDeclaration"
         })
         .map(|b| {
             (
@@ -2577,6 +2654,18 @@ fn lower_block_statement_inner(
                 .collect();
             let should_hoist = is_hoisted_kind || !refs_in_nested_fn.is_empty();
             if should_hoist {
+                // Only hoist if the binding is declared as a direct statement of
+                // THIS block. Bindings declared in child control flow blocks
+                // (if/for branches) will be hoisted when those blocks are
+                // recursively lowered. This prevents DeclareContext from being
+                // emitted before a control flow terminal for variables declared
+                // within a branch, which would widen the reactive scope.
+                if !is_binding_in_block_direct_statements(
+                    &builder.scope_info().bindings[binding_id.0 as usize],
+                    &block.body,
+                ) {
+                    continue;
+                }
                 // For hoisted bindings (function declarations), use the first reference
                 // overall. For non-hoisted bindings, use the first reference inside a
                 // nested function.
@@ -2832,10 +2921,10 @@ fn lower_statement(
                     if !matches!(binding, VariableBinding::Identifier { .. }) {
                         // Position-based resolution failed (synthetic $$gen vars
                         // at position 0). Try scope lookup including descendants.
-                        if let Some((binding_id, binding_data)) = builder.scope_info().find_binding_id_in_descendants(
-                            &id.name,
-                            builder.function_scope(),
-                        ) {
+                        if let Some((binding_id, binding_data)) = builder
+                            .scope_info()
+                            .find_binding_id_in_descendants(&id.name, builder.function_scope())
+                        {
                             let binding_kind = crate::convert_binding_kind(&binding_data.kind);
                             let identifier = builder.resolve_binding_with_loc(
                                 &id.name,
@@ -3742,12 +3831,15 @@ fn lower_statement(
             })?;
 
             // Create the try block
+            // Use lower_block_statement to get hoisting support for bindings
+            // declared inside the try body. This matches the catch block's use of
+            // lower_block_statement_with_scope and ensures self-referencing function
+            // declarations (e.g., `const loop = () => { loop(); }`) inside try blocks
+            // are correctly promoted to context variables.
             let try_body_loc = convert_opt_loc(&try_stmt.block.base.loc);
             let try_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.try_enter_try_catch(handler_block, |builder| {
-                    for stmt in &try_stmt.block.body {
-                        lower_statement(builder, stmt, None, parent_scope)?;
-                    }
+                    lower_block_statement(builder, &try_stmt.block, parent_scope)?;
                     Ok(())
                 })?;
                 Ok(Terminal::Goto {
@@ -4070,16 +4162,13 @@ fn lower_identifier_for_assignment(
 ) -> Result<Option<IdentifierForAssignment>, CompilerError> {
     let mut binding = builder.resolve_identifier(name, start, ident_loc.clone())?;
     if !matches!(binding, VariableBinding::Identifier { .. }) && kind != InstructionKind::Reassign {
-        if let Some((binding_id, binding_data)) = builder.scope_info().find_binding_id_in_descendants(
-            name,
-            builder.function_scope(),
-        ) {
+        if let Some((binding_id, binding_data)) = builder
+            .scope_info()
+            .find_binding_id_in_descendants(name, builder.function_scope())
+        {
             let bk = crate::convert_binding_kind(&binding_data.kind);
-            let identifier = builder.resolve_binding_with_loc(
-                name,
-                binding_id,
-                ident_loc.clone(),
-            )?;
+            let identifier =
+                builder.resolve_binding_with_loc(name, binding_id, ident_loc.clone())?;
             binding = VariableBinding::Identifier {
                 identifier,
                 binding_kind: bk,
@@ -5265,11 +5354,16 @@ fn lower_function(
         let scope_info = builder.scope_info();
         let mapped: std::collections::HashSet<react_compiler_ast::scope::ScopeId> =
             scope_info.node_to_scope.values().copied().collect();
-        let param_names: Vec<String> = params.iter().filter_map(|p| {
-            if let react_compiler_ast::patterns::PatternLike::Identifier(id) = p {
-                Some(id.name.clone())
-            } else { None }
-        }).collect();
+        let param_names: Vec<String> = params
+            .iter()
+            .filter_map(|p| {
+                if let react_compiler_ast::patterns::PatternLike::Identifier(id) = p {
+                    Some(id.name.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
         let mut descendants = std::collections::HashSet::new();
         descendants.insert(parent);
         let mut changed = true;
@@ -5295,8 +5389,12 @@ fn lower_function(
                     && !builder.is_synthetic_scope_claimed(sid)
                 {
                     if !param_names.is_empty() {
-                        let all_match = param_names.iter().all(|name| scope.bindings.contains_key(name));
-                        if !all_match { continue; }
+                        let all_match = param_names
+                            .iter()
+                            .all(|name| scope.bindings.contains_key(name));
+                        if !all_match {
+                            continue;
+                        }
                     }
                     found = sid;
                     break;
@@ -5310,7 +5408,6 @@ fn lower_function(
     let component_scope = builder.component_scope();
     let scope_info = builder.scope_info();
 
-    // Clone parent bindings and used_names to pass to the inner lower
     let parent_bindings = builder.bindings().clone();
     let parent_used_names = builder.used_names().clone();
     let context_ids = builder.context_identifiers().clone();
@@ -5364,9 +5461,6 @@ fn lower_function(
         ident_locs,
     )?;
 
-    // Merge the child's used_names and bindings back into the parent builder.
-    // This ensures name deduplication works across function scopes,
-    // matching the TS behavior where #bindings is shared by reference.
     builder.merge_used_names(child_used_names);
     builder.merge_bindings(child_bindings);
 
@@ -5441,9 +5535,6 @@ fn lower_function_declaration(
     )?;
 
     builder.merge_used_names(child_used_names);
-    // Merge child bindings so the parent can reuse the same IdentifierIds
-    // for bindings that were already resolved by the child. This matches TS
-    // behavior where the parent and child share the same #bindings map by reference.
     builder.merge_bindings(child_bindings);
 
     let func_id = builder.environment_mut().add_function(hir_func);
@@ -5564,7 +5655,6 @@ fn lower_function_for_object_method(
         ident_locs,
         None,
     );
-    // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
         let mut merged = parent_context;
@@ -5661,15 +5751,16 @@ fn lower_inner(
             react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
                 let start = ident.base.start.unwrap_or(0);
                 let param_loc = convert_opt_loc(&ident.base.loc);
-                let mut binding = builder.resolve_identifier(&ident.name, start, param_loc.clone())?;
+                let mut binding =
+                    builder.resolve_identifier(&ident.name, start, param_loc.clone())?;
                 if !matches!(binding, VariableBinding::Identifier { .. }) {
                     // Position-based resolution failed (common for synthetic params
                     // like $$gen$m0 at position 0). Try lookup in function scope
                     // and descendants.
-                    if let Some((binding_id, binding_data)) = builder.scope_info().find_binding_id_in_descendants(
-                        &ident.name,
-                        builder.function_scope(),
-                    ) {
+                    if let Some((binding_id, binding_data)) = builder
+                        .scope_info()
+                        .find_binding_id_in_descendants(&ident.name, builder.function_scope())
+                    {
                         let binding_kind = crate::convert_binding_kind(&binding_data.kind);
                         let identifier = builder.resolve_binding_with_loc(
                             &ident.name,
@@ -6476,7 +6567,13 @@ fn collect_fbt_sub_tags(
     for child in children {
         match child {
             JSXChild::JSXElement(el) => {
-                collect_fbt_sub_tags_from_element(el, tag_name, enum_locs, plural_locs, pronoun_locs);
+                collect_fbt_sub_tags_from_element(
+                    el,
+                    tag_name,
+                    enum_locs,
+                    plural_locs,
+                    pronoun_locs,
+                );
             }
             JSXChild::JSXFragment(frag) => {
                 collect_fbt_sub_tags(
@@ -6488,8 +6585,16 @@ fn collect_fbt_sub_tags(
                 );
             }
             JSXChild::JSXExpressionContainer(container) => {
-                if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(expr) = &container.expression {
-                    collect_fbt_sub_tags_from_expr(expr, tag_name, enum_locs, plural_locs, pronoun_locs);
+                if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(expr) =
+                    &container.expression
+                {
+                    collect_fbt_sub_tags_from_expr(
+                        expr,
+                        tag_name,
+                        enum_locs,
+                        plural_locs,
+                        pronoun_locs,
+                    );
                 }
             }
             _ => {}
@@ -6521,12 +6626,29 @@ fn collect_fbt_sub_tags_from_element(
     for attr in &el.opening_element.attributes {
         if let react_compiler_ast::jsx::JSXAttributeItem::JSXAttribute(a) = attr {
             if let Some(val) = &a.value {
-                if let react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(container) = val {
-                    if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(expr) = &container.expression {
-                        collect_fbt_sub_tags_from_expr(expr, tag_name, enum_locs, plural_locs, pronoun_locs);
+                if let react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(
+                    container,
+                ) = val
+                {
+                    if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(expr) =
+                        &container.expression
+                    {
+                        collect_fbt_sub_tags_from_expr(
+                            expr,
+                            tag_name,
+                            enum_locs,
+                            plural_locs,
+                            pronoun_locs,
+                        );
                     }
                 } else if let react_compiler_ast::jsx::JSXAttributeValue::JSXElement(nested) = val {
-                    collect_fbt_sub_tags_from_element(nested, tag_name, enum_locs, plural_locs, pronoun_locs);
+                    collect_fbt_sub_tags_from_element(
+                        nested,
+                        tag_name,
+                        enum_locs,
+                        plural_locs,
+                        pronoun_locs,
+                    );
                 }
             }
         }
@@ -6546,29 +6668,75 @@ fn collect_fbt_sub_tags_from_expr(
             collect_fbt_sub_tags_from_element(el, tag_name, enum_locs, plural_locs, pronoun_locs);
         }
         Expression::JSXFragment(frag) => {
-            collect_fbt_sub_tags(&frag.children, tag_name, enum_locs, plural_locs, pronoun_locs);
+            collect_fbt_sub_tags(
+                &frag.children,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
         }
         Expression::ConditionalExpression(cond) => {
-            collect_fbt_sub_tags_from_expr(&cond.consequent, tag_name, enum_locs, plural_locs, pronoun_locs);
-            collect_fbt_sub_tags_from_expr(&cond.alternate, tag_name, enum_locs, plural_locs, pronoun_locs);
+            collect_fbt_sub_tags_from_expr(
+                &cond.consequent,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
+            collect_fbt_sub_tags_from_expr(
+                &cond.alternate,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
         }
         Expression::LogicalExpression(log) => {
-            collect_fbt_sub_tags_from_expr(&log.left, tag_name, enum_locs, plural_locs, pronoun_locs);
-            collect_fbt_sub_tags_from_expr(&log.right, tag_name, enum_locs, plural_locs, pronoun_locs);
+            collect_fbt_sub_tags_from_expr(
+                &log.left,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
+            collect_fbt_sub_tags_from_expr(
+                &log.right,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
         }
         Expression::ParenthesizedExpression(paren) => {
-            collect_fbt_sub_tags_from_expr(&paren.expression, tag_name, enum_locs, plural_locs, pronoun_locs);
+            collect_fbt_sub_tags_from_expr(
+                &paren.expression,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
         }
-        Expression::ArrowFunctionExpression(arrow) => {
-            match arrow.body.as_ref() {
-                react_compiler_ast::expressions::ArrowFunctionBody::Expression(body_expr) => {
-                    collect_fbt_sub_tags_from_expr(body_expr, tag_name, enum_locs, plural_locs, pronoun_locs);
-                }
-                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                    collect_fbt_sub_tags_from_stmts(&block.body, tag_name, enum_locs, plural_locs, pronoun_locs);
-                }
+        Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_ref() {
+            react_compiler_ast::expressions::ArrowFunctionBody::Expression(body_expr) => {
+                collect_fbt_sub_tags_from_expr(
+                    body_expr,
+                    tag_name,
+                    enum_locs,
+                    plural_locs,
+                    pronoun_locs,
+                );
             }
-        }
+            react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                collect_fbt_sub_tags_from_stmts(
+                    &block.body,
+                    tag_name,
+                    enum_locs,
+                    plural_locs,
+                    pronoun_locs,
+                );
+            }
+        },
         Expression::CallExpression(call) => {
             for arg in &call.arguments {
                 collect_fbt_sub_tags_from_expr(arg, tag_name, enum_locs, plural_locs, pronoun_locs);
@@ -6590,8 +6758,16 @@ fn collect_fbt_sub_tags_from_stmts(
             if let Some(arg) = &ret.argument {
                 collect_fbt_sub_tags_from_expr(arg, tag_name, enum_locs, plural_locs, pronoun_locs);
             }
-        } else if let react_compiler_ast::statements::Statement::ExpressionStatement(expr_stmt) = stmt {
-            collect_fbt_sub_tags_from_expr(&expr_stmt.expression, tag_name, enum_locs, plural_locs, pronoun_locs);
+        } else if let react_compiler_ast::statements::Statement::ExpressionStatement(expr_stmt) =
+            stmt
+        {
+            collect_fbt_sub_tags_from_expr(
+                &expr_stmt.expression,
+                tag_name,
+                enum_locs,
+                plural_locs,
+                pronoun_locs,
+            );
         }
     }
 }
@@ -6617,22 +6793,34 @@ fn collect_identifier_positions_from_stmt(
 ) {
     use react_compiler_ast::statements::Statement;
     match stmt {
-        Statement::ExpressionStatement(s) => collect_identifier_positions_from_expr(&s.expression, positions),
-        Statement::ReturnStatement(s) => {
-            if let Some(arg) = &s.argument { collect_identifier_positions_from_expr(arg, positions); }
+        Statement::ExpressionStatement(s) => {
+            collect_identifier_positions_from_expr(&s.expression, positions)
         }
-        Statement::ThrowStatement(s) => collect_identifier_positions_from_expr(&s.argument, positions),
+        Statement::ReturnStatement(s) => {
+            if let Some(arg) = &s.argument {
+                collect_identifier_positions_from_expr(arg, positions);
+            }
+        }
+        Statement::ThrowStatement(s) => {
+            collect_identifier_positions_from_expr(&s.argument, positions)
+        }
         Statement::BlockStatement(s) => {
-            for stmt in &s.body { collect_identifier_positions_from_stmt(stmt, positions); }
+            for stmt in &s.body {
+                collect_identifier_positions_from_stmt(stmt, positions);
+            }
         }
         Statement::IfStatement(s) => {
             collect_identifier_positions_from_expr(&s.test, positions);
             collect_identifier_positions_from_stmt(&s.consequent, positions);
-            if let Some(alt) = &s.alternate { collect_identifier_positions_from_stmt(alt, positions); }
+            if let Some(alt) = &s.alternate {
+                collect_identifier_positions_from_stmt(alt, positions);
+            }
         }
         Statement::VariableDeclaration(s) => {
             for decl in &s.declarations {
-                if let Some(init) = &decl.init { collect_identifier_positions_from_expr(init, positions); }
+                if let Some(init) = &decl.init {
+                    collect_identifier_positions_from_expr(init, positions);
+                }
             }
         }
         _ => {}
@@ -6646,7 +6834,9 @@ fn collect_identifier_positions_from_expr(
     use react_compiler_ast::expressions::Expression;
     match expr {
         Expression::Identifier(id) => {
-            if let Some(start) = id.base.start { positions.insert(start); }
+            if let Some(start) = id.base.start {
+                positions.insert(start);
+            }
         }
         Expression::CallExpression(call) => {
             collect_identifier_positions_from_expr(&call.callee, positions);
@@ -6696,19 +6886,23 @@ fn collect_identifier_positions_from_expr(
         Expression::TypeCastExpression(e) => {
             collect_identifier_positions_from_expr(&e.expression, positions);
         }
-        Expression::ArrowFunctionExpression(arrow) => {
-            match arrow.body.as_ref() {
-                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                    for stmt in &block.body { collect_identifier_positions_from_stmt(stmt, positions); }
-                }
-                react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
-                    collect_identifier_positions_from_expr(e, positions);
+        Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_ref() {
+            react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                for stmt in &block.body {
+                    collect_identifier_positions_from_stmt(stmt, positions);
                 }
             }
-        }
+            react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
+                collect_identifier_positions_from_expr(e, positions);
+            }
+        },
         Expression::JSXElement(el) => {
-            if let react_compiler_ast::jsx::JSXElementName::JSXIdentifier(id) = &el.opening_element.name {
-                if let Some(start) = id.base.start { positions.insert(start); }
+            if let react_compiler_ast::jsx::JSXElementName::JSXIdentifier(id) =
+                &el.opening_element.name
+            {
+                if let Some(start) = id.base.start {
+                    positions.insert(start);
+                }
             }
             for attr in &el.opening_element.attributes {
                 match attr {
@@ -6732,12 +6926,17 @@ fn collect_identifier_positions_from_expr(
             for child in &el.children {
                 match child {
                     react_compiler_ast::jsx::JSXChild::JSXExpressionContainer(c) => {
-                        if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) = &c.expression {
+                        if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) =
+                            &c.expression
+                        {
                             collect_identifier_positions_from_expr(e, positions);
                         }
                     }
                     react_compiler_ast::jsx::JSXChild::JSXElement(child_el) => {
-                        collect_identifier_positions_from_expr(&Expression::JSXElement(child_el.clone()), positions);
+                        collect_identifier_positions_from_expr(
+                            &Expression::JSXElement(child_el.clone()),
+                            positions,
+                        );
                     }
                     react_compiler_ast::jsx::JSXChild::JSXSpreadChild(s) => {
                         collect_identifier_positions_from_expr(&s.expression, positions);
@@ -6750,12 +6949,17 @@ fn collect_identifier_positions_from_expr(
             for child in &frag.children {
                 match child {
                     react_compiler_ast::jsx::JSXChild::JSXExpressionContainer(c) => {
-                        if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) = &c.expression {
+                        if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) =
+                            &c.expression
+                        {
                             collect_identifier_positions_from_expr(e, positions);
                         }
                     }
                     react_compiler_ast::jsx::JSXChild::JSXElement(child_el) => {
-                        collect_identifier_positions_from_expr(&Expression::JSXElement(child_el.clone()), positions);
+                        collect_identifier_positions_from_expr(
+                            &Expression::JSXElement(child_el.clone()),
+                            positions,
+                        );
                     }
                     _ => {}
                 }
@@ -6771,7 +6975,9 @@ fn collect_identifier_positions_from_expr(
         Expression::ObjectExpression(obj) => {
             for prop in &obj.properties {
                 match prop {
-                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(
+                        p,
+                    ) => {
                         collect_identifier_positions_from_expr(&p.value, positions);
                     }
                     react_compiler_ast::expressions::ObjectExpressionProperty::SpreadElement(s) => {

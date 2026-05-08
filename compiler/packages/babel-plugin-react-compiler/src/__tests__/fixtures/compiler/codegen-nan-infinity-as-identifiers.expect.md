@@ -1,3 +1,4 @@
+
 ## Input
 
 ```javascript
@@ -16,15 +17,20 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{x: true}],
 };
+
 ```
 
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // Constant propagation can produce NaN/Infinity from arithmetic.
+// These must be emitted as Identifier("NaN")/Identifier("Infinity"),
+// not NumericLiteral(NaN) which serializes to null in JSON.
+
 function Component(t0) {
   const $ = _c(2);
   const { x } = t0;
+
   const t1 = x ? NaN : Infinity;
   let t2;
   if ($[0] !== t1) {
@@ -41,15 +47,13 @@ function Component(t0) {
   }
   return t2;
 }
+
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [
-    {
-      x: true,
-    },
-  ],
+  params: [{ x: true }],
 };
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) <div>NaN-Infinity</div>

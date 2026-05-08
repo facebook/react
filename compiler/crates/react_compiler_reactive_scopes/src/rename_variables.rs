@@ -8,16 +8,25 @@
 //!
 //! Corresponds to `src/ReactiveScopes/RenameVariables.ts`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use react_compiler_hir::{
-    DeclarationId, EvaluationOrder, FunctionId, IdentifierName, InstructionValue,
-    ParamPattern, Place, PrunedReactiveScopeBlock, ReactiveBlock, ReactiveFunction,
-    ReactiveValue, ReactiveScopeBlock,
-    environment::Environment,
-};
+use react_compiler_hir::DeclarationId;
+use react_compiler_hir::EvaluationOrder;
+use react_compiler_hir::FunctionId;
+use react_compiler_hir::IdentifierName;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::ParamPattern;
+use react_compiler_hir::Place;
+use react_compiler_hir::PrunedReactiveScopeBlock;
+use react_compiler_hir::ReactiveBlock;
+use react_compiler_hir::ReactiveFunction;
+use react_compiler_hir::ReactiveScopeBlock;
+use react_compiler_hir::ReactiveValue;
+use react_compiler_hir::environment::Environment;
 
-use crate::visitors::{self, ReactiveFunctionVisitor};
+use crate::visitors::ReactiveFunctionVisitor;
+use crate::visitors::{self};
 
 // =============================================================================
 // Scopes
@@ -40,7 +49,11 @@ impl Scopes {
         }
     }
 
-    fn visit_identifier(&mut self, identifier_id: react_compiler_hir::IdentifierId, env: &Environment) {
+    fn visit_identifier(
+        &mut self,
+        identifier_id: react_compiler_hir::IdentifierId,
+        env: &Environment,
+    ) {
         let identifier = &env.identifiers[identifier_id.0 as usize];
         let original_name = match &identifier.name {
             Some(name) => name.clone(),
@@ -84,7 +97,10 @@ impl Scopes {
 
         let identifier_name = IdentifierName::Named(name.clone());
         self.seen.insert(declaration_id, identifier_name);
-        self.stack.last_mut().unwrap().insert(name.clone(), declaration_id);
+        self.stack
+            .last_mut()
+            .unwrap()
+            .insert(name.clone(), declaration_id);
         self.names.insert(name);
     }
 
@@ -153,7 +169,9 @@ impl ReactiveFunctionVisitor for Visitor<'_> {
     /// TS: `visitScope(scope, state) { for (const [_, decl] of scope.scope.declarations) state.visit(decl.identifier); this.traverseScope(scope, state) }`
     fn visit_scope(&self, scope: &ReactiveScopeBlock, state: &mut Scopes) {
         let scope_data = &self.env.scopes[scope.scope.0 as usize];
-        let decl_ids: Vec<react_compiler_hir::IdentifierId> = scope_data.declarations.iter()
+        let decl_ids: Vec<react_compiler_hir::IdentifierId> = scope_data
+            .declarations
+            .iter()
             .map(|(_, d)| d.identifier)
             .collect();
         for id in decl_ids {
@@ -184,15 +202,35 @@ impl ReactiveFunctionVisitor for Visitor<'_> {
 /// Renames variables for output — assigns unique names, handles SSA renames.
 /// Returns a Set of all unique variable names used.
 /// TS: `renameVariables`
-pub fn rename_variables(
+pub fn rename_variables(func: &mut ReactiveFunction, env: &mut Environment) -> HashSet<String> {
+    rename_variables_with_parent(func, env, None)
+}
+
+fn rename_variables_with_parent(
     func: &mut ReactiveFunction,
     env: &mut Environment,
+    parent_names: Option<&HashSet<String>>,
 ) -> HashSet<String> {
     let globals = collect_referenced_globals(&func.body, env);
 
     // Phase 1: Use ReactiveFunctionVisitor to compute the rename mapping.
     // This collects DeclarationId -> IdentifierName without mutating env.
     let mut scopes = Scopes::new(globals.clone());
+    // If parent names are provided (for outlined functions), pre-populate
+    // the scope stack so that parameter names don't collide with parent
+    // variables. In the TS compiler, outlined functions are placed in the
+    // parent function body and processed within the parent's scope context.
+    if let Some(parent) = parent_names {
+        scopes.enter();
+        for name in parent {
+            scopes
+                .stack
+                .last_mut()
+                .unwrap()
+                .insert(name.clone(), DeclarationId(u32::MAX));
+            scopes.names.insert(name.clone());
+        }
+    }
     rename_variables_impl(func, &Visitor { env }, &mut scopes);
 
     // Phase 2: Apply the computed renames to all identifiers in env.
@@ -210,11 +248,7 @@ pub fn rename_variables(
 }
 
 /// TS: `renameVariablesImpl`
-fn rename_variables_impl(
-    func: &ReactiveFunction,
-    visitor: &Visitor,
-    scopes: &mut Scopes,
-) {
+fn rename_variables_impl(func: &ReactiveFunction, visitor: &Visitor, scopes: &mut Scopes) {
     scopes.enter();
     for param in &func.params {
         let place = match param {
@@ -239,11 +273,7 @@ fn collect_referenced_globals(block: &ReactiveBlock, env: &Environment) -> HashS
     globals
 }
 
-fn collect_globals_block(
-    block: &ReactiveBlock,
-    globals: &mut HashSet<String>,
-    env: &Environment,
-) {
+fn collect_globals_block(block: &ReactiveBlock, globals: &mut HashSet<String>, env: &Environment) {
     for stmt in block {
         match stmt {
             react_compiler_hir::ReactiveStatement::Instruction(instr) => {
@@ -262,11 +292,7 @@ fn collect_globals_block(
     }
 }
 
-fn collect_globals_value(
-    value: &ReactiveValue,
-    globals: &mut HashSet<String>,
-    env: &Environment,
-) {
+fn collect_globals_value(value: &ReactiveValue, globals: &mut HashSet<String>, env: &Environment) {
     match value {
         ReactiveValue::Instruction(iv) => {
             if let InstructionValue::LoadGlobal { binding, .. } = iv {
@@ -281,13 +307,22 @@ fn collect_globals_value(
                 _ => {}
             }
         }
-        ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value: inner,
+            ..
+        } => {
             for instr in instructions {
                 collect_globals_value(&instr.value, globals, env);
             }
             collect_globals_value(inner, globals, env);
         }
-        ReactiveValue::ConditionalExpression { test, consequent, alternate, .. } => {
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             collect_globals_value(test, globals, env);
             collect_globals_value(consequent, globals, env);
             collect_globals_value(alternate, globals, env);
@@ -336,9 +371,17 @@ fn collect_globals_terminal(
     env: &Environment,
 ) {
     match &stmt.terminal {
-        react_compiler_hir::ReactiveTerminal::Break { .. } | react_compiler_hir::ReactiveTerminal::Continue { .. } => {}
-        react_compiler_hir::ReactiveTerminal::Return { .. } | react_compiler_hir::ReactiveTerminal::Throw { .. } => {}
-        react_compiler_hir::ReactiveTerminal::For { init, test, update, loop_block, .. } => {
+        react_compiler_hir::ReactiveTerminal::Break { .. }
+        | react_compiler_hir::ReactiveTerminal::Continue { .. } => {}
+        react_compiler_hir::ReactiveTerminal::Return { .. }
+        | react_compiler_hir::ReactiveTerminal::Throw { .. } => {}
+        react_compiler_hir::ReactiveTerminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            ..
+        } => {
             collect_globals_value(init, globals, env);
             collect_globals_value(test, globals, env);
             collect_globals_block(loop_block, globals, env);
@@ -346,24 +389,39 @@ fn collect_globals_terminal(
                 collect_globals_value(update, globals, env);
             }
         }
-        react_compiler_hir::ReactiveTerminal::ForOf { init, test, loop_block, .. } => {
+        react_compiler_hir::ReactiveTerminal::ForOf {
+            init,
+            test,
+            loop_block,
+            ..
+        } => {
             collect_globals_value(init, globals, env);
             collect_globals_value(test, globals, env);
             collect_globals_block(loop_block, globals, env);
         }
-        react_compiler_hir::ReactiveTerminal::ForIn { init, loop_block, .. } => {
+        react_compiler_hir::ReactiveTerminal::ForIn {
+            init, loop_block, ..
+        } => {
             collect_globals_value(init, globals, env);
             collect_globals_block(loop_block, globals, env);
         }
-        react_compiler_hir::ReactiveTerminal::DoWhile { loop_block, test, .. } => {
+        react_compiler_hir::ReactiveTerminal::DoWhile {
+            loop_block, test, ..
+        } => {
             collect_globals_block(loop_block, globals, env);
             collect_globals_value(test, globals, env);
         }
-        react_compiler_hir::ReactiveTerminal::While { test, loop_block, .. } => {
+        react_compiler_hir::ReactiveTerminal::While {
+            test, loop_block, ..
+        } => {
             collect_globals_value(test, globals, env);
             collect_globals_block(loop_block, globals, env);
         }
-        react_compiler_hir::ReactiveTerminal::If { consequent, alternate, .. } => {
+        react_compiler_hir::ReactiveTerminal::If {
+            consequent,
+            alternate,
+            ..
+        } => {
             collect_globals_block(consequent, globals, env);
             if let Some(alt) = alternate {
                 collect_globals_block(alt, globals, env);

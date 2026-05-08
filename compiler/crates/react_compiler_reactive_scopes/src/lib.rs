@@ -10,12 +10,13 @@
 //!
 //! Corresponds to `src/ReactiveScopes/` in the TypeScript compiler.
 
-pub mod codegen_reactive_function;
 mod assert_scope_instructions_within_scopes;
 mod assert_well_formed_break_targets;
 mod build_reactive_function;
+pub mod codegen_reactive_function;
 mod extract_scope_declarations_from_destructuring;
 mod merge_reactive_scopes_that_invalidate_together;
+pub mod print_reactive_function;
 mod promote_used_temporaries;
 mod propagate_early_returns;
 mod prune_always_invalidating_scopes;
@@ -27,12 +28,12 @@ mod prune_unused_lvalues;
 mod prune_unused_scopes;
 mod rename_variables;
 mod stabilize_block_ids;
-pub mod print_reactive_function;
 pub mod visitors;
 
 pub use assert_scope_instructions_within_scopes::assert_scope_instructions_within_scopes;
 pub use assert_well_formed_break_targets::assert_well_formed_break_targets;
 pub use build_reactive_function::build_reactive_function;
+pub use codegen_reactive_function::codegen_function;
 pub use extract_scope_declarations_from_destructuring::extract_scope_declarations_from_destructuring;
 pub use merge_reactive_scopes_that_invalidate_together::merge_reactive_scopes_that_invalidate_together;
 pub use print_reactive_function::debug_reactive_function;
@@ -46,5 +47,4 @@ pub use prune_unused_labels::prune_unused_labels;
 pub use prune_unused_lvalues::prune_unused_lvalues;
 pub use prune_unused_scopes::prune_unused_scopes;
 pub use rename_variables::rename_variables;
-pub use codegen_reactive_function::codegen_function;
 pub use stabilize_block_ids::stabilize_block_ids;

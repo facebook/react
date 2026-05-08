@@ -1,3 +1,4 @@
+
 ## Input
 
 ```javascript
@@ -64,6 +65,7 @@ export const FIXTURE_ENTRYPOINT = {
     rxData: Object.assign([{non_rx_id: '1'}], {futureData: []}),
   }],
 };
+
 ```
 
 ## Code
@@ -71,6 +73,11 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
+
+// Minimized from MDCAIGlassesPDPRxOOSBadge.react.js
+// Tests that expand_fbt_scope_range syncs identifier mutable_ranges
+// after expanding a scope's range (Rust value semantics vs TS shared reference).
+
 function Component(t0) {
   const $ = _c(8);
   const { selectedColor, selectedProduct, rxData } = t0;
@@ -112,9 +119,10 @@ function Component(t0) {
       ) {
         t1 = (
           <div>
-            {fbt(
-              `Only available in ${fbt.param("frame size", otherFrameSize)} size`,
-              "Badge text",
+            {fbt._(
+              "Only available in {frame size} size",
+              [fbt._param("frame size", otherFrameSize)],
+              { hk: "4sIu3a" },
             )}
           </div>
         );
@@ -131,10 +139,11 @@ function Component(t0) {
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;
   }
+
   if (rxData.futureData.includes(selectedProduct?.id)) {
     let t2;
     if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
-      t2 = <div>{fbt("Out of stock", "Badge text")}</div>;
+      t2 = <div>{fbt._("Out of stock", null, { hk: "M2wQM" })}</div>;
       $[6] = t2;
     } else {
       t2 = $[6];
@@ -143,13 +152,14 @@ function Component(t0) {
   }
   let t2;
   if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = <div>{fbt("Not available", "Badge text")}</div>;
+    t2 = <div>{fbt._("Not available", null, { hk: "43mHFe" })}</div>;
     $[7] = t2;
   } else {
     t2 = $[7];
   }
   return t2;
 }
+
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [
@@ -172,20 +182,15 @@ export const FIXTURE_ENTRYPOINT = {
           ["size", "M"],
         ]),
       },
-      rxData: Object.assign(
-        [
-          {
-            non_rx_id: "1",
-          },
-        ],
-        {
-          futureData: [],
-        },
-      ),
+      rxData: Object.assign([{ non_rx_id: "1" }], { futureData: [] }),
     },
   ],
 };
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: exception) A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime.

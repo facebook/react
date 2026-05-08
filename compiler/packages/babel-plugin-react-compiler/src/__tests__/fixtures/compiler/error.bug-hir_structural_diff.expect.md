@@ -32,14 +32,14 @@ Found 1 error:
 
 Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration
 
-error.bug-hir_structural_diff.ts:17:4
-  15 |     // window, this is most lightly related to the time it takes to animate the
-  16 |     // tab change.
-> 17 |     var delay = x;
+error.bug-hir_structural_diff.ts:14:4
+  12 |     // window, this is most lightly related to the time it takes to animate the
+  13 |     // tab change.
+> 14 |     var delay = x;
      |     ^^^^^^^^^^^^^^ (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration
-  18 |     if (delay) {
-  19 |       x(function () {}, delay);
-  20 |     } else {}
+  15 |     if (delay) {
+  16 |       x(function () {}, delay);
+  17 |     } else {}
 ```
           
       
