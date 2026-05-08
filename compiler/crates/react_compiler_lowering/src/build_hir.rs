@@ -1237,7 +1237,7 @@ fn lower_expression(
                                     InstructionValue::PropertyStore {
                                         object,
                                         property: PropertyLiteral::Number(FloatValue::new(
-                                            num.value,
+                                            num.precise_value(),
                                         )),
                                         value: right,
                                         loc: left_loc,

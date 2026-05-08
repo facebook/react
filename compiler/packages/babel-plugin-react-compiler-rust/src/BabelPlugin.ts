@@ -144,14 +144,6 @@ export default function BabelPluginReactCompilerRust(
             throw err;
           }
 
-          // Apply variable renames from lowering to the Babel AST.
-          // This matches the TS compiler's scope.rename() calls in HIRBuilder,
-          // which rename shadowed variables in the original AST even when the
-          // compiled function is not inserted (e.g., lint mode).
-          if (result.renames != null && result.renames.length > 0) {
-            applyRenames(prog, result.renames);
-          }
-
           if (result.ast != null) {
             // Replace the program with Rust's compiled output.
             const newFile = result.ast as any;
@@ -175,6 +167,13 @@ export default function BabelPluginReactCompilerRust(
             // running on the new children.
             pass.file.ast.comments = [];
             prog.replaceWith(newProgram);
+          }
+
+          // Apply variable renames from lowering to the Babel AST.
+          // Must run AFTER the AST replacement so that scope.rename()
+          // operates on the compiled output, not the original (discarded) AST.
+          if (result.renames != null && result.renames.length > 0) {
+            applyRenames(prog, result.renames);
           }
         },
       },

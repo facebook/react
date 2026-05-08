@@ -2626,40 +2626,28 @@ fn apply_compiled_functions(
     }
 
     // Insert outlined function declarations.
-    let mut insert_decls: Vec<(Option<u32>, FunctionDeclaration)> = Vec::new();
-    let mut push_decls: Vec<FunctionDeclaration> = Vec::new();
+    // For FunctionDeclarations: insert right after the parent function at the same scope level.
+    //   This requires recursive search since the parent may be nested inside other functions.
+    //   Matches TS behavior: `originalFn.insertAfter(outlinedFn)`.
+    // For FunctionExpression/ArrowFunctionExpression: push to program body (top level).
+    //   Matches TS behavior: `program.pushContainer('body', [fn])`.
 
     for (parent_start, original_kind, outlined_decl) in outlined_decls {
+        let outlined_stmt = Statement::FunctionDeclaration(outlined_decl);
         match original_kind {
             OriginalFnKind::FunctionDeclaration => {
-                insert_decls.push((parent_start, outlined_decl));
+                if let Some(start) = parent_start {
+                    if !insert_after_fn_recursive(&mut program.body, start, outlined_stmt.clone()) {
+                        program.body.push(outlined_stmt);
+                    }
+                } else {
+                    program.body.push(outlined_stmt);
+                }
             }
             OriginalFnKind::FunctionExpression | OriginalFnKind::ArrowFunctionExpression => {
-                push_decls.push(outlined_decl);
+                program.body.push(outlined_stmt);
             }
         }
-    }
-
-    for (parent_start, outlined_decl) in insert_decls.into_iter() {
-        let insert_idx = if let Some(start) = parent_start {
-            program
-                .body
-                .iter()
-                .position(|stmt| stmt_has_fn_at_start(stmt, start))
-                .map(|pos| pos + 1)
-                .unwrap_or(program.body.len())
-        } else {
-            program.body.len()
-        };
-        program
-            .body
-            .insert(insert_idx, Statement::FunctionDeclaration(outlined_decl));
-    }
-
-    for outlined_decl in push_decls {
-        program
-            .body
-            .push(Statement::FunctionDeclaration(outlined_decl));
     }
 
     // Register the memo cache import and rename useMemoCache references.
@@ -3194,6 +3182,171 @@ fn apply_gated_function_hoisted(
 
     // Insert gating result before the optimized function
     program.body.insert(fn_idx, gating_result_stmt);
+}
+
+/// Recursively search for a function at `start` position and insert `new_stmt`
+/// right after it in the same block. Returns true if successfully inserted.
+/// Searches through all nested structures: function bodies, object method bodies, etc.
+fn insert_after_fn_recursive(stmts: &mut Vec<Statement>, start: u32, new_stmt: Statement) -> bool {
+    // Check this level first
+    if let Some(pos) = stmts.iter().position(|s| stmt_has_fn_at_start(s, start)) {
+        stmts.insert(pos + 1, new_stmt);
+        return true;
+    }
+    // Recurse into every statement that can contain nested blocks
+    for stmt in stmts.iter_mut() {
+        if insert_after_fn_in_stmt(stmt, start, &new_stmt) {
+            return true;
+        }
+    }
+    false
+}
+
+fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statement) -> bool {
+    match stmt {
+        Statement::FunctionDeclaration(f) => {
+            insert_after_fn_in_block(&mut f.body, start, new_stmt)
+        }
+        Statement::BlockStatement(b) => {
+            insert_after_fn_in_block(b, start, new_stmt)
+        }
+        Statement::ExpressionStatement(e) => {
+            insert_after_fn_in_expr(&mut e.expression, start, new_stmt)
+        }
+        Statement::ReturnStatement(r) => {
+            if let Some(arg) = &mut r.argument {
+                insert_after_fn_in_expr(arg, start, new_stmt)
+            } else {
+                false
+            }
+        }
+        Statement::VariableDeclaration(v) => {
+            for decl in &mut v.declarations {
+                if let Some(init) = &mut decl.init {
+                    if insert_after_fn_in_expr(init, start, new_stmt) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
+        Statement::ExportDefaultDeclaration(e) => match e.declaration.as_mut() {
+            ExportDefaultDecl::FunctionDeclaration(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
+            ExportDefaultDecl::Expression(expr) => insert_after_fn_in_expr(expr, start, new_stmt),
+            _ => false,
+        },
+        Statement::ExportNamedDeclaration(e) => {
+            if let Some(decl) = &mut e.declaration {
+                match decl.as_mut() {
+                    Declaration::FunctionDeclaration(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
+                    Declaration::VariableDeclaration(v) => {
+                        for d in &mut v.declarations {
+                            if let Some(init) = &mut d.init {
+                                if insert_after_fn_in_expr(init, start, new_stmt) {
+                                    return true;
+                                }
+                            }
+                        }
+                        false
+                    }
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        }
+        Statement::IfStatement(i) => {
+            insert_after_fn_in_stmt(&mut i.consequent, start, new_stmt)
+                || i.alternate.as_mut().map_or(false, |a| insert_after_fn_in_stmt(a, start, new_stmt))
+        }
+        Statement::ForStatement(f) => insert_after_fn_in_stmt(&mut f.body, start, new_stmt),
+        Statement::WhileStatement(w) => insert_after_fn_in_stmt(&mut w.body, start, new_stmt),
+        Statement::TryStatement(t) => {
+            if insert_after_fn_in_block(&mut t.block, start, new_stmt) { return true; }
+            if let Some(h) = &mut t.handler {
+                if insert_after_fn_in_block(&mut h.body, start, new_stmt) { return true; }
+            }
+            if let Some(f) = &mut t.finalizer {
+                if insert_after_fn_in_block(f, start, new_stmt) { return true; }
+            }
+            false
+        }
+        _ => false,
+    }
+}
+
+fn insert_after_fn_in_block(block: &mut react_compiler_ast::statements::BlockStatement, start: u32, new_stmt: &Statement) -> bool {
+    if let Some(pos) = block.body.iter().position(|s| stmt_has_fn_at_start(s, start)) {
+        block.body.insert(pos + 1, new_stmt.clone());
+        return true;
+    }
+    for stmt in block.body.iter_mut() {
+        if insert_after_fn_in_stmt(stmt, start, new_stmt) {
+            return true;
+        }
+    }
+    false
+}
+
+fn insert_after_fn_in_expr(expr: &mut react_compiler_ast::expressions::Expression, start: u32, new_stmt: &Statement) -> bool {
+    use react_compiler_ast::expressions::Expression;
+    match expr {
+        Expression::ObjectExpression(obj) => {
+            for prop in &mut obj.properties {
+                match prop {
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectMethod(m) => {
+                        if insert_after_fn_in_block(&mut m.body, start, new_stmt) {
+                            return true;
+                        }
+                    }
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+                        if insert_after_fn_in_expr(&mut p.value, start, new_stmt) {
+                            return true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            false
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in arr.elements.iter_mut().flatten() {
+                if insert_after_fn_in_expr(elem, start, new_stmt) {
+                    return true;
+                }
+            }
+            false
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            match arrow.body.as_mut() {
+                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                    insert_after_fn_in_block(block, start, new_stmt)
+                }
+                react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
+                    insert_after_fn_in_expr(e, start, new_stmt)
+                }
+            }
+        }
+        Expression::FunctionExpression(f) => {
+            insert_after_fn_in_block(&mut f.body, start, new_stmt)
+        }
+        Expression::CallExpression(c) => {
+            for arg in &mut c.arguments {
+                if insert_after_fn_in_expr(arg, start, new_stmt) {
+                    return true;
+                }
+            }
+            insert_after_fn_in_expr(&mut c.callee, start, new_stmt)
+        }
+        Expression::ConditionalExpression(c) => {
+            insert_after_fn_in_expr(&mut c.consequent, start, new_stmt)
+                || insert_after_fn_in_expr(&mut c.alternate, start, new_stmt)
+        }
+        Expression::AssignmentExpression(a) => {
+            insert_after_fn_in_expr(&mut a.right, start, new_stmt)
+        }
+        _ => false,
+    }
 }
 
 /// Check if a statement contains a function whose BaseNode.start matches.
