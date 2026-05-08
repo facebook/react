@@ -22,17 +22,22 @@
 //! instructions in each scope, the scopes must be aligned to block-scope
 //! boundaries — we can't memoize half of a loop!
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
+use react_compiler_hir::BlockId;
+use react_compiler_hir::BlockKind;
+use react_compiler_hir::EvaluationOrder;
+use react_compiler_hir::HirFunction;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::MutableRange;
+use react_compiler_hir::ScopeId;
+use react_compiler_hir::Terminal;
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::visitors;
-use react_compiler_hir::visitors::{
-    each_instruction_lvalue_ids, each_instruction_value_operand_ids, each_terminal_operand_ids,
-};
-use react_compiler_hir::{
-    BlockId, BlockKind, EvaluationOrder, HirFunction, IdentifierId,
-    MutableRange, ScopeId, Terminal,
-};
+use react_compiler_hir::visitors::each_instruction_lvalue_ids;
+use react_compiler_hir::visitors::each_instruction_value_operand_ids;
+use react_compiler_hir::visitors::each_terminal_operand_ids;
 
 // =============================================================================
 // ValueBlockNode — stores the valueRange for scope alignment in value blocks
@@ -84,6 +89,15 @@ struct BlockFallthroughRange {
 /// boundaries. For example, if a scope ends partway through an if consequent,
 /// the scope is extended to the end of the consequent block.
 pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &mut Environment) {
+    // Save original scope ranges BEFORE this pass modifies them.
+    // In TS, identifier.mutableRange and scope.range may or may not be the same
+    // JS object. Only identifiers whose mutableRange IS the scope's range object
+    // (same reference) automatically see scope range modifications. In Rust, we
+    // simulate this by recording original ranges and only syncing identifiers
+    // whose mutableRange matches the original.
+    let original_scope_ranges: Vec<MutableRange> =
+        env.scopes.iter().map(|s| s.range.clone()).collect();
+
     let mut active_block_fallthrough_ranges: Vec<BlockFallthroughRange> = Vec::new();
     let mut active_scopes: HashSet<ScopeId> = HashSet::new();
     let mut seen: HashSet<ScopeId> = HashSet::new();
@@ -95,9 +109,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
         let starting_id = block_first_id(func, block_id);
 
         // Retain only active scopes whose range.end > startingId
-        active_scopes.retain(|&scope_id| {
-            env.scopes[scope_id.0 as usize].range.end > starting_id
-        });
+        active_scopes.retain(|&scope_id| env.scopes[scope_id.0 as usize].range.end > starting_id);
 
         // Check if we've reached a fallthrough block
         if let Some(top) = active_block_fallthrough_ranges.last().cloned() {
@@ -239,8 +251,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
             }
 
             let successor_block = func.body.blocks.get(&successor).unwrap();
-            if successor_block.kind == BlockKind::Block
-                || successor_block.kind == BlockKind::Catch
+            if successor_block.kind == BlockKind::Block || successor_block.kind == BlockKind::Catch
             {
                 // Block or catch kind: don't create a value block node
             } else if node.is_none() || is_ternary_logical_optional {
@@ -248,8 +259,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
                 // or for ternary/logical/optional terminals.
                 let value_range = if node.is_none() {
                     // Transition from block -> value block
-                    let ft =
-                        fallthrough.expect("Expected a fallthrough for value block");
+                    let ft = fallthrough.expect("Expected a fallthrough for value block");
                     let next_id = block_first_id(func, ft);
                     MutableRange {
                         start: terminal_eval_order,
@@ -260,10 +270,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
                     node.as_ref().unwrap().value_range.clone()
                 };
 
-                value_block_nodes.insert(
-                    successor,
-                    ValueBlockNode { value_range },
-                );
+                value_block_nodes.insert(successor, ValueBlockNode { value_range });
             } else {
                 // Value -> value block transition: reuse the node
                 if let Some(n) = &node {
@@ -273,15 +280,23 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
         }
     }
 
-    // Sync identifier mutable_range with their scope's range.
-    // In TS, identifier.mutableRange and scope.range are the same shared object,
-    // so modifications to scope.range are automatically visible through the
-    // identifier. In Rust they are separate copies, so we must explicitly sync.
+    // Sync identifier mutable_range with their scope's range, but ONLY for
+    // identifiers whose mutable_range matched their scope's ORIGINAL range
+    // (before this pass modified it). In TS, identifier.mutableRange and
+    // scope.range are only the same JS object for identifiers that were the
+    // "canonical" representative when the scope was created. Other identifiers
+    // in the same scope have independent mutableRange objects that should NOT
+    // be updated when the scope's range changes.
     for ident in &mut env.identifiers {
         if let Some(scope_id) = ident.scope {
-            let scope_range = &env.scopes[scope_id.0 as usize].range;
-            ident.mutable_range.start = scope_range.start;
-            ident.mutable_range.end = scope_range.end;
+            let original = &original_scope_ranges[scope_id.0 as usize];
+            if ident.mutable_range.start == original.start
+                && ident.mutable_range.end == original.end
+            {
+                let scope_range = &env.scopes[scope_id.0 as usize].range;
+                ident.mutable_range.start = scope_range.start;
+                ident.mutable_range.end = scope_range.end;
+            }
         }
     }
 }

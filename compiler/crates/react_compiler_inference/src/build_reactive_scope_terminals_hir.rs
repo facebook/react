@@ -11,20 +11,25 @@
 //!
 //! Ported from TypeScript `src/HIR/BuildReactiveScopeTerminalsHIR.ts`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 use indexmap::IndexMap;
+use react_compiler_hir::BasicBlock;
+use react_compiler_hir::BlockId;
+use react_compiler_hir::EvaluationOrder;
+use react_compiler_hir::GotoVariant;
+use react_compiler_hir::HirFunction;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::ScopeId;
+use react_compiler_hir::Terminal;
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::{
-    BasicBlock, BlockId, EvaluationOrder, GotoVariant, HirFunction, IdentifierId,
-    ScopeId, Terminal,
-};
-use react_compiler_hir::visitors::{
-    each_instruction_lvalue_ids, each_instruction_operand_ids, each_terminal_operand_ids,
-};
-use react_compiler_lowering::{
-    get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
-};
+use react_compiler_hir::visitors::each_instruction_lvalue_ids;
+use react_compiler_hir::visitors::each_instruction_operand_ids;
+use react_compiler_hir::visitors::each_terminal_operand_ids;
+use react_compiler_lowering::get_reverse_postordered_blocks;
+use react_compiler_lowering::mark_instruction_ids;
+use react_compiler_lowering::mark_predecessors;
 
 // =============================================================================
 // getScopes
@@ -96,10 +101,7 @@ impl TerminalRewriteInfo {
 // =============================================================================
 
 /// Collect all scope rewrites by traversing scopes in pre-order.
-fn collect_scope_rewrites(
-    func: &HirFunction,
-    env: &mut Environment,
-) -> Vec<TerminalRewriteInfo> {
+fn collect_scope_rewrites(func: &HirFunction, env: &mut Environment) -> Vec<TerminalRewriteInfo> {
     let scope_ids = get_scopes(func, env);
 
     // Sort: ascending by start, descending by end for ties
@@ -366,6 +368,18 @@ pub fn build_reactive_scope_terminals_hir(func: &mut HirFunction, env: &mut Envi
 ///
 /// Corresponds to TS `fixScopeAndIdentifierRanges`.
 fn fix_scope_and_identifier_ranges(func: &HirFunction, env: &mut Environment) {
+    // Save original scope ranges before updating them. In TS,
+    // identifier.mutableRange and scope.range may or may not be the same
+    // JS object. Only identifiers whose mutableRange shares the same object
+    // reference as scope.range see the update automatically. We simulate
+    // this by only syncing identifiers whose mutableRange matches the
+    // scope's pre-update range.
+    let original_scope_ranges: Vec<(EvaluationOrder, EvaluationOrder)> = env
+        .scopes
+        .iter()
+        .map(|s| (s.range.start, s.range.end))
+        .collect();
+
     for (_block_id, block) in &func.body.blocks {
         match &block.terminal {
             Terminal::Scope {
@@ -393,17 +407,22 @@ fn fix_scope_and_identifier_ranges(func: &HirFunction, env: &mut Environment) {
         }
     }
 
-    // Sync identifier mutable ranges with their scope ranges.
-    // In TS, identifier.mutableRange IS scope.range (shared object reference).
-    // When fixScopeAndIdentifierRanges updates scope.range, all identifiers
-    // whose mutableRange points to that scope automatically see the update.
-    // In Rust, we must explicitly copy scope range to identifier mutable_range.
+    // Sync identifier mutable ranges with their scope ranges, but ONLY
+    // for identifiers whose mutableRange matched their scope's ORIGINAL
+    // range (before the updates above). In TS, identifier.mutableRange
+    // and scope.range are only the same JS object for identifiers that
+    // were the canonical representative when the scope was created.
+    // After MergeOverlappingReactiveScopesHIR, repointed identifiers
+    // have mutableRange pointing to the OLD scope's range, not the root
+    // scope's range — so they should NOT be synced here.
     for ident in &mut env.identifiers {
         if let Some(scope_id) = ident.scope {
-            let scope_range = &env.scopes[scope_id.0 as usize].range;
-            ident.mutable_range.start = scope_range.start;
-            ident.mutable_range.end = scope_range.end;
+            let (orig_start, orig_end) = original_scope_ranges[scope_id.0 as usize];
+            if ident.mutable_range.start == orig_start && ident.mutable_range.end == orig_end {
+                let scope_range = &env.scopes[scope_id.0 as usize].range;
+                ident.mutable_range.start = scope_range.start;
+                ident.mutable_range.end = scope_range.end;
+            }
         }
     }
 }
-
