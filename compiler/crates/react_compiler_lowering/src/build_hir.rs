@@ -2453,6 +2453,12 @@ fn lower_block_statement_inner(
         .filter(|b| {
             !matches!(b.kind, AstBindingKind::Param | AstBindingKind::Module)
             && b.declaration_type != "FunctionExpression"
+            && b.declaration_type != "TypeAlias"
+            && b.declaration_type != "OpaqueType"
+            && b.declaration_type != "InterfaceDeclaration"
+            && b.declaration_type != "TSTypeAliasDeclaration"
+            && b.declaration_type != "TSInterfaceDeclaration"
+            && b.declaration_type != "TSEnumDeclaration"
         })
         .map(|b| {
             (
