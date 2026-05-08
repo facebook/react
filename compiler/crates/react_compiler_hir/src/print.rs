@@ -62,7 +62,9 @@ pub fn format_js_string(s: &str) -> String {
                     '\t' => result.push_str("\\t"),
             '\u{0008}' => result.push_str("\\b"),
             '\u{000c}' => result.push_str("\\f"),
-                    c if c.is_control() => {
+                    // Only escape C0 control chars (U+0000–U+001F), matching JS JSON.stringify.
+                    // Do NOT escape C1 controls (U+0080–U+009F) — JS outputs those as literal chars.
+                    c if (c as u32) <= 0x1F => {
                 result.push_str(&format!("\\u{:04x}", c as u32));
                     }
                     c => result.push(c),

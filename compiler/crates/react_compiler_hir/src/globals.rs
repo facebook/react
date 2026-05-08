@@ -552,7 +552,21 @@ fn build_array_shape(shapes: &mut ShapeRegistry) {
         None,
         false,
     );
-    let some = every.clone();
+    let some = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            rest_param: Some(Effect::ConditionallyMutate),
+            callee_effect: Effect::ConditionallyMutate,
+            return_type: Type::Primitive,
+            return_value_kind: ValueKind::Primitive,
+            no_alias: true,
+            mutable_only_if_operands_are_mutable: true,
+            ..Default::default()
+        },
+        None,
+        false,
+    );
     let flat_map = add_function(
         shapes,
         Vec::new(),

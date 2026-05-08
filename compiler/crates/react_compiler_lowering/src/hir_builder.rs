@@ -1,25 +1,73 @@
-use indexmap::{IndexMap, IndexSet};
-
-use react_compiler_ast::scope::{BindingId, ImportBindingKind, ScopeId, ScopeInfo};
-use crate::identifier_loc_index::IdentifierLocIndex;
-use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, CompilerError, CompilerErrorDetail, ErrorCategory};
-use react_compiler_hir::*;
+use indexmap::IndexMap;
+use indexmap::IndexSet;
+use react_compiler_ast::scope::BindingId;
+use react_compiler_ast::scope::ImportBindingKind;
+use react_compiler_ast::scope::ScopeId;
+use react_compiler_ast::scope::ScopeInfo;
+use react_compiler_diagnostics::CompilerDiagnostic;
+use react_compiler_diagnostics::CompilerDiagnosticDetail;
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorDetail;
+use react_compiler_diagnostics::ErrorCategory;
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::visitors::{each_terminal_successor, terminal_fallthrough};
+use react_compiler_hir::visitors::each_terminal_successor;
+use react_compiler_hir::visitors::terminal_fallthrough;
+use react_compiler_hir::*;
+
+use crate::identifier_loc_index::IdentifierLocIndex;
 
 // ---------------------------------------------------------------------------
 // Reserved word check (matches TS isReservedWord)
 // ---------------------------------------------------------------------------
 
 fn is_reserved_word(s: &str) -> bool {
-    matches!(s,
-        "break" | "case" | "catch" | "continue" | "debugger" | "default" | "do" |
-        "else" | "finally" | "for" | "function" | "if" | "in" | "instanceof" |
-        "new" | "return" | "switch" | "this" | "throw" | "try" | "typeof" |
-        "var" | "void" | "while" | "with" | "class" | "const" | "enum" |
-        "export" | "extends" | "import" | "super" | "implements" | "interface" |
-        "let" | "package" | "private" | "protected" | "public" | "static" |
-        "yield" | "null" | "true" | "false" | "delete"
+    matches!(
+        s,
+        "break"
+            | "case"
+            | "catch"
+            | "continue"
+            | "debugger"
+            | "default"
+            | "do"
+            | "else"
+            | "finally"
+            | "for"
+            | "function"
+            | "if"
+            | "in"
+            | "instanceof"
+            | "new"
+            | "return"
+            | "switch"
+            | "this"
+            | "throw"
+            | "try"
+            | "typeof"
+            | "var"
+            | "void"
+            | "while"
+            | "with"
+            | "class"
+            | "const"
+            | "enum"
+            | "export"
+            | "extends"
+            | "import"
+            | "super"
+            | "implements"
+            | "interface"
+            | "let"
+            | "package"
+            | "private"
+            | "protected"
+            | "public"
+            | "static"
+            | "yield"
+            | "null"
+            | "true"
+            | "false"
+            | "delete"
     )
 }
 
@@ -187,12 +235,16 @@ impl<'a> HirBuilder<'a> {
 
     /// Look up the source location of an identifier by its byte offset.
     pub fn get_identifier_loc(&self, offset: u32) -> Option<SourceLocation> {
-        self.identifier_locs.get(&offset).map(|entry| entry.loc.clone())
+        self.identifier_locs
+            .get(&offset)
+            .map(|entry| entry.loc.clone())
     }
 
     /// Check whether a byte offset corresponds to a JSXIdentifier node.
     pub fn is_jsx_identifier(&self, offset: u32) -> bool {
-        self.identifier_locs.get(&offset).is_some_and(|entry| entry.is_jsx)
+        self.identifier_locs
+            .get(&offset)
+            .is_some_and(|entry| entry.is_jsx)
     }
 
     /// Access the function scope (the scope of the function being compiled).
@@ -386,7 +438,11 @@ impl<'a> HirBuilder<'a> {
     }
 
     /// Like `enter_reserved`, but the closure returns a `Result<Terminal, CompilerDiagnostic>`.
-    pub fn try_enter_reserved(&mut self, wip: WipBlock, f: impl FnOnce(&mut Self) -> Result<Terminal, CompilerDiagnostic>) -> Result<(), CompilerDiagnostic> {
+    pub fn try_enter_reserved(
+        &mut self,
+        wip: WipBlock,
+        f: impl FnOnce(&mut Self) -> Result<Terminal, CompilerDiagnostic>,
+    ) -> Result<(), CompilerDiagnostic> {
         let prev = std::mem::replace(&mut self.current, wip);
         let terminal = f(self)?;
         let completed_wip = std::mem::replace(&mut self.current, prev);
@@ -438,7 +494,11 @@ impl<'a> HirBuilder<'a> {
     }
 
     /// Like `enter_try_catch`, but the closure returns a `Result`.
-    pub fn try_enter_try_catch(&mut self, handler: BlockId, f: impl FnOnce(&mut Self) -> Result<(), CompilerDiagnostic>) -> Result<(), CompilerDiagnostic> {
+    pub fn try_enter_try_catch(
+        &mut self,
+        handler: BlockId,
+        f: impl FnOnce(&mut Self) -> Result<(), CompilerDiagnostic>,
+    ) -> Result<(), CompilerDiagnostic> {
         self.exception_handler_stack.push(handler);
         let result = f(self);
         self.exception_handler_stack.pop();
@@ -464,7 +524,10 @@ impl<'a> HirBuilder<'a> {
             break_block,
         });
         let value = f(self)?;
-        let last = self.scopes.pop().expect("Mismatched loop scope: stack empty");
+        let last = self
+            .scopes
+            .pop()
+            .expect("Mismatched loop scope: stack empty");
         match &last {
             Scope::Loop {
                 label: l,
@@ -476,7 +539,13 @@ impl<'a> HirBuilder<'a> {
                     "Mismatched loop scope"
                 );
             }
-            _ => return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Mismatched loop scope: expected Loop, got other", None)),
+            _ => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Mismatched loop scope: expected Loop, got other",
+                    None,
+                ));
+            }
         }
         Ok(value)
     }
@@ -498,13 +567,19 @@ impl<'a> HirBuilder<'a> {
             .pop()
             .expect("Mismatched label scope: stack empty");
         match &last {
-            Scope::Label { label: l, break_block: b } => {
-                assert!(
-                    *l == label && *b == break_block,
-                    "Mismatched label scope"
-                );
+            Scope::Label {
+                label: l,
+                break_block: b,
+            } => {
+                assert!(*l == label && *b == break_block, "Mismatched label scope");
             }
-            _ => return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Mismatched label scope: expected Label, got other", None)),
+            _ => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Mismatched label scope: expected Label, got other",
+                    None,
+                ));
+            }
         }
         Ok(value)
     }
@@ -526,13 +601,19 @@ impl<'a> HirBuilder<'a> {
             .pop()
             .expect("Mismatched switch scope: stack empty");
         match &last {
-            Scope::Switch { label: l, break_block: b } => {
-                assert!(
-                    *l == label && *b == break_block,
-                    "Mismatched switch scope"
-                );
+            Scope::Switch {
+                label: l,
+                break_block: b,
+            } => {
+                assert!(*l == label && *b == break_block, "Mismatched switch scope");
             }
-            _ => return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Mismatched switch scope: expected Switch, got other", None)),
+            _ => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "Mismatched switch scope: expected Switch, got other",
+                    None,
+                ));
+            }
         }
         Ok(value)
     }
@@ -551,7 +632,11 @@ impl<'a> HirBuilder<'a> {
                 _ => continue,
             }
         }
-        Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Expected a loop or switch to be in scope for break", None))
+        Err(CompilerDiagnostic::new(
+            ErrorCategory::Invariant,
+            "Expected a loop or switch to be in scope for break",
+            None,
+        ))
     }
 
     /// Look up the continue target for the given label (or the innermost
@@ -570,12 +655,20 @@ impl<'a> HirBuilder<'a> {
                 }
                 _ => {
                     if label.is_some() && scope.label() == label {
-                        return Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Continue may only refer to a labeled loop", None));
+                        return Err(CompilerDiagnostic::new(
+                            ErrorCategory::Invariant,
+                            "Continue may only refer to a labeled loop",
+                            None,
+                        ));
                     }
                 }
             }
         }
-        Err(CompilerDiagnostic::new(ErrorCategory::Invariant, "Expected a loop to be in scope for continue", None))
+        Err(CompilerDiagnostic::new(
+            ErrorCategory::Invariant,
+            "Expected a loop to be in scope for continue",
+            None,
+        ))
     }
 
     /// Create a temporary identifier with a fresh id, returning its IdentifierId.
@@ -631,7 +724,17 @@ impl<'a> HirBuilder<'a> {
     /// 5. Remove unnecessary try-catch
     /// 6. Number all instructions and terminals
     /// 7. Mark predecessor blocks
-    pub fn build(mut self) -> Result<(HIR, Vec<Instruction>, IndexMap<String, BindingId>, IndexMap<BindingId, IdentifierId>), CompilerError> {
+    pub fn build(
+        mut self,
+    ) -> Result<
+        (
+            HIR,
+            Vec<Instruction>,
+            IndexMap<String, BindingId>,
+            IndexMap<BindingId, IdentifierId>,
+        ),
+        CompilerError,
+    > {
         let mut hir = HIR {
             blocks: std::mem::take(&mut self.completed),
             entry: self.entry,
@@ -646,7 +749,10 @@ impl<'a> HirBuilder<'a> {
         for (id, block) in &hir.blocks {
             if !rpo_blocks.contains_key(id) {
                 let has_function_expr = block.instructions.iter().any(|&instr_id| {
-                    matches!(instructions[instr_id.0 as usize].value, InstructionValue::FunctionExpression { .. })
+                    matches!(
+                        instructions[instr_id.0 as usize].value,
+                        InstructionValue::FunctionExpression { .. }
+                    )
                 });
                 if has_function_expr {
                     let loc = block
@@ -689,12 +795,21 @@ impl<'a> HirBuilder<'a> {
     /// Handles name collisions by appending `_0`, `_1`, etc.
     ///
     /// Records errors for variables named 'fbt' or 'this'.
-    pub fn resolve_binding(&mut self, name: &str, binding_id: BindingId) -> Result<IdentifierId, CompilerError> {
+    pub fn resolve_binding(
+        &mut self,
+        name: &str,
+        binding_id: BindingId,
+    ) -> Result<IdentifierId, CompilerError> {
         self.resolve_binding_with_loc(name, binding_id, None)
     }
 
     /// Map a BindingId to an HIR IdentifierId, with an optional source location.
-    pub fn resolve_binding_with_loc(&mut self, name: &str, binding_id: BindingId, loc: Option<SourceLocation>) -> Result<IdentifierId, CompilerError> {
+    pub fn resolve_binding_with_loc(
+        &mut self,
+        name: &str,
+        binding_id: BindingId,
+        loc: Option<SourceLocation>,
+    ) -> Result<IdentifierId, CompilerError> {
         // Check for unsupported names BEFORE the cache check.
         // In TS, resolveBinding records fbt errors when node.name === 'fbt'. After a name collision
         // causes a rename (e.g., "fbt" -> "fbt_0"), TS's scope.rename changes the AST node's name,
@@ -702,7 +817,8 @@ impl<'a> HirBuilder<'a> {
         // resolved name for this binding is still "fbt" (not renamed to "fbt_0" etc.).
         if name == "fbt" {
             // Check if this binding was previously resolved to a renamed version
-            let should_record_fbt_error = if let Some(&identifier_id) = self.bindings.get(&binding_id) {
+            let should_record_fbt_error =
+                if let Some(&identifier_id) = self.bindings.get(&binding_id) {
                 // Already resolved - check if the resolved name is still "fbt"
                 match &self.env.identifiers[identifier_id.0 as usize].name {
                     Some(IdentifierName::Named(resolved_name)) => resolved_name == "fbt",
@@ -777,7 +893,9 @@ impl<'a> HirBuilder<'a> {
         if candidate != name {
             let binding = &self.scope_info.bindings[binding_id.0 as usize];
             if let Some(decl_start) = binding.declaration_start {
-                self.env.renames.push(react_compiler_hir::environment::BindingRename {
+                self.env
+                    .renames
+                    .push(react_compiler_hir::environment::BindingRename {
                     original: name.to_string(),
                     renamed: candidate.clone(),
                     declaration_start: decl_start,
@@ -793,9 +911,9 @@ impl<'a> HirBuilder<'a> {
         // This matches TS behavior where Babel's resolveBinding returns the
         // binding identifier's original loc (the declaration site).
         let binding = &self.scope_info.bindings[binding_id.0 as usize];
-        let decl_loc = binding.declaration_start.and_then(|start| {
-            self.get_identifier_loc(start)
-        });
+        let decl_loc = binding
+            .declaration_start
+            .and_then(|start| self.get_identifier_loc(start));
         if let Some(ref dl) = decl_loc {
             self.env.identifiers[id.0 as usize].loc = Some(dl.clone());
         } else if let Some(ref loc) = loc {
@@ -809,7 +927,11 @@ impl<'a> HirBuilder<'a> {
 
     /// Set the loc on an identifier to the declaration-site loc.
     /// This overrides any previously-set loc (which may have come from a reference site).
-    pub fn set_identifier_declaration_loc(&mut self, id: IdentifierId, loc: &Option<SourceLocation>) {
+    pub fn set_identifier_declaration_loc(
+        &mut self,
+        id: IdentifierId,
+        loc: &Option<SourceLocation>,
+    ) {
         if let Some(loc_val) = loc {
             self.env.identifiers[id.0 as usize].loc = Some(loc_val.clone());
         }
@@ -822,7 +944,12 @@ impl<'a> HirBuilder<'a> {
     /// - ImportDefault, ImportSpecifier, ImportNamespace (program-scope import binding)
     /// - ModuleLocal (program-scope non-import binding)
     /// - Identifier (local binding, resolved via resolve_binding)
-    pub fn resolve_identifier(&mut self, name: &str, start_offset: u32, loc: Option<SourceLocation>) -> Result<VariableBinding, CompilerError> {
+    pub fn resolve_identifier(
+        &mut self,
+        name: &str,
+        start_offset: u32,
+        loc: Option<SourceLocation>,
+    ) -> Result<VariableBinding, CompilerError> {
         let binding_data = self.scope_info.resolve_reference(start_offset);
 
         match binding_data {
@@ -838,9 +965,12 @@ impl<'a> HirBuilder<'a> {
                 // TSEnumDeclaration is included because enums inside function
                 // bodies are lowered as UnsupportedNode and their binding
                 // is never initialized in HIR.
-                if matches!(binding.declaration_type.as_str(),
-                    "TSTypeAliasDeclaration" | "TSInterfaceDeclaration"
-                    | "TSEnumDeclaration" | "TSModuleDeclaration"
+                if matches!(
+                    binding.declaration_type.as_str(),
+                    "TSTypeAliasDeclaration"
+                        | "TSInterfaceDeclaration"
+                        | "TSEnumDeclaration"
+                        | "TSModuleDeclaration"
                 ) {
                     return Ok(VariableBinding::Global {
                         name: name.to_string(),
@@ -879,7 +1009,8 @@ impl<'a> HirBuilder<'a> {
                     // params with the same start position (e.g., both _$$empty_props_placeholder$$
                     // and ref have start=106 after the Flow component transform).
                     let resolved_binding = if binding.name != name {
-                        self.scope_info.resolve_reference_by_name(name, start_offset)
+                        self.scope_info
+                            .resolve_reference_by_name(name, start_offset)
                             .unwrap_or(binding)
                     } else {
                         binding
@@ -902,7 +1033,7 @@ impl<'a> HirBuilder<'a> {
     /// current function's scope, but NOT in the program scope itself and NOT
     /// in the function's own scope. These are "captured" variables from an
     /// enclosing function.
-    pub fn is_context_identifier(&self, _name: &str, start_offset: u32) -> bool {
+    pub fn is_context_identifier(&self, name: &str, start_offset: u32) -> bool {
         let binding = self.scope_info.resolve_reference(start_offset);
 
         match binding {
@@ -913,8 +1044,20 @@ impl<'a> HirBuilder<'a> {
                     return false;
                 }
 
+                // If position-based resolution returns a binding with a different name
+                // (due to synthetic AST transforms like StripComponentSyntax creating
+                // multiple identifiers at the same position), fall back to name-based
+                // resolution to find the correct binding.
+                let resolved = if binding_data.name != name {
+                    self.scope_info
+                        .resolve_reference_by_name(name, start_offset)
+                        .unwrap_or(binding_data)
+                } else {
+                    binding_data
+                };
+
                 // Check if this binding is in the pre-computed context identifiers set.
-                self.context_identifiers.contains(&binding_data.id)
+                self.context_identifiers.contains(&resolved.id)
             }
         }
     }
@@ -933,7 +1076,10 @@ impl<'a> HirBuilder<'a> {
 /// Blocks not reachable through successors are removed. Blocks that are
 /// only reachable as fallthroughs (not through real successor edges) are
 /// replaced with empty blocks that have an Unreachable terminal.
-pub fn get_reverse_postordered_blocks(hir: &HIR, _instructions: &[Instruction]) -> IndexMap<BlockId, BasicBlock> {
+pub fn get_reverse_postordered_blocks(
+    hir: &HIR,
+    _instructions: &[Instruction],
+) -> IndexMap<BlockId, BasicBlock> {
     let mut visited: IndexSet<BlockId> = IndexSet::new();
     let mut used: IndexSet<BlockId> = IndexSet::new();
     let mut used_fallthroughs: IndexSet<BlockId> = IndexSet::new();
@@ -1059,7 +1205,10 @@ pub fn remove_dead_do_while_statements(hir: &mut HIR) {
         };
         if should_replace {
             if let Terminal::DoWhile {
-                loop_block, id, loc, ..
+                loop_block,
+                id,
+                loc,
+                ..
             } = std::mem::replace(
                 &mut block.terminal,
                 Terminal::Unreachable {
@@ -1158,7 +1307,12 @@ pub fn mark_predecessors(hir: &mut HIR) {
 
     let mut visited: IndexSet<BlockId> = IndexSet::new();
 
-    fn visit(hir: &mut HIR, block_id: BlockId, prev_block_id: Option<BlockId>, visited: &mut IndexSet<BlockId>) {
+    fn visit(
+        hir: &mut HIR,
+        block_id: BlockId,
+        prev_block_id: Option<BlockId>,
+        visited: &mut IndexSet<BlockId>,
+    ) {
         // Add predecessor
         if let Some(prev_id) = prev_block_id {
             if let Some(block) = hir.blocks.get_mut(&block_id) {

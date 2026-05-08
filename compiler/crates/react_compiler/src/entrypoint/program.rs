@@ -858,10 +858,48 @@ fn json_expr_is_hook(callee: &serde_json::Value) -> bool {
 }
 
 /// Check if a function body calls hooks or creates JSX.
-fn calls_hooks_or_creates_jsx(body: &FunctionBody) -> bool {
+fn calls_hooks_or_creates_jsx(params: &[PatternLike], body: &FunctionBody) -> bool {
+    // Check default param values (TS traverses the whole function node including params)
+    if calls_hooks_or_creates_jsx_in_params(params) {
+        return true;
+    }
     match body {
         FunctionBody::Block(block) => calls_hooks_or_creates_jsx_in_stmts(&block.body),
         FunctionBody::Expression(expr) => calls_hooks_or_creates_jsx_in_expr(expr),
+    }
+}
+
+/// Check if any parameter default values contain hooks or JSX.
+fn calls_hooks_or_creates_jsx_in_params(params: &[PatternLike]) -> bool {
+    for param in params {
+        if calls_hooks_or_creates_jsx_in_pattern(param) {
+            return true;
+        }
+    }
+    false
+}
+
+fn calls_hooks_or_creates_jsx_in_pattern(pattern: &PatternLike) -> bool {
+    match pattern {
+        PatternLike::AssignmentPattern(assign) => {
+            // Check the default value expression
+            calls_hooks_or_creates_jsx_in_expr(&assign.right)
+                || calls_hooks_or_creates_jsx_in_pattern(&assign.left)
+        }
+        PatternLike::ObjectPattern(obj) => obj.properties.iter().any(|prop| match prop {
+            react_compiler_ast::patterns::ObjectPatternProperty::ObjectProperty(p) => {
+                calls_hooks_or_creates_jsx_in_pattern(&p.value)
+            }
+            react_compiler_ast::patterns::ObjectPatternProperty::RestElement(rest) => {
+                calls_hooks_or_creates_jsx_in_pattern(&rest.argument)
+            }
+        }),
+        PatternLike::ArrayPattern(arr) => arr.elements.iter().any(|elem| {
+            elem.as_ref()
+                .map_or(false, |e| calls_hooks_or_creates_jsx_in_pattern(e))
+        }),
+        PatternLike::RestElement(rest) => calls_hooks_or_creates_jsx_in_pattern(&rest.argument),
+        PatternLike::Identifier(_) | PatternLike::MemberExpression(_) => false,
     }
 }
 
@@ -1054,7 +1092,7 @@ fn get_component_or_hook_like(
     if let Some(fn_name) = name {
         if is_component_name(fn_name) {
             // Check if it actually looks like a component
-            let is_component = calls_hooks_or_creates_jsx(body)
+            let is_component = calls_hooks_or_creates_jsx(params, body)
                 && is_valid_component_params(params)
                 && !returns_non_node_fn(params, body);
             return if is_component {
@@ -1064,7 +1102,7 @@ fn get_component_or_hook_like(
             };
         } else if is_hook_name(fn_name) {
             // Hooks have hook invocations or JSX, but can take any # of arguments
-            return if calls_hooks_or_creates_jsx(body) {
+            return if calls_hooks_or_creates_jsx(params, body) {
                 Some(ReactFunctionType::Hook)
             } else {
                 None
@@ -1075,7 +1113,7 @@ fn get_component_or_hook_like(
     // For unnamed functions, check if they are forwardRef/memo callbacks
     if let Some(callee_name) = parent_callee_name {
         if callee_name == "forwardRef" || callee_name == "memo" {
-            return if calls_hooks_or_creates_jsx(body) {
+            return if calls_hooks_or_creates_jsx(params, body) {
                 Some(ReactFunctionType::Component)
             } else {
                 None
