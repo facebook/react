@@ -16,6 +16,8 @@
 
 use std::collections::{HashMap, HashSet};
 
+use indexmap::IndexMap;
+
 use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
 use react_compiler_hir::environment::Environment;
 use react_compiler_hir::type_config::{ValueKind, ValueReason};
@@ -74,10 +76,10 @@ enum NodeValue {
 #[derive(Debug, Clone)]
 struct Node {
     id: IdentifierId,
-    created_from: HashMap<IdentifierId, usize>,
-    captures: HashMap<IdentifierId, usize>,
-    aliases: HashMap<IdentifierId, usize>,
-    maybe_aliases: HashMap<IdentifierId, usize>,
+    created_from: IndexMap<IdentifierId, usize>,
+    captures: IndexMap<IdentifierId, usize>,
+    aliases: IndexMap<IdentifierId, usize>,
+    maybe_aliases: IndexMap<IdentifierId, usize>,
     edges: Vec<Edge>,
     transitive: Option<MutationInfo>,
     local: Option<MutationInfo>,
@@ -90,10 +92,10 @@ impl Node {
     fn new(id: IdentifierId, value: NodeValue) -> Self {
         Node {
             id,
-            created_from: HashMap::new(),
-            captures: HashMap::new(),
-            aliases: HashMap::new(),
-            maybe_aliases: HashMap::new(),
+            created_from: IndexMap::new(),
+            captures: IndexMap::new(),
+            aliases: IndexMap::new(),
+            maybe_aliases: IndexMap::new(),
             edges: Vec::new(),
             transitive: None,
             local: None,
@@ -105,13 +107,13 @@ impl Node {
 }
 
 struct AliasingState {
-    nodes: HashMap<IdentifierId, Node>,
+    nodes: IndexMap<IdentifierId, Node>,
 }
 
 impl AliasingState {
     fn new() -> Self {
         AliasingState {
-            nodes: HashMap::new(),
+            nodes: IndexMap::new(),
         }
     }
 
