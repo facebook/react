@@ -8,15 +8,27 @@
 //!
 //! Corresponds to `src/ReactiveScopes/PromoteUsedTemporaries.ts`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use react_compiler_hir::{
-    DeclarationId, IdentifierId, IdentifierName, InstructionKind, InstructionValue,
-    JsxTag, ParamPattern, Place, ReactiveBlock, ReactiveFunction, ReactiveInstruction,
-    ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveValue,
-    ScopeId,
-    environment::Environment,
-};
+use react_compiler_hir::DeclarationId;
+use react_compiler_hir::FunctionId;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::IdentifierName;
+use react_compiler_hir::InstructionKind;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::JsxTag;
+use react_compiler_hir::ParamPattern;
+use react_compiler_hir::Place;
+use react_compiler_hir::ReactiveBlock;
+use react_compiler_hir::ReactiveFunction;
+use react_compiler_hir::ReactiveInstruction;
+use react_compiler_hir::ReactiveStatement;
+use react_compiler_hir::ReactiveTerminal;
+use react_compiler_hir::ReactiveTerminalStatement;
+use react_compiler_hir::ReactiveValue;
+use react_compiler_hir::ScopeId;
+use react_compiler_hir::environment::Environment;
 
 // =============================================================================
 // State
@@ -70,12 +82,23 @@ pub fn promote_used_temporaries(func: &mut ReactiveFunction, env: &mut Environme
     let mut globals: HashSet<IdentifierId> = HashSet::new();
     for param in &func.params {
         match param {
-            ParamPattern::Place(p) => { consts.insert(p.identifier); }
-            ParamPattern::Spread(s) => { consts.insert(s.place.identifier); }
+            ParamPattern::Place(p) => {
+                consts.insert(p.identifier);
+            }
+            ParamPattern::Spread(s) => {
+                consts.insert(s.place.identifier);
+            }
         }
     }
     let mut inter_state: HashMap<IdentifierId, (IdentifierId, bool)> = HashMap::new();
-    promote_interposed_block(&func.body, &mut state, &mut inter_state, &mut consts, &mut globals, env);
+    promote_interposed_block(
+        &func.body,
+        &mut state,
+        &mut inter_state,
+        &mut consts,
+        &mut globals,
+        env,
+    );
 
     // Phase 4: promote all instances of promoted declaration IDs
     promote_all_instances_params(func, &mut state, env);
@@ -107,10 +130,13 @@ fn collect_promotable_block(
                 let scope_data = &env.scopes[scope.scope.0 as usize];
                 for (_id, decl) in &scope_data.declarations {
                     let identifier = &env.identifiers[decl.identifier.0 as usize];
-                    state.pruned.insert(identifier.declaration_id, PrunedInfo {
+                    state.pruned.insert(
+                        identifier.declaration_id,
+                        PrunedInfo {
                         active_scopes: active_scopes.clone(),
                         used_outside_scope: false,
-                    });
+                        },
+                    );
                 }
                 collect_promotable_block(&scope.instructions, state, active_scopes, env);
             }
@@ -157,22 +183,37 @@ fn collect_promotable_value(
     match value {
         ReactiveValue::Instruction(instr_value) => {
             // Visit operands
-            for place in react_compiler_hir::visitors::each_instruction_value_operand(instr_value, env) {
+            for place in
+                react_compiler_hir::visitors::each_instruction_value_operand(instr_value, env)
+            {
                 collect_promotable_place(&place, state, active_scopes, env);
             }
             // Check for JSX tag
-            if let InstructionValue::JsxExpression { tag: JsxTag::Place(place), .. } = instr_value {
+            if let InstructionValue::JsxExpression {
+                tag: JsxTag::Place(place),
+                ..
+            } = instr_value
+            {
                 let identifier = &env.identifiers[place.identifier.0 as usize];
                 state.tags.insert(identifier.declaration_id);
             }
         }
-        ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value: inner,
+            ..
+        } => {
             for instr in instructions {
                 collect_promotable_instruction(instr, state, active_scopes, env);
             }
             collect_promotable_value(inner, state, active_scopes, env);
         }
-        ReactiveValue::ConditionalExpression { test, consequent, alternate, .. } => {
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             collect_promotable_value(test, state, active_scopes, env);
             collect_promotable_value(consequent, state, active_scopes, env);
             collect_promotable_value(alternate, state, active_scopes, env);
@@ -198,7 +239,13 @@ fn collect_promotable_terminal(
         ReactiveTerminal::Return { value, .. } | ReactiveTerminal::Throw { value, .. } => {
             collect_promotable_place(value, state, active_scopes, env);
         }
-        ReactiveTerminal::For { init, test, update, loop_block, .. } => {
+        ReactiveTerminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            ..
+        } => {
             collect_promotable_value(init, state, active_scopes, env);
             collect_promotable_value(test, state, active_scopes, env);
             collect_promotable_block(loop_block, state, active_scopes, env);
@@ -206,24 +253,40 @@ fn collect_promotable_terminal(
                 collect_promotable_value(update, state, active_scopes, env);
             }
         }
-        ReactiveTerminal::ForOf { init, test, loop_block, .. } => {
+        ReactiveTerminal::ForOf {
+            init,
+            test,
+            loop_block,
+            ..
+        } => {
             collect_promotable_value(init, state, active_scopes, env);
             collect_promotable_value(test, state, active_scopes, env);
             collect_promotable_block(loop_block, state, active_scopes, env);
         }
-        ReactiveTerminal::ForIn { init, loop_block, .. } => {
+        ReactiveTerminal::ForIn {
+            init, loop_block, ..
+        } => {
             collect_promotable_value(init, state, active_scopes, env);
             collect_promotable_block(loop_block, state, active_scopes, env);
         }
-        ReactiveTerminal::DoWhile { loop_block, test, .. } => {
+        ReactiveTerminal::DoWhile {
+            loop_block, test, ..
+        } => {
             collect_promotable_block(loop_block, state, active_scopes, env);
             collect_promotable_value(test, state, active_scopes, env);
         }
-        ReactiveTerminal::While { test, loop_block, .. } => {
+        ReactiveTerminal::While {
+            test, loop_block, ..
+        } => {
             collect_promotable_value(test, state, active_scopes, env);
             collect_promotable_block(loop_block, state, active_scopes, env);
         }
-        ReactiveTerminal::If { test, consequent, alternate, .. } => {
+        ReactiveTerminal::If {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             collect_promotable_place(test, state, active_scopes, env);
             collect_promotable_block(consequent, state, active_scopes, env);
             if let Some(alt) = alternate {
@@ -244,7 +307,12 @@ fn collect_promotable_terminal(
         ReactiveTerminal::Label { block, .. } => {
             collect_promotable_block(block, state, active_scopes, env);
         }
-        ReactiveTerminal::Try { block, handler_binding, handler, .. } => {
+        ReactiveTerminal::Try {
+            block,
+            handler_binding,
+            handler,
+            ..
+        } => {
             collect_promotable_block(block, state, active_scopes, env);
             if let Some(binding) = handler_binding {
                 collect_promotable_place(binding, state, active_scopes, env);
@@ -258,11 +326,7 @@ fn collect_promotable_terminal(
 // Phase 2: PromoteTemporaries
 // =============================================================================
 
-fn promote_temporaries_block(
-    block: &ReactiveBlock,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_temporaries_block(block: &ReactiveBlock, state: &mut State, env: &mut Environment) {
     for stmt in block {
         match stmt {
             ReactiveStatement::Instruction(instr) => {
@@ -286,7 +350,9 @@ fn promote_temporaries_block(
             ReactiveStatement::PrunedScope(scope) => {
                 let scope_id = scope.scope;
                 let scope_data = &env.scopes[scope_id.0 as usize];
-                let decls: Vec<(IdentifierId, DeclarationId)> = scope_data.declarations.iter()
+                let decls: Vec<(IdentifierId, DeclarationId)> = scope_data
+                    .declarations
+                    .iter()
                     .map(|(_, d)| {
                         let identifier = &env.identifiers[d.identifier.0 as usize];
                         (d.identifier, identifier.declaration_id)
@@ -311,43 +377,35 @@ fn promote_temporaries_block(
     }
 }
 
-fn promote_temporaries_value(
-    value: &ReactiveValue,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_temporaries_value(value: &ReactiveValue, state: &mut State, env: &mut Environment) {
     match value {
         ReactiveValue::Instruction(instr_value) => {
-            // Visit inner functions
+            // Visit inner functions: promote params and recurse into nested functions
+            // TS: visitHirFunction(value.loweredFunc.func, state)
             match instr_value {
                 InstructionValue::FunctionExpression { lowered_func, .. }
                 | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                    let func_id = lowered_func.func;
-                    let inner_func = &env.functions[func_id.0 as usize];
-                    // Collect param IDs first to avoid borrow conflict
-                    let param_ids: Vec<IdentifierId> = inner_func.params.iter()
-                        .map(|param| match param {
-                            ParamPattern::Place(p) => p.identifier,
-                            ParamPattern::Spread(s) => s.place.identifier,
-                        })
-                        .collect();
-                    for id in param_ids {
-                        let identifier = &env.identifiers[id.0 as usize];
-                        if identifier.name.is_none() {
-                            promote_identifier(id, state, env);
-                        }
-                    }
+                    visit_hir_function_for_promotion(lowered_func.func, state, env);
                 }
                 _ => {}
             }
         }
-        ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value: inner,
+            ..
+        } => {
             for instr in instructions {
                 promote_temporaries_value(&instr.value, state, env);
             }
             promote_temporaries_value(inner, state, env);
         }
-        ReactiveValue::ConditionalExpression { test, consequent, alternate, .. } => {
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_temporaries_value(test, state, env);
             promote_temporaries_value(consequent, state, env);
             promote_temporaries_value(alternate, state, env);
@@ -370,7 +428,13 @@ fn promote_temporaries_terminal(
     match &stmt.terminal {
         ReactiveTerminal::Break { .. } | ReactiveTerminal::Continue { .. } => {}
         ReactiveTerminal::Return { .. } | ReactiveTerminal::Throw { .. } => {}
-        ReactiveTerminal::For { init, test, update, loop_block, .. } => {
+        ReactiveTerminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            ..
+        } => {
             promote_temporaries_value(init, state, env);
             promote_temporaries_value(test, state, env);
             promote_temporaries_block(loop_block, state, env);
@@ -378,24 +442,39 @@ fn promote_temporaries_terminal(
                 promote_temporaries_value(update, state, env);
             }
         }
-        ReactiveTerminal::ForOf { init, test, loop_block, .. } => {
+        ReactiveTerminal::ForOf {
+            init,
+            test,
+            loop_block,
+            ..
+        } => {
             promote_temporaries_value(init, state, env);
             promote_temporaries_value(test, state, env);
             promote_temporaries_block(loop_block, state, env);
         }
-        ReactiveTerminal::ForIn { init, loop_block, .. } => {
+        ReactiveTerminal::ForIn {
+            init, loop_block, ..
+        } => {
             promote_temporaries_value(init, state, env);
             promote_temporaries_block(loop_block, state, env);
         }
-        ReactiveTerminal::DoWhile { loop_block, test, .. } => {
+        ReactiveTerminal::DoWhile {
+            loop_block, test, ..
+        } => {
             promote_temporaries_block(loop_block, state, env);
             promote_temporaries_value(test, state, env);
         }
-        ReactiveTerminal::While { test, loop_block, .. } => {
+        ReactiveTerminal::While {
+            test, loop_block, ..
+        } => {
             promote_temporaries_value(test, state, env);
             promote_temporaries_block(loop_block, state, env);
         }
-        ReactiveTerminal::If { consequent, alternate, .. } => {
+        ReactiveTerminal::If {
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_temporaries_block(consequent, state, env);
             if let Some(alt) = alternate {
                 promote_temporaries_block(alt, state, env);
@@ -419,6 +498,57 @@ fn promote_temporaries_terminal(
 }
 
 // =============================================================================
+// Helper: visit inner HIR function for promotion (mirrors TS visitHirFunction)
+// =============================================================================
+
+/// Promotes params and recursively visits nested functions for param promotion.
+/// Specialized version of the TS `visitHirFunction` pattern for the PromoteTemporaries
+/// phase — only promotes unnamed params and recurses into nested functions.
+/// Other `visitHirFunction` behaviors (visitPlace on terminal operands, visitInstruction
+/// on all instructions) are no-ops for this phase and are intentionally omitted.
+fn visit_hir_function_for_promotion(func_id: FunctionId, state: &mut State, env: &mut Environment) {
+    // Promote params of this function
+    let param_ids: Vec<IdentifierId> = {
+        let func = &env.functions[func_id.0 as usize];
+        func.params
+            .iter()
+            .map(|param| match param {
+                ParamPattern::Place(p) => p.identifier,
+                ParamPattern::Spread(s) => s.place.identifier,
+            })
+            .collect()
+    };
+    for id in param_ids {
+        let identifier = &env.identifiers[id.0 as usize];
+        if identifier.name.is_none() {
+            promote_identifier(id, state, env);
+        }
+    }
+
+    // Find nested FunctionExpression/ObjectMethod in body instructions
+    let nested_func_ids: Vec<FunctionId> = {
+        let func = &env.functions[func_id.0 as usize];
+        let mut nested = Vec::new();
+        for (_, block) in &func.body.blocks {
+            for &instr_id in &block.instructions {
+                let instr = &func.instructions[instr_id.0 as usize];
+                match &instr.value {
+                    InstructionValue::FunctionExpression { lowered_func, .. }
+                    | InstructionValue::ObjectMethod { lowered_func, .. } => {
+                        nested.push(lowered_func.func);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        nested
+    };
+    for nested_id in nested_func_ids {
+        visit_hir_function_for_promotion(nested_id, state, env);
+    }
+}
+
+// =============================================================================
 // Phase 3: PromoteInterposedTemporaries
 // =============================================================================
 
@@ -436,10 +566,24 @@ fn promote_interposed_block(
                 promote_interposed_instruction(instr, state, inter_state, consts, globals, env);
             }
             ReactiveStatement::Scope(scope) => {
-                promote_interposed_block(&scope.instructions, state, inter_state, consts, globals, env);
+                promote_interposed_block(
+                    &scope.instructions,
+                    state,
+                    inter_state,
+                    consts,
+                    globals,
+                    env,
+                );
             }
             ReactiveStatement::PrunedScope(scope) => {
-                promote_interposed_block(&scope.instructions, state, inter_state, consts, globals, env);
+                promote_interposed_block(
+                    &scope.instructions,
+                    state,
+                    inter_state,
+                    consts,
+                    globals,
+                    env,
+                );
             }
             ReactiveStatement::Terminal(terminal) => {
                 promote_interposed_terminal(terminal, state, inter_state, consts, globals, env);
@@ -509,7 +653,9 @@ fn promote_interposed_instruction(
                         if lvalue.kind == InstructionKind::Const
                             || lvalue.kind == InstructionKind::HoistedConst
                         {
-                            for operand in react_compiler_hir::visitors::each_pattern_operand(&lvalue.pattern) {
+                            for operand in
+                                react_compiler_hir::visitors::each_pattern_operand(&lvalue.pattern)
+                            {
                                 consts.insert(operand.identifier);
                             }
                             const_store = true;
@@ -520,13 +666,16 @@ fn promote_interposed_instruction(
                     }
 
                     // Visit operands
-                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
+                    for place in
+                        react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
+                    {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
 
                     if !const_store
                         && (instr.lvalue.is_none()
-                            || env.identifiers[instr.lvalue.as_ref().unwrap().identifier.0 as usize]
+                            || env.identifiers
+                                [instr.lvalue.as_ref().unwrap().identifier.0 as usize]
                                 .name
                                 .is_some())
                     {
@@ -553,12 +702,18 @@ fn promote_interposed_instruction(
                         consts.insert(lvalue.place.identifier);
                     }
                     // Visit operands
-                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
+                    for place in
+                        react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
+                    {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
-                InstructionValue::LoadContext { place: load_place, .. }
-                | InstructionValue::LoadLocal { place: load_place, .. } => {
+                InstructionValue::LoadContext {
+                    place: load_place, ..
+                }
+                | InstructionValue::LoadLocal {
+                    place: load_place, ..
+                } => {
                     if let Some(lvalue) = &instr.lvalue {
                         let identifier = &env.identifiers[lvalue.identifier.0 as usize];
                         if identifier.name.is_none() {
@@ -569,7 +724,9 @@ fn promote_interposed_instruction(
                         }
                     }
                     // Visit operands
-                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
+                    for place in
+                        react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
+                    {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
@@ -586,7 +743,9 @@ fn promote_interposed_instruction(
                         }
                     }
                     // Visit operands
-                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
+                    for place in
+                        react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
+                    {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
@@ -595,25 +754,38 @@ fn promote_interposed_instruction(
                         globals.insert(lvalue.identifier);
                     }
                     // Visit operands
-                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
+                    for place in
+                        react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
+                    {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
                 _ => {
                     // Default: visit operands
-                    for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
+                    for place in
+                        react_compiler_hir::visitors::each_instruction_value_operand(iv, env)
+                    {
                         promote_interposed_place(&place, state, inter_state, consts, env);
                     }
                 }
             }
         }
-        ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value: inner,
+            ..
+        } => {
             for sub_instr in instructions {
                 promote_interposed_instruction(sub_instr, state, inter_state, consts, globals, env);
             }
             promote_interposed_value(inner, state, inter_state, consts, globals, env);
         }
-        ReactiveValue::ConditionalExpression { test, consequent, alternate, .. } => {
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_interposed_value(test, state, inter_state, consts, globals, env);
             promote_interposed_value(consequent, state, inter_state, consts, globals, env);
             promote_interposed_value(alternate, state, inter_state, consts, globals, env);
@@ -642,13 +814,22 @@ fn promote_interposed_value(
                 promote_interposed_place(&place, state, inter_state, consts, env);
             }
         }
-        ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value: inner,
+            ..
+        } => {
             for instr in instructions {
                 promote_interposed_instruction(instr, state, inter_state, consts, globals, env);
             }
             promote_interposed_value(inner, state, inter_state, consts, globals, env);
         }
-        ReactiveValue::ConditionalExpression { test, consequent, alternate, .. } => {
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_interposed_value(test, state, inter_state, consts, globals, env);
             promote_interposed_value(consequent, state, inter_state, consts, globals, env);
             promote_interposed_value(alternate, state, inter_state, consts, globals, env);
@@ -676,7 +857,13 @@ fn promote_interposed_terminal(
         ReactiveTerminal::Return { value, .. } | ReactiveTerminal::Throw { value, .. } => {
             promote_interposed_place(value, state, inter_state, consts, env);
         }
-        ReactiveTerminal::For { init, test, update, loop_block, .. } => {
+        ReactiveTerminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            ..
+        } => {
             promote_interposed_value(init, state, inter_state, consts, globals, env);
             promote_interposed_value(test, state, inter_state, consts, globals, env);
             promote_interposed_block(loop_block, state, inter_state, consts, globals, env);
@@ -684,24 +871,40 @@ fn promote_interposed_terminal(
                 promote_interposed_value(update, state, inter_state, consts, globals, env);
             }
         }
-        ReactiveTerminal::ForOf { init, test, loop_block, .. } => {
+        ReactiveTerminal::ForOf {
+            init,
+            test,
+            loop_block,
+            ..
+        } => {
             promote_interposed_value(init, state, inter_state, consts, globals, env);
             promote_interposed_value(test, state, inter_state, consts, globals, env);
             promote_interposed_block(loop_block, state, inter_state, consts, globals, env);
         }
-        ReactiveTerminal::ForIn { init, loop_block, .. } => {
+        ReactiveTerminal::ForIn {
+            init, loop_block, ..
+        } => {
             promote_interposed_value(init, state, inter_state, consts, globals, env);
             promote_interposed_block(loop_block, state, inter_state, consts, globals, env);
         }
-        ReactiveTerminal::DoWhile { loop_block, test, .. } => {
+        ReactiveTerminal::DoWhile {
+            loop_block, test, ..
+        } => {
             promote_interposed_block(loop_block, state, inter_state, consts, globals, env);
             promote_interposed_value(test, state, inter_state, consts, globals, env);
         }
-        ReactiveTerminal::While { test, loop_block, .. } => {
+        ReactiveTerminal::While {
+            test, loop_block, ..
+        } => {
             promote_interposed_value(test, state, inter_state, consts, globals, env);
             promote_interposed_block(loop_block, state, inter_state, consts, globals, env);
         }
-        ReactiveTerminal::If { test, consequent, alternate, .. } => {
+        ReactiveTerminal::If {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_interposed_place(test, state, inter_state, consts, env);
             promote_interposed_block(consequent, state, inter_state, consts, globals, env);
             if let Some(alt) = alternate {
@@ -722,7 +925,12 @@ fn promote_interposed_terminal(
         ReactiveTerminal::Label { block, .. } => {
             promote_interposed_block(block, state, inter_state, consts, globals, env);
         }
-        ReactiveTerminal::Try { block, handler_binding, handler, .. } => {
+        ReactiveTerminal::Try {
+            block,
+            handler_binding,
+            handler,
+            ..
+        } => {
             promote_interposed_block(block, state, inter_state, consts, globals, env);
             if let Some(binding) = handler_binding {
                 promote_interposed_place(binding, state, inter_state, consts, env);
@@ -736,11 +944,7 @@ fn promote_interposed_terminal(
 // Phase 4: PromoteAllInstancesOfPromotedTemporaries
 // =============================================================================
 
-fn promote_all_instances_params(
-    func: &ReactiveFunction,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_all_instances_params(func: &ReactiveFunction, state: &mut State, env: &mut Environment) {
     for param in &func.params {
         let place = match param {
             ParamPattern::Place(p) => p,
@@ -753,11 +957,7 @@ fn promote_all_instances_params(
     }
 }
 
-fn promote_all_instances_block(
-    block: &ReactiveBlock,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_all_instances_block(block: &ReactiveBlock, state: &mut State, env: &mut Environment) {
     for stmt in block {
         match stmt {
             ReactiveStatement::Instruction(instr) => {
@@ -786,10 +986,14 @@ fn promote_all_instances_scope_identifiers(
     let scope_data = &env.scopes[scope_id.0 as usize];
 
     // Collect identifiers to promote
-    let decl_ids: Vec<IdentifierId> = scope_data.declarations.iter()
+    let decl_ids: Vec<IdentifierId> = scope_data
+        .declarations
+        .iter()
         .map(|(_, d)| d.identifier)
         .collect();
-    let dep_ids: Vec<IdentifierId> = scope_data.dependencies.iter()
+    let dep_ids: Vec<IdentifierId> = scope_data
+        .dependencies
+        .iter()
         .map(|d| d.identifier)
         .collect();
     let reassign_ids: Vec<IdentifierId> = scope_data.reassignments.clone();
@@ -814,11 +1018,7 @@ fn promote_all_instances_scope_identifiers(
     }
 }
 
-fn promote_all_instances_place(
-    place: &Place,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_all_instances_place(place: &Place, state: &mut State, env: &mut Environment) {
     let identifier = &env.identifiers[place.identifier.0 as usize];
     if identifier.name.is_none() && state.promoted.contains(&identifier.declaration_id) {
         promote_identifier(place.identifier, state, env);
@@ -836,11 +1036,7 @@ fn promote_all_instances_instruction(
     promote_all_instances_value(&instr.value, state, env);
 }
 
-fn promote_all_instances_value(
-    value: &ReactiveValue,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_all_instances_value(value: &ReactiveValue, state: &mut State, env: &mut Environment) {
     match value {
         ReactiveValue::Instruction(iv) => {
             for place in react_compiler_hir::visitors::each_instruction_value_operand(iv, env) {
@@ -852,7 +1048,9 @@ fn promote_all_instances_value(
                 | InstructionValue::ObjectMethod { lowered_func, .. } => {
                     let func_id = lowered_func.func;
                     let inner_func = &env.functions[func_id.0 as usize];
-                    let param_ids: Vec<IdentifierId> = inner_func.params.iter()
+                    let param_ids: Vec<IdentifierId> = inner_func
+                        .params
+                        .iter()
                         .map(|p| match p {
                             ParamPattern::Place(p) => p.identifier,
                             ParamPattern::Spread(s) => s.place.identifier,
@@ -860,7 +1058,9 @@ fn promote_all_instances_value(
                         .collect();
                     for id in param_ids {
                         let identifier = &env.identifiers[id.0 as usize];
-                        if identifier.name.is_none() && state.promoted.contains(&identifier.declaration_id) {
+                        if identifier.name.is_none()
+                            && state.promoted.contains(&identifier.declaration_id)
+                        {
                             promote_identifier(id, state, env);
                         }
                     }
@@ -868,13 +1068,22 @@ fn promote_all_instances_value(
                 _ => {}
             }
         }
-        ReactiveValue::SequenceExpression { instructions, value: inner, .. } => {
+        ReactiveValue::SequenceExpression {
+            instructions,
+            value: inner,
+            ..
+        } => {
             for instr in instructions {
                 promote_all_instances_instruction(instr, state, env);
             }
             promote_all_instances_value(inner, state, env);
         }
-        ReactiveValue::ConditionalExpression { test, consequent, alternate, .. } => {
+        ReactiveValue::ConditionalExpression {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_all_instances_value(test, state, env);
             promote_all_instances_value(consequent, state, env);
             promote_all_instances_value(alternate, state, env);
@@ -899,7 +1108,13 @@ fn promote_all_instances_terminal(
         ReactiveTerminal::Return { value, .. } | ReactiveTerminal::Throw { value, .. } => {
             promote_all_instances_place(value, state, env);
         }
-        ReactiveTerminal::For { init, test, update, loop_block, .. } => {
+        ReactiveTerminal::For {
+            init,
+            test,
+            update,
+            loop_block,
+            ..
+        } => {
             promote_all_instances_value(init, state, env);
             promote_all_instances_value(test, state, env);
             promote_all_instances_block(loop_block, state, env);
@@ -907,24 +1122,40 @@ fn promote_all_instances_terminal(
                 promote_all_instances_value(update, state, env);
             }
         }
-        ReactiveTerminal::ForOf { init, test, loop_block, .. } => {
+        ReactiveTerminal::ForOf {
+            init,
+            test,
+            loop_block,
+            ..
+        } => {
             promote_all_instances_value(init, state, env);
             promote_all_instances_value(test, state, env);
             promote_all_instances_block(loop_block, state, env);
         }
-        ReactiveTerminal::ForIn { init, loop_block, .. } => {
+        ReactiveTerminal::ForIn {
+            init, loop_block, ..
+        } => {
             promote_all_instances_value(init, state, env);
             promote_all_instances_block(loop_block, state, env);
         }
-        ReactiveTerminal::DoWhile { loop_block, test, .. } => {
+        ReactiveTerminal::DoWhile {
+            loop_block, test, ..
+        } => {
             promote_all_instances_block(loop_block, state, env);
             promote_all_instances_value(test, state, env);
         }
-        ReactiveTerminal::While { test, loop_block, .. } => {
+        ReactiveTerminal::While {
+            test, loop_block, ..
+        } => {
             promote_all_instances_value(test, state, env);
             promote_all_instances_block(loop_block, state, env);
         }
-        ReactiveTerminal::If { test, consequent, alternate, .. } => {
+        ReactiveTerminal::If {
+            test,
+            consequent,
+            alternate,
+            ..
+        } => {
             promote_all_instances_place(test, state, env);
             promote_all_instances_block(consequent, state, env);
             if let Some(alt) = alternate {
@@ -945,7 +1176,12 @@ fn promote_all_instances_terminal(
         ReactiveTerminal::Label { block, .. } => {
             promote_all_instances_block(block, state, env);
         }
-        ReactiveTerminal::Try { block, handler_binding, handler, .. } => {
+        ReactiveTerminal::Try {
+            block,
+            handler_binding,
+            handler,
+            ..
+        } => {
             promote_all_instances_block(block, state, env);
             if let Some(binding) = handler_binding {
                 promote_all_instances_place(binding, state, env);
@@ -959,11 +1195,7 @@ fn promote_all_instances_terminal(
 // Helpers
 // =============================================================================
 
-fn promote_identifier(
-    identifier_id: IdentifierId,
-    state: &mut State,
-    env: &mut Environment,
-) {
+fn promote_identifier(identifier_id: IdentifierId, state: &mut State, env: &mut Environment) {
     let identifier = &env.identifiers[identifier_id.0 as usize];
     assert!(
         identifier.name.is_none(),
