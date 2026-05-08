@@ -22,6 +22,7 @@ export interface BindingData {
   scope: number;
   declarationType: string;
   declarationStart?: number;
+  declarationNodeId?: number;
   import?: ImportBindingData;
 }
 
@@ -37,6 +38,8 @@ export interface ScopeInfo {
   nodeToScope: Record<number, number>;
   nodeToScopeEnd: Record<number, number>;
   referenceToBinding: Record<number, number>;
+  refNodeIdToBinding: Record<number, number>;
+  nodeIdToScope: Record<number, number>;
   programScope: number;
 }
 
@@ -48,13 +51,13 @@ function mapPatternIdentifiers(
   path: NodePath,
   bindingId: number,
   bindingName: string,
-  mapRef: (start: number, bindingId: number) => void,
+  mapRef: (start: number, bindingId: number, node: t.Node) => void,
 ): void {
   if (path.isIdentifier()) {
     if (path.node.name === bindingName) {
       const start = path.node.start;
       if (start != null) {
-        mapRef(start, bindingId);
+        mapRef(start, bindingId, path.node);
       }
     }
   } else if (path.isArrayPattern()) {
@@ -106,7 +109,7 @@ function mapPatternIdentifiers(
     if (obj.isIdentifier() && obj.node.name === bindingName) {
       const start = obj.node.start;
       if (start != null) {
-        mapRef(start, bindingId);
+        mapRef(start, bindingId, obj.node);
       }
     }
   }
@@ -133,15 +136,22 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
   const nodeToScope: Record<number, number> = {};
   const nodeToScopeEnd: Record<number, number> = {};
   const referenceToBinding: Record<number, number> = {};
+  const refNodeIdToBinding: Record<number, number> = {};
+  const nodeIdToScope: Record<number, number> = {};
 
-  // Helper to map an AST position to a binding. Position 0 is allowed:
-  // synthetic nodes from Hermes match desugar share start=0, so multiple
-  // bindings may overwrite the same key. This is acceptable because the
-  // Rust compiler uses scope-based fallback lookup when the position-based
-  // mapping is ambiguous or wrong. Skipping position-0 entirely would
-  // break the common single-match case where only one binding claims it.
-  function mapRef(start: number, bindingId: number): void {
+  let nextNodeId = 1;
+  function getOrAssignNodeId(node: t.Node): number {
+    const n = node as any;
+    if (n._nodeId == null) {
+      n._nodeId = nextNodeId++;
+    }
+    return n._nodeId;
+  }
+
+  function mapRef(start: number, bindingId: number, node: t.Node): void {
     referenceToBinding[start] = bindingId;
+    const nodeId = getOrAssignNodeId(node);
+    refNodeIdToBinding[nodeId] = bindingId;
   }
 
   // Map from Babel scope uid to our scope id
@@ -197,6 +207,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         scope: scopeId,
         declarationType: babelBinding.path.node.type,
         declarationStart: babelBinding.identifier.start ?? undefined,
+        declarationNodeId: getOrAssignNodeId(babelBinding.identifier),
       };
 
       // Check for import bindings
@@ -215,7 +226,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       for (const ref of babelBinding.referencePaths) {
         const start = ref.node.start;
         if (start != null) {
-          mapRef(start, bindingId);
+          mapRef(start, bindingId, ref.node);
         }
       }
 
@@ -234,7 +245,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
           if (arg.isIdentifier()) {
             const start = arg.node.start;
             if (start != null) {
-              mapRef(start, bindingId);
+              mapRef(start, bindingId, arg.node);
             }
           }
         } else if (
@@ -253,7 +264,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
           // Map the function name identifier to the binding
           const funcId = (violation.node as any).id;
           if (funcId?.start != null) {
-            mapRef(funcId.start, bindingId);
+            mapRef(funcId.start, bindingId, funcId);
           }
         }
       }
@@ -261,7 +272,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       // Map the binding identifier itself
       const bindingStart = babelBinding.identifier.start;
       if (bindingStart != null) {
-        mapRef(bindingStart, bindingId);
+        mapRef(bindingStart, bindingId, babelBinding.identifier);
       }
     }
 
@@ -276,6 +287,8 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
         nodeToScope[nodeStart] = scopeId;
         nodeToScopeEnd[nodeStart] = nodeEnd;
       }
+      const scopeNodeId = getOrAssignNodeId(path.node);
+      nodeIdToScope[scopeNodeId] = scopeId;
     }
 
     scopes.push({
@@ -326,6 +339,19 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     },
   });
 
+  // Assign _nodeId to ALL Identifier and JSXIdentifier nodes in the AST,
+  // not just those that resolve to bindings. This ensures global references
+  // (Array, Error, etc.) also have _nodeId set, letting the Rust compiler
+  // distinguish "no binding found via node-ID = global" from "no node-ID at all".
+  program.traverse({
+    Identifier(path: NodePath<t.Identifier>) {
+      getOrAssignNodeId(path.node);
+    },
+    JSXIdentifier(path: NodePath<t.JSXIdentifier>) {
+      getOrAssignNodeId(path.node);
+    },
+  });
+
   // Program scope should always be id 0
   const programScopeUid = String((program.scope as any).uid);
   const programScopeId = scopeUidToId.get(programScopeUid) ?? 0;
@@ -336,6 +362,8 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     nodeToScope,
     nodeToScopeEnd,
     referenceToBinding,
+    refNodeIdToBinding,
+    nodeIdToScope,
     programScope: programScopeId,
   };
 }

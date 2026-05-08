@@ -3,20 +3,24 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
-use swc_common::sync::Lrc;
-use swc_common::{FileName, SourceMap};
-use swc_ecma_ast::EsVersion;
-use swc_ecma_parser::{parse_file_as_module, EsSyntax, Syntax};
-
-use react_compiler_ast::scope::{BindingKind, ScopeKind};
+use react_compiler::entrypoint::plugin_options::CompilerTarget;
+use react_compiler::entrypoint::plugin_options::PluginOptions;
+use react_compiler_ast::scope::BindingKind;
+use react_compiler_ast::scope::ScopeKind;
 use react_compiler_ast::statements::Statement;
 use react_compiler_swc::convert_ast::convert_module;
 use react_compiler_swc::convert_ast_reverse::convert_program_to_swc;
 use react_compiler_swc::convert_scope::build_scope_info;
+use react_compiler_swc::lint_source;
 use react_compiler_swc::prefilter::has_react_like_functions;
-use react_compiler_swc::{lint_source, transform_source};
-
-use react_compiler::entrypoint::plugin_options::{CompilerTarget, PluginOptions};
+use react_compiler_swc::transform_source;
+use swc_common::FileName;
+use swc_common::SourceMap;
+use swc_common::sync::Lrc;
+use swc_ecma_ast::EsVersion;
+use swc_ecma_parser::EsSyntax;
+use swc_ecma_parser::Syntax;
+use swc_ecma_parser::parse_file_as_module;
 
 fn parse_module(source: &str) -> swc_ecma_ast::Module {
     let cm = Lrc::new(SourceMap::default());
@@ -53,6 +57,9 @@ fn default_options() -> PluginOptions {
         ignore_use_no_forget: false,
         custom_opt_out_directives: None,
         environment: Default::default(),
+        source_code: None,
+        profiling: false,
+        debug: false,
     }
 }
 
@@ -518,9 +525,9 @@ fn reverse_convert_variable_declaration() {
     let file = convert_module(&module, source);
 
     let swc_module = convert_program_to_swc(&file);
-    assert_eq!(swc_module.body.len(), 1);
+    assert_eq!(swc_module.module.body.len(), 1);
     assert!(matches!(
-        &swc_module.body[0],
+        &swc_module.module.body[0],
         swc_ecma_ast::ModuleItem::Stmt(swc_ecma_ast::Stmt::Decl(swc_ecma_ast::Decl::Var(_)))
     ));
 }
@@ -532,9 +539,9 @@ fn reverse_convert_function_declaration() {
     let file = convert_module(&module, source);
 
     let swc_module = convert_program_to_swc(&file);
-    assert_eq!(swc_module.body.len(), 1);
+    assert_eq!(swc_module.module.body.len(), 1);
     assert!(matches!(
-        &swc_module.body[0],
+        &swc_module.module.body[0],
         swc_ecma_ast::ModuleItem::Stmt(swc_ecma_ast::Stmt::Decl(swc_ecma_ast::Decl::Fn(_)))
     ));
 }
@@ -549,7 +556,7 @@ fn reverse_convert_import_export() {
     let file = convert_module(&module, source);
 
     let swc_module = convert_program_to_swc(&file);
-    assert_eq!(swc_module.body.len(), 2);
+    assert_eq!(swc_module.module.body.len(), 2);
 }
 
 #[test]
@@ -568,7 +575,7 @@ fn reverse_convert_roundtrip_via_json() {
 
     // Convert the deserialized AST back to SWC
     let swc_module = convert_program_to_swc(&deserialized);
-    assert_eq!(swc_module.body.len(), 2);
+    assert_eq!(swc_module.module.body.len(), 2);
 }
 
 #[test]
@@ -582,7 +589,7 @@ fn reverse_convert_jsx_roundtrip() {
         serde_json::from_value(json).expect("deserialize from JSON");
 
     let swc_module = convert_program_to_swc(&deserialized);
-    assert_eq!(swc_module.body.len(), 1);
+    assert_eq!(swc_module.module.body.len(), 1);
 }
 
 #[test]
@@ -598,5 +605,5 @@ fn reverse_convert_multiple_statement_types() {
     let file = convert_module(&module, source);
 
     let swc_module = convert_program_to_swc(&file);
-    assert_eq!(swc_module.body.len(), 5);
+    assert_eq!(swc_module.module.body.len(), 5);
 }

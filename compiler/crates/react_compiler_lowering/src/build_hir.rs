@@ -293,8 +293,9 @@ fn lower_identifier(
     name: &str,
     start: u32,
     loc: Option<SourceLocation>,
+    node_id: Option<u32>,
 ) -> Result<Place, CompilerError> {
-    let binding = builder.resolve_identifier(name, start, loc.clone())?;
+    let binding = builder.resolve_identifier(name, start, loc.clone(), node_id)?;
     match binding {
         VariableBinding::Identifier { identifier, .. } => Ok(Place {
             identifier,
@@ -570,9 +571,10 @@ fn lower_expression(
         Expression::Identifier(ident) => {
             let loc = convert_opt_loc(&ident.base.loc);
             let start = ident.base.start.unwrap_or(0);
-            let place = lower_identifier(builder, &ident.name, start, loc.clone())?;
+            let place =
+                lower_identifier(builder, &ident.name, start, loc.clone(), ident.base.node_id)?;
             // Determine LoadLocal vs LoadContext based on context identifier check
-            if builder.is_context_identifier(&ident.name, start) {
+            if builder.is_context_identifier(&ident.name, start, ident.base.node_id) {
                 Ok(InstructionValue::LoadContext { place, loc })
             } else {
                 Ok(InstructionValue::LoadLocal { place, loc })
@@ -931,7 +933,7 @@ fn lower_expression(
                 }
                 Expression::Identifier(ident) => {
                     let start = ident.base.start.unwrap_or(0);
-                    if builder.is_context_identifier(&ident.name, start) {
+                    if builder.is_context_identifier(&ident.name, start, ident.base.node_id) {
                         builder.record_error(CompilerErrorDetail {
                             category: ErrorCategory::Todo,
                             reason: "(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.".to_string(),
@@ -947,8 +949,12 @@ fn lower_expression(
                     }
 
                     let ident_loc = convert_opt_loc(&ident.base.loc);
-                    let binding =
-                        builder.resolve_identifier(&ident.name, start, ident_loc.clone())?;
+                    let binding = builder.resolve_identifier(
+                        &ident.name,
+                        start,
+                        ident_loc.clone(),
+                        ident.base.node_id,
+                    )?;
                     match &binding {
                         VariableBinding::Global { .. } => {
                             builder.record_error(CompilerErrorDetail {
@@ -991,7 +997,13 @@ fn lower_expression(
                     };
 
                     // Load the current value
-                    let value = lower_identifier(builder, &ident.name, start, ident_loc)?;
+                    let value = lower_identifier(
+                        builder,
+                        &ident.name,
+                        start,
+                        ident_loc,
+                        ident.base.node_id,
+                    )?;
 
                     let operation = convert_update_operator(&update.operator);
 
@@ -1124,8 +1136,12 @@ fn lower_expression(
                         let start = ident.base.start.unwrap_or(0);
                         let right = lower_expression_to_temporary(builder, &expr.right)?;
                         let ident_loc = convert_opt_loc(&ident.base.loc);
-                        let binding =
-                            builder.resolve_identifier(&ident.name, start, ident_loc.clone())?;
+                        let binding = builder.resolve_identifier(
+                            &ident.name,
+                            start,
+                            ident_loc.clone(),
+                            ident.base.node_id,
+                        )?;
                         match binding {
                             VariableBinding::Identifier {
                                 identifier,
@@ -1155,7 +1171,11 @@ fn lower_expression(
                                     effect: Effect::Unknown,
                                     loc: ident_loc,
                                 };
-                                if builder.is_context_identifier(&ident.name, start) {
+                                if builder.is_context_identifier(
+                                    &ident.name,
+                                    start,
+                                    ident.base.node_id,
+                                ) {
                                     let temp = lower_value_to_temporary(
                                         builder,
                                         InstructionValue::StoreContext {
@@ -1360,8 +1380,12 @@ fn lower_expression(
                             },
                         )?;
                         let ident_loc = convert_opt_loc(&ident.base.loc);
-                        let binding =
-                            builder.resolve_identifier(&ident.name, start, ident_loc.clone())?;
+                        let binding = builder.resolve_identifier(
+                            &ident.name,
+                            start,
+                            ident_loc.clone(),
+                            ident.base.node_id,
+                        )?;
                         match binding {
                             VariableBinding::Identifier { identifier, .. } => {
                                 let place = Place {
@@ -1370,7 +1394,11 @@ fn lower_expression(
                                     effect: Effect::Unknown,
                                     loc: ident_loc,
                                 };
-                                if builder.is_context_identifier(&ident.name, start) {
+                                if builder.is_context_identifier(
+                                    &ident.name,
+                                    start,
+                                    ident.base.node_id,
+                                ) {
                                     lower_value_to_temporary(
                                         builder,
                                         InstructionValue::StoreContext {
@@ -2927,6 +2955,7 @@ fn lower_statement(
                         &id.name,
                         id.base.start.unwrap_or(0),
                         id_loc.clone(),
+                        id.base.node_id,
                     )?;
                     if !matches!(binding, VariableBinding::Identifier { .. }) {
                         // Position-based resolution failed (synthetic $$gen vars
@@ -2958,7 +2987,11 @@ fn lower_statement(
                                 reactive: false,
                                 loc: id_loc.clone(),
                             };
-                            if builder.is_context_identifier(&id.name, id.base.start.unwrap_or(0)) {
+                            if builder.is_context_identifier(
+                                &id.name,
+                                id.base.start.unwrap_or(0),
+                                id.base.node_id,
+                            ) {
                                 if kind == InstructionKind::Const {
                                     builder.record_error(CompilerErrorDetail {
                                         reason: "Expect `const` declaration not to be reassigned"
@@ -4169,8 +4202,9 @@ fn lower_identifier_for_assignment(
     kind: InstructionKind,
     name: &str,
     start: u32,
+    node_id: Option<u32>,
 ) -> Result<Option<IdentifierForAssignment>, CompilerError> {
-    let mut binding = builder.resolve_identifier(name, start, ident_loc.clone())?;
+    let mut binding = builder.resolve_identifier(name, start, ident_loc.clone(), node_id)?;
     if !matches!(binding, VariableBinding::Identifier { .. }) && kind != InstructionKind::Reassign {
         if let Some((binding_id, binding_data)) = builder
             .scope_info()
@@ -4267,6 +4301,7 @@ fn lower_assignment(
                 kind,
                 &id.name,
                 id.base.start.unwrap_or(0),
+                id.base.node_id,
             )?;
             match result {
                 None => {
@@ -4282,7 +4317,7 @@ fn lower_assignment(
                 }
                 Some(IdentifierForAssignment::Place(place)) => {
                     let start = id.base.start.unwrap_or(0);
-                    if builder.is_context_identifier(&id.name, start) {
+                    if builder.is_context_identifier(&id.name, start, id.base.node_id) {
                         // Check if the binding is hoisted before flagging const reassignment
                         let is_hoisted = builder
                             .scope_info()
@@ -4457,12 +4492,17 @@ fn lower_assignment(
                     match elem {
                         Some(PatternLike::Identifier(id)) => {
                             let start = id.base.start.unwrap_or(0);
-                            if builder.is_context_identifier(&id.name, start) {
+                            if builder.is_context_identifier(&id.name, start, id.base.node_id) {
                                 found = true;
                                 break;
                             }
                             let ident_loc = convert_opt_loc(&id.base.loc);
-                            match builder.resolve_identifier(&id.name, start, ident_loc)? {
+                            match builder.resolve_identifier(
+                                &id.name,
+                                start,
+                                ident_loc,
+                                id.base.node_id,
+                            )? {
                                 VariableBinding::Identifier { .. } => {}
                                 _ => {
                                     found = true;
@@ -4493,7 +4533,8 @@ fn lower_assignment(
                         match &*rest.argument {
                             PatternLike::Identifier(id) => {
                                 let start = id.base.start.unwrap_or(0);
-                                let is_context = builder.is_context_identifier(&id.name, start);
+                                let is_context =
+                                    builder.is_context_identifier(&id.name, start, id.base.node_id);
                                 let can_use_direct = !force_temporaries
                                     && (matches!(assignment_style, AssignmentStyle::Assignment)
                                         || !is_context);
@@ -4505,6 +4546,7 @@ fn lower_assignment(
                                         kind,
                                         &id.name,
                                         start,
+                                        id.base.node_id,
                                     )? {
                                         Some(IdentifierForAssignment::Place(place)) => {
                                             items.push(ArrayPatternElement::Spread(
@@ -4553,7 +4595,8 @@ fn lower_assignment(
                     }
                     Some(PatternLike::Identifier(id)) => {
                         let start = id.base.start.unwrap_or(0);
-                        let is_context = builder.is_context_identifier(&id.name, start);
+                        let is_context =
+                            builder.is_context_identifier(&id.name, start, id.base.node_id);
                         let can_use_direct = !force_temporaries
                             && (matches!(assignment_style, AssignmentStyle::Assignment)
                                 || !is_context);
@@ -4565,6 +4608,7 @@ fn lower_assignment(
                                 kind,
                                 &id.name,
                                 start,
+                                id.base.node_id,
                             )? {
                                 Some(IdentifierForAssignment::Place(place)) => {
                                     items.push(ArrayPatternElement::Place(place));
@@ -4642,7 +4686,12 @@ fn lower_assignment(
                             PatternLike::Identifier(id) => {
                                 let start = id.base.start.unwrap_or(0);
                                 let ident_loc = convert_opt_loc(&id.base.loc);
-                                match builder.resolve_identifier(&id.name, start, ident_loc)? {
+                                match builder.resolve_identifier(
+                                    &id.name,
+                                    start,
+                                    ident_loc,
+                                    id.base.node_id,
+                                )? {
                                     VariableBinding::Identifier { .. } => {}
                                     _ => {
                                         found = true;
@@ -4668,7 +4717,8 @@ fn lower_assignment(
                         match &*rest.argument {
                             PatternLike::Identifier(id) => {
                                 let start = id.base.start.unwrap_or(0);
-                                let is_context = builder.is_context_identifier(&id.name, start);
+                                let is_context =
+                                    builder.is_context_identifier(&id.name, start, id.base.node_id);
                                 let can_use_direct = !force_temporaries
                                     && (matches!(assignment_style, AssignmentStyle::Assignment)
                                         || !is_context);
@@ -4680,6 +4730,7 @@ fn lower_assignment(
                                         kind,
                                         &id.name,
                                         start,
+                                        id.base.node_id,
                                     )? {
                                         Some(IdentifierForAssignment::Place(place)) => {
                                             properties.push(ObjectPropertyOrSpread::Spread(
@@ -4751,7 +4802,8 @@ fn lower_assignment(
                         match &*obj_prop.value {
                             PatternLike::Identifier(id) => {
                                 let start = id.base.start.unwrap_or(0);
-                                let is_context = builder.is_context_identifier(&id.name, start);
+                                let is_context =
+                                    builder.is_context_identifier(&id.name, start, id.base.node_id);
                                 let can_use_direct = !force_temporaries
                                     && (matches!(assignment_style, AssignmentStyle::Assignment)
                                         || !is_context);
@@ -4763,6 +4815,7 @@ fn lower_assignment(
                                         kind,
                                         &id.name,
                                         start,
+                                        id.base.node_id,
                                     )? {
                                         Some(IdentifierForAssignment::Place(place)) => {
                                             properties.push(ObjectPropertyOrSpread::Property(
@@ -5572,7 +5625,28 @@ fn lower_function_declaration(
         if let Some(id_node) = &func_decl.id {
             let start = id_node.base.start.unwrap_or(0);
             let ident_loc = convert_opt_loc(&id_node.base.loc);
-            let binding = builder.resolve_identifier(name, start, ident_loc.clone())?;
+            let mut binding =
+                builder.resolve_identifier(name, start, ident_loc.clone(), id_node.base.node_id)?;
+            if matches!(&binding, VariableBinding::Global { .. }) {
+                // For function redeclarations (e.g., `function x() {} function x() {}`),
+                // the redeclaration's identifier position may not be in
+                // reference_to_binding (OXC/SWC don't map constant violations).
+                // Retry using the first declaration's position from the scope chain.
+                let func_start = func_decl.base.start.unwrap_or(0);
+                let fallback_start = {
+                    let si = builder.scope_info();
+                    let scope_id = si
+                        .node_to_scope
+                        .get(&func_start)
+                        .copied()
+                        .unwrap_or(si.program_scope);
+                    si.get_binding(scope_id, name)
+                        .and_then(|bid| si.bindings[bid.0 as usize].declaration_start)
+                };
+                if let Some(ds) = fallback_start {
+                    binding = builder.resolve_identifier(name, ds, ident_loc.clone(), None)?;
+                }
+            }
             match binding {
                 VariableBinding::Identifier { identifier, .. } => {
                     // Don't override the identifier's declaration loc here.
@@ -5587,7 +5661,7 @@ fn lower_function_declaration(
                         effect: Effect::Unknown,
                         loc: loc.clone(),
                     };
-                    if builder.is_context_identifier(name, start) {
+                    if builder.is_context_identifier(name, start, id_node.base.node_id) {
                         lower_value_to_temporary(
                             builder,
                             InstructionValue::StoreContext {
@@ -5761,8 +5835,12 @@ fn lower_inner(
             react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
                 let start = ident.base.start.unwrap_or(0);
                 let param_loc = convert_opt_loc(&ident.base.loc);
-                let mut binding =
-                    builder.resolve_identifier(&ident.name, start, param_loc.clone())?;
+                let mut binding = builder.resolve_identifier(
+                    &ident.name,
+                    start,
+                    param_loc.clone(),
+                    ident.base.node_id,
+                )?;
                 if !matches!(binding, VariableBinding::Identifier { .. }) {
                     // Position-based resolution failed (common for synthetic params
                     // like $$gen$m0 at position 0). Try lookup in function scope
@@ -5956,8 +6034,8 @@ fn lower_jsx_element_name(
             let start = id.base.start.unwrap_or(0);
             if tag.starts_with(|c: char| c.is_ascii_uppercase()) {
                 // Component tag: resolve as identifier and load
-                let place = lower_identifier(builder, tag, start, loc.clone())?;
-                let load_value = if builder.is_context_identifier(tag, start) {
+                let place = lower_identifier(builder, tag, start, loc.clone(), id.base.node_id)?;
+                let load_value = if builder.is_context_identifier(tag, start, id.base.node_id) {
                     InstructionValue::LoadContext { place, loc }
                 } else {
                     InstructionValue::LoadLocal { place, loc }
@@ -6015,8 +6093,8 @@ fn lower_jsx_member_expression(
             let id_loc = convert_opt_loc(&id.base.loc);
             let start = id.base.start.unwrap_or(0);
             // Use identifier's own loc for the place, but member expression's loc for the instruction
-            let place = lower_identifier(builder, &id.name, start, id_loc)?;
-            let load_value = if builder.is_context_identifier(&id.name, start) {
+            let place = lower_identifier(builder, &id.name, start, id_loc, id.base.node_id)?;
+            let load_value = if builder.is_context_identifier(&id.name, start, id.base.node_id) {
                 InstructionValue::LoadContext {
                     place,
                     loc: expr_loc.clone(),

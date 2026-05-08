@@ -52,8 +52,10 @@ pub fn build_scope_info(module: &Module) -> ScopeInfo {
         scopes: collector.scopes,
         bindings: collector.bindings,
         node_to_scope: collector.node_to_scope,
-        node_to_scope_end: std::collections::HashMap::new(),
+        node_to_scope_end: collector.node_to_scope_end,
         reference_to_binding,
+        ref_node_id_to_binding: indexmap::IndexMap::new(),
+        node_id_to_scope: std::collections::HashMap::new(),
         program_scope: ScopeId(0),
     }
 }
@@ -64,6 +66,7 @@ struct ScopeCollector {
     scopes: Vec<ScopeData>,
     bindings: Vec<BindingData>,
     node_to_scope: HashMap<u32, ScopeId>,
+    node_to_scope_end: HashMap<u32, u32>,
     /// Stack of scope IDs representing the current nesting.
     scope_stack: Vec<ScopeId>,
     /// Set of span starts for block statements that are direct function/catch bodies.
@@ -77,6 +80,7 @@ impl ScopeCollector {
             scopes: Vec::new(),
             bindings: Vec::new(),
             node_to_scope: HashMap::new(),
+            node_to_scope_end: HashMap::new(),
             scope_stack: Vec::new(),
             function_body_spans: HashSet::new(),
         }
@@ -86,7 +90,7 @@ impl ScopeCollector {
         *self.scope_stack.last().expect("scope stack is empty")
     }
 
-    fn push_scope(&mut self, kind: ScopeKind, node_start: u32) -> ScopeId {
+    fn push_scope(&mut self, kind: ScopeKind, node_start: u32, node_end: u32) -> ScopeId {
         let id = ScopeId(self.scopes.len() as u32);
         let parent = self.scope_stack.last().copied();
         self.scopes.push(ScopeData {
@@ -96,6 +100,9 @@ impl ScopeCollector {
             bindings: HashMap::new(),
         });
         self.node_to_scope.insert(node_start, id);
+        if node_end > node_start {
+            self.node_to_scope_end.insert(node_start, node_end);
+        }
         self.scope_stack.push(id);
         id
     }
@@ -133,6 +140,7 @@ impl ScopeCollector {
             scope,
             declaration_type,
             declaration_start,
+            declaration_node_id: None,
             import,
         });
         self.scopes[scope.0 as usize].bindings.insert(name, id);
@@ -215,7 +223,7 @@ impl ScopeCollector {
     /// Used for method definitions and other Function nodes not covered by FnDecl/FnExpr.
     fn visit_function_inner(&mut self, function: &Function) {
         let func_start = function.span.lo.0;
-        self.push_scope(ScopeKind::Function, func_start);
+        self.push_scope(ScopeKind::Function, func_start, function.span.hi.0);
 
         for param in &function.params {
             self.collect_pat_bindings(
@@ -237,7 +245,7 @@ impl ScopeCollector {
 
 impl Visit for ScopeCollector {
     fn visit_module(&mut self, module: &Module) {
-        self.push_scope(ScopeKind::Program, module.span.lo.0);
+        self.push_scope(ScopeKind::Program, module.span.lo.0, module.span.hi.0);
         module.visit_children_with(self);
         self.pop_scope();
     }
@@ -382,7 +390,11 @@ impl Visit for ScopeCollector {
                         None,
                     );
                 }
-                self.push_scope(ScopeKind::Class, class_expr.class.span.lo.0);
+                self.push_scope(
+                    ScopeKind::Class,
+                    class_expr.class.span.lo.0,
+                    class_expr.class.span.hi.0,
+                );
                 class_expr.class.visit_children_with(self);
                 self.pop_scope();
             }
@@ -394,7 +406,7 @@ impl Visit for ScopeCollector {
 
     fn visit_fn_expr(&mut self, fn_expr: &FnExpr) {
         let func_start = fn_expr.function.span.lo.0;
-        self.push_scope(ScopeKind::Function, func_start);
+        self.push_scope(ScopeKind::Function, func_start, fn_expr.function.span.hi.0);
 
         // Named function expressions bind their name in the function scope
         if let Some(ident) = &fn_expr.ident {
@@ -429,7 +441,7 @@ impl Visit for ScopeCollector {
 
     fn visit_arrow_expr(&mut self, arrow: &ArrowExpr) {
         let func_start = arrow.span.lo.0;
-        self.push_scope(ScopeKind::Function, func_start);
+        self.push_scope(ScopeKind::Function, func_start, arrow.span.hi.0);
 
         for param in &arrow.params {
             self.collect_pat_bindings(
@@ -458,14 +470,14 @@ impl Visit for ScopeCollector {
             // This block is a function/catch body — don't create a separate scope
             block.visit_children_with(self);
         } else {
-            self.push_scope(ScopeKind::Block, block.span.lo.0);
+            self.push_scope(ScopeKind::Block, block.span.lo.0, block.span.hi.0);
             block.visit_children_with(self);
             self.pop_scope();
         }
     }
 
     fn visit_for_stmt(&mut self, for_stmt: &ForStmt) {
-        self.push_scope(ScopeKind::For, for_stmt.span.lo.0);
+        self.push_scope(ScopeKind::For, for_stmt.span.lo.0, for_stmt.span.hi.0);
 
         if let Some(init) = &for_stmt.init {
             init.visit_with(self);
@@ -482,7 +494,7 @@ impl Visit for ScopeCollector {
     }
 
     fn visit_for_in_stmt(&mut self, for_in: &ForInStmt) {
-        self.push_scope(ScopeKind::For, for_in.span.lo.0);
+        self.push_scope(ScopeKind::For, for_in.span.lo.0, for_in.span.hi.0);
         for_in.left.visit_with(self);
         for_in.right.visit_with(self);
         for_in.body.visit_with(self);
@@ -490,7 +502,7 @@ impl Visit for ScopeCollector {
     }
 
     fn visit_for_of_stmt(&mut self, for_of: &ForOfStmt) {
-        self.push_scope(ScopeKind::For, for_of.span.lo.0);
+        self.push_scope(ScopeKind::For, for_of.span.lo.0, for_of.span.hi.0);
         for_of.left.visit_with(self);
         for_of.right.visit_with(self);
         for_of.body.visit_with(self);
@@ -498,7 +510,7 @@ impl Visit for ScopeCollector {
     }
 
     fn visit_catch_clause(&mut self, catch: &CatchClause) {
-        self.push_scope(ScopeKind::Catch, catch.span.lo.0);
+        self.push_scope(ScopeKind::Catch, catch.span.lo.0, catch.span.hi.0);
 
         if let Some(param) = &catch.param {
             self.collect_pat_bindings(param, BindingKind::Let, self.current_scope(), "CatchClause");
@@ -515,7 +527,7 @@ impl Visit for ScopeCollector {
         // Visit the discriminant in the outer scope
         switch.discriminant.visit_with(self);
 
-        self.push_scope(ScopeKind::Switch, switch.span.lo.0);
+        self.push_scope(ScopeKind::Switch, switch.span.lo.0, switch.span.hi.0);
         for case in &switch.cases {
             case.visit_with(self);
         }
@@ -534,13 +546,21 @@ impl Visit for ScopeCollector {
             None,
         );
 
-        self.push_scope(ScopeKind::Class, class_decl.class.span.lo.0);
+        self.push_scope(
+            ScopeKind::Class,
+            class_decl.class.span.lo.0,
+            class_decl.class.span.hi.0,
+        );
         class_decl.class.visit_children_with(self);
         self.pop_scope();
     }
 
     fn visit_class_expr(&mut self, class_expr: &ClassExpr) {
-        self.push_scope(ScopeKind::Class, class_expr.class.span.lo.0);
+        self.push_scope(
+            ScopeKind::Class,
+            class_expr.class.span.lo.0,
+            class_expr.class.span.hi.0,
+        );
 
         if let Some(ident) = &class_expr.ident {
             let name = ident.sym.to_string();

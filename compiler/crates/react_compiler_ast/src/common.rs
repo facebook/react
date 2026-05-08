@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Custom deserializer that distinguishes "field absent" from "field: null".
 /// - JSON field absent → `None` (via `#[serde(default)]`)
@@ -6,9 +7,7 @@ use serde::{Deserialize, Serialize};
 /// - JSON field with value → `Some(value)`
 ///
 /// Use with `#[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "nullable_value")]`
-pub fn nullable_value<'de, D>(
-    deserializer: D,
-) -> Result<Option<Box<serde_json::Value>>, D::Error>
+pub fn nullable_value<'de, D>(deserializer: D) -> Result<Option<Box<serde_json::Value>>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -65,11 +64,7 @@ pub struct BaseNode {
     /// When deserialized through a `#[serde(tag = "type")]` enum, the enum
     /// consumes the "type" field so this defaults to None. When deserialized
     /// directly, this captures the "type" field for round-trip fidelity.
-    #[serde(
-        rename = "type",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
     pub node_type: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub start: Option<u32>,
@@ -99,6 +94,8 @@ pub struct BaseNode {
         rename = "trailingComments"
     )]
     pub trailing_comments: Option<Vec<Comment>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "_nodeId")]
+    pub node_id: Option<u32>,
 }
 
 impl BaseNode {

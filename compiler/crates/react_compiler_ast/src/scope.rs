@@ -52,6 +52,11 @@ pub struct BindingData {
     /// Used to distinguish declaration sites from references in `reference_to_binding`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub declaration_start: Option<u32>,
+    /// The node-ID of the binding's declaration identifier.
+    /// Preferred over `declaration_start` for distinguishing declarations from
+    /// references, as positions can collide for synthetic nodes at position 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declaration_node_id: Option<u32>,
     /// For import bindings: the source module and import details.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub import: Option<ImportBindingData>,
@@ -118,6 +123,16 @@ pub struct ScopeInfo {
     /// Uses IndexMap to preserve insertion order (source order from serialization).
     pub reference_to_binding: IndexMap<u32, BindingId>,
 
+    /// Maps an identifier reference's node-ID to the binding it resolves to.
+    /// Only present for identifiers that resolve to a binding (not globals).
+    /// Uses IndexMap to preserve insertion order.
+    #[serde(default, rename = "refNodeIdToBinding")]
+    pub ref_node_id_to_binding: IndexMap<u32, BindingId>,
+
+    /// Maps a scope-creating AST node's node-ID to the scope it creates.
+    #[serde(default, rename = "nodeIdToScope")]
+    pub node_id_to_scope: HashMap<u32, ScopeId>,
+
     /// The program-level (module) scope. Always scopes[0].
     pub program_scope: ScopeId,
 }
@@ -137,6 +152,17 @@ impl ScopeInfo {
         None
     }
 
+    /// Look up the scope for an AST node by its unique node ID.
+    pub fn resolve_scope_by_node_id(&self, node_id: u32) -> Option<ScopeId> {
+        self.node_id_to_scope.get(&node_id).copied()
+    }
+
+    /// Look up the binding for an identifier reference by its unique node ID.
+    /// Returns None for globals/unresolved references.
+    pub fn resolve_reference_by_node_id(&self, node_id: u32) -> Option<BindingId> {
+        self.ref_node_id_to_binding.get(&node_id).copied()
+    }
+
     /// Look up the binding for an identifier reference by its AST node start offset.
     /// Returns None for globals/unresolved references.
     pub fn resolve_reference(&self, identifier_start: u32) -> Option<&BindingData> {
@@ -150,8 +176,7 @@ impl ScopeInfo {
     /// binding whose name doesn't match -- e.g., when Babel's Flow component transform
     /// creates multiple params with the same start position.
     pub fn resolve_reference_by_name(&self, name: &str, start: u32) -> Option<&BindingData> {
-        let scope_id = self.resolve_reference(start)
-            .map(|b| b.scope)?;
+        let scope_id = self.resolve_reference(start).map(|b| b.scope)?;
         let mut current = Some(scope_id);
         while let Some(sid) = current {
             let scope = &self.scopes[sid.0 as usize];
@@ -164,7 +189,11 @@ impl ScopeInfo {
     }
 
     /// Find a binding by name within the descendants of a given scope.
-    pub fn find_binding_in_descendants(&self, name: &str, ancestor: ScopeId) -> Option<&BindingData> {
+    pub fn find_binding_in_descendants(
+        &self,
+        name: &str,
+        ancestor: ScopeId,
+    ) -> Option<&BindingData> {
         let mut descendants = std::collections::HashSet::new();
         descendants.insert(ancestor);
         let mut changed = true;
@@ -191,7 +220,11 @@ impl ScopeInfo {
 
     /// Like find_binding_in_descendants, but returns the BindingData with its id
     /// for use in resolve_binding.
-    pub fn find_binding_id_in_descendants(&self, name: &str, ancestor: ScopeId) -> Option<(BindingId, &BindingData)> {
+    pub fn find_binding_id_in_descendants(
+        &self,
+        name: &str,
+        ancestor: ScopeId,
+    ) -> Option<(BindingId, &BindingData)> {
         let mut descendants = std::collections::HashSet::new();
         descendants.insert(ancestor);
         let mut changed = true;
@@ -229,7 +262,10 @@ impl ScopeInfo {
     /// so all bindings (var, const, let) appear in one scope. But our scope
     /// extraction may split them: function scope has params/var, a child block
     /// scope has const/let. This method merges them to match TS behavior.
-    pub fn scope_bindings_with_children(&self, scope_id: ScopeId) -> impl Iterator<Item = &BindingData> {
+    pub fn scope_bindings_with_children(
+        &self,
+        scope_id: ScopeId,
+    ) -> impl Iterator<Item = &BindingData> {
         let mut binding_ids: Vec<BindingId> = Vec::new();
         // Add bindings from the scope itself
         for &id in self.scopes[scope_id.0 as usize].bindings.values() {
@@ -237,21 +273,26 @@ impl ScopeInfo {
         }
         // Add bindings from direct child block scopes
         for (i, scope) in self.scopes.iter().enumerate() {
-            if scope.parent == Some(scope_id)
-                && matches!(scope.kind, ScopeKind::Block)
-            {
+            if scope.parent == Some(scope_id) && matches!(scope.kind, ScopeKind::Block) {
                 for &id in scope.bindings.values() {
                     binding_ids.push(id);
                 }
             }
         }
-        binding_ids.into_iter().map(|id| &self.bindings[id.0 as usize])
+        binding_ids
+            .into_iter()
+            .map(|id| &self.bindings[id.0 as usize])
     }
 
     /// Find a block scope by matching variable names declared within it.
     /// Used for synthetic blocks (position 0) where position-based lookup fails.
     /// The `is_claimed` predicate allows skipping scopes already matched to other blocks.
-    pub fn find_block_scope_by_bindings(&self, names: &[&str], ancestor: ScopeId, is_claimed: impl Fn(ScopeId) -> bool) -> Option<ScopeId> {
+    pub fn find_block_scope_by_bindings(
+        &self,
+        names: &[&str],
+        ancestor: ScopeId,
+        is_claimed: impl Fn(ScopeId) -> bool,
+    ) -> Option<ScopeId> {
         let mut descendants = std::collections::HashSet::new();
         descendants.insert(ancestor);
         let mut changed = true;
@@ -269,8 +310,12 @@ impl ScopeInfo {
         }
         for sid in &descendants {
             let scope = &self.scopes[sid.0 as usize];
-            if matches!(scope.kind, ScopeKind::Function) { continue; }
-            if is_claimed(*sid) { continue; }
+            if matches!(scope.kind, ScopeKind::Function) {
+                continue;
+            }
+            if is_claimed(*sid) {
+                continue;
+            }
             let all_match = names.iter().all(|name| scope.bindings.contains_key(*name));
             if all_match {
                 return Some(*sid);

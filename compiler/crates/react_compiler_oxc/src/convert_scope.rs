@@ -21,6 +21,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
     let mut scopes: Vec<ScopeData> = Vec::new();
     let mut bindings: Vec<BindingData> = Vec::new();
     let mut node_to_scope: HashMap<u32, ScopeId> = HashMap::new();
+    let mut node_to_scope_end: HashMap<u32, u32> = HashMap::new();
     let mut reference_to_binding: IndexMap<u32, BindingId> = IndexMap::new();
 
     // Map OXC symbol IDs to our binding IDs
@@ -52,6 +53,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
             scope: ScopeId(0), // Placeholder, filled in second pass
             declaration_type,
             declaration_start,
+            declaration_node_id: None,
             import,
         });
     }
@@ -78,7 +80,9 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         // Map the AST node that created this scope to the scope ID
         let node_id = scoping.get_node_id(scope_id);
         let node = nodes.get_node(node_id);
-        let start = node.kind().span().start;
+        let span = node.kind().span();
+        let start = span.start;
+        let end = span.end;
         // For function scopes inside object methods, also map the parent
         // ObjectProperty start so the compiler can look up the scope using the
         // ObjectMethod's start position (which matches the property start in Babel).
@@ -97,6 +101,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                         let prop_start = parent_node.kind().span().start;
                         if prop_start != start {
                             node_to_scope.insert(prop_start, our_scope_id);
+                            node_to_scope_end.insert(prop_start, end);
                         }
                     }
                     _ => {}
@@ -104,7 +109,12 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
             }
         }
 
-        node_to_scope.insert(start, our_scope_id);
+        if end > start {
+            node_to_scope.insert(start, our_scope_id);
+            node_to_scope_end.insert(start, end);
+        } else {
+            node_to_scope.insert(start, our_scope_id);
+        }
 
         scopes.push(ScopeData {
             id: our_scope_id,
@@ -141,8 +151,10 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         scopes,
         bindings,
         node_to_scope,
-        node_to_scope_end: std::collections::HashMap::new(),
+        node_to_scope_end,
         reference_to_binding,
+        ref_node_id_to_binding: IndexMap::new(),
+        node_id_to_scope: std::collections::HashMap::new(),
         program_scope,
     }
 }
@@ -330,14 +342,14 @@ fn find_binding_identifier_start(kind: AstKind, name: &str) -> Option<u32> {
             }
         }
         AstKind::TSModuleDeclaration(decl) => match &decl.id {
-                oxc_ast::ast::TSModuleDeclarationName::Identifier(id) => {
-                    if id.name.as_str() == name {
-                        Some(id.span.start)
-                    } else {
-                        None
-                    }
+            oxc_ast::ast::TSModuleDeclarationName::Identifier(id) => {
+                if id.name.as_str() == name {
+                    Some(id.span.start)
+                } else {
+                    None
                 }
-                _ => None,
+            }
+            _ => None,
         },
         _ => None,
     }

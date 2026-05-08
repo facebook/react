@@ -21,13 +21,44 @@ use crate::identifier_loc_index::IdentifierLocIndex;
 // ---------------------------------------------------------------------------
 
 fn is_always_reserved_word(s: &str) -> bool {
-    matches!(s,
-        "break" | "case" | "catch" | "continue" | "debugger" | "default" | "do" |
-        "else" | "finally" | "for" | "function" | "if" | "in" | "instanceof" |
-        "new" | "return" | "switch" | "this" | "throw" | "try" | "typeof" |
-        "var" | "void" | "while" | "with" | "class" | "const" | "enum" |
-        "export" | "extends" | "import" | "super" |
-        "null" | "true" | "false" | "delete"
+    matches!(
+        s,
+        "break"
+            | "case"
+            | "catch"
+            | "continue"
+            | "debugger"
+            | "default"
+            | "do"
+            | "else"
+            | "finally"
+            | "for"
+            | "function"
+            | "if"
+            | "in"
+            | "instanceof"
+            | "new"
+            | "return"
+            | "switch"
+            | "this"
+            | "throw"
+            | "try"
+            | "typeof"
+            | "var"
+            | "void"
+            | "while"
+            | "with"
+            | "class"
+            | "const"
+            | "enum"
+            | "export"
+            | "extends"
+            | "import"
+            | "super"
+            | "null"
+            | "true"
+            | "false"
+            | "delete"
     )
 }
 
@@ -940,8 +971,15 @@ impl<'a> HirBuilder<'a> {
         name: &str,
         start_offset: u32,
         loc: Option<SourceLocation>,
+        node_id: Option<u32>,
     ) -> Result<VariableBinding, CompilerError> {
-        let binding_data = self.scope_info.resolve_reference(start_offset);
+        let binding_data = if let Some(nid) = node_id {
+            self.scope_info
+                .resolve_reference_by_node_id(nid)
+                .map(|bid| &self.scope_info.bindings[bid.0 as usize])
+        } else {
+            self.scope_info.resolve_reference(start_offset)
+        };
 
         match binding_data {
             None => {
@@ -993,42 +1031,12 @@ impl<'a> HirBuilder<'a> {
                         },
                     })
                 } else if !self.is_scope_within_compiled_function(binding.scope) {
-                    // Binding is in an ancestor function scope outside the compiled
-                    // function. Treat as ModuleLocal, matching TS behavior where
-                    // captured outer-function variables become LoadGlobal(module).
                     Ok(VariableBinding::ModuleLocal {
                         name: name.to_string(),
                     })
                 } else {
-                    // Local binding: resolve via resolve_binding.
-                    // When the resolved binding's name doesn't match the identifier
-                    // being resolved, fall back to a name-based lookup. This handles
-                    // cases like component-syntax where Flow transforms create multiple
-                    // params with the same start position (e.g., both _$$empty_props_placeholder$$
-                    // and ref have start=106 after the Flow component transform).
-                    let resolved_binding = if binding.name != name {
-                        // First try: walk UP the scope chain from the binding's scope
-                        if let Some(b) = self.scope_info.resolve_reference_by_name(name, start_offset) {
-                            b
-                        }
-                        // Second try: search ALL descendant scopes from the function scope.
-                        // This handles synthetic match IIFE params ($$gen$m0, $$gen$m1) that
-                        // share position 0 and may be in sibling scopes, not ancestor/descendant.
-                        else if let Some(b) = self.scope_info.find_binding_in_descendants(name, self.function_scope()) {
-                            b
-                        }
-                        // Not found anywhere: truly a global (e.g., Error from match
-                        // exhaustive check at synthetic position 0)
-                        else {
-                            return Ok(VariableBinding::Global {
-                                name: name.to_string(),
-                            });
-                        }
-                    } else {
-                        binding
-                    };
-                    let binding_id = resolved_binding.id;
-                    let binding_kind = crate::convert_binding_kind(&resolved_binding.kind);
+                    let binding_id = binding.id;
+                    let binding_kind = crate::convert_binding_kind(&binding.kind);
                     let identifier_id = self.resolve_binding_with_loc(name, binding_id, loc)?;
                     Ok(VariableBinding::Identifier {
                         identifier: identifier_id,
@@ -1045,31 +1053,27 @@ impl<'a> HirBuilder<'a> {
     /// current function's scope, but NOT in the program scope itself and NOT
     /// in the function's own scope. These are "captured" variables from an
     /// enclosing function.
-    pub fn is_context_identifier(&self, name: &str, start_offset: u32) -> bool {
-        let binding = self.scope_info.resolve_reference(start_offset);
+    pub fn is_context_identifier(
+        &self,
+        _name: &str,
+        start_offset: u32,
+        node_id: Option<u32>,
+    ) -> bool {
+        let binding = if let Some(nid) = node_id {
+            self.scope_info
+                .resolve_reference_by_node_id(nid)
+                .map(|bid| &self.scope_info.bindings[bid.0 as usize])
+        } else {
+            self.scope_info.resolve_reference(start_offset)
+        };
 
         match binding {
             None => false,
             Some(binding_data) => {
-                // If in program scope, it's a module-level binding, not context
                 if binding_data.scope == self.scope_info.program_scope {
                     return false;
                 }
-
-                // If position-based resolution returns a binding with a different name
-                // (due to synthetic AST transforms like StripComponentSyntax creating
-                // multiple identifiers at the same position), fall back to name-based
-                // resolution to find the correct binding.
-                let resolved = if binding_data.name != name {
-                    self.scope_info
-                        .resolve_reference_by_name(name, start_offset)
-                        .unwrap_or(binding_data)
-                } else {
-                    binding_data
-                };
-
-                // Check if this binding is in the pre-computed context identifiers set.
-                self.context_identifiers.contains(&resolved.id)
+                self.context_identifiers.contains(&binding_data.id)
             }
         }
     }

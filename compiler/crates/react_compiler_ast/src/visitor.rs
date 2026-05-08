@@ -167,12 +167,13 @@ impl<'a> AstWalker<'a> {
     }
 
     /// Try to push a scope for a node. Returns true if a scope was pushed.
-    fn try_push_scope(&mut self, start: Option<u32>) -> bool {
-        if let Some(start) = start {
-            if let Some(&scope_id) = self.scope_info.node_to_scope.get(&start) {
-                self.scope_stack.push(scope_id);
-                return true;
-            }
+    fn try_push_scope(&mut self, start: Option<u32>, node_id: Option<u32>) -> bool {
+        let scope = node_id
+            .and_then(|nid| self.scope_info.resolve_scope_by_node_id(nid))
+            .or_else(|| start.and_then(|s| self.scope_info.node_to_scope.get(&s).copied()));
+        if let Some(scope_id) = scope {
+            self.scope_stack.push(scope_id);
+            return true;
         }
         false
     }
@@ -180,7 +181,7 @@ impl<'a> AstWalker<'a> {
     // ---- Public walk methods ----
 
     pub fn walk_program<'ast>(&mut self, v: &mut impl Visitor<'ast>, node: &'ast Program) {
-        let pushed = self.try_push_scope(node.base.start);
+        let pushed = self.try_push_scope(node.base.start, node.base.node_id);
         for stmt in &node.body {
             self.walk_statement(v, stmt);
         }
@@ -194,7 +195,7 @@ impl<'a> AstWalker<'a> {
         v: &mut impl Visitor<'ast>,
         node: &'ast BlockStatement,
     ) {
-        let pushed = self.try_push_scope(node.base.start);
+        let pushed = self.try_push_scope(node.base.start, node.base.node_id);
         for stmt in &node.body {
             self.walk_statement(v, stmt);
         }
@@ -222,7 +223,7 @@ impl<'a> AstWalker<'a> {
                 }
             }
             Statement::ForStatement(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 if let Some(init) = &node.init {
                     match init.as_ref() {
                         ForInit::VariableDeclaration(decl) => {
@@ -259,7 +260,7 @@ impl<'a> AstWalker<'a> {
                 self.loop_expression_depth -= 1;
             }
             Statement::ForInStatement(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 self.walk_for_in_of_left(v, &node.left);
                 self.loop_expression_depth += 1;
                 v.enter_loop_expression();
@@ -272,7 +273,7 @@ impl<'a> AstWalker<'a> {
                 }
             }
             Statement::ForOfStatement(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 self.walk_for_in_of_left(v, &node.left);
                 self.loop_expression_depth += 1;
                 v.enter_loop_expression();
@@ -285,7 +286,7 @@ impl<'a> AstWalker<'a> {
                 }
             }
             Statement::SwitchStatement(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 self.walk_expression(v, &node.discriminant);
                 for case in &node.cases {
                     if let Some(test) = &case.test {
@@ -305,7 +306,7 @@ impl<'a> AstWalker<'a> {
             Statement::TryStatement(node) => {
                 self.walk_block_statement(v, &node.block);
                 if let Some(handler) = &node.handler {
-                    let pushed = self.try_push_scope(handler.base.start);
+                    let pushed = self.try_push_scope(handler.base.start, handler.base.node_id);
                     if let Some(param) = &handler.param {
                         self.walk_pattern(v, param);
                     }
@@ -435,7 +436,7 @@ impl<'a> AstWalker<'a> {
                 }
             }
             Expression::ArrowFunctionExpression(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 v.enter_arrow_function_expression(node, &self.scope_stack);
                 if v.traverse_function_bodies() {
                     for param in &node.params {
@@ -456,7 +457,7 @@ impl<'a> AstWalker<'a> {
                 }
             }
             Expression::FunctionExpression(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 v.enter_function_expression(node, &self.scope_stack);
                 if v.traverse_function_bodies() {
                     for param in &node.params {
@@ -620,7 +621,7 @@ impl<'a> AstWalker<'a> {
         v: &mut impl Visitor<'ast>,
         node: &'ast FunctionDeclaration,
     ) {
-        let pushed = self.try_push_scope(node.base.start);
+        let pushed = self.try_push_scope(node.base.start, node.base.node_id);
         v.enter_function_declaration(node, &self.scope_stack);
         if v.traverse_function_bodies() {
             for param in &node.params {
@@ -647,7 +648,7 @@ impl<'a> AstWalker<'a> {
                 self.walk_expression(v, &p.value);
             }
             ObjectExpressionProperty::ObjectMethod(node) => {
-                let pushed = self.try_push_scope(node.base.start);
+                let pushed = self.try_push_scope(node.base.start, node.base.node_id);
                 v.enter_object_method(node, &self.scope_stack);
                 if v.traverse_function_bodies() {
                     if node.computed {
@@ -1162,18 +1163,18 @@ pub fn walk_expression_mut(v: &mut impl MutVisitor, expr: &mut Expression) -> Vi
             }
         }
         Expression::ArrowFunctionExpression(node) => match node.body.as_mut() {
-                ArrowFunctionBody::BlockStatement(block) => {
-                    for s in block.body.iter_mut() {
-                        if walk_statement_mut(v, s).is_stop() {
-                            return VisitResult::Stop;
-                        }
-                    }
-                }
-                ArrowFunctionBody::Expression(e) => {
-                    if walk_expression_mut(v, e).is_stop() {
+            ArrowFunctionBody::BlockStatement(block) => {
+                for s in block.body.iter_mut() {
+                    if walk_statement_mut(v, s).is_stop() {
                         return VisitResult::Stop;
                     }
                 }
+            }
+            ArrowFunctionBody::Expression(e) => {
+                if walk_expression_mut(v, e).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
         },
         Expression::FunctionExpression(node) => {
             for s in node.body.body.iter_mut() {
@@ -1346,7 +1347,9 @@ fn walk_jsx_mut(
                 if let Some(ref mut val) = a.value {
                     match val {
                         crate::jsx::JSXAttributeValue::JSXExpressionContainer(c) => {
-                            if let crate::jsx::JSXExpressionContainerExpr::Expression(ref mut e) = c.expression {
+                            if let crate::jsx::JSXExpressionContainerExpr::Expression(ref mut e) =
+                                c.expression
+                            {
                                 if walk_expression_mut(v, e).is_stop() {
                                     return VisitResult::Stop;
                                 }
@@ -1383,7 +1386,8 @@ fn walk_jsx_children_mut(
                 }
             }
             crate::jsx::JSXChild::JSXExpressionContainer(c) => {
-                if let crate::jsx::JSXExpressionContainerExpr::Expression(ref mut e) = c.expression {
+                if let crate::jsx::JSXExpressionContainerExpr::Expression(ref mut e) = c.expression
+                {
                     if walk_expression_mut(v, e).is_stop() {
                         return VisitResult::Stop;
                     }

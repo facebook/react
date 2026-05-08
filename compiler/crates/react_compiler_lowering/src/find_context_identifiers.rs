@@ -4,13 +4,15 @@
 //! walking the AST with scope tracking to find variables that cross
 //! function boundaries.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::*;
 use react_compiler_ast::scope::*;
 use react_compiler_ast::statements::FunctionDeclaration;
-use react_compiler_ast::visitor::{AstWalker, Visitor};
+use react_compiler_ast::visitor::AstWalker;
+use react_compiler_ast::visitor::Visitor;
 
 use crate::FunctionNode;
 
@@ -30,31 +32,39 @@ struct ContextIdentifierVisitor<'a> {
 }
 
 impl<'a> ContextIdentifierVisitor<'a> {
-    fn push_function_scope(&mut self, start: Option<u32>) {
-        if let Some(start) = start {
-            if let Some(&scope) = self.scope_info.node_to_scope.get(&start) {
-                self.function_stack.push(scope);
-            }
+    fn push_function_scope(&mut self, start: Option<u32>, node_id: Option<u32>) {
+        let scope = node_id
+            .and_then(|nid| self.scope_info.resolve_scope_by_node_id(nid))
+            .or_else(|| start.and_then(|s| self.scope_info.node_to_scope.get(&s).copied()));
+        if let Some(scope) = scope {
+            self.function_stack.push(scope);
         }
     }
 
-    fn pop_function_scope(&mut self, start: Option<u32>) {
-        if start
-            .and_then(|s| self.scope_info.node_to_scope.get(&s))
-            .is_some()
-        {
+    fn pop_function_scope(&mut self, start: Option<u32>, node_id: Option<u32>) {
+        let has_scope = node_id
+            .and_then(|nid| self.scope_info.resolve_scope_by_node_id(nid))
+            .or_else(|| start.and_then(|s| self.scope_info.node_to_scope.get(&s).copied()));
+        if has_scope.is_some() {
             self.function_stack.pop();
         }
     }
 
-    fn check_captured_reference(&mut self, start: Option<u32>) {
-        let start = match start {
-            Some(s) => s,
-            None => return,
-        };
-        let binding_id = match self.scope_info.reference_to_binding.get(&start) {
-            Some(&id) => id,
-            None => return,
+    fn check_captured_reference(&mut self, start: Option<u32>, node_id: Option<u32>) {
+        let binding_id = if let Some(nid) = node_id {
+            match self.scope_info.resolve_reference_by_node_id(nid) {
+                Some(id) => id,
+                None => return,
+            }
+        } else {
+            let start = match start {
+                Some(s) => s,
+                None => return,
+            };
+            match self.scope_info.reference_to_binding.get(&start) {
+                Some(&id) => id,
+                None => return,
+            }
         };
         let &fn_scope = match self.function_stack.last() {
             Some(s) => s,
@@ -83,40 +93,40 @@ impl<'a> ContextIdentifierVisitor<'a> {
 
 impl<'ast> Visitor<'ast> for ContextIdentifierVisitor<'_> {
     fn enter_function_declaration(&mut self, node: &'ast FunctionDeclaration, _: &[ScopeId]) {
-        self.push_function_scope(node.base.start);
+        self.push_function_scope(node.base.start, node.base.node_id);
     }
     fn leave_function_declaration(&mut self, node: &'ast FunctionDeclaration, _: &[ScopeId]) {
-        self.pop_function_scope(node.base.start);
+        self.pop_function_scope(node.base.start, node.base.node_id);
     }
     fn enter_function_expression(&mut self, node: &'ast FunctionExpression, _: &[ScopeId]) {
-        self.push_function_scope(node.base.start);
+        self.push_function_scope(node.base.start, node.base.node_id);
     }
     fn leave_function_expression(&mut self, node: &'ast FunctionExpression, _: &[ScopeId]) {
-        self.pop_function_scope(node.base.start);
+        self.pop_function_scope(node.base.start, node.base.node_id);
     }
     fn enter_arrow_function_expression(
         &mut self,
         node: &'ast ArrowFunctionExpression,
         _: &[ScopeId],
     ) {
-        self.push_function_scope(node.base.start);
+        self.push_function_scope(node.base.start, node.base.node_id);
     }
     fn leave_arrow_function_expression(
         &mut self,
         node: &'ast ArrowFunctionExpression,
         _: &[ScopeId],
     ) {
-        self.pop_function_scope(node.base.start);
+        self.pop_function_scope(node.base.start, node.base.node_id);
     }
     fn enter_object_method(&mut self, node: &'ast ObjectMethod, _: &[ScopeId]) {
-        self.push_function_scope(node.base.start);
+        self.push_function_scope(node.base.start, node.base.node_id);
     }
     fn leave_object_method(&mut self, node: &'ast ObjectMethod, _: &[ScopeId]) {
-        self.pop_function_scope(node.base.start);
+        self.pop_function_scope(node.base.start, node.base.node_id);
     }
 
     fn enter_identifier(&mut self, node: &'ast Identifier, _scope_stack: &[ScopeId]) {
-        self.check_captured_reference(node.base.start);
+        self.check_captured_reference(node.base.start, node.base.node_id);
     }
 
     fn enter_jsx_identifier(
@@ -124,7 +134,7 @@ impl<'ast> Visitor<'ast> for ContextIdentifierVisitor<'_> {
         node: &'ast react_compiler_ast::jsx::JSXIdentifier,
         _scope_stack: &[ScopeId],
     ) {
-        self.check_captured_reference(node.base.start);
+        self.check_captured_reference(node.base.start, node.base.node_id);
     }
 
     fn enter_assignment_expression(
@@ -216,6 +226,37 @@ fn is_captured_by_function(
     false
 }
 
+/// Build a set of `(BindingId, position)` pairs that are declaration sites
+/// in `reference_to_binding`, not true references. Uses node-ID comparison
+/// when available (from `ref_node_id_to_binding` + `declaration_node_id`),
+/// falling back to position comparison otherwise.
+fn build_declaration_positions(scope_info: &ScopeInfo) -> HashSet<(BindingId, u32)> {
+    let mut result = HashSet::new();
+
+    if !scope_info.ref_node_id_to_binding.is_empty() {
+        // Node-ID path: match entries in ref_node_id_to_binding against
+        // each binding's declaration_node_id. Then record the corresponding
+        // position from declaration_start for use in the position-keyed loop.
+        for (&ref_node_id, &binding_id) in &scope_info.ref_node_id_to_binding {
+            let binding = &scope_info.bindings[binding_id.0 as usize];
+            if binding.declaration_node_id == Some(ref_node_id) {
+                if let Some(decl_start) = binding.declaration_start {
+                    result.insert((binding_id, decl_start));
+                }
+            }
+        }
+    } else {
+        // Position fallback: no node-IDs available (OXC/SWC path)
+        for binding in &scope_info.bindings {
+            if let Some(decl_start) = binding.declaration_start {
+                result.insert((binding.id, decl_start));
+            }
+        }
+    }
+
+    result
+}
+
 /// Find context identifiers for a function: variables that are captured across
 /// function boundaries and need StoreContext/LoadContext semantics.
 ///
@@ -282,22 +323,38 @@ pub fn find_context_identifiers(
     // After scope extraction includes type annotation references,
     // we check if any reassigned binding has references in nested function scopes
     // via referenceToBinding — matching the TS behavior.
+    //
+    // We must skip declaration sites (e.g., the `x` in `function x() {}`),
+    // which are included in reference_to_binding but are not true references.
+    // Prefer node-ID comparison (immune to position-0 collisions from synthetic
+    // nodes), falling back to position when node-IDs are unavailable.
+    let declaration_ref_positions = build_declaration_positions(scope_info);
     for (&ref_pos, &binding_id) in &scope_info.reference_to_binding {
         let info = match visitor.binding_info.get(&binding_id) {
             Some(info) if info.reassigned && !info.referenced_by_inner_fn => info,
             _ => continue,
         };
         let _ = info;
+        if declaration_ref_positions.contains(&(binding_id, ref_pos)) {
+            continue;
+        }
         let binding = &scope_info.bindings[binding_id.0 as usize];
         // Check if ref_pos is inside a nested function scope
         for (&scope_start, &scope_id) in &scope_info.node_to_scope {
             if scope_start <= ref_pos {
                 if let Some(&scope_end) = scope_info.node_to_scope_end.get(&scope_start) {
                     if ref_pos < scope_end
-                        && matches!(scope_info.scopes[scope_id.0 as usize].kind, ScopeKind::Function)
+                        && matches!(
+                            scope_info.scopes[scope_id.0 as usize].kind,
+                            ScopeKind::Function
+                        )
                         && is_captured_by_function(scope_info, binding.scope, scope_id)
                     {
-                        visitor.binding_info.get_mut(&binding_id).unwrap().referenced_by_inner_fn = true;
+                        visitor
+                            .binding_info
+                            .get_mut(&binding_id)
+                            .unwrap()
+                            .referenced_by_inner_fn = true;
                         break;
                     }
                 }

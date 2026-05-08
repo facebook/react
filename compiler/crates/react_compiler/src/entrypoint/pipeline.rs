@@ -1263,6 +1263,7 @@ fn build_outlined_scope_info(
                 scope: ScopeId(1),
                 declaration_type: "VariableDeclarator".to_string(),
                 declaration_start: Some(p),
+                declaration_node_id: None,
                 import: None,
             });
             ref_to_binding.insert(p, binding_id);
@@ -1313,6 +1314,8 @@ fn build_outlined_scope_info(
         node_to_scope,
         node_to_scope_end: HashMap::new(),
         reference_to_binding: ref_to_binding,
+        ref_node_id_to_binding: indexmap::IndexMap::new(),
+        node_id_to_scope: std::collections::HashMap::new(),
         program_scope: ScopeId(0),
     }
 }
@@ -1345,6 +1348,7 @@ fn outlined_assign_pattern_positions(
                     scope: ScopeId(1),
                     declaration_type: "VariableDeclarator".to_string(),
                     declaration_start: Some(p),
+                    declaration_node_id: None,
                     import: None,
                 });
                 ref_to_binding.insert(p, binding_id);
