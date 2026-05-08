@@ -213,7 +213,7 @@ function applyRenames(
     renamesByPos.set(rename.declarationStart, rename);
   }
 
-  // Traverse all scopes to find bindings that match
+  // Traverse all scopes to find bindings that match by position
   prog.traverse({
     Scope(path: BabelCore.NodePath) {
       const scope = path.scope;
@@ -231,6 +231,8 @@ function applyRenames(
       }
     },
   } as BabelCore.Visitor);
+
+
 }
 
 function deduplicateComments(node: any): void {

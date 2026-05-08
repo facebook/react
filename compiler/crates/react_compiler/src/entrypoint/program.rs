@@ -3345,6 +3345,23 @@ fn insert_after_fn_in_expr(expr: &mut react_compiler_ast::expressions::Expressio
         Expression::AssignmentExpression(a) => {
             insert_after_fn_in_expr(&mut a.right, start, new_stmt)
         }
+        Expression::TypeCastExpression(tc) => {
+            insert_after_fn_in_expr(&mut tc.expression, start, new_stmt)
+        }
+        Expression::ParenthesizedExpression(p) => {
+            insert_after_fn_in_expr(&mut p.expression, start, new_stmt)
+        }
+        Expression::TSAsExpression(ts) => {
+            insert_after_fn_in_expr(&mut ts.expression, start, new_stmt)
+        }
+        Expression::SequenceExpression(s) => {
+            for expr in &mut s.expressions {
+                if insert_after_fn_in_expr(expr, start, new_stmt) {
+                    return true;
+                }
+            }
+            false
+        }
         _ => false,
     }
 }

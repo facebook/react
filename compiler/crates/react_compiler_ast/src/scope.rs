@@ -224,6 +224,30 @@ impl ScopeInfo {
             .map(|id| &self.bindings[id.0 as usize])
     }
 
+    /// Get bindings from a scope AND its direct child block scopes.
+    /// In Babel, a function body's BlockStatement shares the function's scope,
+    /// so all bindings (var, const, let) appear in one scope. But our scope
+    /// extraction may split them: function scope has params/var, a child block
+    /// scope has const/let. This method merges them to match TS behavior.
+    pub fn scope_bindings_with_children(&self, scope_id: ScopeId) -> impl Iterator<Item = &BindingData> {
+        let mut binding_ids: Vec<BindingId> = Vec::new();
+        // Add bindings from the scope itself
+        for &id in self.scopes[scope_id.0 as usize].bindings.values() {
+            binding_ids.push(id);
+        }
+        // Add bindings from direct child block scopes
+        for (i, scope) in self.scopes.iter().enumerate() {
+            if scope.parent == Some(scope_id)
+                && matches!(scope.kind, ScopeKind::Block)
+            {
+                for &id in scope.bindings.values() {
+                    binding_ids.push(id);
+                }
+            }
+        }
+        binding_ids.into_iter().map(|id| &self.bindings[id.0 as usize])
+    }
+
     /// Find a block scope by matching variable names declared within it.
     /// Used for synthetic blocks (position 0) where position-based lookup fails.
     /// The `is_claimed` predicate allows skipping scopes already matched to other blocks.

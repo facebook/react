@@ -1244,8 +1244,16 @@ fn validate_no_ref_access_in_render_impl(
         }
     }
 
-    // Note: the TS asserts convergence here, but the Rust fixpoint loop
-    // may not converge within MAX_ITERATIONS for some inputs yet.
+    if ref_env.has_changed() {
+        errors.push(
+            CompilerDiagnostic::new(
+                react_compiler_diagnostics::ErrorCategory::Invariant,
+                "Ref type environment did not converge",
+                None,
+            )
+        );
+        return RefAccessType::None;
+    }
 
     join_ref_access_types_many(&return_values)
 }

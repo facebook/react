@@ -2271,28 +2271,32 @@ fn codegen_base_instruction_value(
             ..
         } => {
             let expr = codegen_place_to_expression(cx, value)?;
-            // Wrap in the appropriate type cast expression if we have the
-            // original type annotation AST node
             let wrapped = match (type_annotation_kind.as_deref(), type_annotation) {
                 (Some("satisfies"), Some(ta)) => {
+                    let mut ta = ta.clone();
+                    apply_renames_to_json(&mut ta, &cx.env.renames);
                     Expression::TSSatisfiesExpression(ast_expr::TSSatisfiesExpression {
                         base: BaseNode::typed("TSSatisfiesExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta.clone(),
+                        type_annotation: ta,
                     })
                 }
                 (Some("as"), Some(ta)) => {
+                    let mut ta = ta.clone();
+                    apply_renames_to_json(&mut ta, &cx.env.renames);
                     Expression::TSAsExpression(ast_expr::TSAsExpression {
                         base: BaseNode::typed("TSAsExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta.clone(),
+                        type_annotation: ta,
                     })
                 }
                 (Some("cast"), Some(ta)) => {
+                    let mut ta = ta.clone();
+                    apply_renames_to_json(&mut ta, &cx.env.renames);
                     Expression::TypeCastExpression(ast_expr::TypeCastExpression {
                         base: BaseNode::typed("TypeCastExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta.clone(),
+                        type_annotation: ta,
                     })
                 }
                 _ => expr,
@@ -3891,4 +3895,61 @@ fn create_function_body_hook_guard(
             directives: Vec::new(),
         }),
     })
+}
+
+fn apply_renames_to_json(
+    value: &mut serde_json::Value,
+    renames: &[react_compiler_hir::environment::BindingRename],
+) {
+    apply_renames_to_json_inner(value, renames, false);
+}
+
+fn apply_renames_to_json_inner(
+    value: &mut serde_json::Value,
+    renames: &[react_compiler_hir::environment::BindingRename],
+    is_property_key: bool,
+) {
+    if renames.is_empty() {
+        return;
+    }
+    match value {
+        serde_json::Value::Object(map) => {
+            let node_type = map
+                .get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            // Rename Identifier nodes that are NOT object property keys.
+            // Property keys in object type annotations (e.g., `id: string`)
+            // use the original property name, not a variable binding name.
+            if (node_type == "Identifier" || node_type == "GenericTypeAnnotation")
+                && !is_property_key
+            {
+                let maybe_rename = map
+                    .get("name")
+                    .and_then(|v| v.as_str())
+                    .and_then(|name| {
+                        renames.iter().find(|r| r.original == name).map(|r| r.renamed.clone())
+                    });
+                if let Some(renamed) = maybe_rename {
+                    map.insert("name".to_string(), serde_json::Value::String(renamed));
+                }
+                if let Some(id) = map.get_mut("id") {
+                    apply_renames_to_json_inner(id, renames, false);
+                }
+            }
+            let is_obj_type_prop = node_type == "ObjectTypeProperty"
+                || node_type == "ObjectTypeIndexer";
+            for (key, val) in map.iter_mut() {
+                let child_is_key = is_obj_type_prop && key == "key";
+                apply_renames_to_json_inner(val, renames, child_is_key);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for item in arr {
+                apply_renames_to_json_inner(item, renames, false);
+            }
+        }
+        _ => {}
+    }
 }

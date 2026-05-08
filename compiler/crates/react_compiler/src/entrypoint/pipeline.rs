@@ -59,9 +59,9 @@ pub fn compile_fn(
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
     context.timing.stop();
 
-    // Collect any renames from lowering and pass to context
+    // Copy renames from lowering to context (keep on env for codegen to apply to type annotations)
     if !env.renames.is_empty() {
-        context.renames.extend(env.renames.drain(..));
+        context.renames.extend(env.renames.iter().cloned());
     }
 
     // Check for Invariant errors after lowering, before logging HIR.

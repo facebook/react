@@ -318,7 +318,11 @@ impl<'a, 'b> Driver<'a, 'b> {
         Ok(block_value)
     }
 
-    fn visit_block(&mut self, block_id: BlockId, block_value: &mut ReactiveBlock) -> Result<(), CompilerDiagnostic> {
+    fn visit_block(&mut self, mut block_id: BlockId, block_value: &mut ReactiveBlock) -> Result<(), CompilerDiagnostic> {
+        // Use a loop to avoid deep recursion for fallthrough chains.
+        // Each terminal that would tail-call visit_block(fallthrough, block_value)
+        // instead sets next_block and continues the loop.
+        loop {
         // Extract data from block before any mutable operations
         let block = &self.hir.body.blocks[&block_id];
         let block_id_val = block.id;
@@ -347,6 +351,7 @@ impl<'a, 'b> Driver<'a, 'b> {
 
         // Process terminal
         let mut schedule_ids: Vec<u32> = Vec::new();
+        let mut next_block: Option<BlockId> = None;
 
         match &terminal {
             Terminal::If {
@@ -415,9 +420,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::Switch {
@@ -483,9 +486,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::DoWhile {
@@ -539,9 +540,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::While {
@@ -599,9 +598,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::For {
@@ -671,9 +668,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::ForOf {
@@ -736,9 +731,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::ForIn {
@@ -795,9 +788,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::Label {
@@ -840,9 +831,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::Sequence { .. }
@@ -875,9 +864,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     loc: *terminal_loc(&terminal),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::Goto {
@@ -906,7 +893,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                 continuation, ..
             } => {
                 if !self.cx.is_scheduled(*continuation) {
-                    self.visit_block(*continuation, block_value)?;
+                    next_block = Some(*continuation);
                 }
             }
 
@@ -948,9 +935,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     }),
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::Scope {
@@ -984,9 +969,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     instructions: scope_body,
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::PrunedScope {
@@ -1020,9 +1003,7 @@ impl<'a, 'b> Driver<'a, 'b> {
                     instructions: scope_body,
                 }));
 
-                if let Some(ft) = fallthrough_id {
-                    self.visit_block(ft, block_value)?;
-                }
+                next_block = fallthrough_id;
             }
 
             Terminal::Return { value, id, loc, .. } => {
@@ -1098,7 +1079,11 @@ impl<'a, 'b> Driver<'a, 'b> {
                 }));
             }
         }
-        Ok(())
+        match next_block {
+            Some(nb) => block_id = nb,
+            None => return Ok(()),
+        }
+        } // end loop
     }
 
     // =========================================================================

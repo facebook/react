@@ -2441,14 +2441,15 @@ fn lower_block_statement_inner(
         }
     };
 
-    // Collect hoistable bindings from this scope (non-param bindings).
-    // Exclude bindings whose declaration_type is "FunctionExpression" since named function
-    // expression names are local to the expression and should never be hoisted.
-    // Matches TS behavior: only param bindings are excluded (plus FunctionExpression names
-    // which are scoped to the expression).
+    // Collect hoistable bindings from this scope AND direct child block scopes.
+    // In Babel, a function body BlockStatement shares the function's scope, so
+    // all bindings (var, const, let) are in one scope. But our scope extraction
+    // may split them: function scope has params/var, child block scope has const/let.
+    // Including child block scope bindings matches TS behavior where
+    // stmt.scope.bindings includes all bindings accessible in the block.
     let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder
         .scope_info()
-        .scope_bindings(scope_id)
+        .scope_bindings_with_children(scope_id)
         .filter(|b| {
             !matches!(b.kind, AstBindingKind::Param | AstBindingKind::Module)
             && b.declaration_type != "FunctionExpression"
@@ -6478,20 +6479,7 @@ fn collect_fbt_sub_tags(
     for child in children {
         match child {
             JSXChild::JSXElement(el) => {
-                // Check if the opening element name is a namespaced name matching the fbt tag
-                if let JSXElementName::JSXNamespacedName(ns) = &el.opening_element.name {
-                    if ns.namespace.name == tag_name {
-                        let loc = convert_opt_loc(&ns.base.loc);
-                        match ns.name.name.as_str() {
-                            "enum" => enum_locs.push(loc),
-                            "plural" => plural_locs.push(loc),
-                            "pronoun" => pronoun_locs.push(loc),
-                            _ => {}
-                        }
-                    }
-                }
-                // Also recurse into children
-                collect_fbt_sub_tags(&el.children, tag_name, enum_locs, plural_locs, pronoun_locs);
+                collect_fbt_sub_tags_from_element(el, tag_name, enum_locs, plural_locs, pronoun_locs);
             }
             JSXChild::JSXFragment(frag) => {
                 collect_fbt_sub_tags(
@@ -6502,7 +6490,111 @@ fn collect_fbt_sub_tags(
                     pronoun_locs,
                 );
             }
+            JSXChild::JSXExpressionContainer(container) => {
+                if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(expr) = &container.expression {
+                    collect_fbt_sub_tags_from_expr(expr, tag_name, enum_locs, plural_locs, pronoun_locs);
+                }
+            }
             _ => {}
+        }
+    }
+}
+
+fn collect_fbt_sub_tags_from_element(
+    el: &react_compiler_ast::jsx::JSXElement,
+    tag_name: &str,
+    enum_locs: &mut Vec<Option<SourceLocation>>,
+    plural_locs: &mut Vec<Option<SourceLocation>>,
+    pronoun_locs: &mut Vec<Option<SourceLocation>>,
+) {
+    use react_compiler_ast::jsx::JSXElementName;
+    if let JSXElementName::JSXNamespacedName(ns) = &el.opening_element.name {
+        if ns.namespace.name == tag_name {
+            let loc = convert_opt_loc(&ns.base.loc);
+            match ns.name.name.as_str() {
+                "enum" => enum_locs.push(loc),
+                "plural" => plural_locs.push(loc),
+                "pronoun" => pronoun_locs.push(loc),
+                _ => {}
+            }
+        }
+    }
+    collect_fbt_sub_tags(&el.children, tag_name, enum_locs, plural_locs, pronoun_locs);
+    // Also traverse JSX attributes (matching TS expr.traverse which visits all nodes)
+    for attr in &el.opening_element.attributes {
+        if let react_compiler_ast::jsx::JSXAttributeItem::JSXAttribute(a) = attr {
+            if let Some(val) = &a.value {
+                if let react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(container) = val {
+                    if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(expr) = &container.expression {
+                        collect_fbt_sub_tags_from_expr(expr, tag_name, enum_locs, plural_locs, pronoun_locs);
+                    }
+                } else if let react_compiler_ast::jsx::JSXAttributeValue::JSXElement(nested) = val {
+                    collect_fbt_sub_tags_from_element(nested, tag_name, enum_locs, plural_locs, pronoun_locs);
+                }
+            }
+        }
+    }
+}
+
+fn collect_fbt_sub_tags_from_expr(
+    expr: &react_compiler_ast::expressions::Expression,
+    tag_name: &str,
+    enum_locs: &mut Vec<Option<SourceLocation>>,
+    plural_locs: &mut Vec<Option<SourceLocation>>,
+    pronoun_locs: &mut Vec<Option<SourceLocation>>,
+) {
+    use react_compiler_ast::expressions::Expression;
+    match expr {
+        Expression::JSXElement(el) => {
+            collect_fbt_sub_tags_from_element(el, tag_name, enum_locs, plural_locs, pronoun_locs);
+        }
+        Expression::JSXFragment(frag) => {
+            collect_fbt_sub_tags(&frag.children, tag_name, enum_locs, plural_locs, pronoun_locs);
+        }
+        Expression::ConditionalExpression(cond) => {
+            collect_fbt_sub_tags_from_expr(&cond.consequent, tag_name, enum_locs, plural_locs, pronoun_locs);
+            collect_fbt_sub_tags_from_expr(&cond.alternate, tag_name, enum_locs, plural_locs, pronoun_locs);
+        }
+        Expression::LogicalExpression(log) => {
+            collect_fbt_sub_tags_from_expr(&log.left, tag_name, enum_locs, plural_locs, pronoun_locs);
+            collect_fbt_sub_tags_from_expr(&log.right, tag_name, enum_locs, plural_locs, pronoun_locs);
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            collect_fbt_sub_tags_from_expr(&paren.expression, tag_name, enum_locs, plural_locs, pronoun_locs);
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            match arrow.body.as_ref() {
+                react_compiler_ast::expressions::ArrowFunctionBody::Expression(body_expr) => {
+                    collect_fbt_sub_tags_from_expr(body_expr, tag_name, enum_locs, plural_locs, pronoun_locs);
+                }
+                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                    collect_fbt_sub_tags_from_stmts(&block.body, tag_name, enum_locs, plural_locs, pronoun_locs);
+                }
+            }
+        }
+        Expression::CallExpression(call) => {
+            for arg in &call.arguments {
+                collect_fbt_sub_tags_from_expr(arg, tag_name, enum_locs, plural_locs, pronoun_locs);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn collect_fbt_sub_tags_from_stmts(
+    stmts: &[react_compiler_ast::statements::Statement],
+    tag_name: &str,
+    enum_locs: &mut Vec<Option<SourceLocation>>,
+    plural_locs: &mut Vec<Option<SourceLocation>>,
+    pronoun_locs: &mut Vec<Option<SourceLocation>>,
+) {
+    for stmt in stmts {
+        if let react_compiler_ast::statements::Statement::ReturnStatement(ret) = stmt {
+            if let Some(arg) = &ret.argument {
+                collect_fbt_sub_tags_from_expr(arg, tag_name, enum_locs, plural_locs, pronoun_locs);
+            }
+        } else if let react_compiler_ast::statements::Statement::ExpressionStatement(expr_stmt) = stmt {
+            collect_fbt_sub_tags_from_expr(&expr_stmt.expression, tag_name, enum_locs, plural_locs, pronoun_locs);
         }
     }
 }

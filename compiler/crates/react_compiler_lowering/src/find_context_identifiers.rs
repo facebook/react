@@ -266,6 +266,35 @@ pub fn find_context_identifiers(
         }
     }
 
+    // Supplement the walker-based analysis with referenceToBinding data.
+    // The AST walker doesn't visit identifiers inside type annotations,
+    // but Babel's traverse (used by TS findContextIdentifiers) does.
+    // After scope extraction includes type annotation references,
+    // we check if any reassigned binding has references in nested function scopes
+    // via referenceToBinding — matching the TS behavior.
+    for (&ref_pos, &binding_id) in &scope_info.reference_to_binding {
+        let info = match visitor.binding_info.get(&binding_id) {
+            Some(info) if info.reassigned && !info.referenced_by_inner_fn => info,
+            _ => continue,
+        };
+        let _ = info;
+        let binding = &scope_info.bindings[binding_id.0 as usize];
+        // Check if ref_pos is inside a nested function scope
+        for (&scope_start, &scope_id) in &scope_info.node_to_scope {
+            if scope_start <= ref_pos {
+                if let Some(&scope_end) = scope_info.node_to_scope_end.get(&scope_start) {
+                    if ref_pos < scope_end
+                        && matches!(scope_info.scopes[scope_id.0 as usize].kind, ScopeKind::Function)
+                        && is_captured_by_function(scope_info, binding.scope, scope_id)
+                    {
+                        visitor.binding_info.get_mut(&binding_id).unwrap().referenced_by_inner_fn = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     // Collect results
     visitor
         .binding_info
