@@ -326,12 +326,29 @@ fn merge_macro_arguments(
 }
 
 /// Expand the scope range on the environment, reading from identifier's mutable_range.
+/// Also syncs mutable_range for all identifiers in this scope whose range matched
+/// the old scope range. In TS, identifier.mutableRange shares the same object as
+/// scope.range, so mutations are automatically visible; in Rust we must propagate.
 /// Equivalent to TS `expandFbtScopeRange`.
 fn expand_fbt_scope_range(env: &mut Environment, scope_id: ScopeId, operand_id: IdentifierId) {
     let extend_start = env.identifiers[operand_id.0 as usize].mutable_range.start;
-    if extend_start.0 != 0 {
-        let scope = &mut env.scopes[scope_id.0 as usize];
-        scope.range.start.0 = scope.range.start.0.min(extend_start.0);
+    if extend_start.0 == 0 {
+        return;
+    }
+    let old_range = env.scopes[scope_id.0 as usize].range.clone();
+    let new_start = old_range.start.0.min(extend_start.0);
+    if new_start == old_range.start.0 {
+        return;
+    }
+    env.scopes[scope_id.0 as usize].range.start.0 = new_start;
+    let new_range = env.scopes[scope_id.0 as usize].range.clone();
+    for ident in &mut env.identifiers {
+        if ident.scope == Some(scope_id)
+            && ident.mutable_range.start == old_range.start
+            && ident.mutable_range.end == old_range.end
+        {
+            ident.mutable_range = new_range.clone();
+        }
     }
 }
 
@@ -348,12 +365,12 @@ fn visit_operands(
 ) {
     macro_values.insert(lvalue_id);
 
-    // Collect operand IDs first to avoid borrow issues with env
     let operand_ids: Vec<IdentifierId> =
         visitors::each_instruction_value_operand_with_functions(value, &env.functions)
             .into_iter()
             .map(|p| p.identifier)
             .collect();
+
     for operand_id in operand_ids {
         if matches!(macro_def.level, InlineLevel::Transitive) {
             env.identifiers[operand_id.0 as usize].scope = Some(scope_id);
