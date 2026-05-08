@@ -1469,14 +1469,16 @@ fn codegen_store_or_declare(
         }
         InstructionValue::StoreContext { lvalue, value: val, .. } => {
             let rhs = codegen_place_to_expression(cx, val)?;
-            emit_store(cx, instr, lvalue.kind, &LvalueRef::Place(&lvalue.place), Some(rhs))
+            let kind = convert_hoisted_kind(lvalue.kind);
+            emit_store(cx, instr, kind, &LvalueRef::Place(&lvalue.place), Some(rhs))
         }
         InstructionValue::DeclareLocal { lvalue, .. }
         | InstructionValue::DeclareContext { lvalue, .. } => {
             if cx.has_declared(lvalue.place.identifier) {
                 return Ok(None);
             }
-            emit_store(cx, instr, lvalue.kind, &LvalueRef::Place(&lvalue.place), None)
+            let kind = convert_hoisted_kind(lvalue.kind);
+            emit_store(cx, instr, kind, &LvalueRef::Place(&lvalue.place), None)
         }
         InstructionValue::Destructure { lvalue, value: val, .. } => {
             let kind = lvalue.kind;
@@ -1491,6 +1493,15 @@ fn codegen_store_or_declare(
             emit_store(cx, instr, kind, &LvalueRef::Pattern(&lvalue.pattern), Some(rhs))
         }
         _ => unreachable!(),
+    }
+}
+
+fn convert_hoisted_kind(kind: InstructionKind) -> InstructionKind {
+    match kind {
+        InstructionKind::HoistedConst => InstructionKind::Const,
+        InstructionKind::HoistedLet => InstructionKind::Let,
+        InstructionKind::HoistedFunction => InstructionKind::Function,
+        other => other,
     }
 }
 
