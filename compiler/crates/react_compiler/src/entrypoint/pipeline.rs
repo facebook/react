@@ -55,6 +55,8 @@ pub fn compile_fn(
     env.hook_guard_name = context.hook_guard_name.clone();
     env.seed_uid_known_names(&context.known_referenced_names());
 
+    env.reference_positions = scope_info.reference_to_binding.keys().copied().collect();
+
     context.timing.start("lower");
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
     context.timing.stop();

@@ -1278,8 +1278,16 @@ pub fn walk_expression_mut(v: &mut impl MutVisitor, expr: &mut Expression) -> Vi
                 }
             }
         }
-        // JSX — not walked for current use cases
-        Expression::JSXElement(_) | Expression::JSXFragment(_) => {}
+        Expression::JSXElement(node) => {
+            if walk_jsx_mut(v, &mut node.opening_element.attributes, &mut node.children).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
+        Expression::JSXFragment(node) => {
+            if walk_jsx_children_mut(v, &mut node.children).is_stop() {
+                return VisitResult::Stop;
+            }
+        }
         // TS/Flow wrappers — traverse inner expression
         Expression::TSAsExpression(node) => {
             if walk_expression_mut(v, &mut node.expression).is_stop() {
@@ -1323,6 +1331,71 @@ pub fn walk_expression_mut(v: &mut impl MutVisitor, expr: &mut Expression) -> Vi
         | Expression::Super(_)
         | Expression::Import(_)
         | Expression::ThisExpression(_) => {}
+    }
+    VisitResult::Continue
+}
+
+fn walk_jsx_mut(
+    v: &mut impl MutVisitor,
+    attrs: &mut [crate::jsx::JSXAttributeItem],
+    children: &mut [crate::jsx::JSXChild],
+) -> VisitResult {
+    for attr in attrs.iter_mut() {
+        match attr {
+            crate::jsx::JSXAttributeItem::JSXAttribute(a) => {
+                if let Some(ref mut val) = a.value {
+                    match val {
+                        crate::jsx::JSXAttributeValue::JSXExpressionContainer(c) => {
+                            if let crate::jsx::JSXExpressionContainerExpr::Expression(ref mut e) = c.expression {
+                                if walk_expression_mut(v, e).is_stop() {
+                                    return VisitResult::Stop;
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            crate::jsx::JSXAttributeItem::JSXSpreadAttribute(s) => {
+                if walk_expression_mut(v, &mut s.argument).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+        }
+    }
+    walk_jsx_children_mut(v, children)
+}
+
+fn walk_jsx_children_mut(
+    v: &mut impl MutVisitor,
+    children: &mut [crate::jsx::JSXChild],
+) -> VisitResult {
+    for child in children.iter_mut() {
+        match child {
+            crate::jsx::JSXChild::JSXElement(el) => {
+                if walk_jsx_mut(v, &mut el.opening_element.attributes, &mut el.children).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+            crate::jsx::JSXChild::JSXFragment(f) => {
+                if walk_jsx_children_mut(v, &mut f.children).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+            crate::jsx::JSXChild::JSXExpressionContainer(c) => {
+                if let crate::jsx::JSXExpressionContainerExpr::Expression(ref mut e) = c.expression {
+                    if walk_expression_mut(v, e).is_stop() {
+                        return VisitResult::Stop;
+                    }
+                }
+            }
+            crate::jsx::JSXChild::JSXSpreadChild(s) => {
+                if walk_expression_mut(v, &mut s.expression).is_stop() {
+                    return VisitResult::Stop;
+                }
+            }
+            _ => {}
+        }
     }
     VisitResult::Continue
 }

@@ -33,8 +33,13 @@ fn next_ref_id() -> RefId {
 
 // --- RefAccessType / RefAccessRefType / RefFnType ---
 
-/// Corresponds to TS `RefAccessType`
-#[derive(Debug, Clone, PartialEq)]
+/// Corresponds to TS `RefAccessType`.
+///
+/// PartialEq matches the TS `tyEqual` semantics: Ref ignores ref_id,
+/// RefValue compares loc but ignores ref_id. This is critical for fixpoint
+/// convergence — join creates fresh ref_ids, and comparing them would
+/// prevent the environment from stabilizing.
+#[derive(Debug, Clone)]
 enum RefAccessType {
     None,
     Nullable,
@@ -54,9 +59,37 @@ enum RefAccessType {
     },
 }
 
+impl PartialEq for RefAccessType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (RefAccessType::None, RefAccessType::None) => true,
+            (RefAccessType::Nullable, RefAccessType::Nullable) => true,
+            (RefAccessType::Guard { ref_id: a }, RefAccessType::Guard { ref_id: b }) => a == b,
+            (RefAccessType::Ref { .. }, RefAccessType::Ref { .. }) => true,
+            (RefAccessType::RefValue { loc: a, .. }, RefAccessType::RefValue { loc: b, .. }) => {
+                a == b
+            }
+            (
+                RefAccessType::Structure {
+                    value: a_val,
+                    fn_type: a_fn,
+                },
+                RefAccessType::Structure {
+                    value: b_val,
+                    fn_type: b_fn,
+                },
+            ) => a_val == b_val && a_fn == b_fn,
+            _ => false,
+        }
+    }
+}
+
 /// Corresponds to TS `RefAccessRefType` — the subset of `RefAccessType` that can appear
 /// inside `Structure.value` and be joined via `join_ref_access_ref_types`.
-#[derive(Debug, Clone, PartialEq)]
+///
+/// PartialEq mirrors RefAccessType: Ref ignores ref_id, RefValue compares
+/// loc only.
+#[derive(Debug, Clone)]
 enum RefAccessRefType {
     Ref {
         ref_id: RefId,
@@ -69,6 +102,29 @@ enum RefAccessRefType {
         value: Option<Box<RefAccessRefType>>,
         fn_type: Option<RefFnType>,
     },
+}
+
+impl PartialEq for RefAccessRefType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (RefAccessRefType::Ref { .. }, RefAccessRefType::Ref { .. }) => true,
+            (
+                RefAccessRefType::RefValue { loc: a, .. },
+                RefAccessRefType::RefValue { loc: b, .. },
+            ) => a == b,
+            (
+                RefAccessRefType::Structure {
+                    value: a_val,
+                    fn_type: a_fn,
+                },
+                RefAccessRefType::Structure {
+                    value: b_val,
+                    fn_type: b_fn,
+                },
+            ) => a_val == b_val && a_fn == b_fn,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

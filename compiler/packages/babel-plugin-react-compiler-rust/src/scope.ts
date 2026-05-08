@@ -284,6 +284,36 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     },
   });
 
+  // Add JSX intrinsic element names to referenceToBinding when they match a
+  // local binding. The TS compiler's gatherCapturedContext explicitly traverses
+  // JSX elements and looks up bindings for their tag names, but Babel does NOT
+  // include JSX intrinsic tag names in binding.referencePaths. We replicate the
+  // TS behavior by adding these references here so the Rust compiler's context
+  // capture correctly detects them.
+  program.traverse({
+    JSXOpeningElement(path) {
+      const name = path.get('name');
+      if (!name.isJSXIdentifier()) {
+        return;
+      }
+      const tagName = name.node.name;
+      const binding = path.scope.getBinding(tagName);
+      if (binding != null) {
+        const bindingScopeUid = String(binding.scope.uid);
+        const bindingScopeId = scopeUidToId.get(bindingScopeUid);
+        if (bindingScopeId != null) {
+          const scopeData = scopes.find(s => s.id === bindingScopeId);
+          if (scopeData != null && tagName in scopeData.bindings) {
+            const start = name.node.start;
+            if (start != null) {
+              referenceToBinding[start] = scopeData.bindings[tagName];
+            }
+          }
+        }
+      }
+    },
+  });
+
   // Program scope should always be id 0
   const programScopeUid = String((program.scope as any).uid);
   const programScopeId = scopeUidToId.get(programScopeUid) ?? 0;

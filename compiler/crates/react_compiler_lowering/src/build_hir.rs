@@ -2522,8 +2522,12 @@ fn lower_block_statement_inner(
             }
 
             // Find the first reference (not declaration) to this binding in the statement's range.
-            // Exclude JSX identifier references since TS hoisting traversal only visits
-            // Identifier nodes, not JSXIdentifier nodes.
+            // Exclude JSX identifier references: while Babel's scope system links JSX
+            // tag names to local bindings (and the context capture pass includes them),
+            // the TS hoisting analysis does NOT traverse JSX elements. This mismatch
+            // is intentional — it matches the TS behavior where <colgroup> adds
+            // "colgroup" to the context but does NOT trigger hoisting, causing
+            // EnterSSA to error with "Expected identifier to be defined before use".
             //
             // The decl_start filter excludes the binding's own declaration position from
             // counting as a reference. For hoisted bindings (function declarations), this
@@ -5450,31 +5454,18 @@ fn lower_function_declaration(
     let fn_place = lower_value_to_temporary(builder, fn_value)?;
 
     // Resolve the binding for the function name and store.
-    // Note: we must resolve from the function's INNER scope, not using reference_to_binding
-    // directly. This matches TS behavior where Babel's `path.scope.getBinding()` resolves
-    // from the function declaration's inner scope. If there's an inner variable that shadows
-    // the function name (e.g., `function hasErrors() { let hasErrors = ... }`), Babel's
-    // scope resolution finds the inner binding, not the outer function binding.
+    // Use position-based resolution (resolve_identifier) which finds the binding
+    // in the parent scope containing the function declaration. This matches the TS
+    // behavior where Babel's `path.scope.getBinding()` resolves from the parent
+    // scope for function declaration id nodes. If the function body has a `const`
+    // that shadows the function name (e.g., `function zoom() { const zoom = ... }`),
+    // position-based resolution correctly finds the outer function binding, not the
+    // inner const binding.
     if let Some(ref name) = func_name {
         if let Some(id_node) = &func_decl.id {
             let start = id_node.base.start.unwrap_or(0);
             let ident_loc = convert_opt_loc(&id_node.base.loc);
-            // Look up the binding from the function's inner scope, which may shadow
-            // the outer binding with the same name
-            let inner_binding_id = builder.scope_info().get_binding(function_scope, name);
-            let binding = if let Some(inner_bid) = inner_binding_id {
-                let binding_kind = crate::convert_binding_kind(
-                    &builder.scope_info().bindings[inner_bid.0 as usize].kind,
-                );
-                let identifier_id =
-                    builder.resolve_binding_with_loc(name, inner_bid, ident_loc.clone())?;
-                VariableBinding::Identifier {
-                    identifier: identifier_id,
-                    binding_kind,
-                }
-            } else {
-                builder.resolve_identifier(name, start, ident_loc.clone())?
-            };
+            let binding = builder.resolve_identifier(name, start, ident_loc.clone())?;
             match binding {
                 VariableBinding::Identifier { identifier, .. } => {
                     // Don't override the identifier's declaration loc here.

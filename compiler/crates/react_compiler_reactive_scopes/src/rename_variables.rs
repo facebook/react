@@ -169,9 +169,7 @@ impl ReactiveFunctionVisitor for Visitor<'_> {
             match iv {
                 InstructionValue::FunctionExpression { lowered_func, .. }
                 | InstructionValue::ObjectMethod { lowered_func, .. } => {
-                    state.enter();
                     self.visit_hir_function(lowered_func.func, state);
-                    state.leave();
                 }
                 _ => {}
             }

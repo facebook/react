@@ -66,6 +66,12 @@ pub struct Environment {
     // keyed by binding declaration position, for applying back to the Babel AST.
     pub renames: Vec<BindingRename>,
 
+    // Source positions that Babel considers actual references to bindings.
+    // Used by codegen to filter type annotation renames — only rename identifiers
+    // whose position is in this set (type labels like ObjectTypeIndexer params
+    // are NOT in this set and should keep their original names).
+    pub reference_positions: HashSet<u32>,
+
     // Hoisted identifiers: tracks which bindings have already been hoisted
     // via DeclareContext to avoid duplicate hoisting.
     // Uses u32 to avoid depending on react_compiler_ast types.
@@ -174,6 +180,7 @@ impl Environment {
             instrument_gating_name: None,
             hook_guard_name: None,
             renames: Vec::new(),
+            reference_positions: HashSet::new(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: config
                 .validate_preserve_existing_memoization_guarantees,
@@ -219,6 +226,7 @@ impl Environment {
             instrument_gating_name: self.instrument_gating_name.clone(),
             hook_guard_name: self.hook_guard_name.clone(),
             renames: Vec::new(),
+            reference_positions: HashSet::new(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: self
                 .validate_preserve_existing_memoization_guarantees,

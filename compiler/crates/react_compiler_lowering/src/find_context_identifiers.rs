@@ -47,6 +47,26 @@ impl<'a> ContextIdentifierVisitor<'a> {
         }
     }
 
+    fn check_captured_reference(&mut self, start: Option<u32>) {
+        let start = match start {
+            Some(s) => s,
+            None => return,
+        };
+        let binding_id = match self.scope_info.reference_to_binding.get(&start) {
+            Some(&id) => id,
+            None => return,
+        };
+        let &fn_scope = match self.function_stack.last() {
+            Some(s) => s,
+            None => return,
+        };
+        let binding = &self.scope_info.bindings[binding_id.0 as usize];
+        if is_captured_by_function(self.scope_info, binding.scope, fn_scope) {
+            let info = self.binding_info.entry(binding_id).or_default();
+            info.referenced_by_inner_fn = true;
+        }
+    }
+
     fn handle_reassignment_identifier(&mut self, name: &str, current_scope: ScopeId) {
         if let Some(binding_id) = self.scope_info.get_binding(current_scope, name) {
             let info = self.binding_info.entry(binding_id).or_default();
@@ -96,25 +116,15 @@ impl<'ast> Visitor<'ast> for ContextIdentifierVisitor<'_> {
     }
 
     fn enter_identifier(&mut self, node: &'ast Identifier, _scope_stack: &[ScopeId]) {
-        let start = match node.base.start {
-            Some(s) => s,
-            None => return,
-        };
-        // Only process identifiers that resolve to a binding (referenced or declaration)
-        let binding_id = match self.scope_info.reference_to_binding.get(&start) {
-            Some(&id) => id,
-            None => return,
-        };
-        // If not inside a nested function, nothing to track
-        let &fn_scope = match self.function_stack.last() {
-            Some(s) => s,
-            None => return,
-        };
-        let binding = &self.scope_info.bindings[binding_id.0 as usize];
-        if is_captured_by_function(self.scope_info, binding.scope, fn_scope) {
-            let info = self.binding_info.entry(binding_id).or_default();
-            info.referenced_by_inner_fn = true;
-        }
+        self.check_captured_reference(node.base.start);
+    }
+
+    fn enter_jsx_identifier(
+        &mut self,
+        node: &'ast react_compiler_ast::jsx::JSXIdentifier,
+        _scope_stack: &[ScopeId],
+    ) {
+        self.check_captured_reference(node.base.start);
     }
 
     fn enter_assignment_expression(

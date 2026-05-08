@@ -1309,8 +1309,10 @@ fn propagate_non_null(
     nodes: &HashMap<BlockId, BlockInfo>,
     registry: &mut PropertyPathRegistry,
 ) -> HashMap<BlockId, BTreeSet<usize>> {
-    // Build successor map
-    let mut block_successors: HashMap<BlockId, HashSet<BlockId>> = HashMap::new();
+    // Build successor map. Use BTreeSet to iterate successors in sorted BlockId
+    // order, matching the TS Set<BlockId> insertion order (blocks are created in
+    // ascending BlockId order).
+    let mut block_successors: HashMap<BlockId, BTreeSet<BlockId>> = HashMap::new();
     for (block_id, block) in &func.body.blocks {
         for pred in &block.preds {
             block_successors
@@ -1389,7 +1391,7 @@ fn recursively_propagate_non_null(
     traversal_state: &mut HashMap<BlockId, TraversalState>,
     working: &mut HashMap<BlockId, BTreeSet<usize>>,
     func: &HirFunction,
-    block_successors: &HashMap<BlockId, HashSet<BlockId>>,
+    block_successors: &HashMap<BlockId, BTreeSet<BlockId>>,
     registry: &mut PropertyPathRegistry,
 ) -> bool {
     // Avoid re-visiting computed or currently active nodes
@@ -1587,7 +1589,19 @@ impl ReactiveScopeDependencyTreeHIR {
     ) -> Self {
         let mut hoistable_roots: HashMap<IdentifierId, (HoistableNode, bool)> = HashMap::new();
 
-        for dep in hoistable_objects {
+        // Sort hoistable objects so that entries with optional first path come
+        // before non-optional ones. This matches the TS behavior where
+        // hoistableFromOptionals entries are inserted into the JS Set before
+        // instruction-based entries, and the first insertion determines the
+        // root access type.
+        let mut sorted_deps: Vec<&ReactiveScopeDependency> = hoistable_objects.collect();
+        sorted_deps.sort_by(|a, b| {
+            let a_optional = !a.path.is_empty() && a.path[0].optional;
+            let b_optional = !b.path.is_empty() && b.path[0].optional;
+            b_optional.cmp(&a_optional)
+        });
+
+        for dep in sorted_deps {
             let root = hoistable_roots
                 .entry(dep.identifier)
                 .or_insert_with(|| {

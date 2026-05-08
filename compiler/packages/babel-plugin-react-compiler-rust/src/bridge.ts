@@ -82,10 +82,10 @@ function getRustCompile(): (
 }
 
 /**
- * Replace lone surrogate escapes in JSON strings with the Unicode replacement character.
+ * Encode lone surrogate escapes so they survive the Rust serde_json round-trip.
  * JS JSON.stringify can produce \uD800-\uDFFF lone surrogates which are invalid
- * in Rust's serde_json (expects valid UTF-8/Unicode). We replace them with \uFFFD
- * since the compiler doesn't depend on the raw surrogate values.
+ * in Rust's serde_json (expects valid UTF-8/Unicode). We encode them as recoverable
+ * markers (__SURROGATE_XXXX__) and restore them via restoreJsonSurrogates on output.
  *
  * Important: we must NOT replace escaped surrogate sequences like \\uD83D\\uDE80
  * that appear in extra.raw fields (literal source text). Those have a double
@@ -93,18 +93,20 @@ function getRustCompile(): (
  * lookbehind to skip them.
  */
 function sanitizeJsonSurrogates(json: string): string {
-  // Match lone high surrogates not followed by a low surrogate,
-  // and lone low surrogates not preceded by a high surrogate.
-  // JSON encodes these as \uD800-\uDFFF literal escape sequences.
-  // The (?<!\\) lookbehind ensures we only match real JSON escapes (\uXXXX)
-  // and not literal backslash-u sequences (\\uXXXX) from e.g. extra.raw fields.
+  // Encode lone surrogates as recoverable markers instead of replacing with
+  // \uFFFD. This preserves the original surrogate values through the Rust
+  // round-trip. restoreJsonSurrogates reverses this on the output side.
   return json.replace(
     /(?<!\\)\\u([dD][89aAbB][0-9a-fA-F]{2})(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
-    '\\uFFFD',
+    (_, hex) => `__SURROGATE_${hex.toUpperCase()}__`,
   ).replace(
     /(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})(?<!\\)\\u([dD][c-fC-F][0-9a-fA-F]{2})/g,
-    '\\uFFFD',
+    (_, hex) => `__SURROGATE_${hex.toUpperCase()}__`,
   );
+}
+
+function restoreJsonSurrogates(json: string): string {
+  return json.replace(/__SURROGATE_([0-9A-F]{4})__/g, (_, hex) => `\\u${hex}`);
 }
 
 export function compileWithRust(
@@ -123,7 +125,7 @@ export function compileWithRust(
     JSON.stringify(optionsWithCode),
   );
 
-  return JSON.parse(resultJson) as CompileResult;
+  return JSON.parse(restoreJsonSurrogates(resultJson)) as CompileResult;
 }
 
 export interface TimingEntry {
@@ -169,7 +171,7 @@ export function compileWithRustProfiled(
   const resultJson = compile(astJson, scopeJson, optionsJson);
   const t4 = performance.now();
 
-  const result = JSON.parse(resultJson) as CompileResult & {
+  const result = JSON.parse(restoreJsonSurrogates(resultJson)) as CompileResult & {
     timing?: Array<TimingEntry>;
   };
   const t5 = performance.now();
