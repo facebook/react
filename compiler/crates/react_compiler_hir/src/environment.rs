@@ -92,8 +92,10 @@ pub struct Environment {
     // Outlined functions: functions extracted from the component during outlining passes
     outlined_functions: Vec<OutlinedFunctionEntry>,
 
-    // Counter for generating globally unique identifier names
-    uid_counter: u32,
+    // Known names for collision-aware UID generation. Lazily populated from
+    // identifiers on first use, then updated with each generated name.
+    // Matches Babel's generateUid behavior of checking hasBinding/hasReference.
+    uid_known_names: Option<HashSet<String>>,
 }
 
 /// An outlined function entry, stored on Environment during compilation.
@@ -185,7 +187,7 @@ impl Environment {
             default_nonmutating_hook: None,
             default_mutating_hook: None,
             outlined_functions: Vec::new(),
-            uid_counter: 0,
+            uid_known_names: None,
             config,
         }
     }
@@ -231,7 +233,7 @@ impl Environment {
             default_nonmutating_hook: self.default_nonmutating_hook.clone(),
             default_mutating_hook: self.default_mutating_hook.clone(),
             outlined_functions: Vec::new(),
-            uid_counter: self.uid_counter,
+            uid_known_names: self.uid_known_names.clone(),
         }
     }
 
@@ -792,6 +794,10 @@ impl Environment {
     /// `scope.generateUidIdentifier`. Matches Babel's naming convention:
     /// first name is `_<name>`, subsequent are `_<name>2`, `_<name>3`, etc.
     /// Also applies Babel's `toIdentifier` sanitization on the input name.
+    ///
+    /// Like Babel's `generateUid`, checks for collisions against existing
+    /// bindings (source-level identifier names) and previously generated UIDs,
+    /// rather than using a blind counter.
     pub fn generate_globally_unique_identifier_name(&mut self, name: Option<&str>) -> String {
         let base = name.unwrap_or("temp");
         // Apply Babel's toIdentifier sanitization:
@@ -833,12 +839,36 @@ impl Environment {
         let stripped = stripped.trim_end_matches(|c: char| c.is_ascii_digit());
         let uid_base = if stripped.is_empty() { "temp" } else { stripped };
 
-        self.uid_counter += 1;
-        if self.uid_counter <= 1 {
+        // Lazily build the set of known names from existing identifiers.
+        // This approximates Babel's hasBinding/hasGlobal/hasReference checks.
+        if self.uid_known_names.is_none() {
+            let mut known = HashSet::new();
+            for id in &self.identifiers {
+                if let Some(name) = &id.name {
+                    known.insert(name.value().to_string());
+                }
+            }
+            self.uid_known_names = Some(known);
+        }
+
+        // Find a name that doesn't collide, matching Babel's generateUid loop
+        let mut i = 1u32;
+        let uid = loop {
+            let candidate = if i == 1 {
             format!("_{}", uid_base)
         } else {
-            format!("_{}{}", uid_base, self.uid_counter)
+                format!("_{}{}", uid_base, i)
+            };
+            i += 1;
+            if !self.uid_known_names.as_ref().expect("uid_known_names initialized above").contains(&candidate) {
+                break candidate;
         }
+        };
+
+        // Register the generated name so subsequent calls see it
+        self.uid_known_names.as_mut().expect("uid_known_names initialized above").insert(uid.clone());
+
+        uid
     }
 
     /// Record an outlined function (extracted during outlineFunctions or outlineJSX).

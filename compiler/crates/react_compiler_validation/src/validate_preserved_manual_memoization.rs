@@ -619,7 +619,7 @@ fn pretty_print_scope_dependency(
     let path_str: String = dep_path.iter().map(|entry| {
         let prop = match &entry.property {
             react_compiler_hir::PropertyLiteral::String(s) => s.clone(),
-            react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n.value()),
+            react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n),
         };
         if entry.optional {
             format!("?.{}", prop)
@@ -650,7 +650,7 @@ fn print_manual_memo_dependency(
     let path_str: String = dep.path.iter().map(|entry| {
         let prop = match &entry.property {
             react_compiler_hir::PropertyLiteral::String(s) => s.clone(),
-            react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n.value()),
+            react_compiler_hir::PropertyLiteral::Number(n) => format!("{}", n),
         };
         if with_optional && entry.optional {
             format!("?.{}", prop)

@@ -81,6 +81,32 @@ function getRustCompile(): (
   return rustCompile!;
 }
 
+/**
+ * Replace lone surrogate escapes in JSON strings with the Unicode replacement character.
+ * JS JSON.stringify can produce \uD800-\uDFFF lone surrogates which are invalid
+ * in Rust's serde_json (expects valid UTF-8/Unicode). We replace them with \uFFFD
+ * since the compiler doesn't depend on the raw surrogate values.
+ *
+ * Important: we must NOT replace escaped surrogate sequences like \\uD83D\\uDE80
+ * that appear in extra.raw fields (literal source text). Those have a double
+ * backslash in the JSON (the first \ escapes the second), so we use a negative
+ * lookbehind to skip them.
+ */
+function sanitizeJsonSurrogates(json: string): string {
+  // Match lone high surrogates not followed by a low surrogate,
+  // and lone low surrogates not preceded by a high surrogate.
+  // JSON encodes these as \uD800-\uDFFF literal escape sequences.
+  // The (?<!\\) lookbehind ensures we only match real JSON escapes (\uXXXX)
+  // and not literal backslash-u sequences (\\uXXXX) from e.g. extra.raw fields.
+  return json.replace(
+    /(?<!\\)\\u([dD][89aAbB][0-9a-fA-F]{2})(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
+    '\\uFFFD',
+  ).replace(
+    /(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})(?<!\\)\\u([dD][c-fC-F][0-9a-fA-F]{2})/g,
+    '\\uFFFD',
+  );
+}
+
 export function compileWithRust(
   ast: t.File,
   scopeInfo: ScopeInfo,
@@ -92,7 +118,7 @@ export function compileWithRust(
   const optionsWithCode =
     code != null ? {...options, __sourceCode: code} : options;
   const resultJson = compile(
-    JSON.stringify(ast),
+    sanitizeJsonSurrogates(JSON.stringify(ast)),
     JSON.stringify(scopeInfo),
     JSON.stringify(optionsWithCode),
   );
@@ -133,7 +159,7 @@ export function compileWithRustProfiled(
       : {...options, __profiling: true};
 
   const t0 = performance.now();
-  const astJson = JSON.stringify(ast);
+  const astJson = sanitizeJsonSurrogates(JSON.stringify(ast));
   const t1 = performance.now();
   const scopeJson = JSON.stringify(scopeInfo);
   const t2 = performance.now();

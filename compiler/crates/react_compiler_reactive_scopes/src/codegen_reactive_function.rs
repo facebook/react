@@ -3695,7 +3695,7 @@ fn dep_to_sort_key(
         let prefix = if entry.optional { "?" } else { "" };
         let prop = match &entry.property {
             PropertyLiteral::String(s) => s.clone(),
-            PropertyLiteral::Number(n) => n.value().to_string(),
+            PropertyLiteral::Number(n) => format!("{}", n),
         };
         parts.push(format!("{prefix}{prop}"));
     }

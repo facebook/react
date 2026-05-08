@@ -9,11 +9,14 @@ pub mod reactive;
 pub mod type_config;
 pub mod visitors;
 
+use indexmap::IndexMap;
+use indexmap::IndexSet;
+pub use react_compiler_diagnostics::CompilerDiagnostic;
+pub use react_compiler_diagnostics::ErrorCategory;
+pub use react_compiler_diagnostics::GENERATED_SOURCE;
+pub use react_compiler_diagnostics::Position;
+pub use react_compiler_diagnostics::SourceLocation;
 pub use reactive::*;
-
-pub use react_compiler_diagnostics::{SourceLocation, Position, GENERATED_SOURCE, CompilerDiagnostic, ErrorCategory};
-
-use indexmap::{IndexMap, IndexSet};
 
 // =============================================================================
 // ID newtypes
@@ -93,7 +96,56 @@ impl std::hash::Hash for FloatValue {
 
 impl std::fmt::Display for FloatValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value())
+        write!(f, "{}", format_js_number(self.value()))
+    }
+}
+
+/// Format an f64 the way JavaScript's `Number.prototype.toString()` does.
+///
+/// Key differences from Rust's default `Display`:
+/// - Uses scientific notation for |x| >= 1e21 (e.g. `1e+21`, `2.18739127891275e+22`)
+/// - Uses scientific notation for 0 < |x| < 1e-6 (e.g. `1e-7`, `1.5e-8`)
+/// - Uses minimal significant digits that round-trip to the same f64
+/// - Formats -0 as "0"
+pub fn format_js_number(n: f64) -> String {
+    if n.is_nan() {
+        return "NaN".to_string();
+    }
+    if n.is_infinite() {
+        return if n > 0.0 {
+            "Infinity".to_string()
+        } else {
+            "-Infinity".to_string()
+        };
+    }
+    if n == 0.0 {
+        return "0".to_string();
+    }
+
+    let abs = n.abs();
+    let sign = if n < 0.0 { "-" } else { "" };
+
+    if abs >= 1e21 || (abs > 0.0 && abs < 1e-6) {
+        // Use scientific notation matching JS format: coefficient + "e+" or "e-" + exponent
+        // Rust's {:e} uses "e" (lowercase) like JS, but formats as e.g. "1.5e21" not "1.5e+21"
+        let formatted = format!("{:e}", abs);
+        // Split into coefficient and exponent parts
+        let (coeff, exp_str) = formatted
+            .split_once('e')
+            .expect("should contain 'e' from {:e} format");
+        let exp: i32 = exp_str.parse().expect("should be a valid integer exponent");
+        // JS uses e+N for positive exponents, e-N for negative
+        if exp >= 0 {
+            format!("{}{}e+{}", sign, coeff, exp)
+        } else {
+            format!("{}{}e-{}", sign, coeff, exp.unsigned_abs())
+        }
+    } else if abs.fract() == 0.0 && abs < (i64::MAX as f64) {
+        // Integer that fits in i64 — format without decimal point
+        format!("{}{}", sign, abs as i64)
+    } else {
+        // Regular float: Rust's default Display gives us the right digits
+        format!("{}", n)
     }
 }
 
@@ -972,7 +1024,15 @@ impl IdentifierName {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum Effect {
     #[serde(rename = "<unknown>")]
     Unknown,
@@ -1311,7 +1371,8 @@ pub struct ReactiveScopeEarlyReturn {
 // =============================================================================
 
 use crate::object_shape::FunctionSignature;
-use crate::type_config::{ValueKind, ValueReason};
+use crate::type_config::ValueKind;
+use crate::type_config::ValueReason;
 
 /// Reason for a mutation, used for generating hints (e.g. rename to "Ref").
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1324,47 +1385,26 @@ pub enum MutationReason {
 #[derive(Debug, Clone)]
 pub enum AliasingEffect {
     /// Marks the given value and its direct aliases as frozen.
-    Freeze {
-        value: Place,
-        reason: ValueReason,
-    },
+    Freeze { value: Place, reason: ValueReason },
     /// Mutate the value and any direct aliases.
     Mutate {
         value: Place,
         reason: Option<MutationReason>,
     },
     /// Mutate the value conditionally (only if mutable).
-    MutateConditionally {
-        value: Place,
-    },
+    MutateConditionally { value: Place },
     /// Mutate the value and transitive captures.
-    MutateTransitive {
-        value: Place,
-    },
+    MutateTransitive { value: Place },
     /// Mutate the value and transitive captures conditionally.
-    MutateTransitiveConditionally {
-        value: Place,
-    },
+    MutateTransitiveConditionally { value: Place },
     /// Information flow from `from` to `into` (non-aliasing capture).
-    Capture {
-        from: Place,
-        into: Place,
-    },
+    Capture { from: Place, into: Place },
     /// Direct aliasing: mutation of `into` implies mutation of `from`.
-    Alias {
-        from: Place,
-        into: Place,
-    },
+    Alias { from: Place, into: Place },
     /// Potential aliasing relationship.
-    MaybeAlias {
-        from: Place,
-        into: Place,
-    },
+    MaybeAlias { from: Place, into: Place },
     /// Direct assignment: `into = from`.
-    Assign {
-        from: Place,
-        into: Place,
-    },
+    Assign { from: Place, into: Place },
     /// Creates a value of the given kind at the given place.
     Create {
         into: Place,
@@ -1372,15 +1412,9 @@ pub enum AliasingEffect {
         reason: ValueReason,
     },
     /// Creates a new value with the same kind as the source.
-    CreateFrom {
-        from: Place,
-        into: Place,
-    },
+    CreateFrom { from: Place, into: Place },
     /// Immutable data flow (escape analysis only, no mutable range influence).
-    ImmutableCapture {
-        from: Place,
-        into: Place,
-    },
+    ImmutableCapture { from: Place, into: Place },
     /// Function call application.
     Apply {
         receiver: Place,
@@ -1413,9 +1447,7 @@ pub enum AliasingEffect {
         error: CompilerDiagnostic,
     },
     /// Value is accessed during render.
-    Render {
-        place: Place,
-    },
+    Render { place: Place },
 }
 
 /// Combined Place/Spread/Hole for Apply args.
@@ -1442,10 +1474,14 @@ pub struct AliasingSignature {
 // Type helper functions (ported from HIR.ts)
 // =============================================================================
 
-use crate::object_shape::{
-    BUILT_IN_ARRAY_ID, BUILT_IN_JSX_ID, BUILT_IN_MAP_ID, BUILT_IN_PROPS_ID,
-    BUILT_IN_REF_VALUE_ID, BUILT_IN_SET_ID, BUILT_IN_USE_OPERATOR_ID, BUILT_IN_USE_REF_ID,
-};
+use crate::object_shape::BUILT_IN_ARRAY_ID;
+use crate::object_shape::BUILT_IN_JSX_ID;
+use crate::object_shape::BUILT_IN_MAP_ID;
+use crate::object_shape::BUILT_IN_PROPS_ID;
+use crate::object_shape::BUILT_IN_REF_VALUE_ID;
+use crate::object_shape::BUILT_IN_SET_ID;
+use crate::object_shape::BUILT_IN_USE_OPERATOR_ID;
+use crate::object_shape::BUILT_IN_USE_REF_ID;
 
 /// Returns true if the type (looked up via identifier) is primitive.
 pub fn is_primitive_type(ty: &Type) -> bool {
@@ -1545,4 +1581,49 @@ pub fn is_plain_object_type(ty: &Type) -> bool {
 /// Returns true if the type is a startTransition function (BuiltInStartTransition).
 pub fn is_start_transition_type(ty: &Type) -> bool {
     matches!(ty, Type::Function { shape_id: Some(id), .. } if id == object_shape::BUILT_IN_START_TRANSITION_ID)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_js_number() {
+        // Scientific notation for large numbers (>= 1e21)
+        assert_eq!(format_js_number(1e21), "1e+21");
+        assert_eq!(format_js_number(1.5e21), "1.5e+21");
+        assert_eq!(
+            format_js_number(2.18739127891275e22),
+            "2.18739127891275e+22"
+        );
+        assert_eq!(format_js_number(1e100), "1e+100");
+        assert_eq!(format_js_number(-1e21), "-1e+21");
+        assert_eq!(format_js_number(-1e100), "-1e+100");
+
+        // Scientific notation for small numbers (< 1e-6)
+        assert_eq!(format_js_number(1e-7), "1e-7");
+        assert_eq!(format_js_number(5e-7), "5e-7");
+        assert_eq!(format_js_number(1.5e-8), "1.5e-8");
+        assert_eq!(format_js_number(-1.5e-8), "-1.5e-8");
+
+        // Non-scientific large numbers (< 1e21)
+        assert_eq!(format_js_number(1e20), "100000000000000000000");
+        assert_eq!(format_js_number(1e-6), "0.000001");
+
+        // Integers
+        assert_eq!(format_js_number(0.0), "0");
+        assert_eq!(format_js_number(-0.0), "0");
+        assert_eq!(format_js_number(1.0), "1");
+        assert_eq!(format_js_number(100.0), "100");
+
+        // Regular floats
+        assert_eq!(format_js_number(1.5), "1.5");
+        assert_eq!(format_js_number(0.5), "0.5");
+        assert_eq!(format_js_number(0.1), "0.1");
+
+        // Special values
+        assert_eq!(format_js_number(f64::NAN), "NaN");
+        assert_eq!(format_js_number(f64::INFINITY), "Infinity");
+        assert_eq!(format_js_number(f64::NEG_INFINITY), "-Infinity");
+    }
 }

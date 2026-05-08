@@ -77,15 +77,7 @@ pub fn format_primitive(prim: &crate::PrimitiveValue) -> String {
         crate::PrimitiveValue::Null => "null".to_string(),
         crate::PrimitiveValue::Undefined => "undefined".to_string(),
         crate::PrimitiveValue::Boolean(b) => format!("{}", b),
-        crate::PrimitiveValue::Number(n) => {
-            let v = n.value();
-            // Match JS String(-0) === "0" behavior
-            if v == 0.0 && v.is_sign_negative() {
-                "0".to_string()
-            } else {
-                format!("{}", v)
-            }
-        }
+        crate::PrimitiveValue::Number(n) => crate::format_js_number(n.value()),
         crate::PrimitiveValue::String(s) => format_js_string(s),
     }
 }
@@ -93,7 +85,7 @@ pub fn format_primitive(prim: &crate::PrimitiveValue) -> String {
 pub fn format_property_literal(prop: &crate::PropertyLiteral) -> String {
     match prop {
         crate::PropertyLiteral::String(s) => s.clone(),
-        crate::PropertyLiteral::Number(n) => format!("{}", n.value()),
+        crate::PropertyLiteral::Number(n) => crate::format_js_number(n.value()),
     }
 }
 
@@ -107,7 +99,7 @@ pub fn format_object_property_key(key: &crate::ObjectPropertyKey) -> String {
             format!("Computed({})", name.identifier.0)
         }
         crate::ObjectPropertyKey::Number { name } => {
-            format!("Number({})", name.value())
+            format!("Number({})", crate::format_js_number(name.value()))
         }
     }
 }
@@ -481,7 +473,7 @@ impl<'a> PrintFormatter<'a> {
                             let prop = match &p.property {
                                 crate::PropertyLiteral::String(s) => s.clone(),
                                 crate::PropertyLiteral::Number(n) => {
-                                    format!("{}", n.value())
+                                    crate::format_js_number(n.value())
                                 }
                             };
                             format!("{}{}", if p.optional { "?." } else { "." }, prop)
