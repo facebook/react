@@ -425,7 +425,7 @@ fn returns_non_node_in_stmt(stmt: &Statement, result: &mut bool) {
             returns_non_node_in_stmt(&if_stmt.consequent, result);
             if let Some(ref alt) = if_stmt.alternate {
                 returns_non_node_in_stmt(alt, result);
-        }
+            }
         }
         Statement::ForStatement(for_stmt) => returns_non_node_in_stmt(&for_stmt.body, result),
         Statement::WhileStatement(while_stmt) => returns_non_node_in_stmt(&while_stmt.body, result),
@@ -1573,13 +1573,9 @@ fn process_fn(
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
                     loc: opt_out.and_then(|d| to_logger_loc(d.base.loc.as_ref(), source_filename)),
                 });
-                // Even though the function is skipped, register the memo cache import
-                // if the compiled function had memo slots. This matches TS behavior where
-                // addMemoCacheImport() is called during codegen as a side effect that
-                // persists even when the function is later skipped.
-                if codegen_fn.memo_slots_used > 0 {
-                    context.add_memo_cache_import();
-                }
+                // The function is skipped due to opt-out. Do NOT register the memo
+                // cache import here — it will be registered in apply_compiled_functions()
+                // only for functions that are actually applied to the output.
                 return Ok(None);
             }
 
@@ -3204,12 +3200,8 @@ fn insert_after_fn_recursive(stmts: &mut Vec<Statement>, start: u32, new_stmt: S
 
 fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statement) -> bool {
     match stmt {
-        Statement::FunctionDeclaration(f) => {
-            insert_after_fn_in_block(&mut f.body, start, new_stmt)
-        }
-        Statement::BlockStatement(b) => {
-            insert_after_fn_in_block(b, start, new_stmt)
-        }
+        Statement::FunctionDeclaration(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
+        Statement::BlockStatement(b) => insert_after_fn_in_block(b, start, new_stmt),
         Statement::ExpressionStatement(e) => {
             insert_after_fn_in_expr(&mut e.expression, start, new_stmt)
         }
@@ -3231,14 +3223,18 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
             false
         }
         Statement::ExportDefaultDeclaration(e) => match e.declaration.as_mut() {
-            ExportDefaultDecl::FunctionDeclaration(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
+            ExportDefaultDecl::FunctionDeclaration(f) => {
+                insert_after_fn_in_block(&mut f.body, start, new_stmt)
+            }
             ExportDefaultDecl::Expression(expr) => insert_after_fn_in_expr(expr, start, new_stmt),
             _ => false,
         },
         Statement::ExportNamedDeclaration(e) => {
             if let Some(decl) = &mut e.declaration {
                 match decl.as_mut() {
-                    Declaration::FunctionDeclaration(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
+                    Declaration::FunctionDeclaration(f) => {
+                        insert_after_fn_in_block(&mut f.body, start, new_stmt)
+                    }
                     Declaration::VariableDeclaration(v) => {
                         for d in &mut v.declarations {
                             if let Some(init) = &mut d.init {
@@ -3257,17 +3253,25 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
         }
         Statement::IfStatement(i) => {
             insert_after_fn_in_stmt(&mut i.consequent, start, new_stmt)
-                || i.alternate.as_mut().map_or(false, |a| insert_after_fn_in_stmt(a, start, new_stmt))
+                || i.alternate
+                    .as_mut()
+                    .map_or(false, |a| insert_after_fn_in_stmt(a, start, new_stmt))
         }
         Statement::ForStatement(f) => insert_after_fn_in_stmt(&mut f.body, start, new_stmt),
         Statement::WhileStatement(w) => insert_after_fn_in_stmt(&mut w.body, start, new_stmt),
         Statement::TryStatement(t) => {
-            if insert_after_fn_in_block(&mut t.block, start, new_stmt) { return true; }
+            if insert_after_fn_in_block(&mut t.block, start, new_stmt) {
+                return true;
+            }
             if let Some(h) = &mut t.handler {
-                if insert_after_fn_in_block(&mut h.body, start, new_stmt) { return true; }
+                if insert_after_fn_in_block(&mut h.body, start, new_stmt) {
+                    return true;
+                }
             }
             if let Some(f) = &mut t.finalizer {
-                if insert_after_fn_in_block(f, start, new_stmt) { return true; }
+                if insert_after_fn_in_block(f, start, new_stmt) {
+                    return true;
+                }
             }
             false
         }
@@ -3275,8 +3279,16 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
     }
 }
 
-fn insert_after_fn_in_block(block: &mut react_compiler_ast::statements::BlockStatement, start: u32, new_stmt: &Statement) -> bool {
-    if let Some(pos) = block.body.iter().position(|s| stmt_has_fn_at_start(s, start)) {
+fn insert_after_fn_in_block(
+    block: &mut react_compiler_ast::statements::BlockStatement,
+    start: u32,
+    new_stmt: &Statement,
+) -> bool {
+    if let Some(pos) = block
+        .body
+        .iter()
+        .position(|s| stmt_has_fn_at_start(s, start))
+    {
         block.body.insert(pos + 1, new_stmt.clone());
         return true;
     }
@@ -3288,7 +3300,11 @@ fn insert_after_fn_in_block(block: &mut react_compiler_ast::statements::BlockSta
     false
 }
 
-fn insert_after_fn_in_expr(expr: &mut react_compiler_ast::expressions::Expression, start: u32, new_stmt: &Statement) -> bool {
+fn insert_after_fn_in_expr(
+    expr: &mut react_compiler_ast::expressions::Expression,
+    start: u32,
+    new_stmt: &Statement,
+) -> bool {
     use react_compiler_ast::expressions::Expression;
     match expr {
         Expression::ObjectExpression(obj) => {
@@ -3299,7 +3315,9 @@ fn insert_after_fn_in_expr(expr: &mut react_compiler_ast::expressions::Expressio
                             return true;
                         }
                     }
-                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(
+                        p,
+                    ) => {
                         if insert_after_fn_in_expr(&mut p.value, start, new_stmt) {
                             return true;
                         }
@@ -3317,19 +3335,15 @@ fn insert_after_fn_in_expr(expr: &mut react_compiler_ast::expressions::Expressio
             }
             false
         }
-        Expression::ArrowFunctionExpression(arrow) => {
-            match arrow.body.as_mut() {
-                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                    insert_after_fn_in_block(block, start, new_stmt)
-                }
-                react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
-                    insert_after_fn_in_expr(e, start, new_stmt)
-                }
+        Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_mut() {
+            react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                insert_after_fn_in_block(block, start, new_stmt)
             }
-        }
-        Expression::FunctionExpression(f) => {
-            insert_after_fn_in_block(&mut f.body, start, new_stmt)
-        }
+            react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
+                insert_after_fn_in_expr(e, start, new_stmt)
+            }
+        },
+        Expression::FunctionExpression(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
         Expression::CallExpression(c) => {
             for arg in &mut c.arguments {
                 if insert_after_fn_in_expr(arg, start, new_stmt) {

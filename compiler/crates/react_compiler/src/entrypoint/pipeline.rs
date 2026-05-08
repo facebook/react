@@ -1055,13 +1055,12 @@ pub fn compile_fn(
     )?;
     context.timing.stop();
 
-    // Register the memo cache import as a side effect of codegen, matching TS behavior
-    // where addMemoCacheImport() is called during codegenReactiveFunction. This must happen
-    // BEFORE the env.has_errors() check so the import persists even when the pipeline
-    // returns Err (e.g., when validation errors are accumulated but codegen succeeded).
-    if codegen_result.memo_slots_used > 0 {
-        context.add_memo_cache_import();
-    }
+    // NOTE: we intentionally do NOT register the memo cache import here.
+    // The import is registered in apply_compiled_functions() only for functions
+    // that are actually applied to the output. Registering it here would cause
+    // a spurious `import { c as _c }` when a function compiles with memo slots
+    // but is later discarded (e.g., due to "use no memo" opt-out or errors),
+    // while other functions in the same file compile to 0 memo slots.
 
     if env.config.validate_source_locations {
         super::validate_source_locations::validate_source_locations(
