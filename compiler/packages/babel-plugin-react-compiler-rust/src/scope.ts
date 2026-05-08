@@ -203,16 +203,6 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       for (const ref of babelBinding.referencePaths) {
         const start = ref.node.start;
         if (start != null) {
-          // Skip references inside type annotations (Flow/TypeScript) —
-          // these are type-level only and should not appear in
-          // referenceToBinding for the compiler.
-          if (
-            ref.findParent(
-              (p: NodePath) => p.isTypeAnnotation() || p.isTSTypeAnnotation(),
-            )
-          ) {
-            continue;
-          }
           referenceToBinding[start] = bindingId;
         }
       }

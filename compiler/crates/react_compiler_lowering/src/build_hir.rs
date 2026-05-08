@@ -2444,20 +2444,14 @@ fn lower_block_statement_inner(
     // Collect hoistable bindings from this scope (non-param bindings).
     // Exclude bindings whose declaration_type is "FunctionExpression" since named function
     // expression names are local to the expression and should never be hoisted.
+    // Matches TS behavior: only param bindings are excluded (plus FunctionExpression names
+    // which are scoped to the expression).
     let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder
         .scope_info()
         .scope_bindings(scope_id)
         .filter(|b| {
             !matches!(b.kind, AstBindingKind::Param | AstBindingKind::Module)
             && b.declaration_type != "FunctionExpression"
-            && !matches!(b.declaration_type.as_str(),
-                "TypeAlias" | "OpaqueType" | "InterfaceDeclaration"
-                | "DeclareVariable" | "DeclareFunction" | "DeclareClass"
-                | "DeclareModule" | "DeclareInterface" | "DeclareOpaqueType"
-                | "TSTypeAliasDeclaration" | "TSInterfaceDeclaration"
-                | "TSEnumDeclaration" | "TSModuleDeclaration"
-                | "ImportSpecifier" | "ImportDefaultSpecifier" | "ImportNamespaceSpecifier"
-            )
         })
         .map(|b| {
             (
