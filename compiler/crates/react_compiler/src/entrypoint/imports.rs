@@ -225,6 +225,17 @@ impl ProgramContext {
         self.known_referenced_names.insert(name);
     }
 
+    /// Get the set of known referenced names for seeding per-function Environment UID generation.
+    pub fn known_referenced_names(&self) -> &HashSet<String> {
+        &self.known_referenced_names
+    }
+
+    /// Merge UID names generated during a function compilation back into the program context,
+    /// so subsequent function compilations avoid collisions.
+    pub fn merge_uid_known_names(&mut self, names: &HashSet<String>) {
+        self.known_referenced_names.extend(names.iter().cloned());
+    }
+
     /// Log a compilation event.
     pub fn log_event(&mut self, event: LoggerEvent) {
         self.ordered_log.push(OrderedLogItem::Event { event: event.clone() });

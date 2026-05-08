@@ -53,6 +53,7 @@ pub fn compile_fn(
     env.instrument_fn_name = context.instrument_fn_name.clone();
     env.instrument_gating_name = context.instrument_gating_name.clone();
     env.hook_guard_name = context.hook_guard_name.clone();
+    env.seed_uid_known_names(&context.known_referenced_names());
 
     context.timing.start("lower");
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
@@ -1133,6 +1134,10 @@ pub fn compile_fn(
                 fn_type: o.fn_type,
             });
         }
+    }
+
+    if let Some(uid_names) = env.take_uid_known_names() {
+        context.merge_uid_known_names(&uid_names);
     }
 
     Ok(CodegenFunction {
