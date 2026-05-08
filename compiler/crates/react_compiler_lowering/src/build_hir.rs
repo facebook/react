@@ -2419,7 +2419,7 @@ fn lower_block_statement_inner(
         }
         if decl_names.is_empty() { return None; }
         let search_parent = parent_scope.unwrap_or_else(|| builder.function_scope());
-        let found = builder.scope_info().find_child_block_scope_by_bindings(&decl_names, search_parent, |sid| {
+        let found = builder.scope_info().find_block_scope_by_bindings(&decl_names, search_parent, |sid| {
             builder.is_synthetic_scope_claimed(sid)
         });
         if let Some(sid) = found {

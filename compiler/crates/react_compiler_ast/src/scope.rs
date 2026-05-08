@@ -197,34 +197,32 @@ impl ScopeInfo {
             .map(|id| &self.bindings[id.0 as usize])
     }
 
-    /// Find a descendant block scope by matching variable names declared within it.
-    /// Searches all descendants of `parent` because intermediate synthetic scopes
-    /// may be absent from `node_to_scope`. The `is_claimed` predicate prevents
-    /// reuse when multiple synthetic blocks declare the same variable name.
-    pub fn find_child_block_scope_by_bindings(&self, names: &[&str], parent: ScopeId, is_claimed: impl Fn(ScopeId) -> bool) -> Option<ScopeId> {
+    /// Find a block scope by matching variable names declared within it.
+    /// Used for synthetic blocks (position 0) where position-based lookup fails.
+    /// The `is_claimed` predicate allows skipping scopes already matched to other blocks.
+    pub fn find_block_scope_by_bindings(&self, names: &[&str], ancestor: ScopeId, is_claimed: impl Fn(ScopeId) -> bool) -> Option<ScopeId> {
         let mut descendants = std::collections::HashSet::new();
-        descendants.insert(parent);
+        descendants.insert(ancestor);
         let mut changed = true;
         while changed {
             changed = false;
             for (i, scope) in self.scopes.iter().enumerate() {
                 let sid = ScopeId(i as u32);
-                if let Some(p) = scope.parent {
-                    if descendants.contains(&p) && !descendants.contains(&sid) {
+                if let Some(parent) = scope.parent {
+                    if descendants.contains(&parent) && !descendants.contains(&sid) {
                         descendants.insert(sid);
                         changed = true;
                     }
                 }
             }
         }
-        for (i, scope) in self.scopes.iter().enumerate() {
-            let sid = ScopeId(i as u32);
-            if !descendants.contains(&sid) { continue; }
+        for sid in &descendants {
+            let scope = &self.scopes[sid.0 as usize];
             if matches!(scope.kind, ScopeKind::Function) { continue; }
-            if is_claimed(sid) { continue; }
+            if is_claimed(*sid) { continue; }
             let all_match = names.iter().all(|name| scope.bindings.contains_key(*name));
             if all_match {
-                return Some(sid);
+                return Some(*sid);
             }
         }
         None

@@ -30,7 +30,7 @@ use react_compiler_hir::environment::Environment;
 use react_compiler_hir::{
     BinaryOperator, BlockKind, FloatValue, FunctionId, GotoVariant, HirFunction, IdentifierId,
     InstructionValue, NonLocalBinding, Phi, Place, PrimitiveValue, PropertyLiteral, SourceLocation,
-    Terminal, UnaryOperator, UpdateOperator,
+    Terminal, UnaryOperator, UpdateOperator, format_js_number,
 };
 use react_compiler_lowering::{
     get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
@@ -599,7 +599,7 @@ fn evaluate_instruction(
                 let expression_str = match sub_prim {
                     PrimitiveValue::Null => "null".to_string(),
                     PrimitiveValue::Boolean(b) => b.to_string(),
-                    PrimitiveValue::Number(n) => js_number_to_string(n.value()),
+                    PrimitiveValue::Number(n) => format_js_number(n.value()),
                     PrimitiveValue::String(s) => s.clone(),
                     // TS rejects undefined subexpression values
                     PrimitiveValue::Undefined => return None,
@@ -1106,31 +1106,4 @@ fn js_to_int32(n: f64) -> i32 {
 /// ECMAScript ToUint32: convert f64 to u32 with modular (wrapping) semantics.
 fn js_to_uint32(n: f64) -> u32 {
     js_to_int32(n) as u32
-}
-
-/// Approximate ECMAScript Number::toString(). Handles special values and
-/// tries to match JS formatting for common cases. Uses Rust's default
-/// float formatting which may diverge from JS for exotic values
-/// (e.g., very large/small numbers near the exponential notation threshold).
-fn js_number_to_string(n: f64) -> String {
-    if n.is_nan() {
-        return "NaN".to_string();
-    }
-    if n.is_infinite() {
-        return if n > 0.0 {
-            "Infinity".to_string()
-        } else {
-            "-Infinity".to_string()
-        };
-    }
-    if n == 0.0 {
-        return "0".to_string();
-    }
-    // For integers that fit, use integer formatting (no decimal point)
-    if n.fract() == 0.0 && n.abs() < (i64::MAX as f64) {
-        return format!("{}", n as i64);
-    }
-    // Default: use Rust's float formatting
-    // This may diverge from JS for edge cases around exponential notation thresholds
-    format!("{}", n)
 }

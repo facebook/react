@@ -287,42 +287,30 @@ fn collect_temporaries(
             sidemap.functions.insert(lvalue_id);
         }
         InstructionValue::LoadGlobal { binding, .. } => {
-            // DIVERGENCE: The TS version uses `env.getGlobalDeclaration()` +
-            // `getHookKindForType()` to resolve bindings through the type system.
-            // Since the type/globals system is not yet ported, we approximate by
-            // checking the binding's NonLocalBinding variant and resolving import
-            // names for known React modules (react, react-dom). This handles:
-            // - Global bindings (e.g., `useMemo` as a global)
-            // - Import specifiers from react/react-dom (resolves aliases)
-            // - ImportDefault/ImportNamespace from react/react-dom
-            // It does NOT handle:
-            // - Custom hooks with useMemo/useCallback hookKind from non-React modules
-            // - User-configured module type definitions
-            // TODO: Use getGlobalDeclaration + getHookKindForType once the type system is ported.
-            let is_hook = match get_hook_detection_name(binding) {
-                Some("useMemo") => {
-                sidemap.manual_memos.insert(
-                    lvalue_id,
-                    ManualMemoCallee {
-                        kind: ManualMemoKind::UseMemo,
-                        load_instr_id: instr_id,
-                    },
-                );
-                    true
+            let hook_name = get_hook_detection_name(binding);
+            let mut detected = false;
+            if let Some(name) = hook_name {
+                if name == "useMemo" {
+                    sidemap.manual_memos.insert(
+                        lvalue_id,
+                        ManualMemoCallee {
+                            kind: ManualMemoKind::UseMemo,
+                            load_instr_id: instr_id,
+                        },
+                    );
+                    detected = true;
+                } else if name == "useCallback" {
+                    sidemap.manual_memos.insert(
+                        lvalue_id,
+                        ManualMemoCallee {
+                            kind: ManualMemoKind::UseCallback,
+                            load_instr_id: instr_id,
+                        },
+                    );
+                    detected = true;
                 }
-                Some("useCallback") => {
-                sidemap.manual_memos.insert(
-                    lvalue_id,
-                    ManualMemoCallee {
-                        kind: ManualMemoKind::UseCallback,
-                        load_instr_id: instr_id,
-                    },
-                );
-                    true
-                }
-                _ => false,
-            };
-            if !is_hook && binding.name() == "React" {
+            }
+            if !detected && binding.name() == "React" {
                 sidemap.react.insert(lvalue_id);
             }
         }
@@ -728,7 +716,8 @@ fn find_optional_places(func: &HirFunction) -> Result<HashSet<IdentifierId>, Com
 }
 
 fn is_known_react_module(module: &str) -> bool {
-    module.eq_ignore_ascii_case("react") || module.eq_ignore_ascii_case("react-dom")
+    let lower = module.to_lowercase();
+    lower == "react" || lower == "react-dom"
 }
 
 /// Returns the name to use for useMemo/useCallback detection, matching the TS
