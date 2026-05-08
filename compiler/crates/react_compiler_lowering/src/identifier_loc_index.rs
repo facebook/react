@@ -7,10 +7,13 @@
 use std::collections::HashMap;
 
 use react_compiler_ast::expressions::*;
-use react_compiler_ast::jsx::{JSXIdentifier, JSXOpeningElement};
-use react_compiler_ast::scope::{ScopeId, ScopeInfo};
+use react_compiler_ast::jsx::JSXIdentifier;
+use react_compiler_ast::jsx::JSXOpeningElement;
+use react_compiler_ast::scope::ScopeId;
+use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::statements::FunctionDeclaration;
-use react_compiler_ast::visitor::{AstWalker, Visitor};
+use react_compiler_ast::visitor::AstWalker;
+use react_compiler_ast::visitor::Visitor;
 use react_compiler_hir::SourceLocation;
 
 use crate::FunctionNode;
@@ -91,24 +94,60 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
         }
     }
 
-    fn enter_jsx_opening_element(&mut self, node: &'ast JSXOpeningElement, _scope_stack: &[ScopeId]) {
+    fn enter_jsx_opening_element(
+        &mut self,
+        node: &'ast JSXOpeningElement,
+        _scope_stack: &[ScopeId],
+    ) {
         self.current_opening_element_loc = node.base.loc.as_ref().map(|loc| convert_loc(loc));
     }
 
-    fn leave_jsx_opening_element(&mut self, _node: &'ast JSXOpeningElement, _scope_stack: &[ScopeId]) {
+    fn leave_jsx_opening_element(
+        &mut self,
+        _node: &'ast JSXOpeningElement,
+        _scope_stack: &[ScopeId],
+    ) {
         self.current_opening_element_loc = None;
     }
 
     // Visit function/class declaration and expression name identifiers,
     // which are not walked by the generic walker (to avoid affecting
     // other Visitor consumers like find_context_identifiers).
-    fn enter_function_declaration(&mut self, node: &'ast FunctionDeclaration, _scope_stack: &[ScopeId]) {
+    fn enter_function_declaration(
+        &mut self,
+        node: &'ast FunctionDeclaration,
+        _scope_stack: &[ScopeId],
+    ) {
         if let Some(id) = &node.id {
             self.insert_identifier(id, true);
         }
     }
 
-    fn enter_function_expression(&mut self, node: &'ast FunctionExpression, _scope_stack: &[ScopeId]) {
+    fn enter_function_expression(
+        &mut self,
+        node: &'ast FunctionExpression,
+        _scope_stack: &[ScopeId],
+    ) {
+        if let Some(id) = &node.id {
+            self.insert_identifier(id, true);
+        }
+    }
+
+    fn enter_class_declaration(
+        &mut self,
+        node: &'ast react_compiler_ast::statements::ClassDeclaration,
+        _scope_stack: &[ScopeId],
+    ) {
+        if let Some(id) = &node.id {
+            self.insert_identifier(id, true);
+        }
+    }
+
+    fn enter_class_expression(
+        &mut self,
+        node: &'ast react_compiler_ast::expressions::ClassExpression,
+        _scope_stack: &[ScopeId],
+    ) {
         if let Some(id) = &node.id {
             self.insert_identifier(id, true);
         }

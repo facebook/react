@@ -4,13 +4,14 @@
 //! and an [`AstWalker`] that traverses the AST while tracking the active scope
 //! via the scope tree's `node_to_scope` map.
 
+use crate::Program;
 use crate::declarations::*;
 use crate::expressions::*;
 use crate::jsx::*;
 use crate::patterns::*;
-use crate::scope::{ScopeId, ScopeInfo};
+use crate::scope::ScopeId;
+use crate::scope::ScopeInfo;
 use crate::statements::*;
-use crate::Program;
 
 /// Trait for visiting Babel AST nodes. All methods default to no-ops.
 /// Override specific methods to intercept nodes of interest.
@@ -67,29 +68,22 @@ pub trait Visitor<'ast> {
         _scope_stack: &[ScopeId],
     ) {
     }
-    fn enter_object_method(
+    fn enter_class_declaration(
         &mut self,
-        _node: &'ast ObjectMethod,
+        _node: &'ast crate::statements::ClassDeclaration,
         _scope_stack: &[ScopeId],
     ) {
     }
-    fn leave_object_method(
-        &mut self,
-        _node: &'ast ObjectMethod,
-        _scope_stack: &[ScopeId],
-    ) {
-    }
+    fn enter_class_expression(&mut self, _node: &'ast ClassExpression, _scope_stack: &[ScopeId]) {}
+    fn enter_object_method(&mut self, _node: &'ast ObjectMethod, _scope_stack: &[ScopeId]) {}
+    fn leave_object_method(&mut self, _node: &'ast ObjectMethod, _scope_stack: &[ScopeId]) {}
     fn enter_assignment_expression(
         &mut self,
         _node: &'ast AssignmentExpression,
         _scope_stack: &[ScopeId],
     ) {
     }
-    fn enter_update_expression(
-        &mut self,
-        _node: &'ast UpdateExpression,
-        _scope_stack: &[ScopeId],
-    ) {
+    fn enter_update_expression(&mut self, _node: &'ast UpdateExpression, _scope_stack: &[ScopeId]) {
     }
     fn enter_identifier(&mut self, _node: &'ast Identifier, _scope_stack: &[ScopeId]) {}
     fn enter_jsx_identifier(&mut self, _node: &'ast JSXIdentifier, _scope_stack: &[ScopeId]) {}
@@ -119,18 +113,8 @@ pub trait Visitor<'ast> {
     ) {
     }
 
-    fn enter_call_expression(
-        &mut self,
-        _node: &'ast CallExpression,
-        _scope_stack: &[ScopeId],
-    ) {
-    }
-    fn leave_call_expression(
-        &mut self,
-        _node: &'ast CallExpression,
-        _scope_stack: &[ScopeId],
-    ) {
-    }
+    fn enter_call_expression(&mut self, _node: &'ast CallExpression, _scope_stack: &[ScopeId]) {}
+    fn leave_call_expression(&mut self, _node: &'ast CallExpression, _scope_stack: &[ScopeId]) {}
 
     /// Called when the walker enters a loop expression context (while.test,
     /// do-while.test, for-in.right, for-of.right). Functions found in these
@@ -195,11 +179,7 @@ impl<'a> AstWalker<'a> {
 
     // ---- Public walk methods ----
 
-    pub fn walk_program<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        node: &'ast Program,
-    ) {
+    pub fn walk_program<'ast>(&mut self, v: &mut impl Visitor<'ast>, node: &'ast Program) {
         let pushed = self.try_push_scope(node.base.start);
         for stmt in &node.body {
             self.walk_statement(v, stmt);
@@ -223,11 +203,7 @@ impl<'a> AstWalker<'a> {
         }
     }
 
-    pub fn walk_statement<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        stmt: &'ast Statement,
-    ) {
+    pub fn walk_statement<'ast>(&mut self, v: &mut impl Visitor<'ast>, stmt: &'ast Statement) {
         match stmt {
             Statement::BlockStatement(node) => self.walk_block_statement(v, node),
             Statement::ReturnStatement(node) => {
@@ -352,9 +328,9 @@ impl<'a> AstWalker<'a> {
                 self.walk_function_declaration_inner(v, node);
             }
             Statement::ClassDeclaration(node) => {
-                if let Some(sc) = &node.super_class {
-                    self.walk_expression(v, sc);
-                }
+                // Call the visitor hook so consumers can index the class name,
+                // but skip walking the class body (no compilable functions inside)
+                v.enter_class_declaration(node, &self.scope_stack);
             }
             Statement::WithStatement(node) => {
                 self.walk_expression(v, &node.object);
@@ -397,11 +373,7 @@ impl<'a> AstWalker<'a> {
         }
     }
 
-    pub fn walk_expression<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        expr: &'ast Expression,
-    ) {
+    pub fn walk_expression<'ast>(&mut self, v: &mut impl Visitor<'ast>, expr: &'ast Expression) {
         match expr {
             Expression::Identifier(node) => {
                 v.enter_identifier(node, &self.scope_stack);
@@ -545,9 +517,9 @@ impl<'a> AstWalker<'a> {
                 self.walk_expression(v, &node.right);
             }
             Expression::ClassExpression(node) => {
-                if let Some(sc) = &node.super_class {
-                    self.walk_expression(v, sc);
-                }
+                // Call the visitor hook so consumers can index the class name,
+                // but skip walking the class body
+                v.enter_class_expression(node, &self.scope_stack);
             }
             // JSX
             Expression::JSXElement(node) => self.walk_jsx_element(v, node),
@@ -576,11 +548,7 @@ impl<'a> AstWalker<'a> {
         }
     }
 
-    pub fn walk_pattern<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        pat: &'ast PatternLike,
-    ) {
+    pub fn walk_pattern<'ast>(&mut self, v: &mut impl Visitor<'ast>, pat: &'ast PatternLike) {
         match pat {
             PatternLike::Identifier(node) => {
                 v.enter_identifier(node, &self.scope_stack);
@@ -625,11 +593,7 @@ impl<'a> AstWalker<'a> {
 
     // ---- Private helper walk methods ----
 
-    fn walk_for_in_of_left<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        left: &'ast ForInOfLeft,
-    ) {
+    fn walk_for_in_of_left<'ast>(&mut self, v: &mut impl Visitor<'ast>, left: &'ast ForInOfLeft) {
         match left {
             ForInOfLeft::VariableDeclaration(decl) => self.walk_variable_declaration(v, decl),
             ForInOfLeft::Pattern(pat) => self.walk_pattern(v, pat),
@@ -705,19 +669,10 @@ impl<'a> AstWalker<'a> {
         }
     }
 
-    fn walk_declaration<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        decl: &'ast Declaration,
-    ) {
+    fn walk_declaration<'ast>(&mut self, v: &mut impl Visitor<'ast>, decl: &'ast Declaration) {
         match decl {
             Declaration::FunctionDeclaration(node) => {
                 self.walk_function_declaration_inner(v, node);
-            }
-            Declaration::ClassDeclaration(node) => {
-                if let Some(sc) = &node.super_class {
-                    self.walk_expression(v, sc);
-                }
             }
             Declaration::VariableDeclaration(node) => {
                 self.walk_variable_declaration(v, node);
@@ -737,9 +692,8 @@ impl<'a> AstWalker<'a> {
                 self.walk_function_declaration_inner(v, node);
             }
             ExportDefaultDecl::ClassDeclaration(node) => {
-                if let Some(sc) = &node.super_class {
-                    self.walk_expression(v, sc);
-                }
+                // Call the visitor hook, but skip the class body
+                v.enter_class_declaration(node, &self.scope_stack);
             }
             ExportDefaultDecl::Expression(expr) => {
                 self.walk_expression(v, expr);
@@ -747,11 +701,7 @@ impl<'a> AstWalker<'a> {
         }
     }
 
-    fn walk_jsx_element<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        node: &'ast JSXElement,
-    ) {
+    fn walk_jsx_element<'ast>(&mut self, v: &mut impl Visitor<'ast>, node: &'ast JSXElement) {
         v.enter_jsx_opening_element(&node.opening_element, &self.scope_stack);
         self.walk_jsx_element_name(v, &node.opening_element.name);
         v.leave_jsx_opening_element(&node.opening_element, &self.scope_stack);
@@ -783,21 +733,13 @@ impl<'a> AstWalker<'a> {
         }
     }
 
-    fn walk_jsx_fragment<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        node: &'ast JSXFragment,
-    ) {
+    fn walk_jsx_fragment<'ast>(&mut self, v: &mut impl Visitor<'ast>, node: &'ast JSXFragment) {
         for child in &node.children {
             self.walk_jsx_child(v, child);
         }
     }
 
-    fn walk_jsx_child<'ast>(
-        &mut self,
-        v: &mut impl Visitor<'ast>,
-        child: &'ast JSXChild,
-    ) {
+    fn walk_jsx_child<'ast>(&mut self, v: &mut impl Visitor<'ast>, child: &'ast JSXChild) {
         match child {
             JSXChild::JSXElement(el) => self.walk_jsx_element(v, el),
             JSXChild::JSXFragment(f) => self.walk_jsx_fragment(v, f),
@@ -1219,8 +1161,7 @@ pub fn walk_expression_mut(v: &mut impl MutVisitor, expr: &mut Expression) -> Vi
                 }
             }
         }
-        Expression::ArrowFunctionExpression(node) => {
-            match node.body.as_mut() {
+        Expression::ArrowFunctionExpression(node) => match node.body.as_mut() {
                 ArrowFunctionBody::BlockStatement(block) => {
                     for s in block.body.iter_mut() {
                         if walk_statement_mut(v, s).is_stop() {
@@ -1233,8 +1174,7 @@ pub fn walk_expression_mut(v: &mut impl MutVisitor, expr: &mut Expression) -> Vi
                         return VisitResult::Stop;
                     }
                 }
-            }
-        }
+        },
         Expression::FunctionExpression(node) => {
             for s in node.body.body.iter_mut() {
                 if walk_statement_mut(v, s).is_stop() {
