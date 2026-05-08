@@ -14,41 +14,62 @@
 //! 5. Processing each function through the compilation pipeline
 //! 6. Applying compiled functions back to the AST
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
+use react_compiler_ast::File;
+use react_compiler_ast::Program;
 use react_compiler_ast::common::BaseNode;
-use react_compiler_ast::declarations::{
-    Declaration, ExportDefaultDecl, ExportDefaultDeclaration, ImportSpecifier, ModuleExportName,
-};
+use react_compiler_ast::declarations::Declaration;
+use react_compiler_ast::declarations::ExportDefaultDecl;
+use react_compiler_ast::declarations::ExportDefaultDeclaration;
+use react_compiler_ast::declarations::ImportSpecifier;
+use react_compiler_ast::declarations::ModuleExportName;
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
-use react_compiler_ast::scope::{ScopeId, ScopeInfo};
+use react_compiler_ast::scope::ScopeId;
+use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::statements::*;
-use react_compiler_ast::visitor::{AstWalker, MutVisitor, VisitResult, Visitor, walk_program_mut};
-use react_compiler_ast::{File, Program};
-use react_compiler_diagnostics::{
-    CompilerError, CompilerErrorDetail, CompilerErrorOrDiagnostic, ErrorCategory, SourceLocation,
-};
+use react_compiler_ast::visitor::AstWalker;
+use react_compiler_ast::visitor::MutVisitor;
+use react_compiler_ast::visitor::VisitResult;
+use react_compiler_ast::visitor::Visitor;
+use react_compiler_ast::visitor::walk_program_mut;
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorDetail;
+use react_compiler_diagnostics::CompilerErrorOrDiagnostic;
+use react_compiler_diagnostics::ErrorCategory;
+use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
 use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
 use regex::Regex;
 
-use super::compile_result::{
-    BindingRenameInfo, CodegenFunction, CompileResult, CompilerErrorDetailInfo,
-    CompilerErrorInfo, CompilerErrorItemInfo, DebugLogEntry, LoggerEvent, LoggerPosition,
-    LoggerSourceLocation, LoggerSuggestionInfo, LoggerSuggestionOp, OrderedLogItem,
-};
-use super::imports::{
-    ProgramContext, add_imports_to_program, get_react_compiler_runtime_module,
-    validate_restricted_imports,
-};
+use super::compile_result::BindingRenameInfo;
+use super::compile_result::CodegenFunction;
+use super::compile_result::CompileResult;
+use super::compile_result::CompilerErrorDetailInfo;
+use super::compile_result::CompilerErrorInfo;
+use super::compile_result::CompilerErrorItemInfo;
+use super::compile_result::DebugLogEntry;
+use super::compile_result::LoggerEvent;
+use super::compile_result::LoggerPosition;
+use super::compile_result::LoggerSourceLocation;
+use super::compile_result::LoggerSuggestionInfo;
+use super::compile_result::LoggerSuggestionOp;
+use super::compile_result::OrderedLogItem;
+use super::imports::ProgramContext;
+use super::imports::add_imports_to_program;
+use super::imports::get_react_compiler_runtime_module;
+use super::imports::validate_restricted_imports;
 use super::pipeline;
-use super::plugin_options::{CompilerOutputMode, GatingConfig, PluginOptions};
-use super::suppression::{
-    SuppressionRange, filter_suppressions_that_affect_function, find_program_suppressions,
-    suppressions_to_compiler_error,
-};
+use super::plugin_options::CompilerOutputMode;
+use super::plugin_options::GatingConfig;
+use super::plugin_options::PluginOptions;
+use super::suppression::SuppressionRange;
+use super::suppression::filter_suppressions_that_affect_function;
+use super::suppression::find_program_suppressions;
+use super::suppression::suppressions_to_compiler_error;
 
 // -----------------------------------------------------------------------
 // Constants
@@ -229,14 +250,53 @@ fn is_valid_identifier(s: &str) -> bool {
         return false;
     }
     // Check for reserved words (matching Babel's t.isValidIdentifier)
-    !matches!(s,
-        "break" | "case" | "catch" | "continue" | "debugger" | "default" | "do" |
-        "else" | "finally" | "for" | "function" | "if" | "in" | "instanceof" |
-        "new" | "return" | "switch" | "this" | "throw" | "try" | "typeof" |
-        "var" | "void" | "while" | "with" | "class" | "const" | "enum" |
-        "export" | "extends" | "import" | "super" | "implements" | "interface" |
-        "let" | "package" | "private" | "protected" | "public" | "static" |
-        "yield" | "null" | "true" | "false" | "delete"
+    !matches!(
+        s,
+        "break"
+            | "case"
+            | "catch"
+            | "continue"
+            | "debugger"
+            | "default"
+            | "do"
+            | "else"
+            | "finally"
+            | "for"
+            | "function"
+            | "if"
+            | "in"
+            | "instanceof"
+            | "new"
+            | "return"
+            | "switch"
+            | "this"
+            | "throw"
+            | "try"
+            | "typeof"
+            | "var"
+            | "void"
+            | "while"
+            | "with"
+            | "class"
+            | "const"
+            | "enum"
+            | "export"
+            | "extends"
+            | "import"
+            | "super"
+            | "implements"
+            | "interface"
+            | "let"
+            | "package"
+            | "private"
+            | "protected"
+            | "public"
+            | "static"
+            | "yield"
+            | "null"
+            | "true"
+            | "false"
+            | "delete"
     )
 }
 
@@ -338,65 +398,67 @@ fn is_non_node(expr: &Expression) -> bool {
 
 /// Recursively check if a function body returns a non-React-node value.
 /// Walks all return statements in the function (not in nested functions).
+/// The last return statement visited (in DFS order) determines the result,
+/// rather than short-circuiting on the first non-node return.
 fn returns_non_node_in_stmts(stmts: &[Statement]) -> bool {
+    let mut result = false;
     for stmt in stmts {
-        if returns_non_node_in_stmt(stmt) {
-            return true;
-        }
+        returns_non_node_in_stmt(stmt, &mut result);
     }
-    false
+    result
 }
 
-fn returns_non_node_in_stmt(stmt: &Statement) -> bool {
+fn returns_non_node_in_stmt(stmt: &Statement, result: &mut bool) {
     match stmt {
         Statement::ReturnStatement(ret) => {
-            if let Some(ref arg) = ret.argument {
-                return is_non_node(arg);
+            *result = match &ret.argument {
+                Some(arg) => is_non_node(arg),
+                None => true, // bare `return;` with no argument is a non-node value
+            };
+        }
+        Statement::BlockStatement(block) => {
+            for s in &block.body {
+                returns_non_node_in_stmt(s, result);
             }
-            false
         }
-        Statement::BlockStatement(block) => returns_non_node_in_stmts(&block.body),
         Statement::IfStatement(if_stmt) => {
-            returns_non_node_in_stmt(&if_stmt.consequent)
-                || if_stmt
-                    .alternate
-                    .as_ref()
-                    .map_or(false, |alt| returns_non_node_in_stmt(alt))
+            returns_non_node_in_stmt(&if_stmt.consequent, result);
+            if let Some(ref alt) = if_stmt.alternate {
+                returns_non_node_in_stmt(alt, result);
         }
-        Statement::ForStatement(for_stmt) => returns_non_node_in_stmt(&for_stmt.body),
-        Statement::WhileStatement(while_stmt) => returns_non_node_in_stmt(&while_stmt.body),
-        Statement::DoWhileStatement(do_while) => returns_non_node_in_stmt(&do_while.body),
-        Statement::ForInStatement(for_in) => returns_non_node_in_stmt(&for_in.body),
-        Statement::ForOfStatement(for_of) => returns_non_node_in_stmt(&for_of.body),
+        }
+        Statement::ForStatement(for_stmt) => returns_non_node_in_stmt(&for_stmt.body, result),
+        Statement::WhileStatement(while_stmt) => returns_non_node_in_stmt(&while_stmt.body, result),
+        Statement::DoWhileStatement(do_while) => returns_non_node_in_stmt(&do_while.body, result),
+        Statement::ForInStatement(for_in) => returns_non_node_in_stmt(&for_in.body, result),
+        Statement::ForOfStatement(for_of) => returns_non_node_in_stmt(&for_of.body, result),
         Statement::SwitchStatement(switch) => {
             for case in &switch.cases {
-                if returns_non_node_in_stmts(&case.consequent) {
-                    return true;
+                for s in &case.consequent {
+                    returns_non_node_in_stmt(s, result);
                 }
             }
-            false
         }
         Statement::TryStatement(try_stmt) => {
-            if returns_non_node_in_stmts(&try_stmt.block.body) {
-                return true;
+            for s in &try_stmt.block.body {
+                returns_non_node_in_stmt(s, result);
             }
             if let Some(ref handler) = try_stmt.handler {
-                if returns_non_node_in_stmts(&handler.body.body) {
-                    return true;
+                for s in &handler.body.body {
+                    returns_non_node_in_stmt(s, result);
                 }
             }
             if let Some(ref finalizer) = try_stmt.finalizer {
-                if returns_non_node_in_stmts(&finalizer.body) {
-                    return true;
+                for s in &finalizer.body {
+                    returns_non_node_in_stmt(s, result);
                 }
             }
-            false
         }
-        Statement::LabeledStatement(labeled) => returns_non_node_in_stmt(&labeled.body),
-        Statement::WithStatement(with) => returns_non_node_in_stmt(&with.body),
+        Statement::LabeledStatement(labeled) => returns_non_node_in_stmt(&labeled.body, result),
+        Statement::WithStatement(with) => returns_non_node_in_stmt(&with.body, result),
         // Skip nested function/class declarations -- they have their own returns
-        Statement::FunctionDeclaration(_) | Statement::ClassDeclaration(_) => false,
-        _ => false,
+        Statement::FunctionDeclaration(_) | Statement::ClassDeclaration(_) => {}
+        _ => {}
     }
 }
 
@@ -540,8 +602,10 @@ fn calls_hooks_or_creates_jsx_in_stmt(stmt: &Statement) -> bool {
             calls_hooks_or_creates_jsx_in_expr(&with.object)
                 || calls_hooks_or_creates_jsx_in_stmt(&with.body)
         }
-        // Skip nested function/class declarations
-        Statement::FunctionDeclaration(_) | Statement::ClassDeclaration(_) => false,
+        // Recurse into class body to find JSX/hooks in methods (matching TS behavior
+        // where Babel's traverse enters class bodies, only skipping nested functions)
+        Statement::FunctionDeclaration(_) => false,
+        Statement::ClassDeclaration(class) => calls_hooks_or_creates_jsx_in_class_body(&class.body),
         _ => false,
     }
 }
@@ -693,9 +757,104 @@ fn calls_hooks_or_creates_jsx_in_expr(expr: &Expression) -> bool {
         // Skip nested functions
         Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => false,
 
+        // Recurse into class body to find JSX/hooks in methods
+        Expression::ClassExpression(class) => calls_hooks_or_creates_jsx_in_class_body(&class.body),
+
         // Leaf expressions
         _ => false,
     }
+}
+
+/// Recursively search a ClassBody for JSX elements or hook calls.
+/// Class body members are stored as serde_json::Value since they aren't fully typed.
+/// We search the JSON tree, skipping nested function nodes (matching TS behavior where
+/// Babel's traverse skips ArrowFunctionExpression, FunctionExpression, FunctionDeclaration
+/// but recurses into class methods).
+fn calls_hooks_or_creates_jsx_in_class_body(
+    body: &react_compiler_ast::expressions::ClassBody,
+) -> bool {
+    body.body
+        .iter()
+        .any(|member| calls_hooks_or_creates_jsx_in_json(member))
+}
+
+fn calls_hooks_or_creates_jsx_in_json(value: &serde_json::Value) -> bool {
+    match value {
+        serde_json::Value::Object(obj) => {
+            // Check the node type
+            if let Some(serde_json::Value::String(node_type)) = obj.get("type") {
+                match node_type.as_str() {
+                    // JSX nodes
+                    "JSXElement" | "JSXFragment" => return true,
+                    // Skip nested function nodes (matching TS skipNestedFunctions)
+                    "ArrowFunctionExpression" | "FunctionExpression" | "FunctionDeclaration" => {
+                        return false;
+                    }
+                    // Hook calls: check if callee name starts with "use"
+                    "CallExpression" => {
+                        if let Some(callee) = obj.get("callee") {
+                            if json_expr_is_hook(callee) {
+                                return true;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            // Recurse into all values of the object
+            obj.values().any(|v| calls_hooks_or_creates_jsx_in_json(v))
+        }
+        serde_json::Value::Array(arr) => arr.iter().any(|v| calls_hooks_or_creates_jsx_in_json(v)),
+        _ => false,
+    }
+}
+
+/// Check if a JSON expression node looks like a hook call.
+/// Handles both Identifier (e.g. `useState`) and MemberExpression
+/// (e.g. `React.useState`) patterns, reusing `is_hook_name` for
+/// consistent naming checks.
+fn json_expr_is_hook(callee: &serde_json::Value) -> bool {
+    if let serde_json::Value::Object(obj) = callee {
+        if let Some(serde_json::Value::String(node_type)) = obj.get("type") {
+            if node_type == "Identifier" {
+                if let Some(serde_json::Value::String(name)) = obj.get("name") {
+                    return is_hook_name(name);
+                }
+            } else if node_type == "MemberExpression" {
+                // Check for PascalCase.useHook pattern (non-computed)
+                let computed = obj
+                    .get("computed")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                if computed {
+                    return false;
+                }
+                // Property must be a hook name
+                if let Some(serde_json::Value::Object(prop)) = obj.get("property") {
+                    if prop.get("type").and_then(|v| v.as_str()) == Some("Identifier") {
+                        if let Some(name) = prop.get("name").and_then(|v| v.as_str()) {
+                            if !is_hook_name(name) {
+                                return false;
+                            }
+                            // Object must be PascalCase identifier
+                            if let Some(serde_json::Value::Object(obj_node)) = obj.get("object") {
+                                if obj_node.get("type").and_then(|v| v.as_str())
+                                    == Some("Identifier")
+                                {
+                                    if let Some(obj_name) =
+                                        obj_node.get("name").and_then(|v| v.as_str())
+                                    {
+                                        return is_component_name(obj_name);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 /// Check if a function body calls hooks or creates JSX.
@@ -729,29 +888,46 @@ fn is_valid_props_annotation(param: &PatternLike) -> bool {
     };
     match annot_type {
         "TSTypeAnnotation" => {
-            let inner_type = annot.get("typeAnnotation")
+            let inner_type = annot
+                .get("typeAnnotation")
                 .and_then(|v| v.get("type"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            !matches!(inner_type,
-                "TSArrayType" | "TSBigIntKeyword" | "TSBooleanKeyword"
-                | "TSConstructorType" | "TSFunctionType" | "TSLiteralType"
-                | "TSNeverKeyword" | "TSNumberKeyword" | "TSStringKeyword"
-                | "TSSymbolKeyword" | "TSTupleType"
+            !matches!(
+                inner_type,
+                "TSArrayType"
+                    | "TSBigIntKeyword"
+                    | "TSBooleanKeyword"
+                    | "TSConstructorType"
+                    | "TSFunctionType"
+                    | "TSLiteralType"
+                    | "TSNeverKeyword"
+                    | "TSNumberKeyword"
+                    | "TSStringKeyword"
+                    | "TSSymbolKeyword"
+                    | "TSTupleType"
             )
         }
         "TypeAnnotation" => {
-            let inner_type = annot.get("typeAnnotation")
+            let inner_type = annot
+                .get("typeAnnotation")
                 .and_then(|v| v.get("type"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            !matches!(inner_type,
-                "ArrayTypeAnnotation" | "BooleanLiteralTypeAnnotation"
-                | "BooleanTypeAnnotation" | "EmptyTypeAnnotation"
-                | "FunctionTypeAnnotation" | "NullLiteralTypeAnnotation"
-                | "NumberLiteralTypeAnnotation" | "NumberTypeAnnotation"
-                | "StringLiteralTypeAnnotation" | "StringTypeAnnotation"
-                | "SymbolTypeAnnotation" | "ThisTypeAnnotation"
+            !matches!(
+                inner_type,
+                "ArrayTypeAnnotation"
+                    | "BooleanLiteralTypeAnnotation"
+                    | "BooleanTypeAnnotation"
+                    | "EmptyTypeAnnotation"
+                    | "FunctionTypeAnnotation"
+                    | "NullLiteralTypeAnnotation"
+                    | "NumberLiteralTypeAnnotation"
+                    | "NumberTypeAnnotation"
+                    | "StringLiteralTypeAnnotation"
+                    | "StringTypeAnnotation"
+                    | "SymbolTypeAnnotation"
+                    | "ThisTypeAnnotation"
                 | "TupleTypeAnnotation"
             )
         }
@@ -974,8 +1150,11 @@ fn diagnostic_details_to_items(
         .details
         .iter()
         .map(|item| match item {
-            react_compiler_diagnostics::CompilerDiagnosticDetail::Error { loc, message, identifier_name } => {
-                CompilerErrorItemInfo {
+            react_compiler_diagnostics::CompilerDiagnosticDetail::Error {
+                loc,
+                message,
+                identifier_name,
+            } => CompilerErrorItemInfo {
                     kind: "error".to_string(),
                     loc: loc.as_ref().map(|l| {
                         let mut logger_loc = diag_loc_to_logger_loc(l, filename);
@@ -983,8 +1162,7 @@ fn diagnostic_details_to_items(
                         logger_loc
                     }),
                     message: message.clone(),
-                }
-            }
+            },
             react_compiler_diagnostics::CompilerDiagnosticDetail::Hint { message } => {
                 CompilerErrorItemInfo {
                     kind: "hint".to_string(),
@@ -1019,10 +1197,7 @@ fn to_logger_loc(
 }
 
 /// Convert a diagnostics SourceLocation to a LoggerSourceLocation with filename.
-fn diag_loc_to_logger_loc(
-    loc: &SourceLocation,
-    filename: Option<&str>,
-) -> LoggerSourceLocation {
+fn diag_loc_to_logger_loc(loc: &SourceLocation, filename: Option<&str>) -> LoggerSourceLocation {
     LoggerSourceLocation {
         start: LoggerPosition {
             line: loc.start.line,
@@ -1103,8 +1278,7 @@ fn log_error(
 
     for detail in &err.details {
         let detail_info = match detail {
-            CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                CompilerErrorDetailInfo {
+            CompilerErrorOrDiagnostic::Diagnostic(d) => CompilerErrorDetailInfo {
                     category: format!("{:?}", d.category),
                     reason: d.reason.clone(),
                     description: d.description.clone(),
@@ -1112,8 +1286,7 @@ fn log_error(
                     suggestions: suggestions_to_logger(&d.suggestions),
                     details: diagnostic_details_to_items(d, source_filename),
                     loc: None,
-                }
-            }
+            },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
                 category: format!("{:?}", d.category),
                 reason: d.reason.clone(),
@@ -1121,7 +1294,10 @@ fn log_error(
                 severity: format!("{:?}", d.logged_severity()),
                 suggestions: suggestions_to_logger(&d.suggestions),
                 details: None,
-                loc: d.loc.as_ref().map(|l| diag_loc_to_logger_loc(l, source_filename)),
+                loc: d
+                    .loc
+                    .as_ref()
+                    .map(|l| diag_loc_to_logger_loc(l, source_filename)),
             },
         };
         // Use CompileErrorWithLoc when fn_loc is present to match TS field ordering
@@ -1212,8 +1388,7 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
         .details
         .iter()
         .map(|d| match d {
-            CompilerErrorOrDiagnostic::Diagnostic(d) => {
-                CompilerErrorDetailInfo {
+            CompilerErrorOrDiagnostic::Diagnostic(d) => CompilerErrorDetailInfo {
                     category: format!("{:?}", d.category),
                     reason: d.reason.clone(),
                     description: d.description.clone(),
@@ -1221,8 +1396,7 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
                     suggestions: suggestions_to_logger(&d.suggestions),
                     details: diagnostic_details_to_items(d, filename),
                     loc: None,
-                }
-            }
+            },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
                 category: format!("{:?}", d.category),
                 reason: d.reason.clone(),
@@ -1327,8 +1501,10 @@ fn process_fn(
             // (not accumulated via env.record_error) and have all non-Invariant details.
             // Matches TS tryCompileFunction() catch block behavior.
             if err.is_thrown && err.is_all_non_invariant() {
-                let source_filename =
-                    source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
+                let source_filename = source
+                    .fn_ast_loc
+                    .as_ref()
+                    .and_then(|loc| loc.filename.as_deref());
                 context.log_event(LoggerEvent::CompileUnexpectedThrow {
                     fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
                     data: err.to_string_for_event(),
@@ -1350,7 +1526,10 @@ fn process_fn(
             // Check opt-out
             if !context.opts.ignore_use_no_forget && opt_out.is_some() {
                 let opt_out_value = &opt_out.unwrap().value.value;
-                let source_filename = source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
+                let source_filename = source
+                    .fn_ast_loc
+                    .as_ref()
+                    .and_then(|loc| loc.filename.as_deref());
                 context.log_event(LoggerEvent::CompileSkip {
                     fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
                     reason: format!("Skipped due to '{}' directive.", opt_out_value),
@@ -1367,7 +1546,10 @@ fn process_fn(
             }
 
             // Log success with memo stats from CodegenFunction
-            let source_filename = source.fn_ast_loc.as_ref().and_then(|loc| loc.filename.as_deref());
+            let source_filename = source
+                .fn_ast_loc
+                .as_ref()
+                .and_then(|loc| loc.filename.as_deref());
             context.log_event(LoggerEvent::CompileSuccess {
                 fn_loc: to_logger_loc(source.fn_ast_loc.as_ref(), source_filename),
                 fn_name: codegen_fn.id.as_ref().map(|id| id.name.clone()),
@@ -1622,9 +1804,7 @@ impl<'a, 'ast> FunctionDiscoveryVisitor<'a, 'ast> {
 
     /// Get the current parent callee name (forwardRef/memo) if any.
     fn current_parent_callee(&self) -> Option<String> {
-        self.parent_callee_stack
-            .last()
-            .and_then(|opt| opt.clone())
+        self.parent_callee_stack.last().and_then(|opt| opt.clone())
     }
 }
 
@@ -1671,11 +1851,7 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         self.current_declarator_name = None;
     }
 
-    fn enter_call_expression(
-        &mut self,
-        node: &'ast CallExpression,
-        _scope_stack: &[ScopeId],
-    ) {
+    fn enter_call_expression(&mut self, node: &'ast CallExpression, _scope_stack: &[ScopeId]) {
         let callee_name = get_callee_name_if_react_api(&node.callee).map(|s| s.to_string());
         // In TS, the declarator name only flows through forwardRef/memo calls
         // (path.parentPath.isCallExpression() checks the callee). For any other
@@ -1686,11 +1862,7 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         self.parent_callee_stack.push(callee_name);
     }
 
-    fn leave_call_expression(
-        &mut self,
-        _node: &'ast CallExpression,
-        _scope_stack: &[ScopeId],
-    ) {
+    fn leave_call_expression(&mut self, _node: &'ast CallExpression, _scope_stack: &[ScopeId]) {
         let was_react_api = self
             .parent_callee_stack
             .pop()
@@ -1893,7 +2065,10 @@ fn stmt_references_identifier_at_top_level(stmt: &Statement, name: &str) -> bool
             } else {
                 // export { Name } - check specifiers
                 export.specifiers.iter().any(|s| {
-                    if let react_compiler_ast::declarations::ExportSpecifier::ExportSpecifier(spec) = s {
+                    if let react_compiler_ast::declarations::ExportSpecifier::ExportSpecifier(
+                        spec,
+                    ) = s
+                    {
                         match &spec.local {
                             ModuleExportName::Identifier(id) => id.name == name,
                             _ => false,
@@ -2120,7 +2295,8 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
                     ForInit::VariableDeclaration(var_decl) => {
                         for d in &var_decl.declarations {
                             if let Some(ref init_expr) = d.init {
-                                if let Some(e) = clone_original_expr_as_expression(init_expr, start) {
+                                if let Some(e) = clone_original_expr_as_expression(init_expr, start)
+                                {
                                     return Some(e);
                                 }
                             }
@@ -2366,12 +2542,7 @@ fn apply_compiled_functions(
 
             if is_ref_before_decl && compiled.original_kind == OriginalFnKind::FunctionDeclaration {
                 // Use the hoisted function declaration gating pattern
-                apply_gated_function_hoisted(
-                    program,
-                    compiled,
-                    gating_config,
-                    context,
-                );
+                apply_gated_function_hoisted(program, compiled, gating_config, context);
             } else {
                 // Use the conditional expression gating pattern
                 let original_expr = original_expressions[idx].clone();
@@ -2386,10 +2557,7 @@ fn apply_compiled_functions(
         } else {
             // No gating: replace the function directly (original behavior)
             if let Some(start) = compiled.fn_start {
-                let mut visitor = ReplaceFnVisitor {
-                    start,
-                    compiled,
-                };
+                let mut visitor = ReplaceFnVisitor { start, compiled };
                 walk_program_mut(&mut visitor, program);
             }
         }
@@ -2955,34 +3123,28 @@ fn apply_gated_function_hoisted(
     // We insert in reverse order for insertAfter.
 
     // Insert dispatcher after the original (now renamed) function
-    program
-        .body
-        .insert(fn_idx + 1, dispatcher_fn);
+    program.body.insert(fn_idx + 1, dispatcher_fn);
 
     // Insert optimized function before the original
-    program.body.insert(
-        fn_idx,
-        Statement::FunctionDeclaration(compiled_fn_decl),
-    );
+    program
+        .body
+        .insert(fn_idx, Statement::FunctionDeclaration(compiled_fn_decl));
 
     // Insert gating result before the optimized function
     program.body.insert(fn_idx, gating_result_stmt);
 }
 
-
 /// Check if a statement contains a function whose BaseNode.start matches.
 fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
     match stmt {
         Statement::FunctionDeclaration(f) => f.base.start == Some(start),
-        Statement::VariableDeclaration(var_decl) => {
-            var_decl.declarations.iter().any(|decl| {
+        Statement::VariableDeclaration(var_decl) => var_decl.declarations.iter().any(|decl| {
                 if let Some(ref init) = decl.init {
                     expr_has_fn_at_start(init, start)
                 } else {
                     false
                 }
-            })
-        }
+        }),
         Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
             ExportDefaultDecl::FunctionDeclaration(f) => f.base.start == Some(start),
             ExportDefaultDecl::Expression(e) => expr_has_fn_at_start(e, start),
@@ -3023,20 +3185,24 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
                     .map_or(false, |alt| stmt_has_fn_at_start(alt, start))
         }
         Statement::TryStatement(try_stmt) => {
-            try_stmt.block.body.iter().any(|s| stmt_has_fn_at_start(s, start))
-                || try_stmt
-                    .handler
-                    .as_ref()
-                    .map_or(false, |h| h.body.body.iter().any(|s| stmt_has_fn_at_start(s, start)))
-                || try_stmt
-                    .finalizer
-                    .as_ref()
-                    .map_or(false, |f| f.body.iter().any(|s| stmt_has_fn_at_start(s, start)))
+            try_stmt
+                .block
+                .body
+                .iter()
+                .any(|s| stmt_has_fn_at_start(s, start))
+                || try_stmt.handler.as_ref().map_or(false, |h| {
+                    h.body.body.iter().any(|s| stmt_has_fn_at_start(s, start))
+                })
+                || try_stmt.finalizer.as_ref().map_or(false, |f| {
+                    f.body.iter().any(|s| stmt_has_fn_at_start(s, start))
+                })
         }
         Statement::SwitchStatement(switch_stmt) => {
             expr_has_fn_at_start(&switch_stmt.discriminant, start)
                 || switch_stmt.cases.iter().any(|case| {
-                    case.consequent.iter().any(|s| stmt_has_fn_at_start(s, start))
+                    case.consequent
+                        .iter()
+                        .any(|s| stmt_has_fn_at_start(s, start))
                 })
         }
         Statement::LabeledStatement(labeled) => stmt_has_fn_at_start(&labeled.body, start),
@@ -3045,7 +3211,9 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
                 match init.as_ref() {
                     ForInit::VariableDeclaration(var_decl) => {
                         if var_decl.declarations.iter().any(|d| {
-                            d.init.as_ref().map_or(false, |e| expr_has_fn_at_start(e, start))
+                            d.init
+                                .as_ref()
+                                .map_or(false, |e| expr_has_fn_at_start(e, start))
                         }) {
                             return true;
                         }
@@ -3057,10 +3225,18 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
                     }
                 }
             }
-            if for_stmt.test.as_ref().map_or(false, |t| expr_has_fn_at_start(t, start)) {
+            if for_stmt
+                .test
+                .as_ref()
+                .map_or(false, |t| expr_has_fn_at_start(t, start))
+            {
                 return true;
             }
-            if for_stmt.update.as_ref().map_or(false, |u| expr_has_fn_at_start(u, start)) {
+            if for_stmt
+                .update
+                .as_ref()
+                .map_or(false, |u| expr_has_fn_at_start(u, start))
+            {
                 return true;
             }
             stmt_has_fn_at_start(&for_stmt.body, start)
@@ -3074,23 +3250,20 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
                 || stmt_has_fn_at_start(&do_while.body, start)
         }
         Statement::ForInStatement(for_in) => {
-            expr_has_fn_at_start(&for_in.right, start)
-                || stmt_has_fn_at_start(&for_in.body, start)
+            expr_has_fn_at_start(&for_in.right, start) || stmt_has_fn_at_start(&for_in.body, start)
         }
         Statement::ForOfStatement(for_of) => {
-            expr_has_fn_at_start(&for_of.right, start)
-                || stmt_has_fn_at_start(&for_of.body, start)
+            expr_has_fn_at_start(&for_of.right, start) || stmt_has_fn_at_start(&for_of.body, start)
         }
         Statement::WithStatement(with_stmt) => {
             expr_has_fn_at_start(&with_stmt.object, start)
                 || stmt_has_fn_at_start(&with_stmt.body, start)
         }
-        Statement::ReturnStatement(ret) => {
-            ret.argument.as_ref().map_or(false, |arg| expr_has_fn_at_start(arg, start))
-        }
-        Statement::ThrowStatement(throw_stmt) => {
-            expr_has_fn_at_start(&throw_stmt.argument, start)
-        }
+        Statement::ReturnStatement(ret) => ret
+            .argument
+            .as_ref()
+            .map_or(false, |arg| expr_has_fn_at_start(arg, start)),
+        Statement::ThrowStatement(throw_stmt) => expr_has_fn_at_start(&throw_stmt.argument, start),
         _ => false,
     }
 }
@@ -3101,9 +3274,10 @@ fn expr_has_fn_at_start(expr: &Expression, start: u32) -> bool {
         Expression::FunctionExpression(f) => f.base.start == Some(start),
         Expression::ArrowFunctionExpression(f) => f.base.start == Some(start),
         // Check for forwardRef/memo wrappers: the inner function
-        Expression::CallExpression(call) => {
-            call.arguments.iter().any(|arg| expr_has_fn_at_start(arg, start))
-        }
+        Expression::CallExpression(call) => call
+            .arguments
+            .iter()
+            .any(|arg| expr_has_fn_at_start(arg, start)),
         _ => false,
     }
 }
@@ -3273,7 +3447,9 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     let restricted_imports = options.environment.validate_blocklisted_imports.clone();
 
     // Determine if we should check for eslint suppressions
-    let validate_exhaustive = options.environment.validate_exhaustive_memoization_dependencies;
+    let validate_exhaustive = options
+        .environment
+        .validate_exhaustive_memoization_dependencies;
     let validate_hooks = options.environment.validate_hooks_usage;
 
     let eslint_rules: Option<Vec<String>> = if validate_exhaustive && validate_hooks {
@@ -3312,7 +3488,11 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     // Extract the source filename from the AST (set by parser's sourceFilename option).
     // This is the bare filename (e.g., "foo.ts") without path prefixes, which the TS
     // compiler uses in logger event source locations.
-    let source_filename = program.base.loc.as_ref().and_then(|loc| loc.filename.clone())
+    let source_filename = program
+        .base
+        .loc
+        .as_ref()
+        .and_then(|loc| loc.filename.clone())
         .or_else(|| {
             // Fallback: try the first statement's loc
             program.body.first().and_then(|stmt| {
@@ -3471,10 +3651,8 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             // Dynamic gating (from `use memo if(identifier)`) takes precedence.
             let gating = if cf.kind == CompileSourceKind::Original {
                 // Check body directives for dynamic gating
-                let dynamic_gating = find_directives_dynamic_gating(
-                    &cf.source.body_directives,
-                    &options,
-                )
+                let dynamic_gating =
+                    find_directives_dynamic_gating(&cf.source.body_directives, &options)
                 .ok()
                 .flatten()
                 .map(|r| r.gating);
@@ -3541,12 +3719,17 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
 }
 
 /// Convert internal BindingRename structs to the serializable BindingRenameInfo format.
-fn convert_renames(renames: &[react_compiler_hir::environment::BindingRename]) -> Vec<BindingRenameInfo> {
-    renames.iter().map(|r| BindingRenameInfo {
+fn convert_renames(
+    renames: &[react_compiler_hir::environment::BindingRename],
+) -> Vec<BindingRenameInfo> {
+    renames
+        .iter()
+        .map(|r| BindingRenameInfo {
         original: r.original.clone(),
         renamed: r.renamed.clone(),
         declaration_start: r.declaration_start,
-    }).collect()
+        })
+        .collect()
 }
 
 #[cfg(test)]
