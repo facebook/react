@@ -12,16 +12,32 @@
 //!
 //! Analogous to TS `Inference/DropManualMemoization.ts`.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use react_compiler_diagnostics::{CompilerDiagnostic, CompilerDiagnosticDetail, ErrorCategory};
+use react_compiler_diagnostics::CompilerDiagnostic;
+use react_compiler_diagnostics::CompilerDiagnosticDetail;
+use react_compiler_diagnostics::ErrorCategory;
+use react_compiler_hir::ArrayElement;
+use react_compiler_hir::DependencyPathEntry;
+use react_compiler_hir::Effect;
+use react_compiler_hir::EvaluationOrder;
+use react_compiler_hir::HirFunction;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::IdentifierName;
+use react_compiler_hir::Instruction;
+use react_compiler_hir::InstructionId;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::ManualMemoDependency;
+use react_compiler_hir::ManualMemoDependencyRoot;
+use react_compiler_hir::NonLocalBinding;
+use react_compiler_hir::Place;
+use react_compiler_hir::PlaceOrSpread;
+use react_compiler_hir::PropertyLiteral;
+use react_compiler_hir::SourceLocation;
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::{
-    ArrayElement, DependencyPathEntry, Effect, EvaluationOrder, HirFunction, IdentifierId,
-    IdentifierName, Instruction, InstructionId, InstructionValue, ManualMemoDependency,
-    ManualMemoDependencyRoot, Place, PlaceOrSpread, PropertyLiteral, SourceLocation,
-};
-use react_compiler_lowering::{create_temporary_place, mark_instruction_ids};
+use react_compiler_lowering::create_temporary_place;
+use react_compiler_lowering::mark_instruction_ids;
 
 // =============================================================================
 // Types
@@ -214,16 +230,12 @@ fn process_manual_memo_call(
             let mut diag = CompilerDiagnostic::new(
                 ErrorCategory::UseMemo,
                 "Expected the first argument to be an inline function expression",
-                Some(
-                    "Expected the first argument to be an inline function expression"
-                        .to_string(),
-                ),
+                Some("Expected the first argument to be an inline function expression".to_string()),
             )
             .with_detail(CompilerDiagnosticDetail::Error {
                 loc: fn_place.loc.clone(),
                 message: Some(
-                    "Expected the first argument to be an inline function expression"
-                        .to_string(),
+                    "Expected the first argument to be an inline function expression".to_string(),
                 ),
                 identifier_name: None,
             });
@@ -275,17 +287,20 @@ fn collect_temporaries(
             sidemap.functions.insert(lvalue_id);
         }
         InstructionValue::LoadGlobal { binding, .. } => {
-            let name = binding.name();
             // DIVERGENCE: The TS version uses `env.getGlobalDeclaration()` +
-            // `getHookKindForType()` to resolve the binding through the type system
-            // and determine if it's useMemo/useCallback. Since the type/globals system
-            // is not yet ported, we match on the binding name directly. This means:
-            // - Custom hooks aliased to useMemo/useCallback won't be detected
-            // - Re-exports or renamed imports won't be detected
-            // - The behavior is equivalent for direct `useMemo`/`useCallback` imports
-            //   and `React.useMemo`/`React.useCallback` member accesses (handled below)
+            // `getHookKindForType()` to resolve bindings through the type system.
+            // Since the type/globals system is not yet ported, we approximate by
+            // checking the binding's NonLocalBinding variant and resolving import
+            // names for known React modules (react, react-dom). This handles:
+            // - Global bindings (e.g., `useMemo` as a global)
+            // - Import specifiers from react/react-dom (resolves aliases)
+            // - ImportDefault/ImportNamespace from react/react-dom
+            // It does NOT handle:
+            // - Custom hooks with useMemo/useCallback hookKind from non-React modules
+            // - User-configured module type definitions
             // TODO: Use getGlobalDeclaration + getHookKindForType once the type system is ported.
-            if name == "useMemo" {
+            let is_hook = match get_hook_detection_name(binding) {
+                Some("useMemo") => {
                 sidemap.manual_memos.insert(
                     lvalue_id,
                     ManualMemoCallee {
@@ -293,7 +308,9 @@ fn collect_temporaries(
                         load_instr_id: instr_id,
                     },
                 );
-            } else if name == "useCallback" {
+                    true
+                }
+                Some("useCallback") => {
                 sidemap.manual_memos.insert(
                     lvalue_id,
                     ManualMemoCallee {
@@ -301,7 +318,11 @@ fn collect_temporaries(
                         load_instr_id: instr_id,
                     },
                 );
-            } else if name == "React" {
+                    true
+                }
+                _ => false,
+            };
+            if !is_hook && binding.name() == "React" {
                 sidemap.react.insert(lvalue_id);
             }
         }
@@ -704,4 +725,42 @@ fn find_optional_places(func: &HirFunction) -> Result<HashSet<IdentifierId>, Com
         }
     }
     Ok(optionals)
+}
+
+fn is_known_react_module(module: &str) -> bool {
+    module.eq_ignore_ascii_case("react") || module.eq_ignore_ascii_case("react-dom")
+}
+
+/// Returns the name to use for useMemo/useCallback detection, matching the TS
+/// behavior of `getGlobalDeclaration` + `getHookKindForType`.
+///
+/// - `Global`: use the binding name (matches globals.get(name) in TS)
+/// - `ImportSpecifier` from known React module: use the `imported` name
+/// - `ImportSpecifier` from unknown module: return None (TS returns a generic
+///   custom hook type with hookKind 'Custom', not 'useMemo'/'useCallback')
+/// - `ModuleLocal`: return None (same reason as above)
+/// - `ImportDefault`/`ImportNamespace` from known React module: use the local name
+/// - `ImportDefault`/`ImportNamespace` from unknown module: return None
+fn get_hook_detection_name(binding: &NonLocalBinding) -> Option<&str> {
+    match binding {
+        NonLocalBinding::Global { name } => Some(name.as_str()),
+        NonLocalBinding::ImportSpecifier {
+            imported, module, ..
+        } => {
+            if is_known_react_module(module) {
+                Some(imported.as_str())
+            } else {
+                None
+            }
+        }
+        NonLocalBinding::ImportDefault { name, module }
+        | NonLocalBinding::ImportNamespace { name, module } => {
+            if is_known_react_module(module) {
+                Some(name.as_str())
+            } else {
+                None
+            }
+        }
+        NonLocalBinding::ModuleLocal { .. } => None,
+    }
 }

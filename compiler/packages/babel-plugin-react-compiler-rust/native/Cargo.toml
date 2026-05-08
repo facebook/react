@@ -11,7 +11,7 @@ napi = { version = "2", features = ["napi4"] }
 napi-derive = "2"
 react_compiler = { path = "../../../crates/react_compiler" }
 react_compiler_ast = { path = "../../../crates/react_compiler_ast" }
-serde_json = "1"
+serde_json = { version = "1", features = ["unbounded_depth"] }
 
 [build-dependencies]
 napi-build = "2"

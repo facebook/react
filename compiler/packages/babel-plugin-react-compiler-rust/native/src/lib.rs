@@ -1,8 +1,11 @@
-use napi_derive::napi;
-use react_compiler_ast::{File, scope::ScopeInfo};
-use react_compiler::entrypoint::{PluginOptions, compile_program};
-use react_compiler::timing::TimingEntry;
 use std::time::Instant;
+
+use napi_derive::napi;
+use react_compiler::entrypoint::PluginOptions;
+use react_compiler::entrypoint::compile_program;
+use react_compiler::timing::TimingEntry;
+use react_compiler_ast::File;
+use react_compiler_ast::scope::ScopeInfo;
 
 /// Main entry point for the React Compiler.
 ///
@@ -10,8 +13,31 @@ use std::time::Instant;
 /// as JSON strings. Returns a JSON string containing the CompileResult.
 ///
 /// This function is called by the JS shim (bridge.ts) via napi-rs.
+/// Spawns a dedicated thread with 64MB stack to handle deeply nested ASTs
+/// that would overflow the default Node.js thread stack.
 #[napi]
-pub fn compile(
+pub fn compile(ast_json: String, scope_json: String, options_json: String) -> napi::Result<String> {
+    let handle = std::thread::Builder::new()
+        .stack_size(64 * 1024 * 1024) // 64MB stack
+        .spawn(move || compile_inner(ast_json, scope_json, options_json))
+        .map_err(|e| napi::Error::from_reason(format!("Failed to spawn compiler thread: {}", e)))?;
+
+    match handle.join() {
+        Ok(result) => result,
+        Err(panic_payload) => {
+            let msg = if let Some(s) = panic_payload.downcast_ref::<&str>() {
+                format!("Rust compiler panicked: {}", s)
+            } else if let Some(s) = panic_payload.downcast_ref::<String>() {
+                format!("Rust compiler panicked: {}", s)
+            } else {
+                "Rust compiler panicked (unknown payload)".to_string()
+            };
+            Err(napi::Error::from_reason(msg))
+        }
+    }
+}
+
+fn compile_inner(
     ast_json: String,
     scope_json: String,
     options_json: String,

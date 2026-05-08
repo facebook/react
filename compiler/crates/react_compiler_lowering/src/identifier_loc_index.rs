@@ -73,6 +73,81 @@ impl IdentifierLocVisitor {
             );
         }
     }
+
+    /// Recursively walk a serde_json::Value tree to find and index all Identifier
+    /// and JSXIdentifier nodes. Used for class bodies which are stored as untyped
+    /// JSON and not walked by the typed AstWalker. This matches the TS behavior
+    /// where gatherCapturedContext's Babel traverse walks into class bodies.
+    fn walk_json_for_identifiers(&mut self, value: &serde_json::Value) {
+        match value {
+            serde_json::Value::Object(obj) => {
+                if let Some(serde_json::Value::String(ty)) = obj.get("type") {
+                    if (ty == "Identifier" || ty == "JSXIdentifier")
+                        && !self.is_json_node_in_type_annotation(obj)
+                    {
+                        if let Some(start) = obj.get("start").and_then(|s| s.as_u64()) {
+                            if let Some(loc) = Self::extract_loc_from_json(obj) {
+                                let is_jsx = ty == "JSXIdentifier";
+                                self.index
+                                    .entry(start as u32)
+                                    .or_insert(IdentifierLocEntry {
+                                        loc,
+                                        is_jsx,
+                                        opening_element_loc: None,
+                                        is_declaration_name: false,
+                                    });
+                            }
+                        }
+                    }
+                }
+                for (_, v) in obj {
+                    self.walk_json_for_identifiers(v);
+                }
+            }
+            serde_json::Value::Array(arr) => {
+                for v in arr {
+                    self.walk_json_for_identifiers(v);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Check if a JSON Identifier node is nested inside a type annotation subtree.
+    /// We use a simple heuristic: always return false because:
+    /// 1. Type-only references are already filtered out of reference_to_binding
+    ///    by the scope.ts fix (findParent isTypeAnnotation check)
+    /// 2. Extra entries in identifier_locs for type-annotation identifiers are
+    ///    harmless — they only provide locations, they don't cause captures
+    fn is_json_node_in_type_annotation(
+        &self,
+        _obj: &serde_json::Map<String, serde_json::Value>,
+    ) -> bool {
+        false
+    }
+
+    fn extract_loc_from_json(
+        obj: &serde_json::Map<String, serde_json::Value>,
+    ) -> Option<SourceLocation> {
+        let loc = obj.get("loc")?.as_object()?;
+        let start = loc.get("start")?.as_object()?;
+        let end = loc.get("end")?.as_object()?;
+        Some(SourceLocation {
+            start: react_compiler_hir::Position {
+                line: start.get("line")?.as_u64()? as u32,
+                column: start.get("column")?.as_u64()? as u32,
+                index: start
+                    .get("index")
+                    .and_then(|i| i.as_u64())
+                    .map(|i| i as u32),
+            },
+            end: react_compiler_hir::Position {
+                line: end.get("line")?.as_u64()? as u32,
+                column: end.get("column")?.as_u64()? as u32,
+                index: end.get("index").and_then(|i| i.as_u64()).map(|i| i as u32),
+            },
+        })
+    }
 }
 
 impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
@@ -141,6 +216,12 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
         if let Some(id) = &node.id {
             self.insert_identifier(id, true);
         }
+        // Walk class body JSON to index identifiers inside class methods.
+        // The typed AstWalker skips class bodies (stored as Vec<serde_json::Value>),
+        // but gatherCapturedContext in TS traverses them via Babel's traverse.
+        for member in &node.body.body {
+            self.walk_json_for_identifiers(member);
+        }
     }
 
     fn enter_class_expression(
@@ -150,6 +231,10 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
     ) {
         if let Some(id) = &node.id {
             self.insert_identifier(id, true);
+        }
+        // Walk class body JSON to index identifiers inside class methods
+        for member in &node.body.body {
+            self.walk_json_for_identifiers(member);
         }
     }
 }

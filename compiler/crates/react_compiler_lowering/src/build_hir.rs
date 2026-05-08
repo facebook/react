@@ -676,10 +676,10 @@ fn lower_expression(
                             }
                         }
                         _ => {
-                            // delete on non-member expression (e.g., delete x) - not commonly supported
+                            // delete on non-member expression (e.g., optional chain, identifier)
                             builder.record_error(CompilerErrorDetail {
-                                reason: "Unsupported delete target".to_string(),
-                                category: ErrorCategory::Todo,
+                                reason: "Only object properties can be deleted".to_string(),
+                                category: ErrorCategory::Syntax,
                                 loc: loc.clone(),
                                 description: None,
                                 suggestions: None,
