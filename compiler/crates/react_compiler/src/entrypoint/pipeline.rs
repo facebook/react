@@ -280,9 +280,9 @@ pub fn compile_fn(
         &mut hir,
         &mut env,
         &mut |inner_func, inner_env| {
-        if debug_inner {
-            inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
-        }
+            if debug_inner {
+                inner_logs.push(debug_print::debug_hir(inner_func, inner_env));
+            }
         },
     );
     context.timing.stop();
@@ -1087,6 +1087,14 @@ pub fn compile_fn(
     // Check for accumulated errors at the end of the pipeline
     // (matches TS Pipeline.ts: env.hasErrors() → Err at the end)
     if env.has_errors() {
+        // Merge UIDs even on error: in TS, Babel's scope.generateUid() permanently
+        // registers names in the scope's `uids` map regardless of whether the function
+        // compilation succeeds or fails. Without this merge, failed compilations would
+        // "leak" _temp names that subsequent successful compilations wouldn't see,
+        // causing numbering mismatches vs TS.
+        if let Some(uid_names) = env.take_uid_known_names() {
+            context.merge_uid_known_names(&uid_names);
+        }
         return Err(env.take_errors());
     }
 
@@ -1189,9 +1197,9 @@ pub fn compile_outlined_fn(
         body: std::mem::replace(
             &mut codegen_fn.body,
             react_compiler_ast::statements::BlockStatement {
-            base: react_compiler_ast::common::BaseNode::typed("BlockStatement"),
-            body: Vec::new(),
-            directives: Vec::new(),
+                base: react_compiler_ast::common::BaseNode::typed("BlockStatement"),
+                body: Vec::new(),
+                directives: Vec::new(),
             },
         ),
         generator: codegen_fn.generator,
@@ -1236,30 +1244,30 @@ fn build_outlined_scope_info(
     // Helper to add a binding
     let _add_binding =
         |name: &str,
-                           kind: BindingKind,
-                           p: u32,
-                           fn_bindings: &mut HashMap<String, BindingId>,
-                           bindings_list: &mut Vec<BindingData>,
-                           ref_to_binding: &mut indexmap::IndexMap<u32, BindingId>| {
-        if fn_bindings.contains_key(name) {
-            // Already exists, just add reference
-            let bid = fn_bindings[name];
-            ref_to_binding.insert(p, bid);
-            return;
-        }
-        let binding_id = BindingId(bindings_list.len() as u32);
-        fn_bindings.insert(name.to_string(), binding_id);
-        bindings_list.push(BindingData {
-            id: binding_id,
-            name: name.to_string(),
-            kind,
-            scope: ScopeId(1),
-            declaration_type: "VariableDeclarator".to_string(),
-            declaration_start: Some(p),
-            import: None,
-        });
-        ref_to_binding.insert(p, binding_id);
-    };
+         kind: BindingKind,
+         p: u32,
+         fn_bindings: &mut HashMap<String, BindingId>,
+         bindings_list: &mut Vec<BindingData>,
+         ref_to_binding: &mut indexmap::IndexMap<u32, BindingId>| {
+            if fn_bindings.contains_key(name) {
+                // Already exists, just add reference
+                let bid = fn_bindings[name];
+                ref_to_binding.insert(p, bid);
+                return;
+            }
+            let binding_id = BindingId(bindings_list.len() as u32);
+            fn_bindings.insert(name.to_string(), binding_id);
+            bindings_list.push(BindingData {
+                id: binding_id,
+                name: name.to_string(),
+                kind,
+                scope: ScopeId(1),
+                declaration_type: "VariableDeclarator".to_string(),
+                declaration_start: Some(p),
+                import: None,
+            });
+            ref_to_binding.insert(p, binding_id);
+        };
 
     // Process params - add as Param bindings
     for param in &mut func.params {
