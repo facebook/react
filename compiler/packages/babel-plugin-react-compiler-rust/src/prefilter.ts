@@ -37,9 +37,11 @@ export function hasReactLikeFunctions(program: NodePath<t.Program>): boolean {
     },
     FunctionExpression(path) {
       if (found) return;
-      const name = path.node.id?.name ?? inferFunctionName(path);
+      const idName = path.node.id?.name;
+      const inferredName = inferFunctionName(path);
       if (
-        (name && isReactLikeName(name)) ||
+        (idName && isReactLikeName(idName)) ||
+        (inferredName && isReactLikeName(inferredName)) ||
         isInsideMemoOrForwardRef(path) ||
         hasOptInDirective(path.node)
       ) {

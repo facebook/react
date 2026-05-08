@@ -966,7 +966,7 @@ fn is_valid_props_annotation(param: &PatternLike) -> bool {
                     | "StringTypeAnnotation"
                     | "SymbolTypeAnnotation"
                     | "ThisTypeAnnotation"
-                | "TupleTypeAnnotation"
+                    | "TupleTypeAnnotation"
             )
         }
         "Noop" => true,
@@ -1193,13 +1193,13 @@ fn diagnostic_details_to_items(
                 message,
                 identifier_name,
             } => CompilerErrorItemInfo {
-                    kind: "error".to_string(),
-                    loc: loc.as_ref().map(|l| {
-                        let mut logger_loc = diag_loc_to_logger_loc(l, filename);
-                        logger_loc.identifier_name = identifier_name.clone();
-                        logger_loc
-                    }),
-                    message: message.clone(),
+                kind: "error".to_string(),
+                loc: loc.as_ref().map(|l| {
+                    let mut logger_loc = diag_loc_to_logger_loc(l, filename);
+                    logger_loc.identifier_name = identifier_name.clone();
+                    logger_loc
+                }),
+                message: message.clone(),
             },
             react_compiler_diagnostics::CompilerDiagnosticDetail::Hint { message } => {
                 CompilerErrorItemInfo {
@@ -1317,13 +1317,13 @@ fn log_error(
     for detail in &err.details {
         let detail_info = match detail {
             CompilerErrorOrDiagnostic::Diagnostic(d) => CompilerErrorDetailInfo {
-                    category: format!("{:?}", d.category),
-                    reason: d.reason.clone(),
-                    description: d.description.clone(),
-                    severity: format!("{:?}", d.logged_severity()),
-                    suggestions: suggestions_to_logger(&d.suggestions),
-                    details: diagnostic_details_to_items(d, source_filename),
-                    loc: None,
+                category: format!("{:?}", d.category),
+                reason: d.reason.clone(),
+                description: d.description.clone(),
+                severity: format!("{:?}", d.logged_severity()),
+                suggestions: suggestions_to_logger(&d.suggestions),
+                details: diagnostic_details_to_items(d, source_filename),
+                loc: None,
             },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
                 category: format!("{:?}", d.category),
@@ -1427,13 +1427,13 @@ fn compiler_error_to_info(err: &CompilerError, filename: Option<&str>) -> Compil
         .iter()
         .map(|d| match d {
             CompilerErrorOrDiagnostic::Diagnostic(d) => CompilerErrorDetailInfo {
-                    category: format!("{:?}", d.category),
-                    reason: d.reason.clone(),
-                    description: d.description.clone(),
-                    severity: format!("{:?}", d.severity()),
-                    suggestions: suggestions_to_logger(&d.suggestions),
-                    details: diagnostic_details_to_items(d, filename),
-                    loc: None,
+                category: format!("{:?}", d.category),
+                reason: d.reason.clone(),
+                description: d.description.clone(),
+                severity: format!("{:?}", d.severity()),
+                suggestions: suggestions_to_logger(&d.suggestions),
+                details: diagnostic_details_to_items(d, filename),
+                loc: None,
             },
             CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerErrorDetailInfo {
                 category: format!("{:?}", d.category),
@@ -1692,7 +1692,7 @@ fn fn_info_from_func_expr<'a>(
     parent_callee_name: Option<String>,
 ) -> FunctionInfo<'a> {
     FunctionInfo {
-        name: expr.id.as_ref().map(|id| id.name.clone()).or(inferred_name),
+        name: inferred_name,
         fn_node: FunctionNode::FunctionExpression(expr),
         params: &expr.params,
         body: FunctionBody::Block(&expr.body),
@@ -1787,8 +1787,10 @@ fn get_declarator_name(decl: &VariableDeclarator) -> Option<String> {
 /// Visitor that discovers functions to compile, matching the TypeScript
 /// compiler's Babel `program.traverse` behavior.
 ///
-/// Uses the `AstWalker` with `traverse_function_bodies` returning `false`
-/// so we don't recurse into function bodies (similar to Babel's `fn.skip()`).
+/// Dynamically controls body traversal via `traverse_function_bodies()`:
+/// functions that are queued for compilation have their bodies skipped
+/// (matching Babel's `fn.skip()`), while non-compiled functions have their
+/// bodies traversed to find nested component/hook declarations.
 ///
 /// Tracks parent context via:
 /// - `current_declarator_name`: set by `enter_variable_declarator`, used to
@@ -1814,6 +1816,10 @@ struct FunctionDiscoveryVisitor<'a, 'ast> {
     /// Depth counter for loop expression positions (while.test, for-in.right, etc.).
     /// When > 0, functions are treated as non-program-scope in 'all' mode.
     loop_expression_depth: usize,
+    /// Set by enter_* hooks: true when the function was queued for compilation,
+    /// meaning the walker should NOT traverse its body (matching Babel's fn.skip()).
+    /// When false, the walker DOES traverse the body to find nested declarations.
+    skip_body: bool,
 }
 
 impl<'a, 'ast> FunctionDiscoveryVisitor<'a, 'ast> {
@@ -1825,6 +1831,7 @@ impl<'a, 'ast> FunctionDiscoveryVisitor<'a, 'ast> {
             current_declarator_name: None,
             parent_callee_stack: Vec::new(),
             loop_expression_depth: 0,
+            skip_body: false,
         }
     }
 
@@ -1848,7 +1855,10 @@ impl<'a, 'ast> FunctionDiscoveryVisitor<'a, 'ast> {
 
 impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
     fn traverse_function_bodies(&self) -> bool {
-        false // Don't recurse into function bodies (like Babel's fn.skip())
+        // Dynamic: only skip the body of functions that were queued for compilation.
+        // Non-queued functions have their bodies traversed to find nested declarations
+        // (matching Babel behavior where fn.skip() is only called for compiled functions).
+        !self.skip_body
     }
 
     fn enter_loop_expression(&mut self) {
@@ -1920,12 +1930,14 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         node: &'ast FunctionDeclaration,
         scope_stack: &[ScopeId],
     ) {
+        self.skip_body = false;
         if self.is_rejected_by_scope_check(scope_stack) {
             return;
         }
         let info = fn_info_from_decl(node);
         if let Some(source) = try_make_compile_source(info, self.opts, self.context) {
             self.queue.push(source);
+            self.skip_body = true;
         }
     }
 
@@ -1934,18 +1946,19 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         node: &'ast FunctionExpression,
         scope_stack: &[ScopeId],
     ) {
+        self.skip_body = false;
         if self.is_rejected_by_scope_check(scope_stack) {
             return;
         }
-        let inferred_name = node
-            .id
-            .as_ref()
-            .map(|id| id.name.clone())
-            .or_else(|| self.current_declarator_name.take());
+        // TS getFunctionName for FunctionExpressions only returns names from parent
+        // context (VariableDeclarator, AssignmentExpression, Property) — never from
+        // the expression's own `id`. So we only use current_declarator_name here.
+        let inferred_name = self.current_declarator_name.take();
         let parent_callee = self.current_parent_callee();
         let info = fn_info_from_func_expr(node, inferred_name, parent_callee);
         if let Some(source) = try_make_compile_source(info, self.opts, self.context) {
             self.queue.push(source);
+            self.skip_body = true;
         }
     }
 
@@ -1954,6 +1967,7 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         node: &'ast ArrowFunctionExpression,
         scope_stack: &[ScopeId],
     ) {
+        self.skip_body = false;
         if self.is_rejected_by_scope_check(scope_stack) {
             return;
         }
@@ -1962,6 +1976,7 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
         let info = fn_info_from_arrow(node, inferred_name, parent_callee);
         if let Some(source) = try_make_compile_source(info, self.opts, self.context) {
             self.queue.push(source);
+            self.skip_body = true;
         }
     }
 }
@@ -1970,8 +1985,9 @@ impl<'a, 'ast> Visitor<'ast> for FunctionDiscoveryVisitor<'a, 'ast> {
 ///
 /// Uses the `AstWalker` with a `FunctionDiscoveryVisitor` to traverse
 /// the entire program, discovering functions at any depth. The visitor
-/// uses `traverse_function_bodies() -> false` to skip recursing into
-/// function bodies (matching Babel's `fn.skip()` behavior).
+/// dynamically controls body traversal: compiled functions have their
+/// bodies skipped (matching Babel's `fn.skip()`), while non-compiled
+/// functions have their bodies traversed to find nested declarations.
 ///
 /// The visitor tracks parent context (VariableDeclarator names for
 /// `const Foo = () => {}`, CallExpression callees for forwardRef/memo
@@ -3177,11 +3193,11 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
     match stmt {
         Statement::FunctionDeclaration(f) => f.base.start == Some(start),
         Statement::VariableDeclaration(var_decl) => var_decl.declarations.iter().any(|decl| {
-                if let Some(ref init) = decl.init {
-                    expr_has_fn_at_start(init, start)
-                } else {
-                    false
-                }
+            if let Some(ref init) = decl.init {
+                expr_has_fn_at_start(init, start)
+            } else {
+                false
+            }
         }),
         Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
             ExportDefaultDecl::FunctionDeclaration(f) => f.base.start == Some(start),
@@ -3319,7 +3335,6 @@ fn expr_has_fn_at_start(expr: &Expression, start: u32) -> bool {
         _ => false,
     }
 }
-
 
 /// Visitor that replaces a compiled function in the AST by matching `base.start`.
 struct ReplaceFnVisitor<'a> {
@@ -3691,9 +3706,9 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
                 // Check body directives for dynamic gating
                 let dynamic_gating =
                     find_directives_dynamic_gating(&cf.source.body_directives, &options)
-                .ok()
-                .flatten()
-                .map(|r| r.gating);
+                        .ok()
+                        .flatten()
+                        .map(|r| r.gating);
                 dynamic_gating.or_else(|| function_gating_config.clone())
             } else {
                 None
@@ -3763,9 +3778,9 @@ fn convert_renames(
     renames
         .iter()
         .map(|r| BindingRenameInfo {
-        original: r.original.clone(),
-        renamed: r.renamed.clone(),
-        declaration_start: r.declaration_start,
+            original: r.original.clone(),
+            renamed: r.renamed.clone(),
+            declaration_start: r.declaration_start,
         })
         .collect()
 }
