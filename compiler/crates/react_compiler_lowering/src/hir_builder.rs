@@ -160,6 +160,9 @@ pub struct HirBuilder<'a> {
     /// and any inner function scope, that are referenced from an inner function scope.
     /// These need StoreContext/LoadContext instead of StoreLocal/LoadLocal.
     context_identifiers: std::collections::HashSet<BindingId>,
+    /// Set of ScopeIds that have been matched to synthetic blocks/functions.
+    /// Prevents the same scope from being reused for different synthetic nodes.
+    claimed_synthetic_scopes: std::collections::HashSet<ScopeId>,
     /// Index mapping identifier byte offsets to source locations and JSX status.
     identifier_locs: &'a IdentifierLocIndex,
 }
@@ -207,6 +210,7 @@ impl<'a> HirBuilder<'a> {
             function_scope,
             component_scope,
             context_identifiers,
+            claimed_synthetic_scopes: std::collections::HashSet::new(),
             identifier_locs,
         }
     }
@@ -289,6 +293,14 @@ impl<'a> HirBuilder<'a> {
     /// Add a binding to the context identifiers set (used by hoisting).
     pub fn add_context_identifier(&mut self, binding_id: BindingId) {
         self.context_identifiers.insert(binding_id);
+    }
+
+    pub fn claim_synthetic_scope(&mut self, scope_id: ScopeId) {
+        self.claimed_synthetic_scopes.insert(scope_id);
+    }
+
+    pub fn is_synthetic_scope_claimed(&self, scope_id: ScopeId) -> bool {
+        self.claimed_synthetic_scopes.contains(&scope_id)
     }
 
     /// Access scope_info and environment mutably at the same time.

@@ -2373,11 +2373,9 @@ fn collect_binding_names_from_pattern(
 fn lower_block_statement(
     builder: &mut HirBuilder,
     block: &react_compiler_ast::statements::BlockStatement,
+    parent_scope: Option<react_compiler_ast::scope::ScopeId>,
 ) -> Result<(), CompilerError> {
-    // Errors from lower_block_statement_inner are already recorded on the
-    // environment by record_error, so we intentionally drop the Result here
-    // to avoid double-recording diagnostics.
-    let _ = lower_block_statement_inner(builder, block, None);
+    let _ = lower_block_statement_inner(builder, block, None, parent_scope);
     Ok(())
 }
 
@@ -2386,10 +2384,7 @@ fn lower_block_statement_with_scope(
     block: &react_compiler_ast::statements::BlockStatement,
     scope_override: react_compiler_ast::scope::ScopeId,
 ) -> Result<(), CompilerError> {
-    // Errors from lower_block_statement_inner are already recorded on the
-    // environment by record_error, so we intentionally drop the Result here
-    // to avoid double-recording diagnostics.
-    let _ = lower_block_statement_inner(builder, block, Some(scope_override));
+    let _ = lower_block_statement_inner(builder, block, Some(scope_override), None);
     Ok(())
 }
 
@@ -2397,6 +2392,7 @@ fn lower_block_statement_inner(
     builder: &mut HirBuilder,
     block: &react_compiler_ast::statements::BlockStatement,
     scope_override: Option<react_compiler_ast::scope::ScopeId>,
+    parent_scope: Option<react_compiler_ast::scope::ScopeId>,
 ) -> Result<(), CompilerDiagnostic> {
     use react_compiler_ast::scope::BindingKind as AstBindingKind;
     use react_compiler_ast::statements::Statement;
@@ -2404,18 +2400,39 @@ fn lower_block_statement_inner(
     // Look up the block's scope to identify hoistable bindings.
     // Use the scope override if provided (for function body blocks that share the function's scope).
     let block_scope_id = scope_override.or_else(|| {
-        block
-            .base
-            .start
-            .and_then(|start| builder.scope_info().node_to_scope.get(&start).copied())
+        let found = block.base.start.and_then(|start| {
+            if start == 0 { return None; }
+            builder.scope_info().node_to_scope.get(&start).copied()
+        });
+        if found.is_some() { return found; }
+        // Fallback for synthetic blocks (start=0 from Hermes match desugar):
+        // find a descendant scope of the parent that contains the block's declarations.
+        let mut decl_names = Vec::new();
+        for stmt in &block.body {
+            if let Statement::VariableDeclaration(vd) = stmt {
+                for d in &vd.declarations {
+                    if let react_compiler_ast::patterns::PatternLike::Identifier(id) = &d.id {
+                        decl_names.push(id.name.as_str());
+                    }
+                }
+            }
+        }
+        if decl_names.is_empty() { return None; }
+        let search_parent = parent_scope.unwrap_or_else(|| builder.function_scope());
+        let found = builder.scope_info().find_child_block_scope_by_bindings(&decl_names, search_parent, |sid| {
+            builder.is_synthetic_scope_claimed(sid)
+        });
+        if let Some(sid) = found {
+            builder.claim_synthetic_scope(sid);
+        }
+        found
     });
 
     let scope_id = match block_scope_id {
         Some(id) => id,
         None => {
-            // No scope found for this block, just lower statements normally
             for body_stmt in &block.body {
-                lower_statement(builder, body_stmt, None)?;
+                lower_statement(builder, body_stmt, None, parent_scope)?;
             }
             return Ok(());
         }
@@ -2428,15 +2445,15 @@ fn lower_block_statement_inner(
         .scope_info()
         .scope_bindings(scope_id)
         .filter(|b| {
-            !matches!(b.kind, AstBindingKind::Param)
+            !matches!(b.kind, AstBindingKind::Param | AstBindingKind::Module)
             && b.declaration_type != "FunctionExpression"
-            // Skip type-only declarations (TypeAlias, OpaqueType, InterfaceDeclaration, etc.)
             && !matches!(b.declaration_type.as_str(),
                 "TypeAlias" | "OpaqueType" | "InterfaceDeclaration"
                 | "DeclareVariable" | "DeclareFunction" | "DeclareClass"
                 | "DeclareModule" | "DeclareInterface" | "DeclareOpaqueType"
                 | "TSTypeAliasDeclaration" | "TSInterfaceDeclaration"
                 | "TSEnumDeclaration" | "TSModuleDeclaration"
+                | "ImportSpecifier" | "ImportDefaultSpecifier" | "ImportNamespaceSpecifier"
             )
         })
         .map(|b| {
@@ -2453,7 +2470,7 @@ fn lower_block_statement_inner(
     if hoistable.is_empty() {
         // No hoistable bindings, just lower statements normally
         for body_stmt in &block.body {
-            lower_statement(builder, body_stmt, None)?;
+            lower_statement(builder, body_stmt, None, Some(scope_id))?;
         }
         return Ok(());
     }
@@ -2684,7 +2701,7 @@ fn lower_block_statement_inner(
             }
         }
 
-        lower_statement(builder, body_stmt, None)?;
+        lower_statement(builder, body_stmt, None, Some(scope_id))?;
     }
     Ok(())
 }
@@ -2697,6 +2714,7 @@ fn lower_statement(
     builder: &mut HirBuilder,
     stmt: &react_compiler_ast::statements::Statement,
     label: Option<&str>,
+    parent_scope: Option<react_compiler_ast::scope::ScopeId>,
 ) -> Result<(), CompilerDiagnostic> {
     use react_compiler_ast::statements::Statement;
 
@@ -2762,7 +2780,7 @@ fn lower_statement(
             );
         }
         Statement::BlockStatement(block) => {
-            lower_block_statement(builder, block)?;
+            lower_block_statement(builder, block, parent_scope)?;
         }
         Statement::VariableDeclaration(var_decl) => {
             use react_compiler_ast::patterns::PatternLike;
@@ -2908,7 +2926,7 @@ fn lower_statement(
             // Block for the consequent (if the test is truthy)
             let consequent_loc = statement_loc(&if_stmt.consequent);
             let consequent_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
-                lower_statement(builder, &if_stmt.consequent, None)?;
+                lower_statement(builder, &if_stmt.consequent, None, parent_scope)?;
                 Ok(Terminal::Goto {
                     block: continuation_id,
                     variant: GotoVariant::Break,
@@ -2921,7 +2939,7 @@ fn lower_statement(
             let alternate_block = if let Some(alternate) = &if_stmt.alternate {
                 let alternate_loc = statement_loc(alternate);
                 builder.try_enter(BlockKind::Block, |builder, _block_id| {
-                    lower_statement(builder, alternate, None)?;
+                    lower_statement(builder, alternate, None, parent_scope)?;
                     Ok(Terminal::Goto {
                         block: continuation_id,
                         variant: GotoVariant::Break,
@@ -2972,7 +2990,7 @@ fn lower_statement(
                         match init.as_ref() {
                             react_compiler_ast::statements::ForInit::VariableDeclaration(var_decl) => {
                                 let init_loc = convert_opt_loc(&var_decl.base.loc);
-                                lower_statement(builder, &Statement::VariableDeclaration(var_decl.clone()), None)?;
+                                lower_statement(builder, &Statement::VariableDeclaration(var_decl.clone()), None, parent_scope)?;
                                 init_loc
                             }
                             react_compiler_ast::statements::ForInit::Expression(expr) => {
@@ -3023,7 +3041,7 @@ fn lower_statement(
                     continue_target,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &for_stmt.body, None)?;
+                        lower_statement(builder, &for_stmt.body, None, parent_scope)?;
                         Ok(Terminal::Goto {
                             block: continue_target,
                             variant: GotoVariant::Continue,
@@ -3107,7 +3125,7 @@ fn lower_statement(
                     conditional_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &while_stmt.body, None)?;
+                        lower_statement(builder, &while_stmt.body, None, parent_scope)?;
                         Ok(Terminal::Goto {
                             block: conditional_id,
                             variant: GotoVariant::Continue,
@@ -3161,7 +3179,7 @@ fn lower_statement(
                     conditional_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &do_while_stmt.body, None)?;
+                        lower_statement(builder, &do_while_stmt.body, None, parent_scope)?;
                         Ok(Terminal::Goto {
                             block: conditional_id,
                             variant: GotoVariant::Continue,
@@ -3212,7 +3230,7 @@ fn lower_statement(
                     init_block_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &for_in.body, None)?;
+                        lower_statement(builder, &for_in.body, None, parent_scope)?;
                         Ok(Terminal::Goto {
                             block: init_block_id,
                             variant: GotoVariant::Continue,
@@ -3336,7 +3354,7 @@ fn lower_statement(
                     init_block_id,
                     continuation_id,
                     |builder| {
-                        lower_statement(builder, &for_of.body, None)?;
+                        lower_statement(builder, &for_of.body, None, parent_scope)?;
                         Ok(Terminal::Goto {
                             block: init_block_id,
                             variant: GotoVariant::Continue,
@@ -3487,7 +3505,7 @@ fn lower_statement(
                 let block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                     builder.switch_scope(label.map(|s| s.to_string()), continuation_id, |builder| {
                         for consequent in &case.consequent {
-                            lower_statement(builder, consequent, None)?;
+                            lower_statement(builder, consequent, None, parent_scope)?;
                         }
                         Ok(Terminal::Goto {
                             block: fallthrough_target,
@@ -3686,7 +3704,7 @@ fn lower_statement(
                     // No scope found — this shouldn't happen with well-formed Babel output.
                     // Fall back to plain block lowering (no hoisting) rather than panicking,
                     // since this is a non-critical degradation.
-                    lower_block_statement(builder, &handler_clause.body)?;
+                    lower_block_statement(builder, &handler_clause.body, parent_scope)?;
                 }
                 Ok(Terminal::Goto {
                     block: continuation_id,
@@ -3701,7 +3719,7 @@ fn lower_statement(
             let try_block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                 builder.try_enter_try_catch(handler_block, |builder| {
                     for stmt in &try_stmt.block.body {
-                        lower_statement(builder, stmt, None)?;
+                        lower_statement(builder, stmt, None, parent_scope)?;
                     }
                     Ok(())
                 })?;
@@ -3737,7 +3755,7 @@ fn lower_statement(
                 | Statement::ForInStatement(_)
                 | Statement::ForOfStatement(_) => {
                     // Labeled loops are special because of continue, push the label down
-                    lower_statement(builder, &labeled_stmt.body, Some(label_name))?;
+                    lower_statement(builder, &labeled_stmt.body, Some(label_name), parent_scope)?;
                 }
                 _ => {
                     // All other statements create a continuation block to allow `break`
@@ -3747,7 +3765,7 @@ fn lower_statement(
 
                     let block = builder.try_enter(BlockKind::Block, |builder, _block_id| {
                         builder.label_scope(label_name.clone(), continuation_id, |builder| {
-                            lower_statement(builder, &labeled_stmt.body, None)?;
+                            lower_statement(builder, &labeled_stmt.body, None, parent_scope)?;
                             Ok(())
                         })?;
                         Ok(Terminal::Goto {
@@ -5189,13 +5207,61 @@ fn lower_function(
         }
     };
 
-    // Find the function's scope
-    let function_scope = builder
-        .scope_info()
-        .node_to_scope
-        .get(&func_start)
-        .copied()
-        .unwrap_or(builder.scope_info().program_scope);
+    // Find the function's scope. For synthetic zero-width functions (e.g., desugared
+    // match IIFEs from Hermes with start=end=0), nodeToScope won't have an entry.
+    let function_scope = if func_start < func_end {
+        builder
+            .scope_info()
+            .node_to_scope
+            .get(&func_start)
+            .copied()
+            .unwrap_or(builder.scope_info().program_scope)
+    } else {
+        let parent = builder.function_scope();
+        let scope_info = builder.scope_info();
+        let mapped: std::collections::HashSet<react_compiler_ast::scope::ScopeId> =
+            scope_info.node_to_scope.values().copied().collect();
+        let param_names: Vec<String> = params.iter().filter_map(|p| {
+            if let react_compiler_ast::patterns::PatternLike::Identifier(id) = p {
+                Some(id.name.clone())
+            } else { None }
+        }).collect();
+        let mut descendants = std::collections::HashSet::new();
+        descendants.insert(parent);
+        let mut changed = true;
+        while changed {
+            changed = false;
+            for (i, scope) in scope_info.scopes.iter().enumerate() {
+                let sid = react_compiler_ast::scope::ScopeId(i as u32);
+                if let Some(p) = scope.parent {
+                    if descendants.contains(&p) && !descendants.contains(&sid) {
+                        descendants.insert(sid);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        let mut found = scope_info.program_scope;
+        for (i, scope) in scope_info.scopes.iter().enumerate() {
+            let sid = react_compiler_ast::scope::ScopeId(i as u32);
+            if let Some(p) = scope.parent {
+                if descendants.contains(&p)
+                    && matches!(scope.kind, ScopeKind::Function)
+                    && !mapped.contains(&sid)
+                    && !builder.is_synthetic_scope_claimed(sid)
+                {
+                    if !param_names.is_empty() {
+                        let all_match = param_names.iter().all(|name| scope.bindings.contains_key(name));
+                        if !all_match { continue; }
+                    }
+                    found = sid;
+                    break;
+                }
+            }
+        }
+        builder.claim_synthetic_scope(found);
+        found
+    };
 
     let component_scope = builder.component_scope();
     let scope_info = builder.scope_info();
@@ -5206,6 +5272,14 @@ fn lower_function(
     let context_ids = builder.context_identifiers().clone();
     let ident_locs = builder.identifier_locs();
 
+    // For synthetic functions with zero-width position ranges, position-based
+    // reference filtering fails. Walk the body AST to collect actual positions.
+    let ref_override = if func_start >= func_end {
+        Some(collect_identifier_positions_from_body(&body))
+    } else {
+        None
+    };
+
     // Gather captured context
     let captured_context = gather_captured_context(
         scope_info,
@@ -5214,12 +5288,8 @@ fn lower_function(
         func_start,
         func_end,
         ident_locs,
+        ref_override.as_ref(),
     );
-
-    // Merge parent context with captured context.
-    // The locally-gathered captured context overrides the parent's loc values,
-    // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
-    // where later entries win.
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
         let mut merged = parent_context;
@@ -5295,11 +5365,8 @@ fn lower_function_declaration(
         func_start,
         func_end,
         ident_locs,
+        None,
     );
-
-    // Merge parent context with captured context.
-    // The locally-gathered captured context overrides the parent's loc values,
-    // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
         let mut merged = parent_context;
@@ -5464,10 +5531,8 @@ fn lower_function_for_object_method(
         func_start,
         func_end,
         ident_locs,
+        None,
     );
-
-    // Merge parent context with captured context.
-    // The locally-gathered captured context overrides the parent's loc values,
     // matching the TS behavior: `new Map([...builder.context, ...capturedContext])`
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
         let parent_context = builder.context().clone();
@@ -6253,6 +6318,7 @@ fn gather_captured_context(
     func_start: u32,
     func_end: u32,
     identifier_locs: &IdentifierLocIndex,
+    ref_positions_override: Option<&IndexSet<u32>>,
 ) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
     let parent_scope = scope_info.scopes[function_scope.0 as usize].parent;
     let pure_scopes = match parent_scope {
@@ -6264,8 +6330,14 @@ fn gather_captured_context(
         IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
 
     for (&ref_start, &binding_id) in &scope_info.reference_to_binding {
-        if ref_start < func_start || ref_start >= func_end {
-            continue;
+        if let Some(allowed) = ref_positions_override {
+            if !allowed.contains(&ref_start) {
+                continue;
+            }
+        } else {
+            if ref_start < func_start || ref_start >= func_end {
+                continue;
+            }
         }
         let binding = &scope_info.bindings[binding_id.0 as usize];
         // Skip references that are actually the binding's own declaration site
@@ -6380,5 +6452,216 @@ fn collect_fbt_sub_tags(
             }
             _ => {}
         }
+    }
+}
+
+fn collect_identifier_positions_from_body(body: &FunctionBody) -> IndexSet<u32> {
+    let mut positions = IndexSet::new();
+    match body {
+        FunctionBody::Block(block) => {
+            for stmt in &block.body {
+                collect_identifier_positions_from_stmt(stmt, &mut positions);
+            }
+        }
+        FunctionBody::Expression(expr) => {
+            collect_identifier_positions_from_expr(expr, &mut positions);
+        }
+    }
+    positions
+}
+
+fn collect_identifier_positions_from_stmt(
+    stmt: &react_compiler_ast::statements::Statement,
+    positions: &mut IndexSet<u32>,
+) {
+    use react_compiler_ast::statements::Statement;
+    match stmt {
+        Statement::ExpressionStatement(s) => collect_identifier_positions_from_expr(&s.expression, positions),
+        Statement::ReturnStatement(s) => {
+            if let Some(arg) = &s.argument { collect_identifier_positions_from_expr(arg, positions); }
+        }
+        Statement::ThrowStatement(s) => collect_identifier_positions_from_expr(&s.argument, positions),
+        Statement::BlockStatement(s) => {
+            for stmt in &s.body { collect_identifier_positions_from_stmt(stmt, positions); }
+        }
+        Statement::IfStatement(s) => {
+            collect_identifier_positions_from_expr(&s.test, positions);
+            collect_identifier_positions_from_stmt(&s.consequent, positions);
+            if let Some(alt) = &s.alternate { collect_identifier_positions_from_stmt(alt, positions); }
+        }
+        Statement::VariableDeclaration(s) => {
+            for decl in &s.declarations {
+                if let Some(init) = &decl.init { collect_identifier_positions_from_expr(init, positions); }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn collect_identifier_positions_from_expr(
+    expr: &react_compiler_ast::expressions::Expression,
+    positions: &mut IndexSet<u32>,
+) {
+    use react_compiler_ast::expressions::Expression;
+    match expr {
+        Expression::Identifier(id) => {
+            if let Some(start) = id.base.start { positions.insert(start); }
+        }
+        Expression::CallExpression(call) => {
+            collect_identifier_positions_from_expr(&call.callee, positions);
+            for arg in &call.arguments {
+                collect_identifier_positions_from_expr(arg, positions);
+            }
+        }
+        Expression::BinaryExpression(e) => {
+            collect_identifier_positions_from_expr(&e.left, positions);
+            collect_identifier_positions_from_expr(&e.right, positions);
+        }
+        Expression::ConditionalExpression(e) => {
+            collect_identifier_positions_from_expr(&e.test, positions);
+            collect_identifier_positions_from_expr(&e.consequent, positions);
+            collect_identifier_positions_from_expr(&e.alternate, positions);
+        }
+        Expression::LogicalExpression(e) => {
+            collect_identifier_positions_from_expr(&e.left, positions);
+            collect_identifier_positions_from_expr(&e.right, positions);
+        }
+        Expression::MemberExpression(e) => {
+            collect_identifier_positions_from_expr(&e.object, positions);
+        }
+        Expression::OptionalMemberExpression(e) => {
+            collect_identifier_positions_from_expr(&e.object, positions);
+        }
+        Expression::OptionalCallExpression(e) => {
+            collect_identifier_positions_from_expr(&e.callee, positions);
+            for arg in &e.arguments {
+                collect_identifier_positions_from_expr(arg, positions);
+            }
+        }
+        Expression::UpdateExpression(e) => {
+            collect_identifier_positions_from_expr(&e.argument, positions);
+        }
+        Expression::FunctionExpression(func) => {
+            for stmt in &func.body.body {
+                collect_identifier_positions_from_stmt(stmt, positions);
+            }
+        }
+        Expression::UnaryExpression(e) => {
+            collect_identifier_positions_from_expr(&e.argument, positions);
+        }
+        Expression::ParenthesizedExpression(e) => {
+            collect_identifier_positions_from_expr(&e.expression, positions);
+        }
+        Expression::TypeCastExpression(e) => {
+            collect_identifier_positions_from_expr(&e.expression, positions);
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            match arrow.body.as_ref() {
+                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                    for stmt in &block.body { collect_identifier_positions_from_stmt(stmt, positions); }
+                }
+                react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
+                    collect_identifier_positions_from_expr(e, positions);
+                }
+            }
+        }
+        Expression::JSXElement(el) => {
+            if let react_compiler_ast::jsx::JSXElementName::JSXIdentifier(id) = &el.opening_element.name {
+                if let Some(start) = id.base.start { positions.insert(start); }
+            }
+            for attr in &el.opening_element.attributes {
+                match attr {
+                    react_compiler_ast::jsx::JSXAttributeItem::JSXAttribute(a) => {
+                        if let Some(val) = &a.value {
+                            match val {
+                                react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(c) => {
+                                    if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) = &c.expression {
+                                        collect_identifier_positions_from_expr(e, positions);
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    react_compiler_ast::jsx::JSXAttributeItem::JSXSpreadAttribute(a) => {
+                        collect_identifier_positions_from_expr(&a.argument, positions);
+                    }
+                }
+            }
+            for child in &el.children {
+                match child {
+                    react_compiler_ast::jsx::JSXChild::JSXExpressionContainer(c) => {
+                        if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) = &c.expression {
+                            collect_identifier_positions_from_expr(e, positions);
+                        }
+                    }
+                    react_compiler_ast::jsx::JSXChild::JSXElement(child_el) => {
+                        collect_identifier_positions_from_expr(&Expression::JSXElement(child_el.clone()), positions);
+                    }
+                    react_compiler_ast::jsx::JSXChild::JSXSpreadChild(s) => {
+                        collect_identifier_positions_from_expr(&s.expression, positions);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::JSXFragment(frag) => {
+            for child in &frag.children {
+                match child {
+                    react_compiler_ast::jsx::JSXChild::JSXExpressionContainer(c) => {
+                        if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) = &c.expression {
+                            collect_identifier_positions_from_expr(e, positions);
+                        }
+                    }
+                    react_compiler_ast::jsx::JSXChild::JSXElement(child_el) => {
+                        collect_identifier_positions_from_expr(&Expression::JSXElement(child_el.clone()), positions);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::ArrayExpression(arr) => {
+            for elem in &arr.elements {
+                if let Some(e) = elem {
+                    collect_identifier_positions_from_expr(e, positions);
+                }
+            }
+        }
+        Expression::ObjectExpression(obj) => {
+            for prop in &obj.properties {
+                match prop {
+                    react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(p) => {
+                        collect_identifier_positions_from_expr(&p.value, positions);
+                    }
+                    react_compiler_ast::expressions::ObjectExpressionProperty::SpreadElement(s) => {
+                        collect_identifier_positions_from_expr(&s.argument, positions);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Expression::NewExpression(e) => {
+            collect_identifier_positions_from_expr(&e.callee, positions);
+            for arg in &e.arguments {
+                collect_identifier_positions_from_expr(arg, positions);
+            }
+        }
+        Expression::AssignmentExpression(e) => {
+            collect_identifier_positions_from_expr(&e.right, positions);
+        }
+        Expression::TemplateLiteral(e) => {
+            for expr in &e.expressions {
+                collect_identifier_positions_from_expr(expr, positions);
+            }
+        }
+        Expression::SpreadElement(e) => {
+            collect_identifier_positions_from_expr(&e.argument, positions);
+        }
+        Expression::SequenceExpression(e) => {
+            for expr in &e.expressions {
+                collect_identifier_positions_from_expr(expr, positions);
+            }
+        }
+        _ => {}
     }
 }

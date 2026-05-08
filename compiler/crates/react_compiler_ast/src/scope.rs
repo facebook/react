@@ -150,14 +150,43 @@ impl ScopeInfo {
     /// binding whose name doesn't match -- e.g., when Babel's Flow component transform
     /// creates multiple params with the same start position.
     pub fn resolve_reference_by_name(&self, name: &str, start: u32) -> Option<&BindingData> {
-        // Find which scope contains this position
-        let scope_id = self.resolve_reference(start).map(|b| b.scope)?;
-        // Look for a binding with the matching name in that scope
-        let scope = &self.scopes[scope_id.0 as usize];
-        scope
-            .bindings
-            .get(name)
-            .map(|id| &self.bindings[id.0 as usize])
+        let scope_id = self.resolve_reference(start)
+            .map(|b| b.scope)?;
+        let mut current = Some(scope_id);
+        while let Some(sid) = current {
+            let scope = &self.scopes[sid.0 as usize];
+            if let Some(id) = scope.bindings.get(name) {
+                return Some(&self.bindings[id.0 as usize]);
+            }
+            current = scope.parent;
+        }
+        None
+    }
+
+    /// Find a binding by name within the descendants of a given scope.
+    pub fn find_binding_in_descendants(&self, name: &str, ancestor: ScopeId) -> Option<&BindingData> {
+        let mut descendants = std::collections::HashSet::new();
+        descendants.insert(ancestor);
+        let mut changed = true;
+        while changed {
+            changed = false;
+            for (i, scope) in self.scopes.iter().enumerate() {
+                let sid = ScopeId(i as u32);
+                if let Some(parent) = scope.parent {
+                    if descendants.contains(&parent) && !descendants.contains(&sid) {
+                        descendants.insert(sid);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        for sid in &descendants {
+            let scope = &self.scopes[sid.0 as usize];
+            if let Some(id) = scope.bindings.get(name) {
+                return Some(&self.bindings[id.0 as usize]);
+            }
+        }
+        None
     }
 
     /// Get all bindings declared in a scope (for hoisting iteration).
@@ -166,5 +195,38 @@ impl ScopeInfo {
             .bindings
             .values()
             .map(|id| &self.bindings[id.0 as usize])
+    }
+
+    /// Find a descendant block scope by matching variable names declared within it.
+    /// Searches all descendants of `parent` because intermediate synthetic scopes
+    /// may be absent from `node_to_scope`. The `is_claimed` predicate prevents
+    /// reuse when multiple synthetic blocks declare the same variable name.
+    pub fn find_child_block_scope_by_bindings(&self, names: &[&str], parent: ScopeId, is_claimed: impl Fn(ScopeId) -> bool) -> Option<ScopeId> {
+        let mut descendants = std::collections::HashSet::new();
+        descendants.insert(parent);
+        let mut changed = true;
+        while changed {
+            changed = false;
+            for (i, scope) in self.scopes.iter().enumerate() {
+                let sid = ScopeId(i as u32);
+                if let Some(p) = scope.parent {
+                    if descendants.contains(&p) && !descendants.contains(&sid) {
+                        descendants.insert(sid);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        for (i, scope) in self.scopes.iter().enumerate() {
+            let sid = ScopeId(i as u32);
+            if !descendants.contains(&sid) { continue; }
+            if matches!(scope.kind, ScopeKind::Function) { continue; }
+            if is_claimed(sid) { continue; }
+            let all_match = names.iter().all(|name| scope.bindings.contains_key(*name));
+            if all_match {
+                return Some(sid);
+            }
+        }
+        None
     }
 }
