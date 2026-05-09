@@ -331,6 +331,7 @@ module.exports = {
         'packages/react-server-dom-turbopack/**/*.js',
         'packages/react-server-dom-parcel/**/*.js',
         'packages/react-server-dom-fb/**/*.js',
+        'packages/react-flight-server-fb/**/*.js',
         'packages/react-server-dom-unbundled/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
@@ -581,6 +582,8 @@ module.exports = {
     CopyInspectedElementPath: 'readonly',
     DOMHighResTimeStamp: 'readonly',
     EventListener: 'readonly',
+    // Flow type
+    FormDataEntryValue: 'readonly',
     Iterable: 'readonly',
     AsyncIterable: 'readonly',
     $AsyncIterable: 'readonly',

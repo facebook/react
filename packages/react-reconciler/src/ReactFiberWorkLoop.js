@@ -51,6 +51,7 @@ import {
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
+  enableInfiniteRenderLoopDetectionForceThrow,
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
@@ -5175,6 +5176,27 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   retryTimedOutBoundary(boundaryFiber, retryLane);
 }
 
+function throwForcedInfiniteRenderLoopError(
+  root: FiberRoot | null,
+  renderLanes: Lanes,
+): empty {
+  if (root !== null) {
+    // Disable concurrent error recovery for the in-progress render so the thrown
+    // error reaches the nearest error boundary and breaks the infinite update
+    // loop instead of being silently retried by the recovery mechanism.
+    root.errorRecoveryDisabledLanes = mergeLanes(
+      root.errorRecoveryDisabledLanes,
+      renderLanes,
+    );
+  }
+  throw new Error(
+    'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
+      'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
+      'causing infinite render loop. React limits the number of nested updates to ' +
+      'prevent infinite loops.',
+  );
+}
+
 export function throwIfInfiniteUpdateLoopDetected(
   isFromInfiniteRenderLoopDetectionInstrumentation: boolean,
 ) {
@@ -5191,10 +5213,16 @@ export function throwIfInfiniteUpdateLoopDetected(
       if (updateKind === NESTED_UPDATE_SYNC_LANE) {
         if (
           isFromInfiniteRenderLoopDetectionInstrumentation ||
-          (executionContext & RenderContext && workInProgressRoot !== null)
+          (executionContext & RenderContext) !== NoContext
         ) {
-          // This loop was identified only because of the instrumentation gated with enableInfiniteRenderLoopDetection, warn instead of throwing.
-          if (__DEV__) {
+          // This loop was identified only because of the instrumentation gated with enableInfiniteRenderLoopDetection,
+          // warn instead of throwing, unless enableInfiniteRenderLoopDetectionForceThrow.
+          if (enableInfiniteRenderLoopDetectionForceThrow) {
+            throwForcedInfiniteRenderLoopError(
+              workInProgressRoot,
+              workInProgressRootRenderLanes,
+            );
+          } else if (__DEV__) {
             console.error(
               'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
                 'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
@@ -5211,7 +5239,12 @@ export function throwIfInfiniteUpdateLoopDetected(
           );
         }
       } else if (updateKind === NESTED_UPDATE_PHASE_SPAWN) {
-        if (__DEV__) {
+        if (enableInfiniteRenderLoopDetectionForceThrow) {
+          throwForcedInfiniteRenderLoopError(
+            workInProgressRoot,
+            workInProgressRootRenderLanes,
+          );
+        } else if (__DEV__) {
           console.error(
             'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
               'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
@@ -5312,9 +5345,11 @@ function doubleInvokeEffectsInDEVIfNecessary(
   if (fiber.memoizedState === null) {
     // Only consider Offscreen that is visible.
     // TODO (Offscreen) Handle manual mode.
-    if (isInStrictMode && fiber.flags & Visibility) {
-      // Double invoke effects on Offscreen's subtree only
+    if (isInStrictMode && fiber.flags & (Visibility | PlacementDEV)) {
+      // Double invoke effects on Offscreen's subtree
       // if it is visible and its visibility has changed.
+      // However, we also need to consider newly hydrated Offscreen because their
+      // visibility flags might not have changed.
       runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
     } else if (fiber.subtreeFlags & PlacementDEV) {
       // Something in the subtree could have been suspended.

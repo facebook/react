@@ -52,6 +52,7 @@ export const passChildrenWhenCloningPersistedNodes: boolean = false;
 export const disableClientCache: boolean = true;
 
 export const enableInfiniteRenderLoopDetection: boolean = false;
+export const enableInfiniteRenderLoopDetectionForceThrow: boolean = false;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 export const enableEffectEventMutationPhase: boolean = false;
