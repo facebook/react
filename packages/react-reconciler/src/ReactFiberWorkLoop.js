@@ -5263,18 +5263,16 @@ export function throwIfInfiniteUpdateLoopDetected(
     }
   }
 
-  if (__DEV__) {
-    if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
-      nestedPassiveUpdateCount = 0;
-      rootWithPassiveNestedUpdates = null;
+  if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
+    nestedPassiveUpdateCount = 0;
+    rootWithPassiveNestedUpdates = null;
 
-      console.error(
-        'Maximum update depth exceeded. This can happen when a component ' +
-          "calls setState inside useEffect, but useEffect either doesn't " +
-          'have a dependency array, or one of the dependencies changes on ' +
-          'every render.',
-      );
-    }
+    throw new Error(
+      'Maximum update depth exceeded. This can happen when a component ' +
+        "calls setState inside useEffect, but useEffect either doesn't " +
+        'have a dependency array, or one of the dependencies changes on ' +
+        'every render.',
+    );
   }
 }
 
