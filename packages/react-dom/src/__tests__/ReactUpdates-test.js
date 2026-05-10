@@ -1975,6 +1975,34 @@ describe('ReactUpdates', () => {
     });
   }
 
+  it('throws on deferred infinite update loop with useEffect in production', async () => {
+    function NonTerminating() {
+      const [step, setStep] = React.useState(0);
+      React.useEffect(function myEffect() {
+        setStep(x => x + 1);
+      });
+      return step;
+    }
+
+    const container = document.createElement('div');
+    const errors = [];
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError: (error, errorInfo) => {
+        errors.push(error.message);
+      },
+    });
+    await act(async () => {
+      root.render(<NonTerminating />);
+    });
+
+    expect(errors).toEqual([
+      'Maximum update depth exceeded. This can happen when a component ' +
+        "calls setState inside useEffect, but useEffect either doesn't " +
+        'have a dependency array, or one of the dependencies changes on ' +
+        'every render.',
+    ]);
+  });
+
   it('prevents infinite update loop triggered by synchronous updates in useEffect', async () => {
     // Ignore flushSync warning
     spyOnDev(console, 'error').mockImplementation(() => {});
