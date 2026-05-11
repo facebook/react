@@ -9,24 +9,33 @@
 //! (which represents the compiler's Babel-compatible output) and produces SWC AST
 //! nodes suitable for code generation via `swc_codegen`.
 
-use swc_atoms::{Atom, Wtf8Atom};
-use swc_common::{BytePos, Span, Spanned, SyntaxContext, DUMMY_SP};
-use swc_common::comments::{Comment as SwcComment, CommentKind, SingleThreadedComments, Comments};
+use react_compiler_ast::common::BaseNode;
+use react_compiler_ast::common::Comment as BabelComment;
+use react_compiler_ast::declarations::ExportAllDeclaration;
+use react_compiler_ast::declarations::ExportDefaultDecl as BabelExportDefaultDecl;
+use react_compiler_ast::declarations::ExportDefaultDeclaration;
+use react_compiler_ast::declarations::ExportKind;
+use react_compiler_ast::declarations::ExportNamedDeclaration;
+use react_compiler_ast::declarations::ImportDeclaration;
+use react_compiler_ast::declarations::ImportKind;
+use react_compiler_ast::expressions::Expression as BabelExpr;
+use react_compiler_ast::expressions::{self as babel_expr};
+use react_compiler_ast::operators::*;
+use react_compiler_ast::patterns::*;
+use react_compiler_ast::statements::Statement as BabelStmt;
+use react_compiler_ast::statements::{self as babel_stmt};
+use swc_atoms::Atom;
+use swc_atoms::Wtf8Atom;
+use swc_common::BytePos;
+use swc_common::DUMMY_SP;
+use swc_common::Span;
+use swc_common::Spanned;
+use swc_common::SyntaxContext;
+use swc_common::comments::Comment as SwcComment;
+use swc_common::comments::CommentKind;
+use swc_common::comments::Comments;
+use swc_common::comments::SingleThreadedComments;
 use swc_ecma_ast::*;
-
-use react_compiler_ast::{
-    common::{BaseNode, Comment as BabelComment},
-    declarations::{
-        ExportAllDeclaration, ExportDefaultDecl as BabelExportDefaultDecl,
-        ExportDefaultDeclaration, ExportKind, ExportNamedDeclaration,
-        ImportDeclaration, ImportKind,
-    },
-    expressions::{self as babel_expr, Expression as BabelExpr},
-
-    operators::*,
-    patterns::*,
-    statements::{self as babel_stmt, Statement as BabelStmt},
-};
 
 /// Result of converting a Babel AST back to SWC, including extracted comments.
 pub struct SwcConversionResult {
@@ -100,20 +109,23 @@ impl ReverseCtx {
         if let Some(ref leading) = base.leading_comments {
             let pos = span.lo;
             for c in leading {
-                self.comments.add_leading(pos, Self::convert_babel_comment(c));
+                self.comments
+                    .add_leading(pos, Self::convert_babel_comment(c));
             }
         }
         if let Some(ref trailing) = base.trailing_comments {
             let pos = span.hi;
             for c in trailing {
-                self.comments.add_trailing(pos, Self::convert_babel_comment(c));
+                self.comments
+                    .add_trailing(pos, Self::convert_babel_comment(c));
             }
         }
         if let Some(ref inner) = base.inner_comments {
             // Inner comments are typically leading comments of the next token
             let pos = span.lo;
             for c in inner {
-                self.comments.add_leading(pos, Self::convert_babel_comment(c));
+                self.comments
+                    .add_leading(pos, Self::convert_babel_comment(c));
             }
         }
     }
@@ -183,7 +195,11 @@ impl ReverseCtx {
     }
 
     /// Parse a string as a TypeScript statement using SWC's parser.
-    fn parse_ts_stmt(&self, text: &str, base: &react_compiler_ast::common::BaseNode) -> Option<Stmt> {
+    fn parse_ts_stmt(
+        &self,
+        text: &str,
+        base: &react_compiler_ast::common::BaseNode,
+    ) -> Option<Stmt> {
         let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
         let fm = cm.new_source_file(
             swc_common::sync::Lrc::new(swc_common::FileName::Anon),
@@ -199,7 +215,8 @@ impl ReverseCtx {
             swc_ecma_ast::EsVersion::latest(),
             None,
             &mut errors,
-        ).ok()?;
+        )
+        .ok()?;
 
         if let Some(item) = module.body.into_iter().next() {
             match item {
@@ -291,15 +308,11 @@ impl ReverseCtx {
             BabelStmt::ImportDeclaration(d) => {
                 ModuleItem::ModuleDecl(ModuleDecl::Import(self.convert_import_declaration(d)))
             }
-            BabelStmt::ExportNamedDeclaration(d) => {
-                self.convert_export_named_to_module_item(d)
-            }
-            BabelStmt::ExportDefaultDeclaration(d) => {
-                self.convert_export_default_to_module_item(d)
-            }
-            BabelStmt::ExportAllDeclaration(d) => {
-                ModuleItem::ModuleDecl(ModuleDecl::ExportAll(self.convert_export_all_declaration(d)))
-            }
+            BabelStmt::ExportNamedDeclaration(d) => self.convert_export_named_to_module_item(d),
+            BabelStmt::ExportDefaultDeclaration(d) => self.convert_export_default_to_module_item(d),
+            BabelStmt::ExportAllDeclaration(d) => ModuleItem::ModuleDecl(ModuleDecl::ExportAll(
+                self.convert_export_all_declaration(d),
+            )),
             _ => ModuleItem::Stmt(self.convert_statement(stmt)),
         }
     }
@@ -322,7 +335,9 @@ impl ReverseCtx {
                 // in assignment) or `function` (IIFE), which would be ambiguous
                 // with a block statement or function declaration.
                 let needs_paren = match &expr {
-                    Expr::Assign(a) => matches!(&a.left, AssignTarget::Pat(AssignTargetPat::Object(_))),
+                    Expr::Assign(a) => {
+                        matches!(&a.left, AssignTarget::Pat(AssignTargetPat::Object(_)))
+                    }
                     Expr::Call(c) => match &c.callee {
                         Callee::Expr(e) => matches!(e.as_ref(), Expr::Fn(_)),
                         _ => false,
@@ -465,11 +480,10 @@ impl ReverseCtx {
                 Stmt::Decl(Decl::Fn(self.convert_function_declaration(f)))
             }
             BabelStmt::ClassDeclaration(c) => {
-                let ident = c
-                    .id
-                    .as_ref()
-                    .map(|id| self.ident(&id.name, self.span(&id.base)))
-                    .unwrap_or_else(|| self.ident("_anonymous", DUMMY_SP));
+                let ident =
+                    c.id.as_ref()
+                        .map(|id| self.ident(&id.name, self.span(&id.base)))
+                        .unwrap_or_else(|| self.ident("_anonymous", DUMMY_SP));
                 let super_class = c
                     .super_class
                     .as_ref()
@@ -496,28 +510,28 @@ impl ReverseCtx {
             | BabelStmt::ExportDefaultDeclaration(_)
             | BabelStmt::ExportAllDeclaration(_) => Stmt::Empty(EmptyStmt { span: DUMMY_SP }),
             // TS declarations - extract from source text if available
-            BabelStmt::TSTypeAliasDeclaration(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
-            BabelStmt::TSInterfaceDeclaration(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
-            BabelStmt::TSEnumDeclaration(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
+            BabelStmt::TSTypeAliasDeclaration(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
+            BabelStmt::TSInterfaceDeclaration(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
+            BabelStmt::TSEnumDeclaration(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
             // Flow type declarations - extract from source text if available
-            BabelStmt::TypeAlias(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
-            BabelStmt::OpaqueType(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
-            BabelStmt::InterfaceDeclaration(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
-            BabelStmt::EnumDeclaration(d) => {
-                self.extract_source_stmt(&d.base).unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP }))
-            }
+            BabelStmt::TypeAlias(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
+            BabelStmt::OpaqueType(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
+            BabelStmt::InterfaceDeclaration(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
+            BabelStmt::EnumDeclaration(d) => self
+                .extract_source_stmt(&d.base)
+                .unwrap_or(Stmt::Empty(EmptyStmt { span: DUMMY_SP })),
             // Other TS/Flow declarations
             BabelStmt::TSModuleDeclaration(_)
             | BabelStmt::TSDeclareFunction(_)
@@ -591,10 +605,7 @@ impl ReverseCtx {
         }
     }
 
-    fn convert_variable_declaration(
-        &self,
-        decl: &babel_stmt::VariableDeclaration,
-    ) -> VarDecl {
+    fn convert_variable_declaration(&self, decl: &babel_stmt::VariableDeclaration) -> VarDecl {
         let kind = match decl.kind {
             babel_stmt::VariableDeclarationKind::Var => VarDeclKind::Var,
             babel_stmt::VariableDeclarationKind::Let => VarDeclKind::Let,
@@ -618,7 +629,10 @@ impl ReverseCtx {
 
     fn convert_variable_declarator(&self, d: &babel_stmt::VariableDeclarator) -> VarDeclarator {
         let name = self.convert_pattern(&d.id);
-        let init = d.init.as_ref().map(|e| Box::new(self.convert_expression(e)));
+        let init = d
+            .init
+            .as_ref()
+            .map(|e| Box::new(self.convert_expression(e)));
         let definite = d.definite.unwrap_or(false);
         VarDeclarator {
             span: self.span(&d.base),
@@ -911,10 +925,9 @@ impl ReverseCtx {
                 },
             }),
             BabelExpr::ClassExpression(c) => {
-                let ident = c
-                    .id
-                    .as_ref()
-                    .map(|id| self.ident(&id.name, self.span(&id.base)));
+                let ident =
+                    c.id.as_ref()
+                        .map(|id| self.ident(&id.name, self.span(&id.base)));
                 let super_class = c
                     .super_class
                     .as_ref()
@@ -934,12 +947,10 @@ impl ReverseCtx {
                     }),
                 })
             }
-            BabelExpr::PrivateName(p) => {
-                Expr::PrivateName(PrivateName {
-                    span: self.span(&p.base),
-                    name: self.atom(&p.id.name),
-                })
-            }
+            BabelExpr::PrivateName(p) => Expr::PrivateName(PrivateName {
+                span: self.span(&p.base),
+                name: self.atom(&p.id.name),
+            }),
             BabelExpr::Super(s) => Expr::Ident(self.ident("super", self.span(&s.base))),
             BabelExpr::Import(i) => Expr::Ident(self.ident("import", self.span(&i.base))),
             BabelExpr::ThisExpression(t) => Expr::This(ThisExpr {
@@ -963,12 +974,13 @@ impl ReverseCtx {
                 let span = self.span(&e.base);
                 // Check if this is "as const" — Babel represents it as
                 // TSAsExpression with typeAnnotation: TSTypeReference { typeName: Identifier { name: "const" } }
-                let is_as_const = e.type_annotation
-                    .get("type").and_then(|v| v.as_str()) == Some("TSTypeReference")
+                let is_as_const = e.type_annotation.get("type").and_then(|v| v.as_str())
+                    == Some("TSTypeReference")
                     && e.type_annotation
                         .get("typeName")
                         .and_then(|tn| tn.get("name"))
-                        .and_then(|n| n.as_str()) == Some("const");
+                        .and_then(|n| n.as_str())
+                        == Some("const");
 
                 if is_as_const {
                     Expr::TsConstAssertion(TsConstAssertion { span, expr })
@@ -982,12 +994,10 @@ impl ReverseCtx {
                 }
             }
             BabelExpr::TSSatisfiesExpression(e) => self.convert_expression(&e.expression),
-            BabelExpr::TSNonNullExpression(e) => {
-                Expr::TsNonNull(TsNonNullExpr {
-                    span: self.span(&e.base),
-                    expr: Box::new(self.convert_expression(&e.expression)),
-                })
-            }
+            BabelExpr::TSNonNullExpression(e) => Expr::TsNonNull(TsNonNullExpr {
+                span: self.span(&e.base),
+                expr: Box::new(self.convert_expression(&e.expression)),
+            }),
             BabelExpr::TSTypeAssertion(e) => self.convert_expression(&e.expression),
             BabelExpr::TSInstantiationExpression(e) => self.convert_expression(&e.expression),
             BabelExpr::TypeCastExpression(e) => self.convert_expression(&e.expression),
@@ -1255,7 +1265,9 @@ impl ReverseCtx {
                             .into_iter()
                             .next()
                             .map(|p| Box::new(p.pat))
-                            .unwrap_or_else(|| Box::new(Pat::Ident(self.binding_ident("_", DUMMY_SP))));
+                            .unwrap_or_else(|| {
+                                Box::new(Pat::Ident(self.binding_ident("_", DUMMY_SP)))
+                            });
                         PropOrSpread::Prop(Box::new(Prop::Setter(SetterProp {
                             span: self.span(&m.base),
                             key,
@@ -1331,15 +1343,11 @@ impl ReverseCtx {
 
     // ===== Functions =====
 
-    fn convert_function_declaration(
-        &self,
-        f: &babel_stmt::FunctionDeclaration,
-    ) -> FnDecl {
-        let ident = f
-            .id
-            .as_ref()
-            .map(|id| self.ident(&id.name, self.span(&id.base)))
-            .unwrap_or_else(|| self.ident("_anonymous", DUMMY_SP));
+    fn convert_function_declaration(&self, f: &babel_stmt::FunctionDeclaration) -> FnDecl {
+        let ident =
+            f.id.as_ref()
+                .map(|id| self.ident(&id.name, self.span(&id.base)))
+                .unwrap_or_else(|| self.ident("_anonymous", DUMMY_SP));
         let params = self.convert_params(&f.params);
         let body = Some(self.convert_block_statement(&f.body));
         let declare = f.declare.unwrap_or(false);
@@ -1385,11 +1393,9 @@ impl ReverseCtx {
             .collect();
 
         let body: Box<BlockStmtOrExpr> = match &*arrow.body {
-            babel_expr::ArrowFunctionBody::BlockStatement(block) => {
-                Box::new(BlockStmtOrExpr::BlockStmt(
-                    self.convert_block_statement(block),
-                ))
-            }
+            babel_expr::ArrowFunctionBody::BlockStatement(block) => Box::new(
+                BlockStmtOrExpr::BlockStmt(self.convert_block_statement(block)),
+            ),
             babel_expr::ArrowFunctionBody::Expression(expr) => {
                 if is_expression {
                     let converted = self.convert_expression(expr);
@@ -1487,8 +1493,7 @@ impl ReverseCtx {
                                     }
                                     _ => {
                                         // Fallback to key-value
-                                        let key =
-                                            self.convert_expression_to_prop_name(&p.key);
+                                        let key = self.convert_expression_to_prop_name(&p.key);
                                         props.push(ObjectPatProp::KeyValue(KeyValuePatProp {
                                             key,
                                             value: Box::new(value),
@@ -1565,11 +1570,9 @@ impl ReverseCtx {
 
     fn convert_pattern_to_assign_target(&self, pattern: &PatternLike) -> AssignTarget {
         match pattern {
-            PatternLike::Identifier(id) => {
-                AssignTarget::Simple(SimpleAssignTarget::Ident(
-                    self.binding_ident(&id.name, self.span(&id.base)),
-                ))
-            }
+            PatternLike::Identifier(id) => AssignTarget::Simple(SimpleAssignTarget::Ident(
+                self.binding_ident(&id.name, self.span(&id.base)),
+            )),
             PatternLike::MemberExpression(m) => {
                 let expr = self.convert_member_expression(m);
                 match expr {
@@ -1691,7 +1694,11 @@ impl ReverseCtx {
     ) -> swc_ecma_ast::JSXMemberExpr {
         let obj = self.convert_jsx_member_expression_object(&m.object);
         let prop = self.ident_name(&m.property.name, self.span(&m.property.base));
-        swc_ecma_ast::JSXMemberExpr { span: DUMMY_SP, obj, prop }
+        swc_ecma_ast::JSXMemberExpr {
+            span: DUMMY_SP,
+            obj,
+            prop,
+        }
     }
 
     fn convert_jsx_member_expression_object(
@@ -1956,10 +1963,7 @@ impl ReverseCtx {
         }
     }
 
-    fn convert_export_named_to_module_item(
-        &self,
-        decl: &ExportNamedDeclaration,
-    ) -> ModuleItem {
+    fn convert_export_named_to_module_item(&self, decl: &ExportNamedDeclaration) -> ModuleItem {
         // If there's a declaration, emit as ExportDecl
         if let Some(declaration) = &decl.declaration {
             let swc_decl = self.convert_declaration(declaration);
@@ -1971,10 +1975,7 @@ impl ReverseCtx {
         self.convert_export_named_specifiers(decl)
     }
 
-    fn convert_declaration(
-        &self,
-        decl: &react_compiler_ast::declarations::Declaration,
-    ) -> Decl {
+    fn convert_declaration(&self, decl: &react_compiler_ast::declarations::Declaration) -> Decl {
         match decl {
             react_compiler_ast::declarations::Declaration::FunctionDeclaration(f) => {
                 Decl::Fn(self.convert_function_declaration(f))
@@ -1983,11 +1984,10 @@ impl ReverseCtx {
                 Decl::Var(Box::new(self.convert_variable_declaration(v)))
             }
             react_compiler_ast::declarations::Declaration::ClassDeclaration(c) => {
-                let ident = c
-                    .id
-                    .as_ref()
-                    .map(|id| self.ident(&id.name, self.span(&id.base)))
-                    .unwrap_or_else(|| self.ident("_anonymous", DUMMY_SP));
+                let ident =
+                    c.id.as_ref()
+                        .map(|id| self.ident(&id.name, self.span(&id.base)))
+                        .unwrap_or_else(|| self.ident("_anonymous", DUMMY_SP));
                 let super_class = c
                     .super_class
                     .as_ref()
@@ -2008,22 +2008,17 @@ impl ReverseCtx {
                     }),
                 })
             }
-            _ => {
-                Decl::Var(Box::new(VarDecl {
-                    span: DUMMY_SP,
-                    ctxt: SyntaxContext::empty(),
-                    kind: VarDeclKind::Const,
-                    declare: true,
-                    decls: vec![],
-                }))
-            }
+            _ => Decl::Var(Box::new(VarDecl {
+                span: DUMMY_SP,
+                ctxt: SyntaxContext::empty(),
+                kind: VarDeclKind::Const,
+                declare: true,
+                decls: vec![],
+            })),
         }
     }
 
-    fn convert_export_named_specifiers(
-        &self,
-        decl: &ExportNamedDeclaration,
-    ) -> ModuleItem {
+    fn convert_export_named_specifiers(&self, decl: &ExportNamedDeclaration) -> ModuleItem {
         let specifiers = decl
             .specifiers
             .iter()
@@ -2095,10 +2090,7 @@ impl ReverseCtx {
         }
     }
 
-    fn convert_export_default_to_module_item(
-        &self,
-        decl: &ExportDefaultDeclaration,
-    ) -> ModuleItem {
+    fn convert_export_default_to_module_item(&self, decl: &ExportDefaultDeclaration) -> ModuleItem {
         let span = self.span(&decl.base);
         match &*decl.declaration {
             BabelExportDefaultDecl::FunctionDeclaration(f) => {
@@ -2114,10 +2106,9 @@ impl ReverseCtx {
                 ))
             }
             BabelExportDefaultDecl::ClassDeclaration(c) => {
-                let ident = c
-                    .id
-                    .as_ref()
-                    .map(|id| self.ident(&id.name, self.span(&id.base)));
+                let ident =
+                    c.id.as_ref()
+                        .map(|id| self.ident(&id.name, self.span(&id.base)));
                 let super_class = c
                     .super_class
                     .as_ref()
@@ -2141,6 +2132,16 @@ impl ReverseCtx {
                         }),
                     },
                 ))
+            }
+            BabelExportDefaultDecl::EnumDeclaration(_) => {
+                // Flow enum declarations cannot be represented in SWC AST;
+                // emit a null placeholder to preserve the export shape.
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
+                    span,
+                    expr: Box::new(swc_ecma_ast::Expr::Lit(swc_ecma_ast::Lit::Null(
+                        swc_ecma_ast::Null { span },
+                    ))),
+                }))
             }
             BabelExportDefaultDecl::Expression(e) => {
                 ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
@@ -2248,30 +2249,32 @@ impl ReverseCtx {
                 kind: TsKeywordTypeKind::TsNeverKeyword,
             }),
             "TSUnionType" => {
-                let types = json.get("types").and_then(|t| t.as_array()).map(|arr| {
-                    arr.iter()
-                        .map(|t| Box::new(self.convert_ts_type_from_json(t, span)))
-                        .collect::<Vec<_>>()
-                }).unwrap_or_default();
-                TsType::TsUnionOrIntersectionType(
-                    TsUnionOrIntersectionType::TsUnionType(TsUnionType {
-                        span,
-                        types,
-                    }),
-                )
+                let types = json
+                    .get("types")
+                    .and_then(|t| t.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .map(|t| Box::new(self.convert_ts_type_from_json(t, span)))
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                TsType::TsUnionOrIntersectionType(TsUnionOrIntersectionType::TsUnionType(
+                    TsUnionType { span, types },
+                ))
             }
             "TSIntersectionType" => {
-                let types = json.get("types").and_then(|t| t.as_array()).map(|arr| {
-                    arr.iter()
-                        .map(|t| Box::new(self.convert_ts_type_from_json(t, span)))
-                        .collect::<Vec<_>>()
-                }).unwrap_or_default();
-                TsType::TsUnionOrIntersectionType(
-                    TsUnionOrIntersectionType::TsIntersectionType(TsIntersectionType {
-                        span,
-                        types,
-                    }),
-                )
+                let types = json
+                    .get("types")
+                    .and_then(|t| t.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .map(|t| Box::new(self.convert_ts_type_from_json(t, span)))
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                TsType::TsUnionOrIntersectionType(TsUnionOrIntersectionType::TsIntersectionType(
+                    TsIntersectionType { span, types },
+                ))
             }
             "TSLiteralType" => {
                 if let Some(literal) = json.get("literal") {
@@ -2289,7 +2292,8 @@ impl ReverseCtx {
                             })
                         }
                         "NumericLiteral" => {
-                            let value = literal.get("value").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                            let value =
+                                literal.get("value").and_then(|v| v.as_f64()).unwrap_or(0.0);
                             TsType::TsLitType(TsLitType {
                                 span,
                                 lit: TsLit::Number(Number {
@@ -2300,13 +2304,13 @@ impl ReverseCtx {
                             })
                         }
                         "BooleanLiteral" => {
-                            let value = literal.get("value").and_then(|v| v.as_bool()).unwrap_or(false);
+                            let value = literal
+                                .get("value")
+                                .and_then(|v| v.as_bool())
+                                .unwrap_or(false);
                             TsType::TsLitType(TsLitType {
                                 span,
-                                lit: TsLit::Bool(Bool {
-                                    span,
-                                    value,
-                                }),
+                                lit: TsLit::Bool(Bool { span, value }),
                             })
                         }
                         _ => TsType::TsKeywordType(TsKeywordType {
@@ -2322,7 +2326,8 @@ impl ReverseCtx {
                 }
             }
             "TSArrayType" => {
-                let elem = json.get("elementType")
+                let elem = json
+                    .get("elementType")
                     .map(|t| self.convert_ts_type_from_json(t, span))
                     .unwrap_or(TsType::TsKeywordType(TsKeywordType {
                         span,
@@ -2333,10 +2338,20 @@ impl ReverseCtx {
                     elem_type: Box::new(elem),
                 })
             }
-            "TSFunctionType" | "TSTypeLiteral" | "TSParenthesizedType" | "TSTupleType"
-            | "TSOptionalType" | "TSRestType" | "TSConditionalType" | "TSInferType"
-            | "TSMappedType" | "TSIndexedAccessType" | "TSTypeOperator" | "TSTypePredicate"
-            | "TSImportType" | "TSQualifiedName" => {
+            "TSFunctionType"
+            | "TSTypeLiteral"
+            | "TSParenthesizedType"
+            | "TSTupleType"
+            | "TSOptionalType"
+            | "TSRestType"
+            | "TSConditionalType"
+            | "TSInferType"
+            | "TSMappedType"
+            | "TSIndexedAccessType"
+            | "TSTypeOperator"
+            | "TSTypePredicate"
+            | "TSImportType"
+            | "TSQualifiedName" => {
                 // For complex types, try to extract from source text
                 if let (Some(source), Some(start), Some(end)) = (
                     self.source_text.as_deref(),
@@ -2380,12 +2395,23 @@ impl ReverseCtx {
                 })
             }
             // Flow types
-            "NumberTypeAnnotation" | "StringTypeAnnotation" | "BooleanTypeAnnotation"
-            | "VoidTypeAnnotation" | "NullLiteralTypeAnnotation" | "AnyTypeAnnotation"
-            | "GenericTypeAnnotation" | "UnionTypeAnnotation" | "IntersectionTypeAnnotation"
-            | "NullableTypeAnnotation" | "FunctionTypeAnnotation" | "ObjectTypeAnnotation"
-            | "ArrayTypeAnnotation" | "TupleTypeAnnotation" | "TypeofTypeAnnotation"
-            | "NumberLiteralTypeAnnotation" | "StringLiteralTypeAnnotation"
+            "NumberTypeAnnotation"
+            | "StringTypeAnnotation"
+            | "BooleanTypeAnnotation"
+            | "VoidTypeAnnotation"
+            | "NullLiteralTypeAnnotation"
+            | "AnyTypeAnnotation"
+            | "GenericTypeAnnotation"
+            | "UnionTypeAnnotation"
+            | "IntersectionTypeAnnotation"
+            | "NullableTypeAnnotation"
+            | "FunctionTypeAnnotation"
+            | "ObjectTypeAnnotation"
+            | "ArrayTypeAnnotation"
+            | "TupleTypeAnnotation"
+            | "TypeofTypeAnnotation"
+            | "NumberLiteralTypeAnnotation"
+            | "StringLiteralTypeAnnotation"
             | "BooleanLiteralTypeAnnotation" => {
                 // For Flow types, try to extract from source text
                 if let (Some(source), Some(start), Some(end)) = (

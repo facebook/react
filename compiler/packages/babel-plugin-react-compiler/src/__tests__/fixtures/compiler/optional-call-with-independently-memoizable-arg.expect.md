@@ -38,7 +38,6 @@ function Component(props) {
     t0 = $[1];
   }
   const y = t0;
-
   return y;
 }
 

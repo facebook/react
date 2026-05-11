@@ -696,6 +696,9 @@ impl<'a> AstWalker<'a> {
                 // Call the visitor hook, but skip the class body
                 v.enter_class_declaration(node, &self.scope_stack);
             }
+            ExportDefaultDecl::EnumDeclaration(_) => {
+                // Flow enum declarations are opaque — no visitor hooks needed
+            }
             ExportDefaultDecl::Expression(expr) => {
                 self.walk_expression(v, expr);
             }
@@ -1469,6 +1472,9 @@ fn walk_export_default_decl_mut(
                     return VisitResult::Stop;
                 }
             }
+        }
+        ExportDefaultDecl::EnumDeclaration(_) => {
+            // Flow enum declarations are opaque — nothing to walk
         }
     }
     VisitResult::Continue

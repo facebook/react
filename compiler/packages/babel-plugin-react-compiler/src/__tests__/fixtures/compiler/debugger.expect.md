@@ -27,6 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 function Component(props) {
   debugger;
+
   if (props.cond) {
     debugger;
   } else {
@@ -34,7 +35,6 @@ function Component(props) {
       debugger;
     }
   }
-
   debugger;
 }
 

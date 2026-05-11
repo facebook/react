@@ -1,9 +1,10 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::common::BaseNode;
-use crate::expressions::{Expression, Identifier};
+use crate::expressions::Expression;
+use crate::expressions::Identifier;
 use crate::literals::StringLiteral;
-
 
 /// Union of Declaration types that can appear in export declarations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,6 +30,7 @@ pub enum Declaration {
 pub enum ExportDefaultDecl {
     FunctionDeclaration(crate::statements::FunctionDeclaration),
     ClassDeclaration(crate::statements::ClassDeclaration),
+    EnumDeclaration(EnumDeclaration),
     #[serde(untagged)]
     Expression(Box<Expression>),
 }
@@ -170,7 +172,11 @@ pub struct ExportDefaultDeclaration {
     #[serde(flatten)]
     pub base: BaseNode,
     pub declaration: Box<ExportDefaultDecl>,
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "exportKind")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "exportKind"
+    )]
     pub export_kind: Option<ExportKind>,
 }
 
