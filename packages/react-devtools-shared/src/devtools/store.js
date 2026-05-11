@@ -121,6 +121,7 @@ export type Config = {
   supportsReloadAndProfile?: boolean,
   supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
+  supportsNativeInspection?: boolean,
 };
 
 const ADVANCED_PROFILING_NONE = 0;
