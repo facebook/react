@@ -324,7 +324,7 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const tagName = name.node.name;
       const binding = path.scope.getBinding(tagName);
       if (binding != null) {
-        const bindingScopeUid = String(binding.scope.uid);
+        const bindingScopeUid = String((binding.scope as any).uid);
         const bindingScopeId = scopeUidToId.get(bindingScopeUid);
         if (bindingScopeId != null) {
           const scopeData = scopes.find(s => s.id === bindingScopeId);
