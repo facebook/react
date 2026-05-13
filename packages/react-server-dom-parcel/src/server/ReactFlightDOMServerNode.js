@@ -561,9 +561,15 @@ export function registerServerActions(manifest: ServerManifest) {
   serverManifest = manifest;
 }
 
-type BusboyBufferedEntry =
-  | {kind: 'field', name: string, value: string}
-  | {kind: 'file', name: string, file: FileHandle, complete: boolean};
+type PendingFile = {
+  name: string,
+  file: FileHandle,
+  complete: boolean,
+  // Lazily allocated when a text field arrives after this file's 'file'
+  // event but before its (deferred) 'end' event. Stored as flat
+  // [name1, value1, name2, value2, ...] pairs.
+  queuedFields: null | Array<string>,
+};
 
 export function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
@@ -580,54 +586,68 @@ export function decodeReplyFromBusboy<T>(
     options ? options.arraySizeLimit : undefined,
   );
 
-  // Buffer of multipart entries in arrival (payload) order. Files complete
-  // asynchronously, so we hold any entries that arrived after a still-
-  // streaming file until that file's 'end' fires. This makes the backing
-  // FormData's insertion order match the payload's entry order.
-  const entries: Array<BusboyBufferedEntry | null> = [];
+  // Buffer of files in arrival (payload) order. Text fields that arrive while a
+  // file is in flight are queued on the most recent pending file's
+  // `queuedFields` so they can be resolved together when that file completes.
+  // Fields that arrive while the buffer is empty bypass it and resolve
+  // immediately. This makes the backing FormData's insertion order match the
+  // payload's entry order.
+  //
+  // We drain by advancing a pointer rather than shifting from the front so the
+  // total drain stays O(N).
+  const pendingFiles: Array<PendingFile> = [];
   let flushedUpTo = 0;
-  let pendingFiles = 0;
   let bodyFinished = false;
   let closed = false;
 
   function flush() {
-    while (flushedUpTo < entries.length) {
-      const entry = entries[flushedUpTo];
-      if (entry === null) {
-        flushedUpTo++;
-        continue;
-      }
-      if (entry.kind === 'field') {
-        try {
-          resolveField(response, entry.name, entry.value);
-        } catch (error) {
-          busboyStream.destroy(error);
-          return;
-        }
-      } else if (entry.complete) {
-        try {
-          resolveFileComplete(response, entry.name, entry.file);
-        } catch (error) {
-          busboyStream.destroy(error);
-          return;
-        }
-      } else {
-        // This file is still streaming. Hold later entries until it completes
-        // so the backing FormData reflects payload order.
+    while (flushedUpTo < pendingFiles.length) {
+      const pendingFile = pendingFiles[flushedUpTo];
+      if (!pendingFile.complete) {
+        // This file is still streaming. Hold later files and fields until it
+        // completes so the backing FormData reflects payload order.
         return;
       }
-      entries[flushedUpTo] = null;
+      try {
+        resolveFileComplete(response, pendingFile.name, pendingFile.file);
+        const queuedFields = pendingFile.queuedFields;
+        if (queuedFields !== null) {
+          for (let i = 0; i < queuedFields.length; i += 2) {
+            resolveField(response, queuedFields[i], queuedFields[i + 1]);
+          }
+        }
+      } catch (error) {
+        busboyStream.destroy(error);
+        return;
+      }
       flushedUpTo++;
     }
-    if (bodyFinished && pendingFiles === 0 && !closed) {
+    // Fully drained — release the drained wrapper objects for GC instead of
+    // letting them accumulate until the response promise resolves.
+    pendingFiles.length = 0;
+    flushedUpTo = 0;
+    if (bodyFinished && !closed) {
       closed = true;
       close(response);
     }
   }
 
   busboyStream.on('field', (name, value) => {
-    entries.push({kind: 'field', name, value});
-    flush();
+    if (flushedUpTo < pendingFiles.length) {
+      // A file is in flight; queue the field on the most recent pending file so
+      // it resolves after that file, preserving payload order.
+      const mostRecentPendingFile = pendingFiles[pendingFiles.length - 1];
+      if (mostRecentPendingFile.queuedFields === null) {
+        mostRecentPendingFile.queuedFields = [];
+      }
+      mostRecentPendingFile.queuedFields.push(name, value);
+    } else {
+      try {
+        resolveField(response, name, value);
+      } catch (error) {
+        busboyStream.destroy(error);
+      }
+    }
   });
   busboyStream.on('file', (name, value, {filename, encoding, mimeType}) => {
     if (encoding.toLowerCase() === 'base64') {
@@ -640,21 +660,23 @@ export function decodeReplyFromBusboy<T>(
       );
       return;
     }
-    pendingFiles++;
     const file = resolveFileInfo(response, name, filename, mimeType);
-    const entry: BusboyBufferedEntry = {
-      kind: 'file',
+    const pendingFile: PendingFile = {
       name,
       file,
       complete: false,
+      queuedFields: null,
     };
-    entries.push(entry);
+    pendingFiles.push(pendingFile);
     value.on('data', chunk => {
-      resolveFileChunk(response, file, chunk);
+      try {
+        resolveFileChunk(response, file, chunk);
+      } catch (error) {
+        busboyStream.destroy(error);
+      }
     });
     value.on('end', () => {
-      entry.complete = true;
-      pendingFiles--;
+      pendingFile.complete = true;
       flush();
     });
   });
