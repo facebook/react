@@ -68,6 +68,7 @@ import {
 import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
 
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+import type {FileHandle} from 'react-server/src/ReactFlightReplyServer';
 
 export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
@@ -551,6 +552,10 @@ function prerender(
   });
 }
 
+type BusboyBufferedEntry =
+  | {kind: 'field', name: string, value: string}
+  | {kind: 'file', name: string, file: FileHandle, complete: boolean};
+
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
   webpackMap: ServerManifest,
@@ -566,21 +571,55 @@ function decodeReplyFromBusboy<T>(
     undefined,
     options ? options.arraySizeLimit : undefined,
   );
+
+  // Buffer of multipart entries in arrival (payload) order. Files complete
+  // asynchronously, so we hold any entries that arrived after a still-
+  // streaming file until that file's 'end' fires. This makes the backing
+  // FormData's insertion order match the payload's entry order.
+  const entries: Array<BusboyBufferedEntry | null> = [];
+  let flushedUpTo = 0;
   let pendingFiles = 0;
-  const queuedFields: Array<string> = [];
-  busboyStream.on('field', (name, value) => {
-    if (pendingFiles > 0) {
-      // Because the 'end' event fires two microtasks after the next 'field'
-      // we would resolve files and fields out of order. To handle this properly
-      // we queue any fields we receive until the previous file is done.
-      queuedFields.push(name, value);
-    } else {
-      try {
-        resolveField(response, name, value);
-      } catch (error) {
-        busboyStream.destroy(error);
+  let bodyFinished = false;
+  let closed = false;
+
+  function flush() {
+    while (flushedUpTo < entries.length) {
+      const entry = entries[flushedUpTo];
+      if (entry === null) {
+        flushedUpTo++;
+        continue;
       }
+      if (entry.kind === 'field') {
+        try {
+          resolveField(response, entry.name, entry.value);
+        } catch (error) {
+          busboyStream.destroy(error);
+          return;
+        }
+      } else if (entry.complete) {
+        try {
+          resolveFileComplete(response, entry.name, entry.file);
+        } catch (error) {
+          busboyStream.destroy(error);
+          return;
+        }
+      } else {
+        // This file is still streaming. Hold later entries until it completes
+        // so the backing FormData reflects payload order.
+        return;
+      }
+      entries[flushedUpTo] = null;
+      flushedUpTo++;
     }
+    if (bodyFinished && pendingFiles === 0 && !closed) {
+      closed = true;
+      close(response);
+    }
+  }
+
+  busboyStream.on('field', (name, value) => {
+    entries.push({kind: 'field', name, value});
+    flush();
   });
   busboyStream.on('file', (name, value, {filename, encoding, mimeType}) => {
     if (encoding.toLowerCase() === 'base64') {
@@ -595,27 +634,25 @@ function decodeReplyFromBusboy<T>(
     }
     pendingFiles++;
     const file = resolveFileInfo(response, name, filename, mimeType);
+    const entry: BusboyBufferedEntry = {
+      kind: 'file',
+      name,
+      file,
+      complete: false,
+    };
+    entries.push(entry);
     value.on('data', chunk => {
       resolveFileChunk(response, file, chunk);
     });
     value.on('end', () => {
-      try {
-        resolveFileComplete(response, name, file);
-        pendingFiles--;
-        if (pendingFiles === 0) {
-          // Release any queued fields
-          for (let i = 0; i < queuedFields.length; i += 2) {
-            resolveField(response, queuedFields[i], queuedFields[i + 1]);
-          }
-          queuedFields.length = 0;
-        }
-      } catch (error) {
-        busboyStream.destroy(error);
-      }
+      entry.complete = true;
+      pendingFiles--;
+      flush();
     });
   });
   busboyStream.on('finish', () => {
-    close(response);
+    bodyFinished = true;
+    flush();
   });
   busboyStream.on('error', err => {
     reportGlobalError(
