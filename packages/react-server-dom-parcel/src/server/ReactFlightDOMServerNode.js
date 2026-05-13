@@ -675,6 +675,9 @@ export function decodeReplyFromBusboy<T>(
         busboyStream.destroy(error);
       }
     });
+    value.on('error', error => {
+      busboyStream.destroy(error);
+    });
     value.on('end', () => {
       pendingFile.complete = true;
       flush();
