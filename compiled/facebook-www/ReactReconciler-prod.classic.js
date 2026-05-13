@@ -796,7 +796,26 @@ module.exports = function ($$$config) {
                 } catch (x$11) {
                   control = x$11;
                 }
-                fn.call(Fake.prototype);
+                Fake = !1;
+                try {
+                  var prevProps = Object.getOwnPropertyDescriptor(
+                    fn.prototype,
+                    "props"
+                  );
+                  Object.defineProperty(fn.prototype, "props", {
+                    configurable: !0,
+                    set: function () {
+                      throw Error();
+                    }
+                  });
+                  Fake = !0;
+                  new fn();
+                } finally {
+                  Fake &&
+                    (void 0 !== prevProps
+                      ? Object.defineProperty(fn.prototype, "props", prevProps)
+                      : delete fn.prototype.props);
+                }
               }
             } else {
               try {
@@ -14484,7 +14503,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-d5736f09-20260507"
+      reconcilerVersion: "19.3.0-www-classic-8fc5763b-20260513"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
