@@ -1611,13 +1611,13 @@ export default class Store extends EventEmitter<{
             const element = this._idToElement.get(id);
 
             if (element === undefined) {
-              this._throwAndEmitError(
-                Error(
+              if (__DEBUG__) {
+                console.warn(
                   `Cannot remove node "${id}" because no matching node was found in the Store.`,
-                ),
-              );
+                );
+              }
 
-              break;
+              continue;
             }
 
             i += 1;
@@ -1649,13 +1649,13 @@ export default class Store extends EventEmitter<{
 
               parentElement = this._idToElement.get(parentID);
               if (parentElement === undefined) {
-                this._throwAndEmitError(
-                  Error(
+                if (__DEBUG__) {
+                  console.warn(
                     `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
-                  ),
-                );
+                  );
+                }
 
-                break;
+                continue;
               }
 
               const index = parentElement.children.indexOf(id);
