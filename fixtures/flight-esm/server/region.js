@@ -21,6 +21,33 @@ const nodeModule = require('node:module');
 
 app.use(compress());
 
+// Authentication middleware
+function authenticate(req, res, next) {
+  const authToken = process.env.AUTH_TOKEN;
+  if (authToken) {
+    // Validate bearer token when AUTH_TOKEN is configured
+    const authHeader = req.get('Authorization');
+    if (authHeader !== 'Bearer ' + authToken) {
+      res.status(401).json({error: 'Unauthorized'});
+      return;
+    }
+  } else {
+    // Default: restrict to localhost only
+    const remoteAddress = req.socket.remoteAddress;
+    const isLocalhost =
+      remoteAddress === '127.0.0.1' ||
+      remoteAddress === '::1' ||
+      remoteAddress === '::ffff:127.0.0.1';
+    if (!isLocalhost) {
+      res.status(401).json({error: 'Unauthorized'});
+      return;
+    }
+  }
+  next();
+}
+
+app.use(authenticate);
+
 // Application
 
 const {readFile} = require('fs').promises;
