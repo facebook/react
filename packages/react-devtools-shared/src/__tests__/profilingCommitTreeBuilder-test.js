@@ -9,6 +9,15 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {
+  TREE_OPERATION_ADD,
+  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+} from 'react-devtools-shared/src/constants';
+import {
+  ElementTypeFunction,
+  ElementTypeRoot,
+} from 'react-devtools-shared/src/frontend/types';
+import {getCommitTree} from 'react-devtools-shared/src/devtools/views/Profiler/CommitTreeBuilder';
 import {getVersionedRenderImplementation} from './utils';
 
 describe('commit tree', () => {
@@ -30,6 +39,87 @@ describe('commit tree', () => {
   });
 
   const {render} = getVersionedRenderImplementation();
+
+  // @reactVersion >= 16.9
+  it('should ignore duplicate add operations for nodes already in the commit tree', () => {
+    const snapshots = new Map([
+      [
+        1,
+        {
+          children: [2],
+          compiledWithForget: false,
+          displayName: null,
+          hocDisplayNames: null,
+          id: 1,
+          key: null,
+          type: ElementTypeRoot,
+        },
+      ],
+      [
+        2,
+        {
+          children: [],
+          compiledWithForget: false,
+          displayName: 'Parent',
+          hocDisplayNames: null,
+          id: 2,
+          key: null,
+          type: ElementTypeFunction,
+        },
+      ],
+    ]);
+    const initialTreeBaseDurations = new Map([
+      [1, 0],
+      [2, 10],
+    ]);
+    const operations = [
+      [
+        1, // renderer ID
+        1, // root ID
+        0, // string table size
+        TREE_OPERATION_ADD,
+        2,
+        ElementTypeFunction,
+        1,
+        0,
+        0,
+        0,
+        0,
+        TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+        2,
+        20000,
+      ],
+    ];
+    const profilerStore = {
+      profilingData: {
+        dataForRoots: new Map([
+          [
+            1,
+            {
+              commitData: [],
+              displayName: 'Parent',
+              initialTreeBaseDurations,
+              operations,
+              rootID: 1,
+              snapshots,
+            },
+          ],
+        ]),
+        imported: false,
+        timelineData: [],
+      },
+    };
+
+    const commitTree = getCommitTree({
+      commitIndex: 0,
+      profilerStore,
+      rootID: 1,
+    });
+
+    expect(commitTree.nodes.size).toBe(2);
+    expect(commitTree.nodes.get(1)?.children).toEqual([2]);
+    expect(commitTree.nodes.get(2)?.treeBaseDuration).toBe(20);
+  });
 
   // @reactVersion >= 16.9
   it('should be able to rebuild the store tree for each commit', () => {
