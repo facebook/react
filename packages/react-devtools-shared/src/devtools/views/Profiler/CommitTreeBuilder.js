@@ -201,13 +201,12 @@ function updateTree(
 
         i += 3;
 
-        if (nodes.has(id)) {
-          throw new Error(
-            `Commit tree already contains fiber "${id}". This is a bug in React DevTools.`,
-          );
-        }
-
         if (type === ElementTypeRoot) {
+          if (nodes.has(id)) {
+            i += 4;
+            break;
+          }
+
           i++; // isStrictModeCompliant
           i++; // Profiling flag
           i++; // supportsStrictMode flag
@@ -231,6 +230,11 @@ function updateTree(
 
           nodes.set(id, node);
         } else {
+          if (nodes.has(id)) {
+            i += 5;
+            break;
+          }
+
           const parentID = ((operations[i]: any): number);
           i++;
 
