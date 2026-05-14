@@ -681,7 +681,8 @@ function decodeReplyFromBusboy<T>(
     if (!closed) {
       // Invariant: busboy delays 'finish' until every file's 'end' event has
       // fired, so the flush above should always close the response.
-      busboyStream.destroy(
+      reportGlobalError(
+        response,
         new Error('Reply finished with incomplete file part.'),
       );
     }
