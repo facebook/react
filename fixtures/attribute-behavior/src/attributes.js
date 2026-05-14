@@ -372,6 +372,11 @@ const attributes = [
   {name: 'contextMenu', read: getAttribute('contextmenu')}, // TODO: Read the property by rendering a menu with the ID.
   {name: 'controls', tagName: 'video'},
   {name: 'coords', tagName: 'a'},
+  {
+    name: 'credentialless',
+    tagName: 'iframe',
+    read: getProperty('credentialless'),
+  },
   {name: 'crossOrigin', tagName: 'script'},
   {name: 'cursor', tag: 'svg', read: getAttribute('cursor')},
   {
