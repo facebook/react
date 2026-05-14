@@ -15,6 +15,7 @@ import {
   GeneratedSource,
   HIRFunction,
   IdentifierId,
+  NonLocalBinding,
   Place,
   SourceLocation,
   getHookKindForType,
@@ -72,16 +73,23 @@ type RefAccessType =
   | RefAccessRefType;
 
 type RefAccessRefType =
-  | {kind: 'Ref'; refId: RefId}
-  | {kind: 'RefValue'; loc?: SourceLocation; refId?: RefId}
+  | {kind: 'Ref'; refId: RefId; initialValue?: RefInitialValue}
+  | {
+      kind: 'RefValue';
+      loc?: SourceLocation;
+      refId?: RefId;
+      initialValue?: RefInitialValue;
+    }
   | {kind: 'Structure'; value: null | RefAccessRefType; fn: null | RefFnType};
 
 type RefFnType = {readRefEffect: boolean; returnType: RefAccessType};
+type RefInitialValue = string;
 
 class Env {
   #changed = false;
   #data: Map<IdentifierId, RefAccessType> = new Map();
   #temporaries: Map<IdentifierId, Place> = new Map();
+  #valueKeys: Map<IdentifierId, RefInitialValue> = new Map();
 
   lookup(place: Place): Place {
     return this.#temporaries.get(place.identifier.id) ?? place;
@@ -104,6 +112,18 @@ class Env {
     return this.#data.get(operandId);
   }
 
+  sourceKey(place: Place): RefInitialValue {
+    const source = this.lookup(place);
+    return (
+      this.#valueKeys.get(source.identifier.id) ??
+      `identifier:${source.identifier.id}`
+    );
+  }
+
+  defineValueKey(place: Place, valueKey: RefInitialValue): void {
+    this.#valueKeys.set(place.identifier.id, valueKey);
+  }
+
   set(key: IdentifierId, value: RefAccessType): this {
     const operandId = this.#temporaries.get(key)?.identifier.id ?? key;
     const cur = this.#data.get(operandId);
@@ -116,6 +136,19 @@ class Env {
     }
     this.#data.set(operandId, widenedValue);
     return this;
+  }
+}
+
+function nonLocalBindingKey(binding: NonLocalBinding): RefInitialValue {
+  switch (binding.kind) {
+    case 'ImportSpecifier':
+      return `${binding.kind}:${binding.module}:${binding.imported}:${binding.name}`;
+    case 'ImportDefault':
+    case 'ImportNamespace':
+      return `${binding.kind}:${binding.module}:${binding.name}`;
+    case 'ModuleLocal':
+    case 'Global':
+      return `${binding.kind}:${binding.name}`;
   }
 }
 
@@ -375,6 +408,9 @@ function validateNoRefAccessInRenderImpl(
                 kind: 'RefValue',
                 loc: instr.loc,
                 refId: objType.refId,
+                ...(objType.initialValue != null
+                  ? {initialValue: objType.initialValue}
+                  : null),
               };
             }
             env.set(
@@ -487,6 +523,24 @@ function validateNoRefAccessInRenderImpl(
              */
             if (!didError) {
               const isRefLValue = isUseRefType(instr.lvalue.identifier);
+              if (isRefLValue && instr.value.kind === 'CallExpression') {
+                const existingRef = env.get(instr.lvalue.identifier.id);
+                const initialArg = instr.value.args[0];
+                const initialValue =
+                  initialArg != null && 'identifier' in initialArg
+                    ? env.sourceKey(initialArg)
+                    : existingRef?.kind === 'Ref'
+                      ? (existingRef.initialValue ?? null)
+                      : null;
+                returnType = {
+                  kind: 'Ref',
+                  refId:
+                    existingRef?.kind === 'Ref'
+                      ? existingRef.refId
+                      : nextRefId(),
+                  ...(initialValue != null ? {initialValue} : null),
+                };
+              }
               if (
                 isRefLValue ||
                 (hookKind != null &&
@@ -686,6 +740,10 @@ function validateNoRefAccessInRenderImpl(
           case 'FinishMemoize':
             break;
           case 'LoadGlobal': {
+            env.defineValueKey(
+              instr.lvalue,
+              nonLocalBindingKey(instr.value.binding),
+            );
             if (instr.value.binding.name === 'undefined') {
               env.set(instr.lvalue.identifier.id, {kind: 'Nullable'});
             }
@@ -739,10 +797,13 @@ function validateNoRefAccessInRenderImpl(
             const right = env.get(instr.value.right.identifier.id);
             let nullish: boolean = false;
             let refId: RefId | null = null;
+            let initialValue: RefInitialValue | null = null;
             if (left?.kind === 'RefValue' && left.refId != null) {
               refId = left.refId;
+              initialValue = left.initialValue ?? null;
             } else if (right?.kind === 'RefValue' && right.refId != null) {
               refId = right.refId;
+              initialValue = right.initialValue ?? null;
             }
 
             if (left?.kind === 'Nullable') {
@@ -751,7 +812,14 @@ function validateNoRefAccessInRenderImpl(
               nullish = true;
             }
 
-            if (refId !== null && nullish) {
+            const comparesRefToInitialValue =
+              refId !== null &&
+              initialValue != null &&
+              instr.value.operator === '===' &&
+              (env.sourceKey(instr.value.left) === initialValue ||
+                env.sourceKey(instr.value.right) === initialValue);
+
+            if (refId !== null && (nullish || comparesRefToInitialValue)) {
               env.set(instr.lvalue.identifier.id, {kind: 'Guard', refId});
             } else {
               for (const operand of eachInstructionValueOperand(instr.value)) {
