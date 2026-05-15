@@ -558,6 +558,78 @@ describe('Store', () => {
       expect(leaf.displayName).toBe('Leaf');
       expect(leaf.isInsideHiddenActivity).toBe(true);
     });
+
+    // Regression test for https://github.com/facebook/react/issues/36315
+    // and https://github.com/facebook/react/issues/36375.
+    // @reactVersion >= 19
+    it('should not throw when a child of hidden Activity is removed while a parent Suspense is suspended', async () => {
+      const Activity = React.Activity || React.unstable_Activity;
+
+      let resolve;
+      const never = new Promise(_resolve => {
+        resolve = _resolve;
+      });
+
+      function Suspender() {
+        readValue(never);
+        return null;
+      }
+
+      function Child() {
+        return <div>child</div>;
+      }
+
+      function App({showChild, suspend}) {
+        return (
+          <React.Suspense fallback={<div>Loading</div>}>
+            {suspend ? <Suspender /> : null}
+            <Activity mode="hidden">{showChild ? <Child /> : null}</Activity>
+          </React.Suspense>
+        );
+      }
+
+      // Mount with child visible inside hidden Activity (child is in the Store)
+      await actAsync(() => {
+        render(<App showChild={true} suspend={false} />);
+      });
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+            ▾ <Suspense>
+              ▸ <Activity mode="hidden">
+        [suspense-root]  rects={[{x:1,y:2,width:5,height:1}]}
+          <Suspense name="App" uniqueSuspenders={false} rects={[{x:1,y:2,width:5,height:1}]}>
+      `);
+
+      // Suspend the Suspense — this sends REMOVE for Activity and Child
+      await actAsync(() => {
+        render(<App showChild={true} suspend={true} />);
+      });
+
+      // Remove Child from Activity's content while Suspense is still suspended.
+      // This must NOT send a second REMOVE for Child (which is no longer in the Store).
+      await actAsync(() => {
+        render(<App showChild={false} suspend={true} />);
+      });
+
+      // Reveal Suspense — Activity and any remaining children should be re-added
+      await actAsync(() => {
+        render(<App showChild={false} suspend={false} />);
+      });
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <App>
+            ▾ <Suspense>
+                <Activity mode="hidden">
+        [suspense-root]  rects={null}
+          <Suspense name="App" uniqueSuspenders={true} rects={null}>
+      `);
+
+      // Resolve the promise to clean up
+      await actAsync(() => {
+        resolve();
+      });
+    });
   });
 
   describe('collapseNodesByDefault:false', () => {

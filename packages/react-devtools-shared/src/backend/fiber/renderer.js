@@ -209,6 +209,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     treeBaseDuration: 0,
     suspendedBy: null,
     suspenseNode: null,
+    isDisconnected: false,
     data: fiber,
   };
 }
@@ -244,6 +245,7 @@ function createVirtualInstance(
     treeBaseDuration: 0,
     suspendedBy: null,
     suspenseNode: null,
+    isDisconnected: false,
     data: debugEntry,
   };
 }
@@ -1784,6 +1786,7 @@ export function attach(
       // We're disconnected. We'll reconnect a hidden mount after the parent reappears.
       return;
     }
+    fiberInstance.isDisconnected = false;
     const id = fiberInstance.id;
     const fiber = fiberInstance.data;
 
@@ -1968,6 +1971,7 @@ export function attach(
       // We're disconnected. We'll reconnect a hidden mount after the parent reappears.
       return;
     }
+    instance.isDisconnected = false;
     const componentInfo = instance.data;
 
     const key =
@@ -2127,6 +2131,13 @@ export function attach(
       // Already disconnected.
       return;
     }
+
+    if (fiberInstance.isDisconnected) {
+      // A REMOVE was already sent for this instance (e.g. via disconnectChildrenRecursively
+      // when a parent Suspense suspended). Don't send a second REMOVE.
+      return;
+    }
+    fiberInstance.isDisconnected = true;
 
     if (trackedPathMatchInstance === fiberInstance) {
       // We're in the process of trying to restore previous selection.
@@ -2853,6 +2864,13 @@ export function attach(
     if (isInDisconnectedSubtree) {
       return;
     }
+
+    if (instance.isDisconnected) {
+      // A REMOVE was already sent for this instance. Don't send a second REMOVE.
+      return;
+    }
+    instance.isDisconnected = true;
+
     if (trackedPathMatchInstance === instance) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
