@@ -3824,6 +3824,11 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/strictest/-/strictest-2.0.5.tgz#2cbc67f207ba87fdec2a84ad79b1708cf4edd93b"
   integrity sha512-ec4tjL2Rr0pkZ5hww65c+EEPYwxOi4Ryv+0MtjeaSQRJyq322Q27eOQiFbuNgw2hpL4hB1/W/HBGk3VKS43osg==
 
+"@types/babel__code-frame@^7.0.6":
+  version "7.27.0"
+  resolved "https://registry.yarnpkg.com/@types/babel__code-frame/-/babel__code-frame-7.27.0.tgz#4799f597ec9e7bbdd39e1374f43423742dcffa99"
+  integrity sha512-Dwlo+LrxDx/0SpfmJ/BKveHf7QXWvLBLc+x03l5sbzykj3oB9nHygCpSECF1a+s+QIxbghe+KHqC90vGtxLRAA==
+
 "@types/babel__core@^7.1.14":
   version "7.20.5"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.5.tgz#3df15f27ba85319caa07ba08d0721889bb39c017"
