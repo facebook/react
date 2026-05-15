@@ -436,66 +436,64 @@ export function findBoundingRects(
     const targetBottom = targetTop + targetRect.height;
 
     for (let j = i - 1; j >= 0; j--) {
-      if (i !== j) {
-        const otherRect = boundingRects[j];
-        const otherLeft = otherRect.x;
-        const otherRight = otherLeft + otherRect.width;
-        const otherTop = otherRect.y;
-        const otherBottom = otherTop + otherRect.height;
+      const otherRect = boundingRects[j];
+      const otherLeft = otherRect.x;
+      const otherRight = otherLeft + otherRect.width;
+      const otherTop = otherRect.y;
+      const otherBottom = otherTop + otherRect.height;
 
-        // Merging all rects to the minimums set would be complicated,
-        // but we can handle the most common cases:
-        // 1. completely overlapping rects
-        // 2. adjacent rects that are the same width or height (e.g. items in a list)
-        //
-        // Even given the above constraints,
-        // we still won't end up with the fewest possible rects without doing multiple passes,
-        // but it's good enough for this purpose.
+      // Merging all rects to the minimums set would be complicated,
+      // but we can handle the most common cases:
+      // 1. completely overlapping rects
+      // 2. adjacent rects that are the same width or height (e.g. items in a list)
+      //
+      // Even given the above constraints,
+      // we still won't end up with the fewest possible rects without doing multiple passes,
+      // but it's good enough for this purpose.
 
-        if (
-          targetLeft >= otherLeft &&
-          targetTop >= otherTop &&
-          targetRight <= otherRight &&
-          targetBottom <= otherBottom
-        ) {
-          // Complete overlapping rects; remove the inner one.
-          boundingRects.splice(i, 1);
-          break;
-        } else if (
-          targetLeft === otherLeft &&
-          targetRect.width === otherRect.width &&
-          !(otherBottom < targetTop) &&
-          !(otherTop > targetBottom)
-        ) {
-          // Adjacent vertical rects; merge them.
-          if (otherTop > targetTop) {
-            otherRect.height += otherTop - targetTop;
-            otherRect.y = targetTop;
-          }
-          if (otherBottom < targetBottom) {
-            otherRect.height = targetBottom - otherTop;
-          }
-
-          boundingRects.splice(i, 1);
-          break;
-        } else if (
-          targetTop === otherTop &&
-          targetRect.height === otherRect.height &&
-          !(otherRight < targetLeft) &&
-          !(otherLeft > targetRight)
-        ) {
-          // Adjacent horizontal rects; merge them.
-          if (otherLeft > targetLeft) {
-            otherRect.width += otherLeft - targetLeft;
-            otherRect.x = targetLeft;
-          }
-          if (otherRight < targetRight) {
-            otherRect.width = targetRight - otherLeft;
-          }
-
-          boundingRects.splice(i, 1);
-          break;
+      if (
+        targetLeft >= otherLeft &&
+        targetTop >= otherTop &&
+        targetRight <= otherRight &&
+        targetBottom <= otherBottom
+      ) {
+        // Complete overlapping rects; remove the inner one.
+        boundingRects.splice(i, 1);
+        break;
+      } else if (
+        targetLeft === otherLeft &&
+        targetRect.width === otherRect.width &&
+        !(otherBottom < targetTop) &&
+        !(otherTop > targetBottom)
+      ) {
+        // Adjacent vertical rects; merge them.
+        if (otherTop > targetTop) {
+          otherRect.height += otherTop - targetTop;
+          otherRect.y = targetTop;
         }
+        if (otherBottom < targetBottom) {
+          otherRect.height = targetBottom - otherTop;
+        }
+
+        boundingRects.splice(i, 1);
+        break;
+      } else if (
+        targetTop === otherTop &&
+        targetRect.height === otherRect.height &&
+        !(otherRight < targetLeft) &&
+        !(otherLeft > targetRight)
+      ) {
+        // Adjacent horizontal rects; merge them.
+        if (otherLeft > targetLeft) {
+          otherRect.width += otherLeft - targetLeft;
+          otherRect.x = targetLeft;
+        }
+        if (otherRight < targetRight) {
+          otherRect.width = targetRight - otherLeft;
+        }
+
+        boundingRects.splice(i, 1);
+        break;
       }
     }
   }
