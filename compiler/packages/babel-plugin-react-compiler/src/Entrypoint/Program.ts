@@ -47,6 +47,7 @@ export type CompilerPass = {
 export const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 const DYNAMIC_GATING_DIRECTIVE = new RegExp('^use memo if\\(([^\\)]*)\\)$');
+const TRACE_TAPE_DIRECTIVE = 'use trace tape';
 
 export function tryFindDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
@@ -278,6 +279,237 @@ export function createNewFunctionNode(
   }
   // Avoid visiting the new transformed version
   return transformedFn;
+}
+
+function hasTraceTapeDirective(directives: Array<t.Directive>): boolean {
+  return directives.some(
+    directive => directive.value.value === TRACE_TAPE_DIRECTIVE,
+  );
+}
+
+function getTraceTapeParamName(fn: BabelFn): string | null {
+  if (fn.node.params.length !== 1) {
+    return null;
+  }
+  const [param] = fn.node.params;
+  return t.isIdentifier(param) ? param.name : null;
+}
+
+function getTraceTapePathSegments(
+  expression: t.Expression,
+  paramName: string,
+): Array<string> | null {
+  if (!t.isMemberExpression(expression) || expression.computed) {
+    return null;
+  }
+  if (!t.isIdentifier(expression.property)) {
+    return null;
+  }
+  if (t.isIdentifier(expression.object)) {
+    return expression.object.name === paramName ? [expression.property.name] : null;
+  }
+  if (!t.isMemberExpression(expression.object)) {
+    return null;
+  }
+  const prefix = getTraceTapePathSegments(expression.object, paramName);
+  return prefix == null ? null : [...prefix, expression.property.name];
+}
+
+function createTraceTapeInputExpression(
+  inputName: string,
+  pathSegments: Array<string>,
+): t.Expression {
+  let expression: t.Expression = t.identifier(inputName);
+  for (const segment of pathSegments) {
+    expression = t.memberExpression(expression, t.identifier(segment));
+  }
+  return expression;
+}
+
+function createTraceTapeSelector(
+  traceSelectorName: string,
+  inputName: string,
+  pathSegments: Array<string>,
+): t.Expression {
+  return t.callExpression(t.identifier(traceSelectorName), [
+    t.stringLiteral(pathSegments.join('.')),
+    t.arrowFunctionExpression(
+      [t.identifier(inputName)],
+      createTraceTapeInputExpression(inputName, pathSegments),
+    ),
+  ]);
+}
+
+function createTraceTapeComputeFn(
+  inputName: string,
+  pathSegments: Array<string>,
+): t.ArrowFunctionExpression {
+  return t.arrowFunctionExpression(
+    [t.identifier(inputName)],
+    createTraceTapeInputExpression(inputName, pathSegments),
+  );
+}
+
+function maybeCreateTraceTapeArtifact(
+  fn: BabelFn,
+  programContext: ProgramContext,
+): t.Statement | null {
+  if (!programContext.opts.enableEmitTraceTape || !fn.isFunctionDeclaration()) {
+    return null;
+  }
+  if (fn.parentPath.isExportDefaultDeclaration()) {
+    return null;
+  }
+  const functionName = fn.node.id?.name;
+  if (functionName == null || fn.node.body.type !== 'BlockStatement') {
+    return null;
+  }
+  if (!hasTraceTapeDirective(fn.node.body.directives)) {
+    return null;
+  }
+  const paramName = getTraceTapeParamName(fn);
+  if (paramName == null) {
+    return null;
+  }
+  if (fn.node.body.body.length !== 1) {
+    return null;
+  }
+  const [statement] = fn.node.body.body;
+  if (!t.isReturnStatement(statement) || statement.argument == null) {
+    return null;
+  }
+  if (!t.isJSXElement(statement.argument)) {
+    return null;
+  }
+
+  const traceSessionImport = programContext.addImportSpecifier(
+    {
+      source: programContext.reactRuntimeModule,
+      importSpecifierName: 'experimental_createRenderTraceSession',
+    },
+    '_traceTapeSession',
+  );
+  const traceSelectorImport = programContext.addImportSpecifier(
+    {
+      source: programContext.reactRuntimeModule,
+      importSpecifierName: 'experimental_createTraceSelector',
+    },
+    '_traceTapeSelector',
+  );
+
+  const root = statement.argument;
+  const traceName = programContext.newUid('trace');
+  const inputName = programContext.newUid('input');
+  const operations: Array<t.Statement> = [];
+
+  for (const attribute of root.openingElement.attributes) {
+    if (t.isJSXSpreadAttribute(attribute)) {
+      return null;
+    }
+    if (!t.isJSXIdentifier(attribute.name)) {
+      return null;
+    }
+    if (
+      attribute.value == null ||
+      t.isStringLiteral(attribute.value) ||
+      !t.isJSXExpressionContainer(attribute.value) ||
+      t.isJSXEmptyExpression(attribute.value.expression)
+    ) {
+      continue;
+    }
+    const pathSegments = getTraceTapePathSegments(
+      attribute.value.expression,
+      paramName,
+    );
+    if (pathSegments == null) {
+      return null;
+    }
+    operations.push(
+      t.expressionStatement(
+        t.callExpression(
+          t.memberExpression(t.identifier(traceName), t.identifier('attr')),
+          [
+            t.stringLiteral('root'),
+            t.stringLiteral(attribute.name.name),
+            t.arrayExpression([
+              createTraceTapeSelector(
+                traceSelectorImport.name,
+                inputName,
+                pathSegments,
+              ),
+            ]),
+            createTraceTapeComputeFn(inputName, pathSegments),
+          ],
+        ),
+      ),
+    );
+  }
+
+  for (const [index, child] of root.children.entries()) {
+    if (t.isJSXText(child)) {
+      if (child.value.trim().length !== 0) {
+        return null;
+      }
+      continue;
+    }
+    if (
+      !t.isJSXExpressionContainer(child) ||
+      t.isJSXEmptyExpression(child.expression)
+    ) {
+      return null;
+    }
+    const pathSegments = getTraceTapePathSegments(child.expression, paramName);
+    if (pathSegments == null) {
+      return null;
+    }
+    operations.push(
+      t.expressionStatement(
+        t.callExpression(
+          t.memberExpression(t.identifier(traceName), t.identifier('text')),
+          [
+            t.stringLiteral(`root.children.${index}`),
+            t.arrayExpression([
+              createTraceTapeSelector(
+                traceSelectorImport.name,
+                inputName,
+                pathSegments,
+              ),
+            ]),
+            createTraceTapeComputeFn(inputName, pathSegments),
+          ],
+        ),
+      ),
+    );
+  }
+
+  if (operations.length === 0) {
+    return null;
+  }
+
+  return t.expressionStatement(
+    t.assignmentExpression(
+      '=',
+      t.memberExpression(
+        t.identifier(functionName),
+        t.identifier('__traceTape'),
+      ),
+      t.functionExpression(
+        null,
+        [],
+        t.blockStatement([
+          t.returnStatement(
+            t.callExpression(t.identifier(traceSessionImport.name), [
+              t.functionExpression(
+                null,
+                [t.identifier(traceName), t.identifier(inputName)],
+                t.blockStatement(operations),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+    ),
+  );
 }
 
 function insertNewOutlinedFunctionNode(
@@ -769,6 +1001,13 @@ function applyCompiledFunctions(
         referencedBeforeDeclared.has(result),
       );
     } else {
+      const traceTapeArtifact =
+        kind === 'original'
+          ? maybeCreateTraceTapeArtifact(originalFn, programContext)
+          : null;
+      if (traceTapeArtifact != null) {
+        originalFn.insertAfter(traceTapeArtifact);
+      }
       originalFn.replaceWith(transformedFn);
     }
   }
