@@ -68,9 +68,9 @@ function extractEvents(
   }
   const formInst = maybeTargetInst;
   const form: HTMLFormElement = (nativeEventTarget: any);
-  let action = coerceFormActionProp(
-    (getFiberCurrentPropsFromNode(form): any).action,
-  );
+  const formProps = (getFiberCurrentPropsFromNode(form): any);
+  let action = coerceFormActionProp(formProps.action);
+  const autoReset: boolean = formProps.autoReset !== false;
   let submitter: null | void | HTMLInputElement | HTMLButtonElement =
     (nativeEvent: any).submitter;
   let submitterAction;
@@ -124,6 +124,7 @@ function extractEvents(
           // the action.
           null,
           formData,
+          autoReset,
         );
       } else {
         // No earlier event scheduled a transition. Exit without setting a
@@ -144,7 +145,7 @@ function extractEvents(
       if (__DEV__) {
         Object.freeze(pendingState);
       }
-      startHostTransition(formInst, pendingState, action, formData);
+      startHostTransition(formInst, pendingState, action, formData, autoReset);
     } else {
       // No earlier event prevented the default submission, and no action was
       // provided. Exit without setting a pending form status.
@@ -180,5 +181,7 @@ export function dispatchReplayedFormAction(
   if (__DEV__) {
     Object.freeze(pendingState);
   }
-  startHostTransition(formInst, pendingState, action, formData);
+  const autoReset: boolean =
+    (getFiberCurrentPropsFromNode(form): any).autoReset !== false;
+  startHostTransition(formInst, pendingState, action, formData, autoReset);
 }
