@@ -2420,7 +2420,9 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
     loc: place.loc,
   });
   const identifier = convertIdentifier(place.identifier);
-  identifier.loc = place.loc as any;
+  if (place.loc != null && place.loc !== GeneratedSource) {
+    identifier.loc = place.loc as any;
+  }
   return identifier;
 }
 
