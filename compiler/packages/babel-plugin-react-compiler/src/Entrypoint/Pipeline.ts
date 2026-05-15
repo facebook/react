@@ -91,6 +91,7 @@ import {validateNoJSXInTryStatement} from '../Validation/ValidateNoJSXInTryState
 import {propagateScopeDependenciesHIR} from '../HIR/PropagateScopeDependenciesHIR';
 import {outlineJSX} from '../Optimization/OutlineJsx';
 import {optimizePropsMethodCalls} from '../Optimization/OptimizePropsMethodCalls';
+import {optimizeDestructurePropertyLoads} from '../Optimization/OptimizeDestructurePropertyLoads';
 import {validateStaticComponents} from '../Validation/ValidateStaticComponents';
 import {validateNoFreezingKnownMutableFunctions} from '../Validation/ValidateNoFreezingKnownMutableFunctions';
 import {inferMutationAliasingEffects} from '../Inference/InferMutationAliasingEffects';
@@ -206,6 +207,9 @@ function runWithEnvironment(
 
   optimizePropsMethodCalls(hir);
   log({kind: 'hir', name: 'OptimizePropsMethodCalls', value: hir});
+
+  optimizeDestructurePropertyLoads(hir);
+  log({kind: 'hir', name: 'OptimizeDestructurePropertyLoads', value: hir});
 
   analyseFunctions(hir);
   log({kind: 'hir', name: 'AnalyseFunctions', value: hir});
