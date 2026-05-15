@@ -23,6 +23,31 @@ import {
 
 import {describeDiff} from 'react-reconciler/src/ReactFiberHydrationDiffs';
 
+import {MATH_NAMESPACE, SVG_NAMESPACE} from './DOMNamespaces';
+
+/**
+ * Mirrors HostContextNamespace in ReactFiberConfigDOM.js (None / Svg / Math).
+ * Used only for dev-only nesting warning prefixes.
+ */
+export type HostContextNamespace = 0 | 1 | 2;
+
+export function getHostContextNamespaceForDomNamespace(
+  namespaceURI: string | null,
+): HostContextNamespace {
+  if (namespaceURI === SVG_NAMESPACE) {
+    return 1;
+  }
+  if (namespaceURI === MATH_NAMESPACE) {
+    return 2;
+  }
+  return 0;
+}
+
+function getContextLabel(hostContextNamespace: HostContextNamespace): string {
+  // "In SVG" only in the SVG namespace; foreignObject switches to HTML (integration point).
+  return hostContextNamespace === 1 ? 'In SVG' : 'In HTML';
+}
+
 function describeAncestors(
   ancestor: Fiber,
   child: Fiber,
@@ -549,6 +574,7 @@ function findAncestor(parent: null | Fiber, tagName: string): null | Fiber {
 function validateDOMNesting(
   childTag: string,
   ancestorInfo: AncestorInfoDev,
+  hostContextNamespace: HostContextNamespace,
 ): boolean {
   if (__DEV__) {
     ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
@@ -589,6 +615,7 @@ function validateDOMNesting(
         : '';
 
     const tagDisplayName = '<' + childTag + '>';
+    const contextLabel = getContextLabel(hostContextNamespace);
     if (invalidParent) {
       let info = '';
       if (ancestorTag === 'table' && childTag === 'tr') {
@@ -597,8 +624,9 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        'In HTML, %s cannot be a child of <%s>.%s\n' +
+        '%s, %s cannot be a child of <%s>.%s\n' +
           'This will cause a hydration error.%s',
+        contextLabel,
         tagDisplayName,
         ancestorTag,
         info,
@@ -606,8 +634,9 @@ function validateDOMNesting(
       );
     } else {
       console.error(
-        'In HTML, %s cannot be a descendant of <%s>.\n' +
+        '%s, %s cannot be a descendant of <%s>.\n' +
           'This will cause a hydration error.%s',
+        contextLabel,
         tagDisplayName,
         ancestorTag,
         ancestorDescription,
@@ -644,6 +673,7 @@ function validateTextNesting(
   childText: string,
   parentTag: string,
   implicitRootScope: boolean,
+  hostContextNamespace: HostContextNamespace,
 ): boolean {
   if (__DEV__) {
     if (implicitRootScope || isTagValidWithParent('#text', parentTag, false)) {
@@ -668,19 +698,22 @@ function validateTextNesting(
           )
         : '';
 
+    const contextLabel = getContextLabel(hostContextNamespace);
     if (/\S/.test(childText)) {
       console.error(
-        'In HTML, text nodes cannot be a child of <%s>.\n' +
+        '%s, text nodes cannot be a child of <%s>.\n' +
           'This will cause a hydration error.%s',
+        contextLabel,
         parentTag,
         ancestorDescription,
       );
     } else {
       console.error(
-        'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
+        '%s, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
           'each line of your source code.\n' +
           'This will cause a hydration error.%s',
+        contextLabel,
         parentTag,
         ancestorDescription,
       );
