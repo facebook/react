@@ -88,7 +88,16 @@ const configs = {
     plugins,
     rules: recommendedLatestRuleConfigs,
   },
-  flat: {} as {
+  flat: {
+    recommended: {
+      plugins: {'react-hooks': plugin},
+      rules: recommendedRuleConfigs,
+    },
+    'recommended-latest': {
+      plugins: {'react-hooks': plugin},
+      rules: recommendedLatestRuleConfigs,
+    },
+  } satisfies {
     recommended: ReactHooksFlatConfig;
     'recommended-latest': ReactHooksFlatConfig;
   },
@@ -102,16 +111,5 @@ const plugin = {
   rules,
   configs,
 };
-
-Object.assign(configs.flat, {
-  'recommended-latest': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest'].rules,
-  },
-  recommended: {
-    plugins: {'react-hooks': plugin},
-    rules: configs.recommended.rules,
-  },
-});
 
 export default plugin;
