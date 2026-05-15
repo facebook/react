@@ -178,7 +178,6 @@ export function createRoot(
 
   warnIfReactDOMContainerInDEV(container);
 
-  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
@@ -239,7 +238,6 @@ export function createRoot(
     ConcurrentRoot,
     null,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
@@ -295,7 +293,6 @@ export function hydrateRoot(
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
 
-  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
@@ -340,7 +337,6 @@ export function hydrateRoot(
     ConcurrentRoot,
     hydrationCallbacks,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
