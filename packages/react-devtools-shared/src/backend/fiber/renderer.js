@@ -330,7 +330,7 @@ const hostResourceToDevToolsInstanceMap: Map<
   Set<DevToolsInstance>,
 > = new Map();
 
-function aquireHostInstance(
+function acquireHostInstance(
   nearestInstance: DevToolsInstance,
   hostInstance: HostInstance,
 ): void {
@@ -350,7 +350,7 @@ function releaseHostInstance(
   }
 }
 
-function aquireHostResource(
+function acquireHostResource(
   nearestInstance: DevToolsInstance,
   resource: ?{instance?: HostInstance},
 ): void {
@@ -3486,7 +3486,7 @@ export function attach(
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        aquireHostResource(nearestInstance, fiber.memoizedState);
+        acquireHostResource(nearestInstance, fiber.memoizedState);
         trackDebugInfoFromHostResource(nearestInstance, fiber);
       } else if (
         fiber.tag === HostComponent ||
@@ -3497,7 +3497,7 @@ export function attach(
         if (nearestInstance === null) {
           throw new Error('Did not expect a host hoistable to be the root');
         }
-        aquireHostInstance(nearestInstance, fiber.stateNode);
+        acquireHostInstance(nearestInstance, fiber.stateNode);
         trackDebugInfoFromHostComponent(nearestInstance, fiber);
       }
 
@@ -4468,7 +4468,7 @@ export function attach(
         }
         if (prevFiber.memoizedState !== nextFiber.memoizedState) {
           releaseHostResource(nearestInstance, prevFiber.memoizedState);
-          aquireHostResource(nearestInstance, nextFiber.memoizedState);
+          acquireHostResource(nearestInstance, nextFiber.memoizedState);
         }
         trackDebugInfoFromHostResource(nearestInstance, nextFiber);
       } else if (
@@ -4482,10 +4482,10 @@ export function attach(
         }
         if (prevFiber.stateNode !== nextFiber.stateNode) {
           // In persistent mode, it's possible for the stateNode to update with
-          // a new clone. In that case we need to release the old one and aquire
+          // a new clone. In that case we need to release the old one and acquire
           // new one instead.
           releaseHostInstance(nearestInstance, prevFiber.stateNode);
-          aquireHostInstance(nearestInstance, nextFiber.stateNode);
+          acquireHostInstance(nearestInstance, nextFiber.stateNode);
         }
         trackDebugInfoFromHostComponent(nearestInstance, nextFiber);
       }
