@@ -1,0 +1,14 @@
+.DS_Store
+.spr.yml
+
+node_modules
+.watchmanconfig
+.watchman-cookie-*
+dist
+.vscode
+!packages/playground/.vscode
+testfilter.txt
+
+# forgive
+*.vsix
+.vscode-test

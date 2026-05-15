@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`describeWithPointerEvent: MouseEvent/TouchEvent provides boolean to tests 1`] = `false`;
+
+exports[`describeWithPointerEvent: MouseEvent/TouchEvent testWithPointerType: mouse 1`] = `"mouse"`;
+
+exports[`describeWithPointerEvent: MouseEvent/TouchEvent testWithPointerType: touch 1`] = `"touch"`;
+
+exports[`describeWithPointerEvent: PointerEvent provides boolean to tests 1`] = `true`;
+
+exports[`describeWithPointerEvent: PointerEvent testWithPointerType: mouse 1`] = `"mouse"`;
+
+exports[`describeWithPointerEvent: PointerEvent testWithPointerType: pen 1`] = `"pen"`;
+
+exports[`describeWithPointerEvent: PointerEvent testWithPointerType: touch 1`] = `"touch"`;

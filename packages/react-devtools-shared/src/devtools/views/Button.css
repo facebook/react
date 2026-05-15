@@ -1,0 +1,38 @@
+.Button {
+  border: none;
+  background: var(--color-button-background);
+  color: var(--color-button);
+  padding: 0;
+  border-radius: 0.25rem;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.ButtonContent {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
+.Button:hover {
+  color: var(--color-button-hover);
+}
+.Button:active {
+  color: var(--color-button-focus);
+  outline: none;
+}
+.Button:focus,
+.ButtonContent:focus {
+  outline: none;
+}
+
+.Button:focus > .ButtonContent {
+  background: var(--color-button-background-focus);
+}
+
+.Button:disabled,
+.Button:disabled:active {
+  background: var(--color-button-background);
+  color: var(--color-button-disabled);
+  cursor: default;
+}

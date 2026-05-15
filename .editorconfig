@@ -1,0 +1,16 @@
+# https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+max_line_length = 80
+
+[*.md]
+max_line_length = 0
+
+[COMMIT_EDITMSG]
+max_line_length = 0
