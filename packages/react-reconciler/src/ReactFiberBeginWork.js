@@ -250,6 +250,7 @@ import {
   claimNextHydratableSuspenseInstance,
   warnIfHydrating,
   queueHydrationError,
+  prepareToHydrateHostPortal,
 } from './ReactFiberHydrationContext';
 import {
   constructClassInstance,
@@ -3638,6 +3639,7 @@ function updatePortalComponent(
   renderLanes: Lanes,
 ) {
   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
+  prepareToHydrateHostPortal(workInProgress);
   const nextChildren = workInProgress.pendingProps;
   if (current === null) {
     // Portals are special because we don't append the children during mount
