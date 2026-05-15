@@ -348,7 +348,7 @@ const rule = {
           if (pathList.has(segment.id)) {
             const pathArray = [...pathList];
             const cyclicSegments = pathArray.slice(
-              pathArray.indexOf(segment.id) + 1,
+              pathArray.indexOf(segment.id),
             );
             for (const cyclicSegment of cyclicSegments) {
               cyclic.add(cyclicSegment);
@@ -422,7 +422,7 @@ const rule = {
           if (pathList.has(segment.id)) {
             const pathArray = Array.from(pathList);
             const cyclicSegments = pathArray.slice(
-              pathArray.indexOf(segment.id) + 1,
+              pathArray.indexOf(segment.id),
             );
             for (const cyclicSegment of cyclicSegments) {
               cyclic.add(cyclicSegment);
