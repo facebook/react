@@ -1,4 +1,4 @@
-// @target="18"
+// @target:"18"
 
 function Component() {
   return <div>Hello world</div>;

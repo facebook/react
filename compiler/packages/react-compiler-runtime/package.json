@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rimraf dist && tsup",
-    "test": "echo 'no tests'",
+    "test": "yarn build && node --test ./tests/*.test.js",
     "watch": "yarn build --watch"
   },
   "repository": {

@@ -7,6 +7,17 @@
 
 import * as React from 'react';
 
+export {
+  createStructuredHookSession as experimental_createStructuredHookSession,
+  useStructuredHooks as experimental_useStructuredHooks,
+} from './structuredHooks';
+export type {
+  StructuredHookContext as ExperimentalStructuredHookContext,
+  StructuredHookSession as ExperimentalStructuredHookSession,
+  StructuredStateAction as ExperimentalStructuredStateAction,
+  StructuredStateSetter as ExperimentalStructuredStateSetter,
+} from './structuredHooks';
+
 const {useRef, useEffect, isValidElement} = React;
 const ReactSecretInternals =
   //@ts-ignore

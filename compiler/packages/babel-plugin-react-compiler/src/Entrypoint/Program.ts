@@ -47,6 +47,7 @@ export type CompilerPass = {
 export const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 const DYNAMIC_GATING_DIRECTIVE = new RegExp('^use memo if\\(([^\\)]*)\\)$');
+const STRUCTURED_HOOKS_DIRECTIVE = 'use structured hooks';
 
 export function tryFindDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
@@ -170,6 +171,28 @@ export type CompileResult = {
   compiledFn: CodegenFunction;
 };
 
+type TransformedFunctionNode =
+  | t.FunctionDeclaration
+  | t.ArrowFunctionExpression
+  | t.FunctionExpression;
+
+type StructuredHooksTransformResult = {
+  originalFn: BabelFn;
+  transformedFn: TransformedFunctionNode;
+};
+
+type StructuredSupportedHookKind = 'useMemo' | 'useState';
+
+type ProcessFnResult =
+  | {
+      kind: 'compiled';
+      compiledFn: CodegenFunction;
+    }
+  | {
+      kind: 'structured-hooks';
+      transformedFn: TransformedFunctionNode;
+    };
+
 function logError(
   err: unknown,
   context: {
@@ -278,6 +301,469 @@ export function createNewFunctionNode(
   }
   // Avoid visiting the new transformed version
   return transformedFn;
+}
+
+function createFunctionNodeWithBody(
+  originalFn: BabelFn,
+  body: t.BlockStatement,
+): TransformedFunctionNode {
+  switch (originalFn.node.type) {
+    case 'FunctionDeclaration': {
+      const fn = t.functionDeclaration(
+        originalFn.node.id ?? null,
+        originalFn.node.params,
+        body,
+        originalFn.node.generator,
+        originalFn.node.async,
+      );
+      fn.loc = originalFn.node.loc ?? null;
+      return fn;
+    }
+    case 'ArrowFunctionExpression': {
+      const fn = t.arrowFunctionExpression(
+        originalFn.node.params,
+        body,
+        originalFn.node.async,
+      );
+      fn.expression = false;
+      fn.loc = originalFn.node.loc ?? null;
+      return fn;
+    }
+    case 'FunctionExpression': {
+      const fn = t.functionExpression(
+        originalFn.node.id ?? null,
+        originalFn.node.params,
+        body,
+        originalFn.node.generator,
+        originalFn.node.async,
+      );
+      fn.loc = originalFn.node.loc ?? null;
+      return fn;
+    }
+    default: {
+      assertExhaustive(
+        originalFn.node,
+        `Creating unhandled function body transform: ${originalFn.node}`,
+      );
+    }
+  }
+}
+
+function findStructuredHooksDirective(
+  directives: Array<t.Directive>,
+): t.Directive | null {
+  return (
+    directives.find(
+      directive => directive.value.value === STRUCTURED_HOOKS_DIRECTIVE,
+    ) ?? null
+  );
+}
+
+function createStructuredHooksError(
+  loc: t.SourceLocation | null,
+  reason: string,
+): CompilerError {
+  const error = new CompilerError();
+  error.push({
+    category: ErrorCategory.Todo,
+    reason,
+    description: null,
+    loc,
+    suggestions: null,
+  });
+  return error;
+}
+
+function getStructuredHookName(
+  callee: t.Expression | t.Super | t.V8IntrinsicIdentifier,
+): string | null {
+  if (t.isIdentifier(callee)) {
+    return isHookName(callee.name) ? callee.name : null;
+  }
+  if (
+    t.isMemberExpression(callee) &&
+    !callee.computed &&
+    t.isIdentifier(callee.object) &&
+    t.isIdentifier(callee.property) &&
+    /^[A-Z]/.test(callee.object.name) &&
+    isHookName(callee.property.name)
+  ) {
+    return callee.property.name;
+  }
+  return null;
+}
+
+function getStructuredHookKind(
+  expression: t.Expression | null | undefined,
+): StructuredSupportedHookKind | 'unsupported' | null {
+  if (expression == null || !t.isCallExpression(expression)) {
+    return null;
+  }
+  const hookName = getStructuredHookName(expression.callee);
+  if (hookName == null) {
+    return null;
+  }
+  if (hookName === 'useState' || hookName === 'useMemo') {
+    return hookName;
+  }
+  return 'unsupported';
+}
+
+function findStructuredHookCall(
+  node: t.Node | null | undefined,
+): t.CallExpression | null {
+  if (node == null) {
+    return null;
+  }
+  if (t.isCallExpression(node) && getStructuredHookName(node.callee) != null) {
+    return node;
+  }
+  const visitorKeys = t.VISITOR_KEYS[node.type];
+  if (visitorKeys == null) {
+    return null;
+  }
+  for (const key of visitorKeys) {
+    const value = (node as any)[key];
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item != null && typeof item.type === 'string') {
+          const hookCall = findStructuredHookCall(item);
+          if (hookCall != null) {
+            return hookCall;
+          }
+        }
+      }
+    } else if (value != null && typeof value.type === 'string') {
+      const hookCall = findStructuredHookCall(value);
+      if (hookCall != null) {
+        return hookCall;
+      }
+    }
+  }
+  return null;
+}
+
+function validateStructuredHookFreeNode(
+  node: t.Node | null | undefined,
+  reason: string,
+): Result<null, CompilerError> {
+  const hookCall = findStructuredHookCall(node);
+  if (hookCall == null) {
+    return Ok(null);
+  }
+  const hookName = getStructuredHookName(hookCall.callee) ?? 'hook';
+  return Err(
+    createStructuredHooksError(
+      hookCall.loc ?? null,
+      `${reason} Found ${hookName}().`,
+    ),
+  );
+}
+
+function transformStructuredMemoCallExpression(
+  expression: t.CallExpression,
+  hooksIdentifier: t.Identifier,
+  nextMemoKey: () => string,
+): Result<t.CallExpression, CompilerError> {
+  const compute = expression.arguments[0];
+  if (
+    compute == null ||
+    (!t.isArrowFunctionExpression(compute) && !t.isFunctionExpression(compute))
+  ) {
+    return Err(
+      createStructuredHooksError(
+        expression.loc ?? null,
+        'Structured hooks prototype currently requires an inline useMemo() callback.',
+      ),
+    );
+  }
+  if (compute.params.length !== 0 || compute.async || compute.generator) {
+    return Err(
+      createStructuredHooksError(
+        compute.loc ?? null,
+        'Structured hooks prototype only supports synchronous zero-argument useMemo() callbacks.',
+      ),
+    );
+  }
+
+  const deps = expression.arguments[1];
+  if (deps == null || !t.isArrayExpression(deps)) {
+    return Err(
+      createStructuredHooksError(
+        expression.loc ?? null,
+        'Structured hooks prototype currently requires a literal dependency array for useMemo().',
+      ),
+    );
+  }
+
+  const nestedHookCall = findStructuredHookCall(compute.body);
+  if (nestedHookCall != null) {
+    const hookName = getStructuredHookName(nestedHookCall.callee) ?? 'hook';
+    return Err(
+      createStructuredHooksError(
+        nestedHookCall.loc ?? null,
+        `Structured hooks prototype does not support hook calls inside useMemo() callbacks. Found ${hookName}().`,
+      ),
+    );
+  }
+
+  return Ok(
+    t.callExpression(t.memberExpression(hooksIdentifier, t.identifier('memo')), [
+      t.stringLiteral(nextMemoKey()),
+      t.cloneNode(deps, true),
+      t.cloneNode(compute, true),
+    ]),
+  );
+}
+
+function transformStructuredHooksStatement(
+  statement: t.Statement,
+  hooksIdentifier: t.Identifier,
+  nextStateKey: () => string,
+  nextMemoKey: () => string,
+): Result<t.Statement, CompilerError> {
+  switch (statement.type) {
+    case 'BlockStatement': {
+      const body = transformStructuredHooksStatements(
+        statement.body,
+        hooksIdentifier,
+        nextStateKey,
+        nextMemoKey,
+      );
+      if (body.isErr()) {
+        return body;
+      }
+      return Ok(t.blockStatement(body.unwrap()));
+    }
+    case 'IfStatement': {
+      const testValidation = validateStructuredHookFreeNode(
+        statement.test,
+        'Structured hooks prototype only supports hook calls in direct variable initializers.',
+      );
+      if (testValidation.isErr()) {
+        return testValidation;
+      }
+      const consequent = transformStructuredHooksStatement(
+        statement.consequent,
+        hooksIdentifier,
+        nextStateKey,
+        nextMemoKey,
+      );
+      if (consequent.isErr()) {
+        return consequent;
+      }
+      const alternate =
+        statement.alternate == null
+          ? Ok<t.Statement | null>(null)
+          : transformStructuredHooksStatement(
+              statement.alternate,
+              hooksIdentifier,
+              nextStateKey,
+              nextMemoKey,
+            );
+      if (alternate.isErr()) {
+        return alternate;
+      }
+      return Ok(
+        t.ifStatement(
+          t.cloneNode(statement.test, true),
+          consequent.unwrap(),
+          alternate.unwrap(),
+        ),
+      );
+    }
+    case 'VariableDeclaration': {
+      const declarations: Array<t.VariableDeclarator> = [];
+
+      for (const declaration of statement.declarations) {
+        const clonedDeclaration = t.cloneNode(declaration, true);
+        const hookCall = findStructuredHookCall(declaration.init);
+        if (hookCall == null) {
+          declarations.push(clonedDeclaration);
+          continue;
+        }
+
+        if (declaration.init !== hookCall) {
+          return Err(
+            createStructuredHooksError(
+              hookCall.loc ?? null,
+              'Structured hooks prototype only supports direct hook initializers in variable declarations.',
+            ),
+          );
+        }
+
+        const hookKind = getStructuredHookKind(hookCall);
+        if (hookKind === 'unsupported') {
+          const hookName = getStructuredHookName(hookCall.callee) ?? 'hook';
+          return Err(
+            createStructuredHooksError(
+              hookCall.loc ?? null,
+              `Structured hooks prototype only lowers useState() and useMemo() today. Found ${hookName}().`,
+            ),
+          );
+        }
+
+        if (hookKind === 'useState') {
+          clonedDeclaration.init = t.callExpression(
+            t.memberExpression(hooksIdentifier, t.identifier('state')),
+            [
+              t.stringLiteral(nextStateKey()),
+              hookCall.arguments[0] != null
+                ? t.cloneNode(hookCall.arguments[0], true)
+                : t.identifier('undefined'),
+            ],
+          );
+        } else if (hookKind === 'useMemo') {
+          const memoCall = transformStructuredMemoCallExpression(
+            hookCall,
+            hooksIdentifier,
+            nextMemoKey,
+          );
+          if (memoCall.isErr()) {
+            return memoCall;
+          }
+          clonedDeclaration.init = memoCall.unwrap();
+        }
+
+        declarations.push(clonedDeclaration);
+      }
+
+      return Ok(t.variableDeclaration(statement.kind, declarations));
+    }
+    case 'ExpressionStatement': {
+      const expressionValidation = validateStructuredHookFreeNode(
+        statement.expression,
+        'Structured hooks prototype only supports hook calls in direct variable initializers.',
+      );
+      if (expressionValidation.isErr()) {
+        return expressionValidation;
+      }
+      return Ok(t.expressionStatement(t.cloneNode(statement.expression, true)));
+    }
+    case 'ReturnStatement': {
+      const returnValidation = validateStructuredHookFreeNode(
+        statement.argument,
+        'Structured hooks prototype only supports hook calls in direct variable initializers.',
+      );
+      if (returnValidation.isErr()) {
+        return returnValidation;
+      }
+      return Ok(
+        t.returnStatement(
+          statement.argument == null
+            ? null
+            : t.cloneNode(statement.argument, true),
+        ),
+      );
+    }
+    default: {
+      return Err(
+        createStructuredHooksError(
+          statement.loc ?? null,
+          `Structured hooks prototype does not yet support ${statement.type}.`,
+        ),
+      );
+    }
+  }
+}
+
+function transformStructuredHooksStatements(
+  statements: Array<t.Statement>,
+  hooksIdentifier: t.Identifier,
+  nextStateKey: () => string,
+  nextMemoKey: () => string,
+): Result<Array<t.Statement>, CompilerError> {
+  const transformedStatements: Array<t.Statement> = [];
+
+  for (const statement of statements) {
+    const transformed = transformStructuredHooksStatement(
+      statement,
+      hooksIdentifier,
+      nextStateKey,
+      nextMemoKey,
+    );
+    if (transformed.isErr()) {
+      return transformed;
+    }
+    transformedStatements.push(transformed.unwrap());
+  }
+
+  return Ok(transformedStatements);
+}
+
+function tryCreateStructuredHooksTransform(
+  fn: BabelFn,
+  fnType: ReactFunctionType,
+  programContext: ProgramContext,
+  outputMode: CompilerOutputMode,
+): Result<TransformedFunctionNode | null, CompilerError> {
+  if (
+    !programContext.opts.enableEmitStructuredHooks ||
+    outputMode !== 'client' ||
+    fn.node.body.type !== 'BlockStatement'
+  ) {
+    return Ok(null);
+  }
+
+  const structuredHooksDirective = findStructuredHooksDirective(
+    fn.node.body.directives,
+  );
+  if (structuredHooksDirective == null) {
+    return Ok(null);
+  }
+  if (fnType === 'Other') {
+    return Err(
+      createStructuredHooksError(
+        fn.node.loc ?? null,
+        'Structured hooks prototype only supports React components and custom hooks.',
+      ),
+    );
+  }
+  if (fn.node.async || fn.node.generator) {
+    return Err(
+      createStructuredHooksError(
+        fn.node.loc ?? null,
+        'Structured hooks prototype does not support async or generator functions.',
+      ),
+    );
+  }
+
+  const useStructuredHooksImport = programContext.addImportSpecifier(
+    {
+      source: programContext.reactRuntimeModule,
+      importSpecifierName: 'experimental_useStructuredHooks',
+    },
+    'useStructuredHooks',
+  );
+  const hooksIdentifier = t.identifier(programContext.newUid('hooks'));
+  let stateIndex = 0;
+  let memoIndex = 0;
+  const transformedBody = transformStructuredHooksStatements(
+    fn.node.body.body,
+    hooksIdentifier,
+    () => `state_${stateIndex++}`,
+    () => `memo_${memoIndex++}`,
+  );
+  if (transformedBody.isErr()) {
+    return transformedBody;
+  }
+
+  return Ok(
+    createFunctionNodeWithBody(
+      fn,
+      t.blockStatement([
+        t.returnStatement(
+          t.callExpression(t.identifier(useStructuredHooksImport.name), [
+            t.functionExpression(
+              null,
+              [hooksIdentifier],
+              t.blockStatement(transformedBody.unwrap()),
+            ),
+          ]),
+        ),
+      ]),
+    ),
+  );
 }
 
 function insertNewOutlinedFunctionNode(
@@ -419,6 +905,7 @@ export function compileProgram(
     programContext,
   );
   const compiledFns: Array<CompileResult> = [];
+  const structuredHooksFns: Array<StructuredHooksTransformResult> = [];
 
   // outputMode takes precedence if specified
   const outputMode: CompilerOutputMode =
@@ -433,7 +920,14 @@ export function compileProgram(
     );
 
     if (compiled != null) {
-      for (const outlined of compiled.outlined) {
+      if (compiled.kind === 'structured-hooks') {
+        structuredHooksFns.push({
+          originalFn: current.fn,
+          transformedFn: compiled.transformedFn,
+        });
+        continue;
+      }
+      for (const outlined of compiled.compiledFn.outlined) {
         CompilerError.invariant(outlined.fn.outlined.length === 0, {
           reason: 'Unexpected nested outlined functions',
           loc: outlined.fn.loc,
@@ -456,7 +950,7 @@ export function compileProgram(
       compiledFns.push({
         kind: current.kind,
         originalFn: current.fn,
-        compiledFn: compiled,
+        compiledFn: compiled.compiledFn,
       });
     }
   }
@@ -479,7 +973,11 @@ export function compileProgram(
   }
 
   // Insert React Compiler generated functions into the Babel AST
+  applyStructuredHooksTransforms(structuredHooksFns, programContext);
   applyCompiledFunctions(program, compiledFns, pass, programContext);
+  if (compiledFns.length > 0 || structuredHooksFns.length > 0) {
+    addImportsToProgram(program, programContext);
+  }
 }
 
 type CompileSource = {
@@ -573,15 +1071,17 @@ function processFn(
   fnType: ReactFunctionType,
   programContext: ProgramContext,
   outputMode: CompilerOutputMode,
-): null | CodegenFunction {
+): null | ProcessFnResult {
   let directives: {
     optIn: t.Directive | null;
     optOut: t.Directive | null;
+    structuredHooks: t.Directive | null;
   };
   if (fn.node.body.type !== 'BlockStatement') {
     directives = {
       optIn: null,
       optOut: null,
+      structuredHooks: null,
     };
   } else {
     const optIn = tryFindDirectiveEnablingMemoization(
@@ -604,6 +1104,36 @@ function processFn(
         fn.node.body.directives,
         programContext.opts,
       ),
+      structuredHooks: findStructuredHooksDirective(fn.node.body.directives),
+    };
+  }
+
+  const structuredHooksResult = tryCreateStructuredHooksTransform(
+    fn,
+    fnType,
+    programContext,
+    outputMode,
+  );
+  if (structuredHooksResult.isErr()) {
+    handleError(structuredHooksResult.unwrapErr(), programContext, fn.node.loc ?? null);
+    return null;
+  }
+  const structuredHooksTransform = structuredHooksResult.unwrapOr(null);
+  if (structuredHooksTransform != null) {
+    programContext.logEvent({
+      kind: 'CompileSuccess',
+      fnLoc: fn.node.loc ?? null,
+      fnName:
+        fn.node.type === 'FunctionDeclaration' ? fn.node.id?.name ?? null : null,
+      memoSlots: 0,
+      memoBlocks: 0,
+      memoValues: 0,
+      prunedMemoBlocks: 0,
+      prunedMemoValues: 0,
+    });
+    return {
+      kind: 'structured-hooks',
+      transformedFn: structuredHooksTransform,
     };
   }
 
@@ -660,7 +1190,8 @@ function processFn(
     return null;
   } else if (
     programContext.opts.compilationMode === 'annotation' &&
-    directives.optIn == null
+    directives.optIn == null &&
+    directives.structuredHooks == null
   ) {
     /**
      * If no opt-in directive is found and the compiler is configured in
@@ -668,7 +1199,10 @@ function processFn(
      */
     return null;
   } else {
-    return compiledFn;
+    return {
+      kind: 'compiled',
+      compiledFn,
+    };
   }
 }
 
@@ -772,10 +1306,15 @@ function applyCompiledFunctions(
       originalFn.replaceWith(transformedFn);
     }
   }
+}
 
-  // Forget compiled the component, we need to update existing imports of useMemoCache
-  if (compiledFns.length > 0) {
-    addImportsToProgram(program, programContext);
+function applyStructuredHooksTransforms(
+  structuredHooksFns: Array<StructuredHooksTransformResult>,
+  programContext: ProgramContext,
+): void {
+  for (const result of structuredHooksFns) {
+    programContext.alreadyCompiled.add(result.transformedFn);
+    result.originalFn.replaceWith(result.transformedFn);
   }
 }
 
@@ -820,6 +1359,12 @@ function getReactFunctionType(
   pass: CompilerPass,
 ): ReactFunctionType | null {
   if (fn.node.body.type === 'BlockStatement') {
+    if (
+      pass.opts.enableEmitStructuredHooks &&
+      findStructuredHooksDirective(fn.node.body.directives) != null
+    ) {
+      return getComponentOrHookLike(fn) ?? 'Other';
+    }
     const optInDirectives = tryFindDirectiveEnablingMemoization(
       fn.node.body.directives,
       pass.opts,

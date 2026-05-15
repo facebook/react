@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @target="18"
+// @target:"18"
 
 function Component() {
   return <div>Hello world</div>;
@@ -19,7 +19,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @target="18"
+import { c as _c } from "react-compiler-runtime"; // @target:"18"
 
 function Component() {
   const $ = _c(1);
