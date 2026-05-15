@@ -88,9 +88,9 @@ const configs = {
     plugins,
     rules: recommendedLatestRuleConfigs,
   },
-  flat: {} as {
-    recommended: ReactHooksFlatConfig;
-    'recommended-latest': ReactHooksFlatConfig;
+  flat: {
+    recommended: null as unknown as ReactHooksFlatConfig,
+    'recommended-latest': null as unknown as ReactHooksFlatConfig,
   },
 };
 
