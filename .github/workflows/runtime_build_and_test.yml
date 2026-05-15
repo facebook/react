@@ -39,37 +39,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
-      - name: Check cache hit
-        uses: actions/cache/restore@v4
+      
+      - name: Prepare cache
         id: node_modules
+        uses: actions/cache@v4
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          lookup-only: true
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
+
       - uses: actions/setup-node@v4
         if: steps.node_modules.outputs.cache-hit != 'true'
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
-      - name: Warm with old cache
-        if: steps.node_modules.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          # Don't use restore-keys here. Otherwise the cache grows indefinitely.
+
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - name: Save cache
-        if: steps.node_modules.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
 
   runtime_compiler_node_modules_cache:
     name: Cache Runtime, Compiler node_modules
@@ -78,41 +64,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_sha != '' && github.event.inputs.commit_sha || github.event.pull_request.head.sha || github.sha }}
-      - name: Check cache hit
-        uses: actions/cache/restore@v4
-        id: node_modules
-        with:
-          path: |
-            **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
-          lookup-only: true
       - uses: actions/setup-node@v4
-        if: steps.node_modules.outputs.cache-hit != 'true'
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: |
-            yarn.lock
-            compiler/yarn.lock
-      - name: Warm with old cache
-        if: steps.node_modules.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@v4
+      - name: Prepare cache
+        id: node_modules
+        uses: actions/cache@v4
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn --cwd compiler install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - name: Save cache
-        if: steps.node_modules.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
 
   # ----- FLOW -----
   discover_flow_inline_configs:
@@ -146,15 +112,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -174,15 +138,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -204,15 +166,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
       - name: Ensure clean build directory
         run: rm -rf build
       - run: yarn install --frozen-lockfile
@@ -260,17 +220,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: |
-            yarn.lock
-            compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -291,17 +247,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path:  |
-            yarn.lock
-            compiler/yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
       - name: Install runtime dependencies
         run: yarn install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
@@ -330,10 +282,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: |
-            yarn.lock
-            compiler/yarn.lock
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -344,7 +292,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -420,17 +368,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: |
-            yarn.lock
-            compiler/yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-and-compiler-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
+          key: runtime-and-compiler-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock', 'compiler/yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -469,15 +413,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -509,15 +451,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -572,15 +512,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -610,15 +548,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -645,8 +581,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4 # note: this does not reuse centralized cache since it has unique cache key
         id: node_modules
@@ -686,8 +620,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       # Fixture copies some built packages from the workroot after install.
       # That means dependencies of the built packages are not installed.
       # We need to install dependencies of the workroot to fulfill all dependency constraints
@@ -760,15 +692,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -820,15 +750,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache/restore@v4
         id: node_modules
         with:
           path: |
             **/node_modules
-          key: runtime-node_modules-v8-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          key: runtime-node_modules-v9-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
           # Don't use restore-keys here. Otherwise the cache grows indefinitely.
       - name: Ensure clean build directory
         run: rm -rf build
@@ -878,8 +806,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: yarn
-          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v4 # note: this does not reuse centralized cache since it has unique cache key
         id: node_modules

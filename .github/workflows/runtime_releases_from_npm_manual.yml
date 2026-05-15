@@ -68,7 +68,7 @@ jobs:
           node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: yarn.lock
-      - name: Restore cached node_modules
+      - name: Cache node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
