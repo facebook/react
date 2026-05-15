@@ -40,6 +40,8 @@ import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 import {enableInternalInstanceMap} from 'shared/ReactFeatureFlags';
 
+import {stopTracking} from './inputValueTracking';
+
 const randomKey = Math.random().toString(36).slice(2);
 const internalInstanceKey = '__reactFiber$' + randomKey;
 const internalPropsKey = '__reactProps$' + randomKey;
@@ -69,6 +71,7 @@ const internalPropsMap:
   | Map<InstanceUnion, Props> = new PossiblyWeakMap();
 
 export function detachDeletedInstance(node: Instance): void {
+  stopTracking((node: any));
   if (enableInternalInstanceMap) {
     internalInstanceMap.delete(node);
     internalPropsMap.delete(node);
