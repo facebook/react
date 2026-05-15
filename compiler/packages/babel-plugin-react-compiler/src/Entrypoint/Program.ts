@@ -16,6 +16,10 @@ import {ExternalFunction, ReactFunctionType} from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
 import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
 import {isHookDeclaration} from '../Utils/HookDeclaration';
+import {
+  copyOutlinedByReactCompilerMarker,
+  markOutlinedByReactCompiler,
+} from '../Utils/OutlinedByReactCompiler';
 import {assertExhaustive} from '../Utils/utils';
 import {insertGatedFunctionDeclaration} from './Gating';
 import {
@@ -240,7 +244,7 @@ export function createNewFunctionNode(
         params: compiledFn.params,
         body: compiledFn.body,
       };
-      transformedFn = fn;
+      transformedFn = copyOutlinedByReactCompilerMarker(originalFn.node, fn);
       break;
     }
     case 'ArrowFunctionExpression': {
@@ -287,9 +291,20 @@ function insertNewOutlinedFunctionNode(
 ): BabelFn {
   switch (originalFn.type) {
     case 'FunctionDeclaration': {
-      return originalFn.insertAfter(
+      const insertedFuncDecl = originalFn.insertAfter(
         createNewFunctionNode(originalFn, compiledFn),
       )[0]!;
+      CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
+        reason: 'Expected inserted outlined function declaration',
+        description: `Got: ${insertedFuncDecl}`,
+        loc: insertedFuncDecl.node?.loc ?? GeneratedSource,
+      });
+      /*
+       * Subsequent Babel passes need to distinguish compiler-outlined helpers
+       * from user-authored top-level declarations.
+       */
+      markOutlinedByReactCompiler(insertedFuncDecl.node);
+      return insertedFuncDecl;
     }
     /**
      * We can't just append the outlined function as a sibling of the original function if it is an
@@ -317,6 +332,11 @@ function insertNewOutlinedFunctionNode(
         description: `Got: ${insertedFuncDecl}`,
         loc: insertedFuncDecl.node?.loc ?? GeneratedSource,
       });
+      /*
+       * Subsequent Babel passes need to distinguish compiler-outlined helpers
+       * from user-authored top-level declarations.
+       */
+      markOutlinedByReactCompiler(insertedFuncDecl.node);
       return insertedFuncDecl;
     }
     default: {
