@@ -205,6 +205,36 @@ describe('profiling charts', () => {
         ]
       `);
     });
+
+    // @reactVersion >= 16.9
+    it('should tolerate missing hocDisplayNames in profiling snapshots', () => {
+      const Parent = (_: {}) => {
+        Scheduler.unstable_advanceTime(1);
+        return <Child />;
+      };
+
+      const Child = () => {
+        Scheduler.unstable_advanceTime(1);
+        return null;
+      };
+
+      utils.act(() => store.profilerStore.startProfiling());
+      utils.act(() => render(<Parent />));
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      const rootID = store.roots[0];
+      const profilingData = store.profilerStore.profilingData;
+      expect(profilingData).not.toBeNull();
+
+      const dataForRoot = ((profilingData: any): any).dataForRoots.get(rootID);
+      expect(dataForRoot).toBeDefined();
+
+      dataForRoot.snapshots.forEach(snapshotNode => {
+        snapshotNode.hocDisplayNames = (undefined: any);
+      });
+
+      expect(() => getFlamegraphChartData(rootID, 0)).not.toThrow();
+    });
   });
 
   describe('ranked chart', () => {
