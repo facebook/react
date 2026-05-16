@@ -27,6 +27,7 @@ import {
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {assertExhaustive, getOrInsertWith} from '../Utils/utils';
+import {computeAllowedImpureRefInitializers} from './ComputeAllowedImpureRefInitializers';
 
 import {AliasingEffect, MutationReason} from './AliasingEffects';
 
@@ -76,6 +77,7 @@ export function inferMutationAliasingRanges(
   fn: HIRFunction,
   {isFunctionExpression}: {isFunctionExpression: boolean},
 ): Array<AliasingEffect> {
+  const allowedImpureRefInitializers = computeAllowedImpureRefInitializers(fn);
   // The set of externally-visible effects
   const functionEffects: Array<AliasingEffect> = [];
 
@@ -201,6 +203,12 @@ export function inferMutationAliasingRanges(
           effect.kind === 'MutateGlobal' ||
           effect.kind === 'Impure'
         ) {
+          if (
+            effect.kind === 'Impure' &&
+            allowedImpureRefInitializers.has(instr.id)
+          ) {
+            continue;
+          }
           if (shouldRecordErrors) {
             fn.env.recordError(effect.error);
           }
