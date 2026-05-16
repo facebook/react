@@ -1126,7 +1126,27 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // We're already rendering. This can happen when React's scheduler
+    // (MessageChannel) posts a message event while the current event is
+    // paused at a blocking call like `alert()` or `debugger` or `confirm`.
+    // Firefox has a bug where these blocking calls do not prevent message
+    // events from firing (see https://bugzilla.mozilla.org/show_bug.cgi?id=758004
+    // and https://bugzilla.mozilla.org/show_bug.cgi?id=951805). Other browsers
+    // correctly block message events while a dialog is shown. Instead of
+    // crashing, exit early. When the paused event finishes, it will
+    // re-schedule a new render.
+    if (__DEV__) {
+      console.warn(
+        'React was unable to finish rendering because a re-render was ' +
+          'scheduled from within a blocking call (e.g. `alert`, `debugger`, ' +
+          'or `confirm`). This is a known Firefox issue that does not occur ' +
+          'in other browsers. To avoid crashing, React will attempt to ' +
+          're-render when the current event completes. If the issue persists, ' +
+          'try wrapping the blocking call in `setTimeout` or moving it outside ' +
+          'of event handlers.',
+      );
+    }
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3518,7 +3538,26 @@ function completeRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // We're already rendering. This can happen when React's scheduler
+    // (MessageChannel) posts a message event while the current event is
+    // paused at a blocking call like `alert()` or `debugger` or `confirm`.
+    // Firefox has a bug where these blocking calls do not prevent message
+    // events from firing. See https://bugzilla.mozilla.org/show_bug.cgi?id=758004
+    // and https://bugzilla.mozilla.org/show_bug.cgi?id=951805.
+    // Instead of crashing, exit early. When the paused event finishes, it will
+    // re-schedule a new render.
+    if (__DEV__) {
+      console.warn(
+        'React was unable to finish rendering because a re-render was ' +
+          'scheduled from within a blocking call (e.g. `alert`, `debugger`, ' +
+          'or `confirm`). This is a known Firefox issue that does not occur ' +
+          'in other browsers. To avoid crashing, React will attempt to ' +
+          're-render when the current event completes. If the issue persists, ' +
+          'try wrapping the blocking call in `setTimeout` or moving it outside ' +
+          'of event handlers.',
+      );
+    }
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
