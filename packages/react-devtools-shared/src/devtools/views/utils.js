@@ -11,11 +11,9 @@ import escapeStringRegExp from 'escape-string-regexp';
 import {meta} from '../../hydration';
 import {formatDataForPreview} from '../../utils';
 import isArray from 'react-devtools-shared/src/isArray';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
-
-// $FlowFixMe[method-unbinding]
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 export function alphaSortEntries(
   entryA: [string, mixed],

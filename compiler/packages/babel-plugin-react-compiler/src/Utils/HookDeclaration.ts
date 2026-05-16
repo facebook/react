@@ -6,6 +6,7 @@
  */
 
 import * as t from '@babel/types';
+import {hasOwnProperty} from './utils';
 
 export type HookDeclaration = t.FunctionDeclaration & {
   __hookDeclaration: boolean;
@@ -14,7 +15,7 @@ export type HookDeclaration = t.FunctionDeclaration & {
 export function isHookDeclaration(
   node: t.FunctionDeclaration,
 ): node is HookDeclaration {
-  return Object.prototype.hasOwnProperty.call(node, '__hookDeclaration');
+  return hasOwnProperty(node, '__hookDeclaration');
 }
 
 export function parseHookDeclaration(
