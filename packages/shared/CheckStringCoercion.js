@@ -20,14 +20,20 @@
 // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 function typeName(value: mixed): string {
   if (__DEV__) {
-    // toStringTag is needed for namespaced types like Temporal.Instant
-    const hasToStringTag = typeof Symbol === 'function' && Symbol.toStringTag;
-    const type =
-      (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
-      (value: any).constructor.name ||
-      'Object';
-    // $FlowFixMe[incompatible-return]
-    return type;
+    try {
+      // toStringTag is needed for namespaced types like Temporal.Instant
+      const hasToStringTag = typeof Symbol === 'function' && Symbol.toStringTag;
+      const type =
+        (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
+        ((value: any).constructor && (value: any).constructor.name) ||
+        Object.prototype.toString.call(value) ||
+        'Object';
+      // $FlowFixMe[incompatible-return]
+      return type;
+    } catch (e) {
+      // $FlowFixMe[incompatible-return]
+      return 'Object';
+    }
   }
 }
 
