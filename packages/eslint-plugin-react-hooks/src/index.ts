@@ -75,9 +75,19 @@ const recommendedLatestRuleConfigs: Linter.RulesRecord = {
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: {react: any};
+  plugins: {'react-hooks': typeof plugin};
   rules: Linter.RulesRecord;
 };
+
+type FlatConfigs = {
+  recommended: ReactHooksFlatConfig;
+  'recommended-latest': ReactHooksFlatConfig;
+};
+
+// We need to declare the type explicitly because `flat` is populated after
+// `plugin` is defined (due to the circular reference: plugin.configs.flat
+// needs to reference plugin itself).
+let flatConfigs: FlatConfigs;
 
 const configs = {
   recommended: {
@@ -88,9 +98,8 @@ const configs = {
     plugins,
     rules: recommendedLatestRuleConfigs,
   },
-  flat: {} as {
-    recommended: ReactHooksFlatConfig;
-    'recommended-latest': ReactHooksFlatConfig;
+  get flat(): FlatConfigs {
+    return flatConfigs;
   },
 };
 
@@ -103,7 +112,8 @@ const plugin = {
   configs,
 };
 
-Object.assign(configs.flat, {
+// Initialize flat configs after plugin is defined to allow self-reference
+flatConfigs = {
   'recommended-latest': {
     plugins: {'react-hooks': plugin},
     rules: configs['recommended-latest'].rules,
@@ -112,6 +122,6 @@ Object.assign(configs.flat, {
     plugins: {'react-hooks': plugin},
     rules: configs.recommended.rules,
   },
-});
+};
 
 export default plugin;
