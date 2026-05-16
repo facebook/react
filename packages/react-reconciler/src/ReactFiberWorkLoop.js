@@ -1042,10 +1042,6 @@ export function scheduleUpdateOnFiber(
     if (enableTransitionTracing) {
       const transition = ReactSharedInternals.T;
       if (transition !== null && transition.name != null) {
-        if (transition.startTime === -1) {
-          transition.startTime = now();
-        }
-
         addTransitionToLanesMap(root, transition, lane);
       }
     }
