@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import type {Linter, Rule} from 'eslint';
+import type { Linter, Rule } from 'eslint';
 
 import ExhaustiveDeps from './rules/ExhaustiveDeps';
 import {
@@ -67,15 +67,18 @@ const recommendedRuleConfigs: Linter.RulesRecord = {
   ...basicRuleConfigs,
   ...recommendedCompilerRuleConfigs,
 };
+
 const recommendedLatestRuleConfigs: Linter.RulesRecord = {
   ...basicRuleConfigs,
   ...recommendedLatestCompilerRuleConfigs,
 };
 
-const plugins = ['react-hooks'];
+const plugins = ['react-hooks'] as const;
 
 type ReactHooksFlatConfig = {
-  plugins: {react: any};
+  plugins: {
+    'react-hooks': unknown;
+  };
   rules: Linter.RulesRecord;
 };
 
@@ -105,11 +108,11 @@ const plugin = {
 
 Object.assign(configs.flat, {
   'recommended-latest': {
-    plugins: {'react-hooks': plugin},
+    plugins: { 'react-hooks': plugin },
     rules: configs['recommended-latest'].rules,
   },
   recommended: {
-    plugins: {'react-hooks': plugin},
+    plugins: { 'react-hooks': plugin },
     rules: configs.recommended.rules,
   },
 });
