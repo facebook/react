@@ -171,21 +171,6 @@ function isUseEffectEventIdentifier(node: Node): boolean {
   return node.type === 'Identifier' && node.name === 'useEffectEvent';
 }
 
-function useEffectEventError(fn: string | null, called: boolean): string {
-  // no function identifier, i.e. it is not assigned to a variable
-  if (fn === null) {
-    return (
-      `React Hook "useEffectEvent" can only be called at the top level of your component.` +
-      ` It cannot be passed down.`
-    );
-  }
-
-  return (
-    `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
-    'Effects and Effect Events in the same component.' +
-    (called ? '' : ' It cannot be assigned to a variable or passed down.')
-  );
-}
 
 function isUseIdentifier(node: Node): boolean {
   return isReactFunction(node, 'use');
@@ -198,6 +183,44 @@ const rule = {
       description: 'enforces the Rules of Hooks',
       recommended: true,
       url: 'https://react.dev/reference/rules/rules-of-hooks',
+    },
+    messages: {
+      useInTryCatch:
+        'React Hook "{{hookName}}" cannot be called in a try/catch block.',
+      executedMoreThanOnce:
+        'React Hook "{{hookName}}" may be executed more than once. Possibly ' +
+        'because it is called in a loop. React Hooks must be called in the ' +
+        'exact same order in every component render.',
+      calledInAsyncFunction:
+        'React Hook "{{hookName}}" cannot be called in an async function.',
+      calledConditionally:
+        'React Hook "{{hookName}}" is called conditionally. React Hooks must be ' +
+        'called in the exact same order in every component render.' +
+        '{{earlyReturnHint}}',
+      calledInClass:
+        'React Hook "{{hookName}}" cannot be called in a class component. React Hooks ' +
+        'must be called in a React function component or a custom React ' +
+        'Hook function.',
+      calledInInvalidFunction:
+        'React Hook "{{hookName}}" is called in function "{{functionName}}" that is neither ' +
+        'a React function component nor a custom React Hook function.' +
+        ' React component names must start with an uppercase letter.' +
+        ' React Hook names must start with the word "use".',
+      calledAtTopLevel:
+        'React Hook "{{hookName}}" cannot be called at the top level. React Hooks ' +
+        'must be called in a React function component or a custom React ' +
+        'Hook function.',
+      calledInsideCallback:
+        'React Hook "{{hookName}}" cannot be called inside a callback. React Hooks ' +
+        'must be called in a React function component or a custom React ' +
+        'Hook function.',
+      useEffectEventTopLevel:
+        'React Hook "useEffectEvent" can only be called at the top level of your component.' +
+        ' It cannot be passed down.',
+      useEffectEventInvalidUsage:
+        '`{{functionName}}` is a function created with React Hook "useEffectEvent", and can only be called from ' +
+        'Effects and Effect Events in the same component.' +
+        '{{passDownHint}}',
     },
     schema: [
       {
@@ -621,9 +644,8 @@ const rule = {
             if (isUseIdentifier(hook) && isInsideTryCatch(hook)) {
               context.report({
                 node: hook,
-                message: `React Hook "${getSourceCode().getText(
-                  hook,
-                )}" cannot be called in a try/catch block.`,
+                messageId: 'useInTryCatch',
+                data: {hookName: getSourceCode().getText(hook)},
               });
             }
 
@@ -635,13 +657,8 @@ const rule = {
             ) {
               context.report({
                 node: hook,
-                message:
-                  `React Hook "${getSourceCode().getText(
-                    hook,
-                  )}" may be executed ` +
-                  'more than once. Possibly because it is called in a loop. ' +
-                  'React Hooks must be called in the exact same order in ' +
-                  'every component render.',
+                messageId: 'executedMoreThanOnce',
+                data: {hookName: getSourceCode().getText(hook)},
               });
             }
 
@@ -657,9 +674,8 @@ const rule = {
               if (isAsyncFunction) {
                 context.report({
                   node: hook,
-                  message:
-                    `React Hook "${getSourceCode().getText(hook)}" cannot be ` +
-                    'called in an async function.',
+                  messageId: 'calledInAsyncFunction',
+                  data: {hookName: getSourceCode().getText(hook)},
                 });
               }
 
@@ -673,15 +689,17 @@ const rule = {
                 !isUseIdentifier(hook) && // `use(...)` can be called conditionally.
                 !isInsideDoWhileLoop(hook) // wrapping do/while loops are checked separately.
               ) {
-                const message =
-                  `React Hook "${getSourceCode().getText(hook)}" is called ` +
-                  'conditionally. React Hooks must be called in the exact ' +
-                  'same order in every component render.' +
-                  (possiblyHasEarlyReturn
-                    ? ' Did you accidentally call a React Hook after an' +
-                      ' early return?'
-                    : '');
-                context.report({node: hook, message});
+                context.report({
+                  node: hook,
+                  messageId: 'calledConditionally',
+                  data: {
+                    hookName: getSourceCode().getText(hook),
+                    earlyReturnHint: possiblyHasEarlyReturn
+                      ? ' Did you accidentally call a React Hook after an' +
+                        ' early return?'
+                      : '',
+                  },
+                });
               }
             } else if (
               codePathNode.parent != null &&
@@ -692,32 +710,28 @@ const rule = {
               codePathNode.parent.value === codePathNode
             ) {
               // Custom message for hooks inside a class
-              const message =
-                `React Hook "${getSourceCode().getText(
-                  hook,
-                )}" cannot be called ` +
-                'in a class component. React Hooks must be called in a ' +
-                'React function component or a custom React Hook function.';
-              context.report({node: hook, message});
+              context.report({
+                node: hook,
+                messageId: 'calledInClass',
+                data: {hookName: getSourceCode().getText(hook)},
+              });
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
-              const message =
-                `React Hook "${getSourceCode().getText(hook)}" is called in ` +
-                `function "${getSourceCode().getText(codePathFunctionName)}" ` +
-                'that is neither a React function component nor a custom ' +
-                'React Hook function.' +
-                ' React component names must start with an uppercase letter.' +
-                ' React Hook names must start with the word "use".';
-              context.report({node: hook, message});
+              context.report({
+                node: hook,
+                messageId: 'calledInInvalidFunction',
+                data: {
+                  hookName: getSourceCode().getText(hook),
+                  functionName: getSourceCode().getText(codePathFunctionName),
+                },
+              });
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
-              const message =
-                `React Hook "${getSourceCode().getText(
-                  hook,
-                )}" cannot be called ` +
-                'at the top level. React Hooks must be called in a ' +
-                'React function component or a custom React Hook function.';
-              context.report({node: hook, message});
+              context.report({
+                node: hook,
+                messageId: 'calledAtTopLevel',
+                data: {hookName: getSourceCode().getText(hook)},
+              });
             } else {
               // Assume in all other cases the user called a hook in some
               // random function callback. This should usually be true for
@@ -726,13 +740,11 @@ const rule = {
               // uncommon cases doesn't matter.
               // `use(...)` can be called in callbacks.
               if (isSomewhereInsideComponentOrHook && !isUseIdentifier(hook)) {
-                const message =
-                  `React Hook "${getSourceCode().getText(
-                    hook,
-                  )}" cannot be called ` +
-                  'inside a callback. React Hooks must be called in a ' +
-                  'React function component or a custom React Hook function.';
-                context.report({node: hook, message});
+                context.report({
+                  node: hook,
+                  messageId: 'calledInsideCallback',
+                  data: {hookName: getSourceCode().getText(hook)},
+                });
               }
             }
           }
@@ -789,11 +801,9 @@ const rule = {
           // like in other hooks, calling useEffectEvent at component's top level without assignment is valid
           node.parent?.type !== 'ExpressionStatement'
         ) {
-          const message = useEffectEventError(null, false);
-
           context.report({
             node,
-            message,
+            messageId: 'useEffectEventTopLevel',
           });
         }
       },
@@ -802,14 +812,16 @@ const rule = {
         // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
         // effect or another event function. It isn't being called either.
         if (lastEffect == null && useEffectEventFunctions.has(node)) {
-          const message = useEffectEventError(
-            getSourceCode().getText(node),
-            node.parent.type === 'CallExpression',
-          );
-
           context.report({
             node,
-            message,
+            messageId: 'useEffectEventInvalidUsage',
+            data: {
+              functionName: getSourceCode().getText(node),
+              passDownHint:
+                node.parent.type === 'CallExpression'
+                  ? ''
+                  : ' It cannot be assigned to a variable or passed down.',
+            },
           });
         }
       },
