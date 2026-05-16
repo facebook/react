@@ -105,6 +105,7 @@ export const enableViewTransitionForPersistenceMode: boolean = false;
 export const enableGestureTransition: boolean = false;
 
 export const enableFizzBlockingRender: boolean = true;
+export const enableFizzSuspenseListTail: boolean = false;
 export const enableSrcObject: boolean = false;
 export const enableHydrationChangeEvent: boolean = false;
 export const enableDefaultTransitionIndicator: boolean = true;
