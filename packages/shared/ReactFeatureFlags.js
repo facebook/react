@@ -182,9 +182,6 @@ export const disableLegacyContextForFunctionComponents: boolean = true;
 // Enable the moveBefore() alternative to insertBefore(). This preserves states of moves.
 export const enableMoveBefore: boolean = false;
 
-// Disabled caching behavior of `react/cache` in client runtimes.
-export const disableClientCache: boolean = true;
-
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning: boolean = true;
 

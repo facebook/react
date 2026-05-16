@@ -16,7 +16,6 @@ import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 // All flags
 // -----------------------------------------------------------------------------
 export const alwaysThrottleRetries: boolean = false;
-export const disableClientCache: boolean = true;
 export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const disableLegacyContext: boolean = true;

@@ -92,8 +92,6 @@ export const enableFizzExternalRuntime: boolean = true;
 
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
-export const disableClientCache: boolean = true;
-
 export const enableReactTestRendererWarning: boolean = false;
 
 export const disableLegacyMode: boolean = true;
