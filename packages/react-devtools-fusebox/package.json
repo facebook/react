@@ -1,9 +1,11 @@
 {
   "name": "react-devtools-fusebox",
   "version": "0.0.0",
-  "private": "true",
+  "private": true,
   "license": "MIT",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build:frontend:copy-types": "cp src/*.d.ts dist/",
     "build:frontend:local": "cross-env NODE_ENV=development webpack --config webpack.config.frontend.js && yarn build:frontend:copy-types",
