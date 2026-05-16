@@ -1126,7 +1126,12 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // There's already work running on this stack. This can happen
+    // in Firefox when an alert/debugger/confirm blocks the main thread
+    // but a message event still fires, causing a reentrant render.
+    // Instead of throwing, we exit early and let the original render
+    // finish and reschedule a new render when it's done.
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3518,7 +3523,12 @@ function completeRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    throw new Error('Should not already be working.');
+    // There's already work running on this stack. This can happen
+    // in Firefox when an alert/debugger/confirm blocks the main thread
+    // but a message event still fires, causing a reentrant commit.
+    // Instead of throwing, we exit early and let the original commit
+    // finish when the user dismisses the modal.
+    return;
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
