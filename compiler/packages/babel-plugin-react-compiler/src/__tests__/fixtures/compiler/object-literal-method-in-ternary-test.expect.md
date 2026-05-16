@@ -33,7 +33,7 @@ import {
 function useHook(t0) {
   const { value } = t0;
   return {
-    getValue() {
+    getValue: function () {
       return identity(value);
     },
   }

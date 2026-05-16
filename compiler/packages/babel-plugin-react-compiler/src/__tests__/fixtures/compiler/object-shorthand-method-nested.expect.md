@@ -42,10 +42,10 @@ function useHook(t0) {
   let t1;
   if ($[0] !== state || $[1] !== value) {
     t1 = {
-      getX() {
+      getX: function () {
         return {
           a: [],
-          getY() {
+          getY: function () {
             return value;
           },
           state,

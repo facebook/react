@@ -36,7 +36,7 @@ function useFoo(t0) {
   let t1;
   if ($[0] !== a) {
     const x = {
-      fn() {
+      fn: function () {
         return identity(a.b.c);
       },
     };

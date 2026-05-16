@@ -34,15 +34,11 @@ function useHook(props) {
   let t0;
   if ($[0] !== props) {
     const x = {
-      getX() {
+      getX: function () {
         return props;
       },
     };
-    const y = {
-      getY() {
-        return "y";
-      },
-    };
+    const y = { getY: _temp };
     t0 = setProperty(x, y);
     $[0] = props;
     $[1] = t0;
@@ -50,6 +46,9 @@ function useHook(props) {
     t0 = $[1];
   }
   return t0;
+}
+function _temp() {
+  return "y";
 }
 
 export const FIXTURE_ENTRYPOINT = {
