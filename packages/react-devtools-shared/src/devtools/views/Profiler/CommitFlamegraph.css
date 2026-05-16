@@ -2,6 +2,7 @@
   width: 100%;
   flex: 1;
   padding: 0.5rem;
+  overflow: hidden;
 }
 
 .PatternPath {
