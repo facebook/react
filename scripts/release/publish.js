@@ -3,7 +3,6 @@
 'use strict';
 
 const {join} = require('path');
-const {readJsonSync} = require('fs-extra');
 const clear = require('clear');
 const {getPublicPackages, handleError} = require('./utils');
 const theme = require('./theme');
@@ -15,7 +14,6 @@ const parseParams = require('./publish-commands/parse-params');
 const printFollowUpInstructions = require('./publish-commands/print-follow-up-instructions');
 const promptForOTP = require('./publish-commands/prompt-for-otp');
 const publishToNPM = require('./publish-commands/publish-to-npm');
-const updateStableVersionNumbers = require('./publish-commands/update-stable-version-numbers');
 const validateTags = require('./publish-commands/validate-tags');
 const validateSkipPackages = require('./publish-commands/validate-skip-packages');
 
@@ -23,10 +21,8 @@ const run = async () => {
   try {
     const params = parseParams();
 
-    const version =
-      params.publishVersion ??
-      readJsonSync('./build/node_modules/react/package.json').version;
-    const isExperimental = version.includes('experimental');
+    // Publishing experimental versions as stable is forbidden
+    const isExperimental = false;
 
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages(isExperimental);
@@ -104,7 +100,6 @@ const run = async () => {
           continue;
         }
       }
-      await updateStableVersionNumbers(params);
       await printFollowUpInstructions(params);
     }
   } catch (error) {

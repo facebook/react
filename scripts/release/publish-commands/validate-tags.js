@@ -18,6 +18,7 @@ const run = async ({cwd, packages, tags}) => {
     'package.json'
   );
   const {version} = await readJson(packageJSONPath);
+
   const isExperimentalVersion = version.indexOf('experimental') !== -1;
   if (version.indexOf('-') !== -1) {
     if (tags.includes('latest')) {

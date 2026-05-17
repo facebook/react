@@ -3,13 +3,9 @@ name: (Runtime) Publish Releases from NPM Manual
 on:
   workflow_dispatch:
     inputs:
-      version_to_promote:
+      prerelease:
         required: true
-        description: Current npm version (non-experimental) to promote
-        type: string
-      version_to_publish:
-        required: true
-        description: Version to publish for the specified packages
+        description: Current npm prerelease (non-experimental) to promote
         type: string
       only_packages:
         description: Packages to publish (space separated)
@@ -65,7 +61,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
@@ -82,42 +78,42 @@ jobs:
       - run: yarn --cwd scripts/release install --frozen-lockfile
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: cp ./scripts/release/ci-npmrc ~/.npmrc
-      - if: '${{ inputs.only_packages }}'
-        name: 'Prepare ${{ inputs.only_packages }} from NPM'
+      - if: "${{ inputs.only_packages }}"
+        name: "Prepare ${{ inputs.only_packages }} from NPM"
         run: |
           scripts/release/prepare-release-from-npm.js \
             --ci \
+            --tags=${{ inputs.tags }} \
             --skipTests \
-            --version=${{ inputs.version_to_promote }} \
-            --publishVersion=${{ inputs.version_to_publish }} \
+            --prerelease=${{ inputs.prerelease }} \
             --onlyPackages=${{ inputs.only_packages }}
-      - if: '${{ inputs.skip_packages }}'
-        name: 'Prepare all packages EXCEPT ${{ inputs.skip_packages }} from NPM'
+      - if: "${{ inputs.skip_packages }}"
+        name: "Prepare all packages EXCEPT ${{ inputs.skip_packages }} from NPM"
         run: |
           scripts/release/prepare-release-from-npm.js \
             --ci \
+            --tags=${{ inputs.tags }} \
             --skipTests \
-            --version=${{ inputs.version_to_promote }} \
-            --publishVersion=${{ inputs.version_to_publish }} \
+            --prerelease=${{ inputs.prerelease }} \
             --skipPackages=${{ inputs.skip_packages }}
       - name: Check prepared files
         run: ls -R build/node_modules
-      - if: '${{ inputs.only_packages }}'
-        name: 'Publish ${{ inputs.only_packages }}'
+      - if: "${{ inputs.only_packages }}"
+        name: "Publish ${{ inputs.only_packages }}"
         run: |
           scripts/release/publish.js \
             --ci \
             --tags=${{ inputs.tags }} \
-            --publishVersion=${{ inputs.version_to_publish }} \
+            --prerelease=${{ inputs.prerelease }} \
             --onlyPackages=${{ inputs.only_packages }} ${{ (inputs.dry && '') || '\'}}
             ${{ inputs.dry && '--dry' || '' }}
-      - if: '${{ inputs.skip_packages }}'
-        name: 'Publish all packages EXCEPT ${{ inputs.skip_packages }}'
+      - if: "${{ inputs.skip_packages }}"
+        name: "Publish all packages EXCEPT ${{ inputs.skip_packages }}"
         run: |
           scripts/release/publish.js \
             --ci \
             --tags=${{ inputs.tags }} \
-            --publishVersion=${{ inputs.version_to_publish }} \
+            --prerelease=${{ inputs.prerelease }} \
             --skipPackages=${{ inputs.skip_packages }} ${{ (inputs.dry && '') || '\'}}
             ${{ inputs.dry && '--dry' || '' }}
       - name: Archive released package for debugging
