@@ -981,10 +981,8 @@ export function scheduleUpdateOnFiber(
     }
   }
 
-  if (__DEV__) {
-    if (isFlushingPassiveEffects) {
-      didScheduleUpdateDuringPassiveEffects = true;
-    }
+  if (isFlushingPassiveEffects) {
+    didScheduleUpdateDuringPassiveEffects = true;
   }
 
   // Check if the work loop is currently suspended and waiting for data to
@@ -4193,10 +4191,8 @@ function flushSpawnedWork(): void {
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     releaseRootPooledCache(root, root.pendingLanes);
-    if (__DEV__) {
-      nestedPassiveUpdateCount = 0;
-      rootWithPassiveNestedUpdates = null;
-    }
+    nestedPassiveUpdateCount = 0;
+    rootWithPassiveNestedUpdates = null;
   }
 
   // Read this again, since an effect might have updated it
@@ -4734,10 +4730,8 @@ function flushPassiveEffectsImpl() {
     setCurrentTrackFromLanes(lanes);
   }
 
-  if (__DEV__) {
-    isFlushingPassiveEffects = true;
-    didScheduleUpdateDuringPassiveEffects = false;
-  }
+  isFlushingPassiveEffects = true;
+  didScheduleUpdateDuringPassiveEffects = false;
 
   let passiveEffectStartTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -4816,22 +4810,20 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (__DEV__) {
-    // If additional passive effects were scheduled, increment a counter. If this
-    // exceeds the limit, we'll fire a warning.
-    if (didScheduleUpdateDuringPassiveEffects) {
-      if (root === rootWithPassiveNestedUpdates) {
-        nestedPassiveUpdateCount++;
-      } else {
-        nestedPassiveUpdateCount = 0;
-        rootWithPassiveNestedUpdates = root;
-      }
+  // If additional passive effects were scheduled, increment a counter. If this
+  // exceeds the limit, throwIfInfiniteUpdateLoopDetected will throw in production.
+  if (didScheduleUpdateDuringPassiveEffects) {
+    if (root === rootWithPassiveNestedUpdates) {
+      nestedPassiveUpdateCount++;
     } else {
       nestedPassiveUpdateCount = 0;
+      rootWithPassiveNestedUpdates = root;
     }
-    isFlushingPassiveEffects = false;
-    didScheduleUpdateDuringPassiveEffects = false;
+  } else {
+    nestedPassiveUpdateCount = 0;
   }
+  isFlushingPassiveEffects = false;
+  didScheduleUpdateDuringPassiveEffects = false;
 
   if (enableYieldingBeforePassive) {
     // Next, we reschedule any remaining work in a new task since it's a new
