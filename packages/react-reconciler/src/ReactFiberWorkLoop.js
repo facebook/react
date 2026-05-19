@@ -4825,6 +4825,18 @@ function flushPassiveEffectsImpl() {
   isFlushingPassiveEffects = false;
   didScheduleUpdateDuringPassiveEffects = false;
 
+  if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
+    nestedPassiveUpdateCount = 0;
+    rootWithPassiveNestedUpdates = null;
+
+    throw new Error(
+      'Maximum update depth exceeded. This can happen when a component ' +
+        "calls setState inside useEffect, but useEffect either doesn't " +
+        'have a dependency array, or one of the dependencies changes on ' +
+        'every render.',
+    );
+  }
+
   if (enableYieldingBeforePassive) {
     // Next, we reschedule any remaining work in a new task since it's a new
     // sequence of work. We wait until the end to do this in case the passive
@@ -5254,18 +5266,6 @@ export function throwIfInfiniteUpdateLoopDetected(
       );
     }
   }
-
-  if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
-    nestedPassiveUpdateCount = 0;
-    rootWithPassiveNestedUpdates = null;
-
-    throw new Error(
-      'Maximum update depth exceeded. This can happen when a component ' +
-        "calls setState inside useEffect, but useEffect either doesn't " +
-        'have a dependency array, or one of the dependencies changes on ' +
-        'every render.',
-    );
-  }
 }
 
 function flushRenderPhaseStrictModeWarningsInDEV() {
@@ -5319,14 +5319,14 @@ function doubleInvokeEffectsInDEVIfNecessary(
     if (fiber.flags & PlacementDEV) {
       if (isInStrictMode) {
         runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
+        return;
       }
-    } else {
-      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
-        root,
-        fiber,
-        isInStrictMode,
-      );
     }
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      fiber,
+      isInStrictMode,
+    );
     return;
   }
 
