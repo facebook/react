@@ -899,7 +899,12 @@ fn calls_hooks_or_creates_jsx_in_pattern(pattern: &PatternLike) -> bool {
                 .map_or(false, |e| calls_hooks_or_creates_jsx_in_pattern(e))
         }),
         PatternLike::RestElement(rest) => calls_hooks_or_creates_jsx_in_pattern(&rest.argument),
-        PatternLike::Identifier(_) | PatternLike::MemberExpression(_) => false,
+        PatternLike::Identifier(_)
+        | PatternLike::MemberExpression(_)
+        | PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => false,
     }
 }
 
@@ -914,7 +919,11 @@ fn is_valid_props_annotation(param: &PatternLike) -> bool {
         PatternLike::ArrayPattern(ap) => ap.type_annotation.as_deref(),
         PatternLike::AssignmentPattern(ap) => ap.type_annotation.as_deref(),
         PatternLike::RestElement(re) => re.type_annotation.as_deref(),
-        PatternLike::MemberExpression(_) => None,
+        PatternLike::MemberExpression(_)
+        | PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => None,
     };
     let annot = match type_annotation {
         Some(val) => val,

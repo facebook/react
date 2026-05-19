@@ -1563,6 +1563,20 @@ impl ReverseCtx {
                 // MemberExpression in pattern position - convert to an expression pattern
                 Pat::Expr(Box::new(self.convert_member_expression(m)))
             }
+            // TS wrappers in pattern position: strip the type wrapper, keep the
+            // inner expression (unreachable for unsupported targets; non-panicking).
+            PatternLike::TSAsExpression(e) => {
+                Pat::Expr(Box::new(self.convert_expression(&e.expression)))
+            }
+            PatternLike::TSSatisfiesExpression(e) => {
+                Pat::Expr(Box::new(self.convert_expression(&e.expression)))
+            }
+            PatternLike::TSNonNullExpression(e) => {
+                Pat::Expr(Box::new(self.convert_expression(&e.expression)))
+            }
+            PatternLike::TSTypeAssertion(e) => {
+                Pat::Expr(Box::new(self.convert_expression(&e.expression)))
+            }
         }
     }
 
@@ -1607,6 +1621,12 @@ impl ReverseCtx {
                 self.convert_pattern_to_assign_target(&ap.left)
             }
             PatternLike::RestElement(r) => self.convert_pattern_to_assign_target(&r.argument),
+            PatternLike::TSAsExpression(_)
+            | PatternLike::TSSatisfiesExpression(_)
+            | PatternLike::TSNonNullExpression(_)
+            | PatternLike::TSTypeAssertion(_) => AssignTarget::Simple(SimpleAssignTarget::Ident(
+                self.binding_ident("__unknown__", DUMMY_SP),
+            )),
         }
     }
 

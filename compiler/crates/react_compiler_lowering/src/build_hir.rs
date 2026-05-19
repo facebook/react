@@ -57,6 +57,10 @@ fn pattern_like_loc(
         PatternLike::AssignmentPattern(p) => p.base.loc.clone(),
         PatternLike::RestElement(p) => p.base.loc.clone(),
         PatternLike::MemberExpression(p) => p.base.loc.clone(),
+        PatternLike::TSAsExpression(p) => p.base.loc.clone(),
+        PatternLike::TSSatisfiesExpression(p) => p.base.loc.clone(),
+        PatternLike::TSNonNullExpression(p) => p.base.loc.clone(),
+        PatternLike::TSTypeAssertion(p) => p.base.loc.clone(),
     }
 }
 
@@ -2258,6 +2262,10 @@ fn pattern_declares_name(pattern: &react_compiler_ast::patterns::PatternLike, na
         PatternLike::AssignmentPattern(ap) => pattern_declares_name(&ap.left, name),
         PatternLike::RestElement(r) => pattern_declares_name(&r.argument, name),
         PatternLike::MemberExpression(_) => false,
+        PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => false,
     }
 }
 
@@ -2460,6 +2468,10 @@ fn collect_binding_names_from_pattern(
             collect_binding_names_from_pattern(&rest.argument, scope_id, scope_info, out);
         }
         PatternLike::MemberExpression(_) => {}
+        PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => {}
     }
 }
 
@@ -4150,7 +4162,7 @@ pub fn lower(
         .unwrap_or(scope_info.program_scope);
 
     // Pre-compute context identifiers: variables captured across function boundaries
-    let context_identifiers = find_context_identifiers(func, scope_info);
+    let context_identifiers = find_context_identifiers(func, scope_info, env)?;
 
     // Build identifier location index from the AST (replaces serialized referenceLocs/jsxReferencePositions)
     let identifier_locs = build_identifier_loc_index(func, scope_info);
@@ -5011,6 +5023,14 @@ fn lower_assignment(
                 assignment_style,
             )?)
         }
+
+        // TS assignment-target wrappers (e.g. `(x as T) = ...`). The TS-faithful
+        // Todo is recorded once in `find_context_identifiers`; lowering itself
+        // never reaches a successful path for these, so do not record again.
+        PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => Ok(None),
     }
 }
 
@@ -5940,6 +5960,10 @@ fn lower_inner(
                     }),
                 );
             }
+            react_compiler_ast::patterns::PatternLike::TSAsExpression(_)
+            | react_compiler_ast::patterns::PatternLike::TSSatisfiesExpression(_)
+            | react_compiler_ast::patterns::PatternLike::TSNonNullExpression(_)
+            | react_compiler_ast::patterns::PatternLike::TSTypeAssertion(_) => {}
         }
     }
 

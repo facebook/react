@@ -1152,7 +1152,11 @@ impl<'a> ReverseCtx<'a> {
                     .binding_pattern_assignment_pattern(SPAN, left, right)
             }
             PatternLike::RestElement(r) => self.convert_pattern_to_binding_pattern(&r.argument),
-            PatternLike::MemberExpression(_) => self
+            PatternLike::MemberExpression(_)
+            | PatternLike::TSAsExpression(_)
+            | PatternLike::TSSatisfiesExpression(_)
+            | PatternLike::TSNonNullExpression(_)
+            | PatternLike::TSTypeAssertion(_) => self
                 .builder
                 .binding_pattern_binding_identifier(SPAN, self.atom("__member_pattern__")),
         }
@@ -1278,6 +1282,16 @@ impl<'a> ReverseCtx<'a> {
                 self.convert_pattern_to_assignment_target(&ap.left)
             }
             PatternLike::RestElement(r) => self.convert_pattern_to_assignment_target(&r.argument),
+            PatternLike::TSAsExpression(_)
+            | PatternLike::TSSatisfiesExpression(_)
+            | PatternLike::TSNonNullExpression(_)
+            | PatternLike::TSTypeAssertion(_) => self
+                .builder
+                .simple_assignment_target_assignment_target_identifier(
+                    SPAN,
+                    self.atom("__unknown__"),
+                )
+                .into(),
         }
     }
 

@@ -589,6 +589,14 @@ impl<'a> AstWalker<'a> {
                     self.walk_expression(v, &node.property);
                 }
             }
+            PatternLike::TSAsExpression(node) => self.walk_expression(v, &node.expression),
+            PatternLike::TSSatisfiesExpression(node) => {
+                self.walk_expression(v, &node.expression)
+            }
+            PatternLike::TSNonNullExpression(node) => {
+                self.walk_expression(v, &node.expression)
+            }
+            PatternLike::TSTypeAssertion(node) => self.walk_expression(v, &node.expression),
         }
     }
 

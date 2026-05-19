@@ -18,7 +18,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-Failed to parse AST JSON: unknown variant `TSAsExpression`, expected one of `Identifier`, `ObjectPattern`, `ArrayPattern`, `AssignmentPattern`, `RestElement`, `MemberExpression` at line 1 column 9800
+Found 1 error:
+
+Todo: [FindContextIdentifiers] Cannot handle Object destructuring assignment target TSAsExpression
+
+error.todo-rust-as-expression-assignment-target.ts:2:2
+  1 | function Component(props: {obj: {x: unknown}}) {
+> 2 | 	(props.obj.x as unknown as number) = 1;
+    | 	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [FindContextIdentifiers] Cannot handle Object destructuring assignment target TSAsExpression
+  3 | 	return <div>{props.obj.x as number}</div>;
+  4 | }
+  5 |
 ```
           
       
