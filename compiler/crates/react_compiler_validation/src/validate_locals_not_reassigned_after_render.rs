@@ -158,6 +158,7 @@ fn get_context_reassignment(
                                 }),
                             );
                             // Return null (don't propagate further) — matches TS behavior
+                            return None;
                         } else {
                             // Propagate reassignment info on the lvalue
                             reassigning_functions

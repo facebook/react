@@ -19,7 +19,7 @@ function Component() {
 ## Error
 
 ```
-Found 2 errors:
+Found 1 error:
 
 Error: Cannot reassign variable in async function
 
@@ -33,19 +33,6 @@ error.invalid-reassign-local-variable-in-multiple-async-callbacks.ts:4:2
   5 | 	};
   6 | 	const b = async () => {
   7 | 		value = 2;
-
-Error: Cannot reassign variable in async function
-
-Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead.
-
-error.invalid-reassign-local-variable-in-multiple-async-callbacks.ts:7:2
-   5 | 	};
-   6 | 	const b = async () => {
->  7 | 		value = 2;
-     | 		^^^^^ Cannot reassign `value`
-   8 | 	};
-   9 | 	return <div>{[a, b]}</div>;
-  10 | }
 ```
           
       
