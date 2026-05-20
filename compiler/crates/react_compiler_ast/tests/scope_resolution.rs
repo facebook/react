@@ -746,6 +746,21 @@ fn visit_pat(pat: &mut PatternLike, si: &ScopeInfo) {
             visit_expr(&mut e.object, si);
             visit_expr(&mut e.property, si);
         }
+        PatternLike::TSAsExpression(e) => {
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
+        }
+        PatternLike::TSSatisfiesExpression(e) => {
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
+        }
+        PatternLike::TSNonNullExpression(e) => {
+            visit_expr(&mut e.expression, si);
+        }
+        PatternLike::TSTypeAssertion(e) => {
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
+        }
     }
 }
 
