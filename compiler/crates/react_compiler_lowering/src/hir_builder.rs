@@ -20,7 +20,7 @@ use crate::identifier_loc_index::IdentifierLocIndex;
 // Reserved word check (matches TS isReservedWord)
 // ---------------------------------------------------------------------------
 
-fn is_always_reserved_word(s: &str) -> bool {
+pub(crate) fn is_always_reserved_word(s: &str) -> bool {
     matches!(
         s,
         "break"
@@ -60,6 +60,22 @@ fn is_always_reserved_word(s: &str) -> bool {
             | "false"
             | "delete"
     )
+}
+
+pub(crate) fn reserved_identifier_diagnostic(name: &str) -> CompilerDiagnostic {
+    CompilerDiagnostic::new(
+        ErrorCategory::Syntax,
+        "Expected a non-reserved identifier name",
+        Some(format!(
+            "`{}` is a reserved word in JavaScript and cannot be used as an identifier name",
+            name
+        )),
+    )
+    .with_detail(CompilerDiagnosticDetail::Error {
+        loc: None, // GeneratedSource in TS
+        message: Some("reserved word".to_string()),
+        identifier_name: None,
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -873,24 +889,8 @@ impl<'a> HirBuilder<'a> {
         }
 
         if is_always_reserved_word(name) {
-            // Match TS behavior: makeIdentifierName throws for reserved words,
-            // which propagates as a CompileUnexpectedThrow + CompileError.
-            // Note: this is normally caught earlier in scope.ts, but kept as a safety net.
-            self.env.record_diagnostic(
-                CompilerDiagnostic::new(
-                    ErrorCategory::Syntax,
-                    "Expected a non-reserved identifier name",
-                    Some(format!(
-                        "`{}` is a reserved word in JavaScript and cannot be used as an identifier name",
-                        name
-                    )),
-                )
-                .with_detail(CompilerDiagnosticDetail::Error {
-                    loc: None, // GeneratedSource in TS
-                    message: Some("reserved word".to_string()),
-                    identifier_name: None,
-                }),
-            );
+            // Match TS behavior: makeIdentifierName throws for reserved words.
+            return Err(CompilerError::from(reserved_identifier_diagnostic(name)));
         }
 
         // Find a unique name: start with the original name, then try name_0, name_1, ...

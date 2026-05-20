@@ -3,7 +3,9 @@ use std::collections::HashSet;
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use react_compiler_ast::scope::BindingId;
+use react_compiler_ast::scope::BindingKind as AstBindingKind;
 use react_compiler_ast::scope::ScopeInfo;
+use react_compiler_ast::scope::ScopeId;
 use react_compiler_ast::scope::ScopeKind;
 use react_compiler_diagnostics::CompilerDiagnostic;
 use react_compiler_diagnostics::CompilerDiagnosticDetail;
@@ -16,6 +18,8 @@ use react_compiler_hir::*;
 use crate::FunctionNode;
 use crate::find_context_identifiers::find_context_identifiers;
 use crate::hir_builder::HirBuilder;
+use crate::hir_builder::is_always_reserved_word;
+use crate::hir_builder::reserved_identifier_diagnostic;
 use crate::identifier_loc_index::IdentifierLocIndex;
 use crate::identifier_loc_index::build_identifier_loc_index;
 
@@ -114,6 +118,66 @@ fn expression_loc(expr: &react_compiler_ast::expressions::Expression) -> Option<
         Expression::TypeCastExpression(e) => e.base.loc.clone(),
     };
     convert_opt_loc(&loc)
+}
+
+fn validate_ts_this_parameter(
+    scope_info: &ScopeInfo,
+    function_scope: ScopeId,
+) -> Result<(), CompilerError> {
+    let Some(scope) = scope_info.scopes.get(function_scope.0 as usize) else {
+        return Ok(());
+    };
+    let Some(binding_id) = scope.bindings.get("this") else {
+        return Ok(());
+    };
+    let Some(binding) = scope_info.bindings.get(binding_id.0 as usize) else {
+        return Ok(());
+    };
+    if matches!(binding.kind, AstBindingKind::Param) {
+        return Err(CompilerError::from(reserved_identifier_diagnostic("this")));
+    }
+    Ok(())
+}
+
+fn is_class_scope_descendant(scope_info: &ScopeInfo, mut scope_id: ScopeId) -> bool {
+    while let Some(scope) = scope_info.scopes.get(scope_id.0 as usize) {
+        let Some(parent) = scope.parent else {
+            return false;
+        };
+        let Some(parent_scope) = scope_info.scopes.get(parent.0 as usize) else {
+            return false;
+        };
+        if matches!(parent_scope.kind, ScopeKind::Class) {
+            return true;
+        }
+        scope_id = parent;
+    }
+    false
+}
+
+fn validate_ts_this_parameters_in_function_range(
+    scope_info: &ScopeInfo,
+    start: u32,
+    end: u32,
+) -> Result<(), CompilerError> {
+    if start >= end {
+        return Ok(());
+    }
+    for (node_start, scope_id) in &scope_info.node_to_scope {
+        if *node_start < start || *node_start >= end {
+            continue;
+        }
+        let Some(scope) = scope_info.scopes.get(scope_id.0 as usize) else {
+            continue;
+        };
+        if !matches!(scope.kind, ScopeKind::Function)
+            || is_class_scope_descendant(scope_info, *scope_id)
+        {
+            continue;
+        }
+        validate_ts_this_parameter(scope_info, *scope_id)?;
+    }
+    Ok(())
 }
 
 /// Get the Babel-style type name of an Expression node (e.g. "Identifier", "NumericLiteral").
@@ -1568,20 +1632,18 @@ fn lower_expression(
             Ok(InstructionValue::LoadLocal { place, loc })
         }
         Expression::ArrowFunctionExpression(_) => {
-            // The expression type is already known to be ArrowFunctionExpression at this point,
-            // so lower_function's non-function invariant cannot fail. Safe to unwrap.
             Ok(lower_function_to_value(
                 builder,
                 expr,
                 FunctionExpressionType::ArrowFunctionExpression,
-            )
-            .expect("lower_function_to_value called with ArrowFunctionExpression"))
+            )?)
         }
         Expression::FunctionExpression(_) => {
-            Ok(
-                lower_function_to_value(builder, expr, FunctionExpressionType::FunctionExpression)
-                    .expect("lower_function_to_value called with FunctionExpression"),
-            )
+            Ok(lower_function_to_value(
+                builder,
+                expr,
+                FunctionExpressionType::FunctionExpression,
+            )?)
         }
         Expression::ObjectExpression(obj) => {
             let loc = convert_opt_loc(&obj.base.loc);
@@ -4115,7 +4177,7 @@ pub fn lower(
     // Note: `id` param may include inferred names (e.g., from `const Foo = () => {}`),
     // but the HIR function's `id` field should only include the function's own AST id
     // (FunctionDeclaration.id or FunctionExpression.id, NOT arrow functions).
-    let (params, body, generator, is_async, loc, start, ast_id) = match func {
+    let (params, body, generator, is_async, loc, start, end, ast_id) = match func {
         FunctionNode::FunctionDeclaration(decl) => (
             &decl.params[..],
             FunctionBody::Block(&decl.body),
@@ -4123,6 +4185,7 @@ pub fn lower(
             decl.is_async,
             convert_opt_loc(&decl.base.loc),
             decl.base.start.unwrap_or(0),
+            decl.base.end.unwrap_or(0),
             decl.id.as_ref().map(|id| id.name.as_str()),
         ),
         FunctionNode::FunctionExpression(expr) => (
@@ -4132,6 +4195,7 @@ pub fn lower(
             expr.is_async,
             convert_opt_loc(&expr.base.loc),
             expr.base.start.unwrap_or(0),
+            expr.base.end.unwrap_or(0),
             expr.id.as_ref().map(|id| id.name.as_str()),
         ),
         FunctionNode::ArrowFunctionExpression(arrow) => {
@@ -4150,6 +4214,7 @@ pub fn lower(
                 arrow.is_async,
                 convert_opt_loc(&arrow.base.loc),
                 arrow.base.start.unwrap_or(0),
+                arrow.base.end.unwrap_or(0),
                 None, // Arrow functions never have an AST id
             )
         }
@@ -4160,6 +4225,8 @@ pub fn lower(
         .get(&start)
         .copied()
         .unwrap_or(scope_info.program_scope);
+
+    validate_ts_this_parameters_in_function_range(scope_info, start, end)?;
 
     // Pre-compute context identifiers: variables captured across function boundaries
     let context_identifiers = find_context_identifiers(func, scope_info, env)?;
@@ -5822,6 +5889,8 @@ fn lower_inner(
     ),
     CompilerError,
 > {
+    validate_ts_this_parameter(scope_info, function_scope)?;
+
     let mut builder = HirBuilder::new(
         env,
         scope_info,
@@ -5853,6 +5922,11 @@ fn lower_inner(
     for param in params {
         match param {
             react_compiler_ast::patterns::PatternLike::Identifier(ident) => {
+                if is_always_reserved_word(&ident.name) {
+                    return Err(CompilerError::from(reserved_identifier_diagnostic(
+                        &ident.name,
+                    )));
+                }
                 let start = ident.base.start.unwrap_or(0);
                 let param_loc = convert_opt_loc(&ident.base.loc);
                 let mut binding = builder.resolve_identifier(
