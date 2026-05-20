@@ -2633,6 +2633,10 @@ impl<'a> ConvertCtx<'a> {
                     rest.type_annotation = Some(type_json);
                 }
                 PatternLike::MemberExpression(_) => {}
+                PatternLike::TSAsExpression(_)
+                | PatternLike::TSSatisfiesExpression(_)
+                | PatternLike::TSNonNullExpression(_)
+                | PatternLike::TSTypeAssertion(_) => {}
             }
         }
 

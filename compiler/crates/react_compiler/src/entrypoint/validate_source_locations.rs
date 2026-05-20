@@ -746,6 +746,10 @@ fn collect_original_pattern(
                 locations,
             );
         }
+        PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => {}
     }
 }
 
@@ -1236,6 +1240,10 @@ fn collect_generated_pattern(
             collect_generated_expression(&m.object, locations);
             collect_generated_expression(&m.property, locations);
         }
+        PatternLike::TSAsExpression(_)
+        | PatternLike::TSSatisfiesExpression(_)
+        | PatternLike::TSNonNullExpression(_)
+        | PatternLike::TSTypeAssertion(_) => {}
     }
 }
 

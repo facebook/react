@@ -13,6 +13,12 @@ use react_compiler_ast::scope::*;
 use react_compiler_ast::statements::FunctionDeclaration;
 use react_compiler_ast::visitor::AstWalker;
 use react_compiler_ast::visitor::Visitor;
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorDetail;
+use react_compiler_diagnostics::ErrorCategory;
+use react_compiler_diagnostics::Position;
+use react_compiler_diagnostics::SourceLocation;
+use react_compiler_hir::environment::Environment;
 
 use crate::FunctionNode;
 
@@ -25,10 +31,12 @@ struct BindingInfo {
 
 struct ContextIdentifierVisitor<'a> {
     scope_info: &'a ScopeInfo,
+    env: &'a mut Environment,
     /// Stack of inner function scopes encountered during traversal.
     /// Empty when at the top level of the function being compiled.
     function_stack: Vec<ScopeId>,
     binding_info: HashMap<BindingId, BindingInfo>,
+    error: Option<CompilerError>,
 }
 
 impl<'a> ContextIdentifierVisitor<'a> {
@@ -146,7 +154,11 @@ impl<'ast> Visitor<'ast> for ContextIdentifierVisitor<'_> {
             .last()
             .copied()
             .unwrap_or(self.scope_info.program_scope);
-        walk_lval_for_reassignment(self, &node.left, current_scope);
+        if self.error.is_none() {
+            if let Err(error) = walk_lval_for_reassignment(self, &node.left, current_scope) {
+                self.error = Some(error);
+            }
+        }
     }
 
     fn enter_update_expression(&mut self, node: &'ast UpdateExpression, scope_stack: &[ScopeId]) {
@@ -165,7 +177,7 @@ fn walk_lval_for_reassignment(
     visitor: &mut ContextIdentifierVisitor<'_>,
     pattern: &PatternLike,
     current_scope: ScopeId,
-) {
+) -> Result<(), CompilerError> {
     match pattern {
         PatternLike::Identifier(ident) => {
             visitor.handle_reassignment_identifier(&ident.name, current_scope);
@@ -173,7 +185,7 @@ fn walk_lval_for_reassignment(
         PatternLike::ArrayPattern(pat) => {
             for element in &pat.elements {
                 if let Some(el) = element {
-                    walk_lval_for_reassignment(visitor, el, current_scope);
+                    walk_lval_for_reassignment(visitor, el, current_scope)?;
                 }
             }
         }
@@ -181,24 +193,89 @@ fn walk_lval_for_reassignment(
             for prop in &pat.properties {
                 match prop {
                     ObjectPatternProperty::ObjectProperty(p) => {
-                        walk_lval_for_reassignment(visitor, &p.value, current_scope);
+                        walk_lval_for_reassignment(visitor, &p.value, current_scope)?;
                     }
                     ObjectPatternProperty::RestElement(p) => {
-                        walk_lval_for_reassignment(visitor, &p.argument, current_scope);
+                        walk_lval_for_reassignment(visitor, &p.argument, current_scope)?;
                     }
                 }
             }
         }
         PatternLike::AssignmentPattern(pat) => {
-            walk_lval_for_reassignment(visitor, &pat.left, current_scope);
+            walk_lval_for_reassignment(visitor, &pat.left, current_scope)?;
         }
         PatternLike::RestElement(pat) => {
-            walk_lval_for_reassignment(visitor, &pat.argument, current_scope);
+            walk_lval_for_reassignment(visitor, &pat.argument, current_scope)?;
         }
         PatternLike::MemberExpression(_) => {
             // Interior mutability - not a variable reassignment
         }
+        PatternLike::TSAsExpression(node) => {
+            record_unsupported_lval(visitor.env, "TSAsExpression", convert_opt_loc(&node.base.loc))?;
+        }
+        PatternLike::TSSatisfiesExpression(node) => {
+            record_unsupported_lval(
+                visitor.env,
+                "TSSatisfiesExpression",
+                convert_opt_loc(&node.base.loc),
+            )?;
+        }
+        PatternLike::TSNonNullExpression(node) => {
+            record_unsupported_lval(
+                visitor.env,
+                "TSNonNullExpression",
+                convert_opt_loc(&node.base.loc),
+            )?;
+        }
+        PatternLike::TSTypeAssertion(node) => {
+            record_unsupported_lval(
+                visitor.env,
+                "TSTypeAssertion",
+                convert_opt_loc(&node.base.loc),
+            )?;
+        }
     }
+    Ok(())
+}
+
+fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocation {
+    SourceLocation {
+        start: Position {
+            line: loc.start.line,
+            column: loc.start.column,
+            index: loc.start.index,
+        },
+        end: Position {
+            line: loc.end.line,
+            column: loc.end.column,
+            index: loc.end.index,
+        },
+    }
+}
+
+fn convert_opt_loc(
+    loc: &Option<react_compiler_ast::common::SourceLocation>,
+) -> Option<SourceLocation> {
+    loc.as_ref().map(convert_loc)
+}
+
+/// Record the TS-faithful Todo for an unsupported assignment-target wrapper node,
+/// mirroring the TypeScript `FindContextIdentifiers` pass. Recorded via the
+/// environment's Todo mechanism (non-fatal under panicThreshold "none").
+fn record_unsupported_lval(
+    env: &mut Environment,
+    type_name: &str,
+    loc: Option<SourceLocation>,
+) -> Result<(), CompilerError> {
+    env.record_error(CompilerErrorDetail {
+        category: ErrorCategory::Todo,
+        reason: format!(
+            "[FindContextIdentifiers] Cannot handle Object destructuring assignment target {type_name}"
+        ),
+        description: None,
+        loc,
+        suggestions: None,
+    })
 }
 
 /// Check if a binding declared at `binding_scope` is captured by a function at `function_scope`.
@@ -269,7 +346,8 @@ fn build_declaration_positions(scope_info: &ScopeInfo) -> HashSet<(BindingId, u3
 pub fn find_context_identifiers(
     func: &FunctionNode<'_>,
     scope_info: &ScopeInfo,
-) -> HashSet<BindingId> {
+    env: &mut Environment,
+) -> Result<HashSet<BindingId>, CompilerError> {
     let func_start = match func {
         FunctionNode::FunctionDeclaration(d) => d.base.start.unwrap_or(0),
         FunctionNode::FunctionExpression(e) => e.base.start.unwrap_or(0),
@@ -283,8 +361,10 @@ pub fn find_context_identifiers(
 
     let mut visitor = ContextIdentifierVisitor {
         scope_info,
+        env,
         function_stack: Vec::new(),
         binding_info: HashMap::new(),
+        error: None,
     };
     let mut walker = AstWalker::with_initial_scope(scope_info, func_scope);
 
@@ -315,6 +395,10 @@ pub fn find_context_identifiers(
                 }
             }
         }
+    }
+
+    if let Some(error) = visitor.error {
+        return Err(error);
     }
 
     // Supplement the walker-based analysis with referenceToBinding data.
@@ -363,12 +447,12 @@ pub fn find_context_identifiers(
     }
 
     // Collect results
-    visitor
+    Ok(visitor
         .binding_info
         .into_iter()
         .filter(|(_, info)| {
             info.reassigned_by_inner_fn || (info.reassigned && info.referenced_by_inner_fn)
         })
         .map(|(id, _)| id)
-        .collect()
+        .collect())
 }

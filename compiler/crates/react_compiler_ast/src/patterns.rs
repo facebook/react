@@ -16,6 +16,10 @@ pub enum PatternLike {
     RestElement(RestElement),
     // Expressions can appear in pattern positions (e.g., MemberExpression as LVal)
     MemberExpression(crate::expressions::MemberExpression),
+    TSAsExpression(crate::expressions::TSAsExpression),
+    TSSatisfiesExpression(crate::expressions::TSSatisfiesExpression),
+    TSNonNullExpression(crate::expressions::TSNonNullExpression),
+    TSTypeAssertion(crate::expressions::TSTypeAssertion),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
