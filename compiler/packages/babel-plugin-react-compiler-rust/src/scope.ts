@@ -191,12 +191,6 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
       const babelBinding = ownBindings[name];
       if (!babelBinding) continue;
 
-      if (isAlwaysReservedWord(name)) {
-        throw new Error(
-          `Expected a non-reserved identifier name. \`${name}\` is a reserved word in JavaScript and cannot be used as an identifier name.`,
-        );
-      }
-
       const bindingId = bindings.length;
       scopeBindings[name] = bindingId;
 
@@ -438,44 +432,3 @@ function getImportData(binding: {
   return undefined;
 }
 
-const ALWAYS_RESERVED_WORDS = new Set([
-  'break',
-  'case',
-  'catch',
-  'continue',
-  'debugger',
-  'default',
-  'delete',
-  'do',
-  'else',
-  'enum',
-  'export',
-  'extends',
-  'false',
-  'finally',
-  'for',
-  'function',
-  'if',
-  'in',
-  'instanceof',
-  'new',
-  'null',
-  'return',
-  'super',
-  'switch',
-  'this',
-  'throw',
-  'true',
-  'try',
-  'typeof',
-  'var',
-  'void',
-  'while',
-  'with',
-  'class',
-  'const',
-]);
-
-function isAlwaysReservedWord(name: string): boolean {
-  return ALWAYS_RESERVED_WORDS.has(name);
-}
