@@ -484,11 +484,9 @@ async function runVariant(
   for (let i = 0; i < fixtureInfos.length; i++) {
     const {fixturePath, relPath, source, firstLine, isFlow} = fixtureInfos[i];
     const tsCode = tsBaselines.get(fixturePath)!;
-    // TS baseline uses Babel (0-based columns), no adjustment needed
+    // All variants emit 0-based columns/indices.
     oneBasedColumns = false;
     const tsEvents = normalizeEvents(tsRawEvents.get(fixturePath)!);
-    // SWC uses 1-based columns/indices (BytePos); OXC is 0-based like Babel
-    oneBasedColumns = variant === 'swc';
 
     writeProgress(
       `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${s.failed} failed)`,

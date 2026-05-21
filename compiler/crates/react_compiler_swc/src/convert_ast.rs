@@ -196,16 +196,19 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
+    /// `BytePos` is 1-based; emit 0-based `loc` to match Babel.
+    /// (`BaseNode.start`/`end` stays 1-based: `convert_scope` keys on it.)
     fn position(&self, offset: u32) -> Position {
-        let line_idx = match self.line_offsets.binary_search(&offset) {
+        let zero_based = offset.saturating_sub(1);
+        let line_idx = match self.line_offsets.binary_search(&zero_based) {
             Ok(idx) => idx,
             Err(idx) => idx.saturating_sub(1),
         };
         let line_start = self.line_offsets[line_idx];
         Position {
             line: (line_idx as u32) + 1,
-            column: offset - line_start,
-            index: Some(offset),
+            column: zero_based - line_start,
+            index: Some(zero_based),
         }
     }
 
