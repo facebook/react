@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Check if actor is maintainer
         id: check_if_actor_is_maintainer
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
