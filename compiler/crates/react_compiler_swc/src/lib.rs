@@ -6,9 +6,11 @@
 pub mod convert_ast;
 pub mod convert_ast_reverse;
 pub mod convert_scope;
+pub mod apply_renames;
 pub mod diagnostics;
 pub mod prefilter;
 
+use apply_renames::apply_renames;
 use convert_ast::convert_module_with_source_type;
 use convert_ast_reverse::convert_program_to_swc_with_source;
 use convert_scope::build_scope_info;
@@ -88,13 +90,16 @@ pub fn transform(
         react_compiler::entrypoint::program::compile_program(file, scope_info, options);
 
     let diagnostics = compile_result_to_diagnostics(&result);
-    let (program_json, events) = match result {
+    let (program_json, events, renames) = match result {
         react_compiler::entrypoint::compile_result::CompileResult::Success {
-            ast, events, ..
-        } => (ast, events),
+            ast,
+            events,
+            renames,
+            ..
+        } => (ast, events, renames),
         react_compiler::entrypoint::compile_result::CompileResult::Error {
             events, ..
-        } => (None, events),
+        } => (None, events, Vec::new()),
     };
 
     let conversion_result = program_json.and_then(|raw_json| {
@@ -109,6 +114,7 @@ pub fn transform(
 
     let (mut swc_module, mut comments) = match conversion_result {
         Some(result) => (Some(result.module), Some(result.comments)),
+        None if !renames.is_empty() => (Some(module.clone()), None),
         None => (None, None),
     };
 
@@ -154,6 +160,8 @@ pub fn transform(
                 }
             }
         }
+
+        apply_renames(swc_mod, &renames);
 
         let (source_leading_comments, source_trailing_comments) =
             extract_source_comments(source_text);
