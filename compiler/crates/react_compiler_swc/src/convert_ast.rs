@@ -191,19 +191,27 @@ struct ConvertCtx<'a> {
     #[allow(dead_code)]
     source_text: &'a str,
     line_offsets: Vec<u32>,
+    utf16_offsets: Vec<u32>,
 }
 
 impl<'a> ConvertCtx<'a> {
     fn new(source_text: &'a str) -> Self {
         let mut line_offsets = vec![0u32];
+        let mut utf16_offsets = vec![0u32; source_text.len() + 1];
+        let mut utf16_offset = 0u32;
         for (i, ch) in source_text.char_indices() {
+            let next = i + ch.len_utf8();
+            utf16_offsets[i..next].fill(utf16_offset);
+            utf16_offset += ch.len_utf16() as u32;
             if ch == '\n' {
-                line_offsets.push((i + 1) as u32);
+                line_offsets.push(next as u32);
             }
         }
+        utf16_offsets[source_text.len()] = utf16_offset;
         Self {
             source_text,
             line_offsets,
+            utf16_offsets,
         }
     }
 
@@ -222,7 +230,7 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
-    /// `BytePos` is 1-based; emit 0-based `loc` to match Babel.
+    /// `BytePos` is 1-based; emit 0-based UTF-16 `loc` to match Babel.
     /// (`BaseNode.start`/`end` stays 1-based: `convert_scope` keys on it.)
     fn position(&self, offset: u32) -> Position {
         let zero_based = offset.saturating_sub(1);
@@ -231,10 +239,14 @@ impl<'a> ConvertCtx<'a> {
             Err(idx) => idx.saturating_sub(1),
         };
         let line_start = self.line_offsets[line_idx];
+        // Synthetic spans can point past EOF; clamp to the sentinel.
+        let byte_idx = (zero_based as usize).min(self.utf16_offsets.len() - 1);
+        let utf16_offset = self.utf16_offsets[byte_idx];
+        let line_start_utf16 = self.utf16_offsets[line_start as usize];
         Position {
             line: (line_idx as u32) + 1,
-            column: zero_based - line_start,
-            index: Some(zero_based),
+            column: utf16_offset - line_start_utf16,
+            index: Some(utf16_offset),
         }
     }
 
