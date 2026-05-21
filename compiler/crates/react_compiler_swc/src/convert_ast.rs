@@ -2073,6 +2073,39 @@ impl<'a> ConvertCtx<'a> {
         }
     }
 
+    // ===== TS type JSON (binding ident annotations) =====
+
+    fn convert_ts_type_to_json(&self, ty: &swc::TsType) -> Option<serde_json::Value> {
+        match ty {
+            swc::TsType::TsKeywordType(k)
+                if k.kind == swc::TsKeywordTypeKind::TsNumberKeyword =>
+            {
+                Some(serde_json::json!({ "type": "TSNumberKeyword" }))
+            }
+            // Skip generics: `convert_ts_type_annotation_from_json` ignores
+            // type params, so silently emitting `Foo` for `Foo<T>` loses
+            // information. Fall back to `Null` instead.
+            swc::TsType::TsTypeRef(r) if r.type_params.is_none() => match &r.type_name {
+                swc::TsEntityName::Ident(id) => Some(serde_json::json!({
+                    "type": "TSTypeReference",
+                    "typeName": {
+                        "type": "Identifier",
+                        "name": id.sym.to_string()
+                    }
+                })),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn convert_ts_type_ann_to_json(&self, ann: &swc::TsTypeAnn) -> Option<serde_json::Value> {
+        Some(serde_json::json!({
+            "type": "TSTypeAnnotation",
+            "typeAnnotation": self.convert_ts_type_to_json(&ann.type_ann)?,
+        }))
+    }
+
     // ===== Identifiers =====
 
     fn convert_ident_to_identifier(&self, id: &swc::Ident) -> Identifier {
@@ -2089,10 +2122,12 @@ impl<'a> ConvertCtx<'a> {
         Identifier {
             base: self.make_base_node(id.id.span),
             name: id.id.sym.to_string(),
-            type_annotation: id
-                .type_ann
-                .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+            type_annotation: id.type_ann.as_ref().map(|ann| {
+                Box::new(
+                    self.convert_ts_type_ann_to_json(ann)
+                        .unwrap_or(serde_json::Value::Null),
+                )
+            }),
             optional: if id.id.optional { Some(true) } else { None },
             decorators: None,
         }
