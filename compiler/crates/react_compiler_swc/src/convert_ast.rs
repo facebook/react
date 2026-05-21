@@ -1336,6 +1336,7 @@ impl<'a> ConvertCtx<'a> {
                     .as_ref()
                     .map(|_| Box::new(serde_json::Value::Null)),
                 type_parameters: None,
+                predicate: None,
             }),
             swc::Prop::Setter(s) => ObjectExpressionProperty::ObjectMethod(ObjectMethod {
                 base: self.make_base_node(s.span),
@@ -1359,6 +1360,7 @@ impl<'a> ConvertCtx<'a> {
                 decorators: None,
                 return_type: None,
                 type_parameters: None,
+                predicate: None,
             }),
             swc::Prop::Method(m) => ObjectExpressionProperty::ObjectMethod(ObjectMethod {
                 base: self.make_base_node(m.span()),
@@ -1391,6 +1393,7 @@ impl<'a> ConvertCtx<'a> {
                     .type_params
                     .as_ref()
                     .map(|_| Box::new(serde_json::Value::Null)),
+                predicate: None,
             }),
             swc::Prop::Assign(a) => {
                 let ident = self.convert_ident_to_identifier(&a.key);

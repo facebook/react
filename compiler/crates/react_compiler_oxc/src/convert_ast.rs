@@ -1969,6 +1969,7 @@ impl<'a> ConvertCtx<'a> {
                                 .type_parameters
                                 .as_ref()
                                 .map(|_| Box::new(serde_json::Value::Null)),
+                            predicate: None,
                         });
                     }
                 }

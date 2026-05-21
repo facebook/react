@@ -310,7 +310,8 @@ pub struct FunctionDeclaration {
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        rename = "predicate"
+        rename = "predicate",
+        deserialize_with = "crate::common::nullable_value"
     )]
     pub predicate: Option<Box<serde_json::Value>>,
     /// Set by the Hermes parser for Flow `component Foo(...) { ... }` syntax

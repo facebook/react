@@ -2745,6 +2745,7 @@ fn codegen_object_expression(
                                 decorators: None,
                                 return_type: None,
                                 type_parameters: None,
+                                predicate: None,
                             },
                         ));
                     }
