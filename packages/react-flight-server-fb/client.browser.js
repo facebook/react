@@ -7,5 +7,4 @@
  * @flow
  */
 
-export * from 'react-native-renderer/src/ReactFiberConfigNative';
-export * from 'react-client/src/ReactClientConsoleConfigPlain';
+export * from './src/client/ReactFlightDOMClientBrowser';

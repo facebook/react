@@ -1695,6 +1695,7 @@ function pushAttribute(
     case 'async':
     case 'autoPlay':
     case 'controls':
+    case 'credentialless':
     case 'default':
     case 'defer':
     case 'disabled':
