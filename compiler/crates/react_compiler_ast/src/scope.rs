@@ -115,7 +115,7 @@ pub struct ScopeInfo {
     /// Parallel to node_to_scope — same keys, but stores the end position
     /// of the scope-creating AST node. Used to determine if a source position
     /// falls within a particular scope's AST range.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub node_to_scope_end: HashMap<u32, u32>,
 
     /// Maps an Identifier AST node's start offset to the binding it resolves to.
@@ -126,11 +126,19 @@ pub struct ScopeInfo {
     /// Maps an identifier reference's node-ID to the binding it resolves to.
     /// Only present for identifiers that resolve to a binding (not globals).
     /// Uses IndexMap to preserve insertion order.
-    #[serde(default, rename = "refNodeIdToBinding")]
+    #[serde(
+        default,
+        rename = "refNodeIdToBinding",
+        skip_serializing_if = "IndexMap::is_empty"
+    )]
     pub ref_node_id_to_binding: IndexMap<u32, BindingId>,
 
     /// Maps a scope-creating AST node's node-ID to the scope it creates.
-    #[serde(default, rename = "nodeIdToScope")]
+    #[serde(
+        default,
+        rename = "nodeIdToScope",
+        skip_serializing_if = "HashMap::is_empty"
+    )]
     pub node_id_to_scope: HashMap<u32, ScopeId>,
 
     /// The program-level (module) scope. Always scopes[0].
