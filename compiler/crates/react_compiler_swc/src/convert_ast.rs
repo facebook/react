@@ -82,6 +82,30 @@ fn extract_comments_from_source(source: &str) -> Vec<react_compiler_ast::common:
     let bytes = source.as_bytes();
     let len = bytes.len();
     let mut i = 0;
+    let mut line_offsets = vec![0u32];
+    for (i, ch) in source.char_indices() {
+        if ch == '\n' {
+            line_offsets.push((i + 1) as u32);
+        }
+    }
+    let position = |offset: u32| {
+        let line_idx = match line_offsets.binary_search(&offset) {
+            Ok(idx) => idx,
+            Err(idx) => idx.saturating_sub(1),
+        };
+        let line_start = line_offsets[line_idx];
+        Position {
+            line: (line_idx as u32) + 1,
+            column: offset - line_start,
+            index: Some(offset),
+        }
+    };
+    let source_location = |start: u32, end: u32| SourceLocation {
+        start: position(start),
+        end: position(end),
+        filename: None,
+        identifier_name: None,
+    };
 
     while i < len {
         if bytes[i] == b'/' && i + 1 < len {
@@ -94,11 +118,12 @@ fn extract_comments_from_source(source: &str) -> Vec<react_compiler_ast::common:
                     end += 1;
                 }
                 let value = String::from_utf8_lossy(&bytes[content_start..end]).to_string();
+                let end_u32 = end as u32;
                 comments.push(Comment::CommentLine(CommentData {
                     value: value.trim().to_string(),
                     start: Some(start),
-                    end: Some(end as u32),
-                    loc: None,
+                    end: Some(end_u32),
+                    loc: Some(source_location(start, end_u32)),
                 }));
                 i = end;
                 continue;
@@ -115,11 +140,12 @@ fn extract_comments_from_source(source: &str) -> Vec<react_compiler_ast::common:
                 }
                 let value = String::from_utf8_lossy(&bytes[content_start..end]).to_string();
                 let comment_end = if end + 1 < len { end + 2 } else { end };
+                let comment_end_u32 = comment_end as u32;
                 comments.push(Comment::CommentBlock(CommentData {
                     value: value.trim().to_string(),
                     start: Some(start),
-                    end: Some(comment_end as u32),
-                    loc: None,
+                    end: Some(comment_end_u32),
+                    loc: Some(source_location(start, comment_end_u32)),
                 }));
                 i = comment_end;
                 continue;
