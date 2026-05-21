@@ -45,6 +45,12 @@ pub fn build_scope_info(module: &Module) -> ScopeInfo {
             }
         }
 
+        // Function redeclarations: resolve the second `function x()`'s ident
+        // to the first declaration's binding (overwrites any earlier entry).
+        for (start, binding_id) in &collector.redeclaration_refs {
+            resolver.reference_to_binding.insert(*start, *binding_id);
+        }
+
         resolver.reference_to_binding
     };
 
@@ -72,6 +78,11 @@ struct ScopeCollector {
     /// Set of span starts for block statements that are direct function/catch bodies.
     /// These should NOT create a separate Block scope.
     function_body_spans: HashSet<u32>,
+    /// Function declarations that redeclare an existing hoisted name resolve to
+    /// the first binding's `BindingId` (like babel's `constantViolations`), so
+    /// the compiler treats the redeclaration as a reassignment rather than a
+    /// new binding.
+    redeclaration_refs: HashMap<u32, BindingId>,
 }
 
 impl ScopeCollector {
@@ -83,6 +94,7 @@ impl ScopeCollector {
             node_to_scope_end: HashMap::new(),
             scope_stack: Vec::new(),
             function_body_spans: HashSet::new(),
+            redeclaration_refs: HashMap::new(),
         }
     }
 
@@ -344,14 +356,20 @@ impl Visit for ScopeCollector {
         let hoist_scope = self.enclosing_function_scope();
         let name = fn_decl.ident.sym.to_string();
         let start = fn_decl.ident.span.lo.0;
-        self.add_binding(
-            name,
-            BindingKind::Hoisted,
-            hoist_scope,
-            "FunctionDeclaration".to_string(),
-            Some(start),
-            None,
-        );
+        if let Some(&existing_id) =
+            self.scopes[hoist_scope.0 as usize].bindings.get(&name)
+        {
+            self.redeclaration_refs.insert(start, existing_id);
+        } else {
+            self.add_binding(
+                name,
+                BindingKind::Hoisted,
+                hoist_scope,
+                "FunctionDeclaration".to_string(),
+                Some(start),
+                None,
+            );
+        }
 
         self.visit_function_inner(&fn_decl.function);
     }
