@@ -717,17 +717,26 @@ impl<'a> ConvertCtx<'a> {
             swc::Expr::TsAs(e) => Expression::TSAsExpression(TSAsExpression {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
-                type_annotation: Box::new(serde_json::Value::Null),
+                type_annotation: Box::new(
+                    self.convert_ts_type_to_json(&e.type_ann)
+                        .unwrap_or(serde_json::Value::Null),
+                ),
             }),
             swc::Expr::TsSatisfies(e) => Expression::TSSatisfiesExpression(TSSatisfiesExpression {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
-                type_annotation: Box::new(serde_json::Value::Null),
+                type_annotation: Box::new(
+                    self.convert_ts_type_to_json(&e.type_ann)
+                        .unwrap_or(serde_json::Value::Null),
+                ),
             }),
             swc::Expr::TsTypeAssertion(e) => Expression::TSTypeAssertion(TSTypeAssertion {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
-                type_annotation: Box::new(serde_json::Value::Null),
+                type_annotation: Box::new(
+                    self.convert_ts_type_to_json(&e.type_ann)
+                        .unwrap_or(serde_json::Value::Null),
+                ),
             }),
             swc::Expr::TsNonNull(e) => Expression::TSNonNullExpression(TSNonNullExpression {
                 base: self.make_base_node(e.span),
