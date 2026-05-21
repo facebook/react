@@ -127,22 +127,22 @@ pub fn transform(
 
         // Fix up dummy spans on compiler-generated items: SWC codegen skips
         // comments at BytePos(0) (DUMMY), so we give generated items a real
-        // span derived from the original module's first item.
-        let has_source_items = !module.body.is_empty();
-        if has_source_items {
-            // Use a synthetic span at position 1 (minimal non-dummy position)
-            // This ensures comments can be attached to the first item.
-            let synthetic_span = swc_common::Span::new(
-                swc_common::BytePos(1),
-                swc_common::BytePos(1),
-            );
+        // span before the original module's first item.
+        let first_source_lo = module.body.first().map(|item| item.span().lo);
+        let mut top_level_comment_target = None;
+        if first_source_lo.is_some() {
+            let mut next_synthetic_pos = swc_common::BytePos(1);
             for item in &mut swc_mod.body {
                 if item.span().lo.is_dummy() {
+                    let synthetic_span =
+                        swc_common::Span::new(next_synthetic_pos, next_synthetic_pos);
+                    next_synthetic_pos = next_synthetic_pos + swc_common::BytePos(1);
                     match item {
                         swc_ecma_ast::ModuleItem::ModuleDecl(
                             swc_ecma_ast::ModuleDecl::Import(import),
                         ) => {
                             import.span = synthetic_span;
+                            top_level_comment_target = Some(import.span.hi);
                         }
                         swc_ecma_ast::ModuleItem::Stmt(
                             swc_ecma_ast::Stmt::Decl(swc_ecma_ast::Decl::Var(var)),
@@ -155,16 +155,44 @@ pub fn transform(
             }
         }
 
-        let source_comments = extract_source_comments(source_text);
-        if !source_comments.is_empty() {
+        let (source_leading_comments, source_trailing_comments) =
+            extract_source_comments(source_text);
+        if !source_leading_comments.is_empty() || !source_trailing_comments.is_empty() {
             let merged = comments.unwrap_or_default();
 
-            for (orig_pos, comment_list) in source_comments {
-                // Keep comments at their original positions. Comments
-                // attached to the first source statement will appear before
-                // the corresponding statement in the compiled output
-                // (which preserves the original import's span).
+            let source_bytes = source_text.as_bytes();
+            for (orig_pos, comment_list) in source_leading_comments {
+                // Pragma comments (e.g. `// @gating`) before the first source
+                // item need to attach AFTER any compiler-inserted imports so
+                // the gated output preserves the directive. Other leading
+                // comments (copyright, JSDoc, etc.) stay at their original
+                // position so SWC emits them before the original item.
+                let is_pragma = Some(orig_pos) == first_source_lo
+                    && comment_list
+                        .iter()
+                        .all(|c| c.text.trim_start().starts_with('@'));
+                if is_pragma {
+                    if let Some(pos) = top_level_comment_target {
+                        merged.add_trailing_comments(pos, comment_list);
+                        continue;
+                    }
+                }
                 merged.add_leading_comments(orig_pos, comment_list);
+            }
+            // Trailing comments after a `,` separator are stored by the SWC
+            // parser at the position past the comma, but codegen looks them
+            // up at the previous element's `span.hi`, which is before the
+            // comma. Shift those back by one. Trailing comments after other
+            // tokens (e.g. `;`) are already at the matching `span.hi`, so
+            // pass them through unchanged.
+            for (orig_pos, comment_list) in source_trailing_comments {
+                let idx = orig_pos.0 as usize;
+                let pos = if idx >= 2 && source_bytes.get(idx - 2) == Some(&b',') {
+                    swc_common::BytePos(orig_pos.0 - 1)
+                } else {
+                    orig_pos
+                };
+                merged.add_trailing_comments(pos, comment_list);
             }
             comments = Some(merged);
         }
@@ -861,7 +889,10 @@ fn get_first_code_line(item: &swc_ecma_ast::ModuleItem) -> String {
 /// position of the token following the comment(s).
 fn extract_source_comments(
     source_text: &str,
-) -> Vec<(swc_common::BytePos, Vec<swc_common::comments::Comment>)> {
+) -> (
+    Vec<(swc_common::BytePos, Vec<swc_common::comments::Comment>)>,
+    Vec<(swc_common::BytePos, Vec<swc_common::comments::Comment>)>,
+) {
     let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
     let fm = cm.new_source_file(
         swc_common::sync::Lrc::new(swc_common::FileName::Anon),
@@ -882,16 +913,21 @@ fn extract_source_comments(
         &mut errors,
     );
 
-    // Collect all leading comments
-    let mut result = Vec::new();
-    let (leading, _trailing) = comments.borrow_all();
+    let mut leading_result = Vec::new();
+    let mut trailing_result = Vec::new();
+    let (leading, trailing) = comments.borrow_all();
     for (pos, cmts) in leading.iter() {
         if !cmts.is_empty() {
-            result.push((*pos, cmts.clone()));
+            leading_result.push((*pos, cmts.clone()));
+        }
+    }
+    for (pos, cmts) in trailing.iter() {
+        if !cmts.is_empty() {
+            trailing_result.push((*pos, cmts.clone()));
         }
     }
 
-    result
+    (leading_result, trailing_result)
 }
 
 /// Normalize source code formatting to match Babel's codegen behavior.
