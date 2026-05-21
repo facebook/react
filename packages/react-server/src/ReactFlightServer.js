@@ -576,7 +576,12 @@ export type Request = {
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
   completedHintChunks: Array<Chunk>,
-  completedRegularChunks: Array<Chunk | BinaryChunk>,
+  // Some rows (Text, TypedArray) are pushed as a [headerChunk, contentChunk]
+  // tuple so flushCompletedChunks can write the pair atomically and never
+  // strand the content chunk on a backpressure break.
+  completedRegularChunks: Array<
+    Chunk | BinaryChunk | Array<Chunk | BinaryChunk>,
+  >,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -594,7 +599,8 @@ export type Request = {
   abortTime: number,
   // DEV-only
   pendingDebugChunks: number,
-  completedDebugChunks: Array<Chunk | BinaryChunk>,
+  // See completedRegularChunks for why some entries are tuples.
+  completedDebugChunks: Array<Chunk | BinaryChunk | Array<Chunk | BinaryChunk>>,
   debugDestination: null | Destination,
   environmentName: () => string,
   filterStackFrame: (
@@ -695,7 +701,9 @@ function RequestInstance(
   this.pingedTasks = pingedTasks;
   this.completedImportChunks = ([]: Array<Chunk>);
   this.completedHintChunks = ([]: Array<Chunk>);
-  this.completedRegularChunks = ([]: Array<Chunk | BinaryChunk>);
+  this.completedRegularChunks = ([]: Array<
+    Chunk | BinaryChunk | Array<Chunk | BinaryChunk>,
+  >);
   this.completedErrorChunks = ([]: Array<Chunk>);
   this.writtenSymbols = new Map();
   this.writtenClientReferences = new Map();
@@ -711,7 +719,9 @@ function RequestInstance(
 
   if (__DEV__) {
     this.pendingDebugChunks = 0;
-    this.completedDebugChunks = ([]: Array<Chunk>);
+    this.completedDebugChunks = ([]: Array<
+      Chunk | BinaryChunk | Array<Chunk | BinaryChunk>,
+    >);
     this.debugDestination = null;
     this.environmentName =
       environmentName === undefined
@@ -4691,10 +4701,16 @@ function emitTypedArrayChunk(
   const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
   const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
+  // Push the header and binary as a single tuple so flushCompletedChunks can
+  // write them atomically. Otherwise, if the destination's backpressure flips
+  // between the two writes, the content chunk would be stranded at the front of
+  // the queue and the next drain would emit Import or Hint chunks between the
+  // header and the content — and the Flight Client would frame those
+  // intervening bytes as this row's content.
   if (__DEV__ && debug) {
-    request.completedDebugChunks.push(headerChunk, binaryChunk);
+    request.completedDebugChunks.push([headerChunk, binaryChunk]);
   } else {
-    request.completedRegularChunks.push(headerChunk, binaryChunk);
+    request.completedRegularChunks.push([headerChunk, binaryChunk]);
   }
 }
 
@@ -4719,10 +4735,11 @@ function emitTextChunk(
   const binaryLength = byteLengthOfChunk(textChunk);
   const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
+  // See emitTypedArrayChunk for why the pair is pushed as a tuple.
   if (__DEV__ && debug) {
-    request.completedDebugChunks.push(headerChunk, textChunk);
+    request.completedDebugChunks.push([headerChunk, textChunk]);
   } else {
-    request.completedRegularChunks.push(headerChunk, textChunk);
+    request.completedRegularChunks.push([headerChunk, textChunk]);
   }
 }
 
@@ -6014,9 +6031,16 @@ function flushCompletedChunks(request: Request): void {
       const debugChunks = request.completedDebugChunks;
       let i = 0;
       for (; i < debugChunks.length; i++) {
-        request.pendingDebugChunks--;
-        const chunk = debugChunks[i];
-        writeChunkAndReturn(debugDestination, chunk);
+        const item = debugChunks[i];
+        if (isArray(item)) {
+          request.pendingDebugChunks -= item.length;
+          for (let j = 0; j < item.length; j++) {
+            writeChunkAndReturn(debugDestination, item[j]);
+          }
+        } else {
+          request.pendingDebugChunks--;
+          writeChunkAndReturn(debugDestination, item);
+        }
       }
       debugChunks.splice(0, i);
     } finally {
@@ -6064,9 +6088,18 @@ function flushCompletedChunks(request: Request): void {
         const debugChunks = request.completedDebugChunks;
         i = 0;
         for (; i < debugChunks.length; i++) {
-          request.pendingDebugChunks--;
-          const chunk = debugChunks[i];
-          const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+          const item = debugChunks[i];
+          let keepWriting: boolean;
+          if (isArray(item)) {
+            request.pendingDebugChunks -= item.length;
+            keepWriting = true;
+            for (let j = 0; j < item.length; j++) {
+              keepWriting = writeChunkAndReturn(destination, item[j]);
+            }
+          } else {
+            request.pendingDebugChunks--;
+            keepWriting = writeChunkAndReturn(destination, item);
+          }
           if (!keepWriting) {
             request.destination = null;
             i++;
@@ -6080,9 +6113,18 @@ function flushCompletedChunks(request: Request): void {
       const regularChunks = request.completedRegularChunks;
       i = 0;
       for (; i < regularChunks.length; i++) {
-        request.pendingChunks--;
-        const chunk = regularChunks[i];
-        const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+        const item = regularChunks[i];
+        let keepWriting: boolean;
+        if (isArray(item)) {
+          request.pendingChunks -= item.length;
+          keepWriting = true;
+          for (let j = 0; j < item.length; j++) {
+            keepWriting = writeChunkAndReturn(destination, item[j]);
+          }
+        } else {
+          request.pendingChunks--;
+          keepWriting = writeChunkAndReturn(destination, item);
+        }
         if (!keepWriting) {
           request.destination = null;
           i++;
