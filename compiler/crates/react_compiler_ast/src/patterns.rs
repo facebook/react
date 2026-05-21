@@ -20,6 +20,8 @@ pub enum PatternLike {
     TSSatisfiesExpression(crate::expressions::TSSatisfiesExpression),
     TSNonNullExpression(crate::expressions::TSNonNullExpression),
     TSTypeAssertion(crate::expressions::TSTypeAssertion),
+    // Flow's analogue of the TS cast wrappers: `(expr: SomeType)`.
+    TypeCastExpression(crate::expressions::TypeCastExpression),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

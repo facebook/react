@@ -2637,7 +2637,8 @@ impl<'a> ConvertCtx<'a> {
                 PatternLike::TSAsExpression(_)
                 | PatternLike::TSSatisfiesExpression(_)
                 | PatternLike::TSNonNullExpression(_)
-                | PatternLike::TSTypeAssertion(_) => {}
+                | PatternLike::TSTypeAssertion(_)
+                | PatternLike::TypeCastExpression(_) => {}
             }
         }
 

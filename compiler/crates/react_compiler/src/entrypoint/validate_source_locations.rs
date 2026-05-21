@@ -749,7 +749,8 @@ fn collect_original_pattern(
         PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => {}
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => {}
     }
 }
 
@@ -1243,7 +1244,8 @@ fn collect_generated_pattern(
         PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => {}
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => {}
     }
 }
 

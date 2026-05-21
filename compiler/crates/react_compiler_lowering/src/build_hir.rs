@@ -65,6 +65,7 @@ fn pattern_like_loc(
         PatternLike::TSSatisfiesExpression(p) => p.base.loc.clone(),
         PatternLike::TSNonNullExpression(p) => p.base.loc.clone(),
         PatternLike::TSTypeAssertion(p) => p.base.loc.clone(),
+        PatternLike::TypeCastExpression(p) => p.base.loc.clone(),
     }
 }
 
@@ -2327,7 +2328,8 @@ fn pattern_declares_name(pattern: &react_compiler_ast::patterns::PatternLike, na
         PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => false,
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => false,
     }
 }
 
@@ -2533,7 +2535,8 @@ fn collect_binding_names_from_pattern(
         PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => {}
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => {}
     }
 }
 
@@ -5091,13 +5094,15 @@ fn lower_assignment(
             )?)
         }
 
-        // TS assignment-target wrappers (e.g. `(x as T) = ...`). The TS-faithful
-        // Todo is recorded once in `find_context_identifiers`; lowering itself
-        // never reaches a successful path for these, so do not record again.
+        // TS assignment-target wrappers (e.g. `(x as T) = ...`) and the Flow
+        // analogue `TypeCastExpression`. The TS-faithful Todo is recorded once
+        // in `find_context_identifiers`; lowering itself never reaches a
+        // successful path for these, so do not record again.
         PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => Ok(None),
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => Ok(None),
     }
 }
 
@@ -6037,7 +6042,8 @@ fn lower_inner(
             react_compiler_ast::patterns::PatternLike::TSAsExpression(_)
             | react_compiler_ast::patterns::PatternLike::TSSatisfiesExpression(_)
             | react_compiler_ast::patterns::PatternLike::TSNonNullExpression(_)
-            | react_compiler_ast::patterns::PatternLike::TSTypeAssertion(_) => {}
+            | react_compiler_ast::patterns::PatternLike::TSTypeAssertion(_)
+            | react_compiler_ast::patterns::PatternLike::TypeCastExpression(_) => {}
         }
     }
 
