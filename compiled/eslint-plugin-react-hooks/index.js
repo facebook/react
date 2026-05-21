@@ -50965,6 +50965,10 @@ function applyCompiledFunctions(program, compiledFns, pass, programContext) {
         }
     }
     if (compiledFns.length > 0) {
+        const anyAppliedUsesMemo = compiledFns.some(result => result.compiledFn.memoSlotsUsed > 0);
+        if (!anyAppliedUsesMemo) {
+            programContext.removeMemoCacheImport();
+        }
         addImportsToProgram(program, programContext);
     }
 }
@@ -51395,6 +51399,16 @@ class ProgramContext {
             source: this.reactRuntimeModule,
             importSpecifierName: 'c',
         }, '_c');
+    }
+    removeMemoCacheImport() {
+        const moduleImports = this.imports.get(this.reactRuntimeModule);
+        if (moduleImports == null) {
+            return;
+        }
+        moduleImports.delete('c');
+        if (moduleImports.size === 0) {
+            this.imports.delete(this.reactRuntimeModule);
+        }
     }
     addImportSpecifier({ source: module, importSpecifierName: specifier }, nameHint) {
         var _a;
