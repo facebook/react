@@ -128,7 +128,8 @@ fn determine_swc_syntax(_filename: &str) -> swc_ecma_parser::Syntax {
     })
 }
 
-fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> CompileOutput {
+fn compile_swc(source: &str, filename: &str, mut options: PluginOptions) -> CompileOutput {
+    options.filename = Some(filename.to_string());
     let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
     let fm = cm.new_source_file(
         swc_common::sync::Lrc::new(swc_common::FileName::Anon),
@@ -210,7 +211,8 @@ fn compile_swc(source: &str, filename: &str, options: PluginOptions) -> CompileO
     }
 }
 
-fn compile_oxc(source: &str, filename: &str, options: PluginOptions) -> CompileOutput {
+fn compile_oxc(source: &str, filename: &str, mut options: PluginOptions) -> CompileOutput {
+    options.filename = Some(filename.to_string());
     // Always enable TypeScript parsing (like the TS/Babel baseline uses
     // ['typescript', 'jsx'] plugins). Some .js fixtures contain TS syntax.
     // Check for @script pragma in the first line to use script source type.
