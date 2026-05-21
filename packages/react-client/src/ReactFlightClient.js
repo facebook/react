@@ -2367,7 +2367,7 @@ function parseModelString(
     if (value === '$') {
       // A very common symbol.
       if (initializingHandler !== null && key === '0') {
-        // We we already have an initializing handler and we're abound to enter
+        // We already have an initializing handler and we're abound to enter
         // a new element, we need to shadow it because we're now in a new scope.
         // This is effectively the "begin" or "push" phase of Element parsing.
         // We'll pop later when we parse the array itself.

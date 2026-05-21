@@ -112,7 +112,7 @@ export function pushDehydratedActivitySuspenseHandler(fiber: Fiber): void {
   // dehydrated if it suspends.
   // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
   // Reuse the current value on the stack.
-  // TODO: We can avoid needing to push here by by forking popSuspenseHandler
+  // TODO: We can avoid needing to push here by forking popSuspenseHandler
   // into separate functions for Activity, Suspense and Offscreen.
   push(suspenseStackCursor, suspenseStackCursor.current, fiber);
   push(suspenseHandlerStackCursor, fiber, fiber);
@@ -126,7 +126,7 @@ export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
   if (fiber.tag === OffscreenComponent) {
     // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
     // Reuse the current value on the stack.
-    // TODO: We can avoid needing to push here by by forking popSuspenseHandler
+    // TODO: We can avoid needing to push here by forking popSuspenseHandler
     // into separate functions for Activity, Suspense and Offscreen.
     push(suspenseStackCursor, suspenseStackCursor.current, fiber);
     push(suspenseHandlerStackCursor, fiber, fiber);

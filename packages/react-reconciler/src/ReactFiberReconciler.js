@@ -332,7 +332,7 @@ export function createHydrationContainer(
   root.context = getContextForSubtree(null);
 
   // Schedule the initial render. In a hydration root, this is different from
-  // a regular update because the initial render must match was was rendered
+  // a regular update because the initial render must match what was rendered
   // on the server.
   // NOTE: This update intentionally doesn't have a payload. We're only using
   // the update to schedule work on the root fiber (and, for legacy roots, to

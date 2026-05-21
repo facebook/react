@@ -285,7 +285,7 @@ function processEventDispatch(
 
     profilerData.nativeEvents.push(nativeEvent);
 
-    // Keep track of curent event in case future ones overlap.
+    // Keep track of current event in case future ones overlap.
     // We separate them into different vertical lanes in this case.
     state.nativeEventStack.push(nativeEvent);
   }
