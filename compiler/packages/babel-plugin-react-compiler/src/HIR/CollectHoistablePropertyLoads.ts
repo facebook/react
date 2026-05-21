@@ -124,9 +124,7 @@ export function collectHoistablePropertyLoads(
     hoistableFromOptionals,
     registry,
     nestedFnImmutableContext: null,
-    assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
-      ? new Set()
-      : getAssumedInvokedFunctions(fn),
+    assumedInvokedFns: getAssumedInvokedFunctions(fn),
   });
 }
 
@@ -142,9 +140,7 @@ export function collectHoistablePropertyLoadsInInnerFn(
     hoistableFromOptionals,
     registry: new PropertyPathRegistry(),
     nestedFnImmutableContext: null,
-    assumedInvokedFns: fn.env.config.enableTreatFunctionDepsAsConditional
-      ? new Set()
-      : getAssumedInvokedFunctions(fn),
+    assumedInvokedFns: getAssumedInvokedFunctions(fn),
   };
   const nestedFnImmutableContext = new Set(
     fn.context

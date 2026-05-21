@@ -378,6 +378,17 @@ export async function transformFixtureInput(
       msg: 'Expected nothing to be compiled (from `// @expectNothingCompiled`), but some functions compiled or errored',
     };
   }
+  const unexpectedThrows = logs.filter(
+    log => log.event.kind === 'CompileUnexpectedThrow',
+  );
+  if (unexpectedThrows.length > 0) {
+    return {
+      kind: 'err',
+      msg:
+        `Compiler pass(es) threw instead of recording errors:\n` +
+        unexpectedThrows.map(l => (l.event as any).data).join('\n'),
+    };
+  }
   return {
     kind: 'ok',
     value: {

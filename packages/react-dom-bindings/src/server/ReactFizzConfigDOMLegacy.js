@@ -326,7 +326,10 @@ export function writePreambleStart(
   );
 }
 
-export function hasSuspenseyContent(hoistableState: HoistableState): boolean {
+export function hasSuspenseyContent(
+  hoistableState: HoistableState,
+  flushingInShell: boolean,
+): boolean {
   // Never outline.
   return false;
 }

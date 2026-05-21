@@ -584,6 +584,9 @@ export default function InspectedElementSuspendedBy({
       break;
   }
 
+  if (groups.length === 0) {
+    return null;
+  }
   return (
     <div>
       <div className={styles.HeaderRow}>

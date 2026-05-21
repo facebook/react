@@ -20,6 +20,7 @@ import ErrorBoundaries from './ErrorBoundaries';
 import PartiallyStrictApp from './PartiallyStrictApp';
 import Segments from './Segments';
 import SuspenseTree from './SuspenseTree';
+import ActivityTree from './ActivityTree';
 import TraceUpdatesTest from './TraceUpdatesTest';
 import {ignoreErrors, ignoreLogs, ignoreWarnings} from './console';
 
@@ -114,6 +115,7 @@ function mountTestApp() {
   mountApp(SuspenseTree);
   mountApp(DeeplyNestedComponents);
   mountApp(Iframe);
+  mountApp(ActivityTree);
   mountApp(TraceUpdatesTest);
   mountApp(Segments);
 

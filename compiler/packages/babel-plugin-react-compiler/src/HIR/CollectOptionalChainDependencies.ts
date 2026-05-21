@@ -310,16 +310,13 @@ function traverseOptionalBlock(
      * - a optional base block with a separate nested optional-chain (e.g. a(c?.d)?.d)
      */
     const testBlock = context.blocks.get(maybeTest.terminal.fallthrough)!;
-    if (testBlock!.terminal.kind !== 'branch') {
-      /**
-       * Fallthrough of the inner optional should be a block with no
-       * instructions, terminating with Test($<temporary written to from
-       * StoreLocal>)
-       */
-      CompilerError.throwTodo({
-        reason: `Unexpected terminal kind \`${testBlock.terminal.kind}\` for optional fallthrough block`,
-        loc: maybeTest.terminal.loc,
-      });
+    /**
+     * Fallthrough of the inner optional should be a block with no
+     * instructions, terminating with Test($<temporary written to from
+     * StoreLocal>)
+     */
+    if (testBlock.terminal.kind !== 'branch') {
+      return null;
     }
     /**
      * Recurse into inner optional blocks to collect inner optional-chain

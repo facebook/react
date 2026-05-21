@@ -826,6 +826,7 @@ export type StartMemoize = {
    * emitting diagnostics with a suggested replacement
    */
   depsLoc: SourceLocation | null;
+  hasInvalidDeps?: true;
   loc: SourceLocation;
 };
 export type FinishMemoize = {
@@ -1886,12 +1887,6 @@ export function isUseReducerType(id: Identifier): boolean {
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
-}
-
-export function isFireFunctionType(id: Identifier): boolean {
-  return (
-    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInFireFunction'
-  );
 }
 
 export function isEffectEventFunctionType(id: Identifier): boolean {

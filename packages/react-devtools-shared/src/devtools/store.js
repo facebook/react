@@ -48,7 +48,11 @@ import {
   BRIDGE_PROTOCOL,
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
-import {StrictMode} from 'react-devtools-shared/src/frontend/types';
+import {
+  StrictMode,
+  ActivityHiddenMode,
+  ActivityVisibleMode,
+} from 'react-devtools-shared/src/frontend/types';
 import {withPermissionsCheck} from 'react-devtools-shared/src/frontend/utils/withPermissionsCheck';
 
 import type {
@@ -957,6 +961,12 @@ export default class Store extends EventEmitter<{
       if (root === null) {
         continue;
       }
+      const rendererID = this._rootIDToRendererID.get(rootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for root. This is a bug in React DevTools.',
+        );
+      }
       // TODO: This includes boundaries that can't be suspended due to no support from the renderer.
 
       const suspense = this.getSuspenseByID(rootID);
@@ -972,6 +982,7 @@ export default class Store extends EventEmitter<{
             id: suspense.id,
             environment: environmentName,
             endTime: suspense.endTime,
+            rendererID,
           };
           target.push(rootStep);
         } else {
@@ -990,6 +1001,7 @@ export default class Store extends EventEmitter<{
           uniqueSuspendersOnly,
           environments,
           0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+          rendererID,
         );
       }
     }
@@ -1003,12 +1015,12 @@ export default class Store extends EventEmitter<{
   ): void {
     for (let i = 0; i < children.length; i++) {
       const childID = children[i];
-      const suspense = this.getSuspenseByID(childID);
-      if (suspense !== null) {
+      const suspense = this._idToSuspense.get(childID);
+      if (suspense !== undefined) {
         target.push(suspense.id);
       } else {
-        const childElement = this.getElementByID(childID);
-        if (childElement !== null) {
+        const childElement = this._idToElement.get(childID);
+        if (childElement !== undefined) {
           this._pushSuspenseChildrenInDocumentOrder(
             childElement.children,
             target,
@@ -1039,6 +1051,7 @@ export default class Store extends EventEmitter<{
    */
   getSuspendableDocumentOrderSuspenseTransition(
     uniqueSuspendersOnly: boolean,
+    rendererID: number,
   ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const focusedTransitionID = this._focusedTransition;
@@ -1051,6 +1064,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       environment: null,
       endTime: 0,
+      rendererID,
     });
 
     const transitionChildren = this.getSuspenseChildren(focusedTransitionID);
@@ -1062,6 +1076,7 @@ export default class Store extends EventEmitter<{
       // TODO: Get environment for Activity
       [],
       0, // Don't pass a minimum end time at the root. The root is always first so doesn't matter.
+      rendererID,
     );
 
     return target;
@@ -1073,6 +1088,7 @@ export default class Store extends EventEmitter<{
     uniqueSuspendersOnly: boolean,
     parentEnvironments: Array<string>,
     parentEndTime: number,
+    rendererID: number,
   ): void {
     for (let i = 0; i < children.length; i++) {
       const child = this.getSuspenseByID(children[i]);
@@ -1106,6 +1122,7 @@ export default class Store extends EventEmitter<{
           id: child.id,
           environment: environmentName,
           endTime: maxEndTime,
+          rendererID,
         });
       }
       this.pushTimelineStepsInDocumentOrder(
@@ -1114,6 +1131,7 @@ export default class Store extends EventEmitter<{
         uniqueSuspendersOnly,
         unionEnvironments,
         maxEndTime,
+        rendererID,
       );
     }
   }
@@ -1121,14 +1139,32 @@ export default class Store extends EventEmitter<{
   getEndTimeOrDocumentOrderSuspense(
     uniqueSuspendersOnly: boolean,
   ): $ReadOnlyArray<SuspenseTimelineStep> {
-    const timeline =
-      this._focusedTransition === 0
-        ? this.getSuspendableDocumentOrderSuspenseInitialPaint(
-            uniqueSuspendersOnly,
-          )
-        : this.getSuspendableDocumentOrderSuspenseTransition(
-            uniqueSuspendersOnly,
-          );
+    let timeline: SuspenseTimelineStep[];
+    if (this._focusedTransition === 0) {
+      timeline =
+        this.getSuspendableDocumentOrderSuspenseInitialPaint(
+          uniqueSuspendersOnly,
+        );
+    } else {
+      const focusedTransitionRootID = this.getRootIDForElement(
+        this._focusedTransition,
+      );
+      if (focusedTransitionRootID === null) {
+        throw new Error(
+          'Failed to find root ID for focused transition. This is a bug in React DevTools.',
+        );
+      }
+      const rendererID = this._rootIDToRendererID.get(focusedTransitionRootID);
+      if (rendererID === undefined) {
+        throw new Error(
+          'Failed to find renderer ID for focused transition root. This is a bug in React DevTools.',
+        );
+      }
+      timeline = this.getSuspendableDocumentOrderSuspenseTransition(
+        uniqueSuspendersOnly,
+        rendererID,
+      );
+    }
 
     if (timeline.length === 0) {
       return timeline;
@@ -1459,6 +1495,8 @@ export default class Store extends EventEmitter<{
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
               isStrictModeNonCompliant,
+              isActivityHidden: false,
+              isInsideHiddenActivity: false,
               key: null,
               nameProp: null,
               ownerID: 0,
@@ -1528,6 +1566,10 @@ export default class Store extends EventEmitter<{
               id,
               isCollapsed: this._collapseNodesByDefault,
               isStrictModeNonCompliant: parentElement.isStrictModeNonCompliant,
+              isActivityHidden: false,
+              isInsideHiddenActivity:
+                parentElement.isInsideHiddenActivity ||
+                parentElement.isActivityHidden,
               key,
               nameProp,
               ownerID,
@@ -1696,6 +1738,42 @@ export default class Store extends EventEmitter<{
             this._recursivelyUpdateSubtree(id, element => {
               element.isStrictModeNonCompliant = false;
             });
+          } else if (mode === ActivityHiddenMode) {
+            const element = this._idToElement.get(id);
+            if (element != null) {
+              element.isActivityHidden = true;
+              element.children.forEach(childID =>
+                this._recursivelyUpdateSubtree(childID, child => {
+                  child.isInsideHiddenActivity = true;
+                }),
+              );
+              // Collapse hidden Activity subtrees by default.
+              if (!element.isCollapsed) {
+                element.isCollapsed = true;
+                if (element.children.length > 0) {
+                  const weightDelta = 1 - element.weight;
+                  const parentElement = this._idToElement.get(element.parentID);
+                  this._adjustParentTreeWeight(parentElement, weightDelta);
+                }
+              }
+            }
+          } else if (mode === ActivityVisibleMode) {
+            const element = this._idToElement.get(id);
+            if (element != null) {
+              element.isActivityHidden = false;
+              element.children.forEach(childID =>
+                this._recursivelyUpdateSubtree(childID, child => {
+                  child.isInsideHiddenActivity = false;
+                }),
+              );
+              // Expand Activity subtree when it becomes visible.
+              if (element.isCollapsed && element.children.length > 0) {
+                element.isCollapsed = false;
+                const weightDelta = element.weight - 1;
+                const parentElement = this._idToElement.get(element.parentID);
+                this._adjustParentTreeWeight(parentElement, weightDelta);
+              }
+            }
           }
 
           if (__DEBUG__) {
@@ -2043,7 +2121,9 @@ export default class Store extends EventEmitter<{
               const previousHasUniqueSuspenders = suspense.hasUniqueSuspenders;
               debug(
                 'Suspender changes',
-                `Suspense node ${id} unique suspenders set to ${String(hasUniqueSuspenders)} (was ${String(previousHasUniqueSuspenders)})`,
+                `Suspense node ${id} unique suspenders set to ${String(
+                  hasUniqueSuspenders,
+                )} (was ${String(previousHasUniqueSuspenders)})`,
               );
             }
 

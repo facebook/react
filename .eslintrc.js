@@ -331,6 +331,7 @@ module.exports = {
         'packages/react-server-dom-turbopack/**/*.js',
         'packages/react-server-dom-parcel/**/*.js',
         'packages/react-server-dom-fb/**/*.js',
+        'packages/react-flight-server-fb/**/*.js',
         'packages/react-server-dom-unbundled/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
@@ -463,6 +464,7 @@ module.exports = {
       globals: {
         nativeFabricUIManager: 'readonly',
         RN$enableMicrotasksInReact: 'readonly',
+        RN$isNativeEventTargetEventDispatchingEnabled: 'readonly',
       },
     },
     {
@@ -566,6 +568,7 @@ module.exports = {
     CallSite: 'readonly',
     ConsoleTask: 'readonly', // TOOD: Figure out what the official name of this will be.
     ReturnType: 'readonly',
+    AggregateError: 'readonly',
     AnimationFrameID: 'readonly',
     WeakRef: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
@@ -579,6 +582,8 @@ module.exports = {
     CopyInspectedElementPath: 'readonly',
     DOMHighResTimeStamp: 'readonly',
     EventListener: 'readonly',
+    // Flow type
+    FormDataEntryValue: 'readonly',
     Iterable: 'readonly',
     AsyncIterable: 'readonly',
     $AsyncIterable: 'readonly',
@@ -626,6 +631,7 @@ module.exports = {
     FinalizationRegistry: 'readonly',
     Exclude: 'readonly',
     Omit: 'readonly',
+    Pick: 'readonly',
     Keyframe: 'readonly',
     PropertyIndexedKeyframes: 'readonly',
     KeyframeAnimationOptions: 'readonly',

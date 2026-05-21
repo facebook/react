@@ -228,8 +228,6 @@ const CompilerOutputModeSchema = z.enum([
   'ssr',
   // Build optimized for the client, with auto memoization
   'client',
-  // Build optimized for the client without auto memo
-  'client-no-memo',
   // Lint mode, the output is unused but validations should run
   'lint',
 ]);
@@ -254,10 +252,9 @@ export type LoggerEvent =
   | CompileErrorEvent
   | CompileDiagnosticEvent
   | CompileSkipEvent
+  | CompileUnexpectedThrowEvent
   | PipelineErrorEvent
-  | TimingEvent
-  | AutoDepsDecorationsEvent
-  | AutoDepsEligibleEvent;
+  | TimingEvent;
 
 export type CompileErrorEvent = {
   kind: 'CompileError';
@@ -290,21 +287,15 @@ export type PipelineErrorEvent = {
   fnLoc: t.SourceLocation | null;
   data: string;
 };
+export type CompileUnexpectedThrowEvent = {
+  kind: 'CompileUnexpectedThrow';
+  fnLoc: t.SourceLocation | null;
+  data: string;
+};
 export type TimingEvent = {
   kind: 'Timing';
   measurement: PerformanceMeasure;
 };
-export type AutoDepsDecorationsEvent = {
-  kind: 'AutoDepsDecorations';
-  fnLoc: t.SourceLocation;
-  decorations: Array<t.SourceLocation>;
-};
-export type AutoDepsEligibleEvent = {
-  kind: 'AutoDepsEligible';
-  fnLoc: t.SourceLocation;
-  depArrayLoc: t.SourceLocation;
-};
-
 export type Logger = {
   logEvent: (filename: string | null, event: LoggerEvent) => void;
   debugLogIRs?: (value: CompilerPipelineValue) => void;
