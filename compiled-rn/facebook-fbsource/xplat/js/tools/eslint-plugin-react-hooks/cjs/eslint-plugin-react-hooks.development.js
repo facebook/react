@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<ef643599852ada6eba2594787bf2054c>>
+ * @generated SignedSource<<6b42b0b85104dc7db189f9f31ef1dfd1>>
  */
 
 'use strict';
@@ -50964,6 +50964,10 @@ function applyCompiledFunctions(program, compiledFns, pass, programContext) {
         }
     }
     if (compiledFns.length > 0) {
+        const anyAppliedUsesMemo = compiledFns.some(result => result.compiledFn.memoSlotsUsed > 0);
+        if (!anyAppliedUsesMemo) {
+            programContext.removeMemoCacheImport();
+        }
         addImportsToProgram(program, programContext);
     }
 }
@@ -51394,6 +51398,16 @@ class ProgramContext {
             source: this.reactRuntimeModule,
             importSpecifierName: 'c',
         }, '_c');
+    }
+    removeMemoCacheImport() {
+        const moduleImports = this.imports.get(this.reactRuntimeModule);
+        if (moduleImports == null) {
+            return;
+        }
+        moduleImports.delete('c');
+        if (moduleImports.size === 0) {
+            this.imports.delete(this.reactRuntimeModule);
+        }
     }
     addImportSpecifier({ source: module, importSpecifierName: specifier }, nameHint) {
         var _a;
