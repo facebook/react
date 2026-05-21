@@ -145,6 +145,26 @@ Expect significant overlap with the SWC Group C bugs (cast wrappers,
 type annotations, UTF-16/WTF-8 handling) since both frontends share the
 post-conversion pipeline.
 
+## test-babel-ast.sh status
+
+Separate from the e2e variants above, `compiler/scripts/test-babel-ast.sh`
+runs three `react_compiler_ast` integration tests against the same fixture
+set. All three are green end-to-end:
+
+| Sub-test                  | Score        |
+| ------------------------- | ------------ |
+| `round_trip_all_fixtures` | 1779 / 1779  |
+| `scope_info_round_trip`   | 1780 / 1780  |
+| `scope_resolution_rename` | 1779 / 1779  |
+
+One fixture is excluded from the two round-trip tests pending the WTF-8
+work documented under [SWC Group C](#group-c-real-swc-frontend-bugs)
+above: `lone-surrogate-string-values.js`. Babel's `JSON.stringify` emits
+lone surrogate escapes like `"\uD83E"` which `serde_json` cannot
+materialize into Rust `String`. The skip keeps the rest of the suite
+green; the proper fix lives with the SWC Group C entry (same root
+cause, broader impact).
+
 ## How this stack got here
 
 - `compiler/scripts/test-e2e.sh --variant swc` baseline was 1742 / 1795
