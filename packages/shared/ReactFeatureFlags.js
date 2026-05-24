@@ -149,7 +149,6 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
  * mechanism to throw instead of only warning in cases where it would
  * otherwise downgrade to a warning.
  */
-export const enableInfiniteRenderLoopDetectionForceThrow: boolean = false;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;

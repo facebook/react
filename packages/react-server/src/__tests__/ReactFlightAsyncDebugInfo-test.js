@@ -314,7 +314,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "value": undefined,
+                "value": [
+                  undefined,
+                ],
               },
             },
             "env": "Server",
@@ -419,7 +421,9 @@ describe('ReactFlightAsyncDebugInfo', () => {
               ],
               "start": 0,
               "value": {
-                "value": undefined,
+                "value": [
+                  undefined,
+                ],
               },
             },
             "env": "Server",
@@ -3206,7 +3210,7 @@ describe('ReactFlightAsyncDebugInfo', () => {
             "awaited": {
               "end": 0,
               "env": "Server",
-              "name": "Object.readFile",
+              "name": "",
               "owner": {
                 "env": "Server",
                 "key": null,
@@ -3223,16 +3227,6 @@ describe('ReactFlightAsyncDebugInfo', () => {
                   ],
                 ],
               },
-              "stack": [
-                [
-                  "Component",
-                  "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                  3151,
-                  7,
-                  3149,
-                  5,
-                ],
-              ],
               "start": 0,
               "value": {
                 "status": "halted",
@@ -3259,8 +3253,8 @@ describe('ReactFlightAsyncDebugInfo', () => {
               [
                 "Component",
                 "/packages/react-server/src/__tests__/ReactFlightAsyncDebugInfo-test.js",
-                3153,
-                7,
+                3150,
+                20,
                 3149,
                 5,
               ],

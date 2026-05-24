@@ -20,7 +20,6 @@ export const {
   disableSchedulerTimeoutInWorkLoop,
   enableEffectEventMutationPhase,
   enableInfiniteRenderLoopDetection,
-  enableInfiniteRenderLoopDetectionForceThrow,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRetryLaneExpiration,

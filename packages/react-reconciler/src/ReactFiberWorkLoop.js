@@ -51,7 +51,6 @@ import {
   disableLegacyContext,
   alwaysThrottleRetries,
   enableInfiniteRenderLoopDetection,
-  enableInfiniteRenderLoopDetectionForceThrow,
   disableLegacyMode,
   enableComponentPerformanceTrack,
   enableYieldingBeforePassive,
@@ -5215,21 +5214,10 @@ export function throwIfInfiniteUpdateLoopDetected(
           isFromInfiniteRenderLoopDetectionInstrumentation ||
           (executionContext & RenderContext) !== NoContext
         ) {
-          // This loop was identified only because of the instrumentation gated with enableInfiniteRenderLoopDetection,
-          // warn instead of throwing, unless enableInfiniteRenderLoopDetectionForceThrow.
-          if (enableInfiniteRenderLoopDetectionForceThrow) {
-            throwForcedInfiniteRenderLoopError(
-              workInProgressRoot,
-              workInProgressRootRenderLanes,
-            );
-          } else if (__DEV__) {
-            console.error(
-              'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
-                'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
-                'causing infinite render loop. React limits the number of nested updates to ' +
-                'prevent infinite loops.',
-            );
-          }
+          throwForcedInfiniteRenderLoopError(
+            workInProgressRoot,
+            workInProgressRootRenderLanes,
+          );
         } else {
           throw new Error(
             'Maximum update depth exceeded. This can happen when a component ' +
@@ -5239,19 +5227,10 @@ export function throwIfInfiniteUpdateLoopDetected(
           );
         }
       } else if (updateKind === NESTED_UPDATE_PHASE_SPAWN) {
-        if (enableInfiniteRenderLoopDetectionForceThrow) {
-          throwForcedInfiniteRenderLoopError(
-            workInProgressRoot,
-            workInProgressRootRenderLanes,
-          );
-        } else if (__DEV__) {
-          console.error(
-            'Maximum update depth exceeded. This could be an infinite loop. This can happen when a component ' +
-              'repeatedly calls setState during render phase or inside useLayoutEffect, ' +
-              'causing infinite render loop. React limits the number of nested updates to ' +
-              'prevent infinite loops.',
-          );
-        }
+        throwForcedInfiniteRenderLoopError(
+          workInProgressRoot,
+          workInProgressRootRenderLanes,
+        );
       }
     } else {
       throw new Error(
@@ -5263,18 +5242,16 @@ export function throwIfInfiniteUpdateLoopDetected(
     }
   }
 
-  if (__DEV__) {
-    if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
-      nestedPassiveUpdateCount = 0;
-      rootWithPassiveNestedUpdates = null;
+  if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
+    nestedPassiveUpdateCount = 0;
+    rootWithPassiveNestedUpdates = null;
 
-      console.error(
-        'Maximum update depth exceeded. This can happen when a component ' +
-          "calls setState inside useEffect, but useEffect either doesn't " +
-          'have a dependency array, or one of the dependencies changes on ' +
-          'every render.',
-      );
-    }
+    throw new Error(
+      'Maximum update depth exceeded. This can happen when a component ' +
+        "calls setState inside useEffect, but useEffect either doesn't " +
+        'have a dependency array, or one of the dependencies changes on ' +
+        'every render.',
+    );
   }
 }
 
