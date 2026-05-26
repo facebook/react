@@ -1909,4 +1909,53 @@ describe('ReactFlightDOMNode', () => {
       globalThis.eval = previousEval;
     }
   });
+
+  it('isValidElement returns true for elements deserialized with a delayed debugChannel', async () => {
+    function ServerApp() {
+      return ReactServer.createElement('div', null, 'hello');
+    }
+
+    const {delayedStream, resolveDelayedStream} = createDelayedStream();
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(ServerApp, null),
+        webpackMap,
+        {
+          debugChannel: new Stream.Writable({
+            write(chunk, encoding, callback) {
+              delayedStream.write(chunk, encoding);
+              callback();
+            },
+            final() {
+              delayedStream.end();
+            },
+          }),
+        },
+      ),
+    );
+
+    const readable = new Stream.PassThrough(streamOptions);
+    rscStream.pipe(readable);
+
+    const serverConsumerManifest = {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    };
+
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      serverConsumerManifest,
+      {debugChannel: delayedStream},
+    );
+
+    setTimeout(resolveDelayedStream);
+
+    let deserialized;
+    await serverAct(async () => {
+      deserialized = await response;
+    });
+
+    expect(React.isValidElement(deserialized)).toBe(true);
+  });
 });
