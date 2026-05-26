@@ -6,6 +6,13 @@ on:
   pull_request:
     paths-ignore:
       - compiler/**
+  # Manual re-runs are allowed. The workflow always runs on the SHA it was
+  # dispatched from (github.sha); no user-supplied ref is accepted, because
+  # downstream workflows (e.g. runtime_release_from_ci) consume this
+  # workflow's artifacts under a protected environment.
+  workflow_dispatch:
+
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
