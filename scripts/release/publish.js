@@ -16,8 +16,7 @@ const run = async () => {
   try {
     const params = parseParams();
 
-    // Publishing experimental versions as stable is forbidden
-    const isExperimental = false;
+    const isExperimental = params.tag === 'experimental';
 
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages(isExperimental);
