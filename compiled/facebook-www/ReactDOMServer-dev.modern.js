@@ -4056,10 +4056,13 @@ __DEV__ &&
             lastThenable.status = "fulfilled";
           };
         case "rejected":
-          var previousThenableReason = lastThenable.reason;
+          var previousThenableReason = lastThenable.reason,
+            _previousThenableThen = lastThenable.then.bind(lastThenable);
           delete lastThenable.reason;
           delete lastThenable.status;
+          lastThenable.then = noop;
           return function () {
+            lastThenable.then = _previousThenableThen;
             lastThenable.reason = previousThenableReason;
             lastThenable.status = "rejected";
           };
@@ -10413,5 +10416,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-008a6d4a-20260520";
+    exports.version = "19.3.0-www-modern-37fa36ce-20260526";
   })();

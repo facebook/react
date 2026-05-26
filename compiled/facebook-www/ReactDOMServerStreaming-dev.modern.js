@@ -3841,10 +3841,13 @@ __DEV__ &&
             lastThenable.status = "fulfilled";
           };
         case "rejected":
-          var previousThenableReason = lastThenable.reason;
+          var previousThenableReason = lastThenable.reason,
+            _previousThenableThen = lastThenable.then.bind(lastThenable);
           delete lastThenable.reason;
           delete lastThenable.status;
+          lastThenable.then = noop;
           return function () {
+            lastThenable.then = _previousThenableThen;
             lastThenable.reason = previousThenableReason;
             lastThenable.status = "rejected";
           };
