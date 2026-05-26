@@ -257,7 +257,7 @@ export function ensureSuspendableThenableStateDEV(
     const lastThenable = thenableState[thenableState.length - 1];
     // Reset the last thenable back to pending.
     switch (lastThenable.status) {
-      case 'fulfilled':
+      case 'fulfilled': {
         const previousThenableValue = lastThenable.value;
         // $FlowIgnore[method-unbinding] We rebind .then immediately.
         const previousThenableThen = lastThenable.then.bind(lastThenable);
@@ -274,14 +274,25 @@ export function ensureSuspendableThenableStateDEV(
           lastThenable.value = previousThenableValue;
           lastThenable.status = 'fulfilled';
         };
-      case 'rejected':
+      }
+      case 'rejected': {
         const previousThenableReason = lastThenable.reason;
+        // $FlowIgnore[method-unbinding] We rebind .then immediately.
+        const previousThenableThen = lastThenable.then.bind(lastThenable);
         delete lastThenable.reason;
         delete (lastThenable: any).status;
+        // We'll call .then again if we resuspend. Since we potentially corrupted
+        // the internal state of unknown classes, we need to diffuse the potential
+        // crash by replacing the .then method with a noop.
+        // $FlowFixMe[cannot-write] Custom userspace Thenables may not be but native Promises are.
+        lastThenable.then = noop;
         return () => {
+          // $FlowFixMe[cannot-write] Custom userspace Thenables may not be but native Promises are.
+          lastThenable.then = previousThenableThen;
           lastThenable.reason = previousThenableReason;
           lastThenable.status = 'rejected';
         };
+      }
     }
     return noop;
   } else {

@@ -1583,6 +1583,189 @@ describe('ReactFlightDOMNode', () => {
       }
     });
 
+    it('should use late-arriving I/O debug info from rejected server promises to enhance component and owner stacks when aborting a prerender', async () => {
+      let rejectHangingPromise;
+
+      async function makeHangingPromise() {
+        return new Promise((resolve, reject) => {
+          rejectHangingPromise = reject;
+        });
+      }
+
+      async function getRoot() {
+        return {promise: makeHangingPromise()};
+      }
+
+      let staticEndTime = -1;
+      const staticChunks = [];
+      const dynamicChunks = [];
+
+      const serverAbortController = new AbortController();
+      await new Promise(resolve => {
+        setTimeout(async () => {
+          const stream = ReactServerDOMServer.renderToPipeableStream(
+            getRoot(),
+            webpackMap,
+            {
+              filterStackFrame,
+              onError(err) {
+                if (serverAbortController.signal.aborted) {
+                  return;
+                }
+                console.error(err);
+              },
+            },
+          );
+          serverAbortController.signal.addEventListener(
+            'abort',
+            () => {
+              stream.abort(serverAbortController.signal.reason);
+
+              // Only reject the promise after the render is aborted
+              // so that it's no longer observable
+              rejectHangingPromise(
+                new Error(
+                  'Hanging promise was rejected after the prerender finished',
+                ),
+              );
+            },
+            {once: true},
+          );
+
+          const passThrough = new Stream.PassThrough(streamOptions);
+          stream.pipe(passThrough);
+
+          passThrough.on('data', chunk => {
+            if (staticEndTime < 0) {
+              staticChunks.push(chunk);
+            } else {
+              dynamicChunks.push(chunk);
+            }
+          });
+
+          passThrough.on('end', resolve);
+        });
+        setTimeout(() => {
+          staticEndTime = performance.now() + performance.timeOrigin;
+          serverAbortController.abort();
+        });
+      });
+
+      const clientAbortController = new AbortController();
+
+      const serverStream = createReadableWithLateRelease(
+        staticChunks,
+        dynamicChunks,
+        clientAbortController.signal,
+      );
+
+      const response = await ReactServerDOMClient.createFromNodeStream(
+        serverStream,
+        {
+          serverConsumerManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+        {
+          // Debug info arriving after this end time will be ignored, e.g. the
+          // I/O info for the second dynamic data.
+          endTime: staticEndTime,
+        },
+      );
+
+      const resolvedPromise = Promise.resolve('hello');
+      function ClientDynamic() {
+        use(resolvedPromise);
+        use(response.promise); // unresolved ReactPromise (becomes rejected when we abort)
+      }
+
+      function ClientRoot() {
+        return React.createElement(
+          'html',
+          null,
+          React.createElement(
+            'body',
+            null,
+            React.createElement(
+              React.Suspense,
+              {fallback: 'Loading...'},
+              React.createElement(ClientDynamic),
+            ),
+          ),
+        );
+      }
+
+      let ownerStack;
+      let componentStack;
+
+      const {prelude} = await new Promise(resolve => {
+        let result;
+
+        setTimeout(() => {
+          result = ReactDOMFizzStatic.prerenderToNodeStream(
+            React.createElement(ClientRoot),
+            {
+              signal: clientAbortController.signal,
+              onError(error, errorInfo) {
+                componentStack = errorInfo.componentStack;
+                ownerStack = React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null;
+              },
+            },
+          );
+        });
+
+        setTimeout(() => {
+          clientAbortController.abort();
+          resolve(result);
+        });
+      });
+
+      const prerenderHTML = await readResult(prelude);
+
+      expect(prerenderHTML).toContain('Loading...');
+
+      if (__DEV__) {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in ClientDynamic (ReactFlightDOMNode-test.js:1679:9)\n' +
+            '    in Suspense\n' +
+            '    in body\n' +
+            '    in html\n' +
+            '    in ClientRoot',
+        );
+      } else {
+        expect(
+          normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
+        ).toBe(
+          '\n' +
+            '    in ClientDynamic (ReactFlightDOMNode-test.js:1679:9)\n' +
+            '    in Suspense\n' +
+            '    in body\n' +
+            '    in html\n' +
+            '    in ClientRoot',
+        );
+      }
+
+      if (__DEV__) {
+        expect(ignoreListStack(ownerStack)).toBe(
+          '\n' +
+            gate(flags =>
+              flags.enableAsyncDebugInfo
+                ? '    at ClientDynamic (./ReactFlightDOMNode-test.js:1680:9)\n'
+                : '',
+            ) +
+            '    at ClientRoot (./ReactFlightDOMNode-test.js:1693:21)',
+        );
+      } else {
+        expect(ownerStack).toBeNull();
+      }
+    });
+
     function createReadableWithLateRelease(initialChunks, lateChunks, signal) {
       // Create a new Readable and push all initial chunks immediately.
       const readable = new Stream.Readable({...streamOptions, read() {}});
