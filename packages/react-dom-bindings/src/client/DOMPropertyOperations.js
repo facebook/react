@@ -226,10 +226,13 @@ export function setValueForPropertyOnCustomComponent(
   }
 
   if (value === true) {
-    node.setAttribute(name, '');
-    return;
+    const prefix = name.toLowerCase().slice(0, 5);
+    if (prefix !== 'data-' && prefix !== 'aria-') {
+      // for non aria and data attributes, set the attribute to an empty string (just the value on the DOM)
+      node.setAttribute(name, '');
+      return;
+    }
   }
 
-  // From here, it's the same as any attribute
   setValueForAttribute(node, name, value);
 }
