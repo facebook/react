@@ -13,7 +13,7 @@ on:
   # Manual re-runs are allowed. The workflow always runs on the SHA it was
   # dispatched from (github.sha); no user-supplied ref is accepted, because
   # downstream workflows (e.g. runtime_release_from_ci) consume this
-  # workflow's artifacts under a protected environment with NPM_TOKEN.
+  # workflow's artifacts under a protected environment.
   workflow_dispatch:
 
 permissions: {}
