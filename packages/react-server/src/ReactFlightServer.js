@@ -587,7 +587,9 @@ export type Request = {
   // sentinel followed by their [headerChunk, contentChunk] pair, so that
   // flushCompletedChunks can write the pair atomically and never strand the
   // content chunk on a backpressure break.
-  completedRegularChunks: Array<Chunk | BinaryChunk | symbol>,
+  completedRegularChunks: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -607,7 +609,9 @@ export type Request = {
   pendingDebugChunks: number,
   // See completedRegularChunks for why some entries are preceded by the
   // NEXT_TWO_CHUNKS_ARE_ATOMIC sentinel.
-  completedDebugChunks: Array<Chunk | BinaryChunk | symbol>,
+  completedDebugChunks: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >,
   debugDestination: null | Destination,
   environmentName: () => string,
   filterStackFrame: (
@@ -708,7 +712,9 @@ function RequestInstance(
   this.pingedTasks = pingedTasks;
   this.completedImportChunks = ([]: Array<Chunk>);
   this.completedHintChunks = ([]: Array<Chunk>);
-  this.completedRegularChunks = ([]: Array<Chunk | BinaryChunk | symbol>);
+  this.completedRegularChunks = ([]: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >);
   this.completedErrorChunks = ([]: Array<Chunk>);
   this.writtenSymbols = new Map();
   this.writtenClientReferences = new Map();
@@ -724,7 +730,9 @@ function RequestInstance(
 
   if (__DEV__) {
     this.pendingDebugChunks = 0;
-    this.completedDebugChunks = ([]: Array<Chunk | BinaryChunk | symbol>);
+    this.completedDebugChunks = ([]: Array<
+      Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+    >);
     this.debugDestination = null;
     this.environmentName =
       environmentName === undefined
