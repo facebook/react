@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e5a671954cd4fad68f9ee2839e4aa06a>>
+ * @generated SignedSource<<6cf36134136ff47c945ff1c57b17b8b6>>
  */
 
 "use strict";
@@ -1876,11 +1876,13 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "fulfilled":
       return thenable.value;
     case "rejected":
-      throw (
-        ((thenableState = thenable.reason),
-        checkIfUseWrappedInAsyncCatch(thenableState),
-        thenableState)
-      );
+      thenableState = thenable.reason;
+      checkIfUseWrappedInAsyncCatch(thenableState);
+      if (void 0 === thenableState && !("reason" in thenable))
+        throw Error(
+          "A rejected Promise was passed to React without a `reason` property. React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`."
+        );
+      throw thenableState;
     default:
       if ("string" === typeof thenable.status) thenable.then(noop, noop);
       else {
@@ -11624,10 +11626,10 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1330 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-008a6d4a-20260520",
+  version: "19.3.0-native-fb-c0cd4d5d-20260527",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-008a6d4a-20260520",
+  reconcilerVersion: "19.3.0-native-fb-c0cd4d5d-20260527",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$156 = 0;
@@ -11778,4 +11780,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(0, !0));
   }
 };
-exports.version = "19.3.0-native-fb-008a6d4a-20260520";
+exports.version = "19.3.0-native-fb-c0cd4d5d-20260527";

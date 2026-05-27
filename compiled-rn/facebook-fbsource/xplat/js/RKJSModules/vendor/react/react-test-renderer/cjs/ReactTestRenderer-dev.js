@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b7a284c517b4853a41098fe6f39e8704>>
+ * @generated SignedSource<<f3d1ac663a8102033553324258dc7422>>
  */
 
 "use strict";
@@ -2706,11 +2706,13 @@ __DEV__ &&
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          throw (
-            ((thenableState = thenable.reason),
-            checkIfUseWrappedInAsyncCatch(thenableState),
-            thenableState)
-          );
+          thenableState = thenable.reason;
+          checkIfUseWrappedInAsyncCatch(thenableState);
+          if (void 0 === thenableState && !("reason" in thenable))
+            throw Error(
+              "A rejected Promise was passed to React without a `reason` property. React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`."
+            );
+          throw thenableState;
         default:
           if ("string" === typeof thenable.status) thenable.then(noop, noop);
           else {
@@ -17036,10 +17038,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-008a6d4a-20260520",
+        version: "19.3.0-native-fb-c0cd4d5d-20260527",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-008a6d4a-20260520"
+        reconcilerVersion: "19.3.0-native-fb-c0cd4d5d-20260527"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17185,5 +17187,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.3.0-native-fb-008a6d4a-20260520";
+    exports.version = "19.3.0-native-fb-c0cd4d5d-20260527";
   })();

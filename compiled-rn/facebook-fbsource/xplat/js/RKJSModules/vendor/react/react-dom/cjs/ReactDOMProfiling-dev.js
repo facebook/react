@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<143799d1cacf0f7c19068566a8faefc7>>
+ * @generated SignedSource<<9706fdbba5ab001045cf55efe3f03fa0>>
  */
 
 /*
@@ -6403,11 +6403,13 @@ __DEV__ &&
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          throw (
-            ((thenableState = thenable.reason),
-            checkIfUseWrappedInAsyncCatch(thenableState),
-            thenableState)
-          );
+          thenableState = thenable.reason;
+          checkIfUseWrappedInAsyncCatch(thenableState);
+          if (void 0 === thenableState && !("reason" in thenable))
+            throw Error(
+              "A rejected Promise was passed to React without a `reason` property. React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`."
+            );
+          throw thenableState;
         default:
           if ("string" === typeof thenable.status)
             thenable.then(noop$1, noop$1);
@@ -32012,11 +32014,11 @@ __DEV__ &&
     };
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-native-fb-008a6d4a-20260520" !== isomorphicReactPackageVersion)
+      if ("19.3.0-native-fb-c0cd4d5d-20260527" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-native-fb-008a6d4a-20260520\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-native-fb-c0cd4d5d-20260527\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -32053,10 +32055,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-native-fb-008a6d4a-20260520",
+          version: "19.3.0-native-fb-c0cd4d5d-20260527",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-native-fb-008a6d4a-20260520"
+          reconcilerVersion: "19.3.0-native-fb-c0cd4d5d-20260527"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -32522,7 +32524,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-native-fb-008a6d4a-20260520";
+    exports.version = "19.3.0-native-fb-c0cd4d5d-20260527";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

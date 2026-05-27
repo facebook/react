@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2ddd8f31317557f157aa0725d7c903a3>>
+ * @generated SignedSource<<3ee4f7dde893e605a6559857ce7c3b65>>
  */
 
 "use strict";
@@ -4267,11 +4267,13 @@ __DEV__ &&
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          throw (
-            ((thenableState = thenable.reason),
-            checkIfUseWrappedInAsyncCatch(thenableState),
-            thenableState)
-          );
+          thenableState = thenable.reason;
+          checkIfUseWrappedInAsyncCatch(thenableState);
+          if (void 0 === thenableState && !("reason" in thenable))
+            throw Error(
+              "A rejected Promise was passed to React without a `reason` property. React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`."
+            );
+          throw thenableState;
         default:
           if ("string" === typeof thenable.status) thenable.then(noop, noop);
           else {
@@ -21175,10 +21177,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-008a6d4a-20260520",
+        version: "19.3.0-native-fb-c0cd4d5d-20260527",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-008a6d4a-20260520"
+        reconcilerVersion: "19.3.0-native-fb-c0cd4d5d-20260527"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
