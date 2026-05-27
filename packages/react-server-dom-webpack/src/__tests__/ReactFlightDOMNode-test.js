@@ -2092,4 +2092,157 @@ describe('ReactFlightDOMNode', () => {
       globalThis.eval = previousEval;
     }
   });
+
+  // Shared scenario for the two regression tests below. Both guard against
+  // the same destination-backpressure bug — emitTextChunk and
+  // emitTypedArrayChunk each push a [headerChunk, contentChunk] pair into
+  // completedRegularChunks. Before the fix, a flush that broke between the
+  // two writes left the content chunk stranded at the head of the queue,
+  // and the next flush emitted any newly-arrived Import rows ahead of it —
+  // splicing Import bytes into the position the Flight Client expects to
+  // read as the row's content.
+  //
+  // The scenario embeds `payload` in the model under the key `payload` and
+  // returns the deserialized model. Each test asserts that result.payload
+  // round-trips identically to what the Flight Server emitted.
+  async function runScenarioWithBackpressureBetweenHeaderAndContent(payload) {
+    function Client1() {
+      return <span>client1</span>;
+    }
+    // Client1's Import row must exceed VIEW_SIZE (4096) so writeStringChunk
+    // takes its BIG path and calls destination.write directly. That write
+    // returning false is what triggers the backpressure we want to test.
+    const Client1Reference = clientExports(
+      Client1,
+      1,
+      '/' + 'a'.repeat(5000),
+      Promise.resolve(),
+    );
+
+    function Client2() {
+      return <span>client2</span>;
+    }
+    const Client2Reference = clientExports(
+      Client2,
+      2,
+      '/client2.js',
+      Promise.resolve(),
+    );
+
+    let resolveAsync;
+    const asyncPromise = new Promise(resolve => {
+      resolveAsync = resolve;
+    });
+
+    async function AsyncWrapper() {
+      await asyncPromise;
+      return <Client2Reference />;
+    }
+
+    const model = {
+      client: <Client1Reference />,
+      payload,
+      async: <AsyncWrapper />,
+    };
+
+    const heldCallbacks = [];
+    const collectedChunks = [];
+
+    // A destination that returns false from every write (highWaterMark: 1 in
+    // byte mode) and never completes any of them until the test releases the
+    // stored callback. This gives us deterministic control over when each write
+    // finishes and when 'drain' fires.
+    const destination = new Stream.Writable({
+      highWaterMark: 1,
+      write(chunk, encoding, callback) {
+        collectedChunks.push(
+          Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding),
+        );
+        heldCallbacks.push(callback);
+      },
+    });
+
+    const finished = new Promise((resolve, reject) => {
+      destination.on('finish', resolve);
+      destination.on('error', reject);
+    });
+
+    // First flush: Client1's huge Import row hits backpressure, so the flush
+    // loop reaches the payload row's [headerChunk, contentChunk] pair while
+    // destinationHasCapacity is already false. Before the fix, this would
+    // have encoded just the header into currentView, broken the loop, and
+    // let completeWriting flush the header as its own write — stranding
+    // the content chunk at the front of completedRegularChunks.
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(model, webpackMap),
+    );
+    await serverAct(() => {
+      pipe(destination);
+    });
+
+    // While the destination is still paused, push Client2's Import row into
+    // completedImportChunks. No flush runs (request.destination is null after
+    // the first flush's backpressure break).
+    await serverAct(() => {
+      resolveAsync();
+    });
+
+    // Release callbacks one at a time. The drain that empties the writable
+    // buffer triggers flushCompletedChunks; before the fix, this is where
+    // Client2's newly-queued Import row would have been emitted ahead of
+    // the still-orphaned payload content chunk.
+    while (heldCallbacks.length > 0) {
+      await serverAct(() => {
+        const cb = heldCallbacks.shift();
+        cb();
+      });
+    }
+
+    await finished;
+
+    const readable = new Stream.Readable({read() {}});
+    for (let i = 0; i < collectedChunks.length; i++) {
+      readable.push(collectedChunks[i]);
+    }
+    readable.push(null);
+
+    const response = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: null,
+      moduleLoading: null,
+    });
+    return await response;
+  }
+
+  it("keeps a Text row's header and content chunks adjacent when a flush hits backpressure between them", async () => {
+    // length >= 1024 makes the Flight Server outline this as a Text row via
+    // serializeLargeTextString, which is where emitTextChunk pushes its
+    // [headerChunk, textChunk] pair.
+    const largeText = 'x'.repeat(2048);
+
+    const result =
+      await runScenarioWithBackpressureBetweenHeaderAndContent(largeText);
+
+    // Before the fix, the Flight Client would have framed Client2's Import
+    // row bytes as text-row content, making result.payload `<id>:I[...]...`
+    // garbage rather than the x's the Flight Server emitted.
+    expect(result.payload).toBe(largeText);
+  });
+
+  it("keeps a TypedArray row's header and content chunks adjacent when a flush hits backpressure between them", async () => {
+    // emitTypedArrayChunk pushes the same [headerChunk, contentChunk] pair as
+    // emitTextChunk. Before the fix, a flush break after the header would have
+    // stranded the content chunk in exactly the same way.
+    const binaryData = new Uint8Array(1024);
+    for (let i = 0; i < binaryData.length; i++) {
+      binaryData[i] = i % 256;
+    }
+
+    const result =
+      await runScenarioWithBackpressureBetweenHeaderAndContent(binaryData);
+
+    // Before the fix, the typed array's bytes would have been replaced by
+    // Client2's Import row bytes followed by whatever happened to land in
+    // the next 1024-byte window.
+    expect(result.payload).toEqual(binaryData);
+  });
 });

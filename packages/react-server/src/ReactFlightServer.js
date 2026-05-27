@@ -23,6 +23,7 @@ import {
   scheduleMicrotask,
   flushBuffered,
   beginWriting,
+  writeChunk,
   writeChunkAndReturn,
   stringToChunk,
   typedArrayToBinaryChunk,
@@ -560,6 +561,12 @@ const CLOSED = 14;
 const RENDER = 20;
 const PRERENDER = 21;
 
+// Marker pushed before a [headerChunk, contentChunk] pair in
+// completedRegularChunks / completedDebugChunks to signal that the next two
+// entries must be written atomically — see emitTextChunk and
+// emitTypedArrayChunk for why, and flushCompletedChunks for how it's read.
+const NEXT_TWO_CHUNKS_ARE_ATOMIC: symbol = Symbol();
+
 export type Request = {
   status: 10 | 11 | 12 | 13 | 14,
   type: 20 | 21,
@@ -576,7 +583,13 @@ export type Request = {
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
   completedHintChunks: Array<Chunk>,
-  completedRegularChunks: Array<Chunk | BinaryChunk>,
+  // Text and TypedArray rows are pushed as a NEXT_TWO_CHUNKS_ARE_ATOMIC
+  // sentinel followed by their [headerChunk, contentChunk] pair, so that
+  // flushCompletedChunks can write the pair atomically and never strand the
+  // content chunk on a backpressure break.
+  completedRegularChunks: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -594,7 +607,11 @@ export type Request = {
   abortTime: number,
   // DEV-only
   pendingDebugChunks: number,
-  completedDebugChunks: Array<Chunk | BinaryChunk>,
+  // See completedRegularChunks for why some entries are preceded by the
+  // NEXT_TWO_CHUNKS_ARE_ATOMIC sentinel.
+  completedDebugChunks: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >,
   debugDestination: null | Destination,
   environmentName: () => string,
   filterStackFrame: (
@@ -695,7 +712,9 @@ function RequestInstance(
   this.pingedTasks = pingedTasks;
   this.completedImportChunks = ([]: Array<Chunk>);
   this.completedHintChunks = ([]: Array<Chunk>);
-  this.completedRegularChunks = ([]: Array<Chunk | BinaryChunk>);
+  this.completedRegularChunks = ([]: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >);
   this.completedErrorChunks = ([]: Array<Chunk>);
   this.writtenSymbols = new Map();
   this.writtenClientReferences = new Map();
@@ -711,7 +730,9 @@ function RequestInstance(
 
   if (__DEV__) {
     this.pendingDebugChunks = 0;
-    this.completedDebugChunks = ([]: Array<Chunk>);
+    this.completedDebugChunks = ([]: Array<
+      Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+    >);
     this.debugDestination = null;
     this.environmentName =
       environmentName === undefined
@@ -4691,10 +4712,25 @@ function emitTypedArrayChunk(
   const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
   const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
+  // Push a NEXT_TWO_CHUNKS_ARE_ATOMIC sentinel before the header so that
+  // flushCompletedChunks can write the header and binary chunks atomically.
+  // Otherwise, if the destination's backpressure flips between the two writes,
+  // the content chunk would be stranded at the front of the queue and the next
+  // drain would emit Import or Hint chunks between the header and the content —
+  // and the Flight Client would frame those intervening bytes as this row's
+  // content.
   if (__DEV__ && debug) {
-    request.completedDebugChunks.push(headerChunk, binaryChunk);
+    request.completedDebugChunks.push(
+      NEXT_TWO_CHUNKS_ARE_ATOMIC,
+      headerChunk,
+      binaryChunk,
+    );
   } else {
-    request.completedRegularChunks.push(headerChunk, binaryChunk);
+    request.completedRegularChunks.push(
+      NEXT_TWO_CHUNKS_ARE_ATOMIC,
+      headerChunk,
+      binaryChunk,
+    );
   }
 }
 
@@ -4719,10 +4755,19 @@ function emitTextChunk(
   const binaryLength = byteLengthOfChunk(textChunk);
   const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
   const headerChunk = stringToChunk(row);
+  // See emitTypedArrayChunk for why the pair is preceded by a sentinel.
   if (__DEV__ && debug) {
-    request.completedDebugChunks.push(headerChunk, textChunk);
+    request.completedDebugChunks.push(
+      NEXT_TWO_CHUNKS_ARE_ATOMIC,
+      headerChunk,
+      textChunk,
+    );
   } else {
-    request.completedRegularChunks.push(headerChunk, textChunk);
+    request.completedRegularChunks.push(
+      NEXT_TWO_CHUNKS_ARE_ATOMIC,
+      headerChunk,
+      textChunk,
+    );
   }
 }
 
@@ -6014,9 +6059,27 @@ function flushCompletedChunks(request: Request): void {
       const debugChunks = request.completedDebugChunks;
       let i = 0;
       for (; i < debugChunks.length; i++) {
-        request.pendingDebugChunks--;
-        const chunk = debugChunks[i];
-        writeChunkAndReturn(debugDestination, chunk);
+        const item = debugChunks[i];
+        if (item === NEXT_TWO_CHUNKS_ARE_ATOMIC) {
+          if (i + 2 >= debugChunks.length) {
+            throw new Error(
+              'A chunk pair is incomplete. This is a bug in React.',
+            );
+          }
+          request.pendingDebugChunks -= 2;
+          writeChunk(
+            debugDestination,
+            ((debugChunks[i + 1]: any): Chunk | BinaryChunk),
+          );
+          writeChunk(
+            debugDestination,
+            ((debugChunks[i + 2]: any): Chunk | BinaryChunk),
+          );
+          i += 2;
+        } else {
+          request.pendingDebugChunks--;
+          writeChunk(debugDestination, ((item: any): Chunk | BinaryChunk));
+        }
       }
       debugChunks.splice(0, i);
     } finally {
@@ -6064,9 +6127,31 @@ function flushCompletedChunks(request: Request): void {
         const debugChunks = request.completedDebugChunks;
         i = 0;
         for (; i < debugChunks.length; i++) {
-          request.pendingDebugChunks--;
-          const chunk = debugChunks[i];
-          const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+          const item = debugChunks[i];
+          let keepWriting: boolean;
+          if (item === NEXT_TWO_CHUNKS_ARE_ATOMIC) {
+            if (i + 2 >= debugChunks.length) {
+              throw new Error(
+                'A chunk pair is incomplete. This is a bug in React.',
+              );
+            }
+            request.pendingDebugChunks -= 2;
+            writeChunk(
+              destination,
+              ((debugChunks[i + 1]: any): Chunk | BinaryChunk),
+            );
+            keepWriting = writeChunkAndReturn(
+              destination,
+              ((debugChunks[i + 2]: any): Chunk | BinaryChunk),
+            );
+            i += 2;
+          } else {
+            request.pendingDebugChunks--;
+            keepWriting = writeChunkAndReturn(
+              destination,
+              ((item: any): Chunk | BinaryChunk),
+            );
+          }
           if (!keepWriting) {
             request.destination = null;
             i++;
@@ -6080,9 +6165,31 @@ function flushCompletedChunks(request: Request): void {
       const regularChunks = request.completedRegularChunks;
       i = 0;
       for (; i < regularChunks.length; i++) {
-        request.pendingChunks--;
-        const chunk = regularChunks[i];
-        const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+        const item = regularChunks[i];
+        let keepWriting: boolean;
+        if (item === NEXT_TWO_CHUNKS_ARE_ATOMIC) {
+          if (i + 2 >= regularChunks.length) {
+            throw new Error(
+              'A chunk pair is incomplete. This is a bug in React.',
+            );
+          }
+          request.pendingChunks -= 2;
+          writeChunk(
+            destination,
+            ((regularChunks[i + 1]: any): Chunk | BinaryChunk),
+          );
+          keepWriting = writeChunkAndReturn(
+            destination,
+            ((regularChunks[i + 2]: any): Chunk | BinaryChunk),
+          );
+          i += 2;
+        } else {
+          request.pendingChunks--;
+          keepWriting = writeChunkAndReturn(
+            destination,
+            ((item: any): Chunk | BinaryChunk),
+          );
+        }
         if (!keepWriting) {
           request.destination = null;
           i++;
