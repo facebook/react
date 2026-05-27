@@ -228,8 +228,8 @@ module.exports = [
   {
     shortName: 'dom-node-unbundled',
     entryPoints: [
-      'react-server-dom-unbundled/client',
-      'react-server-dom-unbundled/server.node',
+      'react-server-dom-unbundled/src/client/react-flight-dom-client.node',
+      'react-server-dom-unbundled/src/server/react-flight-dom-server.node',
     ],
     paths: [
       'react-dom',
