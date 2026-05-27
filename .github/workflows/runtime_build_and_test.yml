@@ -2,11 +2,7 @@ name: (Runtime) Build and Test
 
 on:
   push:
-    branches: [main]
-    tags:
-      # To get CI for backport releases.
-      # This will duplicate CI for releases from main which is acceptable
-      - "v*"
+    branches: [main, releases/**]
   pull_request:
     paths-ignore:
       - compiler/**
