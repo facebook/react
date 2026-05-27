@@ -6059,12 +6059,18 @@ function flushCompletedChunks(request: Request): void {
             );
           }
           request.pendingDebugChunks -= 2;
-          writeChunk(debugDestination, debugChunks[i + 1]);
-          writeChunk(debugDestination, debugChunks[i + 2]);
+          writeChunk(
+            debugDestination,
+            ((debugChunks[i + 1]: any): Chunk | BinaryChunk),
+          );
+          writeChunk(
+            debugDestination,
+            ((debugChunks[i + 2]: any): Chunk | BinaryChunk),
+          );
           i += 2;
         } else {
           request.pendingDebugChunks--;
-          writeChunk(debugDestination, item);
+          writeChunk(debugDestination, ((item: any): Chunk | BinaryChunk));
         }
       }
       debugChunks.splice(0, i);
@@ -6122,12 +6128,21 @@ function flushCompletedChunks(request: Request): void {
               );
             }
             request.pendingDebugChunks -= 2;
-            writeChunk(destination, debugChunks[i + 1]);
-            keepWriting = writeChunkAndReturn(destination, debugChunks[i + 2]);
+            writeChunk(
+              destination,
+              ((debugChunks[i + 1]: any): Chunk | BinaryChunk),
+            );
+            keepWriting = writeChunkAndReturn(
+              destination,
+              ((debugChunks[i + 2]: any): Chunk | BinaryChunk),
+            );
             i += 2;
           } else {
             request.pendingDebugChunks--;
-            keepWriting = writeChunkAndReturn(destination, item);
+            keepWriting = writeChunkAndReturn(
+              destination,
+              ((item: any): Chunk | BinaryChunk),
+            );
           }
           if (!keepWriting) {
             request.destination = null;
@@ -6151,12 +6166,21 @@ function flushCompletedChunks(request: Request): void {
             );
           }
           request.pendingChunks -= 2;
-          writeChunk(destination, regularChunks[i + 1]);
-          keepWriting = writeChunkAndReturn(destination, regularChunks[i + 2]);
+          writeChunk(
+            destination,
+            ((regularChunks[i + 1]: any): Chunk | BinaryChunk),
+          );
+          keepWriting = writeChunkAndReturn(
+            destination,
+            ((regularChunks[i + 2]: any): Chunk | BinaryChunk),
+          );
           i += 2;
         } else {
           request.pendingChunks--;
-          keepWriting = writeChunkAndReturn(destination, item);
+          keepWriting = writeChunkAndReturn(
+            destination,
+            ((item: any): Chunk | BinaryChunk),
+          );
         }
         if (!keepWriting) {
           request.destination = null;
