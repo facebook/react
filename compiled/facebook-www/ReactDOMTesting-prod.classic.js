@@ -2926,11 +2926,11 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "fulfilled":
       return thenable.value;
     case "rejected":
-      throw (
-        ((thenableState = thenable.reason),
-        checkIfUseWrappedInAsyncCatch(thenableState),
-        thenableState)
-      );
+      thenableState = thenable.reason;
+      checkIfUseWrappedInAsyncCatch(thenableState);
+      if (void 0 === thenableState && !("reason" in thenable))
+        throw Error(formatProdErrorMessage(600));
+      throw thenableState;
     default:
       if ("string" === typeof thenable.status) thenable.then(noop$1, noop$1);
       else {
@@ -20634,14 +20634,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2089 = React.version;
 if (
-  "19.3.0-www-classic-37fa36ce-20260526" !==
+  "19.3.0-www-classic-c0cd4d5d-20260527" !==
   isomorphicReactPackageVersion$jscomp$inline_2089
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2089,
-      "19.3.0-www-classic-37fa36ce-20260526"
+      "19.3.0-www-classic-c0cd4d5d-20260527"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -20659,10 +20659,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2660 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-37fa36ce-20260526",
+  version: "19.3.0-www-classic-c0cd4d5d-20260527",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-37fa36ce-20260526"
+  reconcilerVersion: "19.3.0-www-classic-c0cd4d5d-20260527"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2661 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -21242,4 +21242,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-37fa36ce-20260526";
+exports.version = "19.3.0-www-classic-c0cd4d5d-20260527";

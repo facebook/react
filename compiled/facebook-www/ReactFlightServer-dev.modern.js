@@ -14,27 +14,6 @@
 __DEV__ &&
   (function () {
     function voidHandler() {}
-    function _defineProperty(obj, key, value) {
-      a: if ("object" == typeof key && key) {
-        var e = key[Symbol.toPrimitive];
-        if (void 0 !== e) {
-          key = e.call(key, "string");
-          if ("object" != typeof key) break a;
-          throw new TypeError("@@toPrimitive must return a primitive value.");
-        }
-        key = String(key);
-      }
-      key = "symbol" == typeof key ? key : key + "";
-      key in obj
-        ? Object.defineProperty(obj, key, {
-            value: value,
-            enumerable: !0,
-            configurable: !0,
-            writable: !0
-          })
-        : (obj[key] = value);
-      return obj;
-    }
     function flushBuffered(destination) {
       "function" === typeof destination.flush && destination.flush();
     }
@@ -296,7 +275,12 @@ __DEV__ &&
         case "fulfilled":
           return thenable.value;
         case "rejected":
-          throw thenable.reason;
+          thenableState = thenable.reason;
+          if (void 0 === thenableState && !("reason" in thenable))
+            throw Error(
+              "A rejected Promise was passed to React without a `reason` property. React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`."
+            );
+          throw thenableState;
         default:
           "string" === typeof thenable.status
             ? thenable.then(noop, noop)
@@ -1055,8 +1039,8 @@ __DEV__ &&
                   : tryStreamTask(request, streamTask),
                 enqueueFlush(request),
                 reader.read().then(progress, error);
-            } catch (x$0) {
-              error(x$0);
+            } catch (x$6) {
+              error(x$6);
             }
       }
       function error(reason) {
@@ -1145,8 +1129,8 @@ __DEV__ &&
                 tryStreamTask(request, streamTask),
                 enqueueFlush(request),
                 callIteratorInDEV(iterator, progress, error);
-            } catch (x$1) {
-              error(x$1);
+            } catch (x$7) {
+              error(x$7);
             }
       }
       function error(reason) {
@@ -1281,43 +1265,49 @@ __DEV__ &&
       result.$$typeof === REACT_ELEMENT_TYPE && (result._store.validated = 1);
       var iteratorFn = getIteratorFn(result);
       if (iteratorFn) {
-        var multiShot = _defineProperty({}, Symbol.iterator, function () {
-          var iterator = iteratorFn.call(result);
-          iterator !== result ||
-            ("[object GeneratorFunction]" ===
-              Object.prototype.toString.call(Component) &&
-              "[object Generator]" ===
-                Object.prototype.toString.call(result)) ||
-            callWithDebugContextInDEV(request, task, function () {
-              console.error(
-                "Returning an Iterator from a Server Component is not supported since it cannot be looped over more than once. "
-              );
-            });
-          return iterator;
-        });
-        multiShot._debugInfo = result._debugInfo;
-        return multiShot;
+        var $jscomp$compprop0 = {};
+        $jscomp$compprop0 =
+          (($jscomp$compprop0[Symbol.iterator] = function () {
+            var iterator = iteratorFn.call(result);
+            iterator !== result ||
+              ("[object GeneratorFunction]" ===
+                Object.prototype.toString.call(Component) &&
+                "[object Generator]" ===
+                  Object.prototype.toString.call(result)) ||
+              callWithDebugContextInDEV(request, task, function () {
+                console.error(
+                  "Returning an Iterator from a Server Component is not supported since it cannot be looped over more than once. "
+                );
+              });
+            return iterator;
+          }),
+          $jscomp$compprop0);
+        $jscomp$compprop0._debugInfo = result._debugInfo;
+        return $jscomp$compprop0;
       }
       return "function" !== typeof result[ASYNC_ITERATOR] ||
         ("function" === typeof ReadableStream &&
           result instanceof ReadableStream)
         ? result
-        : ((multiShot = _defineProperty({}, ASYNC_ITERATOR, function () {
-            var iterator = result[ASYNC_ITERATOR]();
-            iterator !== result ||
-              ("[object AsyncGeneratorFunction]" ===
-                Object.prototype.toString.call(Component) &&
-                "[object AsyncGenerator]" ===
-                  Object.prototype.toString.call(result)) ||
-              callWithDebugContextInDEV(request, task, function () {
-                console.error(
-                  "Returning an AsyncIterator from a Server Component is not supported since it cannot be looped over more than once. "
-                );
-              });
-            return iterator;
-          })),
-          (multiShot._debugInfo = result._debugInfo),
-          multiShot);
+        : (($jscomp$compprop0 = {}),
+          ($jscomp$compprop0 =
+            (($jscomp$compprop0[ASYNC_ITERATOR] = function () {
+              var iterator = result[ASYNC_ITERATOR]();
+              iterator !== result ||
+                ("[object AsyncGeneratorFunction]" ===
+                  Object.prototype.toString.call(Component) &&
+                  "[object AsyncGenerator]" ===
+                    Object.prototype.toString.call(result)) ||
+                callWithDebugContextInDEV(request, task, function () {
+                  console.error(
+                    "Returning an AsyncIterator from a Server Component is not supported since it cannot be looped over more than once. "
+                  );
+                });
+              return iterator;
+            }),
+            $jscomp$compprop0)),
+          ($jscomp$compprop0._debugInfo = result._debugInfo),
+          $jscomp$compprop0);
     }
     function renderFunctionComponent(
       request,
@@ -3568,9 +3558,9 @@ __DEV__ &&
             onAllReady();
             flushCompletedChunks(request);
           }
-        } catch (error$2) {
-          logRecoverableError(request, error$2, null),
-            fatalError(request, error$2);
+        } catch (error$8) {
+          logRecoverableError(request, error$8, null),
+            fatalError(request, error$8);
         }
     }
     function fromHex(str) {
@@ -3671,6 +3661,16 @@ __DEV__ &&
         null !== listeners && rejectChunk(response, listeners, error);
       }
     }
+    function createResolvedModelChunk(response, value, id) {
+      var $jscomp$compprop2 = {};
+      return new ReactPromise(
+        "resolved_model",
+        value,
+        (($jscomp$compprop2.id = id),
+        ($jscomp$compprop2[RESPONSE_SYMBOL] = response),
+        $jscomp$compprop2)
+      );
+    }
     function resolveModelChunk(response, chunk, value, id) {
       if ("pending" !== chunk.status)
         (chunk = chunk.reason),
@@ -3682,7 +3682,9 @@ __DEV__ &&
           rejectListeners = chunk.reason;
         chunk.status = "resolved_model";
         chunk.value = value;
-        chunk.reason = _defineProperty({ id: id }, RESPONSE_SYMBOL, response);
+        value = {};
+        chunk.reason =
+          ((value.id = id), (value[RESPONSE_SYMBOL] = response), value);
         if (null !== resolveListeners)
           switch ((initializeModelChunk(chunk), chunk.status)) {
             case "fulfilled":
@@ -3691,13 +3693,21 @@ __DEV__ &&
             case "blocked":
             case "pending":
               if (chunk.value)
-                for (value = 0; value < resolveListeners.length; value++)
-                  chunk.value.push(resolveListeners[value]);
+                for (
+                  response = 0;
+                  response < resolveListeners.length;
+                  response++
+                )
+                  chunk.value.push(resolveListeners[response]);
               else chunk.value = resolveListeners;
               if (chunk.reason) {
                 if (rejectListeners)
-                  for (value = 0; value < rejectListeners.length; value++)
-                    chunk.reason.push(rejectListeners[value]);
+                  for (
+                    resolveListeners = 0;
+                    resolveListeners < rejectListeners.length;
+                    resolveListeners++
+                  )
+                    chunk.reason.push(rejectListeners[resolveListeners]);
               } else chunk.reason = rejectListeners;
               break;
             case "rejected":
@@ -3707,12 +3717,15 @@ __DEV__ &&
       }
     }
     function createResolvedIteratorResultChunk(response, value, done) {
+      var $jscomp$compprop4 = {};
       return new ReactPromise(
         "resolved_model",
         (done ? '{"done":true,"value":' : '{"done":false,"value":') +
           value +
           "}",
-        _defineProperty({ id: -1 }, RESPONSE_SYMBOL, response)
+        (($jscomp$compprop4.id = -1),
+        ($jscomp$compprop4[RESPONSE_SYMBOL] = response),
+        $jscomp$compprop4)
       );
     }
     function resolveIteratorResultChunk(response, chunk, value, done) {
@@ -3957,11 +3970,7 @@ __DEV__ &&
         ((chunk = response._formData.data.get(response._prefix + id)),
         (chunk =
           "string" === typeof chunk
-            ? new ReactPromise(
-                "resolved_model",
-                chunk,
-                _defineProperty({ id: id }, RESPONSE_SYMBOL, response)
-              )
+            ? createResolvedModelChunk(response, chunk, id)
             : response._closed
               ? new ReactPromise("rejected", null, response._closedReason)
               : new ReactPromise("pending", null, null)),
@@ -4287,11 +4296,7 @@ __DEV__ &&
         flightController = {
           enqueueModel: function (json) {
             if (null === previousBlockedChunk) {
-              var chunk = new ReactPromise(
-                "resolved_model",
-                json,
-                _defineProperty({ id: -1 }, RESPONSE_SYMBOL, response)
-              );
+              var chunk = createResolvedModelChunk(response, json, -1);
               initializeModelChunk(chunk);
               "fulfilled" === chunk.status
                 ? enqueue(chunk.value)
@@ -4347,7 +4352,9 @@ __DEV__ &&
       var buffer = [],
         closed = !1,
         nextWriteIndex = 0,
-        iterable = _defineProperty({}, ASYNC_ITERATOR, function () {
+        $jscomp$compprop5 = {};
+      $jscomp$compprop5 =
+        (($jscomp$compprop5[ASYNC_ITERATOR] = function () {
           var nextReadIndex = 0;
           return new FlightIterator(function (arg) {
             if (void 0 !== arg)
@@ -4365,8 +4372,11 @@ __DEV__ &&
             }
             return buffer[nextReadIndex++];
           });
-        });
-      iterator = iterator ? iterable[ASYNC_ITERATOR]() : iterable;
+        }),
+        $jscomp$compprop5);
+      iterator = iterator
+        ? $jscomp$compprop5[ASYNC_ITERATOR]()
+        : $jscomp$compprop5;
       resolveStream(response, reference, iterator, {
         enqueueModel: function (value) {
           nextWriteIndex === buffer.length

@@ -1676,11 +1676,11 @@ module.exports = function ($$$config) {
       case "fulfilled":
         return thenable.value;
       case "rejected":
-        throw (
-          ((thenableState = thenable.reason),
-          checkIfUseWrappedInAsyncCatch(thenableState),
-          thenableState)
-        );
+        thenableState = thenable.reason;
+        checkIfUseWrappedInAsyncCatch(thenableState);
+        if (void 0 === thenableState && !("reason" in thenable))
+          throw Error(formatProdErrorMessage(600));
+        throw thenableState;
       default:
         if ("string" === typeof thenable.status) thenable.then(noop$1, noop$1);
         else {
@@ -14218,7 +14218,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-37fa36ce-20260526"
+      reconcilerVersion: "19.3.0-www-modern-c0cd4d5d-20260527"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
