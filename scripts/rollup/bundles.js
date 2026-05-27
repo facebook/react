@@ -714,7 +714,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-unbundled/server.node',
+    entry: 'react-server-dom-unbundled/src/server/react-flight-dom-server.node',
+    name: 'react-server-dom-unbundled-server.node',
     condition: 'react-server',
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
@@ -733,8 +734,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-unbundled/client',
-    global: 'ReactServerDOMClient',
+    entry: 'react-server-dom-unbundled/src/client/react-flight-dom-client.node',
+    name: 'react-server-dom-unbundled-client.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'react-dom', 'util', 'crypto'],
