@@ -27,18 +27,10 @@ const paramDefinitions = [
     description: 'Packages to include in publishing',
     defaultValue: [],
   },
-  {
-    name: 'skipPackages',
-    type: String,
-    multiple: true,
-    description: 'Packages to exclude from publishing',
-    defaultValue: [],
-  },
 ];
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
-  splitCommaParams(params.skipPackages);
   splitCommaParams(params.onlyPackages);
 
   // Single-tag invariant. `command-line-args` already collapses multiple
