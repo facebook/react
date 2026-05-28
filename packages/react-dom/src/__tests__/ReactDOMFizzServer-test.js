@@ -3811,6 +3811,39 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  it('includes referrerPolicy in rendered image preload headers', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <img
+              src="referrer-policy-img"
+              fetchPriority="high"
+              referrerPolicy="no-referrer"
+            />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<referrer-policy-img>; rel=preload; as="image"; fetchpriority="high"; referrerpolicy="no-referrer"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
   it('emits nothing for headers if you pipe before work begins', async () => {
     let headers = null;
     function onHeaders(x) {
