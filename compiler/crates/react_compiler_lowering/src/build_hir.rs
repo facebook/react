@@ -2714,7 +2714,7 @@ fn lower_block_statement_inner(
         }
         let mut will_hoist: Vec<HoistInfo> = Vec::new();
 
-        for (binding_id, name, kind, decl_type, decl_start, decl_node_id) in &hoistable {
+        for (binding_id, name, kind, decl_type, _decl_start, decl_node_id) in &hoistable {
             if declared.contains(binding_id) {
                 continue;
             }
@@ -6667,11 +6667,15 @@ fn gather_captured_context(
         None => IndexSet::new(),
     };
 
-    let mut captured =
-        IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
+    // Collect the earliest (lowest source position) reference location for each
+    // captured binding. Using the minimum position makes the result independent of
+    // ref_node_id_to_binding iteration order, matching the behavior the TS compiler
+    // gets from Babel's position-ordered traversal.
+    let mut captured: std::collections::HashMap<
+        react_compiler_ast::scope::BindingId,
+        (u32, Option<SourceLocation>), // (min_position, loc)
+    > = std::collections::HashMap::new();
 
-    // Iterate ref_node_id_to_binding (node_id-keyed) and use identifier_locs
-    // (also node_id-keyed) for position range checks and metadata.
     for (&ref_nid, &binding_id) in &scope_info.ref_node_id_to_binding {
         if let Some(allowed) = ref_node_ids_override {
             if !allowed.contains(&ref_nid) {
@@ -6705,7 +6709,8 @@ fn gather_captured_context(
         {
             continue;
         }
-        if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
+        if pure_scopes.contains(&binding.scope) {
+            let ref_start = identifier_locs.get(&ref_nid).map(|e| e.start).unwrap_or(0);
             let loc = identifier_locs.get(&ref_nid).map(|entry| {
                 if let Some(oe_loc) = &entry.opening_element_loc {
                     oe_loc.clone()
@@ -6713,11 +6718,27 @@ fn gather_captured_context(
                     entry.loc.clone()
                 }
             });
-            captured.insert(binding.id, loc);
+            captured
+                .entry(binding.id)
+                .and_modify(|(min_pos, existing_loc)| {
+                    if ref_start < *min_pos {
+                        *min_pos = ref_start;
+                        *existing_loc = loc.clone();
+                    }
+                })
+                .or_insert((ref_start, loc));
         }
     }
 
-    captured
+    // Sort captured entries by source position so context declarations appear
+    // in source order, matching the TS compiler's position-ordered traversal.
+    let mut sorted: Vec<_> = captured.into_iter().collect();
+    sorted.sort_by_key(|(_, (pos, _))| *pos);
+
+    sorted
+        .into_iter()
+        .map(|(bid, (_, loc))| (bid, loc))
+        .collect()
 }
 
 fn capture_scopes(
