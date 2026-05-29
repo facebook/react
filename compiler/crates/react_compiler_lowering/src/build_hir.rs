@@ -2631,7 +2631,14 @@ fn lower_block_statement_inner(
     // branch) should NOT be hoisted at the parent level — they'll be handled when
     // that nested block is recursively lowered. This prevents DeclareContext from
     // being emitted before an `if` terminal for variables declared within the branch.
-    let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder
+    let hoistable: Vec<(
+        BindingId,
+        String,
+        AstBindingKind,
+        String,
+        Option<u32>,
+        Option<u32>,
+    )> = builder
         .scope_info()
         .scope_bindings_with_children(scope_id)
         .filter(|b| {
@@ -2651,6 +2658,7 @@ fn lower_block_statement_inner(
                 b.kind.clone(),
                 b.declaration_type.clone(),
                 b.declaration_start,
+                b.declaration_node_id,
             )
         })
         .collect();
@@ -2706,7 +2714,7 @@ fn lower_block_statement_inner(
         }
         let mut will_hoist: Vec<HoistInfo> = Vec::new();
 
-        for (binding_id, name, kind, decl_type, decl_start) in &hoistable {
+        for (binding_id, name, kind, decl_type, decl_start, decl_node_id) in &hoistable {
             if declared.contains(binding_id) {
                 continue;
             }
@@ -2727,16 +2735,25 @@ fn lower_block_statement_inner(
             let apply_decl_filter = !matches!(kind, AstBindingKind::Hoisted) || is_function_decl;
             let refs_in_stmt: Vec<u32> = builder
                 .scope_info()
-                .reference_to_binding
+                .ref_node_id_to_binding
                 .iter()
-                .filter(|(ref_start, ref_binding_id)| {
-                    **ref_start >= stmt_start
-                        && **ref_start < stmt_end
-                        && **ref_binding_id == *binding_id
-                        && (!apply_decl_filter || Some(**ref_start) != *decl_start)
-                        && !builder.is_jsx_identifier_at_pos(**ref_start)
+                .filter_map(|(&ref_nid, &ref_bid)| {
+                    if ref_bid != *binding_id {
+                        return None;
+                    }
+                    let entry = builder.identifier_locs().get(&ref_nid)?;
+                    let ref_start = entry.start;
+                    if ref_start < stmt_start || ref_start >= stmt_end {
+                        return None;
+                    }
+                    if apply_decl_filter && *decl_node_id == Some(ref_nid) {
+                        return None;
+                    }
+                    if entry.is_jsx {
+                        return None;
+                    }
+                    Some(ref_start)
                 })
-                .map(|(ref_start, _)| *ref_start)
                 .collect();
 
             if refs_in_stmt.is_empty() {
@@ -4225,11 +4242,11 @@ pub fn lower(
 
     validate_ts_this_parameters_in_function_range(scope_info, start, end)?;
 
-    // Pre-compute context identifiers: variables captured across function boundaries
-    let context_identifiers = find_context_identifiers(func, scope_info, env)?;
-
     // Build identifier location index from the AST (replaces serialized referenceLocs/jsxReferencePositions)
     let identifier_locs = build_identifier_loc_index(func, scope_info);
+
+    // Pre-compute context identifiers: variables captured across function boundaries
+    let context_identifiers = find_context_identifiers(func, scope_info, env, &identifier_locs)?;
 
     // For top-level functions, context is empty (no captured refs)
     let context_map: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> =

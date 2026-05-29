@@ -292,30 +292,18 @@ fn is_captured_by_function(
 /// in `reference_to_binding`, not true references. Uses node-ID comparison
 /// when available (from `ref_node_id_to_binding` + `declaration_node_id`),
 /// falling back to position comparison otherwise.
-fn build_declaration_positions(scope_info: &ScopeInfo) -> HashSet<(BindingId, u32)> {
+/// Build a set of (BindingId, node_id) pairs for declaration sites in
+/// ref_node_id_to_binding. These are entries where the reference's node_id
+/// matches the binding's declaration_node_id — i.e., the "reference" is
+/// actually the declaration itself.
+fn build_declaration_node_ids(scope_info: &ScopeInfo) -> HashSet<(BindingId, u32)> {
     let mut result = HashSet::new();
-
-    if !scope_info.ref_node_id_to_binding.is_empty() {
-        // Node-ID path: match entries in ref_node_id_to_binding against
-        // each binding's declaration_node_id. Then record the corresponding
-        // position from declaration_start for use in the position-keyed loop.
-        for (&ref_node_id, &binding_id) in &scope_info.ref_node_id_to_binding {
-            let binding = &scope_info.bindings[binding_id.0 as usize];
-            if binding.declaration_node_id == Some(ref_node_id) {
-                if let Some(decl_start) = binding.declaration_start {
-                    result.insert((binding_id, decl_start));
-                }
-            }
-        }
-    } else {
-        // Position fallback: no node-IDs available (OXC/SWC path)
-        for binding in &scope_info.bindings {
-            if let Some(decl_start) = binding.declaration_start {
-                result.insert((binding.id, decl_start));
-            }
+    for (&ref_nid, &binding_id) in &scope_info.ref_node_id_to_binding {
+        let binding = &scope_info.bindings[binding_id.0 as usize];
+        if binding.declaration_node_id == Some(ref_nid) {
+            result.insert((binding_id, ref_nid));
         }
     }
-
     result
 }
 
@@ -332,6 +320,7 @@ pub fn find_context_identifiers(
     func: &FunctionNode<'_>,
     scope_info: &ScopeInfo,
     env: &mut Environment,
+    identifier_locs: &crate::identifier_loc_index::IdentifierLocIndex,
 ) -> Result<HashSet<BindingId>, CompilerError> {
     let func_scope = scope_info
         .resolve_scope_for_node(func.node_id())
@@ -390,16 +379,21 @@ pub fn find_context_identifiers(
     // which are included in reference_to_binding but are not true references.
     // Prefer node-ID comparison (immune to position-0 collisions from synthetic
     // nodes), falling back to position when node-IDs are unavailable.
-    let declaration_ref_positions = build_declaration_positions(scope_info);
-    for (&ref_pos, &binding_id) in &scope_info.reference_to_binding {
+    let declaration_node_ids = build_declaration_node_ids(scope_info);
+    for (&ref_nid, &binding_id) in &scope_info.ref_node_id_to_binding {
         let info = match visitor.binding_info.get(&binding_id) {
             Some(info) if info.reassigned && !info.referenced_by_inner_fn => info,
             _ => continue,
         };
         let _ = info;
-        if declaration_ref_positions.contains(&(binding_id, ref_pos)) {
+        if declaration_node_ids.contains(&(binding_id, ref_nid)) {
             continue;
         }
+        // Get the reference's position from identifier_locs for range checks
+        let ref_pos = match identifier_locs.get(&ref_nid) {
+            Some(entry) => entry.start,
+            None => continue,
+        };
         let binding = &scope_info.bindings[binding_id.0 as usize];
         // Check if ref_pos is inside a nested function scope
         for (&scope_start, &scope_id) in &scope_info.node_to_scope {
