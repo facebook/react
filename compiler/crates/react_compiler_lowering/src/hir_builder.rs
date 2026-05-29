@@ -870,8 +870,8 @@ impl<'a> HirBuilder<'a> {
                 };
             if should_record_fbt_error {
                 let error_loc = self.scope_info.bindings[binding_id.0 as usize]
-                    .declaration_start
-                    .and_then(|start| self.get_identifier_loc(start))
+                    .declaration_node_id
+                    .and_then(|nid| self.get_identifier_loc(nid))
                     .or_else(|| loc.clone());
                 self.env.record_error(CompilerErrorDetail {
                     category: ErrorCategory::Todo,
@@ -936,8 +936,8 @@ impl<'a> HirBuilder<'a> {
         // binding identifier's original loc (the declaration site).
         let binding = &self.scope_info.bindings[binding_id.0 as usize];
         let decl_loc = binding
-            .declaration_start
-            .and_then(|start| self.get_identifier_loc(start));
+            .declaration_node_id
+            .and_then(|nid| self.get_identifier_loc(nid));
         if let Some(ref dl) = decl_loc {
             self.env.identifiers[id.0 as usize].loc = Some(dl.clone());
         } else if let Some(ref loc) = loc {

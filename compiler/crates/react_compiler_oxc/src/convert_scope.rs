@@ -57,7 +57,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
             scope: ScopeId(0), // Placeholder, filled in second pass
             declaration_type,
             declaration_start,
-            declaration_node_id: None,
+            declaration_node_id: declaration_start,
             import,
         });
     }

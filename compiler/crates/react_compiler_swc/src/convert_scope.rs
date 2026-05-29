@@ -159,7 +159,7 @@ impl ScopeCollector {
             scope,
             declaration_type,
             declaration_start,
-            declaration_node_id: None,
+            declaration_node_id: declaration_start,
             import,
         });
         self.scopes[scope.0 as usize].bindings.insert(name, id);
