@@ -2711,6 +2711,7 @@ fn lower_block_statement_inner(
             kind: AstBindingKind,
             declaration_type: String,
             first_ref_pos: u32,
+            first_ref_nid: u32,
         }
         let mut will_hoist: Vec<HoistInfo> = Vec::new();
 
@@ -2733,7 +2734,7 @@ fn lower_block_statement_inner(
             // since that's the only statement type where decl_start is a declaration, not
             // a reference.
             let apply_decl_filter = !matches!(kind, AstBindingKind::Hoisted) || is_function_decl;
-            let refs_in_stmt: Vec<u32> = builder
+            let refs_in_stmt: Vec<(u32, u32)> = builder
                 .scope_info()
                 .ref_node_id_to_binding
                 .iter()
@@ -2752,7 +2753,7 @@ fn lower_block_statement_inner(
                     if entry.is_jsx {
                         return None;
                     }
-                    Some(ref_start)
+                    Some((ref_start, ref_nid))
                 })
                 .collect();
 
@@ -2760,17 +2761,18 @@ fn lower_block_statement_inner(
                 continue;
             }
 
-            let first_ref_pos = *refs_in_stmt.iter().min().unwrap();
+            let (first_ref_pos, first_ref_nid) =
+                *refs_in_stmt.iter().min_by_key(|(pos, _)| *pos).unwrap();
 
             // Hoist if: (1) binding is "hoisted" kind (function declaration), or
             // (2) any reference to this binding is inside a nested function scope.
             // Check per-reference rather than per-statement to correctly handle
             // statements that contain both nested functions and top-level code.
             let is_hoisted_kind = matches!(kind, AstBindingKind::Hoisted);
-            let refs_in_nested_fn: Vec<u32> = refs_in_stmt
+            let refs_in_nested_fn: Vec<(u32, u32)> = refs_in_stmt
                 .iter()
                 .copied()
-                .filter(|&ref_pos| {
+                .filter(|&(ref_pos, _)| {
                     nested_function_ranges
                         .iter()
                         .any(|&(fn_start, fn_end)| ref_pos >= fn_start && ref_pos < fn_end)
@@ -2793,10 +2795,13 @@ fn lower_block_statement_inner(
                 // For hoisted bindings (function declarations), use the first reference
                 // overall. For non-hoisted bindings, use the first reference inside a
                 // nested function.
-                let hoist_ref_pos = if is_hoisted_kind {
-                    first_ref_pos
+                let (hoist_ref_pos, hoist_ref_nid) = if is_hoisted_kind {
+                    (first_ref_pos, first_ref_nid)
                 } else {
-                    *refs_in_nested_fn.iter().min().unwrap()
+                    *refs_in_nested_fn
+                        .iter()
+                        .min_by_key(|(pos, _)| *pos)
+                        .unwrap()
                 };
                 will_hoist.push(HoistInfo {
                     binding_id: *binding_id,
@@ -2804,6 +2809,7 @@ fn lower_block_statement_inner(
                     kind: kind.clone(),
                     declaration_type: decl_type.clone(),
                     first_ref_pos: hoist_ref_pos,
+                    first_ref_nid: hoist_ref_nid,
                 });
             }
         }
@@ -2857,11 +2863,9 @@ fn lower_block_statement_inner(
             };
 
             // Look up the reference location for the DeclareContext instruction.
-            // info.first_ref_pos is a byte offset; scan identifier_locs for matching start.
             let ref_loc = builder
                 .identifier_locs()
-                .values()
-                .find(|e| e.start == info.first_ref_pos)
+                .get(&info.first_ref_nid)
                 .map(|e| e.loc.clone());
             let identifier = builder.resolve_binding(&info.name, info.binding_id)?;
             let place = Place {
