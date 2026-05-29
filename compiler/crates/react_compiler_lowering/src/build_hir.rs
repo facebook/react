@@ -2734,7 +2734,7 @@ fn lower_block_statement_inner(
                         && **ref_start < stmt_end
                         && **ref_binding_id == *binding_id
                         && (!apply_decl_filter || Some(**ref_start) != *decl_start)
-                        && !builder.is_jsx_identifier(**ref_start)
+                        && !builder.is_jsx_identifier_at_pos(**ref_start)
                 })
                 .map(|(ref_start, _)| *ref_start)
                 .collect();
@@ -2839,8 +2839,13 @@ fn lower_block_statement_inner(
                 }
             };
 
-            // Look up the reference location for the DeclareContext instruction
-            let ref_loc = builder.get_identifier_loc(info.first_ref_pos);
+            // Look up the reference location for the DeclareContext instruction.
+            // info.first_ref_pos is a byte offset; scan identifier_locs for matching start.
+            let ref_loc = builder
+                .identifier_locs()
+                .values()
+                .find(|e| e.start == info.first_ref_pos)
+                .map(|e| e.loc.clone());
             let identifier = builder.resolve_binding(&info.name, info.binding_id)?;
             let place = Place {
                 effect: Effect::Unknown,
@@ -5559,7 +5564,7 @@ fn lower_function(
     // For synthetic functions with zero-width position ranges, position-based
     // reference filtering fails. Walk the body AST to collect actual positions.
     let ref_override = if func_start >= func_end {
-        Some(collect_identifier_positions_from_body(&body))
+        Some(collect_identifier_node_ids_from_body(&body))
     } else {
         None
     };
@@ -6637,7 +6642,7 @@ fn gather_captured_context(
     func_start: u32,
     func_end: u32,
     identifier_locs: &IdentifierLocIndex,
-    ref_positions_override: Option<&IndexSet<u32>>,
+    ref_node_ids_override: Option<&IndexSet<u32>>,
 ) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
     let parent_scope = scope_info.scopes[function_scope.0 as usize].parent;
     let pure_scopes = match parent_scope {
@@ -6648,23 +6653,27 @@ fn gather_captured_context(
     let mut captured =
         IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
 
-    for (&ref_start, &binding_id) in &scope_info.reference_to_binding {
-        if let Some(allowed) = ref_positions_override {
-            if !allowed.contains(&ref_start) {
+    // Iterate ref_node_id_to_binding (node_id-keyed) and use identifier_locs
+    // (also node_id-keyed) for position range checks and metadata.
+    for (&ref_nid, &binding_id) in &scope_info.ref_node_id_to_binding {
+        if let Some(allowed) = ref_node_ids_override {
+            if !allowed.contains(&ref_nid) {
                 continue;
             }
         } else {
+            // Range check: use the position stored in identifier_locs
+            let ref_start = identifier_locs.get(&ref_nid).map(|e| e.start).unwrap_or(0);
             if ref_start < func_start || ref_start >= func_end {
                 continue;
             }
         }
         let binding = &scope_info.bindings[binding_id.0 as usize];
         // Skip references that are actually the binding's own declaration site
-        if binding.declaration_start == Some(ref_start) {
+        if binding.declaration_node_id == Some(ref_nid) {
             continue;
         }
         // Skip function/class declaration names that are not expression references.
-        if let Some(entry) = identifier_locs.get(&ref_start) {
+        if let Some(entry) = identifier_locs.get(&ref_nid) {
             if entry.is_declaration_name {
                 continue;
             }
@@ -6680,7 +6689,7 @@ fn gather_captured_context(
             continue;
         }
         if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
-            let loc = identifier_locs.get(&ref_start).map(|entry| {
+            let loc = identifier_locs.get(&ref_nid).map(|entry| {
                 if let Some(oe_loc) = &entry.opening_element_loc {
                     oe_loc.clone()
                 } else {
@@ -6938,54 +6947,54 @@ fn collect_fbt_sub_tags_from_stmts(
     }
 }
 
-fn collect_identifier_positions_from_body(body: &FunctionBody) -> IndexSet<u32> {
+fn collect_identifier_node_ids_from_body(body: &FunctionBody) -> IndexSet<u32> {
     let mut positions = IndexSet::new();
     match body {
         FunctionBody::Block(block) => {
             for stmt in &block.body {
-                collect_identifier_positions_from_stmt(stmt, &mut positions);
+                collect_identifier_node_ids_from_stmt(stmt, &mut positions);
             }
         }
         FunctionBody::Expression(expr) => {
-            collect_identifier_positions_from_expr(expr, &mut positions);
+            collect_identifier_node_ids_from_expr(expr, &mut positions);
         }
     }
     positions
 }
 
-fn collect_identifier_positions_from_stmt(
+fn collect_identifier_node_ids_from_stmt(
     stmt: &react_compiler_ast::statements::Statement,
     positions: &mut IndexSet<u32>,
 ) {
     use react_compiler_ast::statements::Statement;
     match stmt {
         Statement::ExpressionStatement(s) => {
-            collect_identifier_positions_from_expr(&s.expression, positions)
+            collect_identifier_node_ids_from_expr(&s.expression, positions)
         }
         Statement::ReturnStatement(s) => {
             if let Some(arg) = &s.argument {
-                collect_identifier_positions_from_expr(arg, positions);
+                collect_identifier_node_ids_from_expr(arg, positions);
             }
         }
         Statement::ThrowStatement(s) => {
-            collect_identifier_positions_from_expr(&s.argument, positions)
+            collect_identifier_node_ids_from_expr(&s.argument, positions)
         }
         Statement::BlockStatement(s) => {
             for stmt in &s.body {
-                collect_identifier_positions_from_stmt(stmt, positions);
+                collect_identifier_node_ids_from_stmt(stmt, positions);
             }
         }
         Statement::IfStatement(s) => {
-            collect_identifier_positions_from_expr(&s.test, positions);
-            collect_identifier_positions_from_stmt(&s.consequent, positions);
+            collect_identifier_node_ids_from_expr(&s.test, positions);
+            collect_identifier_node_ids_from_stmt(&s.consequent, positions);
             if let Some(alt) = &s.alternate {
-                collect_identifier_positions_from_stmt(alt, positions);
+                collect_identifier_node_ids_from_stmt(alt, positions);
             }
         }
         Statement::VariableDeclaration(s) => {
             for decl in &s.declarations {
                 if let Some(init) = &decl.init {
-                    collect_identifier_positions_from_expr(init, positions);
+                    collect_identifier_node_ids_from_expr(init, positions);
                 }
             }
         }
@@ -6993,81 +7002,81 @@ fn collect_identifier_positions_from_stmt(
     }
 }
 
-fn collect_identifier_positions_from_expr(
+fn collect_identifier_node_ids_from_expr(
     expr: &react_compiler_ast::expressions::Expression,
     positions: &mut IndexSet<u32>,
 ) {
     use react_compiler_ast::expressions::Expression;
     match expr {
         Expression::Identifier(id) => {
-            if let Some(start) = id.base.start {
-                positions.insert(start);
+            if let Some(nid) = id.base.node_id {
+                positions.insert(nid);
             }
         }
         Expression::CallExpression(call) => {
-            collect_identifier_positions_from_expr(&call.callee, positions);
+            collect_identifier_node_ids_from_expr(&call.callee, positions);
             for arg in &call.arguments {
-                collect_identifier_positions_from_expr(arg, positions);
+                collect_identifier_node_ids_from_expr(arg, positions);
             }
         }
         Expression::BinaryExpression(e) => {
-            collect_identifier_positions_from_expr(&e.left, positions);
-            collect_identifier_positions_from_expr(&e.right, positions);
+            collect_identifier_node_ids_from_expr(&e.left, positions);
+            collect_identifier_node_ids_from_expr(&e.right, positions);
         }
         Expression::ConditionalExpression(e) => {
-            collect_identifier_positions_from_expr(&e.test, positions);
-            collect_identifier_positions_from_expr(&e.consequent, positions);
-            collect_identifier_positions_from_expr(&e.alternate, positions);
+            collect_identifier_node_ids_from_expr(&e.test, positions);
+            collect_identifier_node_ids_from_expr(&e.consequent, positions);
+            collect_identifier_node_ids_from_expr(&e.alternate, positions);
         }
         Expression::LogicalExpression(e) => {
-            collect_identifier_positions_from_expr(&e.left, positions);
-            collect_identifier_positions_from_expr(&e.right, positions);
+            collect_identifier_node_ids_from_expr(&e.left, positions);
+            collect_identifier_node_ids_from_expr(&e.right, positions);
         }
         Expression::MemberExpression(e) => {
-            collect_identifier_positions_from_expr(&e.object, positions);
+            collect_identifier_node_ids_from_expr(&e.object, positions);
         }
         Expression::OptionalMemberExpression(e) => {
-            collect_identifier_positions_from_expr(&e.object, positions);
+            collect_identifier_node_ids_from_expr(&e.object, positions);
         }
         Expression::OptionalCallExpression(e) => {
-            collect_identifier_positions_from_expr(&e.callee, positions);
+            collect_identifier_node_ids_from_expr(&e.callee, positions);
             for arg in &e.arguments {
-                collect_identifier_positions_from_expr(arg, positions);
+                collect_identifier_node_ids_from_expr(arg, positions);
             }
         }
         Expression::UpdateExpression(e) => {
-            collect_identifier_positions_from_expr(&e.argument, positions);
+            collect_identifier_node_ids_from_expr(&e.argument, positions);
         }
         Expression::FunctionExpression(func) => {
             for stmt in &func.body.body {
-                collect_identifier_positions_from_stmt(stmt, positions);
+                collect_identifier_node_ids_from_stmt(stmt, positions);
             }
         }
         Expression::UnaryExpression(e) => {
-            collect_identifier_positions_from_expr(&e.argument, positions);
+            collect_identifier_node_ids_from_expr(&e.argument, positions);
         }
         Expression::ParenthesizedExpression(e) => {
-            collect_identifier_positions_from_expr(&e.expression, positions);
+            collect_identifier_node_ids_from_expr(&e.expression, positions);
         }
         Expression::TypeCastExpression(e) => {
-            collect_identifier_positions_from_expr(&e.expression, positions);
+            collect_identifier_node_ids_from_expr(&e.expression, positions);
         }
         Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_ref() {
             react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
                 for stmt in &block.body {
-                    collect_identifier_positions_from_stmt(stmt, positions);
+                    collect_identifier_node_ids_from_stmt(stmt, positions);
                 }
             }
             react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
-                collect_identifier_positions_from_expr(e, positions);
+                collect_identifier_node_ids_from_expr(e, positions);
             }
         },
         Expression::JSXElement(el) => {
             if let react_compiler_ast::jsx::JSXElementName::JSXIdentifier(id) =
                 &el.opening_element.name
             {
-                if let Some(start) = id.base.start {
-                    positions.insert(start);
+                if let Some(nid) = id.base.node_id {
+                    positions.insert(nid);
                 }
             }
             for attr in &el.opening_element.attributes {
@@ -7077,7 +7086,7 @@ fn collect_identifier_positions_from_expr(
                             match val {
                                 react_compiler_ast::jsx::JSXAttributeValue::JSXExpressionContainer(c) => {
                                     if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) = &c.expression {
-                                        collect_identifier_positions_from_expr(e, positions);
+                                        collect_identifier_node_ids_from_expr(e, positions);
                                     }
                                 }
                                 _ => {}
@@ -7085,7 +7094,7 @@ fn collect_identifier_positions_from_expr(
                         }
                     }
                     react_compiler_ast::jsx::JSXAttributeItem::JSXSpreadAttribute(a) => {
-                        collect_identifier_positions_from_expr(&a.argument, positions);
+                        collect_identifier_node_ids_from_expr(&a.argument, positions);
                     }
                 }
             }
@@ -7095,17 +7104,17 @@ fn collect_identifier_positions_from_expr(
                         if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) =
                             &c.expression
                         {
-                            collect_identifier_positions_from_expr(e, positions);
+                            collect_identifier_node_ids_from_expr(e, positions);
                         }
                     }
                     react_compiler_ast::jsx::JSXChild::JSXElement(child_el) => {
-                        collect_identifier_positions_from_expr(
+                        collect_identifier_node_ids_from_expr(
                             &Expression::JSXElement(child_el.clone()),
                             positions,
                         );
                     }
                     react_compiler_ast::jsx::JSXChild::JSXSpreadChild(s) => {
-                        collect_identifier_positions_from_expr(&s.expression, positions);
+                        collect_identifier_node_ids_from_expr(&s.expression, positions);
                     }
                     _ => {}
                 }
@@ -7118,11 +7127,11 @@ fn collect_identifier_positions_from_expr(
                         if let react_compiler_ast::jsx::JSXExpressionContainerExpr::Expression(e) =
                             &c.expression
                         {
-                            collect_identifier_positions_from_expr(e, positions);
+                            collect_identifier_node_ids_from_expr(e, positions);
                         }
                     }
                     react_compiler_ast::jsx::JSXChild::JSXElement(child_el) => {
-                        collect_identifier_positions_from_expr(
+                        collect_identifier_node_ids_from_expr(
                             &Expression::JSXElement(child_el.clone()),
                             positions,
                         );
@@ -7134,7 +7143,7 @@ fn collect_identifier_positions_from_expr(
         Expression::ArrayExpression(arr) => {
             for elem in &arr.elements {
                 if let Some(e) = elem {
-                    collect_identifier_positions_from_expr(e, positions);
+                    collect_identifier_node_ids_from_expr(e, positions);
                 }
             }
         }
@@ -7144,35 +7153,35 @@ fn collect_identifier_positions_from_expr(
                     react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(
                         p,
                     ) => {
-                        collect_identifier_positions_from_expr(&p.value, positions);
+                        collect_identifier_node_ids_from_expr(&p.value, positions);
                     }
                     react_compiler_ast::expressions::ObjectExpressionProperty::SpreadElement(s) => {
-                        collect_identifier_positions_from_expr(&s.argument, positions);
+                        collect_identifier_node_ids_from_expr(&s.argument, positions);
                     }
                     _ => {}
                 }
             }
         }
         Expression::NewExpression(e) => {
-            collect_identifier_positions_from_expr(&e.callee, positions);
+            collect_identifier_node_ids_from_expr(&e.callee, positions);
             for arg in &e.arguments {
-                collect_identifier_positions_from_expr(arg, positions);
+                collect_identifier_node_ids_from_expr(arg, positions);
             }
         }
         Expression::AssignmentExpression(e) => {
-            collect_identifier_positions_from_expr(&e.right, positions);
+            collect_identifier_node_ids_from_expr(&e.right, positions);
         }
         Expression::TemplateLiteral(e) => {
             for expr in &e.expressions {
-                collect_identifier_positions_from_expr(expr, positions);
+                collect_identifier_node_ids_from_expr(expr, positions);
             }
         }
         Expression::SpreadElement(e) => {
-            collect_identifier_positions_from_expr(&e.argument, positions);
+            collect_identifier_node_ids_from_expr(&e.argument, positions);
         }
         Expression::SequenceExpression(e) => {
             for expr in &e.expressions {
-                collect_identifier_positions_from_expr(expr, positions);
+                collect_identifier_node_ids_from_expr(expr, positions);
             }
         }
         _ => {}

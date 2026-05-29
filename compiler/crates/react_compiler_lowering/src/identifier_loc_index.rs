@@ -1,8 +1,9 @@
-//! Builds an index mapping identifier byte offsets to source locations.
+//! Builds an index mapping identifier node-IDs to source locations.
 //!
-//! Walks the function's AST to collect `(start, SourceLocation, is_jsx)` for
-//! every Identifier and JSXIdentifier node. This replaces the `referenceLocs`
-//! and `jsxReferencePositions` fields that were previously serialized from JS.
+//! Walks the function's AST to collect `(node_id, start, SourceLocation, is_jsx)`
+//! for every Identifier and JSXIdentifier node. Keyed by node_id for identity
+//! lookups; each entry also stores `start` (byte offset) for range-containment
+//! checks in `gather_captured_context`.
 
 use std::collections::HashMap;
 
@@ -20,12 +21,14 @@ use crate::FunctionNode;
 
 /// Source location and whether the identifier is a JSXIdentifier.
 pub struct IdentifierLocEntry {
+    /// The byte offset of the identifier (base.start). Stored here so that
+    /// callers iterating by node_id can still do position-range containment
+    /// checks without a separate bridge map.
+    pub start: u32,
     pub loc: SourceLocation,
     pub is_jsx: bool,
     /// For JSX identifiers that are the root name of a JSXOpeningElement,
     /// stores the JSXOpeningElement's loc (which spans the full tag).
-    /// This matches the TS behavior where `handleMaybeDependency` receives
-    /// the JSXOpeningElement path and uses `path.node.loc`.
     pub opening_element_loc: Option<SourceLocation>,
     /// True if this identifier is the name of a function/class declaration
     /// (not an expression reference). Used by `gather_captured_context` to
@@ -34,7 +37,7 @@ pub struct IdentifierLocEntry {
     pub is_declaration_name: bool,
 }
 
-/// Index mapping byte offset → (SourceLocation, is_jsx) for all Identifier
+/// Index mapping node_id → IdentifierLocEntry for all Identifier
 /// and JSXIdentifier nodes in a function's AST.
 pub type IdentifierLocIndex = HashMap<u32, IdentifierLocEntry>;
 
@@ -61,10 +64,13 @@ fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocati
 
 impl IdentifierLocVisitor {
     fn insert_identifier(&mut self, node: &Identifier, is_declaration_name: bool) {
-        if let (Some(start), Some(loc)) = (node.base.start, &node.base.loc) {
+        if let (Some(nid), Some(start), Some(loc)) =
+            (node.base.node_id, node.base.start, &node.base.loc)
+        {
             self.index.insert(
-                start,
+                nid,
                 IdentifierLocEntry {
+                    start,
                     loc: convert_loc(loc),
                     is_jsx: false,
                     opening_element_loc: None,
@@ -85,17 +91,19 @@ impl IdentifierLocVisitor {
                     if (ty == "Identifier" || ty == "JSXIdentifier")
                         && !self.is_json_node_in_type_annotation(obj)
                     {
-                        if let Some(start) = obj.get("start").and_then(|s| s.as_u64()) {
+                        if let (Some(nid), Some(start)) = (
+                            obj.get("_nodeId").and_then(|s| s.as_u64()),
+                            obj.get("start").and_then(|s| s.as_u64()),
+                        ) {
                             if let Some(loc) = Self::extract_loc_from_json(obj) {
                                 let is_jsx = ty == "JSXIdentifier";
-                                self.index
-                                    .entry(start as u32)
-                                    .or_insert(IdentifierLocEntry {
-                                        loc,
-                                        is_jsx,
-                                        opening_element_loc: None,
-                                        is_declaration_name: false,
-                                    });
+                                self.index.entry(nid as u32).or_insert(IdentifierLocEntry {
+                                    start: start as u32,
+                                    loc,
+                                    is_jsx,
+                                    opening_element_loc: None,
+                                    is_declaration_name: false,
+                                });
                             }
                         }
                     }
@@ -156,10 +164,13 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
     }
 
     fn enter_jsx_identifier(&mut self, node: &'ast JSXIdentifier, _scope_stack: &[ScopeId]) {
-        if let (Some(start), Some(loc)) = (node.base.start, &node.base.loc) {
+        if let (Some(nid), Some(start), Some(loc)) =
+            (node.base.node_id, node.base.start, &node.base.loc)
+        {
             self.index.insert(
-                start,
+                nid,
                 IdentifierLocEntry {
+                    start,
                     loc: convert_loc(loc),
                     is_jsx: true,
                     opening_element_loc: self.current_opening_element_loc.clone(),

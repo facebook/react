@@ -263,18 +263,20 @@ impl<'a> HirBuilder<'a> {
         self.scope_info
     }
 
-    /// Look up the source location of an identifier by its byte offset.
-    pub fn get_identifier_loc(&self, offset: u32) -> Option<SourceLocation> {
+    /// Look up the source location of an identifier by its node_id.
+    pub fn get_identifier_loc(&self, node_id: u32) -> Option<SourceLocation> {
         self.identifier_locs
-            .get(&offset)
+            .get(&node_id)
             .map(|entry| entry.loc.clone())
     }
 
-    /// Check whether a byte offset corresponds to a JSXIdentifier node.
-    pub fn is_jsx_identifier(&self, offset: u32) -> bool {
+    /// Check whether a reference at the given byte offset corresponds to a
+    /// JSXIdentifier. Scans the node_id-keyed index for an entry whose stored
+    /// `start` matches the offset.
+    pub fn is_jsx_identifier_at_pos(&self, offset: u32) -> bool {
         self.identifier_locs
-            .get(&offset)
-            .is_some_and(|entry| entry.is_jsx)
+            .values()
+            .any(|entry| entry.start == offset && entry.is_jsx)
     }
 
     /// Access the function scope (the scope of the function being compiled).
