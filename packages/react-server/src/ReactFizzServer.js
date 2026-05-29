@@ -6143,9 +6143,12 @@ export function stopFlowing(request: Request): void {
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
-  if (request.status === OPEN || request.status === OPENING) {
-    request.status = ABORTING;
+  if (request.status !== OPEN && request.status !== OPENING) {
+    // Only requests that are not already complete or in the process of aborting
+    // can be aborted. in practice this makes abort callable at most once per render.
+    return;
   }
+  request.status = ABORTING;
 
   try {
     const abortableTasks = request.abortableTasks;
