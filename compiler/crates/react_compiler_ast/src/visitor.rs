@@ -167,10 +167,8 @@ impl<'a> AstWalker<'a> {
     }
 
     /// Try to push a scope for a node. Returns true if a scope was pushed.
-    fn try_push_scope(&mut self, start: Option<u32>, node_id: Option<u32>) -> bool {
-        let scope = node_id
-            .and_then(|nid| self.scope_info.resolve_scope_by_node_id(nid))
-            .or_else(|| start.and_then(|s| self.scope_info.node_to_scope.get(&s).copied()));
+    fn try_push_scope(&mut self, _start: Option<u32>, node_id: Option<u32>) -> bool {
+        let scope = self.scope_info.resolve_scope_for_node(node_id);
         if let Some(scope_id) = scope {
             self.scope_stack.push(scope_id);
             return true;

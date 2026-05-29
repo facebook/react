@@ -54,14 +54,21 @@ pub fn build_scope_info(module: &Module) -> ScopeInfo {
         resolver.reference_to_binding
     };
 
+    // In the SWC backend, span.lo is used as node_id (SWC spans are unique,
+    // no synthetic zero-width node collisions like Babel). Mirror the
+    // position-based maps into the node-ID maps.
+    let node_id_to_scope = collector.node_to_scope.clone();
+    let ref_node_id_to_binding: indexmap::IndexMap<u32, BindingId> =
+        reference_to_binding.iter().map(|(&k, &v)| (k, v)).collect();
+
     ScopeInfo {
         scopes: collector.scopes,
         bindings: collector.bindings,
         node_to_scope: collector.node_to_scope,
         node_to_scope_end: collector.node_to_scope_end,
         reference_to_binding,
-        ref_node_id_to_binding: indexmap::IndexMap::new(),
-        node_id_to_scope: std::collections::HashMap::new(),
+        ref_node_id_to_binding,
+        node_id_to_scope,
         program_scope: ScopeId(0),
     }
 }

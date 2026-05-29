@@ -244,15 +244,8 @@ pub fn build_identifier_loc_index(
     func: &FunctionNode<'_>,
     scope_info: &ScopeInfo,
 ) -> IdentifierLocIndex {
-    let func_start = match func {
-        FunctionNode::FunctionDeclaration(d) => d.base.start.unwrap_or(0),
-        FunctionNode::FunctionExpression(e) => e.base.start.unwrap_or(0),
-        FunctionNode::ArrowFunctionExpression(a) => a.base.start.unwrap_or(0),
-    };
     let func_scope = scope_info
-        .node_to_scope
-        .get(&func_start)
-        .copied()
+        .resolve_scope_for_node(func.node_id())
         .unwrap_or(scope_info.program_scope);
 
     let mut visitor = IdentifierLocVisitor {

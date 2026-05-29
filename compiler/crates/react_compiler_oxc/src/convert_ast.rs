@@ -88,7 +88,7 @@ impl<'a> ConvertCtx<'a> {
             loc: Some(self.source_location(span)),
             range: None,
             extra: None,
-            node_id: None,
+            node_id: Some(span.start),
             leading_comments: None,
             inner_comments: None,
             trailing_comments: None,

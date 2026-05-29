@@ -55,7 +55,7 @@ pub fn compile_fn(
     env.hook_guard_name = context.hook_guard_name.clone();
     env.seed_uid_known_names(&context.known_referenced_names());
 
-    env.reference_positions = scope_info.reference_to_binding.keys().copied().collect();
+    env.reference_node_ids = scope_info.ref_node_id_to_binding.keys().copied().collect();
 
     context.timing.start("lower");
     let mut hir = react_compiler_lowering::lower(func, fn_name, scope_info, &mut env)?;
@@ -1308,14 +1308,20 @@ fn build_outlined_scope_info(
     let mut node_to_scope: HashMap<u32, ScopeId> = HashMap::new();
     node_to_scope.insert(0, ScopeId(1));
 
+    // Mirror position maps into node-ID maps for outlined functions
+    let mut node_id_to_scope: HashMap<u32, ScopeId> = HashMap::new();
+    node_id_to_scope.insert(0, ScopeId(1));
+    let ref_node_id_to_binding: indexmap::IndexMap<u32, BindingId> =
+        ref_to_binding.iter().map(|(&k, &v)| (k, v)).collect();
+
     ScopeInfo {
         scopes: vec![program_scope, fn_scope],
         bindings: bindings_list,
         node_to_scope,
         node_to_scope_end: HashMap::new(),
         reference_to_binding: ref_to_binding,
-        ref_node_id_to_binding: indexmap::IndexMap::new(),
-        node_id_to_scope: std::collections::HashMap::new(),
+        ref_node_id_to_binding,
+        node_id_to_scope,
         program_scope: ScopeId(0),
     }
 }

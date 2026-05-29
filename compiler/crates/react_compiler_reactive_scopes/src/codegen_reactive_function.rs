@@ -2453,7 +2453,7 @@ fn codegen_base_instruction_value(
             let wrapped = match (type_annotation_kind.as_deref(), type_annotation) {
                 (Some("satisfies"), Some(ta)) => {
                     let mut ta = ta.clone();
-                    apply_renames_to_json(&mut ta, &cx.env.renames, &cx.env.reference_positions);
+                    apply_renames_to_json(&mut ta, &cx.env.renames, &cx.env.reference_node_ids);
                     Expression::TSSatisfiesExpression(ast_expr::TSSatisfiesExpression {
                         base: BaseNode::typed("TSSatisfiesExpression"),
                         expression: Box::new(expr),
@@ -2462,7 +2462,7 @@ fn codegen_base_instruction_value(
                 }
                 (Some("as"), Some(ta)) => {
                     let mut ta = ta.clone();
-                    apply_renames_to_json(&mut ta, &cx.env.renames, &cx.env.reference_positions);
+                    apply_renames_to_json(&mut ta, &cx.env.renames, &cx.env.reference_node_ids);
                     Expression::TSAsExpression(ast_expr::TSAsExpression {
                         base: BaseNode::typed("TSAsExpression"),
                         expression: Box::new(expr),
@@ -2471,7 +2471,7 @@ fn codegen_base_instruction_value(
                 }
                 (Some("cast"), Some(ta)) => {
                     let mut ta = ta.clone();
-                    apply_renames_to_json(&mut ta, &cx.env.renames, &cx.env.reference_positions);
+                    apply_renames_to_json(&mut ta, &cx.env.renames, &cx.env.reference_node_ids);
                     Expression::TypeCastExpression(ast_expr::TypeCastExpression {
                         base: BaseNode::typed("TypeCastExpression"),
                         expression: Box::new(expr),
@@ -4080,15 +4080,15 @@ fn create_function_body_hook_guard(
 fn apply_renames_to_json(
     value: &mut serde_json::Value,
     renames: &[react_compiler_hir::environment::BindingRename],
-    reference_positions: &std::collections::HashSet<u32>,
+    reference_node_ids: &std::collections::HashSet<u32>,
 ) {
-    apply_renames_to_json_inner(value, renames, reference_positions, false);
+    apply_renames_to_json_inner(value, renames, reference_node_ids, false);
 }
 
 fn apply_renames_to_json_inner(
     value: &mut serde_json::Value,
     renames: &[react_compiler_hir::environment::BindingRename],
-    reference_positions: &std::collections::HashSet<u32>,
+    reference_node_ids: &std::collections::HashSet<u32>,
     is_property_key: bool,
 ) {
     if renames.is_empty() {
@@ -4107,11 +4107,12 @@ fn apply_renames_to_json_inner(
             if (node_type == "Identifier" || node_type == "GenericTypeAnnotation")
                 && !is_property_key
             {
+                let ident_node_id = map.get("_nodeId").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
                 let ident_start = map.get("start").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
-                // Only rename identifiers that Babel considers actual references
-                // to bindings. Type-level labels (e.g., ObjectTypeIndexer params)
-                // are NOT in the reference set and keep their original names.
-                let is_reference = ident_start > 0 && reference_positions.contains(&ident_start);
+                // Only rename identifiers that are actual references to bindings
+                // (identified by node_id). Type-level labels (e.g., ObjectTypeIndexer
+                // params) are NOT in the reference set and keep their original names.
+                let is_reference = ident_node_id > 0 && reference_node_ids.contains(&ident_node_id);
                 let maybe_rename = if is_reference {
                     map.get("name").and_then(|v| v.as_str()).and_then(|name| {
                         renames
@@ -4120,7 +4121,7 @@ fn apply_renames_to_json_inner(
                             .max_by_key(|r| r.declaration_start)
                             .map(|r| r.renamed.clone())
                     })
-                } else if ident_start == 0 {
+                } else if ident_node_id == 0 {
                     map.get("name").and_then(|v| v.as_str()).and_then(|name| {
                         renames
                             .iter()
@@ -4134,19 +4135,19 @@ fn apply_renames_to_json_inner(
                     map.insert("name".to_string(), serde_json::Value::String(renamed));
                 }
                 if let Some(id) = map.get_mut("id") {
-                    apply_renames_to_json_inner(id, renames, reference_positions, false);
+                    apply_renames_to_json_inner(id, renames, reference_node_ids, false);
                 }
             }
             let is_obj_type_prop =
                 node_type == "ObjectTypeProperty" || node_type == "ObjectTypeIndexer";
             for (key, val) in map.iter_mut() {
                 let child_is_key = is_obj_type_prop && key == "key";
-                apply_renames_to_json_inner(val, renames, reference_positions, child_is_key);
+                apply_renames_to_json_inner(val, renames, reference_node_ids, child_is_key);
             }
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                apply_renames_to_json_inner(item, renames, reference_positions, false);
+                apply_renames_to_json_inner(item, renames, reference_node_ids, false);
             }
         }
         _ => {}

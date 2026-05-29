@@ -109,18 +109,22 @@ pub struct ScopeInfo {
     pub bindings: Vec<BindingData>,
 
     /// Maps an AST node's start offset to the scope it creates.
+    ///
+    /// **NOT for identity lookups** — use `node_id_to_scope` (via `resolve_scope_for_node`)
+    /// instead. Retained only for position-range containment queries
+    /// (e.g., "is reference R inside function scope S?").
     pub node_to_scope: HashMap<u32, ScopeId>,
 
     /// Maps an AST node's start offset to the node's end offset.
-    /// Parallel to node_to_scope — same keys, but stores the end position
-    /// of the scope-creating AST node. Used to determine if a source position
-    /// falls within a particular scope's AST range.
+    /// Parallel to `node_to_scope` — used for position-range containment checks.
     #[serde(default)]
     pub node_to_scope_end: HashMap<u32, u32>,
 
     /// Maps an Identifier AST node's start offset to the binding it resolves to.
-    /// Only present for identifiers that resolve to a binding (not globals).
-    /// Uses IndexMap to preserve insertion order (source order from serialization).
+    ///
+    /// **NOT for identity lookups** — use `ref_node_id_to_binding` (via
+    /// `resolve_reference_id_for_node`) instead. Retained only for position-range
+    /// iteration (e.g., filtering refs within a function's byte range).
     pub reference_to_binding: IndexMap<u32, BindingId>,
 
     /// Maps an identifier reference's node-ID to the binding it resolves to.
@@ -157,10 +161,37 @@ impl ScopeInfo {
         self.node_id_to_scope.get(&node_id).copied()
     }
 
+    /// Resolve the scope for an AST node by node_id. Panics if node_id is None.
+    /// All AST nodes must have node_id set (populated by all backends).
+    pub fn resolve_scope_for_node(&self, node_id: Option<u32>) -> Option<ScopeId> {
+        let nid = node_id.expect(
+            "BUG: node_id is None during scope resolution. \
+             All AST nodes must have node_id set by the frontend (Babel/OXC/SWC).",
+        );
+        self.node_id_to_scope.get(&nid).copied()
+    }
+
     /// Look up the binding for an identifier reference by its unique node ID.
     /// Returns None for globals/unresolved references.
     pub fn resolve_reference_by_node_id(&self, node_id: u32) -> Option<BindingId> {
         self.ref_node_id_to_binding.get(&node_id).copied()
+    }
+
+    /// Resolve the binding for an identifier by node_id. Panics if node_id is None.
+    /// Returns None for globals/unresolved references.
+    pub fn resolve_reference_id_for_node(&self, node_id: Option<u32>) -> Option<BindingId> {
+        let nid = node_id.expect(
+            "BUG: node_id is None during reference resolution. \
+             All identifier nodes must have node_id set by the frontend (Babel/OXC/SWC).",
+        );
+        self.ref_node_id_to_binding.get(&nid).copied()
+    }
+
+    /// Resolve the binding for an identifier by node_id. Panics if node_id is None.
+    /// Returns None for globals/unresolved references.
+    pub fn resolve_reference_for_node(&self, node_id: Option<u32>) -> Option<&BindingData> {
+        self.resolve_reference_id_for_node(node_id)
+            .map(|id| &self.bindings[id.0 as usize])
     }
 
     /// Look up the binding for an identifier reference by its AST node start offset.
@@ -272,7 +303,7 @@ impl ScopeInfo {
             binding_ids.push(id);
         }
         // Add bindings from direct child block scopes
-        for (i, scope) in self.scopes.iter().enumerate() {
+        for scope in self.scopes.iter() {
             if scope.parent == Some(scope_id) && matches!(scope.kind, ScopeKind::Block) {
                 for &id in scope.bindings.values() {
                     binding_ids.push(id);

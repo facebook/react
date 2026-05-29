@@ -1,16 +1,25 @@
-use std::collections::{HashMap, HashSet};
-use crate::*;
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+use react_compiler_diagnostics::CompilerDiagnostic;
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorDetail;
+use react_compiler_diagnostics::ErrorCategory;
+
 use crate::default_module_type_provider::default_module_type_provider;
 use crate::environment_config::EnvironmentConfig;
-use crate::globals::{self, Global, GlobalRegistry};
-use crate::object_shape::{
-    FunctionSignature, HookKind, HookSignatureBuilder, ShapeRegistry,
-    BUILT_IN_MIXED_READONLY_ID,
-    add_hook, default_mutating_hook, default_nonmutating_hook,
-};
-use react_compiler_diagnostics::{
-    CompilerDiagnostic, CompilerError, CompilerErrorDetail, ErrorCategory,
-};
+use crate::globals::Global;
+use crate::globals::GlobalRegistry;
+use crate::globals::{self};
+use crate::object_shape::BUILT_IN_MIXED_READONLY_ID;
+use crate::object_shape::FunctionSignature;
+use crate::object_shape::HookKind;
+use crate::object_shape::HookSignatureBuilder;
+use crate::object_shape::ShapeRegistry;
+use crate::object_shape::add_hook;
+use crate::object_shape::default_mutating_hook;
+use crate::object_shape::default_nonmutating_hook;
+use crate::*;
 
 /// A variable rename from lowering: the binding at `declaration_start` position
 /// was renamed from `original` to `renamed`.
@@ -66,11 +75,11 @@ pub struct Environment {
     // keyed by binding declaration position, for applying back to the Babel AST.
     pub renames: Vec<BindingRename>,
 
-    // Source positions that Babel considers actual references to bindings.
+    // Node IDs of identifiers that are actual references to bindings.
     // Used by codegen to filter type annotation renames — only rename identifiers
-    // whose position is in this set (type labels like ObjectTypeIndexer params
+    // whose node_id is in this set (type labels like ObjectTypeIndexer params
     // are NOT in this set and should keep their original names).
-    pub reference_positions: HashSet<u32>,
+    pub reference_node_ids: HashSet<u32>,
 
     // Hoisted identifiers: tracks which bindings have already been hoisted
     // via DeclareContext to avoid duplicate hoisting.
@@ -156,8 +165,7 @@ impl Environment {
         // Register reanimated module type when enabled
         let mut module_types: HashMap<String, Option<Global>> = HashMap::new();
         if config.enable_custom_type_definition_for_reanimated {
-            let reanimated_module_type =
-                globals::get_reanimated_module_type(&mut shapes);
+            let reanimated_module_type = globals::get_reanimated_module_type(&mut shapes);
             module_types.insert(
                 "react-native-reanimated".to_string(),
                 Some(reanimated_module_type),
@@ -180,7 +188,7 @@ impl Environment {
             instrument_gating_name: None,
             hook_guard_name: None,
             renames: Vec::new(),
-            reference_positions: HashSet::new(),
+            reference_node_ids: HashSet::new(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: config
                 .validate_preserve_existing_memoization_guarantees,
@@ -226,7 +234,7 @@ impl Environment {
             instrument_gating_name: self.instrument_gating_name.clone(),
             hook_guard_name: self.hook_guard_name.clone(),
             renames: Vec::new(),
-            reference_positions: HashSet::new(),
+            reference_node_ids: HashSet::new(),
             hoisted_identifiers: HashSet::new(),
             validate_preserve_existing_memoization_guarantees: self
                 .validate_preserve_existing_memoization_guarantees,
@@ -371,8 +379,12 @@ impl Environment {
         let old = std::mem::take(&mut self.errors);
         for detail in old.details {
             let is_invariant = match &detail {
-                react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => d.category == react_compiler_diagnostics::ErrorCategory::Invariant,
-                react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category == react_compiler_diagnostics::ErrorCategory::Invariant,
+                react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
+                    d.category == react_compiler_diagnostics::ErrorCategory::Invariant
+                }
+                react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                    d.category == react_compiler_diagnostics::ErrorCategory::Invariant
+                }
             };
             if is_invariant {
                 invariant.details.push(detail);
@@ -388,8 +400,12 @@ impl Environment {
     /// In TS, Todo errors throw immediately via CompilerError.throwTodo().
     pub fn has_todo_errors(&self) -> bool {
         self.errors.details.iter().any(|d| match d {
-            react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => d.category == react_compiler_diagnostics::ErrorCategory::Todo,
-            react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => d.category == react_compiler_diagnostics::ErrorCategory::Todo,
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::Diagnostic(d) => {
+                d.category == react_compiler_diagnostics::ErrorCategory::Todo
+            }
+            react_compiler_diagnostics::CompilerErrorOrDiagnostic::ErrorDetail(d) => {
+                d.category == react_compiler_diagnostics::ErrorCategory::Todo
+            }
         })
     }
 
@@ -495,11 +511,9 @@ impl Environment {
                 }
 
                 if let Some(module_type) = module_type {
-                    if let Some(imported_type) = Self::get_property_type_from_shapes(
-                        &self.shapes,
-                        &module_type,
-                        imported,
-                    ) {
+                    if let Some(imported_type) =
+                        Self::get_property_type_from_shapes(&self.shapes, &module_type, imported)
+                    {
                         return Ok(Some(imported_type));
                     }
                 }
@@ -542,18 +556,18 @@ impl Environment {
 
                 if let Some(module_type) = module_type {
                     let imported_type = if is_default {
-                        Self::get_property_type_from_shapes(
-                            &self.shapes,
-                            &module_type,
-                            "default",
-                        )
+                        Self::get_property_type_from_shapes(&self.shapes, &module_type, "default")
                     } else {
                         Some(module_type)
                     };
                     if let Some(imported_type) = imported_type {
                         // Validate hook-name vs hook-type consistency for module name
                         let expect_hook = is_hook_name(module);
-                        let is_hook = self.get_hook_kind_for_type(&imported_type).ok().flatten().is_some();
+                        let is_hook = self
+                            .get_hook_kind_for_type(&imported_type)
+                            .ok()
+                            .flatten()
+                            .is_some();
                         if expect_hook != is_hook {
                             self.record_error(
                                 CompilerErrorDetail::new(
@@ -610,7 +624,11 @@ impl Environment {
 
     /// Get the type of a named property on a receiver type.
     /// Ported from TS `getPropertyType`.
-    pub fn get_property_type(&mut self, receiver: &Type, property: &str) -> Result<Option<Type>, CompilerDiagnostic> {
+    pub fn get_property_type(
+        &mut self,
+        receiver: &Type,
+        property: &str,
+    ) -> Result<Option<Type>, CompilerDiagnostic> {
         let shape_id = match receiver {
             Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => None,
@@ -648,7 +666,10 @@ impl Environment {
 
     /// Get the type of a numeric property on a receiver type.
     /// Ported from the numeric branch of TS `getPropertyType`.
-    pub fn get_property_type_numeric(&self, receiver: &Type) -> Result<Option<Type>, CompilerDiagnostic> {
+    pub fn get_property_type_numeric(
+        &self,
+        receiver: &Type,
+    ) -> Result<Option<Type>, CompilerDiagnostic> {
         let shape_id = match receiver {
             Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => None,
@@ -671,7 +692,10 @@ impl Environment {
 
     /// Get the fallthrough (wildcard `*`) property type for computed property access.
     /// Ported from TS `getFallthroughPropertyType`.
-    pub fn get_fallthrough_property_type(&self, receiver: &Type) -> Result<Option<Type>, CompilerDiagnostic> {
+    pub fn get_fallthrough_property_type(
+        &self,
+        receiver: &Type,
+    ) -> Result<Option<Type>, CompilerDiagnostic> {
         let shape_id = match receiver {
             Type::Object { shape_id } | Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => None,
@@ -694,7 +718,10 @@ impl Environment {
 
     /// Get the function signature for a function type.
     /// Ported from TS `getFunctionSignature`.
-    pub fn get_function_signature(&self, ty: &Type) -> Result<Option<&FunctionSignature>, CompilerDiagnostic> {
+    pub fn get_function_signature(
+        &self,
+        ty: &Type,
+    ) -> Result<Option<&FunctionSignature>, CompilerDiagnostic> {
         let shape_id = match ty {
             Type::Function { shape_id, .. } => shape_id.as_deref(),
             _ => return Ok(None),
@@ -717,8 +744,12 @@ impl Environment {
 
     /// Get the hook kind for a type, if it represents a hook.
     /// Ported from TS `getHookKindForType` in HIR.ts.
-    pub fn get_hook_kind_for_type(&self, ty: &Type) -> Result<Option<&HookKind>, CompilerDiagnostic> {
-        Ok(self.get_function_signature(ty)?
+    pub fn get_hook_kind_for_type(
+        &self,
+        ty: &Type,
+    ) -> Result<Option<&HookKind>, CompilerDiagnostic> {
+        Ok(self
+            .get_function_signature(ty)?
             .and_then(|sig| sig.hook_kind.as_ref()))
     }
 
@@ -731,7 +762,9 @@ impl Environment {
         }
 
         // Check pre-resolved provider results first, then fall back to default
-        let module_config = self.config.module_type_provider
+        let module_config = self
+            .config
+            .module_type_provider
             .as_ref()
             .and_then(|map| map.get(module_name).cloned())
             .or_else(|| default_module_type_provider(module_name));
@@ -768,14 +801,12 @@ impl Environment {
     fn get_custom_hook_type(&mut self) -> Global {
         if self.config.enable_assume_hooks_follow_rules_of_react {
             if self.default_nonmutating_hook.is_none() {
-                self.default_nonmutating_hook =
-                    Some(default_nonmutating_hook(&mut self.shapes));
+                self.default_nonmutating_hook = Some(default_nonmutating_hook(&mut self.shapes));
             }
             self.default_nonmutating_hook.clone().unwrap()
         } else {
             if self.default_mutating_hook.is_none() {
-                self.default_mutating_hook =
-                    Some(default_mutating_hook(&mut self.shapes));
+                self.default_mutating_hook = Some(default_mutating_hook(&mut self.shapes));
             }
             self.default_mutating_hook.clone().unwrap()
         }
@@ -845,7 +876,11 @@ impl Environment {
         // Strip leading '_' and trailing digits (Babel's generateUid behavior)
         let stripped = camel.trim_start_matches('_');
         let stripped = stripped.trim_end_matches(|c: char| c.is_ascii_digit());
-        let uid_base = if stripped.is_empty() { "temp" } else { stripped };
+        let uid_base = if stripped.is_empty() {
+            "temp"
+        } else {
+            stripped
+        };
 
         // Lazily build the set of known names from existing identifiers.
         // This approximates Babel's hasBinding/hasGlobal/hasReference checks.
@@ -897,7 +932,8 @@ impl Environment {
     /// Record an outlined function (extracted during outlineFunctions or outlineJSX).
     /// Corresponds to TS `env.outlineFunction(fn, type)`.
     pub fn outline_function(&mut self, func: HirFunction, fn_type: Option<ReactFunctionType>) {
-        self.outlined_functions.push(OutlinedFunctionEntry { func, fn_type });
+        self.outlined_functions
+            .push(OutlinedFunctionEntry { func, fn_type });
     }
 
     /// Get the outlined functions accumulated during compilation.
@@ -1054,7 +1090,9 @@ mod tests {
         assert!(map_type.is_some());
         let push_type = env.get_property_type(&array_type, "push").unwrap();
         assert!(push_type.is_some());
-        let nonexistent = env.get_property_type(&array_type, "nonExistentMethod").unwrap();
+        let nonexistent = env
+            .get_property_type(&array_type, "nonExistentMethod")
+            .unwrap();
         assert!(nonexistent.is_none());
     }
 

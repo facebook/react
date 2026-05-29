@@ -23,6 +23,10 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
     let mut node_to_scope: HashMap<u32, ScopeId> = HashMap::new();
     let mut node_to_scope_end: HashMap<u32, u32> = HashMap::new();
     let mut reference_to_binding: IndexMap<u32, BindingId> = IndexMap::new();
+    // Node-ID-based maps: in the OXC backend, we use span.start as the node_id
+    // since OXC spans are unique (no synthetic zero-width node collisions like Babel).
+    let mut node_id_to_scope: HashMap<u32, ScopeId> = HashMap::new();
+    let mut ref_node_id_to_binding: IndexMap<u32, BindingId> = IndexMap::new();
 
     // Map OXC symbol IDs to our binding IDs
     let mut symbol_to_binding: HashMap<oxc_syntax::symbol::SymbolId, BindingId> = HashMap::new();
@@ -102,6 +106,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                         if prop_start != start {
                             node_to_scope.insert(prop_start, our_scope_id);
                             node_to_scope_end.insert(prop_start, end);
+                            node_id_to_scope.insert(prop_start, our_scope_id);
                         }
                     }
                     _ => {}
@@ -115,6 +120,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         } else {
             node_to_scope.insert(start, our_scope_id);
         }
+        node_id_to_scope.insert(start, our_scope_id);
 
         scopes.push(ScopeData {
             id: our_scope_id,
@@ -132,6 +138,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                 let ref_node = nodes.get_node(reference.node_id());
                 let start = ref_node.kind().span().start;
                 reference_to_binding.insert(start, binding_id);
+                ref_node_id_to_binding.insert(start, binding_id);
             }
         }
     }
@@ -141,6 +148,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
             if let Some(start) = bindings[binding_id.0 as usize].declaration_start {
                 reference_to_binding.entry(start).or_insert(binding_id);
+                ref_node_id_to_binding.entry(start).or_insert(binding_id);
             }
         }
     }
@@ -157,16 +165,22 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                     let name = id.name.as_str();
                     if let Some(symbol_id) = id.symbol_id.get() {
                         if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
+                            let export_start = export.span().start;
                             reference_to_binding
-                                .entry(export.span().start)
+                                .entry(export_start)
+                                .or_insert(binding_id);
+                            ref_node_id_to_binding
+                                .entry(export_start)
                                 .or_insert(binding_id);
                         }
                     } else {
                         // Fallback: look up binding by name
                         for (sym_id, &bind_id) in &symbol_to_binding {
                             if scoping.symbol_name(*sym_id) == name {
-                                reference_to_binding
-                                    .entry(export.span().start)
+                                let export_start = export.span().start;
+                                reference_to_binding.entry(export_start).or_insert(bind_id);
+                                ref_node_id_to_binding
+                                    .entry(export_start)
                                     .or_insert(bind_id);
                                 break;
                             }
@@ -217,8 +231,8 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         node_to_scope,
         node_to_scope_end,
         reference_to_binding,
-        ref_node_id_to_binding: IndexMap::new(),
-        node_id_to_scope: std::collections::HashMap::new(),
+        ref_node_id_to_binding,
+        node_id_to_scope,
         program_scope,
     }
 }

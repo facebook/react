@@ -2575,12 +2575,9 @@ fn lower_block_statement_inner(
     // Look up the block's scope to identify hoistable bindings.
     // Use the scope override if provided (for function body blocks that share the function's scope).
     let block_scope_id = scope_override.or_else(|| {
-        let found = block.base.start.and_then(|start| {
-            if start == 0 {
-                return None;
-            }
-            builder.scope_info().node_to_scope.get(&start).copied()
-        });
+        let found = builder
+            .scope_info()
+            .resolve_scope_for_node(block.base.node_id);
         if found.is_some() {
             return found;
         }
@@ -2634,8 +2631,6 @@ fn lower_block_statement_inner(
     // branch) should NOT be hoisted at the parent level — they'll be handled when
     // that nested block is recursively lowered. This prevents DeclareContext from
     // being emitted before an `if` terminal for variables declared within the branch.
-    let block_start = block.base.start.unwrap_or(0);
-    let block_end = block.base.end.unwrap_or(u32::MAX);
     let hoistable: Vec<(BindingId, String, AstBindingKind, String, Option<u32>)> = builder
         .scope_info()
         .scope_bindings_with_children(scope_id)
@@ -3922,14 +3917,13 @@ fn lower_statement(
                 // the CatchClause scope in Babel (contains the catch param binding).
                 // Use the catch clause's scope (which contains the catch param binding).
                 // Fall back to the body block's own scope if the catch clause scope is missing.
-                let catch_scope = handler_clause
-                    .base
-                    .start
-                    .and_then(|start| builder.scope_info().node_to_scope.get(&start).copied())
+                let catch_scope = builder
+                    .scope_info()
+                    .resolve_scope_for_node(handler_clause.base.node_id)
                     .or_else(|| {
-                        handler_clause.body.base.start.and_then(|start| {
-                            builder.scope_info().node_to_scope.get(&start).copied()
-                        })
+                        builder
+                            .scope_info()
+                            .resolve_scope_for_node(handler_clause.body.base.node_id)
                     });
                 if let Some(scope_id) = catch_scope {
                     lower_block_statement_with_scope(builder, &handler_clause.body, scope_id)?;
@@ -4177,7 +4171,7 @@ pub fn lower(
     // Note: `id` param may include inferred names (e.g., from `const Foo = () => {}`),
     // but the HIR function's `id` field should only include the function's own AST id
     // (FunctionDeclaration.id or FunctionExpression.id, NOT arrow functions).
-    let (params, body, generator, is_async, loc, start, end, ast_id) = match func {
+    let (params, body, generator, is_async, loc, _start, end, ast_id) = match func {
         FunctionNode::FunctionDeclaration(decl) => (
             &decl.params[..],
             FunctionBody::Block(&decl.body),
@@ -4221,9 +4215,7 @@ pub fn lower(
     };
 
     let scope_id = scope_info
-        .node_to_scope
-        .get(&start)
-        .copied()
+        .resolve_scope_for_node(func.node_id())
         .unwrap_or(scope_info.program_scope);
 
     validate_ts_this_parameters_in_function_range(scope_info, start, end)?;
@@ -5450,110 +5442,111 @@ fn lower_function(
     use react_compiler_ast::expressions::Expression;
 
     // Extract function parts from the AST node
-    let (params, body, id, generator, is_async, func_start, func_end, func_loc) = match expr {
-        Expression::ArrowFunctionExpression(arrow) => {
-            let body = match arrow.body.as_ref() {
-                react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                    FunctionBody::Block(block)
-                }
-                react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
-                    FunctionBody::Expression(expr)
-                }
-            };
-            (
-                &arrow.params[..],
-                body,
-                None::<&str>,
-                arrow.generator,
-                arrow.is_async,
-                arrow.base.start.unwrap_or(0),
-                arrow.base.end.unwrap_or(0),
-                convert_opt_loc(&arrow.base.loc),
-            )
-        }
-        Expression::FunctionExpression(func) => (
-            &func.params[..],
-            FunctionBody::Block(&func.body),
-            func.id.as_ref().map(|id| id.name.as_str()),
-            func.generator,
-            func.is_async,
-            func.base.start.unwrap_or(0),
-            func.base.end.unwrap_or(0),
-            convert_opt_loc(&func.base.loc),
-        ),
-        _ => {
-            return Err(CompilerDiagnostic::new(
-                ErrorCategory::Invariant,
-                "lower_function called with non-function expression",
-                None,
-            ));
-        }
-    };
+    let (params, body, id, generator, is_async, func_start, func_end, func_loc, func_node_id) =
+        match expr {
+            Expression::ArrowFunctionExpression(arrow) => {
+                let body = match arrow.body.as_ref() {
+                    react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
+                        FunctionBody::Block(block)
+                    }
+                    react_compiler_ast::expressions::ArrowFunctionBody::Expression(expr) => {
+                        FunctionBody::Expression(expr)
+                    }
+                };
+                (
+                    &arrow.params[..],
+                    body,
+                    None::<&str>,
+                    arrow.generator,
+                    arrow.is_async,
+                    arrow.base.start.unwrap_or(0),
+                    arrow.base.end.unwrap_or(0),
+                    convert_opt_loc(&arrow.base.loc),
+                    arrow.base.node_id,
+                )
+            }
+            Expression::FunctionExpression(func) => (
+                &func.params[..],
+                FunctionBody::Block(&func.body),
+                func.id.as_ref().map(|id| id.name.as_str()),
+                func.generator,
+                func.is_async,
+                func.base.start.unwrap_or(0),
+                func.base.end.unwrap_or(0),
+                convert_opt_loc(&func.base.loc),
+                func.base.node_id,
+            ),
+            _ => {
+                return Err(CompilerDiagnostic::new(
+                    ErrorCategory::Invariant,
+                    "lower_function called with non-function expression",
+                    None,
+                ));
+            }
+        };
 
     // Find the function's scope. For synthetic zero-width functions (e.g., desugared
-    // match IIFEs from Hermes with start=end=0), nodeToScope won't have an entry.
-    let function_scope = if func_start < func_end {
-        builder
-            .scope_info()
-            .node_to_scope
-            .get(&func_start)
-            .copied()
-            .unwrap_or(builder.scope_info().program_scope)
-    } else {
-        let parent = builder.function_scope();
-        let scope_info = builder.scope_info();
-        let mapped: std::collections::HashSet<react_compiler_ast::scope::ScopeId> =
-            scope_info.node_to_scope.values().copied().collect();
-        let param_names: Vec<String> = params
-            .iter()
-            .filter_map(|p| {
-                if let react_compiler_ast::patterns::PatternLike::Identifier(id) = p {
-                    Some(id.name.clone())
-                } else {
-                    None
+    // match IIFEs from Hermes with start=end=0), node_id_to_scope won't have an entry.
+    let function_scope =
+        if let Some(scope) = builder.scope_info().resolve_scope_for_node(func_node_id) {
+            scope
+        } else if func_start < func_end {
+            builder.scope_info().program_scope
+        } else {
+            let parent = builder.function_scope();
+            let scope_info = builder.scope_info();
+            let mapped: std::collections::HashSet<react_compiler_ast::scope::ScopeId> =
+                scope_info.node_id_to_scope.values().copied().collect();
+            let param_names: Vec<String> = params
+                .iter()
+                .filter_map(|p| {
+                    if let react_compiler_ast::patterns::PatternLike::Identifier(id) = p {
+                        Some(id.name.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            let mut descendants = std::collections::HashSet::new();
+            descendants.insert(parent);
+            let mut changed = true;
+            while changed {
+                changed = false;
+                for (i, scope) in scope_info.scopes.iter().enumerate() {
+                    let sid = react_compiler_ast::scope::ScopeId(i as u32);
+                    if let Some(p) = scope.parent {
+                        if descendants.contains(&p) && !descendants.contains(&sid) {
+                            descendants.insert(sid);
+                            changed = true;
+                        }
+                    }
                 }
-            })
-            .collect();
-        let mut descendants = std::collections::HashSet::new();
-        descendants.insert(parent);
-        let mut changed = true;
-        while changed {
-            changed = false;
+            }
+            let mut found = scope_info.program_scope;
             for (i, scope) in scope_info.scopes.iter().enumerate() {
                 let sid = react_compiler_ast::scope::ScopeId(i as u32);
                 if let Some(p) = scope.parent {
-                    if descendants.contains(&p) && !descendants.contains(&sid) {
-                        descendants.insert(sid);
-                        changed = true;
-                    }
-                }
-            }
-        }
-        let mut found = scope_info.program_scope;
-        for (i, scope) in scope_info.scopes.iter().enumerate() {
-            let sid = react_compiler_ast::scope::ScopeId(i as u32);
-            if let Some(p) = scope.parent {
-                if descendants.contains(&p)
-                    && matches!(scope.kind, ScopeKind::Function)
-                    && !mapped.contains(&sid)
-                    && !builder.is_synthetic_scope_claimed(sid)
-                {
-                    if !param_names.is_empty() {
-                        let all_match = param_names
-                            .iter()
-                            .all(|name| scope.bindings.contains_key(name));
-                        if !all_match {
-                            continue;
+                    if descendants.contains(&p)
+                        && matches!(scope.kind, ScopeKind::Function)
+                        && !mapped.contains(&sid)
+                        && !builder.is_synthetic_scope_claimed(sid)
+                    {
+                        if !param_names.is_empty() {
+                            let all_match = param_names
+                                .iter()
+                                .all(|name| scope.bindings.contains_key(name));
+                            if !all_match {
+                                continue;
+                            }
                         }
+                        found = sid;
+                        break;
                     }
-                    found = sid;
-                    break;
                 }
             }
-        }
-        builder.claim_synthetic_scope(found);
-        found
-    };
+            builder.claim_synthetic_scope(found);
+            found
+        };
 
     let component_scope = builder.component_scope();
     let scope_info = builder.scope_info();
@@ -5632,9 +5625,7 @@ fn lower_function_declaration(
     // Find the function's scope
     let function_scope = builder
         .scope_info()
-        .node_to_scope
-        .get(&func_start)
-        .copied()
+        .resolve_scope_for_node(func_decl.base.node_id)
         .unwrap_or(builder.scope_info().program_scope);
 
     let component_scope = builder.component_scope();
@@ -5719,13 +5710,10 @@ fn lower_function_declaration(
                 // the redeclaration's identifier position may not be in
                 // reference_to_binding (OXC/SWC don't map constant violations).
                 // Retry using the first declaration's position from the scope chain.
-                let func_start = func_decl.base.start.unwrap_or(0);
                 let fallback_start = {
                     let si = builder.scope_info();
                     let scope_id = si
-                        .node_to_scope
-                        .get(&func_start)
-                        .copied()
+                        .resolve_scope_for_node(func_decl.base.node_id)
                         .unwrap_or(si.program_scope);
                     si.get_binding(scope_id, name)
                         .and_then(|bid| si.bindings[bid.0 as usize].declaration_start)
@@ -5804,9 +5792,7 @@ fn lower_function_for_object_method(
 
     let function_scope = builder
         .scope_info()
-        .node_to_scope
-        .get(&func_start)
-        .copied()
+        .resolve_scope_for_node(method.base.node_id)
         .unwrap_or(builder.scope_info().program_scope);
 
     let component_scope = builder.component_scope();
@@ -6749,7 +6735,6 @@ fn collect_fbt_sub_tags(
     pronoun_locs: &mut Vec<Option<SourceLocation>>,
 ) {
     use react_compiler_ast::jsx::JSXChild;
-    use react_compiler_ast::jsx::JSXElementName;
     for child in children {
         match child {
             JSXChild::JSXElement(el) => {

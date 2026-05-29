@@ -100,6 +100,7 @@ struct CompileSource<'a> {
     fn_ast_loc: Option<react_compiler_ast::common::SourceLocation>,
     fn_start: Option<u32>,
     fn_end: Option<u32>,
+    fn_node_id: Option<u32>,
     fn_type: ReactFunctionType,
     /// Directives from the function body (for opt-in/opt-out checks)
     body_directives: Vec<Directive>,
@@ -1740,9 +1741,9 @@ fn try_make_compile_source<'a>(
     opts: &PluginOptions,
     context: &mut ProgramContext,
 ) -> Option<CompileSource<'a>> {
-    // Skip if already compiled
-    if let Some(start) = info.base.start {
-        if context.is_already_compiled(start) {
+    // Skip if already compiled (identified by node_id)
+    if let Some(nid) = info.base.node_id {
+        if context.is_already_compiled(nid) {
             return None;
         }
     }
@@ -1760,8 +1761,8 @@ fn try_make_compile_source<'a>(
     )?;
 
     // Mark as compiled
-    if let Some(start) = info.base.start {
-        context.mark_compiled(start);
+    if let Some(nid) = info.base.node_id {
+        context.mark_compiled(nid);
     }
 
     Some(CompileSource {
@@ -1772,6 +1773,7 @@ fn try_make_compile_source<'a>(
         fn_ast_loc: info.base.loc.clone(),
         fn_start: info.base.start,
         fn_end: info.base.end,
+        fn_node_id: info.base.node_id,
         fn_type,
         body_directives: info.body_directives,
     })
@@ -2045,8 +2047,10 @@ enum OriginalFnKind {
 /// Owned representation of a compiled function for AST replacement.
 /// Does not borrow from the original program, so we can mutate the AST.
 struct CompiledFnForReplacement {
-    /// Start position of the original function, used to find it in the AST.
+    /// Start position of the original function (retained for range queries).
     fn_start: Option<u32>,
+    /// Node ID of the original function, used to find it in the AST.
+    fn_node_id: Option<u32>,
     /// The kind of the original function node.
     original_kind: OriginalFnKind,
     /// The compiled codegen output.
@@ -2067,13 +2071,13 @@ fn get_functions_referenced_before_declaration(
     program: &Program,
     compiled_fns: &[CompiledFnForReplacement],
 ) -> HashSet<u32> {
-    // Collect function names and their start positions for compiled FunctionDeclarations
+    // Collect function names and their node_ids for compiled FunctionDeclarations
     let mut fn_names: HashMap<String, u32> = HashMap::new();
     for compiled in compiled_fns {
         if compiled.original_kind == OriginalFnKind::FunctionDeclaration {
             if let Some(ref name) = compiled.fn_name {
-                if let Some(start) = compiled.fn_start {
-                    fn_names.insert(name.clone(), start);
+                if let Some(nid) = compiled.fn_node_id {
+                    fn_names.insert(name.clone(), nid);
                 }
             }
         }
@@ -2096,9 +2100,9 @@ fn get_functions_referenced_before_declaration(
         }
         // For all remaining tracked names, check if the statement references them
         // at the top level (not inside nested functions)
-        for (name, start) in &fn_names {
-            if stmt_references_identifier_at_top_level(stmt, name) {
-                referenced_before_decl.insert(*start);
+        for (_name, nid) in &fn_names {
+            if stmt_references_identifier_at_top_level(stmt, _name) {
+                referenced_before_decl.insert(*nid);
             }
         }
     }
@@ -2212,10 +2216,10 @@ fn build_compiled_function_expression(codegen: &CodegenFunction) -> Expression {
 /// Build a function expression that preserves the original function's structure.
 /// For FunctionDeclarations, converts to FunctionExpression.
 /// For ArrowFunctionExpressions, keeps as-is.
-fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expression> {
+fn clone_original_fn_as_expression(stmt: &Statement, node_id: u32) -> Option<Expression> {
     match stmt {
         Statement::FunctionDeclaration(f) => {
-            if f.base.start == Some(start) {
+            if f.base.node_id == Some(node_id) {
                 return Some(Expression::FunctionExpression(FunctionExpression {
                     base: BaseNode::typed("FunctionExpression"),
                     id: f.id.clone(),
@@ -2232,7 +2236,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
         Statement::VariableDeclaration(var_decl) => {
             for d in &var_decl.declarations {
                 if let Some(ref init) = d.init {
-                    if let Some(e) = clone_original_expr_as_expression(init, start) {
+                    if let Some(e) = clone_original_expr_as_expression(init, node_id) {
                         return Some(e);
                     }
                 }
@@ -2241,7 +2245,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
         }
         Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
             ExportDefaultDecl::FunctionDeclaration(f) => {
-                if f.base.start == Some(start) {
+                if f.base.node_id == Some(node_id) {
                     return Some(Expression::FunctionExpression(FunctionExpression {
                         base: BaseNode::typed("FunctionExpression"),
                         id: f.id.clone(),
@@ -2255,14 +2259,14 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
                 }
                 None
             }
-            ExportDefaultDecl::Expression(e) => clone_original_expr_as_expression(e, start),
+            ExportDefaultDecl::Expression(e) => clone_original_expr_as_expression(e, node_id),
             _ => None,
         },
         Statement::ExportNamedDeclaration(export) => {
             if let Some(ref decl) = export.declaration {
                 match decl.as_ref() {
                     Declaration::FunctionDeclaration(f) => {
-                        if f.base.start == Some(start) {
+                        if f.base.node_id == Some(node_id) {
                             return Some(Expression::FunctionExpression(FunctionExpression {
                                 base: BaseNode::typed("FunctionExpression"),
                                 id: f.id.clone(),
@@ -2279,7 +2283,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
                     Declaration::VariableDeclaration(var_decl) => {
                         for d in &var_decl.declarations {
                             if let Some(ref init) = d.init {
-                                if let Some(e) = clone_original_expr_as_expression(init, start) {
+                                if let Some(e) = clone_original_expr_as_expression(init, node_id) {
                                     return Some(e);
                                 }
                             }
@@ -2293,26 +2297,26 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
             }
         }
         Statement::ExpressionStatement(expr_stmt) => {
-            clone_original_expr_as_expression(&expr_stmt.expression, start)
+            clone_original_expr_as_expression(&expr_stmt.expression, node_id)
         }
         // Recurse into block-containing statements
         Statement::BlockStatement(block) => {
             for s in &block.body {
-                if let Some(e) = clone_original_fn_as_expression(s, start) {
+                if let Some(e) = clone_original_fn_as_expression(s, node_id) {
                     return Some(e);
                 }
             }
             None
         }
         Statement::IfStatement(if_stmt) => {
-            if let Some(e) = clone_original_expr_as_expression(&if_stmt.test, start) {
+            if let Some(e) = clone_original_expr_as_expression(&if_stmt.test, node_id) {
                 return Some(e);
             }
-            if let Some(e) = clone_original_fn_as_expression(&if_stmt.consequent, start) {
+            if let Some(e) = clone_original_fn_as_expression(&if_stmt.consequent, node_id) {
                 return Some(e);
             }
             if let Some(ref alt) = if_stmt.alternate {
-                if let Some(e) = clone_original_fn_as_expression(alt, start) {
+                if let Some(e) = clone_original_fn_as_expression(alt, node_id) {
                     return Some(e);
                 }
             }
@@ -2320,20 +2324,20 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
         }
         Statement::TryStatement(try_stmt) => {
             for s in &try_stmt.block.body {
-                if let Some(e) = clone_original_fn_as_expression(s, start) {
+                if let Some(e) = clone_original_fn_as_expression(s, node_id) {
                     return Some(e);
                 }
             }
             if let Some(ref handler) = try_stmt.handler {
                 for s in &handler.body.body {
-                    if let Some(e) = clone_original_fn_as_expression(s, start) {
+                    if let Some(e) = clone_original_fn_as_expression(s, node_id) {
                         return Some(e);
                     }
                 }
             }
             if let Some(ref finalizer) = try_stmt.finalizer {
                 for s in &finalizer.body {
-                    if let Some(e) = clone_original_fn_as_expression(s, start) {
+                    if let Some(e) = clone_original_fn_as_expression(s, node_id) {
                         return Some(e);
                     }
                 }
@@ -2341,12 +2345,12 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
             None
         }
         Statement::SwitchStatement(switch_stmt) => {
-            if let Some(e) = clone_original_expr_as_expression(&switch_stmt.discriminant, start) {
+            if let Some(e) = clone_original_expr_as_expression(&switch_stmt.discriminant, node_id) {
                 return Some(e);
             }
             for case in &switch_stmt.cases {
                 for s in &case.consequent {
-                    if let Some(e) = clone_original_fn_as_expression(s, start) {
+                    if let Some(e) = clone_original_fn_as_expression(s, node_id) {
                         return Some(e);
                     }
                 }
@@ -2354,7 +2358,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
             None
         }
         Statement::LabeledStatement(labeled) => {
-            clone_original_fn_as_expression(&labeled.body, start)
+            clone_original_fn_as_expression(&labeled.body, node_id)
         }
         Statement::ForStatement(for_stmt) => {
             if let Some(ref init) = for_stmt.init {
@@ -2362,7 +2366,8 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
                     ForInit::VariableDeclaration(var_decl) => {
                         for d in &var_decl.declarations {
                             if let Some(ref init_expr) = d.init {
-                                if let Some(e) = clone_original_expr_as_expression(init_expr, start)
+                                if let Some(e) =
+                                    clone_original_expr_as_expression(init_expr, node_id)
                                 {
                                     return Some(e);
                                 }
@@ -2370,86 +2375,86 @@ fn clone_original_fn_as_expression(stmt: &Statement, start: u32) -> Option<Expre
                         }
                     }
                     ForInit::Expression(expr) => {
-                        if let Some(e) = clone_original_expr_as_expression(expr, start) {
+                        if let Some(e) = clone_original_expr_as_expression(expr, node_id) {
                             return Some(e);
                         }
                     }
                 }
             }
             if let Some(ref test) = for_stmt.test {
-                if let Some(e) = clone_original_expr_as_expression(test, start) {
+                if let Some(e) = clone_original_expr_as_expression(test, node_id) {
                     return Some(e);
                 }
             }
             if let Some(ref update) = for_stmt.update {
-                if let Some(e) = clone_original_expr_as_expression(update, start) {
+                if let Some(e) = clone_original_expr_as_expression(update, node_id) {
                     return Some(e);
                 }
             }
-            clone_original_fn_as_expression(&for_stmt.body, start)
+            clone_original_fn_as_expression(&for_stmt.body, node_id)
         }
         Statement::WhileStatement(while_stmt) => {
-            if let Some(e) = clone_original_expr_as_expression(&while_stmt.test, start) {
+            if let Some(e) = clone_original_expr_as_expression(&while_stmt.test, node_id) {
                 return Some(e);
             }
-            clone_original_fn_as_expression(&while_stmt.body, start)
+            clone_original_fn_as_expression(&while_stmt.body, node_id)
         }
         Statement::DoWhileStatement(do_while) => {
-            if let Some(e) = clone_original_expr_as_expression(&do_while.test, start) {
+            if let Some(e) = clone_original_expr_as_expression(&do_while.test, node_id) {
                 return Some(e);
             }
-            clone_original_fn_as_expression(&do_while.body, start)
+            clone_original_fn_as_expression(&do_while.body, node_id)
         }
         Statement::ForInStatement(for_in) => {
-            if let Some(e) = clone_original_expr_as_expression(&for_in.right, start) {
+            if let Some(e) = clone_original_expr_as_expression(&for_in.right, node_id) {
                 return Some(e);
             }
-            clone_original_fn_as_expression(&for_in.body, start)
+            clone_original_fn_as_expression(&for_in.body, node_id)
         }
         Statement::ForOfStatement(for_of) => {
-            if let Some(e) = clone_original_expr_as_expression(&for_of.right, start) {
+            if let Some(e) = clone_original_expr_as_expression(&for_of.right, node_id) {
                 return Some(e);
             }
-            clone_original_fn_as_expression(&for_of.body, start)
+            clone_original_fn_as_expression(&for_of.body, node_id)
         }
         Statement::WithStatement(with_stmt) => {
-            if let Some(e) = clone_original_expr_as_expression(&with_stmt.object, start) {
+            if let Some(e) = clone_original_expr_as_expression(&with_stmt.object, node_id) {
                 return Some(e);
             }
-            clone_original_fn_as_expression(&with_stmt.body, start)
+            clone_original_fn_as_expression(&with_stmt.body, node_id)
         }
         Statement::ReturnStatement(ret) => {
             if let Some(ref arg) = ret.argument {
-                clone_original_expr_as_expression(arg, start)
+                clone_original_expr_as_expression(arg, node_id)
             } else {
                 None
             }
         }
         Statement::ThrowStatement(throw_stmt) => {
-            clone_original_expr_as_expression(&throw_stmt.argument, start)
+            clone_original_expr_as_expression(&throw_stmt.argument, node_id)
         }
         _ => None,
     }
 }
 
 /// Clone an expression node for use as the original (fallback) in gating.
-fn clone_original_expr_as_expression(expr: &Expression, start: u32) -> Option<Expression> {
+fn clone_original_expr_as_expression(expr: &Expression, node_id: u32) -> Option<Expression> {
     match expr {
         Expression::FunctionExpression(f) => {
-            if f.base.start == Some(start) {
+            if f.base.node_id == Some(node_id) {
                 return Some(Expression::FunctionExpression(f.clone()));
             }
             None
         }
         Expression::ArrowFunctionExpression(f) => {
-            if f.base.start == Some(start) {
+            if f.base.node_id == Some(node_id) {
                 return Some(Expression::ArrowFunctionExpression(f.clone()));
             }
             None
         }
         Expression::CallExpression(call) => {
             for arg in &call.arguments {
-                if let Some(e) = clone_original_expr_as_expression(arg, start) {
+                if let Some(e) = clone_original_expr_as_expression(arg, node_id) {
                     return Some(e);
                 }
             }
@@ -2459,12 +2464,12 @@ fn clone_original_expr_as_expression(expr: &Expression, start: u32) -> Option<Ex
             for prop in &obj.properties {
                 match prop {
                     ObjectExpressionProperty::ObjectProperty(p) => {
-                        if let Some(e) = clone_original_expr_as_expression(&p.value, start) {
+                        if let Some(e) = clone_original_expr_as_expression(&p.value, node_id) {
                             return Some(e);
                         }
                     }
                     ObjectExpressionProperty::SpreadElement(s) => {
-                        if let Some(e) = clone_original_expr_as_expression(&s.argument, start) {
+                        if let Some(e) = clone_original_expr_as_expression(&s.argument, node_id) {
                             return Some(e);
                         }
                     }
@@ -2475,31 +2480,31 @@ fn clone_original_expr_as_expression(expr: &Expression, start: u32) -> Option<Ex
         }
         Expression::ArrayExpression(arr) => {
             for elem in arr.elements.iter().flatten() {
-                if let Some(e) = clone_original_expr_as_expression(elem, start) {
+                if let Some(e) = clone_original_expr_as_expression(elem, node_id) {
                     return Some(e);
                 }
             }
             None
         }
         Expression::AssignmentExpression(assign) => {
-            clone_original_expr_as_expression(&assign.right, start)
+            clone_original_expr_as_expression(&assign.right, node_id)
         }
         Expression::SequenceExpression(seq) => {
             for e in &seq.expressions {
-                if let Some(e) = clone_original_expr_as_expression(e, start) {
+                if let Some(e) = clone_original_expr_as_expression(e, node_id) {
                     return Some(e);
                 }
             }
             None
         }
         Expression::ConditionalExpression(cond) => {
-            if let Some(e) = clone_original_expr_as_expression(&cond.consequent, start) {
+            if let Some(e) = clone_original_expr_as_expression(&cond.consequent, node_id) {
                 return Some(e);
             }
-            clone_original_expr_as_expression(&cond.alternate, start)
+            clone_original_expr_as_expression(&cond.alternate, node_id)
         }
         Expression::ParenthesizedExpression(paren) => {
-            clone_original_expr_as_expression(&paren.expression, start)
+            clone_original_expr_as_expression(&paren.expression, node_id)
         }
         _ => None,
     }
@@ -2558,9 +2563,9 @@ fn apply_compiled_functions(
             .iter()
             .map(|compiled| {
                 if compiled.gating.is_some() {
-                    if let Some(start) = compiled.fn_start {
+                    if let Some(node_id) = compiled.fn_node_id {
                         for stmt in program.body.iter() {
-                            if let Some(expr) = clone_original_fn_as_expression(stmt, start) {
+                            if let Some(expr) = clone_original_fn_as_expression(stmt, node_id) {
                                 return Some(expr);
                             }
                         }
@@ -2579,7 +2584,7 @@ fn apply_compiled_functions(
     // For FunctionDeclarations: insert right after the parent (matching TS insertAfter behavior)
     // For FunctionExpression/ArrowFunctionExpression: append at end of program body
     //   (matching TS pushContainer behavior)
-    let mut outlined_decls: Vec<(Option<u32>, OriginalFnKind, FunctionDeclaration)> = Vec::new();
+    let mut outlined_decls: Vec<(Option<u32>, OriginalFnKind, FunctionDeclaration)> = Vec::new(); // (node_id, kind, decl)
 
     // Replace each compiled function in the AST
     for (idx, compiled) in compiled_fns.iter().enumerate() {
@@ -2599,13 +2604,13 @@ fn apply_compiled_functions(
                 component_declaration: false,
                 hook_declaration: false,
             };
-            outlined_decls.push((compiled.fn_start, compiled.original_kind, outlined_decl));
+            outlined_decls.push((compiled.fn_node_id, compiled.original_kind, outlined_decl));
         }
 
         if let Some(ref gating_config) = compiled.gating {
             let is_ref_before_decl = compiled
-                .fn_start
-                .map_or(false, |s| referenced_before_decl.contains(&s));
+                .fn_node_id
+                .map_or(false, |nid| referenced_before_decl.contains(&nid));
 
             if is_ref_before_decl && compiled.original_kind == OriginalFnKind::FunctionDeclaration {
                 // Use the hoisted function declaration gating pattern
@@ -2623,8 +2628,8 @@ fn apply_compiled_functions(
             }
         } else {
             // No gating: replace the function directly (original behavior)
-            if let Some(start) = compiled.fn_start {
-                let mut visitor = ReplaceFnVisitor { start, compiled };
+            if let Some(node_id) = compiled.fn_node_id {
+                let mut visitor = ReplaceFnVisitor { node_id, compiled };
                 walk_program_mut(&mut visitor, program);
             }
         }
@@ -2637,12 +2642,12 @@ fn apply_compiled_functions(
     // For FunctionExpression/ArrowFunctionExpression: push to program body (top level).
     //   Matches TS behavior: `program.pushContainer('body', [fn])`.
 
-    for (parent_start, original_kind, outlined_decl) in outlined_decls {
+    for (parent_node_id, original_kind, outlined_decl) in outlined_decls {
         let outlined_stmt = Statement::FunctionDeclaration(outlined_decl);
         match original_kind {
             OriginalFnKind::FunctionDeclaration => {
-                if let Some(start) = parent_start {
-                    if !insert_after_fn_recursive(&mut program.body, start, outlined_stmt.clone()) {
+                if let Some(nid) = parent_node_id {
+                    if !insert_after_fn_recursive(&mut program.body, nid, outlined_stmt.clone()) {
                         program.body.push(outlined_stmt);
                     }
                 } else {
@@ -2696,8 +2701,12 @@ fn apply_gated_function_conditional(
     original_expr: Option<Expression>,
     context: &mut ProgramContext,
 ) {
-    let start = match compiled.fn_start {
+    let _start = match compiled.fn_start {
         Some(s) => s,
+        None => return,
+    };
+    let node_id = match compiled.fn_node_id {
+        Some(nid) => nid,
         None => return,
     };
 
@@ -2748,7 +2757,7 @@ fn apply_gated_function_conditional(
     for (idx, stmt) in program.body.iter().enumerate() {
         if let Statement::ExportDefaultDeclaration(export) = stmt {
             if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
-                if f.base.start == Some(start) {
+                if f.base.node_id == Some(node_id) {
                     if let Some(ref fn_id) = f.id {
                         export_default_name = Some((idx, fn_id.name.clone()));
                     }
@@ -2758,7 +2767,7 @@ fn apply_gated_function_conditional(
     }
 
     let mut visitor = ReplaceWithGatedVisitor {
-        start,
+        node_id,
         gating_expression: &gating_expression,
     };
     walk_program_mut(&mut visitor, program);
@@ -2786,7 +2795,7 @@ fn apply_gated_function_conditional(
 
 /// Visitor that replaces a function with a gated conditional expression.
 struct ReplaceWithGatedVisitor<'a> {
-    start: u32,
+    node_id: u32,
     gating_expression: &'a Expression,
 }
 
@@ -2794,7 +2803,7 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
     fn visit_statement(&mut self, stmt: &mut Statement) -> VisitResult {
         // FunctionDeclaration → replace with `const Foo = gating() ? ... : ...;`
         if let Statement::FunctionDeclaration(f) = &*stmt {
-            if f.base.start == Some(self.start) {
+            if f.base.start == Some(self.node_id) {
                 let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
                     base: BaseNode::typed("Identifier"),
                     name: "anonymous".to_string(),
@@ -2825,7 +2834,7 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
         if let Statement::ExportDefaultDeclaration(export) = stmt {
             let is_fn_decl_match = matches!(
                 export.declaration.as_ref(),
-                ExportDefaultDecl::FunctionDeclaration(f) if f.base.start == Some(self.start)
+                ExportDefaultDecl::FunctionDeclaration(f) if f.base.start == Some(self.node_id)
             );
             if is_fn_decl_match {
                 if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
@@ -2862,7 +2871,7 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
         if let Statement::ExportNamedDeclaration(export) = stmt {
             if let Some(ref mut decl) = export.declaration {
                 if let Declaration::FunctionDeclaration(f) = decl.as_mut() {
-                    if f.base.start == Some(self.start) {
+                    if f.base.start == Some(self.node_id) {
                         let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
                             base: BaseNode::typed("Identifier"),
                             name: "anonymous".to_string(),
@@ -2892,11 +2901,11 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
 
     fn visit_expression(&mut self, expr: &mut Expression) -> VisitResult {
         match expr {
-            Expression::FunctionExpression(f) if f.base.start == Some(self.start) => {
+            Expression::FunctionExpression(f) if f.base.start == Some(self.node_id) => {
                 *expr = self.gating_expression.clone();
                 VisitResult::Stop
             }
-            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.start) => {
+            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.node_id) => {
                 *expr = self.gating_expression.clone();
                 VisitResult::Stop
             }
@@ -2919,8 +2928,12 @@ fn apply_gated_function_hoisted(
     gating_config: &GatingConfig,
     context: &mut ProgramContext,
 ) {
-    let start = match compiled.fn_start {
+    let _start = match compiled.fn_start {
         Some(s) => s,
+        None => return,
+    };
+    let node_id = match compiled.fn_node_id {
+        Some(nid) => nid,
         None => return,
     };
 
@@ -2948,7 +2961,7 @@ fn apply_gated_function_hoisted(
 
     for (idx, stmt) in program.body.iter().enumerate() {
         if let Statement::FunctionDeclaration(f) = stmt {
-            if f.base.start == Some(start) {
+            if f.base.node_id == Some(node_id) {
                 original_params = f.params.clone();
                 fn_stmt_idx = Some(idx);
                 break;
@@ -3192,31 +3205,40 @@ fn apply_gated_function_hoisted(
 /// Recursively search for a function at `start` position and insert `new_stmt`
 /// right after it in the same block. Returns true if successfully inserted.
 /// Searches through all nested structures: function bodies, object method bodies, etc.
-fn insert_after_fn_recursive(stmts: &mut Vec<Statement>, start: u32, new_stmt: Statement) -> bool {
+fn insert_after_fn_recursive(
+    stmts: &mut Vec<Statement>,
+    node_id: u32,
+    new_stmt: Statement,
+) -> bool {
     // Check this level first
-    if let Some(pos) = stmts.iter().position(|s| stmt_has_fn_at_start(s, start)) {
+    if let Some(pos) = stmts
+        .iter()
+        .position(|s| stmt_has_fn_with_node_id(s, node_id))
+    {
         stmts.insert(pos + 1, new_stmt);
         return true;
     }
     // Recurse into every statement that can contain nested blocks
     for stmt in stmts.iter_mut() {
-        if insert_after_fn_in_stmt(stmt, start, &new_stmt) {
+        if insert_after_fn_in_stmt(stmt, node_id, &new_stmt) {
             return true;
         }
     }
     false
 }
 
-fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statement) -> bool {
+fn insert_after_fn_in_stmt(stmt: &mut Statement, node_id: u32, new_stmt: &Statement) -> bool {
     match stmt {
-        Statement::FunctionDeclaration(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
-        Statement::BlockStatement(b) => insert_after_fn_in_block(b, start, new_stmt),
+        Statement::FunctionDeclaration(f) => {
+            insert_after_fn_in_block(&mut f.body, node_id, new_stmt)
+        }
+        Statement::BlockStatement(b) => insert_after_fn_in_block(b, node_id, new_stmt),
         Statement::ExpressionStatement(e) => {
-            insert_after_fn_in_expr(&mut e.expression, start, new_stmt)
+            insert_after_fn_in_expr(&mut e.expression, node_id, new_stmt)
         }
         Statement::ReturnStatement(r) => {
             if let Some(arg) = &mut r.argument {
-                insert_after_fn_in_expr(arg, start, new_stmt)
+                insert_after_fn_in_expr(arg, node_id, new_stmt)
             } else {
                 false
             }
@@ -3224,7 +3246,7 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
         Statement::VariableDeclaration(v) => {
             for decl in &mut v.declarations {
                 if let Some(init) = &mut decl.init {
-                    if insert_after_fn_in_expr(init, start, new_stmt) {
+                    if insert_after_fn_in_expr(init, node_id, new_stmt) {
                         return true;
                     }
                 }
@@ -3233,21 +3255,21 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
         }
         Statement::ExportDefaultDeclaration(e) => match e.declaration.as_mut() {
             ExportDefaultDecl::FunctionDeclaration(f) => {
-                insert_after_fn_in_block(&mut f.body, start, new_stmt)
+                insert_after_fn_in_block(&mut f.body, node_id, new_stmt)
             }
-            ExportDefaultDecl::Expression(expr) => insert_after_fn_in_expr(expr, start, new_stmt),
+            ExportDefaultDecl::Expression(expr) => insert_after_fn_in_expr(expr, node_id, new_stmt),
             _ => false,
         },
         Statement::ExportNamedDeclaration(e) => {
             if let Some(decl) = &mut e.declaration {
                 match decl.as_mut() {
                     Declaration::FunctionDeclaration(f) => {
-                        insert_after_fn_in_block(&mut f.body, start, new_stmt)
+                        insert_after_fn_in_block(&mut f.body, node_id, new_stmt)
                     }
                     Declaration::VariableDeclaration(v) => {
                         for d in &mut v.declarations {
                             if let Some(init) = &mut d.init {
-                                if insert_after_fn_in_expr(init, start, new_stmt) {
+                                if insert_after_fn_in_expr(init, node_id, new_stmt) {
                                     return true;
                                 }
                             }
@@ -3261,24 +3283,24 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
             }
         }
         Statement::IfStatement(i) => {
-            insert_after_fn_in_stmt(&mut i.consequent, start, new_stmt)
+            insert_after_fn_in_stmt(&mut i.consequent, node_id, new_stmt)
                 || i.alternate
                     .as_mut()
-                    .map_or(false, |a| insert_after_fn_in_stmt(a, start, new_stmt))
+                    .map_or(false, |a| insert_after_fn_in_stmt(a, node_id, new_stmt))
         }
-        Statement::ForStatement(f) => insert_after_fn_in_stmt(&mut f.body, start, new_stmt),
-        Statement::WhileStatement(w) => insert_after_fn_in_stmt(&mut w.body, start, new_stmt),
+        Statement::ForStatement(f) => insert_after_fn_in_stmt(&mut f.body, node_id, new_stmt),
+        Statement::WhileStatement(w) => insert_after_fn_in_stmt(&mut w.body, node_id, new_stmt),
         Statement::TryStatement(t) => {
-            if insert_after_fn_in_block(&mut t.block, start, new_stmt) {
+            if insert_after_fn_in_block(&mut t.block, node_id, new_stmt) {
                 return true;
             }
             if let Some(h) = &mut t.handler {
-                if insert_after_fn_in_block(&mut h.body, start, new_stmt) {
+                if insert_after_fn_in_block(&mut h.body, node_id, new_stmt) {
                     return true;
                 }
             }
             if let Some(f) = &mut t.finalizer {
-                if insert_after_fn_in_block(f, start, new_stmt) {
+                if insert_after_fn_in_block(f, node_id, new_stmt) {
                     return true;
                 }
             }
@@ -3290,19 +3312,19 @@ fn insert_after_fn_in_stmt(stmt: &mut Statement, start: u32, new_stmt: &Statemen
 
 fn insert_after_fn_in_block(
     block: &mut react_compiler_ast::statements::BlockStatement,
-    start: u32,
+    node_id: u32,
     new_stmt: &Statement,
 ) -> bool {
     if let Some(pos) = block
         .body
         .iter()
-        .position(|s| stmt_has_fn_at_start(s, start))
+        .position(|s| stmt_has_fn_with_node_id(s, node_id))
     {
         block.body.insert(pos + 1, new_stmt.clone());
         return true;
     }
     for stmt in block.body.iter_mut() {
-        if insert_after_fn_in_stmt(stmt, start, new_stmt) {
+        if insert_after_fn_in_stmt(stmt, node_id, new_stmt) {
             return true;
         }
     }
@@ -3311,7 +3333,7 @@ fn insert_after_fn_in_block(
 
 fn insert_after_fn_in_expr(
     expr: &mut react_compiler_ast::expressions::Expression,
-    start: u32,
+    node_id: u32,
     new_stmt: &Statement,
 ) -> bool {
     use react_compiler_ast::expressions::Expression;
@@ -3320,14 +3342,14 @@ fn insert_after_fn_in_expr(
             for prop in &mut obj.properties {
                 match prop {
                     react_compiler_ast::expressions::ObjectExpressionProperty::ObjectMethod(m) => {
-                        if insert_after_fn_in_block(&mut m.body, start, new_stmt) {
+                        if insert_after_fn_in_block(&mut m.body, node_id, new_stmt) {
                             return true;
                         }
                     }
                     react_compiler_ast::expressions::ObjectExpressionProperty::ObjectProperty(
                         p,
                     ) => {
-                        if insert_after_fn_in_expr(&mut p.value, start, new_stmt) {
+                        if insert_after_fn_in_expr(&mut p.value, node_id, new_stmt) {
                             return true;
                         }
                     }
@@ -3338,7 +3360,7 @@ fn insert_after_fn_in_expr(
         }
         Expression::ArrayExpression(arr) => {
             for elem in arr.elements.iter_mut().flatten() {
-                if insert_after_fn_in_expr(elem, start, new_stmt) {
+                if insert_after_fn_in_expr(elem, node_id, new_stmt) {
                     return true;
                 }
             }
@@ -3346,40 +3368,42 @@ fn insert_after_fn_in_expr(
         }
         Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_mut() {
             react_compiler_ast::expressions::ArrowFunctionBody::BlockStatement(block) => {
-                insert_after_fn_in_block(block, start, new_stmt)
+                insert_after_fn_in_block(block, node_id, new_stmt)
             }
             react_compiler_ast::expressions::ArrowFunctionBody::Expression(e) => {
-                insert_after_fn_in_expr(e, start, new_stmt)
+                insert_after_fn_in_expr(e, node_id, new_stmt)
             }
         },
-        Expression::FunctionExpression(f) => insert_after_fn_in_block(&mut f.body, start, new_stmt),
+        Expression::FunctionExpression(f) => {
+            insert_after_fn_in_block(&mut f.body, node_id, new_stmt)
+        }
         Expression::CallExpression(c) => {
             for arg in &mut c.arguments {
-                if insert_after_fn_in_expr(arg, start, new_stmt) {
+                if insert_after_fn_in_expr(arg, node_id, new_stmt) {
                     return true;
                 }
             }
-            insert_after_fn_in_expr(&mut c.callee, start, new_stmt)
+            insert_after_fn_in_expr(&mut c.callee, node_id, new_stmt)
         }
         Expression::ConditionalExpression(c) => {
-            insert_after_fn_in_expr(&mut c.consequent, start, new_stmt)
-                || insert_after_fn_in_expr(&mut c.alternate, start, new_stmt)
+            insert_after_fn_in_expr(&mut c.consequent, node_id, new_stmt)
+                || insert_after_fn_in_expr(&mut c.alternate, node_id, new_stmt)
         }
         Expression::AssignmentExpression(a) => {
-            insert_after_fn_in_expr(&mut a.right, start, new_stmt)
+            insert_after_fn_in_expr(&mut a.right, node_id, new_stmt)
         }
         Expression::TypeCastExpression(tc) => {
-            insert_after_fn_in_expr(&mut tc.expression, start, new_stmt)
+            insert_after_fn_in_expr(&mut tc.expression, node_id, new_stmt)
         }
         Expression::ParenthesizedExpression(p) => {
-            insert_after_fn_in_expr(&mut p.expression, start, new_stmt)
+            insert_after_fn_in_expr(&mut p.expression, node_id, new_stmt)
         }
         Expression::TSAsExpression(ts) => {
-            insert_after_fn_in_expr(&mut ts.expression, start, new_stmt)
+            insert_after_fn_in_expr(&mut ts.expression, node_id, new_stmt)
         }
         Expression::SequenceExpression(s) => {
             for expr in &mut s.expressions {
-                if insert_after_fn_in_expr(expr, start, new_stmt) {
+                if insert_after_fn_in_expr(expr, node_id, new_stmt) {
                     return true;
                 }
             }
@@ -3389,30 +3413,30 @@ fn insert_after_fn_in_expr(
     }
 }
 
-/// Check if a statement contains a function whose BaseNode.start matches.
-fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
+/// Check if a statement contains a function whose BaseNode.node_id matches.
+fn stmt_has_fn_with_node_id(stmt: &Statement, node_id: u32) -> bool {
     match stmt {
-        Statement::FunctionDeclaration(f) => f.base.start == Some(start),
+        Statement::FunctionDeclaration(f) => f.base.node_id == Some(node_id),
         Statement::VariableDeclaration(var_decl) => var_decl.declarations.iter().any(|decl| {
             if let Some(ref init) = decl.init {
-                expr_has_fn_at_start(init, start)
+                expr_has_fn_with_node_id(init, node_id)
             } else {
                 false
             }
         }),
         Statement::ExportDefaultDeclaration(export) => match export.declaration.as_ref() {
-            ExportDefaultDecl::FunctionDeclaration(f) => f.base.start == Some(start),
-            ExportDefaultDecl::Expression(e) => expr_has_fn_at_start(e, start),
+            ExportDefaultDecl::FunctionDeclaration(f) => f.base.node_id == Some(node_id),
+            ExportDefaultDecl::Expression(e) => expr_has_fn_with_node_id(e, node_id),
             _ => false,
         },
         Statement::ExportNamedDeclaration(export) => {
             if let Some(ref decl) = export.declaration {
                 match decl.as_ref() {
-                    Declaration::FunctionDeclaration(f) => f.base.start == Some(start),
+                    Declaration::FunctionDeclaration(f) => f.base.node_id == Some(node_id),
                     Declaration::VariableDeclaration(var_decl) => {
                         var_decl.declarations.iter().any(|d| {
                             if let Some(ref init) = d.init {
-                                expr_has_fn_at_start(init, start)
+                                expr_has_fn_with_node_id(init, node_id)
                             } else {
                                 false
                             }
@@ -3425,42 +3449,46 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
             }
         }
         Statement::ExpressionStatement(expr_stmt) => {
-            expr_has_fn_at_start(&expr_stmt.expression, start)
+            expr_has_fn_with_node_id(&expr_stmt.expression, node_id)
         }
         // Recurse into block-containing statements
-        Statement::BlockStatement(block) => {
-            block.body.iter().any(|s| stmt_has_fn_at_start(s, start))
-        }
+        Statement::BlockStatement(block) => block
+            .body
+            .iter()
+            .any(|s| stmt_has_fn_with_node_id(s, node_id)),
         Statement::IfStatement(if_stmt) => {
-            expr_has_fn_at_start(&if_stmt.test, start)
-                || stmt_has_fn_at_start(&if_stmt.consequent, start)
+            expr_has_fn_with_node_id(&if_stmt.test, node_id)
+                || stmt_has_fn_with_node_id(&if_stmt.consequent, node_id)
                 || if_stmt
                     .alternate
                     .as_ref()
-                    .map_or(false, |alt| stmt_has_fn_at_start(alt, start))
+                    .map_or(false, |alt| stmt_has_fn_with_node_id(alt, node_id))
         }
         Statement::TryStatement(try_stmt) => {
             try_stmt
                 .block
                 .body
                 .iter()
-                .any(|s| stmt_has_fn_at_start(s, start))
+                .any(|s| stmt_has_fn_with_node_id(s, node_id))
                 || try_stmt.handler.as_ref().map_or(false, |h| {
-                    h.body.body.iter().any(|s| stmt_has_fn_at_start(s, start))
+                    h.body
+                        .body
+                        .iter()
+                        .any(|s| stmt_has_fn_with_node_id(s, node_id))
                 })
                 || try_stmt.finalizer.as_ref().map_or(false, |f| {
-                    f.body.iter().any(|s| stmt_has_fn_at_start(s, start))
+                    f.body.iter().any(|s| stmt_has_fn_with_node_id(s, node_id))
                 })
         }
         Statement::SwitchStatement(switch_stmt) => {
-            expr_has_fn_at_start(&switch_stmt.discriminant, start)
+            expr_has_fn_with_node_id(&switch_stmt.discriminant, node_id)
                 || switch_stmt.cases.iter().any(|case| {
                     case.consequent
                         .iter()
-                        .any(|s| stmt_has_fn_at_start(s, start))
+                        .any(|s| stmt_has_fn_with_node_id(s, node_id))
                 })
         }
-        Statement::LabeledStatement(labeled) => stmt_has_fn_at_start(&labeled.body, start),
+        Statement::LabeledStatement(labeled) => stmt_has_fn_with_node_id(&labeled.body, node_id),
         Statement::ForStatement(for_stmt) => {
             if let Some(ref init) = for_stmt.init {
                 match init.as_ref() {
@@ -3468,13 +3496,13 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
                         if var_decl.declarations.iter().any(|d| {
                             d.init
                                 .as_ref()
-                                .map_or(false, |e| expr_has_fn_at_start(e, start))
+                                .map_or(false, |e| expr_has_fn_with_node_id(e, node_id))
                         }) {
                             return true;
                         }
                     }
                     ForInit::Expression(expr) => {
-                        if expr_has_fn_at_start(expr, start) {
+                        if expr_has_fn_with_node_id(expr, node_id) {
                             return true;
                         }
                     }
@@ -3483,70 +3511,74 @@ fn stmt_has_fn_at_start(stmt: &Statement, start: u32) -> bool {
             if for_stmt
                 .test
                 .as_ref()
-                .map_or(false, |t| expr_has_fn_at_start(t, start))
+                .map_or(false, |t| expr_has_fn_with_node_id(t, node_id))
             {
                 return true;
             }
             if for_stmt
                 .update
                 .as_ref()
-                .map_or(false, |u| expr_has_fn_at_start(u, start))
+                .map_or(false, |u| expr_has_fn_with_node_id(u, node_id))
             {
                 return true;
             }
-            stmt_has_fn_at_start(&for_stmt.body, start)
+            stmt_has_fn_with_node_id(&for_stmt.body, node_id)
         }
         Statement::WhileStatement(while_stmt) => {
-            expr_has_fn_at_start(&while_stmt.test, start)
-                || stmt_has_fn_at_start(&while_stmt.body, start)
+            expr_has_fn_with_node_id(&while_stmt.test, node_id)
+                || stmt_has_fn_with_node_id(&while_stmt.body, node_id)
         }
         Statement::DoWhileStatement(do_while) => {
-            expr_has_fn_at_start(&do_while.test, start)
-                || stmt_has_fn_at_start(&do_while.body, start)
+            expr_has_fn_with_node_id(&do_while.test, node_id)
+                || stmt_has_fn_with_node_id(&do_while.body, node_id)
         }
         Statement::ForInStatement(for_in) => {
-            expr_has_fn_at_start(&for_in.right, start) || stmt_has_fn_at_start(&for_in.body, start)
+            expr_has_fn_with_node_id(&for_in.right, node_id)
+                || stmt_has_fn_with_node_id(&for_in.body, node_id)
         }
         Statement::ForOfStatement(for_of) => {
-            expr_has_fn_at_start(&for_of.right, start) || stmt_has_fn_at_start(&for_of.body, start)
+            expr_has_fn_with_node_id(&for_of.right, node_id)
+                || stmt_has_fn_with_node_id(&for_of.body, node_id)
         }
         Statement::WithStatement(with_stmt) => {
-            expr_has_fn_at_start(&with_stmt.object, start)
-                || stmt_has_fn_at_start(&with_stmt.body, start)
+            expr_has_fn_with_node_id(&with_stmt.object, node_id)
+                || stmt_has_fn_with_node_id(&with_stmt.body, node_id)
         }
         Statement::ReturnStatement(ret) => ret
             .argument
             .as_ref()
-            .map_or(false, |arg| expr_has_fn_at_start(arg, start)),
-        Statement::ThrowStatement(throw_stmt) => expr_has_fn_at_start(&throw_stmt.argument, start),
+            .map_or(false, |arg| expr_has_fn_with_node_id(arg, node_id)),
+        Statement::ThrowStatement(throw_stmt) => {
+            expr_has_fn_with_node_id(&throw_stmt.argument, node_id)
+        }
         _ => false,
     }
 }
 
-/// Check if an expression contains a function whose BaseNode.start matches.
-fn expr_has_fn_at_start(expr: &Expression, start: u32) -> bool {
+/// Check if an expression contains a function whose BaseNode.node_id matches.
+fn expr_has_fn_with_node_id(expr: &Expression, node_id: u32) -> bool {
     match expr {
-        Expression::FunctionExpression(f) => f.base.start == Some(start),
-        Expression::ArrowFunctionExpression(f) => f.base.start == Some(start),
+        Expression::FunctionExpression(f) => f.base.node_id == Some(node_id),
+        Expression::ArrowFunctionExpression(f) => f.base.node_id == Some(node_id),
         // Check for forwardRef/memo wrappers: the inner function
         Expression::CallExpression(call) => call
             .arguments
             .iter()
-            .any(|arg| expr_has_fn_at_start(arg, start)),
+            .any(|arg| expr_has_fn_with_node_id(arg, node_id)),
         _ => false,
     }
 }
 
-/// Visitor that replaces a compiled function in the AST by matching `base.start`.
+/// Visitor that replaces a compiled function in the AST by matching `base.node_id`.
 struct ReplaceFnVisitor<'a> {
-    start: u32,
+    node_id: u32,
     compiled: &'a CompiledFnForReplacement,
 }
 
 impl MutVisitor for ReplaceFnVisitor<'_> {
     fn visit_statement(&mut self, stmt: &mut Statement) -> VisitResult {
         match stmt {
-            Statement::FunctionDeclaration(f) if f.base.start == Some(self.start) => {
+            Statement::FunctionDeclaration(f) if f.base.start == Some(self.node_id) => {
                 f.id = self.compiled.codegen_fn.id.clone();
                 f.params = self.compiled.codegen_fn.params.clone();
                 f.body = self.compiled.codegen_fn.body.clone();
@@ -3560,7 +3592,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
             }
             Statement::ExportDefaultDeclaration(export) => {
                 if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_mut() {
-                    if f.base.start == Some(self.start) {
+                    if f.base.start == Some(self.node_id) {
                         f.id = self.compiled.codegen_fn.id.clone();
                         f.params = self.compiled.codegen_fn.params.clone();
                         f.body = self.compiled.codegen_fn.body.clone();
@@ -3577,7 +3609,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
             Statement::ExportNamedDeclaration(export) => {
                 if let Some(ref mut decl) = export.declaration {
                     if let Declaration::FunctionDeclaration(f) = decl.as_mut() {
-                        if f.base.start == Some(self.start) {
+                        if f.base.start == Some(self.node_id) {
                             f.id = self.compiled.codegen_fn.id.clone();
                             f.params = self.compiled.codegen_fn.params.clone();
                             f.body = self.compiled.codegen_fn.body.clone();
@@ -3599,7 +3631,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
 
     fn visit_expression(&mut self, expr: &mut Expression) -> VisitResult {
         match expr {
-            Expression::FunctionExpression(f) if f.base.start == Some(self.start) => {
+            Expression::FunctionExpression(f) if f.base.start == Some(self.node_id) => {
                 f.id = self.compiled.codegen_fn.id.clone();
                 f.params = self.compiled.codegen_fn.params.clone();
                 f.body = self.compiled.codegen_fn.body.clone();
@@ -3609,7 +3641,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
                 f.type_parameters = None;
                 VisitResult::Stop
             }
-            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.start) => {
+            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.node_id) => {
                 f.params = self.compiled.codegen_fn.params.clone();
                 f.body = Box::new(ArrowFunctionBody::BlockStatement(
                     self.compiled.codegen_fn.body.clone(),
@@ -3916,6 +3948,7 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
             };
             CompiledFnForReplacement {
                 fn_start: cf.source.fn_start,
+                fn_node_id: cf.source.fn_node_id,
                 original_kind,
                 codegen_fn: cf.codegen_fn,
                 source_kind: cf.kind,

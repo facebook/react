@@ -197,6 +197,33 @@ fn scope_info_round_trip() {
             }
         }
 
+        // Validate node-ID maps
+        if consistency_error.is_none() {
+            for (&_nid, &bid) in &scope_info.ref_node_id_to_binding {
+                if bid.0 as usize >= scope_info.bindings.len() {
+                    consistency_error = Some(format!(
+                        "ref_node_id_to_binding has binding id {} but only {} bindings exist",
+                        bid.0,
+                        scope_info.bindings.len()
+                    ));
+                    break;
+                }
+            }
+        }
+
+        if consistency_error.is_none() {
+            for (&_nid, &sid) in &scope_info.node_id_to_scope {
+                if sid.0 as usize >= scope_info.scopes.len() {
+                    consistency_error = Some(format!(
+                        "node_id_to_scope has scope id {} but only {} scopes exist",
+                        sid.0,
+                        scope_info.scopes.len()
+                    ));
+                    break;
+                }
+            }
+        }
+
         if let Some(err) = consistency_error {
             failures.push((fixture_name, format!("Consistency error: {err}")));
             continue;
@@ -232,11 +259,11 @@ fn scope_info_round_trip() {
 // Typed AST traversal for identifier renaming
 // ============================================================================
 
-/// Rename an Identifier if it has a binding in reference_to_binding.
+/// Rename an Identifier if it has a binding in ref_node_id_to_binding.
 /// Uses the declaring scope from the binding table — no scope stack needed.
 fn rename_id(id: &mut Identifier, si: &ScopeInfo) {
-    if let Some(start) = id.base.start {
-        if let Some(&bid) = si.reference_to_binding.get(&start) {
+    if let Some(nid) = id.base.node_id {
+        if let Some(bid) = si.resolve_reference_by_node_id(nid) {
             let scope = si.bindings[bid.0 as usize].scope.0;
             id.name = format!("{}_{}", id.name, format_args!("{scope}_{}", bid.0));
         }
@@ -252,8 +279,8 @@ fn visit_json(val: &mut serde_json::Value, si: &ScopeInfo) {
     match val {
         serde_json::Value::Object(map) => {
             if map.get("type").and_then(|v| v.as_str()) == Some("Identifier") {
-                if let Some(start) = map.get("start").and_then(|v| v.as_u64()) {
-                    if let Some(&bid) = si.reference_to_binding.get(&(start as u32)) {
+                if let Some(nid) = map.get("_nodeId").and_then(|v| v.as_u64()) {
+                    if let Some(bid) = si.resolve_reference_by_node_id(nid as u32) {
                         let scope = si.bindings[bid.0 as usize].scope.0;
                         if let Some(name) = map
                             .get("name")

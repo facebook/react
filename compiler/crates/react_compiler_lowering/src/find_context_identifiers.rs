@@ -40,39 +40,24 @@ struct ContextIdentifierVisitor<'a> {
 }
 
 impl<'a> ContextIdentifierVisitor<'a> {
-    fn push_function_scope(&mut self, start: Option<u32>, node_id: Option<u32>) {
-        let scope = node_id
-            .and_then(|nid| self.scope_info.resolve_scope_by_node_id(nid))
-            .or_else(|| start.and_then(|s| self.scope_info.node_to_scope.get(&s).copied()));
+    fn push_function_scope(&mut self, _start: Option<u32>, node_id: Option<u32>) {
+        let scope = self.scope_info.resolve_scope_for_node(node_id);
         if let Some(scope) = scope {
             self.function_stack.push(scope);
         }
     }
 
-    fn pop_function_scope(&mut self, start: Option<u32>, node_id: Option<u32>) {
-        let has_scope = node_id
-            .and_then(|nid| self.scope_info.resolve_scope_by_node_id(nid))
-            .or_else(|| start.and_then(|s| self.scope_info.node_to_scope.get(&s).copied()));
+    fn pop_function_scope(&mut self, _start: Option<u32>, node_id: Option<u32>) {
+        let has_scope = self.scope_info.resolve_scope_for_node(node_id);
         if has_scope.is_some() {
             self.function_stack.pop();
         }
     }
 
-    fn check_captured_reference(&mut self, start: Option<u32>, node_id: Option<u32>) {
-        let binding_id = if let Some(nid) = node_id {
-            match self.scope_info.resolve_reference_by_node_id(nid) {
-                Some(id) => id,
-                None => return,
-            }
-        } else {
-            let start = match start {
-                Some(s) => s,
-                None => return,
-            };
-            match self.scope_info.reference_to_binding.get(&start) {
-                Some(&id) => id,
-                None => return,
-            }
+    fn check_captured_reference(&mut self, _start: Option<u32>, node_id: Option<u32>) {
+        let binding_id = match self.scope_info.resolve_reference_id_for_node(node_id) {
+            Some(id) => id,
+            None => return,
         };
         let &fn_scope = match self.function_stack.last() {
             Some(s) => s,
@@ -348,15 +333,8 @@ pub fn find_context_identifiers(
     scope_info: &ScopeInfo,
     env: &mut Environment,
 ) -> Result<HashSet<BindingId>, CompilerError> {
-    let func_start = match func {
-        FunctionNode::FunctionDeclaration(d) => d.base.start.unwrap_or(0),
-        FunctionNode::FunctionExpression(e) => e.base.start.unwrap_or(0),
-        FunctionNode::ArrowFunctionExpression(a) => a.base.start.unwrap_or(0),
-    };
     let func_scope = scope_info
-        .node_to_scope
-        .get(&func_start)
-        .copied()
+        .resolve_scope_for_node(func.node_id())
         .unwrap_or(scope_info.program_scope);
 
     let mut visitor = ContextIdentifierVisitor {
