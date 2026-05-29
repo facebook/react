@@ -22,7 +22,6 @@
     "@babel/plugin-transform-block-scoping": "^7.11.1",
     "@babel/plugin-transform-class-properties": "^7.25.9",
     "@babel/plugin-transform-classes": "^7.10.4",
-    "@babel/plugin-transform-computed-properties": "^7.10.4",
     "@babel/plugin-transform-destructuring": "^7.10.4",
     "@babel/plugin-transform-for-of": "^7.10.4",
     "@babel/plugin-transform-literals": "^7.10.4",
