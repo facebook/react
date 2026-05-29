@@ -292,41 +292,6 @@ fn is_captured_by_function(
 /// in `reference_to_binding`, not true references. Uses node-ID comparison
 /// when available (from `ref_node_id_to_binding` + `declaration_node_id`),
 /// falling back to position comparison otherwise.
-/// Build a node_id→position map for references that may not be in IdentifierLocIndex.
-/// The AST walker doesn't visit type annotation subtrees, so identifiers like
-/// `typeof someVar` won't have IdentifierLocIndex entries. This map provides
-/// position data for those references by matching ref_node_id_to_binding entries
-/// with reference_to_binding entries that share the same binding_id.
-pub fn build_nid_to_pos_fallback(scope_info: &ScopeInfo) -> std::collections::HashMap<u32, u32> {
-    let mut pos_by_bid: std::collections::HashMap<BindingId, Vec<u32>> =
-        std::collections::HashMap::new();
-    for (&pos, &bid) in &scope_info.reference_to_binding {
-        pos_by_bid.entry(bid).or_default().push(pos);
-    }
-    for positions in pos_by_bid.values_mut() {
-        positions.sort();
-    }
-
-    let mut nid_by_bid: std::collections::HashMap<BindingId, Vec<u32>> =
-        std::collections::HashMap::new();
-    for (&nid, &bid) in &scope_info.ref_node_id_to_binding {
-        nid_by_bid.entry(bid).or_default().push(nid);
-    }
-    for nids in nid_by_bid.values_mut() {
-        nids.sort();
-    }
-
-    let mut map = std::collections::HashMap::new();
-    for (bid, positions) in &pos_by_bid {
-        if let Some(nids) = nid_by_bid.get(bid) {
-            for (pos, nid) in positions.iter().zip(nids.iter()) {
-                map.insert(*nid, *pos);
-            }
-        }
-    }
-    map
-}
-
 /// Build a set of (BindingId, node_id) pairs for declaration sites in
 /// ref_node_id_to_binding. These are entries where the reference's node_id
 /// matches the binding's declaration_node_id — i.e., the "reference" is
@@ -414,10 +379,6 @@ pub fn find_context_identifiers(
     // which are included in reference_to_binding but are not true references.
     // Prefer node-ID comparison (immune to position-0 collisions from synthetic
     // nodes), falling back to position when node-IDs are unavailable.
-    // Build a node_id→position fallback for references not in identifier_locs
-    // (e.g., identifiers inside type annotations that the AST walker doesn't visit).
-    let nid_to_pos = build_nid_to_pos_fallback(scope_info);
-
     let declaration_node_ids = build_declaration_node_ids(scope_info);
     for (&ref_nid, &binding_id) in &scope_info.ref_node_id_to_binding {
         let info = match visitor.binding_info.get(&binding_id) {
@@ -428,15 +389,10 @@ pub fn find_context_identifiers(
         if declaration_node_ids.contains(&(binding_id, ref_nid)) {
             continue;
         }
-        // Get the reference's position for range checks.
-        // Use identifier_locs if available, fall back to nid_to_pos for
-        // type annotation refs that the AST walker doesn't visit.
+        // Get the reference's position from identifier_locs for range checks
         let ref_pos = match identifier_locs.get(&ref_nid) {
             Some(entry) => entry.start,
-            None => match nid_to_pos.get(&ref_nid) {
-                Some(&pos) => pos,
-                None => continue,
-            },
+            None => continue,
         };
         let binding = &scope_info.bindings[binding_id.0 as usize];
         // Check if ref_pos is inside a nested function scope

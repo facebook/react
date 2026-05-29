@@ -301,5 +301,22 @@ pub fn build_identifier_loc_index(
         }
     }
 
+    // Walk type annotations that the AST walker skips.
+    // The walker skips TypeAlias, TSTypeAliasDeclaration, and similar statements,
+    // but Babel's isReferencedIdentifier() returns true for identifiers inside them
+    // (e.g., typeof x in `type T = ReturnType<typeof x>`). The TS compiler's
+    // FindContextIdentifiers includes these via its Identifier visitor. We match by
+    // serializing the function body to JSON and walking the full JSON tree.
+    // The walk_json_for_identifiers method uses entry().or_insert() so it won't
+    // overwrite entries already added by the typed walker above.
+    let body_json: Option<serde_json::Value> = match func {
+        FunctionNode::FunctionDeclaration(d) => serde_json::to_value(&d.body).ok(),
+        FunctionNode::FunctionExpression(e) => serde_json::to_value(&e.body).ok(),
+        FunctionNode::ArrowFunctionExpression(a) => serde_json::to_value(&a.body).ok(),
+    };
+    if let Some(json) = body_json {
+        visitor.walk_json_for_identifiers(&json);
+    }
+
     visitor.index
 }

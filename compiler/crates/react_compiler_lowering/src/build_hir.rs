@@ -2619,10 +2619,6 @@ fn lower_block_statement_inner(
         }
     };
 
-    // Build nid→pos fallback for type annotation refs not in identifier_locs
-    let nid_to_pos =
-        crate::find_context_identifiers::build_nid_to_pos_fallback(builder.scope_info());
-
     // Collect hoistable bindings from this scope AND direct child block scopes.
     // In Babel, a function body BlockStatement shares the function's scope, so
     // all bindings (var, const, let) are in one scope. But our scope extraction
@@ -2745,19 +2741,15 @@ fn lower_block_statement_inner(
                     if ref_bid != *binding_id {
                         return None;
                     }
-                    let entry = builder.identifier_locs().get(&ref_nid);
-                    // Get position from identifier_locs or fallback
-                    let ref_start = entry
-                        .map(|e| e.start)
-                        .or_else(|| nid_to_pos.get(&ref_nid).copied())
-                        .unwrap_or(0);
+                    let entry = builder.identifier_locs().get(&ref_nid)?;
+                    let ref_start = entry.start;
                     if ref_start < stmt_start || ref_start >= stmt_end {
                         return None;
                     }
                     if apply_decl_filter && *decl_node_id == Some(ref_nid) {
                         return None;
                     }
-                    if entry.is_some_and(|e| e.is_jsx) {
+                    if entry.is_jsx {
                         return None;
                     }
                     Some(ref_start)
@@ -6678,10 +6670,6 @@ fn gather_captured_context(
     let mut captured =
         IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
 
-    // Build a node_id→position fallback for references not in identifier_locs
-    // (e.g., identifiers inside type annotations that the AST walker doesn't visit).
-    let nid_to_pos = crate::find_context_identifiers::build_nid_to_pos_fallback(scope_info);
-
     // Iterate ref_node_id_to_binding (node_id-keyed) and use identifier_locs
     // (also node_id-keyed) for position range checks and metadata.
     for (&ref_nid, &binding_id) in &scope_info.ref_node_id_to_binding {
@@ -6690,13 +6678,8 @@ fn gather_captured_context(
                 continue;
             }
         } else {
-            // Range check: use identifier_locs position if available,
-            // otherwise fall back to nid_to_pos (covers type annotation refs)
-            let ref_start = identifier_locs
-                .get(&ref_nid)
-                .map(|e| e.start)
-                .or_else(|| nid_to_pos.get(&ref_nid).copied())
-                .unwrap_or(0);
+            // Range check: use the position stored in identifier_locs
+            let ref_start = identifier_locs.get(&ref_nid).map(|e| e.start).unwrap_or(0);
             if ref_start < func_start || ref_start >= func_end {
                 continue;
             }
