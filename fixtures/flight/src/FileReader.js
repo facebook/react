@@ -12,9 +12,5 @@ export default async function FileReader() {
   await writeFile(`/tmp/react-flight-fixture-above.txt`, 'x'.repeat(1000001));
   await readFile(`/tmp/react-flight-fixture-above.txt`, 'utf-8');
 
-  // This console log's argument is above the threshold too, so the replayed
-  // log on the client receives the placeholder instead of the actual string.
-  console.log('a'.repeat(1000001));
-
   return <p>FileReader</p>;
 }

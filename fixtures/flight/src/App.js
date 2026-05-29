@@ -246,7 +246,11 @@ export default async function App({prerender, noCache}) {
               <LargeContent />
             </React.Suspense>
           )}
-          <FileReader />
+          {/*
+            This text prop is above the threshold, so in the debug info for
+            the element we'll see a placeholder instead of the actual value.
+          */}
+          <FileReader largeText={'a'.repeat(1000001)} />
         </Container>
       </body>
     </html>
