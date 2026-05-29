@@ -9,14 +9,6 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 
-import {
-  TREE_OPERATION_ADD,
-  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
-} from 'react-devtools-shared/src/constants';
-import {
-  ElementTypeFunction,
-  ElementTypeRoot,
-} from 'react-devtools-shared/src/frontend/types';
 import {getCommitTree} from 'react-devtools-shared/src/devtools/views/Profiler/CommitTreeBuilder';
 import {getVersionedRenderImplementation} from './utils';
 
@@ -41,84 +33,46 @@ describe('commit tree', () => {
   const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >= 16.9
-  it('should ignore duplicate add operations for nodes already in the commit tree', () => {
-    const snapshots = new Map([
-      [
-        1,
-        {
-          children: [2],
-          compiledWithForget: false,
-          displayName: null,
-          hocDisplayNames: null,
-          id: 1,
-          key: null,
-          type: ElementTypeRoot,
-        },
-      ],
-      [
-        2,
-        {
-          children: [],
-          compiledWithForget: false,
-          displayName: 'Parent',
-          hocDisplayNames: null,
-          id: 2,
-          key: null,
-          type: ElementTypeFunction,
-        },
-      ],
-    ]);
-    const initialTreeBaseDurations = new Map([
-      [1, 0],
-      [2, 10],
-    ]);
-    const operations = [
-      [
-        1, // renderer ID
-        1, // root ID
-        0, // string table size
-        TREE_OPERATION_ADD,
-        2,
-        ElementTypeFunction,
-        1,
-        0,
-        0,
-        0,
-        0,
-        TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
-        2,
-        20000,
-      ],
-    ];
-    const profilerStore = {
-      profilingData: {
-        dataForRoots: new Map([
-          [
-            1,
-            {
-              commitData: [],
-              displayName: 'Parent',
-              initialTreeBaseDurations,
-              operations,
-              rootID: 1,
-              snapshots,
-            },
-          ],
-        ]),
-        imported: false,
-        timelineData: [],
-      },
+  it('replays duplicate add operations without duplicating children for the same tree node', () => {
+    const Parent = () => {
+      Scheduler.unstable_advanceTime(1);
+      return <Child />;
     };
 
-    const commitTree = getCommitTree({
+    const Child = () => {
+      Scheduler.unstable_advanceTime(2);
+      return null;
+    };
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => render(<Parent />));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const dataForRoot = store.profilerStore.getDataForRoot(rootID);
+    const firstCommitTree = getCommitTree({
       commitIndex: 0,
-      profilerStore,
-      rootID: 1,
+      profilerStore: store.profilerStore,
+      rootID,
     });
 
-    expect(commitTree.nodes.size).toBe(2);
-    expect(commitTree.nodes.get(1)?.children).toEqual([2]);
-    expect(commitTree.nodes.get(2)?.treeBaseDuration).toBe(20);
+    // Replay a duplicated payload using the same snapshot and operations shape
+    // that ProfilerStore records from the renderer.
+    dataForRoot.operations.push(dataForRoot.operations[0].slice());
+
+    const secondCommitTree = getCommitTree({
+      commitIndex: 1,
+      profilerStore: store.profilerStore,
+      rootID,
+    });
+
+    expect(secondCommitTree.nodes.size).toBe(firstCommitTree.nodes.size);
+    expect(secondCommitTree.nodes.get(rootID)?.children).toEqual(
+      firstCommitTree.nodes.get(rootID)?.children,
+    );
+    secondCommitTree.nodes.forEach(node => {
+      expect(new Set(node.children).size).toBe(node.children.length);
+    });
   });
 
   // @reactVersion >= 16.9
