@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3ee4f7dde893e605a6559857ce7c3b65>>
+ * @generated SignedSource<<f836d5ef58e8b29d890383a303d0f107>>
  */
 
 "use strict";
@@ -2271,7 +2271,9 @@ __DEV__ &&
             "This object has been omitted by React in the console log to avoid sending too much data from the server. Try logging smaller or more specific objects." ===
             value
               ? "\u2026"
-              : JSON.stringify(value);
+              : JSON.stringify(
+                  1024 <= value.length ? value.slice(0, 1023) + "\u2026" : value
+                );
           break;
         case "undefined":
           value = "undefined";
@@ -21177,10 +21179,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-c0cd4d5d-20260527",
+        version: "19.3.0-native-fb-f0dfee38-20260529",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-c0cd4d5d-20260527"
+        reconcilerVersion: "19.3.0-native-fb-f0dfee38-20260529"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
