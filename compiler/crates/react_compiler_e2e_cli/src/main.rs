@@ -14,11 +14,12 @@
 //! Usage:
 //!   react-compiler-e2e --frontend <swc|oxc> --filename <path> [--options <json>] [--json]
 
+use std::io::Read;
+use std::process;
+
 use clap::Parser;
 use react_compiler::entrypoint::compile_result::LoggerEvent;
 use react_compiler::entrypoint::plugin_options::PluginOptions;
-use std::io::Read;
-use std::process;
 
 #[derive(Parser)]
 #[command(name = "react-compiler-e2e")]
@@ -38,6 +39,10 @@ struct Cli {
     /// Output JSON envelope with code/error and logger events
     #[arg(long)]
     json: bool,
+
+    /// Dump ScopeInfo as JSON to stderr (for debugging scope analysis differences)
+    #[arg(long)]
+    dump_scope: bool,
 }
 
 /// Result of compiling via a frontend, carrying both code/error and logger events.
@@ -52,10 +57,12 @@ fn main() {
 
     // Read source from stdin
     let mut source = String::new();
-    std::io::stdin().read_to_string(&mut source).unwrap_or_else(|e| {
-        eprintln!("Failed to read stdin: {e}");
-        process::exit(1);
-    });
+    std::io::stdin()
+        .read_to_string(&mut source)
+        .unwrap_or_else(|e| {
+            eprintln!("Failed to read stdin: {e}");
+            process::exit(1);
+        });
 
     // Parse options — merge provided JSON over sensible defaults
     let default_json = r#"{"shouldCompile":true,"enableReanimated":false,"isDev":false}"#;
@@ -66,8 +73,7 @@ fn main() {
             eprintln!("Failed to parse options JSON: {e}");
             process::exit(1);
         });
-        if let (serde_json::Value::Object(b), serde_json::Value::Object(o)) =
-            (&mut base, overrides)
+        if let (serde_json::Value::Object(b), serde_json::Value::Object(o)) = (&mut base, overrides)
         {
             for (k, v) in o {
                 b.insert(k, v);
@@ -83,7 +89,7 @@ fn main() {
 
     let output = match cli.frontend.as_str() {
         "swc" => compile_swc(&source, &cli.filename, options),
-        "oxc" => compile_oxc(&source, &cli.filename, options),
+        "oxc" => compile_oxc(&source, &cli.filename, options, cli.dump_scope),
         other => {
             eprintln!("Unknown frontend: {other}. Use 'swc' or 'oxc'.");
             process::exit(1);
@@ -173,9 +179,10 @@ fn compile_swc(source: &str, filename: &str, mut options: PluginOptions) -> Comp
     // the TS/Babel plugin throws on any compilation error. We replicate this
     // behavior by returning an error when there are error diagnostics and
     // no compiled output.
-    let has_errors = result.diagnostics.iter().any(|d| {
-        matches!(d.severity, react_compiler_swc::diagnostics::Severity::Error)
-    });
+    let has_errors = result
+        .diagnostics
+        .iter()
+        .any(|d| matches!(d.severity, react_compiler_swc::diagnostics::Severity::Error));
 
     match result.module {
         Some(compiled_module) => CompileOutput {
@@ -211,7 +218,12 @@ fn compile_swc(source: &str, filename: &str, mut options: PluginOptions) -> Comp
     }
 }
 
-fn compile_oxc(source: &str, filename: &str, mut options: PluginOptions) -> CompileOutput {
+fn compile_oxc(
+    source: &str,
+    filename: &str,
+    mut options: PluginOptions,
+    dump_scope: bool,
+) -> CompileOutput {
     options.filename = Some(filename.to_string());
     // Always enable TypeScript parsing (like the TS/Babel baseline uses
     // ['typescript', 'jsx'] plugins). Some .js fixtures contain TS syntax.
@@ -241,20 +253,31 @@ fn compile_oxc(source: &str, filename: &str, mut options: PluginOptions) -> Comp
         .build(&parsed.program)
         .semantic;
 
+    if dump_scope {
+        let scope_info =
+            react_compiler_oxc::convert_scope::convert_scope_info(&semantic, &parsed.program);
+        eprintln!("{}", serde_json::to_string_pretty(&scope_info).unwrap());
+    }
+
     let result = react_compiler_oxc::transform(&parsed.program, &semantic, source, options);
     let events = result.events;
 
     // Check for error-level diagnostics, similar to SWC path.
     // OxcDiagnostic uses miette's Severity.
-    let has_errors = result.diagnostics.iter().any(|d| {
-        d.severity == oxc_diagnostics::Severity::Error
-    });
+    let has_errors = result
+        .diagnostics
+        .iter()
+        .any(|d| d.severity == oxc_diagnostics::Severity::Error);
 
     match result.file {
         Some(ref file) => {
             let emit_allocator = oxc_allocator::Allocator::default();
             CompileOutput {
-                code: Some(react_compiler_oxc::emit(file, &emit_allocator, Some(source))),
+                code: Some(react_compiler_oxc::emit(
+                    file,
+                    &emit_allocator,
+                    Some(source),
+                )),
                 error: None,
                 events,
             }

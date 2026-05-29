@@ -145,6 +145,70 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         }
     }
 
+    // Map `export default function Foo` — Babel treats the ExportDefaultDeclaration
+    // as a reference to the function's binding. OXC doesn't create a reference for
+    // the export itself, so we add one at the export statement's start position.
+    for stmt in &_program.body {
+        if let oxc_ast::ast::Statement::ExportDefaultDeclaration(export) = stmt {
+            if let oxc_ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(func) =
+                &export.declaration
+            {
+                if let Some(id) = &func.id {
+                    let name = id.name.as_str();
+                    if let Some(symbol_id) = id.symbol_id.get() {
+                        if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
+                            reference_to_binding
+                                .entry(export.span().start)
+                                .or_insert(binding_id);
+                        }
+                    } else {
+                        // Fallback: look up binding by name
+                        for (sym_id, &bind_id) in &symbol_to_binding {
+                            if scoping.symbol_name(*sym_id) == name {
+                                reference_to_binding
+                                    .entry(export.span().start)
+                                    .or_insert(bind_id);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Map `export default function Foo` — Babel treats the ExportDefaultDeclaration
+    // as a reference to the function's binding. OXC doesn't create a reference for
+    // the export itself, so we add one at the export statement's start position.
+    for stmt in &_program.body {
+        if let oxc_ast::ast::Statement::ExportDefaultDeclaration(export) = stmt {
+            if let oxc_ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(func) =
+                &export.declaration
+            {
+                if let Some(id) = &func.id {
+                    let name = id.name.as_str();
+                    if let Some(symbol_id) = id.symbol_id.get() {
+                        if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
+                            reference_to_binding
+                                .entry(export.span().start)
+                                .or_insert(binding_id);
+                        }
+                    } else {
+                        // Fallback: look up binding by name
+                        for (sym_id, &bind_id) in &symbol_to_binding {
+                            if scoping.symbol_name(*sym_id) == name {
+                                reference_to_binding
+                                    .entry(export.span().start)
+                                    .or_insert(bind_id);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     let program_scope = ScopeId(scoping.root_scope_id().index() as u32);
 
     ScopeInfo {
