@@ -5160,6 +5160,17 @@ function renderDebugModel(
   }
 
   if (typeof value === 'string') {
+    if (value.length > 1000000) {
+      // Reconstructing a multi-megabyte string on the client blocks the main
+      // thread for too long. We omit the actual value and send a placeholder
+      // instead.
+      return (
+        'This string of length ' +
+        value.length +
+        ' has been omitted by React to avoid sending too much data from the ' +
+        'server.'
+      );
+    }
     if (value.length >= 1024) {
       // Large strings are counted towards the object limit.
       if (counter.objectLimit <= 0) {

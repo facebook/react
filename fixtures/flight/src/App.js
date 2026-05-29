@@ -27,6 +27,7 @@ import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
 import {sdkMethod} from './library.js';
+import FileReader from './FileReader.js';
 
 const promisedText = new Promise(resolve =>
   setTimeout(() => resolve('deferred text'), 50)
@@ -245,6 +246,7 @@ export default async function App({prerender, noCache}) {
               <LargeContent />
             </React.Suspense>
           )}
+          <FileReader />
         </Container>
       </body>
     </html>
