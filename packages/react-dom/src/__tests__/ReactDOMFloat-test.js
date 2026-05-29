@@ -2219,7 +2219,7 @@ body {
                 media="all"
                 integrity="somehash"
                 referrerPolicy="origin"
-                // data and non starndard attributes that should flush
+                // data and non standard attributes that should flush
                 data-foo={'"quoted"'}
                 nonStandardAttr="attr"
                 properlyformattednonstandardattr="attr"
@@ -2242,7 +2242,7 @@ body {
                     media="all"
                     integrity="somehash"
                     referrerPolicy="origin"
-                    // data and non starndard attributes that should flush
+                    // data and non standard attributes that should flush
                     data-foo={'"quoted"'}
                     nonStandardAttr="attr"
                     properlyformattednonstandardattr="attr"
