@@ -2734,7 +2734,7 @@ fn lower_block_statement_inner(
                         && **ref_start < stmt_end
                         && **ref_binding_id == *binding_id
                         && (!apply_decl_filter || Some(**ref_start) != *decl_start)
-                        && !builder.is_jsx_identifier(**ref_start)
+                        && !builder.is_jsx_identifier_by_pos(**ref_start)
                 })
                 .map(|(ref_start, _)| *ref_start)
                 .collect();
@@ -2840,7 +2840,8 @@ fn lower_block_statement_inner(
             };
 
             // Look up the reference location for the DeclareContext instruction
-            let ref_loc = builder.get_identifier_loc(info.first_ref_pos);
+            let ref_node_id = builder.pos_to_node_id.get(&info.first_ref_pos).copied();
+            let ref_loc = ref_node_id.and_then(|nid| builder.get_identifier_loc(nid));
             let identifier = builder.resolve_binding(&info.name, info.binding_id)?;
             let place = Place {
                 effect: Effect::Unknown,
@@ -4392,7 +4393,7 @@ fn lower_assignment(
                         // Check if the binding is hoisted before flagging const reassignment
                         let is_hoisted = builder
                             .scope_info()
-                            .resolve_reference(start)
+                            .resolve_reference_for_node(id.base.node_id)
                             .map(|b| builder.environment().is_hoisted_identifier(b.id.0))
                             .unwrap_or(false);
                         if kind == InstructionKind::Const && !is_hoisted {
@@ -5572,6 +5573,7 @@ fn lower_function(
         func_start,
         func_end,
         ident_locs,
+        &builder.pos_to_node_id,
         ref_override.as_ref(),
     );
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
@@ -5644,6 +5646,7 @@ fn lower_function_declaration(
         func_start,
         func_end,
         ident_locs,
+        &builder.pos_to_node_id,
         None,
     );
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
@@ -5707,19 +5710,22 @@ fn lower_function_declaration(
                 builder.resolve_identifier(name, start, ident_loc.clone(), id_node.base.node_id)?;
             if matches!(&binding, VariableBinding::Global { .. }) {
                 // For function redeclarations (e.g., `function x() {} function x() {}`),
-                // the redeclaration's identifier position may not be in
-                // reference_to_binding (OXC/SWC don't map constant violations).
-                // Retry using the first declaration's position from the scope chain.
-                let fallback_start = {
+                // the redeclaration's identifier may not be in ref_node_id_to_binding
+                // (OXC/SWC don't map constant violations). Retry using the first
+                // declaration's node_id from the scope chain.
+                let fallback = {
                     let si = builder.scope_info();
                     let scope_id = si
                         .resolve_scope_for_node(func_decl.base.node_id)
                         .unwrap_or(si.program_scope);
-                    si.get_binding(scope_id, name)
-                        .and_then(|bid| si.bindings[bid.0 as usize].declaration_start)
+                    si.get_binding(scope_id, name).map(|bid| {
+                        let b = &si.bindings[bid.0 as usize];
+                        (b.declaration_start.unwrap_or(0), b.declaration_node_id)
+                    })
                 };
-                if let Some(ds) = fallback_start {
-                    binding = builder.resolve_identifier(name, ds, ident_loc.clone(), None)?;
+                if let Some((ds, ds_node_id)) = fallback {
+                    binding =
+                        builder.resolve_identifier(name, ds, ident_loc.clone(), ds_node_id)?;
                 }
             }
             match binding {
@@ -5810,6 +5816,7 @@ fn lower_function_for_object_method(
         func_start,
         func_end,
         ident_locs,
+        &builder.pos_to_node_id,
         None,
     );
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
@@ -6442,8 +6449,9 @@ fn is_reorderable_expression(
     use react_compiler_ast::expressions::Expression;
     match expr {
         Expression::Identifier(ident) => {
-            let start = ident.base.start.unwrap_or(0);
-            let binding = builder.scope_info().resolve_reference(start);
+            let binding = builder
+                .scope_info()
+                .resolve_reference_for_node(ident.base.node_id);
             match binding {
                 None => {
                     // global, safe to reorder
@@ -6502,8 +6510,10 @@ fn is_reorderable_expression(
                 inner = m.object.as_ref();
             }
             if let Expression::Identifier(ident) = inner {
-                let start = ident.base.start.unwrap_or(0);
-                match builder.scope_info().resolve_reference(start) {
+                match builder
+                    .scope_info()
+                    .resolve_reference_for_node(ident.base.node_id)
+                {
                     None => true, // global
                     Some(binding) => {
                         // Module-scope bindings (ModuleLocal, imports) are safe to reorder
@@ -6631,6 +6641,7 @@ fn gather_captured_context(
     func_start: u32,
     func_end: u32,
     identifier_locs: &IdentifierLocIndex,
+    pos_to_node_id: &std::collections::HashMap<u32, u32>,
     ref_positions_override: Option<&IndexSet<u32>>,
 ) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
     let parent_scope = scope_info.scopes[function_scope.0 as usize].parent;
@@ -6642,6 +6653,8 @@ fn gather_captured_context(
     let mut captured =
         IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
 
+    // Iterate reference_to_binding for position-range filtering, then use
+    // pos_to_node_id bridge to look up IdentifierLocIndex entries by node_id.
     for (&ref_start, &binding_id) in &scope_info.reference_to_binding {
         if let Some(allowed) = ref_positions_override {
             if !allowed.contains(&ref_start) {
@@ -6654,23 +6667,20 @@ fn gather_captured_context(
         }
         let binding = &scope_info.bindings[binding_id.0 as usize];
         // Skip references that are actually the binding's own declaration site
-        // (e.g., the function name in `function x() {}` is mapped in referenceToBinding
-        // but is not a true captured reference)
         if binding.declaration_start == Some(ref_start) {
             continue;
         }
+        // Look up the node_id for this position to access identifier_locs
+        let ref_node_id = pos_to_node_id.get(&ref_start).copied();
         // Skip function/class declaration names that are not expression references.
-        // In the TS, gatherCapturedContext traverses with an Expression visitor, so
-        // it never encounters function declaration names. But reference_to_binding
-        // includes constant violations for function redeclarations (e.g., the second
-        // `function x() {}` in a scope), so we must filter them out here.
-        if let Some(entry) = identifier_locs.get(&ref_start) {
-            if entry.is_declaration_name {
-                continue;
+        if let Some(nid) = ref_node_id {
+            if let Some(entry) = identifier_locs.get(&nid) {
+                if entry.is_declaration_name {
+                    continue;
+                }
             }
         }
-        // Skip type-only bindings (e.g., Flow/TypeScript type aliases)
-        // These are not runtime values and should not be captured as context
+        // Skip type-only bindings
         if binding.declaration_type == "TypeAlias"
             || binding.declaration_type == "OpaqueType"
             || binding.declaration_type == "InterfaceDeclaration"
@@ -6681,16 +6691,14 @@ fn gather_captured_context(
             continue;
         }
         if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
-            let loc = identifier_locs.get(&ref_start).map(|entry| {
-                // For JSX identifiers that are part of an opening element name,
-                // use the JSXOpeningElement's loc (which spans the full tag) to match
-                // the TS behavior where handleMaybeDependency receives the
-                // JSXOpeningElement path and uses path.node.loc.
-                if let Some(oe_loc) = &entry.opening_element_loc {
-                    oe_loc.clone()
-                } else {
-                    entry.loc.clone()
-                }
+            let loc = ref_node_id.and_then(|nid| {
+                identifier_locs.get(&nid).map(|entry| {
+                    if let Some(oe_loc) = &entry.opening_element_loc {
+                        oe_loc.clone()
+                    } else {
+                        entry.loc.clone()
+                    }
+                })
             });
             captured.insert(binding.id, loc);
         }

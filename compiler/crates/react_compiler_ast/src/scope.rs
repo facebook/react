@@ -161,13 +161,14 @@ impl ScopeInfo {
         self.node_id_to_scope.get(&node_id).copied()
     }
 
-    /// Resolve the scope for an AST node by node_id. Panics if node_id is None.
-    /// All AST nodes must have node_id set (populated by all backends).
+    /// Resolve the scope for an AST node by node_id.
+    /// Returns None if node_id is None (the node has no scope entry) or if the
+    /// node_id doesn't map to any scope. This is expected for AST nodes that
+    /// don't create their own scope — e.g., a function body BlockStatement in
+    /// Babel shares the function's scope and never gets a _nodeId assigned by
+    /// scope extraction.
     pub fn resolve_scope_for_node(&self, node_id: Option<u32>) -> Option<ScopeId> {
-        let nid = node_id.expect(
-            "BUG: node_id is None during scope resolution. \
-             All AST nodes must have node_id set by the frontend (Babel/OXC/SWC).",
-        );
+        let nid = node_id?;
         self.node_id_to_scope.get(&nid).copied()
     }
 
@@ -177,18 +178,17 @@ impl ScopeInfo {
         self.ref_node_id_to_binding.get(&node_id).copied()
     }
 
-    /// Resolve the binding for an identifier by node_id. Panics if node_id is None.
-    /// Returns None for globals/unresolved references.
+    /// Resolve the binding for an identifier by node_id.
+    /// Returns None if node_id is None or if the identifier doesn't resolve to
+    /// a binding (i.e., it's a global/unresolved reference).
     pub fn resolve_reference_id_for_node(&self, node_id: Option<u32>) -> Option<BindingId> {
-        let nid = node_id.expect(
-            "BUG: node_id is None during reference resolution. \
-             All identifier nodes must have node_id set by the frontend (Babel/OXC/SWC).",
-        );
+        let nid = node_id?;
         self.ref_node_id_to_binding.get(&nid).copied()
     }
 
-    /// Resolve the binding for an identifier by node_id. Panics if node_id is None.
-    /// Returns None for globals/unresolved references.
+    /// Resolve the binding for an identifier by node_id.
+    /// Returns None if node_id is None or if the identifier doesn't resolve to
+    /// a binding (i.e., it's a global/unresolved reference).
     pub fn resolve_reference_for_node(&self, node_id: Option<u32>) -> Option<&BindingData> {
         self.resolve_reference_id_for_node(node_id)
             .map(|id| &self.bindings[id.0 as usize])
@@ -200,23 +200,6 @@ impl ScopeInfo {
         self.reference_to_binding
             .get(&identifier_start)
             .map(|id| &self.bindings[id.0 as usize])
-    }
-
-    /// Look up a binding by name in the scope that contains the identifier at `start`.
-    /// Used as a fallback when position-based lookup (`resolve_reference`) returns a
-    /// binding whose name doesn't match -- e.g., when Babel's Flow component transform
-    /// creates multiple params with the same start position.
-    pub fn resolve_reference_by_name(&self, name: &str, start: u32) -> Option<&BindingData> {
-        let scope_id = self.resolve_reference(start).map(|b| b.scope)?;
-        let mut current = Some(scope_id);
-        while let Some(sid) = current {
-            let scope = &self.scopes[sid.0 as usize];
-            if let Some(id) = scope.bindings.get(name) {
-                return Some(&self.bindings[id.0 as usize]);
-            }
-            current = scope.parent;
-        }
-        None
     }
 
     /// Find a binding by name within the descendants of a given scope.

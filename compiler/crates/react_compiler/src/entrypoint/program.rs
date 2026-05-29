@@ -2803,7 +2803,7 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
     fn visit_statement(&mut self, stmt: &mut Statement) -> VisitResult {
         // FunctionDeclaration → replace with `const Foo = gating() ? ... : ...;`
         if let Statement::FunctionDeclaration(f) = &*stmt {
-            if f.base.start == Some(self.node_id) {
+            if f.base.node_id == Some(self.node_id) {
                 let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
                     base: BaseNode::typed("Identifier"),
                     name: "anonymous".to_string(),
@@ -2834,7 +2834,7 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
         if let Statement::ExportDefaultDeclaration(export) = stmt {
             let is_fn_decl_match = matches!(
                 export.declaration.as_ref(),
-                ExportDefaultDecl::FunctionDeclaration(f) if f.base.start == Some(self.node_id)
+                ExportDefaultDecl::FunctionDeclaration(f) if f.base.node_id == Some(self.node_id)
             );
             if is_fn_decl_match {
                 if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_ref() {
@@ -2871,7 +2871,7 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
         if let Statement::ExportNamedDeclaration(export) = stmt {
             if let Some(ref mut decl) = export.declaration {
                 if let Declaration::FunctionDeclaration(f) = decl.as_mut() {
-                    if f.base.start == Some(self.node_id) {
+                    if f.base.node_id == Some(self.node_id) {
                         let fn_name = f.id.clone().unwrap_or_else(|| Identifier {
                             base: BaseNode::typed("Identifier"),
                             name: "anonymous".to_string(),
@@ -2901,11 +2901,11 @@ impl MutVisitor for ReplaceWithGatedVisitor<'_> {
 
     fn visit_expression(&mut self, expr: &mut Expression) -> VisitResult {
         match expr {
-            Expression::FunctionExpression(f) if f.base.start == Some(self.node_id) => {
+            Expression::FunctionExpression(f) if f.base.node_id == Some(self.node_id) => {
                 *expr = self.gating_expression.clone();
                 VisitResult::Stop
             }
-            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.node_id) => {
+            Expression::ArrowFunctionExpression(f) if f.base.node_id == Some(self.node_id) => {
                 *expr = self.gating_expression.clone();
                 VisitResult::Stop
             }
@@ -3578,7 +3578,7 @@ struct ReplaceFnVisitor<'a> {
 impl MutVisitor for ReplaceFnVisitor<'_> {
     fn visit_statement(&mut self, stmt: &mut Statement) -> VisitResult {
         match stmt {
-            Statement::FunctionDeclaration(f) if f.base.start == Some(self.node_id) => {
+            Statement::FunctionDeclaration(f) if f.base.node_id == Some(self.node_id) => {
                 f.id = self.compiled.codegen_fn.id.clone();
                 f.params = self.compiled.codegen_fn.params.clone();
                 f.body = self.compiled.codegen_fn.body.clone();
@@ -3592,7 +3592,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
             }
             Statement::ExportDefaultDeclaration(export) => {
                 if let ExportDefaultDecl::FunctionDeclaration(f) = export.declaration.as_mut() {
-                    if f.base.start == Some(self.node_id) {
+                    if f.base.node_id == Some(self.node_id) {
                         f.id = self.compiled.codegen_fn.id.clone();
                         f.params = self.compiled.codegen_fn.params.clone();
                         f.body = self.compiled.codegen_fn.body.clone();
@@ -3609,7 +3609,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
             Statement::ExportNamedDeclaration(export) => {
                 if let Some(ref mut decl) = export.declaration {
                     if let Declaration::FunctionDeclaration(f) = decl.as_mut() {
-                        if f.base.start == Some(self.node_id) {
+                        if f.base.node_id == Some(self.node_id) {
                             f.id = self.compiled.codegen_fn.id.clone();
                             f.params = self.compiled.codegen_fn.params.clone();
                             f.body = self.compiled.codegen_fn.body.clone();
@@ -3631,7 +3631,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
 
     fn visit_expression(&mut self, expr: &mut Expression) -> VisitResult {
         match expr {
-            Expression::FunctionExpression(f) if f.base.start == Some(self.node_id) => {
+            Expression::FunctionExpression(f) if f.base.node_id == Some(self.node_id) => {
                 f.id = self.compiled.codegen_fn.id.clone();
                 f.params = self.compiled.codegen_fn.params.clone();
                 f.body = self.compiled.codegen_fn.body.clone();
@@ -3641,7 +3641,7 @@ impl MutVisitor for ReplaceFnVisitor<'_> {
                 f.type_parameters = None;
                 VisitResult::Stop
             }
-            Expression::ArrowFunctionExpression(f) if f.base.start == Some(self.node_id) => {
+            Expression::ArrowFunctionExpression(f) if f.base.node_id == Some(self.node_id) => {
                 f.params = self.compiled.codegen_fn.params.clone();
                 f.body = Box::new(ArrowFunctionBody::BlockStatement(
                     self.compiled.codegen_fn.body.clone(),

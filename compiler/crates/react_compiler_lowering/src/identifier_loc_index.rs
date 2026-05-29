@@ -1,6 +1,6 @@
-//! Builds an index mapping identifier byte offsets to source locations.
+//! Builds an index mapping identifier node-IDs to source locations.
 //!
-//! Walks the function's AST to collect `(start, SourceLocation, is_jsx)` for
+//! Walks the function's AST to collect `(node_id, SourceLocation, is_jsx)` for
 //! every Identifier and JSXIdentifier node. This replaces the `referenceLocs`
 //! and `jsxReferencePositions` fields that were previously serialized from JS.
 
@@ -34,7 +34,7 @@ pub struct IdentifierLocEntry {
     pub is_declaration_name: bool,
 }
 
-/// Index mapping byte offset → (SourceLocation, is_jsx) for all Identifier
+/// Index mapping node_id → (SourceLocation, is_jsx) for all Identifier
 /// and JSXIdentifier nodes in a function's AST.
 pub type IdentifierLocIndex = HashMap<u32, IdentifierLocEntry>;
 
@@ -61,9 +61,9 @@ fn convert_loc(loc: &react_compiler_ast::common::SourceLocation) -> SourceLocati
 
 impl IdentifierLocVisitor {
     fn insert_identifier(&mut self, node: &Identifier, is_declaration_name: bool) {
-        if let (Some(start), Some(loc)) = (node.base.start, &node.base.loc) {
+        if let (Some(nid), Some(loc)) = (node.base.node_id, &node.base.loc) {
             self.index.insert(
-                start,
+                nid,
                 IdentifierLocEntry {
                     loc: convert_loc(loc),
                     is_jsx: false,
@@ -85,17 +85,15 @@ impl IdentifierLocVisitor {
                     if (ty == "Identifier" || ty == "JSXIdentifier")
                         && !self.is_json_node_in_type_annotation(obj)
                     {
-                        if let Some(start) = obj.get("start").and_then(|s| s.as_u64()) {
+                        if let Some(nid) = obj.get("_nodeId").and_then(|s| s.as_u64()) {
                             if let Some(loc) = Self::extract_loc_from_json(obj) {
                                 let is_jsx = ty == "JSXIdentifier";
-                                self.index
-                                    .entry(start as u32)
-                                    .or_insert(IdentifierLocEntry {
-                                        loc,
-                                        is_jsx,
-                                        opening_element_loc: None,
-                                        is_declaration_name: false,
-                                    });
+                                self.index.entry(nid as u32).or_insert(IdentifierLocEntry {
+                                    loc,
+                                    is_jsx,
+                                    opening_element_loc: None,
+                                    is_declaration_name: false,
+                                });
                             }
                         }
                     }
@@ -156,9 +154,9 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
     }
 
     fn enter_jsx_identifier(&mut self, node: &'ast JSXIdentifier, _scope_stack: &[ScopeId]) {
-        if let (Some(start), Some(loc)) = (node.base.start, &node.base.loc) {
+        if let (Some(nid), Some(loc)) = (node.base.node_id, &node.base.loc) {
             self.index.insert(
-                start,
+                nid,
                 IdentifierLocEntry {
                     loc: convert_loc(loc),
                     is_jsx: true,
