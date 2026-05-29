@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use indexmap::IndexMap;
 use indexmap::IndexSet;
 use react_compiler_ast::scope::BindingId;
@@ -172,13 +170,8 @@ pub struct HirBuilder<'a> {
     /// Set of ScopeIds that have been matched to synthetic blocks/functions.
     /// Prevents the same scope from being reused for different synthetic nodes.
     claimed_synthetic_scopes: std::collections::HashSet<ScopeId>,
-    /// Index mapping identifier node-IDs to source locations and JSX status.
+    /// Index mapping identifier byte offsets to source locations and JSX status.
     identifier_locs: &'a IdentifierLocIndex,
-    /// Bridge map: position → node_id for references. Built from
-    /// reference_to_binding + ref_node_id_to_binding at construction.
-    /// Used by position-based consumers (hoisting range iteration) that
-    /// need to look up IdentifierLocIndex entries.
-    pub pos_to_node_id: HashMap<u32, u32>,
 }
 
 impl<'a> HirBuilder<'a> {
@@ -208,20 +201,6 @@ impl<'a> HirBuilder<'a> {
     ) -> Self {
         let entry = env.next_block_id();
         let kind = entry_block_kind.unwrap_or(BlockKind::Block);
-        // Build position → node_id bridge from reference_to_binding and
-        // ref_node_id_to_binding. Used by position-based consumers (hoisting
-        // range iteration) that need to look up IdentifierLocIndex entries.
-        let mut pos_to_node_id = HashMap::new();
-        for ((&pos, &bid), (&nid, &nid_bid)) in scope_info
-            .reference_to_binding
-            .iter()
-            .zip(scope_info.ref_node_id_to_binding.iter())
-        {
-            if bid == nid_bid {
-                pos_to_node_id.insert(pos, nid);
-            }
-        }
-
         HirBuilder {
             completed: IndexMap::new(),
             current: new_block(entry, kind),
@@ -240,7 +219,6 @@ impl<'a> HirBuilder<'a> {
             context_identifiers,
             claimed_synthetic_scopes: std::collections::HashSet::new(),
             identifier_locs,
-            pos_to_node_id,
         }
     }
 
@@ -285,26 +263,17 @@ impl<'a> HirBuilder<'a> {
         self.scope_info
     }
 
-    /// Look up the source location of an identifier by its node_id.
-    pub fn get_identifier_loc(&self, node_id: u32) -> Option<SourceLocation> {
+    /// Look up the source location of an identifier by its byte offset.
+    pub fn get_identifier_loc(&self, offset: u32) -> Option<SourceLocation> {
         self.identifier_locs
-            .get(&node_id)
+            .get(&offset)
             .map(|entry| entry.loc.clone())
     }
 
-    /// Check whether a node_id corresponds to a JSXIdentifier node.
-    pub fn is_jsx_identifier_by_node_id(&self, node_id: u32) -> bool {
+    /// Check whether a byte offset corresponds to a JSXIdentifier node.
+    pub fn is_jsx_identifier(&self, offset: u32) -> bool {
         self.identifier_locs
-            .get(&node_id)
-            .is_some_and(|entry| entry.is_jsx)
-    }
-
-    /// Check whether a position corresponds to a JSXIdentifier node.
-    /// Uses the pos_to_node_id bridge to convert position → node_id.
-    pub fn is_jsx_identifier_by_pos(&self, pos: u32) -> bool {
-        self.pos_to_node_id
-            .get(&pos)
-            .and_then(|nid| self.identifier_locs.get(nid))
+            .get(&offset)
             .is_some_and(|entry| entry.is_jsx)
     }
 

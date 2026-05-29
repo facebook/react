@@ -2734,7 +2734,7 @@ fn lower_block_statement_inner(
                         && **ref_start < stmt_end
                         && **ref_binding_id == *binding_id
                         && (!apply_decl_filter || Some(**ref_start) != *decl_start)
-                        && !builder.is_jsx_identifier_by_pos(**ref_start)
+                        && !builder.is_jsx_identifier(**ref_start)
                 })
                 .map(|(ref_start, _)| *ref_start)
                 .collect();
@@ -2840,8 +2840,7 @@ fn lower_block_statement_inner(
             };
 
             // Look up the reference location for the DeclareContext instruction
-            let ref_node_id = builder.pos_to_node_id.get(&info.first_ref_pos).copied();
-            let ref_loc = ref_node_id.and_then(|nid| builder.get_identifier_loc(nid));
+            let ref_loc = builder.get_identifier_loc(info.first_ref_pos);
             let identifier = builder.resolve_binding(&info.name, info.binding_id)?;
             let place = Place {
                 effect: Effect::Unknown,
@@ -5573,7 +5572,6 @@ fn lower_function(
         func_start,
         func_end,
         ident_locs,
-        &builder.pos_to_node_id,
         ref_override.as_ref(),
     );
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
@@ -5646,7 +5644,6 @@ fn lower_function_declaration(
         func_start,
         func_end,
         ident_locs,
-        &builder.pos_to_node_id,
         None,
     );
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
@@ -5816,7 +5813,6 @@ fn lower_function_for_object_method(
         func_start,
         func_end,
         ident_locs,
-        &builder.pos_to_node_id,
         None,
     );
     let merged_context: IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> = {
@@ -6641,7 +6637,6 @@ fn gather_captured_context(
     func_start: u32,
     func_end: u32,
     identifier_locs: &IdentifierLocIndex,
-    pos_to_node_id: &std::collections::HashMap<u32, u32>,
     ref_positions_override: Option<&IndexSet<u32>>,
 ) -> IndexMap<react_compiler_ast::scope::BindingId, Option<SourceLocation>> {
     let parent_scope = scope_info.scopes[function_scope.0 as usize].parent;
@@ -6653,8 +6648,6 @@ fn gather_captured_context(
     let mut captured =
         IndexMap::<react_compiler_ast::scope::BindingId, Option<SourceLocation>>::new();
 
-    // Iterate reference_to_binding for position-range filtering, then use
-    // pos_to_node_id bridge to look up IdentifierLocIndex entries by node_id.
     for (&ref_start, &binding_id) in &scope_info.reference_to_binding {
         if let Some(allowed) = ref_positions_override {
             if !allowed.contains(&ref_start) {
@@ -6670,14 +6663,10 @@ fn gather_captured_context(
         if binding.declaration_start == Some(ref_start) {
             continue;
         }
-        // Look up the node_id for this position to access identifier_locs
-        let ref_node_id = pos_to_node_id.get(&ref_start).copied();
         // Skip function/class declaration names that are not expression references.
-        if let Some(nid) = ref_node_id {
-            if let Some(entry) = identifier_locs.get(&nid) {
-                if entry.is_declaration_name {
-                    continue;
-                }
+        if let Some(entry) = identifier_locs.get(&ref_start) {
+            if entry.is_declaration_name {
+                continue;
             }
         }
         // Skip type-only bindings
@@ -6691,14 +6680,12 @@ fn gather_captured_context(
             continue;
         }
         if pure_scopes.contains(&binding.scope) && !captured.contains_key(&binding.id) {
-            let loc = ref_node_id.and_then(|nid| {
-                identifier_locs.get(&nid).map(|entry| {
-                    if let Some(oe_loc) = &entry.opening_element_loc {
-                        oe_loc.clone()
-                    } else {
-                        entry.loc.clone()
-                    }
-                })
+            let loc = identifier_locs.get(&ref_start).map(|entry| {
+                if let Some(oe_loc) = &entry.opening_element_loc {
+                    oe_loc.clone()
+                } else {
+                    entry.loc.clone()
+                }
             });
             captured.insert(binding.id, loc);
         }
