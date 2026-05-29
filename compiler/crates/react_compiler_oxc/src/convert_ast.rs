@@ -1073,8 +1073,23 @@ impl<'a> ConvertCtx<'a> {
             oxc::Expression::FunctionExpression(f) => {
                 Expression::FunctionExpression(self.convert_function_expression(f))
             }
-            oxc::Expression::ImportExpression(_) => {
-                todo!("ImportExpression")
+            oxc::Expression::ImportExpression(i) => {
+                // OXC models `import('foo')` as ImportExpression { source, options }.
+                // Babel/compiler AST models it as CallExpression { callee: Import, arguments: [source] }.
+                let mut args = vec![self.convert_expression(&i.source)];
+                if let Some(ref opts) = i.options {
+                    args.push(self.convert_expression(opts));
+                }
+                Expression::CallExpression(CallExpression {
+                    base: self.make_base_node(i.span),
+                    callee: Box::new(Expression::Import(Import {
+                        base: self.make_base_node(i.span),
+                    })),
+                    arguments: args,
+                    optional: None,
+                    type_arguments: None,
+                    type_parameters: None,
+                })
             }
             oxc::Expression::LogicalExpression(l) => {
                 Expression::LogicalExpression(self.convert_logical_expression(l))
@@ -2774,7 +2789,22 @@ macro_rules! impl_expression_like {
                     Self::ClassExpression(e) => Expression::ClassExpression(ctx.convert_class_expression(e)),
                     Self::ConditionalExpression(e) => Expression::ConditionalExpression(ctx.convert_conditional_expression(e)),
                     Self::FunctionExpression(e) => Expression::FunctionExpression(ctx.convert_function_expression(e)),
-                    Self::ImportExpression(_) => todo!("ImportExpression"),
+                    Self::ImportExpression(i) => {
+                        let mut args = vec![ctx.convert_expression(&i.source)];
+                        if let Some(ref opts) = i.options {
+                            args.push(ctx.convert_expression(opts));
+                        }
+                        Expression::CallExpression(CallExpression {
+                            base: ctx.make_base_node(i.span),
+                            callee: Box::new(Expression::Import(Import {
+                                base: ctx.make_base_node(i.span),
+                            })),
+                            arguments: args,
+                            optional: None,
+                            type_arguments: None,
+                            type_parameters: None,
+                        })
+                    }
                     Self::LogicalExpression(e) => Expression::LogicalExpression(ctx.convert_logical_expression(e)),
                     Self::NewExpression(e) => Expression::NewExpression(ctx.convert_new_expression(e)),
                     Self::ObjectExpression(e) => Expression::ObjectExpression(ctx.convert_object_expression(e)),

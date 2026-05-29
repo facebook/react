@@ -654,8 +654,9 @@ impl<'a> ReverseCtx<'a> {
                     .identifier_name(SPAN, self.atom(&mp.property.name));
                 self.builder.expression_meta_property(SPAN, meta, property)
             }
-            Expression::ClassExpression(_) => {
-                todo!("ClassExpression reverse conversion")
+            Expression::ClassExpression(c) => {
+                let class = self.convert_class_to_oxc(c, oxc::ClassType::ClassExpression);
+                oxc::Expression::ClassExpression(self.builder.alloc(class))
             }
             Expression::PrivateName(_) => self
                 .builder
@@ -949,6 +950,31 @@ impl<'a> ReverseCtx<'a> {
             body,
             c.is_abstract.unwrap_or(false),
             c.declare.unwrap_or(false),
+        )
+    }
+
+    fn convert_class_to_oxc(
+        &self,
+        c: &react_compiler_ast::expressions::ClassExpression,
+        class_type: oxc::ClassType,
+    ) -> oxc::Class<'a> {
+        let id =
+            c.id.as_ref()
+                .map(|id| self.builder.binding_identifier(SPAN, self.atom(&id.name)));
+        let super_class = c.super_class.as_ref().map(|s| self.convert_expression(s));
+        let body = self.builder.class_body(SPAN, self.builder.vec());
+        self.builder.class(
+            SPAN,
+            class_type,
+            self.builder.vec(), // decorators
+            id,
+            None::<oxc_allocator::Box<'a, oxc::TSTypeParameterDeclaration<'a>>>,
+            super_class,
+            None::<oxc_allocator::Box<'a, oxc::TSTypeParameterInstantiation<'a>>>,
+            self.builder.vec(), // implements
+            body,
+            false, // is_abstract
+            false, // declare
         )
     }
 
