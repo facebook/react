@@ -31,7 +31,10 @@ pub fn build_scope_info(module: &Module) -> ScopeInfo {
 
     // Pass 2: Resolve references
     // We scope the resolver borrow so we can move out of collector afterwards.
-    let reference_to_binding = {
+    // Build ref_node_id_to_binding directly. In SWC, node_id == span.lo
+    // (unique positions), so the resolver's position-keyed map serves as
+    // both reference_to_binding and ref_node_id_to_binding.
+    let ref_node_id_to_binding = {
         let mut resolver = ReferenceResolver::new(&collector);
         resolver.visit_module(module);
 
@@ -54,19 +57,14 @@ pub fn build_scope_info(module: &Module) -> ScopeInfo {
         resolver.reference_to_binding
     };
 
-    // In the SWC backend, span.lo is used as node_id (SWC spans are unique,
-    // no synthetic zero-width node collisions like Babel). Mirror the
-    // position-based maps into the node-ID maps.
     let node_id_to_scope = collector.node_to_scope.clone();
-    let ref_node_id_to_binding: indexmap::IndexMap<u32, BindingId> =
-        reference_to_binding.iter().map(|(&k, &v)| (k, v)).collect();
 
     ScopeInfo {
         scopes: collector.scopes,
         bindings: collector.bindings,
         node_to_scope: collector.node_to_scope,
         node_to_scope_end: collector.node_to_scope_end,
-        reference_to_binding,
+        reference_to_binding: indexmap::IndexMap::new(),
         ref_node_id_to_binding,
         node_id_to_scope,
         program_scope: ScopeId(0),

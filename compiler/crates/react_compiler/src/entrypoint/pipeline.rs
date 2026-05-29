@@ -1319,7 +1319,7 @@ fn build_outlined_scope_info(
         bindings: bindings_list,
         node_to_scope,
         node_to_scope_end: HashMap::new(),
-        reference_to_binding: ref_to_binding,
+        reference_to_binding: indexmap::IndexMap::new(),
         ref_node_id_to_binding,
         node_id_to_scope,
         program_scope: ScopeId(0),

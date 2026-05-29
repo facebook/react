@@ -120,7 +120,8 @@ pub struct ScopeInfo {
     #[serde(default)]
     pub node_to_scope_end: HashMap<u32, u32>,
 
-    /// **DEPRECATED** — retained only for JSON deserialization compatibility.
+    /// **DEPRECATED** — retained only for Babel bridge JSON deserialization.
+    /// All backends pass empty maps; only the Babel bridge populates this.
     /// Use `ref_node_id_to_binding` for all lookups and iteration.
     #[serde(default)]
     pub reference_to_binding: IndexMap<u32, BindingId>,

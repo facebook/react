@@ -22,9 +22,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
     let mut bindings: Vec<BindingData> = Vec::new();
     let mut node_to_scope: HashMap<u32, ScopeId> = HashMap::new();
     let mut node_to_scope_end: HashMap<u32, u32> = HashMap::new();
-    let mut reference_to_binding: IndexMap<u32, BindingId> = IndexMap::new();
-    // Node-ID-based maps: in the OXC backend, we use span.start as the node_id
-    // since OXC spans are unique (no synthetic zero-width node collisions like Babel).
+    // In OXC, span.start is used as node_id (OXC spans are unique).
     let mut node_id_to_scope: HashMap<u32, ScopeId> = HashMap::new();
     let mut ref_node_id_to_binding: IndexMap<u32, BindingId> = IndexMap::new();
 
@@ -137,7 +135,6 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                 let reference = scoping.get_reference(ref_id);
                 let ref_node = nodes.get_node(reference.node_id());
                 let start = ref_node.kind().span().start;
-                reference_to_binding.insert(start, binding_id);
                 ref_node_id_to_binding.insert(start, binding_id);
             }
         }
@@ -147,7 +144,6 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
     for symbol_id in scoping.symbol_ids() {
         if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
             if let Some(start) = bindings[binding_id.0 as usize].declaration_start {
-                reference_to_binding.entry(start).or_insert(binding_id);
                 ref_node_id_to_binding.entry(start).or_insert(binding_id);
             }
         }
@@ -166,9 +162,6 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                     if let Some(symbol_id) = id.symbol_id.get() {
                         if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
                             let export_start = export.span().start;
-                            reference_to_binding
-                                .entry(export_start)
-                                .or_insert(binding_id);
                             ref_node_id_to_binding
                                 .entry(export_start)
                                 .or_insert(binding_id);
@@ -178,7 +171,6 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                         for (sym_id, &bind_id) in &symbol_to_binding {
                             if scoping.symbol_name(*sym_id) == name {
                                 let export_start = export.span().start;
-                                reference_to_binding.entry(export_start).or_insert(bind_id);
                                 ref_node_id_to_binding
                                     .entry(export_start)
                                     .or_insert(bind_id);
@@ -203,7 +195,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                     let name = id.name.as_str();
                     if let Some(symbol_id) = id.symbol_id.get() {
                         if let Some(&binding_id) = symbol_to_binding.get(&symbol_id) {
-                            reference_to_binding
+                            ref_node_id_to_binding
                                 .entry(export.span().start)
                                 .or_insert(binding_id);
                         }
@@ -211,7 +203,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
                         // Fallback: look up binding by name
                         for (sym_id, &bind_id) in &symbol_to_binding {
                             if scoping.symbol_name(*sym_id) == name {
-                                reference_to_binding
+                                ref_node_id_to_binding
                                     .entry(export.span().start)
                                     .or_insert(bind_id);
                                 break;
@@ -230,7 +222,7 @@ pub fn convert_scope_info(semantic: &Semantic, _program: &Program) -> ScopeInfo 
         bindings,
         node_to_scope,
         node_to_scope_end,
-        reference_to_binding,
+        reference_to_binding: IndexMap::new(),
         ref_node_id_to_binding,
         node_id_to_scope,
         program_scope,

@@ -4197,7 +4197,7 @@ pub fn lower(
     // Note: `id` param may include inferred names (e.g., from `const Foo = () => {}`),
     // but the HIR function's `id` field should only include the function's own AST id
     // (FunctionDeclaration.id or FunctionExpression.id, NOT arrow functions).
-    let (params, body, generator, is_async, loc, _start, end, ast_id) = match func {
+    let (params, body, generator, is_async, loc, start, end, ast_id) = match func {
         FunctionNode::FunctionDeclaration(decl) => (
             &decl.params[..],
             FunctionBody::Block(&decl.body),
