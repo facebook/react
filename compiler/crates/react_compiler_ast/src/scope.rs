@@ -120,11 +120,9 @@ pub struct ScopeInfo {
     #[serde(default)]
     pub node_to_scope_end: HashMap<u32, u32>,
 
-    /// Maps an Identifier AST node's start offset to the binding it resolves to.
-    ///
-    /// **NOT for identity lookups** — use `ref_node_id_to_binding` (via
-    /// `resolve_reference_id_for_node`) instead. Retained only for position-range
-    /// iteration (e.g., filtering refs within a function's byte range).
+    /// **DEPRECATED** — retained only for JSON deserialization compatibility.
+    /// Use `ref_node_id_to_binding` for all lookups and iteration.
+    #[serde(default)]
     pub reference_to_binding: IndexMap<u32, BindingId>,
 
     /// Maps an identifier reference's node-ID to the binding it resolves to.
@@ -191,14 +189,6 @@ impl ScopeInfo {
     /// a binding (i.e., it's a global/unresolved reference).
     pub fn resolve_reference_for_node(&self, node_id: Option<u32>) -> Option<&BindingData> {
         self.resolve_reference_id_for_node(node_id)
-            .map(|id| &self.bindings[id.0 as usize])
-    }
-
-    /// Look up the binding for an identifier reference by its AST node start offset.
-    /// Returns None for globals/unresolved references.
-    pub fn resolve_reference(&self, identifier_start: u32) -> Option<&BindingData> {
-        self.reference_to_binding
-            .get(&identifier_start)
             .map(|id| &self.bindings[id.0 as usize])
     }
 
