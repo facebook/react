@@ -4643,50 +4643,51 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 
   if (boundary === null) {
-    if (request.status !== CLOSING && request.status !== CLOSED) {
-      const replay: null | ReplaySet = task.replay;
-      if (replay === null) {
-        // We didn't complete the root so we have nothing to show. We can close
-        // the request;
-        if (request.trackedPostpones !== null && segment !== null) {
-          const trackedPostpones = request.trackedPostpones;
-          // We are aborting a prerender and must treat the shell as halted
-          // We log the error but we still resolve the prerender
-          logRecoverableError(request, error, errorInfo, task.debugTask);
-          trackPostpone(request, trackedPostpones, task, segment);
-          finishedTask(request, null, task.row, segment);
-        } else {
-          logRecoverableError(request, error, errorInfo, task.debugTask);
+    const replay: null | ReplaySet = task.replay;
+    if (replay === null) {
+      // We didn't complete the root so we have nothing to show. We can close
+      // the request;
+      if (request.trackedPostpones !== null && segment !== null) {
+        const trackedPostpones = request.trackedPostpones;
+        // We are aborting a prerender and must treat the shell as halted
+        // We log the error but we still resolve the prerender
+        logRecoverableError(request, error, errorInfo, task.debugTask);
+        trackPostpone(request, trackedPostpones, task, segment);
+        finishedTask(request, null, task.row, segment);
+      } else {
+        logRecoverableError(request, error, errorInfo, task.debugTask);
+        if (request.status !== CLOSING && request.status !== CLOSED) {
           fatalError(request, error, errorInfo, task.debugTask);
         }
-        return;
-      } else {
-        // If the shell aborts during a replay, that's not a fatal error. Instead
-        // we should be able to recover by client rendering all the root boundaries in
-        // the ReplaySet.
-        replay.pendingTasks--;
-        if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
-          const errorDigest = logRecoverableError(
-            request,
-            error,
-            errorInfo,
-            null,
-          );
-          abortRemainingReplayNodes(
-            request,
-            null,
-            replay.nodes,
-            replay.slots,
-            error,
-            errorDigest,
-            errorInfo,
-            true,
-          );
-        }
-        request.pendingRootTasks--;
-        if (request.pendingRootTasks === 0) {
-          completeShell(request);
-        }
+      }
+      return;
+    }
+    if (request.status !== CLOSING && request.status !== CLOSED) {
+      // If the shell aborts during a replay, that's not a fatal error. Instead
+      // we should be able to recover by client rendering all the root boundaries in
+      // the ReplaySet.
+      replay.pendingTasks--;
+      if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
+        const errorDigest = logRecoverableError(
+          request,
+          error,
+          errorInfo,
+          null,
+        );
+        abortRemainingReplayNodes(
+          request,
+          null,
+          replay.nodes,
+          replay.slots,
+          error,
+          errorDigest,
+          errorInfo,
+          true,
+        );
+      }
+      request.pendingRootTasks--;
+      if (request.pendingRootTasks === 0) {
+        completeShell(request);
       }
     }
   } else {

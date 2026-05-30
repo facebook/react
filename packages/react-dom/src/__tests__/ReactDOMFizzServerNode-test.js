@@ -434,6 +434,45 @@ describe('ReactDOMFizzServerNode', () => {
     expect(isCompleteCalls).toBe(0);
   });
 
+  it('should report abort errors for every suspended task but fail the shell only once', async () => {
+    const promise = new Promise(() => {});
+    const rendered = [];
+    function Suspend({label}) {
+      rendered.push(label);
+      React.use(promise);
+      return null;
+    }
+
+    const errors = [];
+    const shellErrors = [];
+    const {abort} = ReactDOMFizzServer.renderToPipeableStream(
+      <>
+        <Suspense fallback="Loading...">
+          <Suspend label="boundary" />
+        </Suspense>
+        <Suspend label="root one" />
+        <Suspend label="root two" />
+      </>,
+      {
+        onError(error) {
+          errors.push(error.message);
+        },
+        onShellError(error) {
+          shellErrors.push(error);
+        },
+      },
+    );
+
+    await jest.runAllTimers();
+    expect(rendered).toEqual(['boundary', 'root one', 'root two']);
+
+    const reason = new Error('abort reason');
+    abort(reason);
+
+    expect(shellErrors).toEqual([reason]);
+    expect(errors).toEqual(['abort reason', 'abort reason', 'abort reason']);
+  });
+
   it('should be able to complete by abort when the fallback is also suspended', async () => {
     let isCompleteCalls = 0;
     const errors = [];
