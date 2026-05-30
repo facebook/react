@@ -88,6 +88,7 @@ import {
   hoistHoistables,
   createHoistableState,
   createPreambleState,
+  isWorkLoopExternallyDriven,
   supportsRequestStorage,
   requestStorage,
   pushFormStateMarkerIsMatching,
@@ -527,7 +528,7 @@ function RequestInstance(
     progressiveChunkSize === undefined
       ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
       : progressiveChunkSize;
-  this.status = OPENING;
+  this.status = isWorkLoopExternallyDriven ? OPEN : OPENING;
   this.fatalError = null;
   this.nextSegmentId = 0;
   this.allPendingTasks = 0;
@@ -790,12 +791,16 @@ export function resolveRequest(): null | Request {
 function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
-  if (request.pingedTasks.length === 1) {
-    request.flushScheduled = request.destination !== null;
-    if (request.trackedPostpones !== null || request.status === OPENING) {
-      scheduleMicrotask(() => performWork(request));
-    } else {
-      scheduleWork(() => performWork(request));
+  if (isWorkLoopExternallyDriven) {
+    return;
+  } else {
+    if (request.pingedTasks.length === 1) {
+      request.flushScheduled = request.destination !== null;
+      if (request.trackedPostpones !== null || request.status === OPENING) {
+        scheduleMicrotask(() => performWork(request));
+      } else {
+        scheduleWork(() => performWork(request));
+      }
     }
   }
 }
@@ -6030,39 +6035,45 @@ function flushCompletedQueues(
 }
 
 export function startWork(request: Request): void {
-  request.flushScheduled = request.destination !== null;
-  // When prerendering we use microtasks for pinging work
-  if (supportsRequestStorage) {
-    scheduleMicrotask(() => requestStorage.run(request, performWork, request));
+  if (isWorkLoopExternallyDriven) {
+    return;
   } else {
-    scheduleMicrotask(() => performWork(request));
-  }
-  scheduleWork(() => {
-    if (request.status === OPENING) {
-      request.status = OPEN;
+    request.flushScheduled = request.destination !== null;
+    // When prerendering we use microtasks for pinging work
+    if (supportsRequestStorage) {
+      scheduleMicrotask(() =>
+        requestStorage.run(request, performWork, request),
+      );
+    } else {
+      scheduleMicrotask(() => performWork(request));
     }
-
-    if (request.trackedPostpones === null) {
-      // this is either a regular render or a resume. For regular render we want
-      // to call emitEarlyPreloads after the first performWork because we want
-      // are responding to a live request and need to balance sending something early
-      // (i.e. don't want for the shell to finish) but we need something to send.
-      // The only implementation of this is for DOM at the moment and during resumes nothing
-      // actually emits but the code paths here are the same.
-      // During a prerender we don't want to be too aggressive in emitting early preloads
-      // because we aren't responding to a live request and we can wait for the prerender to
-      // postpone before we emit anything.
-      if (supportsRequestStorage) {
-        requestStorage.run(
-          request,
-          enqueueEarlyPreloadsAfterInitialWork,
-          request,
-        );
-      } else {
-        enqueueEarlyPreloadsAfterInitialWork(request);
+    scheduleWork(() => {
+      if (request.status === OPENING) {
+        request.status = OPEN;
       }
-    }
-  });
+
+      if (request.trackedPostpones === null) {
+        // this is either a regular render or a resume. For regular render we want
+        // to call emitEarlyPreloads after the first performWork because we want
+        // are responding to a live request and need to balance sending something early
+        // (i.e. don't want for the shell to finish) but we need something to send.
+        // The only implementation of this is for DOM at the moment and during resumes nothing
+        // actually emits but the code paths here are the same.
+        // During a prerender we don't want to be too aggressive in emitting early preloads
+        // because we aren't responding to a live request and we can wait for the prerender to
+        // postpone before we emit anything.
+        if (supportsRequestStorage) {
+          requestStorage.run(
+            request,
+            enqueueEarlyPreloadsAfterInitialWork,
+            request,
+          );
+        } else {
+          enqueueEarlyPreloadsAfterInitialWork(request);
+        }
+      }
+    });
+  }
 }
 
 function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
