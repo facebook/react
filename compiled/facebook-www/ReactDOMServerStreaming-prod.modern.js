@@ -3798,7 +3798,7 @@ function RequestInstance(
   this.rootFormatContext = rootFormatContext;
   this.progressiveChunkSize =
     void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize;
-  this.status = 10;
+  this.status = 11;
   this.fatalError = null;
   this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
   this.completedPreambleSegments = this.completedRootSegment = null;
@@ -3817,11 +3817,6 @@ function RequestInstance(
   this.formState = void 0 === formState ? null : formState;
 }
 var currentRequest = null;
-function pingTask(request, task) {
-  request.pingedTasks.push(task);
-  1 === request.pingedTasks.length &&
-    (request.flushScheduled = null !== request.destination);
-}
 function createSuspenseBoundary(
   request,
   row,
@@ -3884,7 +3879,7 @@ function createRenderTask(
     node: node,
     childIndex: childIndex,
     ping: function () {
-      return pingTask(request, task);
+      request.pingedTasks.push(task);
     },
     blockedBoundary: blockedBoundary,
     blockedSegment: blockedSegment,
@@ -3929,7 +3924,7 @@ function createReplayTask(
     node: node,
     childIndex: childIndex,
     ping: function () {
-      return pingTask(request, task);
+      request.pingedTasks.push(task);
     },
     blockedBoundary: blockedBoundary,
     blockedSegment: null,
@@ -6598,10 +6593,17 @@ function flushCompletedQueues(request, destination) {
   }
 }
 function enqueueFlush(request) {
-  !1 === request.flushScheduled &&
+  if (
+    !1 === request.flushScheduled &&
     0 === request.pingedTasks.length &&
-    null !== request.destination &&
-    (request.flushScheduled = !0);
+    null !== request.destination
+  ) {
+    request.flushScheduled = !0;
+    var destination = request.destination;
+    destination
+      ? flushCompletedQueues(request, destination)
+      : (request.flushScheduled = !1);
+  }
 }
 function abort(request, reason) {
   if (11 === request.status || 10 === request.status) {
@@ -7139,7 +7141,6 @@ exports.renderToStream = function (children, options) {
   );
   pushComponentStack(children);
   options.pingedTasks.push(children);
-  options.flushScheduled = null !== options.destination;
   if (destination.fatal) throw destination.error;
   return { destination: destination, request: options };
 };
