@@ -7528,19 +7528,22 @@ __DEV__ &&
           pushSuspendedCallSiteOnComponentStack(request, task);
       }
       if (null === boundary) {
-        if (13 !== request.status && request.status !== CLOSED) {
-          boundary = task.replay;
-          if (null === boundary) {
-            null !== request.trackedPostpones && null !== segment
-              ? ((boundary = request.trackedPostpones),
-                logRecoverableError(request, error, errorInfo, task.debugTask),
-                trackPostpone(request, boundary, task, segment),
-                finishedTask(request, null, task.row, segment))
-              : (logRecoverableError(request, error, errorInfo, task.debugTask),
+        boundary = task.replay;
+        if (null === boundary) {
+          null !== request.trackedPostpones && null !== segment
+            ? ((boundary = request.trackedPostpones),
+              logRecoverableError(request, error, errorInfo, task.debugTask),
+              trackPostpone(request, boundary, task, segment),
+              finishedTask(request, null, task.row, segment))
+            : (logRecoverableError(request, error, errorInfo, task.debugTask),
+              13 !== request.status &&
+                request.status !== CLOSED &&
                 fatalError(request, error, errorInfo, task.debugTask));
-            return;
-          }
-          boundary.pendingTasks--;
+          return;
+        }
+        13 !== request.status &&
+          request.status !== CLOSED &&
+          (boundary.pendingTasks--,
           0 === boundary.pendingTasks &&
             0 < boundary.nodes.length &&
             ((segment = logRecoverableError(request, error, errorInfo, null)),
@@ -7553,10 +7556,9 @@ __DEV__ &&
               segment,
               errorInfo,
               !0
-            ));
-          request.pendingRootTasks--;
-          0 === request.pendingRootTasks && completeShell(request);
-        }
+            )),
+          request.pendingRootTasks--,
+          0 === request.pendingRootTasks && completeShell(request));
       } else {
         node = request.trackedPostpones;
         if (boundary.status !== CLIENT_RENDERED) {
@@ -10498,5 +10500,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-classic-f1af67e1-20260530";
+    exports.version = "19.3.0-www-classic-f39ed9fd-20260530";
   })();

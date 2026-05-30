@@ -5700,19 +5700,22 @@ function abortTask(task, request, error) {
   }
   var errorInfo = getThrownInfo(task.componentStack);
   if (null === boundary) {
-    if (13 !== request.status && 14 !== request.status) {
-      boundary = task.replay;
-      if (null === boundary) {
-        null !== request.trackedPostpones && null !== segment
-          ? ((boundary = request.trackedPostpones),
-            logRecoverableError(request, error, errorInfo),
-            trackPostpone(request, boundary, task, segment),
-            finishedTask(request, null, task.row, segment))
-          : (logRecoverableError(request, error, errorInfo),
+    boundary = task.replay;
+    if (null === boundary) {
+      null !== request.trackedPostpones && null !== segment
+        ? ((boundary = request.trackedPostpones),
+          logRecoverableError(request, error, errorInfo),
+          trackPostpone(request, boundary, task, segment),
+          finishedTask(request, null, task.row, segment))
+        : (logRecoverableError(request, error, errorInfo),
+          13 !== request.status &&
+            14 !== request.status &&
             fatalError(request, error));
-        return;
-      }
-      boundary.pendingTasks--;
+      return;
+    }
+    13 !== request.status &&
+      14 !== request.status &&
+      (boundary.pendingTasks--,
       0 === boundary.pendingTasks &&
         0 < boundary.nodes.length &&
         ((segment = logRecoverableError(request, error, errorInfo)),
@@ -5723,10 +5726,9 @@ function abortTask(task, request, error) {
           boundary.slots,
           error,
           segment
-        ));
-      request.pendingRootTasks--;
-      0 === request.pendingRootTasks && completeShell(request);
-    }
+        )),
+      request.pendingRootTasks--,
+      0 === request.pendingRootTasks && completeShell(request));
   } else {
     var trackedPostpones$65 = request.trackedPostpones;
     if (4 !== boundary.status) {

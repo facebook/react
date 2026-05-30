@@ -5756,19 +5756,22 @@ function abortTask(task, request, error) {
   }
   var errorInfo = getThrownInfo(task.componentStack);
   if (null === boundary) {
-    if (13 !== request.status && 14 !== request.status) {
-      boundary = task.replay;
-      if (null === boundary) {
-        null !== request.trackedPostpones && null !== segment
-          ? ((boundary = request.trackedPostpones),
-            logRecoverableError(request, error, errorInfo),
-            trackPostpone(request, boundary, task, segment),
-            finishedTask(request, null, task.row, segment))
-          : (logRecoverableError(request, error, errorInfo),
+    boundary = task.replay;
+    if (null === boundary) {
+      null !== request.trackedPostpones && null !== segment
+        ? ((boundary = request.trackedPostpones),
+          logRecoverableError(request, error, errorInfo),
+          trackPostpone(request, boundary, task, segment),
+          finishedTask(request, null, task.row, segment))
+        : (logRecoverableError(request, error, errorInfo),
+          13 !== request.status &&
+            14 !== request.status &&
             fatalError(request, error));
-        return;
-      }
-      boundary.pendingTasks--;
+      return;
+    }
+    13 !== request.status &&
+      14 !== request.status &&
+      (boundary.pendingTasks--,
       0 === boundary.pendingTasks &&
         0 < boundary.nodes.length &&
         ((segment = logRecoverableError(request, error, errorInfo)),
@@ -5779,10 +5782,9 @@ function abortTask(task, request, error) {
           boundary.slots,
           error,
           segment
-        ));
-      request.pendingRootTasks--;
-      0 === request.pendingRootTasks && completeShell(request);
-    }
+        )),
+      request.pendingRootTasks--,
+      0 === request.pendingRootTasks && completeShell(request));
   } else {
     var trackedPostpones$65 = request.trackedPostpones;
     if (4 !== boundary.status) {
@@ -6963,4 +6965,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.3.0-www-modern-f1af67e1-20260530";
+exports.version = "19.3.0-www-modern-f39ed9fd-20260530";
