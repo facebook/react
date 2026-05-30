@@ -1,0 +1,10 @@
+# Audit unused dependencies:
+npm ls --depth=0  # Show top-level only
+npm audit  # Security check
+npm outdated  # See what's out of date
+
+# Remove unused:
+npm uninstall unused-package
+npm prune  # Remove devDeps if NODE_ENV=production
+
+# Consolidate: Replace 3 validation libs with 1 (e.g., zod or valibot)
