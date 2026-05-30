@@ -26,6 +26,7 @@ export const enableCreateEventHandleAPI = false;
 export const enableMoveBefore = false;
 export const enableFizzExternalRuntime = true;
 export const enableInfiniteRenderLoopDetection = false;
+export const enableInfiniteRenderLoopDetectionForceThrow = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;

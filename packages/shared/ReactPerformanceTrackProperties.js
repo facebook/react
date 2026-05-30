@@ -275,7 +275,11 @@ export function addValueToProperties(
       if (value === OMITTED_PROP_ERROR) {
         desc = '\u2026'; // ellipsis
       } else {
-        desc = JSON.stringify(value);
+        desc = JSON.stringify(
+          value.length >= 1024
+            ? value.slice(0, 1023) + '\u2026' // ellipsis
+            : value,
+        );
       }
       break;
     case 'undefined':
