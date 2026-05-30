@@ -299,7 +299,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     });
 
-    controller.abort();
+    await serverAct(() => {
+      controller.abort();
+    });
 
     const result = await resultPromise;
 
@@ -329,7 +331,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
     await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
-    controller.abort(theReason);
+    await serverAct(() => {
+      controller.abort(theReason);
+    });
 
     let rejected = false;
     let prelude;
@@ -447,7 +451,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort('foobar');
+    await serverAct(() => {
+      controller.abort('foobar');
+    });
 
     await resultPromise;
 
@@ -489,11 +495,61 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort(new Error('uh oh'));
+    await serverAct(() => {
+      controller.abort(new Error('uh oh'));
+    });
 
     await resultPromise;
 
     expect(errors).toEqual(['uh oh', 'uh oh']);
+  });
+
+  it('currently uses the abort reason when an abort listener synchronously rejects pending work', async () => {
+    let reject;
+    const rejectedPromise = new Promise((resolve, rejectPromise) => {
+      reject = rejectPromise;
+    });
+    const haltedPromise = new Promise(() => {});
+    function RejectedWait() {
+      React.use(rejectedPromise);
+      return null;
+    }
+    function HaltedWait() {
+      React.use(haltedPromise);
+      return null;
+    }
+
+    const errors = [];
+    const controller = new AbortController();
+    let resultPromise;
+    await serverAct(() => {
+      resultPromise = ReactDOMFizzStatic.prerender(
+        <>
+          <Suspense fallback="Loading rejected">
+            <RejectedWait />
+          </Suspense>
+          <Suspense fallback="Loading halted">
+            <HaltedWait />
+          </Suspense>
+        </>,
+        {
+          signal: controller.signal,
+          onError(error) {
+            errors.push(error.message);
+          },
+        },
+      );
+    });
+
+    controller.signal.addEventListener('abort', () => {
+      reject(new Error('rejected during abort'));
+    });
+    await serverAct(() => {
+      controller.abort(new Error('abort reason'));
+    });
+    await resultPromise;
+
+    expect(errors).toEqual(['abort reason', 'abort reason']);
   });
 
   it('logs an error if onHeaders throws but continues the prerender', async () => {
@@ -562,7 +618,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort();
+    await serverAct(() => {
+      controller.abort();
+    });
     const prerendered = await pendingResult;
     const postponedState = JSON.stringify(prerendered.postponed);
 
@@ -587,7 +645,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     });
 
-    controller2.abort();
+    await serverAct(() => {
+      controller2.abort();
+    });
 
     const prerendered2 = await pendingResult;
     const postponedState2 = JSON.stringify(prerendered2.postponed);
@@ -641,7 +701,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
         onError() {},
       });
     });
-    controller.abort('prerender abort');
+    await serverAct(() => {
+      controller.abort('prerender abort');
+    });
     const prerendered = await pendingResult;
 
     prerendering = false;
@@ -693,7 +755,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
         onError() {},
       });
     });
-    controller.abort('prerender abort');
+    await serverAct(() => {
+      controller.abort('prerender abort');
+    });
     const prerendered = await pendingResult;
 
     prerendering = false;
@@ -761,7 +825,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort();
+    await serverAct(() => {
+      controller.abort();
+    });
 
     const prerendered = await pendingResult;
     const postponedState = JSON.stringify(prerendered.postponed);
@@ -792,7 +858,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     });
 
-    controller2.abort();
+    await serverAct(() => {
+      controller2.abort();
+    });
 
     const prerendered2 = await pendingResult;
     const postponedState2 = JSON.stringify(prerendered2.postponed);
@@ -855,7 +923,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort(new Error('boom'));
+    await serverAct(() => {
+      controller.abort(new Error('boom'));
+    });
 
     const prerendered = await pendingResult;
 
@@ -917,7 +987,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort();
+    await serverAct(() => {
+      controller.abort();
+    });
 
     const prerendered = await pendingResult;
 
@@ -995,7 +1067,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       });
     });
 
-    controller.abort();
+    await serverAct(() => {
+      controller.abort();
+    });
 
     const prerendered = await pendingResult;
     const postponedState = JSON.stringify(prerendered.postponed);
@@ -1021,7 +1095,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     });
 
-    controller2.abort();
+    await serverAct(() => {
+      controller2.abort();
+    });
 
     const prerendered2 = await pendingResult;
     const postponedState2 = JSON.stringify(prerendered2.postponed);
