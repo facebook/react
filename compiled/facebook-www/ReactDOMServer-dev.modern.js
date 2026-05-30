@@ -8822,40 +8822,46 @@ __DEV__ &&
       }
     }
     function abort(request, reason) {
-      if (11 === request.status || 10 === request.status) request.status = 12;
-      try {
-        var abortableTasks = request.abortableTasks;
-        if (0 < abortableTasks.size) {
-          var error =
-            void 0 === reason
-              ? Error("The render was aborted by the server without a reason.")
-              : "object" === typeof reason &&
-                  null !== reason &&
-                  "function" === typeof reason.then
-                ? Error("The render was aborted by the server with a promise.")
-                : reason;
-          request.fatalError = error;
-          abortableTasks.forEach(function (task) {
-            var prevTaskInDEV = currentTaskInDEV,
-              prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-            currentTaskInDEV = task;
-            ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-            try {
-              abortTask(task, request, error);
-            } finally {
-              (currentTaskInDEV = prevTaskInDEV),
-                (ReactSharedInternals.getCurrentStack =
-                  prevGetCurrentStackImpl);
-            }
-          });
-          abortableTasks.clear();
+      if (11 === request.status || 10 === request.status) {
+        request.status = 12;
+        try {
+          var abortableTasks = request.abortableTasks;
+          if (0 < abortableTasks.size) {
+            var error =
+              void 0 === reason
+                ? Error(
+                    "The render was aborted by the server without a reason."
+                  )
+                : "object" === typeof reason &&
+                    null !== reason &&
+                    "function" === typeof reason.then
+                  ? Error(
+                      "The render was aborted by the server with a promise."
+                    )
+                  : reason;
+            request.fatalError = error;
+            abortableTasks.forEach(function (task) {
+              var prevTaskInDEV = currentTaskInDEV,
+                prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+              currentTaskInDEV = task;
+              ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+              try {
+                abortTask(task, request, error);
+              } finally {
+                (currentTaskInDEV = prevTaskInDEV),
+                  (ReactSharedInternals.getCurrentStack =
+                    prevGetCurrentStackImpl);
+              }
+            });
+            abortableTasks.clear();
+          }
+          null !== request.destination &&
+            flushCompletedQueues(request, request.destination);
+        } catch (error$4) {
+          (reason = {}),
+            logRecoverableError(request, error$4, reason, null),
+            fatalError(request, error$4, reason, null);
         }
-        null !== request.destination &&
-          flushCompletedQueues(request, request.destination);
-      } catch (error$4) {
-        (reason = {}),
-          logRecoverableError(request, error$4, reason, null),
-          fatalError(request, error$4, reason, null);
       }
     }
     function addToReplayParent(node, parentKeyPath, trackedPostpones) {
@@ -10421,5 +10427,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-f0dfee38-20260529";
+    exports.version = "19.3.0-www-modern-f1af67e1-20260530";
   })();

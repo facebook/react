@@ -6859,28 +6859,30 @@ function startFlowing(request, destination) {
   }
 }
 function abort(request, reason) {
-  if (11 === request.status || 10 === request.status) request.status = 12;
-  try {
-    var abortableTasks = request.abortableTasks;
-    if (0 < abortableTasks.size) {
-      var error =
-        void 0 === reason
-          ? Error(formatProdErrorMessage(432))
-          : "object" === typeof reason &&
-              null !== reason &&
-              "function" === typeof reason.then
-            ? Error(formatProdErrorMessage(530))
-            : reason;
-      request.fatalError = error;
-      abortableTasks.forEach(function (task) {
-        return abortTask(task, request, error);
-      });
-      abortableTasks.clear();
+  if (11 === request.status || 10 === request.status) {
+    request.status = 12;
+    try {
+      var abortableTasks = request.abortableTasks;
+      if (0 < abortableTasks.size) {
+        var error =
+          void 0 === reason
+            ? Error(formatProdErrorMessage(432))
+            : "object" === typeof reason &&
+                null !== reason &&
+                "function" === typeof reason.then
+              ? Error(formatProdErrorMessage(530))
+              : reason;
+        request.fatalError = error;
+        abortableTasks.forEach(function (task) {
+          return abortTask(task, request, error);
+        });
+        abortableTasks.clear();
+      }
+      null !== request.destination &&
+        flushCompletedQueues(request, request.destination);
+    } catch (error$73) {
+      logRecoverableError(request, error$73, {}), fatalError(request, error$73);
     }
-    null !== request.destination &&
-      flushCompletedQueues(request, request.destination);
-  } catch (error$73) {
-    logRecoverableError(request, error$73, {}), fatalError(request, error$73);
   }
 }
 function addToReplayParent(node, parentKeyPath, trackedPostpones) {
@@ -6961,4 +6963,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.3.0-www-modern-f0dfee38-20260529";
+exports.version = "19.3.0-www-modern-f1af67e1-20260530";

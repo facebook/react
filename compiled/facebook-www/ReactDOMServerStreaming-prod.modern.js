@@ -6602,28 +6602,30 @@ function enqueueFlush(request) {
     (request.flushScheduled = !0);
 }
 function abort(request, reason) {
-  if (11 === request.status || 10 === request.status) request.status = 12;
-  try {
-    var abortableTasks = request.abortableTasks;
-    if (0 < abortableTasks.size) {
-      var error =
-        void 0 === reason
-          ? Error("The render was aborted by the server without a reason.")
-          : "object" === typeof reason &&
-              null !== reason &&
-              "function" === typeof reason.then
-            ? Error("The render was aborted by the server with a promise.")
-            : reason;
-      request.fatalError = error;
-      abortableTasks.forEach(function (task) {
-        return abortTask(task, request, error);
-      });
-      abortableTasks.clear();
+  if (11 === request.status || 10 === request.status) {
+    request.status = 12;
+    try {
+      var abortableTasks = request.abortableTasks;
+      if (0 < abortableTasks.size) {
+        var error =
+          void 0 === reason
+            ? Error("The render was aborted by the server without a reason.")
+            : "object" === typeof reason &&
+                null !== reason &&
+                "function" === typeof reason.then
+              ? Error("The render was aborted by the server with a promise.")
+              : reason;
+        request.fatalError = error;
+        abortableTasks.forEach(function (task) {
+          return abortTask(task, request, error);
+        });
+        abortableTasks.clear();
+      }
+      null !== request.destination &&
+        flushCompletedQueues(request, request.destination);
+    } catch (error$73) {
+      logRecoverableError(request, error$73, {}), fatalError(request, error$73);
     }
-    null !== request.destination &&
-      flushCompletedQueues(request, request.destination);
-  } catch (error$73) {
-    logRecoverableError(request, error$73, {}), fatalError(request, error$73);
   }
 }
 function addToReplayParent(node, parentKeyPath, trackedPostpones) {
