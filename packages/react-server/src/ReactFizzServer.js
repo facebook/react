@@ -336,12 +336,11 @@ const FLUSHED = 2;
 const ABORTED = 3;
 const ERRORED = 4;
 const POSTPONED = 5;
-const RENDERING = 6;
 
 type Root = null;
 
 type Segment = {
-  status: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  status: 0 | 1 | 2 | 3 | 4 | 5,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
@@ -381,6 +380,7 @@ export opaque type Request = {
   byteSize: number, // counts the number of bytes accumulated in the shell
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
+  currentTask: null | Task, // The task currently executing in this request.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -539,6 +539,7 @@ function RequestInstance(
   this.byteSize = 0;
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
+  this.currentTask = null;
   this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
   this.completedBoundaries = ([]: Array<SuspenseBoundary>);
   this.partialBoundaries = ([]: Array<SuspenseBoundary>);
@@ -1473,7 +1474,6 @@ function renderSuspenseBoundary(
       replaceSuspenseComponentStackWithSuspenseFallbackStack(
         suspenseComponentStack,
       );
-    boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
       pushSegmentFinale(
@@ -1548,8 +1548,6 @@ function renderSuspenseBoundary(
       prevContext,
     );
     task.row = null;
-    contentRootSegment.status = RENDERING;
-
     try {
       // We use the safe form because we don't handle suspending here. Only error handling.
       renderNode(request, task, content, -1);
@@ -1744,8 +1742,9 @@ function replaySuspenseBoundary(
       // faster
       return;
     }
-  } catch (error: mixed) {
+  } catch (thrownValue: mixed) {
     resumedBoundary.status = CLIENT_RENDERED;
+    const error = request.aborted ? request.fatalError : thrownValue;
     const thrownInfo = getThrownInfo(task.componentStack);
     const errorDigest = logRecoverableError(
       request,
@@ -2263,7 +2262,6 @@ function renderPreamble(
   blockedSegment.preambleChildren.push(preambleSegment);
   task.blockedSegment = preambleSegment;
   try {
-    preambleSegment.status = RENDERING;
     renderNode(request, task, node, -1);
     pushSegmentFinale(
       preambleSegment.chunks,
@@ -3161,7 +3159,7 @@ function replayElement(
         erroredReplay(
           request,
           task.blockedBoundary,
-          x,
+          request.aborted ? request.fatalError : x,
           thrownInfo,
           childNodes,
           childSlots,
@@ -3676,7 +3674,7 @@ function replayFragment(
       erroredReplay(
         request,
         task.blockedBoundary,
-        x,
+        request.aborted ? request.fatalError : x,
         thrownInfo,
         childNodes,
         childSlots,
@@ -4596,14 +4594,13 @@ function abortRemainingReplayNodes(
 function abortTask(task: Task, request: Request, error: mixed): void {
   // This aborts the task and aborts the parent that it blocks, putting it into
   // client rendered mode.
+  if (task === request.currentTask) {
+    // This is a currently rendering Task. The render itself will abort the task.
+    return;
+  }
   const boundary = task.blockedBoundary;
   const segment = task.blockedSegment;
   if (segment !== null) {
-    if (segment.status === RENDERING) {
-      // This is the a currently rendering Segment. The render itself will
-      // abort the task.
-      return;
-    }
     segment.status = ABORTED;
   }
 
@@ -5079,8 +5076,8 @@ function retryRenderTask(
     return;
   }
 
-  // We track when a Segment is rendering so we can handle aborts while rendering
-  segment.status = RENDERING;
+  const prevTask = request.currentTask;
+  request.currentTask = task;
 
   // We restore the context to what it was when we suspended.
   // We don't restore it after we leave because it's likely that we'll end up
@@ -5177,6 +5174,7 @@ function retryRenderTask(
     );
     return;
   } finally {
+    request.currentTask = prevTask;
     if (__DEV__) {
       setCurrentTaskInDEV(prevTaskInDEV);
     }
@@ -5188,6 +5186,9 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     // There are no pending tasks working on this set, so we must have aborted.
     return;
   }
+
+  const prevTask = request.currentTask;
+  request.currentTask = task;
 
   // We restore the context to what it was when we suspended.
   // We don't restore it after we leave because it's likely that we'll end up
@@ -5267,6 +5268,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     return;
   } finally {
+    request.currentTask = prevTask;
     if (__DEV__) {
       setCurrentTaskInDEV(prevTaskInDEV);
     }

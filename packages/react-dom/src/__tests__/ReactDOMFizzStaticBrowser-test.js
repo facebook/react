@@ -605,6 +605,115 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
+  it('can abort while replaying a prerendered tree', async () => {
+    const promise = new Promise(() => {});
+    let prerendering = true;
+    const resumeController = new AbortController();
+
+    function AbortDuringReplay({children}) {
+      if (!prerendering) {
+        resumeController.abort('resume abort');
+      }
+      return children;
+    }
+
+    function Wait() {
+      return prerendering ? React.use(promise) : 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <AbortDuringReplay>
+            <Suspense fallback="Loading 1...">
+              <Wait />
+            </Suspense>
+          </AbortDuringReplay>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(() => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError() {},
+      });
+    });
+    controller.abort('prerender abort');
+    const prerendered = await pendingResult;
+
+    prerendering = false;
+    const errors = [];
+    await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+        {
+          signal: resumeController.signal,
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      ),
+    );
+
+    expect(errors).toEqual(['resume abort']);
+  });
+
+  it('can abort while rendering a resumed segment', async () => {
+    const promise = new Promise(() => {});
+    let prerendering = true;
+    const resumeController = new AbortController();
+
+    function Wait() {
+      if (prerendering) {
+        return React.use(promise);
+      }
+      resumeController.abort('resume abort');
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Wait />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(() => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError() {},
+      });
+    });
+    controller.abort('prerender abort');
+    const prerendered = await pendingResult;
+
+    prerendering = false;
+    const errors = [];
+    await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+        {
+          signal: resumeController.signal,
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      ),
+    );
+
+    expect(errors).toEqual(['resume abort']);
+  });
+
   it('can prerender a preamble', async () => {
     const errors = [];
 
