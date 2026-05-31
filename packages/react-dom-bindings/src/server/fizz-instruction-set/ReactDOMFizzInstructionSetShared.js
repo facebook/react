@@ -377,10 +377,6 @@ export function clientRenderBoundary(
     // E.g. because the parent was hydrated.
     return;
   }
-  // Find the boundary around the fallback. This is always the previous node.
-  const suspenseNode = suspenseIdNode.previousSibling;
-  // Tag it to be client rendered.
-  suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
   // assign error metadata to first sibling
   const dataset = suspenseIdNode.dataset;
   if (errorDigest) dataset['dgst'] = errorDigest;
@@ -388,6 +384,16 @@ export function clientRenderBoundary(
   if (errorStack) dataset['stck'] = errorStack;
   if (errorComponentStack) dataset['cstck'] = errorComponentStack;
   // Tell React to retry it if the parent already hydrated.
+  let suspenseNode;
+  if (suspenseIdNode.dataset['lst'] != null) {
+    // SuspenseList retries on the template node.
+    suspenseNode = suspenseIdNode;
+  } else {
+    // Find the boundary around the fallback. This is always the previous node.
+    suspenseNode = suspenseIdNode.previousSibling;
+    // Tag it to be client rendered.
+    suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
+  }
   if (suspenseNode['_reactRetry']) {
     suspenseNode['_reactRetry']();
   }
