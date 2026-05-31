@@ -359,10 +359,9 @@ type Segment = {
 
 const OPENING = 10;
 const OPEN = 11;
-const ABORTING = 12;
-const CLOSING = 13;
-const CLOSED = 14;
-const STALLED_DEV = 15;
+const CLOSING = 12;
+const CLOSED = 13;
+const STALLED_DEV = 14;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -371,8 +370,9 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 10 | 11 | 12 | 13 | 14 | 15,
+  status: 10 | 11 | 12 | 13 | 14,
   fatalError: mixed,
+  aborted: boolean,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
@@ -530,6 +530,7 @@ function RequestInstance(
       : progressiveChunkSize;
   this.status = isWorkLoopExternallyDriven ? OPEN : OPENING;
   this.fatalError = null;
+  this.aborted = false;
   this.nextSegmentId = 0;
   this.allPendingTasks = 0;
   this.pendingRootTasks = 0;
@@ -1038,7 +1039,11 @@ function pushHaltedAwaitOnComponentStack(
 // performWork + retryTask without mutation
 function rerenderStalledTask(request: Request, task: Task): void {
   const prevStatus = request.status;
+  const prevAborted = request.aborted;
   request.status = STALLED_DEV;
+  // This diagnostic replay must reach the suspended call site instead of
+  // taking the abort path.
+  request.aborted = false;
 
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
@@ -1082,6 +1087,7 @@ function rerenderStalledTask(request: Request, task: Task): void {
     }
     currentRequest = prevRequest;
     request.status = prevStatus;
+    request.aborted = prevAborted;
   }
 }
 
@@ -1479,7 +1485,7 @@ function renderSuspenseBoundary(
       boundarySegment.status = COMPLETED;
       finishedSegment(request, parentBoundary, boundarySegment);
     } catch (thrownValue: mixed) {
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         boundarySegment.status = ABORTED;
       } else {
         boundarySegment.status = ERRORED;
@@ -1589,7 +1595,7 @@ function renderSuspenseBoundary(
     } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
       let error: mixed;
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         contentRootSegment.status = ABORTED;
         error = request.fatalError;
       } else {
@@ -2075,7 +2081,7 @@ function renderSuspenseListRows(
             finishSuspenseListRow(request, previousSuspenseListRow);
           }
         } catch (thrownValue: mixed) {
-          if (request.status === ABORTING) {
+          if (request.aborted) {
             newSegment.status = ABORTED;
           } else {
             newSegment.status = ERRORED;
@@ -2392,7 +2398,7 @@ function finishClassComponent(
   } else {
     nextChildren = instance.render();
   }
-  if (request.status === ABORTING) {
+  if (request.aborted) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -2541,7 +2547,7 @@ function renderFunctionComponent(
     props,
     legacyContext,
   );
-  if (request.status === ABORTING) {
+  if (request.aborted) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -2818,12 +2824,7 @@ function renderLazyComponent(
     const init = lazyComponent._init;
     Component = init(payload);
   }
-  if (
-    request.status === ABORTING &&
-    // We're going to discard this render anyway.
-    // We just need to reach the point where we suspended in dev.
-    (!__DEV__ || request.status !== STALLED_DEV)
-  ) {
+  if (request.aborted) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -3441,7 +3442,7 @@ function retryNode(request: Request, task: Task): void {
           const init = lazyNode._init;
           resolvedNode = init(payload);
         }
-        if (request.status === ABORTING) {
+        if (request.aborted) {
           // eslint-disable-next-line no-throw-literal
           throw null;
         }
@@ -4185,7 +4186,7 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         // We are aborting so we can just bubble up to the task by falling through
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
@@ -4286,7 +4287,7 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         // We are aborting so we can just bubble up to the task by falling through
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
@@ -5124,11 +5125,11 @@ function retryRenderTask(
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : request.status === ABORTING
+        : request.aborted
           ? request.fatalError
           : thrownValue;
 
-    if (request.status === ABORTING && request.trackedPostpones !== null) {
+    if (request.aborted && request.trackedPostpones !== null) {
       // We are aborting a prerender and need to halt this task.
       const trackedPostpones = request.trackedPostpones;
       const thrownInfo = getThrownInfo(task.componentStack);
@@ -5250,7 +5251,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     erroredReplay(
       request,
       task.blockedBoundary,
-      request.status === ABORTING ? request.fatalError : x,
+      request.aborted ? request.fatalError : x,
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
@@ -6155,12 +6156,15 @@ export function stopFlowing(request: Request): void {
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
-  if (request.status !== OPEN && request.status !== OPENING) {
+  if (
+    request.aborted ||
+    (request.status !== OPEN && request.status !== OPENING)
+  ) {
     // Only requests that are not already complete or in the process of aborting
     // can be aborted. in practice this makes abort callable at most once per render.
     return;
   }
-  request.status = ABORTING;
+  request.aborted = true;
 
   try {
     const abortableTasks = request.abortableTasks;
