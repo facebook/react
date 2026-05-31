@@ -4829,6 +4829,23 @@ function abortTaskDEV(task: Task, request: Request): void {
   }
 }
 
+function abortUnwoundTask(task: Task, request: Request): void {
+  // This task was rendering when abort began, so the synchronous abort sweep
+  // left it alone. It has now unwound from user code and can be completed
+  // through the normal abort path.
+  if (__DEV__) {
+    abortTaskDEV(task, request);
+  } else {
+    abortTask(task, request);
+  }
+  task.abortSet.delete(task);
+  if (__DEV__) {
+    finishAbortedTaskDEV(task, request, request.fatalError);
+  } else {
+    finishAbortedTask(task, request, request.fatalError);
+  }
+}
+
 function safelyEmitEarlyPreloads(
   request: Request,
   shellComplete: boolean,
@@ -5169,25 +5186,22 @@ function retryRenderTask(
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : request.aborted
-          ? request.fatalError
-          : thrownValue;
+        : thrownValue;
 
-    if (request.aborted && request.trackedPostpones !== null) {
-      // We are aborting a prerender and need to halt this task.
-      const trackedPostpones = request.trackedPostpones;
-      const thrownInfo = getThrownInfo(task.componentStack);
-      task.abortSet.delete(task);
-
-      logRecoverableError(
-        request,
-        x,
-        thrownInfo,
-        __DEV__ ? task.debugTask : null,
-      );
-
-      trackPostpone(request, trackedPostpones, task, segment);
-      finishedTask(request, task.blockedBoundary, task.row, segment);
+    if (request.aborted) {
+      if (thrownValue === SuspenseException) {
+        // This task was rendering when abort() was called, so it never took
+        // the normal suspension path below that stores the thenable state.
+        // Preserve it before finishing the abort so DEV can replay the task
+        // and include this suspended use() call site in the owner stack.
+        task.thenableState = getThenableStateAfterSuspending();
+      }
+      // The task has unwound from user code, so it must no longer appear to
+      // be the currently rendering task while we synchronously finish it.
+      // Restore the parent instead of clearing this field because finishing
+      // can reenter Fizz and abort an outer render that is still on the stack.
+      request.currentTask = prevTask;
+      abortUnwoundTask(task, request);
       return;
     }
 
@@ -5279,6 +5293,23 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
         : thrownValue;
+
+    if (request.aborted) {
+      if (thrownValue === SuspenseException) {
+        // This task was rendering when abort() was called, so it never took
+        // the normal suspension path below that stores the thenable state.
+        // Preserve it before finishing the abort so DEV can replay the task
+        // and include this suspended use() call site in the owner stack.
+        task.thenableState = getThenableStateAfterSuspending();
+      }
+      // The task has unwound from user code, so it must no longer appear to
+      // be the currently rendering task while we synchronously finish it.
+      // Restore the parent instead of clearing this field because finishing
+      // can reenter Fizz and abort an outer render that is still on the stack.
+      request.currentTask = prevTask;
+      abortUnwoundTask(task, request);
+      return;
+    }
 
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
