@@ -3800,6 +3800,7 @@ function RequestInstance(
     void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize;
   this.status = 11;
   this.fatalError = null;
+  this.aborted = !1;
   this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
   this.completedPreambleSegments = this.completedRootSegment = null;
   this.byteSize = 0;
@@ -4017,12 +4018,12 @@ function fatalError(request, error) {
   onShellError(error);
   onFatalError(error);
   null !== request.destination
-    ? ((request.status = 14),
+    ? ((request.status = 13),
       (request = request.destination),
       (request.done = !0),
       (request.fatal = !0),
       (request.error = error))
-    : ((request.status = 13), (request.fatalError = error));
+    : ((request.status = 12), (request.fatalError = error));
 }
 function finishSuspenseListRow(request, row) {
   unblockSuspenseListRow(request, row.next, row.hoistables);
@@ -4179,9 +4180,7 @@ function renderSuspenseListRows(request, task, keyPath, rows, revealOrder) {
           0 === --previousSuspenseListRow.pendingTasks &&
             finishSuspenseListRow(request, previousSuspenseListRow);
       } catch (thrownValue) {
-        throw (
-          ((newSegment.status = 12 === request.status ? 3 : 4), thrownValue)
-        );
+        throw ((newSegment.status = request.aborted ? 3 : 4), thrownValue);
       }
     }
     task.blockedSegment = resumeSlots;
@@ -4367,14 +4366,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
         } else internalInstance.queue = null;
       }
       var nextChildren = JSCompiler_inline_result$jscomp$0.render();
-      if (12 === request.status) throw null;
+      if (request.aborted) throw null;
       var prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
       renderNodeDestructive(request, task, nextChildren, -1);
       task.keyPath = prevKeyPath;
     } else {
       var value = renderWithHooks(request, task, keyPath, type, props, void 0);
-      if (12 === request.status) throw null;
+      if (request.aborted) throw null;
       finishFunctionComponent(
         request,
         task,
@@ -4765,7 +4764,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 (boundarySegment.status = 1);
             } catch (thrownValue) {
               throw (
-                ((boundarySegment.status = 12 === request.status ? 3 : 4),
+                ((boundarySegment.status = request.aborted ? 3 : 4),
                 thrownValue)
               );
             } finally {
@@ -4844,7 +4843,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
                   tryToResolveTogetherRow(request, prevRow$jscomp$0);
             } catch (thrownValue$30) {
               newBoundary.status = 4;
-              if (12 === request.status) {
+              if (request.aborted) {
                 contentRootSegment.status = 3;
                 var error = request.fatalError;
               } else (contentRootSegment.status = 4), (error = thrownValue$30);
@@ -4960,7 +4959,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
         case REACT_LAZY_TYPE:
           var init = type._init;
           var Component = init(type._payload);
-          if (12 === request.status) throw null;
+          if (request.aborted) throw null;
           renderElement(request, task, keyPath, Component, props, ref);
           return;
       }
@@ -5215,7 +5214,7 @@ function retryNode(request, task) {
         case REACT_LAZY_TYPE:
           childNodes = node._init;
           node = childNodes(node._payload);
-          if (12 === request.status) throw null;
+          if (request.aborted) throw null;
           renderNodeDestructive(request, task, node, childIndex);
           return;
       }
@@ -5535,7 +5534,7 @@ function renderNode(request, task, node, childIndex) {
           thrownValue === SuspenseException
             ? getSuspendedThenable()
             : thrownValue),
-        12 !== request.status && "object" === typeof node && null !== node)
+        !request.aborted && "object" === typeof node && null !== node)
       ) {
         if ("function" === typeof node.then) {
           childIndex =
@@ -5585,7 +5584,7 @@ function renderNode(request, task, node, childIndex) {
           thrownValue$64 === SuspenseException
             ? getSuspendedThenable()
             : thrownValue$64),
-        12 !== request.status && "object" === typeof node && null !== node)
+        !request.aborted && "object" === typeof node && null !== node)
       ) {
         if ("function" === typeof node.then) {
           segment = node;
@@ -5703,13 +5702,13 @@ function abortTask(task, request, error) {
           trackPostpone(request, boundary, task, segment),
           finishedTask(request, null, task.row, segment))
         : (logRecoverableError(request, error, errorInfo),
-          13 !== request.status &&
-            14 !== request.status &&
+          12 !== request.status &&
+            13 !== request.status &&
             fatalError(request, error));
       return;
     }
-    13 !== request.status &&
-      14 !== request.status &&
+    12 !== request.status &&
+      13 !== request.status &&
       (boundary.pendingTasks--,
       0 === boundary.pendingTasks &&
         0 < boundary.nodes.length &&
@@ -6587,7 +6586,7 @@ function flushCompletedQueues(request, destination) {
         (i = request.resumableState),
         i.hasBody && writeChunk(destination, endChunkForTag("body")),
         i.hasHtml && writeChunk(destination, endChunkForTag("html")),
-        (request.status = 14),
+        (request.status = 13),
         (destination.done = !0),
         (request.destination = null));
   }
@@ -6606,8 +6605,8 @@ function enqueueFlush(request) {
   }
 }
 function abort(request, reason) {
-  if (11 === request.status || 10 === request.status) {
-    request.status = 12;
+  if (!(request.aborted || (11 !== request.status && 10 !== request.status))) {
+    request.aborted = !0;
     try {
       var abortableTasks = request.abortableTasks;
       if (0 < abortableTasks.size) {
@@ -6664,7 +6663,7 @@ exports.hasFinished = function (stream) {
 exports.renderNextChunk = function (stream) {
   var request = stream.request;
   stream = stream.destination;
-  if (14 !== request.status && 13 !== request.status) {
+  if (13 !== request.status && 12 !== request.status) {
     var prevContext = currentActiveSnapshot,
       prevDispatcher = ReactSharedInternals.H;
     ReactSharedInternals.H = HooksDispatcher;
@@ -6731,8 +6730,7 @@ exports.renderNextChunk = function (stream) {
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
                 var errorInfo = getThrownInfo(task$jscomp$0.componentStack),
                   boundary = task$jscomp$0.blockedBoundary,
-                  error$jscomp$0 =
-                    12 === request.status ? request.fatalError : x,
+                  error$jscomp$0 = request.aborted ? request.fatalError : x,
                   replayNodes = task$jscomp$0.replay.nodes,
                   resumeSlots = task$jscomp$0.replay.slots,
                   errorDigest = logRecoverableError(
@@ -6787,10 +6785,10 @@ exports.renderNextChunk = function (stream) {
               var x$jscomp$0 =
                 thrownValue === SuspenseException
                   ? getSuspendedThenable()
-                  : 12 === request.status
+                  : request.aborted
                     ? request.fatalError
                     : thrownValue;
-              if (12 === request.status && null !== request.trackedPostpones) {
+              if (request.aborted && null !== request.trackedPostpones) {
                 var trackedPostpones = request.trackedPostpones,
                   thrownInfo = getThrownInfo(task$jscomp$0.componentStack);
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
@@ -6877,13 +6875,13 @@ exports.renderNextChunk = function (stream) {
         (currentRequest = prevRequest);
     }
   }
-  if (13 === request.status)
-    (request.status = 14),
+  if (12 === request.status)
+    (request.status = 13),
       (request = request.fatalError),
       (stream.done = !0),
       (stream.fatal = !0),
       (stream.error = request);
-  else if (14 !== request.status && null === request.destination) {
+  else if (13 !== request.status && null === request.destination) {
     request.destination = stream;
     try {
       flushCompletedQueues(request, stream);
