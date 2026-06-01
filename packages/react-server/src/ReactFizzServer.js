@@ -88,6 +88,7 @@ import {
   hoistHoistables,
   createHoistableState,
   createPreambleState,
+  isWorkLoopExternallyDriven,
   supportsRequestStorage,
   requestStorage,
   pushFormStateMarkerIsMatching,
@@ -335,12 +336,11 @@ const FLUSHED = 2;
 const ABORTED = 3;
 const ERRORED = 4;
 const POSTPONED = 5;
-const RENDERING = 6;
 
 type Root = null;
 
 type Segment = {
-  status: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  status: 0 | 1 | 2 | 3 | 4 | 5,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
@@ -358,10 +358,9 @@ type Segment = {
 
 const OPENING = 10;
 const OPEN = 11;
-const ABORTING = 12;
-const CLOSING = 13;
-const CLOSED = 14;
-const STALLED_DEV = 15;
+const CLOSING = 12;
+const CLOSED = 13;
+const STALLED_DEV = 14;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -370,8 +369,9 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 10 | 11 | 12 | 13 | 14 | 15,
+  status: 10 | 11 | 12 | 13 | 14,
   fatalError: mixed,
+  aborted: boolean,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
@@ -380,6 +380,7 @@ export opaque type Request = {
   byteSize: number, // counts the number of bytes accumulated in the shell
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
+  currentTask: null | Task, // The task currently executing in this request.
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -527,8 +528,9 @@ function RequestInstance(
     progressiveChunkSize === undefined
       ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
       : progressiveChunkSize;
-  this.status = OPENING;
+  this.status = isWorkLoopExternallyDriven ? OPEN : OPENING;
   this.fatalError = null;
+  this.aborted = false;
   this.nextSegmentId = 0;
   this.allPendingTasks = 0;
   this.pendingRootTasks = 0;
@@ -537,6 +539,7 @@ function RequestInstance(
   this.byteSize = 0;
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
+  this.currentTask = null;
   this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
   this.completedBoundaries = ([]: Array<SuspenseBoundary>);
   this.partialBoundaries = ([]: Array<SuspenseBoundary>);
@@ -790,12 +793,16 @@ export function resolveRequest(): null | Request {
 function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
-  if (request.pingedTasks.length === 1) {
-    request.flushScheduled = request.destination !== null;
-    if (request.trackedPostpones !== null || request.status === OPENING) {
-      scheduleMicrotask(() => performWork(request));
-    } else {
-      scheduleWork(() => performWork(request));
+  if (isWorkLoopExternallyDriven) {
+    return;
+  } else {
+    if (request.pingedTasks.length === 1) {
+      request.flushScheduled = request.destination !== null;
+      if (request.trackedPostpones !== null || request.status === OPENING) {
+        scheduleMicrotask(() => performWork(request));
+      } else {
+        scheduleWork(() => performWork(request));
+      }
     }
   }
 }
@@ -1033,7 +1040,11 @@ function pushHaltedAwaitOnComponentStack(
 // performWork + retryTask without mutation
 function rerenderStalledTask(request: Request, task: Task): void {
   const prevStatus = request.status;
+  const prevAborted = request.aborted;
   request.status = STALLED_DEV;
+  // This diagnostic replay must reach the suspended call site instead of
+  // taking the abort path.
+  request.aborted = false;
 
   const prevContext = getActiveContext();
   const prevDispatcher = ReactSharedInternals.H;
@@ -1077,6 +1088,7 @@ function rerenderStalledTask(request: Request, task: Task): void {
     }
     currentRequest = prevRequest;
     request.status = prevStatus;
+    request.aborted = prevAborted;
   }
 }
 
@@ -1462,7 +1474,6 @@ function renderSuspenseBoundary(
       replaceSuspenseComponentStackWithSuspenseFallbackStack(
         suspenseComponentStack,
       );
-    boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
       pushSegmentFinale(
@@ -1474,7 +1485,7 @@ function renderSuspenseBoundary(
       boundarySegment.status = COMPLETED;
       finishedSegment(request, parentBoundary, boundarySegment);
     } catch (thrownValue: mixed) {
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         boundarySegment.status = ABORTED;
       } else {
         boundarySegment.status = ERRORED;
@@ -1537,8 +1548,6 @@ function renderSuspenseBoundary(
       prevContext,
     );
     task.row = null;
-    contentRootSegment.status = RENDERING;
-
     try {
       // We use the safe form because we don't handle suspending here. Only error handling.
       renderNode(request, task, content, -1);
@@ -1584,7 +1593,7 @@ function renderSuspenseBoundary(
     } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
       let error: mixed;
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         contentRootSegment.status = ABORTED;
         error = request.fatalError;
       } else {
@@ -1733,8 +1742,9 @@ function replaySuspenseBoundary(
       // faster
       return;
     }
-  } catch (error: mixed) {
+  } catch (thrownValue: mixed) {
     resumedBoundary.status = CLIENT_RENDERED;
+    const error = request.aborted ? request.fatalError : thrownValue;
     const thrownInfo = getThrownInfo(task.componentStack);
     const errorDigest = logRecoverableError(
       request,
@@ -2070,7 +2080,7 @@ function renderSuspenseListRows(
             finishSuspenseListRow(request, previousSuspenseListRow);
           }
         } catch (thrownValue: mixed) {
-          if (request.status === ABORTING) {
+          if (request.aborted) {
             newSegment.status = ABORTED;
           } else {
             newSegment.status = ERRORED;
@@ -2252,7 +2262,6 @@ function renderPreamble(
   blockedSegment.preambleChildren.push(preambleSegment);
   task.blockedSegment = preambleSegment;
   try {
-    preambleSegment.status = RENDERING;
     renderNode(request, task, node, -1);
     pushSegmentFinale(
       preambleSegment.chunks,
@@ -2387,7 +2396,7 @@ function finishClassComponent(
   } else {
     nextChildren = instance.render();
   }
-  if (request.status === ABORTING) {
+  if (request.aborted) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -2536,7 +2545,7 @@ function renderFunctionComponent(
     props,
     legacyContext,
   );
-  if (request.status === ABORTING) {
+  if (request.aborted) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -2813,12 +2822,7 @@ function renderLazyComponent(
     const init = lazyComponent._init;
     Component = init(payload);
   }
-  if (
-    request.status === ABORTING &&
-    // We're going to discard this render anyway.
-    // We just need to reach the point where we suspended in dev.
-    (!__DEV__ || request.status !== STALLED_DEV)
-  ) {
+  if (request.aborted) {
     // eslint-disable-next-line no-throw-literal
     throw null;
   }
@@ -3155,7 +3159,7 @@ function replayElement(
         erroredReplay(
           request,
           task.blockedBoundary,
-          x,
+          request.aborted ? request.fatalError : x,
           thrownInfo,
           childNodes,
           childSlots,
@@ -3436,7 +3440,7 @@ function retryNode(request: Request, task: Task): void {
           const init = lazyNode._init;
           resolvedNode = init(payload);
         }
-        if (request.status === ABORTING) {
+        if (request.aborted) {
           // eslint-disable-next-line no-throw-literal
           throw null;
         }
@@ -3670,7 +3674,7 @@ function replayFragment(
       erroredReplay(
         request,
         task.blockedBoundary,
-        x,
+        request.aborted ? request.fatalError : x,
         thrownInfo,
         childNodes,
         childSlots,
@@ -4180,7 +4184,7 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         // We are aborting so we can just bubble up to the task by falling through
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
@@ -4281,7 +4285,7 @@ function renderNode(
             getSuspendedThenable()
           : thrownValue;
 
-      if (request.status === ABORTING) {
+      if (request.aborted) {
         // We are aborting so we can just bubble up to the task by falling through
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
@@ -4590,14 +4594,13 @@ function abortRemainingReplayNodes(
 function abortTask(task: Task, request: Request, error: mixed): void {
   // This aborts the task and aborts the parent that it blocks, putting it into
   // client rendered mode.
+  if (task === request.currentTask) {
+    // This is a currently rendering Task. The render itself will abort the task.
+    return;
+  }
   const boundary = task.blockedBoundary;
   const segment = task.blockedSegment;
   if (segment !== null) {
-    if (segment.status === RENDERING) {
-      // This is the a currently rendering Segment. The render itself will
-      // abort the task.
-      return;
-    }
     segment.status = ABORTED;
   }
 
@@ -4643,50 +4646,51 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 
   if (boundary === null) {
-    if (request.status !== CLOSING && request.status !== CLOSED) {
-      const replay: null | ReplaySet = task.replay;
-      if (replay === null) {
-        // We didn't complete the root so we have nothing to show. We can close
-        // the request;
-        if (request.trackedPostpones !== null && segment !== null) {
-          const trackedPostpones = request.trackedPostpones;
-          // We are aborting a prerender and must treat the shell as halted
-          // We log the error but we still resolve the prerender
-          logRecoverableError(request, error, errorInfo, task.debugTask);
-          trackPostpone(request, trackedPostpones, task, segment);
-          finishedTask(request, null, task.row, segment);
-        } else {
-          logRecoverableError(request, error, errorInfo, task.debugTask);
+    const replay: null | ReplaySet = task.replay;
+    if (replay === null) {
+      // We didn't complete the root so we have nothing to show. We can close
+      // the request;
+      if (request.trackedPostpones !== null && segment !== null) {
+        const trackedPostpones = request.trackedPostpones;
+        // We are aborting a prerender and must treat the shell as halted
+        // We log the error but we still resolve the prerender
+        logRecoverableError(request, error, errorInfo, task.debugTask);
+        trackPostpone(request, trackedPostpones, task, segment);
+        finishedTask(request, null, task.row, segment);
+      } else {
+        logRecoverableError(request, error, errorInfo, task.debugTask);
+        if (request.status !== CLOSING && request.status !== CLOSED) {
           fatalError(request, error, errorInfo, task.debugTask);
         }
-        return;
-      } else {
-        // If the shell aborts during a replay, that's not a fatal error. Instead
-        // we should be able to recover by client rendering all the root boundaries in
-        // the ReplaySet.
-        replay.pendingTasks--;
-        if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
-          const errorDigest = logRecoverableError(
-            request,
-            error,
-            errorInfo,
-            null,
-          );
-          abortRemainingReplayNodes(
-            request,
-            null,
-            replay.nodes,
-            replay.slots,
-            error,
-            errorDigest,
-            errorInfo,
-            true,
-          );
-        }
-        request.pendingRootTasks--;
-        if (request.pendingRootTasks === 0) {
-          completeShell(request);
-        }
+      }
+      return;
+    }
+    if (request.status !== CLOSING && request.status !== CLOSED) {
+      // If the shell aborts during a replay, that's not a fatal error. Instead
+      // we should be able to recover by client rendering all the root boundaries in
+      // the ReplaySet.
+      replay.pendingTasks--;
+      if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
+        const errorDigest = logRecoverableError(
+          request,
+          error,
+          errorInfo,
+          null,
+        );
+        abortRemainingReplayNodes(
+          request,
+          null,
+          replay.nodes,
+          replay.slots,
+          error,
+          errorDigest,
+          errorInfo,
+          true,
+        );
+      }
+      request.pendingRootTasks--;
+      if (request.pendingRootTasks === 0) {
+        completeShell(request);
       }
     }
   } else {
@@ -5072,8 +5076,8 @@ function retryRenderTask(
     return;
   }
 
-  // We track when a Segment is rendering so we can handle aborts while rendering
-  segment.status = RENDERING;
+  const prevTask = request.currentTask;
+  request.currentTask = task;
 
   // We restore the context to what it was when we suspended.
   // We don't restore it after we leave because it's likely that we'll end up
@@ -5118,11 +5122,11 @@ function retryRenderTask(
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : request.status === ABORTING
+        : request.aborted
           ? request.fatalError
           : thrownValue;
 
-    if (request.status === ABORTING && request.trackedPostpones !== null) {
+    if (request.aborted && request.trackedPostpones !== null) {
       // We are aborting a prerender and need to halt this task.
       const trackedPostpones = request.trackedPostpones;
       const thrownInfo = getThrownInfo(task.componentStack);
@@ -5170,6 +5174,7 @@ function retryRenderTask(
     );
     return;
   } finally {
+    request.currentTask = prevTask;
     if (__DEV__) {
       setCurrentTaskInDEV(prevTaskInDEV);
     }
@@ -5181,6 +5186,9 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     // There are no pending tasks working on this set, so we must have aborted.
     return;
   }
+
+  const prevTask = request.currentTask;
+  request.currentTask = task;
 
   // We restore the context to what it was when we suspended.
   // We don't restore it after we leave because it's likely that we'll end up
@@ -5244,7 +5252,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     erroredReplay(
       request,
       task.blockedBoundary,
-      request.status === ABORTING ? request.fatalError : x,
+      request.aborted ? request.fatalError : x,
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
@@ -5260,6 +5268,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     return;
   } finally {
+    request.currentTask = prevTask;
     if (__DEV__) {
       setCurrentTaskInDEV(prevTaskInDEV);
     }
@@ -6029,39 +6038,45 @@ function flushCompletedQueues(
 }
 
 export function startWork(request: Request): void {
-  request.flushScheduled = request.destination !== null;
-  // When prerendering we use microtasks for pinging work
-  if (supportsRequestStorage) {
-    scheduleMicrotask(() => requestStorage.run(request, performWork, request));
+  if (isWorkLoopExternallyDriven) {
+    return;
   } else {
-    scheduleMicrotask(() => performWork(request));
-  }
-  scheduleWork(() => {
-    if (request.status === OPENING) {
-      request.status = OPEN;
+    request.flushScheduled = request.destination !== null;
+    // When prerendering we use microtasks for pinging work
+    if (supportsRequestStorage) {
+      scheduleMicrotask(() =>
+        requestStorage.run(request, performWork, request),
+      );
+    } else {
+      scheduleMicrotask(() => performWork(request));
     }
-
-    if (request.trackedPostpones === null) {
-      // this is either a regular render or a resume. For regular render we want
-      // to call emitEarlyPreloads after the first performWork because we want
-      // are responding to a live request and need to balance sending something early
-      // (i.e. don't want for the shell to finish) but we need something to send.
-      // The only implementation of this is for DOM at the moment and during resumes nothing
-      // actually emits but the code paths here are the same.
-      // During a prerender we don't want to be too aggressive in emitting early preloads
-      // because we aren't responding to a live request and we can wait for the prerender to
-      // postpone before we emit anything.
-      if (supportsRequestStorage) {
-        requestStorage.run(
-          request,
-          enqueueEarlyPreloadsAfterInitialWork,
-          request,
-        );
-      } else {
-        enqueueEarlyPreloadsAfterInitialWork(request);
+    scheduleWork(() => {
+      if (request.status === OPENING) {
+        request.status = OPEN;
       }
-    }
-  });
+
+      if (request.trackedPostpones === null) {
+        // this is either a regular render or a resume. For regular render we want
+        // to call emitEarlyPreloads after the first performWork because we want
+        // are responding to a live request and need to balance sending something early
+        // (i.e. don't want for the shell to finish) but we need something to send.
+        // The only implementation of this is for DOM at the moment and during resumes nothing
+        // actually emits but the code paths here are the same.
+        // During a prerender we don't want to be too aggressive in emitting early preloads
+        // because we aren't responding to a live request and we can wait for the prerender to
+        // postpone before we emit anything.
+        if (supportsRequestStorage) {
+          requestStorage.run(
+            request,
+            enqueueEarlyPreloadsAfterInitialWork,
+            request,
+          );
+        } else {
+          enqueueEarlyPreloadsAfterInitialWork(request);
+        }
+      }
+    });
+  }
 }
 
 function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
@@ -6143,9 +6158,15 @@ export function stopFlowing(request: Request): void {
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
-  if (request.status === OPEN || request.status === OPENING) {
-    request.status = ABORTING;
+  if (
+    request.aborted ||
+    (request.status !== OPEN && request.status !== OPENING)
+  ) {
+    // Only requests that are not already complete or in the process of aborting
+    // can be aborted. in practice this makes abort callable at most once per render.
+    return;
   }
+  request.aborted = true;
 
   try {
     const abortableTasks = request.abortableTasks;

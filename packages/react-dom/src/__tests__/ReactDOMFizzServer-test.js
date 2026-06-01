@@ -3562,6 +3562,47 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('reports abort errors for every suspended task when aborting fatals the shell', async () => {
+    const promise = new Promise(() => {});
+    const rendered = [];
+    function Suspend({label}) {
+      rendered.push(label);
+      use(promise);
+      return null;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback="Loading...">
+            <Suspend label="boundary" />
+          </Suspense>
+          <Suspend label="root one" />
+          <Suspend label="root two" />
+        </>
+      );
+    }
+
+    const errors = [];
+    let abort;
+    await act(() => {
+      abort = renderToPipeableStream(<App />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+        onShellError() {},
+      }).abort;
+    });
+
+    expect(rendered).toEqual(['boundary', 'root one', 'root two']);
+
+    await act(() => {
+      abort(new Error('abort reason'));
+    });
+
+    expect(errors).toEqual(['abort reason', 'abort reason', 'abort reason']);
+  });
+
   it('warns in dev if you access digest from errorInfo in onRecoverableError', async () => {
     await act(() => {
       const {pipe} = renderToPipeableStream(
@@ -3803,8 +3844,8 @@ describe('ReactDOMFizzServer', () => {
 
     expect(headers).toEqual({
       Link: `
-<non-responsive-preload>; rel=preload; as="image"; fetchpriority="high", 
-<non-responsive-img>; rel=preload; as="image"; fetchpriority="high"
+<non-responsive-preload>; rel=preload; as="image"; fetchpriority="high",
+ <non-responsive-img>; rel=preload; as="image"; fetchpriority="high"
 `
         .replaceAll('\n', '')
         .trim(),
@@ -4003,10 +4044,46 @@ describe('ReactDOMFizzServer', () => {
     await act(() => pipe(testWritable));
     expect(didRender).toBe(false);
     expect(didFatal).toBe(didFatal);
-    expect(errors).toEqual([
-      'boom',
-      'The destination stream errored while writing data.',
-    ]);
+    expect(errors).toEqual(['boom']);
+  });
+
+  it('does not report aborts after fatally erroring', async () => {
+    const promise = new Promise(() => {});
+    function AsyncComp() {
+      React.use(promise);
+      return 'Async';
+    }
+
+    function ErrorComp() {
+      throw new Error('boom');
+    }
+
+    const errors = [];
+    let abort;
+    await act(() => {
+      abort = renderToPipeableStream(
+        <div>
+          <Suspense fallback="loading...">
+            <AsyncComp />
+          </Suspense>
+          <ErrorComp />
+        </div>,
+        {
+          onError(error) {
+            errors.push(error.message);
+          },
+          onShellError() {},
+        },
+      ).abort;
+    });
+
+    expect(errors).toEqual(['boom']);
+
+    await act(() => {
+      abort(new Error('too late'));
+    });
+
+    expect(errors).toEqual(['boom']);
   });
 
   describe('error escaping', () => {
@@ -6986,6 +7063,81 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('reports an in-flight root task after another root task fatals while aborting', async () => {
+    const promise = new Promise(() => {});
+    function SuspendedRoot() {
+      use(promise);
+      return null;
+    }
+
+    function Child() {
+      return 'child';
+    }
+
+    const abortRef = {current: null};
+    function ComponentThatAborts() {
+      abortRef.current(new Error('abort reason'));
+      return <Child />;
+    }
+
+    const errors = [];
+    await act(() => {
+      const {abort} = renderToPipeableStream(
+        <>
+          <SuspendedRoot />
+          <ComponentThatAborts />
+        </>,
+        {
+          onError(error) {
+            errors.push(error.message);
+          },
+          onShellError() {},
+        },
+      );
+      abortRef.current = abort;
+    });
+
+    expect(errors).toEqual(['abort reason', 'abort reason']);
+  });
+
+  it('reports a root task that suspends after aborting during render', async () => {
+    const promise = new Promise(() => {});
+    function SuspendedRoot() {
+      use(promise);
+      return null;
+    }
+
+    function Child() {
+      use(promise);
+      return null;
+    }
+
+    const abortRef = {current: null};
+    function ComponentThatAborts() {
+      abortRef.current(new Error('abort reason'));
+      return <Child />;
+    }
+
+    const errors = [];
+    await act(() => {
+      const {abort} = renderToPipeableStream(
+        <>
+          <SuspendedRoot />
+          <ComponentThatAborts />
+        </>,
+        {
+          onError(error) {
+            errors.push(error.message);
+          },
+          onShellError() {},
+        },
+      );
+      abortRef.current = abort;
+    });
+
+    expect(errors).toEqual(['abort reason', 'abort reason']);
+  });
+
   it('can abort during render in a lazy initializer for a component', async () => {
     function Sibling() {
       return <p>sibling</p>;
@@ -8290,10 +8442,6 @@ describe('ReactDOMFizzServer', () => {
     }
 
     expect(thrownError).toBe('boom');
-    // TODO there should actually be three errors. One for the pending Suspense, one for the fallback task, and one for the task
-    // that does the abort itself. At the moment abort will flush queues and if there is no pending tasks will close the request before
-    // the task which initiated the abort can even be processed. This is a bug but not one that I am fixing with the current change
-    // so I am asserting the current behavior
     expect(errors).toEqual([
       {
         error: 'boom',
@@ -8313,9 +8461,10 @@ describe('ReactDOMFizzServer', () => {
           'html',
           'App',
         ]),
-        // }, {
-        //   error: 'boom',
-        //   componentStack: componentStack(['Abort', 'body', 'html', 'App'])
+      },
+      {
+        error: 'boom',
+        componentStack: componentStack(['Abort', 'body', 'html', 'App']),
       },
     ]);
 
