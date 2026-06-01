@@ -7100,7 +7100,7 @@ describe('ReactDOMFizzServer', () => {
     expect(errors).toEqual(['abort reason', 'abort reason']);
   });
 
-  it('reports a root task that suspends after aborting during render', async () => {
+  it('reports a root task before rendering a suspended child returned after aborting', async () => {
     const promise = new Promise(() => {});
     function SuspendedRoot() {
       use(promise);
@@ -7136,6 +7136,34 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(errors).toEqual(['abort reason', 'abort reason']);
+  });
+
+  it('currently does not report a root task that suspends directly after aborting during render', async () => {
+    const promise = new Promise(() => {});
+    const abortRef = {current: null};
+    function ComponentThatAbortsAndSuspends() {
+      abortRef.current(new Error('abort reason'));
+      use(promise);
+      return null;
+    }
+
+    const errors = [];
+    await act(() => {
+      const {abort} = renderToPipeableStream(
+        <ComponentThatAbortsAndSuspends />,
+        {
+          onError(error) {
+            errors.push(error.message);
+          },
+          onShellError() {},
+        },
+      );
+      abortRef.current = abort;
+    });
+
+    // The task suspends before renderFunctionComponent gets to throw the
+    // abort reason, and retryRenderTask currently suspends it again.
+    expect(errors).toEqual([]);
   });
 
   it('can abort during render in a lazy initializer for a component', async () => {
@@ -8445,6 +8473,10 @@ describe('ReactDOMFizzServer', () => {
     expect(errors).toEqual([
       {
         error: 'boom',
+        componentStack: componentStack(['Abort', 'body', 'html', 'App']),
+      },
+      {
+        error: 'boom',
         componentStack: componentStack([
           'Pending',
           'Suspense',
@@ -8461,10 +8493,6 @@ describe('ReactDOMFizzServer', () => {
           'html',
           'App',
         ]),
-      },
-      {
-        error: 'boom',
-        componentStack: componentStack(['Abort', 'body', 'html', 'App']),
       },
     ]);
 

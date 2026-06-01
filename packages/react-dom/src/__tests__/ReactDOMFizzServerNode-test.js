@@ -382,6 +382,7 @@ describe('ReactDOMFizzServerNode', () => {
     expect(isCompleteCalls).toBe(0);
 
     abort(new Error('uh oh'));
+    await jest.runAllTimers();
 
     await completed;
 
@@ -468,6 +469,7 @@ describe('ReactDOMFizzServerNode', () => {
 
     const reason = new Error('abort reason');
     abort(reason);
+    await jest.runAllTimers();
 
     expect(shellErrors).toEqual([reason]);
     expect(errors).toEqual(['abort reason', 'abort reason', 'abort reason']);
@@ -504,6 +506,7 @@ describe('ReactDOMFizzServerNode', () => {
     expect(isCompleteCalls).toBe(0);
 
     abort();
+    await jest.runAllTimers();
 
     await completed;
 
@@ -746,6 +749,7 @@ describe('ReactDOMFizzServerNode', () => {
     resolve();
 
     await completed;
+    await jest.runAllTimers();
 
     expect(errors).toEqual([
       'The destination stream errored while writing data.',

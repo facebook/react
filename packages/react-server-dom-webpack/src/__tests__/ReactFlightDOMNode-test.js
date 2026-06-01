@@ -2051,7 +2051,7 @@ describe('ReactFlightDOMNode', () => {
       );
 
       expect(result).toContain(
-        'Switched to client rendering because the server rendering aborted due to:\n\n' +
+        'Switched to client rendering because the server rendering aborted due to:\\n\\n' +
           'ssr-abort',
       );
     });

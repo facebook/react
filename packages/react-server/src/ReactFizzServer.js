@@ -356,6 +356,9 @@ type Segment = {
   textEmbedded: boolean,
 };
 
+// The ordering of these statuses matters. OPENING and OPEN are the only
+// statuses in which newly scheduled work may be performed. Any status greater
+// than OPEN represents a request that no longer admits work.
 const OPENING = 10;
 const OPEN = 11;
 const CLOSING = 12;
@@ -4591,9 +4594,9 @@ function abortRemainingReplayNodes(
   }
 }
 
-function abortTask(task: Task, request: Request, error: mixed): void {
-  // This aborts the task and aborts the parent that it blocks, putting it into
-  // client rendered mode.
+function abortTask(task: Task, request: Request): void {
+  // Mark pending tasks as aborted synchronously so any work that was already
+  // scheduled cannot begin after abort is called.
   if (task === request.currentTask) {
     // This is a currently rendering Task. The render itself will abort the task.
     return;
@@ -4604,17 +4607,13 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     segment.status = ABORTED;
   }
 
-  const errorInfo = getThrownInfo(task.componentStack);
   if (__DEV__ && enableAsyncDebugInfo) {
-    // If the task is not rendering, then this is an async abort. Conceptually it's as if
-    // the abort happened inside the async gap. The abort reason's stack frame won't have that
-    // on the stack so instead we use the owner stack and debug task of any halted async debug info.
+    // Capture async debug information at the point abort begins. The task may
+    // receive more data before finishAbort runs and no longer suspend at the
+    // call site we need to report.
     let node: any = task.node;
     if (node !== null && typeof node === 'object') {
-      // Push a fake component stack frame that represents the await.
       let debugInfo = node._debugInfo;
-      // First resolve lazy nodes to find debug info that has been transferred
-      // to the inner value.
       while (
         typeof node === 'object' &&
         node !== null &&
@@ -4644,6 +4643,29 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       }
     }
   }
+
+  if (boundary !== null) {
+    boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+      abortTask(fallbackTask, request),
+    );
+  }
+}
+
+function finishAbortedTask(task: Task, request: Request, error: mixed): void {
+  // Report and complete a task that was synchronously claimed by abortTask.
+  // A currently rendering task remains responsible for unwinding itself.
+  if (task === request.currentTask) {
+    return;
+  }
+  const boundary = task.blockedBoundary;
+  const segment = task.blockedSegment;
+  if (segment !== null) {
+    if (segment.status !== ABORTED) {
+      return;
+    }
+  }
+
+  const errorInfo = getThrownInfo(task.componentStack);
 
   if (boundary === null) {
     const replay: null | ReplaySet = task.replay;
@@ -4706,7 +4728,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // If this boundary was still pending then we haven't already cancelled its fallbacks.
         // We'll need to abort the fallbacks, which will also error that parent boundary.
         boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-          abortTask(fallbackTask, request, error),
+          finishAbortedTask(fallbackTask, request, error),
         );
         boundary.fallbackAbortableTasks.clear();
         return finishedTask(request, boundary, task.row, segment);
@@ -4743,7 +4765,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
     boundary.fallbackAbortableTasks.forEach(fallbackTask =>
-      abortTask(fallbackTask, request, error),
+      finishAbortedTask(fallbackTask, request, error),
     );
     boundary.fallbackAbortableTasks.clear();
   }
@@ -4761,14 +4783,39 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 }
 
-function abortTaskDEV(task: Task, request: Request, error: mixed): void {
+function finishAbortedTaskDEV(
+  task: Task,
+  request: Request,
+  error: mixed,
+): void {
   if (__DEV__) {
     const prevTaskInDEV = currentTaskInDEV;
     const prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
     setCurrentTaskInDEV(task);
     ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
     try {
-      abortTask(task, request, error);
+      finishAbortedTask(task, request, error);
+    } finally {
+      setCurrentTaskInDEV(prevTaskInDEV);
+      ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
+    }
+  } else {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'finishAbortedTaskDEV should never be called in production mode. This is a bug in React.',
+    );
+  }
+}
+
+function abortTaskDEV(task: Task, request: Request): void {
+  if (__DEV__) {
+    const prevTaskInDEV = currentTaskInDEV;
+    const prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+    setCurrentTaskInDEV(task);
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+    try {
+      abortTask(task, request);
     } finally {
       setCurrentTaskInDEV(prevTaskInDEV);
       ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl;
@@ -5276,7 +5323,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
 }
 
 export function performWork(request: Request): void {
-  if (request.status === CLOSED || request.status === CLOSING) {
+  if (request.aborted || request.status > OPEN) {
     return;
   }
   const prevContext = getActiveContext();
@@ -6156,36 +6203,16 @@ export function stopFlowing(request: Request): void {
   request.destination = null;
 }
 
-// This is called to early terminate a request. It puts all pending boundaries in client rendered state.
-export function abort(request: Request, reason: mixed): void {
-  if (
-    request.aborted ||
-    (request.status !== OPEN && request.status !== OPENING)
-  ) {
-    // Only requests that are not already complete or in the process of aborting
-    // can be aborted. in practice this makes abort callable at most once per render.
-    return;
-  }
-  request.aborted = true;
-
+function finishAbort(request: Request, abortableTasks: Set<Task>): void {
   try {
-    const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
-      const error =
-        reason === undefined
-          ? new Error('The render was aborted by the server without a reason.')
-          : typeof reason === 'object' &&
-              reason !== null &&
-              typeof reason.then === 'function'
-            ? new Error('The render was aborted by the server with a promise.')
-            : reason;
-      // This error isn't necessarily fatal in this case but we need to stash it
-      // so we can use it to abort any pending work
-      request.fatalError = error;
+      const error = request.fatalError;
       if (__DEV__) {
-        abortableTasks.forEach(task => abortTaskDEV(task, request, error));
+        abortableTasks.forEach(task =>
+          finishAbortedTaskDEV(task, request, error),
+        );
       } else {
-        abortableTasks.forEach(task => abortTask(task, request, error));
+        abortableTasks.forEach(task => finishAbortedTask(task, request, error));
       }
       abortableTasks.clear();
     }
@@ -6197,6 +6224,40 @@ export function abort(request: Request, reason: mixed): void {
     logRecoverableError(request, error, errorInfo, null);
     fatalError(request, error, errorInfo, null);
   }
+}
+
+// This is called to early terminate a request. It puts all pending boundaries in client rendered state.
+export function abort(request: Request, reason: mixed): void {
+  if (
+    request.aborted ||
+    (request.status !== OPEN && request.status !== OPENING)
+  ) {
+    // Only requests that are not already complete or in the process of aborting
+    // can be aborted. in practice this makes abort callable at most once per render.
+    return;
+  }
+  request.aborted = true;
+  const error =
+    reason === undefined
+      ? new Error('The render was aborted by the server without a reason.')
+      : typeof reason === 'object' &&
+          reason !== null &&
+          typeof reason.then === 'function'
+        ? new Error('The render was aborted by the server with a promise.')
+        : reason;
+  // This error isn't necessarily fatal in this case but we need to stash it
+  // so we can use it to abort any pending work.
+  request.fatalError = error;
+  const abortableTasks = request.abortableTasks;
+  if (__DEV__) {
+    abortableTasks.forEach(task => abortTaskDEV(task, request));
+  } else {
+    abortableTasks.forEach(task => abortTask(task, request));
+  }
+  // Even though this looks async some renderers schedule work sync
+  // So it is important that the finish step does not assume the stack
+  // has unwinded yet
+  scheduleWork(() => finishAbort(request, abortableTasks));
 }
 
 export function flushResources(request: Request): void {
