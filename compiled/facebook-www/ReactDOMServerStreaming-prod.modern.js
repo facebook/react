@@ -6736,7 +6736,15 @@ exports.renderNextChunk = function (stream) {
                 thrownValue === SuspenseException
                   ? getSuspendedThenable()
                   : thrownValue;
-              if (
+              if (request.aborted)
+                thrownValue === SuspenseException &&
+                  (task$jscomp$0.thenableState =
+                    getThenableStateAfterSuspending()),
+                  (request.currentTask = prevTask),
+                  abortTask(task$jscomp$0, request),
+                  task$jscomp$0.abortSet.delete(task$jscomp$0),
+                  finishAbortedTask(task$jscomp$0, request, request.fatalError);
+              else if (
                 "object" === typeof x &&
                 null !== x &&
                 "function" === typeof x.then
@@ -6809,27 +6817,16 @@ exports.renderNextChunk = function (stream) {
               var x$jscomp$0 =
                 thrownValue === SuspenseException
                   ? getSuspendedThenable()
-                  : request.aborted
-                    ? request.fatalError
-                    : thrownValue;
-              if (request.aborted && null !== request.trackedPostpones) {
-                var trackedPostpones = request.trackedPostpones,
-                  thrownInfo = getThrownInfo(task$jscomp$0.componentStack);
-                task$jscomp$0.abortSet.delete(task$jscomp$0);
-                logRecoverableError(request, x$jscomp$0, thrownInfo);
-                trackPostpone(
-                  request,
-                  trackedPostpones,
-                  task$jscomp$0,
-                  segment$jscomp$0
-                );
-                finishedTask(
-                  request,
-                  task$jscomp$0.blockedBoundary,
-                  task$jscomp$0.row,
-                  segment$jscomp$0
-                );
-              } else if (
+                  : thrownValue;
+              if (request.aborted)
+                thrownValue === SuspenseException &&
+                  (task$jscomp$0.thenableState =
+                    getThenableStateAfterSuspending()),
+                  (request.currentTask = prevTask$jscomp$0),
+                  abortTask(task$jscomp$0, request),
+                  task$jscomp$0.abortSet.delete(task$jscomp$0),
+                  finishAbortedTask(task$jscomp$0, request, request.fatalError);
+              else if (
                 "object" === typeof x$jscomp$0 &&
                 null !== x$jscomp$0 &&
                 "function" === typeof x$jscomp$0.then

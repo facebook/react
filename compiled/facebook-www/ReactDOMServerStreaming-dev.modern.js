@@ -7424,6 +7424,30 @@ __DEV__ &&
         }
       }
     }
+    function finishAbortedTaskDEV(task, request, error) {
+      var prevTaskInDEV = currentTaskInDEV,
+        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+      currentTaskInDEV = task;
+      ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+      try {
+        finishAbortedTask(task, request, error);
+      } finally {
+        (currentTaskInDEV = prevTaskInDEV),
+          (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl);
+      }
+    }
+    function abortTaskDEV(task, request) {
+      var prevTaskInDEV = currentTaskInDEV,
+        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+      currentTaskInDEV = task;
+      ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+      try {
+        abortTask(task, request);
+      } finally {
+        (currentTaskInDEV = prevTaskInDEV),
+          (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl);
+      }
+    }
     function safelyEmitEarlyPreloads(request, shellComplete) {
       try {
         var renderState = request.renderState,
@@ -8430,17 +8454,7 @@ __DEV__ &&
         if (0 < abortableTasks.size) {
           var error = request.fatalError;
           abortableTasks.forEach(function (task) {
-            var prevTaskInDEV = currentTaskInDEV,
-              prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-            currentTaskInDEV = task;
-            ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-            try {
-              finishAbortedTask(task, request, error);
-            } finally {
-              (currentTaskInDEV = prevTaskInDEV),
-                (ReactSharedInternals.getCurrentStack =
-                  prevGetCurrentStackImpl);
-            }
+            return finishAbortedTaskDEV(task, request, error);
           });
           abortableTasks.clear();
         }
@@ -8466,16 +8480,7 @@ __DEV__ &&
               : reason),
         (reason = request.abortableTasks),
         reason.forEach(function (task) {
-          var prevTaskInDEV = currentTaskInDEV,
-            prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-          currentTaskInDEV = task;
-          ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-          try {
-            abortTask(task, request);
-          } finally {
-            (currentTaskInDEV = prevTaskInDEV),
-              (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl);
-          }
+          return abortTaskDEV(task, request);
         }),
         finishAbort(request, reason));
     }
@@ -10059,7 +10064,19 @@ __DEV__ &&
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
                       : thrownValue;
-                  if (
+                  if (request$jscomp$0.aborted)
+                    thrownValue === SuspenseException &&
+                      (task$jscomp$0.thenableState =
+                        getThenableStateAfterSuspending()),
+                      (request$jscomp$0.currentTask = prevTask),
+                      abortTaskDEV(task$jscomp$0, request$jscomp$0),
+                      task$jscomp$0.abortSet.delete(task$jscomp$0),
+                      finishAbortedTaskDEV(
+                        task$jscomp$0,
+                        request$jscomp$0,
+                        request$jscomp$0.fatalError
+                      );
+                  else if (
                     "object" === typeof x &&
                     null !== x &&
                     "function" === typeof x.then
@@ -10143,35 +10160,20 @@ __DEV__ &&
                   var x$jscomp$0 =
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
-                      : request$jscomp$0.aborted
-                        ? request$jscomp$0.fatalError
-                        : thrownValue;
-                  if (
-                    request$jscomp$0.aborted &&
-                    null !== request$jscomp$0.trackedPostpones
-                  ) {
-                    var trackedPostpones = request$jscomp$0.trackedPostpones,
-                      thrownInfo = getThrownInfo(task$jscomp$0.componentStack);
-                    task$jscomp$0.abortSet.delete(task$jscomp$0);
-                    logRecoverableError(
-                      request$jscomp$0,
-                      x$jscomp$0,
-                      thrownInfo,
-                      task$jscomp$0.debugTask
-                    );
-                    trackPostpone(
-                      request$jscomp$0,
-                      trackedPostpones,
-                      task$jscomp$0,
-                      segment$jscomp$0
-                    );
-                    finishedTask(
-                      request$jscomp$0,
-                      task$jscomp$0.blockedBoundary,
-                      task$jscomp$0.row,
-                      segment$jscomp$0
-                    );
-                  } else if (
+                      : thrownValue;
+                  if (request$jscomp$0.aborted)
+                    thrownValue === SuspenseException &&
+                      (task$jscomp$0.thenableState =
+                        getThenableStateAfterSuspending()),
+                      (request$jscomp$0.currentTask = prevTask$jscomp$0),
+                      abortTaskDEV(task$jscomp$0, request$jscomp$0),
+                      task$jscomp$0.abortSet.delete(task$jscomp$0),
+                      finishAbortedTaskDEV(
+                        task$jscomp$0,
+                        request$jscomp$0,
+                        request$jscomp$0.fatalError
+                      );
+                  else if (
                     "object" === typeof x$jscomp$0 &&
                     null !== x$jscomp$0 &&
                     "function" === typeof x$jscomp$0.then

@@ -7581,6 +7581,30 @@ __DEV__ &&
         }
       }
     }
+    function finishAbortedTaskDEV(task, request, error) {
+      var prevTaskInDEV = currentTaskInDEV,
+        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+      currentTaskInDEV = task;
+      ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+      try {
+        finishAbortedTask(task, request, error);
+      } finally {
+        (currentTaskInDEV = prevTaskInDEV),
+          (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl);
+      }
+    }
+    function abortTaskDEV(task, request) {
+      var prevTaskInDEV = currentTaskInDEV,
+        prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
+      currentTaskInDEV = task;
+      ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+      try {
+        abortTask(task, request);
+      } finally {
+        (currentTaskInDEV = prevTaskInDEV),
+          (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl);
+      }
+    }
     function safelyEmitEarlyPreloads(request, shellComplete) {
       try {
         var renderState = request.renderState,
@@ -7826,7 +7850,20 @@ __DEV__ &&
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
                       : thrownValue;
-                  if (
+                  if (request.aborted) {
+                    thrownValue === SuspenseException &&
+                      (task$jscomp$0.thenableState =
+                        getThenableStateAfterSuspending());
+                    request.currentTask = prevTask;
+                    var request$jscomp$0 = request;
+                    abortTaskDEV(task$jscomp$0, request$jscomp$0);
+                    task$jscomp$0.abortSet.delete(task$jscomp$0);
+                    finishAbortedTaskDEV(
+                      task$jscomp$0,
+                      request$jscomp$0,
+                      request$jscomp$0.fatalError
+                    );
+                  } else if (
                     "object" === typeof x &&
                     null !== x &&
                     "function" === typeof x.then
@@ -7840,9 +7877,9 @@ __DEV__ &&
                   } else {
                     task$jscomp$0.replay.pendingTasks--;
                     task$jscomp$0.abortSet.delete(task$jscomp$0);
-                    var errorInfo = getThrownInfo(task$jscomp$0.componentStack),
-                      request$jscomp$0 = request,
-                      boundary = task$jscomp$0.blockedBoundary,
+                    var errorInfo = getThrownInfo(task$jscomp$0.componentStack);
+                    request$jscomp$0 = request;
+                    var boundary = task$jscomp$0.blockedBoundary,
                       error$jscomp$0 = request.aborted ? request.fatalError : x,
                       errorInfo$jscomp$0 = errorInfo,
                       replayNodes = task$jscomp$0.replay.nodes,
@@ -7909,32 +7946,21 @@ __DEV__ &&
                 var x$jscomp$0 =
                   thrownValue === SuspenseException
                     ? getSuspendedThenable()
-                    : request.aborted
-                      ? request.fatalError
-                      : thrownValue;
-                if (request.aborted && null !== request.trackedPostpones) {
-                  var trackedPostpones = request.trackedPostpones,
-                    thrownInfo = getThrownInfo(task$jscomp$0.componentStack);
-                  task$jscomp$0.abortSet.delete(task$jscomp$0);
-                  logRecoverableError(
-                    request,
-                    x$jscomp$0,
-                    thrownInfo,
-                    task$jscomp$0.debugTask
-                  );
-                  trackPostpone(
-                    request,
-                    trackedPostpones,
-                    task$jscomp$0,
-                    request$jscomp$0
-                  );
-                  finishedTask(
-                    request,
-                    task$jscomp$0.blockedBoundary,
-                    task$jscomp$0.row,
-                    request$jscomp$0
-                  );
-                } else if (
+                    : thrownValue;
+                if (request.aborted)
+                  thrownValue === SuspenseException &&
+                    (task$jscomp$0.thenableState =
+                      getThenableStateAfterSuspending()),
+                    (request.currentTask = prevTask$jscomp$0),
+                    (request$jscomp$0 = request),
+                    abortTaskDEV(task$jscomp$0, request$jscomp$0),
+                    task$jscomp$0.abortSet.delete(task$jscomp$0),
+                    finishAbortedTaskDEV(
+                      task$jscomp$0,
+                      request$jscomp$0,
+                      request$jscomp$0.fatalError
+                    );
+                else if (
                   "object" === typeof x$jscomp$0 &&
                   null !== x$jscomp$0 &&
                   "function" === typeof x$jscomp$0.then
@@ -8872,17 +8898,7 @@ __DEV__ &&
         if (0 < abortableTasks.size) {
           var error = request.fatalError;
           abortableTasks.forEach(function (task) {
-            var prevTaskInDEV = currentTaskInDEV,
-              prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-            currentTaskInDEV = task;
-            ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-            try {
-              finishAbortedTask(task, request, error);
-            } finally {
-              (currentTaskInDEV = prevTaskInDEV),
-                (ReactSharedInternals.getCurrentStack =
-                  prevGetCurrentStackImpl);
-            }
+            return finishAbortedTaskDEV(task, request, error);
           });
           abortableTasks.clear();
         }
@@ -8908,16 +8924,7 @@ __DEV__ &&
               : reason),
         (reason = request.abortableTasks),
         reason.forEach(function (task) {
-          var prevTaskInDEV = currentTaskInDEV,
-            prevGetCurrentStackImpl = ReactSharedInternals.getCurrentStack;
-          currentTaskInDEV = task;
-          ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
-          try {
-            abortTask(task, request);
-          } finally {
-            (currentTaskInDEV = prevTaskInDEV),
-              (ReactSharedInternals.getCurrentStack = prevGetCurrentStackImpl);
-          }
+          return abortTaskDEV(task, request);
         }),
         finishAbort(request, reason));
     }
@@ -10484,5 +10491,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-3c882b4a-20260531";
+    exports.version = "19.3.0-www-modern-557e28fa-20260601";
   })();
