@@ -655,4 +655,429 @@ describe('ReactDOMFizzShellHydration', () => {
       expect(container.innerHTML).toBe('Client');
     },
   );
+
+  it(
+    'keeps hydrated content instead of flashing the fallback when the ' +
+      'post-hydration store patch-up suspends',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+      const Suspense = React.Suspense;
+
+      let resolveClient;
+      const clientPromise = new Promise(res => {
+        resolveClient = res;
+      });
+
+      function subscribe() {
+        return () => {};
+      }
+      function getSnapshot() {
+        return 'Client';
+      }
+      function getServerSnapshot() {
+        return 'Server';
+      }
+
+      function Child({value}) {
+        if (value === 'Client') {
+          // Client data is not ready yet, so the patch-up render suspends.
+          return React.use(clientPromise);
+        }
+        return value;
+      }
+
+      function App() {
+        const value = useSyncExternalStore(
+          subscribe,
+          getSnapshot,
+          getServerSnapshot,
+        );
+        return (
+          <Suspense fallback="Loading">
+            <Child value={value} />
+          </Suspense>
+        );
+      }
+
+      // Server render uses getServerSnapshot and reveals "Server".
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(container.textContent).toBe('Server');
+
+      // Hydrate. The mount renders with getServerSnapshot ("Server"), matching
+      // the HTML. The post-hydration passive effect sees getSnapshot ("Client")
+      // differ and schedules the sync patch-up, which suspends inside the
+      // already-revealed boundary.
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+      });
+
+      if (gate(flags => flags.enableHoldHydratedContentOnStoreSync)) {
+        // The patch-up is delay-able: the hydrated "Server" content stays
+        // visible and the fallback is not committed.
+        expect(container.textContent).toBe('Server');
+      } else {
+        // Today's behavior: the boundary commits its fallback (the hidden
+        // primary subtree remains in the DOM, so the fallback text is present).
+        expect(container.textContent).toContain('Loading');
+      }
+
+      // Once client data resolves, the boundary reveals the client value.
+      await clientAct(async () => {
+        resolveClient('Client');
+      });
+      expect(container.textContent).toBe('Client');
+    },
+  );
+
+  // Regression test: the hydration marker lives on the store instance and is
+  // cleared by a passive effect (updateStoreInstance). StrictMode
+  // double-invokes passive effects on mount, so the keep-content behavior must
+  // survive the marker's owning effect running twice.
+  it(
+    'keeps hydrated content under StrictMode (double-invoked passive effects ' +
+      'must not clear the hydration marker before the patch-up consumes it)',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+      const Suspense = React.Suspense;
+      const StrictMode = React.StrictMode;
+
+      let resolveClient;
+      const clientPromise = new Promise(res => {
+        resolveClient = res;
+      });
+
+      function subscribe() {
+        return () => {};
+      }
+      function getSnapshot() {
+        return 'Client';
+      }
+      function getServerSnapshot() {
+        return 'Server';
+      }
+
+      function Child({value}) {
+        if (value === 'Client') {
+          // Client data is not ready yet, so the patch-up render suspends.
+          return React.use(clientPromise);
+        }
+        return value;
+      }
+
+      function App() {
+        const value = useSyncExternalStore(
+          subscribe,
+          getSnapshot,
+          getServerSnapshot,
+        );
+        return (
+          <Suspense fallback="Loading">
+            <Child value={value} />
+          </Suspense>
+        );
+      }
+
+      // Server render uses getServerSnapshot and reveals "Server".
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <StrictMode>
+            <App />
+          </StrictMode>,
+        );
+        pipe(writable);
+      });
+      expect(container.textContent).toBe('Server');
+
+      // Hydrate under StrictMode. The passive effect that owns the hydration
+      // marker is double-invoked; the marker must not be cleared before the
+      // patch-up render consumes it.
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(
+          container,
+          <StrictMode>
+            <App />
+          </StrictMode>,
+        );
+      });
+
+      if (gate(flags => flags.enableHoldHydratedContentOnStoreSync)) {
+        // The patch-up is still delay-able despite the double invoke: the
+        // hydrated "Server" content stays visible.
+        expect(container.textContent).toBe('Server');
+      } else {
+        expect(container.textContent).toContain('Loading');
+      }
+
+      await clientAct(async () => {
+        resolveClient('Client');
+      });
+      expect(container.textContent).toBe('Client');
+    },
+  );
+
+  // The hydration marker must be cleared after the patch-up commits, so a later
+  // steady-state sync store update that suspends still flashes the fallback (it
+  // is NOT delay-able). If the marker leaked, the content would be held instead.
+  it(
+    'clears the hydration marker so a later steady-state store update flashes ' +
+      'the fallback',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+      const Suspense = React.Suspense;
+
+      let resolveNext;
+      const nextPromise = new Promise(res => {
+        resolveNext = res;
+      });
+
+      const listeners = new Set();
+      let snapshot = 'Client';
+      const store = {
+        subscribe(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+        getSnapshot() {
+          return snapshot;
+        },
+        getServerSnapshot() {
+          return 'Server';
+        },
+        set(next) {
+          snapshot = next;
+          listeners.forEach(listener => listener());
+        },
+      };
+
+      function Child({value}) {
+        if (value === 'Next') {
+          // Only the later steady-state value is unresolved, so the patch-up
+          // commits cleanly and the marker is cleared on that commit.
+          return React.use(nextPromise);
+        }
+        return value;
+      }
+
+      function App() {
+        const value = useSyncExternalStore(
+          store.subscribe,
+          store.getSnapshot,
+          store.getServerSnapshot,
+        );
+        return (
+          <Suspense fallback="Loading">
+            <Child value={value} />
+          </Suspense>
+        );
+      }
+
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(container.textContent).toBe('Server');
+
+      // Patch-up reconciles "Server" -> "Client". "Client" is ready, so it
+      // commits and the hydration marker is cleared.
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+      });
+      expect(container.textContent).toBe('Client');
+
+      // Steady-state update to an unresolved value: must flash the fallback even
+      // with the flag on, because the hydration marker has been cleared.
+      await clientAct(async () => {
+        store.set('Next');
+      });
+      expect(container.textContent).toContain('Loading');
+
+      await clientAct(async () => {
+        resolveNext('Next');
+      });
+      expect(container.textContent).toBe('Next');
+    },
+  );
+
+  // When the client snapshot matches the server snapshot at hydration there is
+  // no patch-up, so the marker is never armed: a later suspending sync update
+  // flashes the fallback.
+  it(
+    'does not hold content when the client snapshot matches the server ' +
+      'snapshot at hydration',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+      const Suspense = React.Suspense;
+
+      let resolveNext;
+      const nextPromise = new Promise(res => {
+        resolveNext = res;
+      });
+
+      const listeners = new Set();
+      let snapshot = 'Same';
+      const store = {
+        subscribe(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+        getSnapshot() {
+          return snapshot;
+        },
+        getServerSnapshot() {
+          return 'Same';
+        },
+        set(next) {
+          snapshot = next;
+          listeners.forEach(listener => listener());
+        },
+      };
+
+      function Child({value}) {
+        if (value === 'Next') {
+          return React.use(nextPromise);
+        }
+        return value;
+      }
+
+      function App() {
+        const value = useSyncExternalStore(
+          store.subscribe,
+          store.getSnapshot,
+          store.getServerSnapshot,
+        );
+        return (
+          <Suspense fallback="Loading">
+            <Child value={value} />
+          </Suspense>
+        );
+      }
+
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(container.textContent).toBe('Same');
+
+      // No client/server mismatch, so no patch-up and the marker is never armed.
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+      });
+      expect(container.textContent).toBe('Same');
+
+      // A later sync update that suspends flashes the fallback.
+      await clientAct(async () => {
+        store.set('Next');
+      });
+      expect(container.textContent).toContain('Loading');
+
+      await clientAct(async () => {
+        resolveNext('Next');
+      });
+      expect(container.textContent).toBe('Next');
+    },
+  );
+
+  // The hold covers the whole post-hydration reconcile window, not just the
+  // first update. If the store updates again before the boundary resolves, the
+  // marker is still armed (it is cleared only once a consistent snapshot
+  // commits), so the later update is held too instead of flashing the fallback.
+  it(
+    'keeps content across multiple store updates that arrive before the ' +
+      'patch-up resolves',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+      const Suspense = React.Suspense;
+
+      const resolvers = new Map();
+      function getResolver(key) {
+        let entry = resolvers.get(key);
+        if (entry === undefined) {
+          let resolve;
+          const promise = new Promise(res => {
+            resolve = res;
+          });
+          entry = {promise, resolve};
+          resolvers.set(key, entry);
+        }
+        return entry;
+      }
+
+      const listeners = new Set();
+      let snapshot = 'B';
+      const store = {
+        subscribe(listener) {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+        getSnapshot() {
+          return snapshot;
+        },
+        getServerSnapshot() {
+          return 'A';
+        },
+        set(next) {
+          snapshot = next;
+          listeners.forEach(listener => listener());
+        },
+      };
+
+      function Child({value}) {
+        if (value === 'A') {
+          // The hydrated server value renders directly: the boundary is revealed.
+          return value;
+        }
+        // Every client value suspends until its own promise resolves.
+        return React.use(getResolver(value).promise);
+      }
+
+      function App() {
+        const value = useSyncExternalStore(
+          store.subscribe,
+          store.getSnapshot,
+          store.getServerSnapshot,
+        );
+        return (
+          <Suspense fallback="Loading">
+            <Child value={value} />
+          </Suspense>
+        );
+      }
+
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(container.textContent).toBe('A');
+
+      // Patch-up reconciles "A" -> "B"; "B" is not ready, so it suspends.
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+      });
+      if (gate(flags => flags.enableHoldHydratedContentOnStoreSync)) {
+        expect(container.textContent).toBe('A');
+      } else {
+        expect(container.textContent).toContain('Loading');
+      }
+
+      // A second update arrives before "B" resolved. The marker has not been
+      // cleared (no consistent commit yet), so this update is held too.
+      await clientAct(async () => {
+        store.set('C');
+      });
+      if (gate(flags => flags.enableHoldHydratedContentOnStoreSync)) {
+        expect(container.textContent).toBe('A');
+      } else {
+        expect(container.textContent).toContain('Loading');
+      }
+
+      // Resolving the latest value commits it and clears the marker.
+      await clientAct(async () => {
+        getResolver('C').resolve('C');
+      });
+      expect(container.textContent).toBe('C');
+    },
+  );
 });
