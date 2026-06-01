@@ -216,6 +216,7 @@ describe('ReactDOMFizzStaticNode', () => {
     await jest.runAllTimers();
 
     controller.abort();
+    await jest.runAllTimers();
 
     const result = await resultPromise;
 
@@ -244,6 +245,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
+    await jest.runAllTimers();
 
     let didThrow = false;
     let prelude;
@@ -281,6 +283,7 @@ describe('ReactDOMFizzStaticNode', () => {
       },
     );
 
+    await jest.runAllTimers();
     const {prelude} = await streamPromise;
     const content = await readContent(prelude);
     expect(errors).toEqual(['This operation was aborted']);
@@ -309,6 +312,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     // Technically we could still continue rendering the shell but currently the
     // semantics mean that we also abort any pending CPU work.
+    await jest.runAllTimers();
 
     let didThrow = false;
     let prelude;
@@ -358,6 +362,7 @@ describe('ReactDOMFizzStaticNode', () => {
     await jest.runAllTimers();
 
     controller.abort('foobar');
+    await jest.runAllTimers();
 
     await resultPromise;
 
@@ -399,9 +404,57 @@ describe('ReactDOMFizzStaticNode', () => {
     await jest.runAllTimers();
 
     controller.abort(new Error('uh oh'));
+    await jest.runAllTimers();
 
     await resultPromise;
 
     expect(errors).toEqual(['uh oh', 'uh oh']);
+  });
+
+  it('currently uses the abort reason when an abort listener synchronously rejects pending work', async () => {
+    let reject;
+    const rejectedPromise = new Promise((resolve, rejectPromise) => {
+      reject = rejectPromise;
+    });
+    const haltedPromise = new Promise(() => {});
+    function RejectedWait() {
+      React.use(rejectedPromise);
+      return null;
+    }
+    function HaltedWait() {
+      React.use(haltedPromise);
+      return null;
+    }
+
+    const errors = [];
+    const controller = new AbortController();
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(
+      <>
+        <Suspense fallback="Loading rejected">
+          <RejectedWait />
+        </Suspense>
+        <Suspense fallback="Loading halted">
+          <HaltedWait />
+        </Suspense>
+      </>,
+      {
+        signal: controller.signal,
+        onError(error) {
+          errors.push(error.message);
+        },
+      },
+    );
+
+    await jest.runAllTimers();
+
+    controller.signal.addEventListener('abort', () => {
+      reject(new Error('rejected during abort'));
+    });
+    controller.abort(new Error('abort reason'));
+
+    await jest.runAllTimers();
+    await resultPromise;
+
+    expect(errors).toEqual(['abort reason', 'abort reason']);
   });
 });
