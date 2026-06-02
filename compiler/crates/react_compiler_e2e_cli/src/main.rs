@@ -261,6 +261,7 @@ fn compile_oxc(
 
     let result = react_compiler_oxc::transform(&parsed.program, &semantic, source, options);
     let events = result.events;
+    let rename_plan = result.rename_plan;
 
     // Check for error-level diagnostics, similar to SWC path.
     // OxcDiagnostic uses miette's Severity.
@@ -277,6 +278,7 @@ fn compile_oxc(
                     file,
                     &emit_allocator,
                     Some(source),
+                    &rename_plan,
                 )),
                 error: None,
                 events,

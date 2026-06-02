@@ -1,9 +1,13 @@
+pub mod apply_renames;
 pub mod convert_ast;
 pub mod convert_ast_reverse;
 pub mod convert_scope;
 pub mod diagnostics;
 pub mod prefilter;
 
+use std::collections::HashMap;
+
+use apply_renames::build_rename_plan;
 use convert_ast::convert_program;
 use convert_scope::convert_scope_info;
 use diagnostics::compile_result_to_diagnostics;
@@ -17,6 +21,11 @@ pub struct TransformResult {
     pub file: Option<react_compiler_ast::File>,
     pub diagnostics: Vec<oxc_diagnostics::OxcDiagnostic>,
     pub events: Vec<LoggerEvent>,
+    /// Pre-computed rename plan: maps source positions (span.start) to new
+    /// identifier names. Built from the compiler's binding renames and the
+    /// original scope info. Applied during `emit()` to fix references in
+    /// uncompiled sibling functions.
+    pub rename_plan: HashMap<u32, String>,
 }
 
 /// Result of linting a program via the OXC frontend.
@@ -37,6 +46,7 @@ pub fn transform(
             file: None,
             diagnostics: vec![],
             events: vec![],
+            rename_plan: HashMap::new(),
         };
     }
 
@@ -48,17 +58,24 @@ pub fn transform(
 
     // Run the compiler
     let result =
-        react_compiler::entrypoint::program::compile_program(file, scope_info, options);
+        react_compiler::entrypoint::program::compile_program(file, scope_info.clone(), options);
 
     let diagnostics = compile_result_to_diagnostics(&result);
-    let (program_ast, events) = match result {
+    let (program_ast, events, renames) = match result {
         react_compiler::entrypoint::compile_result::CompileResult::Success {
-            ast, events, ..
-        } => (ast, events),
+            ast,
+            events,
+            renames,
+            ..
+        } => (ast, events, renames),
         react_compiler::entrypoint::compile_result::CompileResult::Error {
             events, ..
-        } => (None, events),
+        } => (None, events, Vec::new()),
     };
+
+    // Build the rename plan from the original scope info + compiler renames.
+    // This maps source positions to new identifier names for uncompiled code.
+    let rename_plan = build_rename_plan(&scope_info, &renames);
 
     let compiled_file = program_ast.and_then(|raw_json| {
         // First parse to serde_json::Value which deduplicates "type" fields
@@ -72,6 +89,7 @@ pub fn transform(
         file: compiled_file,
         diagnostics,
         events,
+        rename_plan,
     }
 }
 
@@ -114,10 +132,15 @@ pub fn lint(
 /// If `source_text` is provided, comments from the original source will be
 /// preserved in the output by re-parsing the source to extract comments and
 /// injecting them into the OXC program before codegen.
+///
+/// If `rename_plan` is non-empty, binding renames are applied to the OXC
+/// program before emission. This fixes references in uncompiled sibling
+/// functions when the compiler renames a shared binding.
 pub fn emit(
     file: &react_compiler_ast::File,
     allocator: &oxc_allocator::Allocator,
     source_text: Option<&str>,
+    rename_plan: &HashMap<u32, String>,
 ) -> String {
     let mut program = if let Some(source) = source_text {
         convert_ast_reverse::convert_program_to_oxc_with_source(file, allocator, source)
@@ -167,6 +190,9 @@ pub fn emit(
             oxc_allocator::StringBuilder::from_str_in(source, allocator);
         program.source_text = source_in_alloc.into_str();
     }
+
+    // Apply binding renames to fix references in uncompiled sibling functions
+    apply_renames::apply_renames(&mut program, rename_plan, allocator);
 
     oxc_codegen::Codegen::new().build(&program).code
 }
