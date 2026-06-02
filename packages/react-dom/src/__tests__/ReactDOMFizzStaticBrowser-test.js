@@ -379,6 +379,29 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(content).toBe('');
   });
 
+  it('reports the abort reason if a task suspends after aborting a prerender', async () => {
+    const promise = new Promise(() => {});
+    const errors = [];
+    const controller = new AbortController();
+    function App() {
+      controller.abort(new Error('abort reason'));
+      React.use(promise);
+      return null;
+    }
+
+    const result = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(error) {
+          errors.push(error.message);
+        },
+      }),
+    );
+
+    expect(errors).toEqual(['abort reason']);
+    expect(await readContent(result.prelude)).toBe('');
+  });
+
   it('should resolve an empty prelude if passing an already aborted signal', async () => {
     const errors = [];
     const controller = new AbortController();
@@ -686,6 +709,66 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <div>
           <AbortDuringReplay>
             <Suspense fallback="Loading 1...">
+              <Wait />
+            </Suspense>
+          </AbortDuringReplay>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    let pendingResult;
+    await serverAct(() => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError() {},
+      });
+    });
+    await serverAct(() => {
+      controller.abort('prerender abort');
+    });
+    const prerendered = await pendingResult;
+
+    prerendering = false;
+    const errors = [];
+    await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+        {
+          signal: resumeController.signal,
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      ),
+    );
+
+    expect(errors).toEqual(['resume abort']);
+  });
+
+  it('can abort and suspend while replaying a prerendered tree', async () => {
+    const promise = new Promise(() => {});
+    let prerendering = true;
+    const resumeController = new AbortController();
+
+    function AbortDuringReplay({children}) {
+      if (!prerendering) {
+        resumeController.abort('resume abort');
+        React.use(promise);
+      }
+      return children;
+    }
+
+    function Wait() {
+      return React.use(promise);
+    }
+
+    function App() {
+      return (
+        <div>
+          <AbortDuringReplay>
+            <Suspense fallback="Loading...">
               <Wait />
             </Suspense>
           </AbortDuringReplay>
