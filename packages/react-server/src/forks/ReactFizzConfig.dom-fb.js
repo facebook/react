@@ -12,6 +12,9 @@ export * from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 
-export const isWorkLoopExternallyDriven = false;
+// This renderer is pulled from the outside through renderNextChunk. Promises
+// can ping tasks, but the outer caller decides when to process them.
+export const isWorkLoopExternallyDriven = true;
+
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
