@@ -43,6 +43,7 @@ pub struct Environment {
     // Counters
     pub next_block_id_counter: u32,
     pub next_scope_id_counter: u32,
+    next_mutable_range_id_counter: u32,
 
     // Arenas (use direct field access for sliced borrows)
     pub identifiers: Vec<Identifier>,
@@ -175,6 +176,7 @@ impl Environment {
         Self {
             next_block_id_counter: 0,
             next_scope_id_counter: 0,
+            next_mutable_range_id_counter: 0,
             identifiers: Vec::new(),
             types: Vec::new(),
             scopes: Vec::new(),
@@ -221,6 +223,7 @@ impl Environment {
             next_block_id_counter: self.next_block_id_counter,
             // Scope counter must be consistent with scopes vec length
             next_scope_id_counter: self.scopes.len() as u32,
+            next_mutable_range_id_counter: self.next_mutable_range_id_counter,
             identifiers: self.identifiers.clone(),
             types: self.types.clone(),
             scopes: self.scopes.clone(),
@@ -259,19 +262,26 @@ impl Environment {
         id
     }
 
+    /// Create a new MutableRange with a unique ID.
+    /// Use this when creating a logically new range (not copying an existing one).
+    /// To copy a range preserving its identity, use `.clone()` instead.
+    pub fn new_mutable_range(&mut self, start: EvaluationOrder, end: EvaluationOrder) -> MutableRange {
+        let id = MutableRangeId(self.next_mutable_range_id_counter);
+        self.next_mutable_range_id_counter += 1;
+        MutableRange { id, start, end }
+    }
+
     /// Allocate a new Identifier in the arena with default values,
     /// returns its IdentifierId.
     pub fn next_identifier_id(&mut self) -> IdentifierId {
         let id = IdentifierId(self.identifiers.len() as u32);
         let type_id = self.make_type();
+        let mutable_range = self.new_mutable_range(EvaluationOrder(0), EvaluationOrder(0));
         self.identifiers.push(Identifier {
             id,
             declaration_id: DeclarationId(id.0),
             name: None,
-            mutable_range: MutableRange {
-                start: EvaluationOrder(0),
-                end: EvaluationOrder(0),
-            },
+            mutable_range,
             scope: None,
             type_: type_id,
             loc: None,
@@ -283,12 +293,10 @@ impl Environment {
     pub fn next_scope_id(&mut self) -> ScopeId {
         let id = ScopeId(self.next_scope_id_counter);
         self.next_scope_id_counter += 1;
+        let range = self.new_mutable_range(EvaluationOrder(0), EvaluationOrder(0));
         self.scopes.push(ReactiveScope {
             id,
-            range: MutableRange {
-                start: EvaluationOrder(0),
-                end: EvaluationOrder(0),
-            },
+            range,
             dependencies: Vec::new(),
             declarations: Vec::new(),
             reassignments: Vec::new(),

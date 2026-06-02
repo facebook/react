@@ -335,18 +335,16 @@ fn expand_fbt_scope_range(env: &mut Environment, scope_id: ScopeId, operand_id: 
     if extend_start.0 == 0 {
         return;
     }
-    let old_range = env.scopes[scope_id.0 as usize].range.clone();
-    let new_start = old_range.start.0.min(extend_start.0);
-    if new_start == old_range.start.0 {
+    let old_range_id = env.scopes[scope_id.0 as usize].range.id;
+    let old_start = env.scopes[scope_id.0 as usize].range.start;
+    let new_start = old_start.0.min(extend_start.0);
+    if new_start == old_start.0 {
         return;
     }
     env.scopes[scope_id.0 as usize].range.start.0 = new_start;
     let new_range = env.scopes[scope_id.0 as usize].range.clone();
     for ident in &mut env.identifiers {
-        if ident.scope == Some(scope_id)
-            && ident.mutable_range.start == old_range.start
-            && ident.mutable_range.end == old_range.end
-        {
+        if ident.scope == Some(scope_id) && ident.mutable_range.id == old_range_id {
             ident.mutable_range = new_range.clone();
         }
     }

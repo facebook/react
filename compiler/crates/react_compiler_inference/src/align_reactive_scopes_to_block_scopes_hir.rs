@@ -202,10 +202,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
 
                 active_block_fallthrough_ranges.push(BlockFallthroughRange {
                     fallthrough: ft,
-                    range: MutableRange {
-                        start: terminal_eval_order,
-                        end: next_id,
-                    },
+                    range: env.new_mutable_range(terminal_eval_order, next_id),
                 });
 
                 assert!(
@@ -261,10 +258,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
                     // Transition from block -> value block
                     let ft = fallthrough.expect("Expected a fallthrough for value block");
                     let next_id = block_first_id(func, ft);
-                    MutableRange {
-                        start: terminal_eval_order,
-                        end: next_id,
-                    }
+                    env.new_mutable_range(terminal_eval_order, next_id)
                 } else {
                     // Value -> value transition (ternary/logical/optional): reuse range
                     node.as_ref().unwrap().value_range.clone()
@@ -290,9 +284,7 @@ pub fn align_reactive_scopes_to_block_scopes_hir(func: &mut HirFunction, env: &m
     for ident in &mut env.identifiers {
         if let Some(scope_id) = ident.scope {
             let original = &original_scope_ranges[scope_id.0 as usize];
-            if ident.mutable_range.start == original.start
-                && ident.mutable_range.end == original.end
-            {
+            if ident.mutable_range.same_range(original) {
                 let scope_range = &env.scopes[scope_id.0 as usize].range;
                 ident.mutable_range.start = scope_range.start;
                 ident.mutable_range.end = scope_range.end;

@@ -95,12 +95,12 @@ pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
         entry.1 = EvaluationOrder(std::cmp::max(entry.1 .0, scope_range.end.0));
     });
 
-    // Save original scope ranges before updating
-    let original_ranges: HashMap<ScopeId, (EvaluationOrder, EvaluationOrder)> = range_updates
+    // Save original scope range IDs before updating
+    let original_range_ids: HashMap<ScopeId, react_compiler_hir::MutableRangeId> = range_updates
         .keys()
         .map(|&root_id| {
-            let r = &env.scopes[root_id.0 as usize].range;
-            (root_id, (r.start, r.end))
+            let range_id = env.scopes[root_id.0 as usize].range.id;
+            (root_id, range_id)
         })
         .collect();
 
@@ -110,14 +110,11 @@ pub fn align_method_call_scopes(func: &mut HirFunction, env: &mut Environment) {
     }
 
     // Sync identifier mutable_ranges that shared the old scope range.
-    // In TS, identifier.mutableRange shares the same object as scope.range,
-    // so scope range mutations are automatically visible to all identifiers.
+    // Uses MutableRangeId for exact identity matching instead of value comparison.
     for ident in &mut env.identifiers {
         if let Some(scope_id) = ident.scope {
-            if let Some(&(orig_start, orig_end)) = original_ranges.get(&scope_id) {
-                if ident.mutable_range.start == orig_start
-                    && ident.mutable_range.end == orig_end
-                {
+            if let Some(&orig_range_id) = original_range_ids.get(&scope_id) {
+                if ident.mutable_range.id == orig_range_id {
                     let new_range = &env.scopes[scope_id.0 as usize].range;
                     ident.mutable_range.start = new_range.start;
                     ident.mutable_range.end = new_range.end;

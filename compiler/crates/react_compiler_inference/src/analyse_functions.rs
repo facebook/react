@@ -19,7 +19,7 @@ use std::collections::HashSet;
 
 use react_compiler_hir::{
     AliasingEffect, BlockId, Effect, EvaluationOrder, FunctionId, HirFunction, IdentifierId,
-    InstructionValue, MutableRange, Place, ReactFunctionType, HIR,
+    InstructionValue, Place, ReactFunctionType, HIR,
 };
 
 /// Analyse all nested function expressions and object methods in `func`.
@@ -76,11 +76,9 @@ where
         // are stored in an arena, so we reset both the identifier's range
         // and clear its scope.
         for operand in &inner_func.context {
+            let new_range = env.new_mutable_range(EvaluationOrder(0), EvaluationOrder(0));
             let ident = &mut env.identifiers[operand.identifier.0 as usize];
-            ident.mutable_range = MutableRange {
-                start: EvaluationOrder(0),
-                end: EvaluationOrder(0),
-            };
+            ident.mutable_range = new_range;
             ident.scope = None;
         }
 

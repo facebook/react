@@ -49,6 +49,9 @@ pub struct TypeId(pub u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FunctionId(pub u32);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MutableRangeId(pub u32);
+
 // =============================================================================
 // FloatValue wrapper
 // =============================================================================
@@ -996,6 +999,10 @@ pub struct Identifier {
 
 #[derive(Debug, Clone)]
 pub struct MutableRange {
+    /// Unique identity for this logical range. Cloning preserves the ID
+    /// (same logical range); use `Environment::new_mutable_range()` to create
+    /// a range with a fresh ID.
+    pub id: MutableRangeId,
     pub start: EvaluationOrder,
     pub end: EvaluationOrder,
 }
@@ -1003,8 +1010,15 @@ pub struct MutableRange {
 impl MutableRange {
     /// Returns true if the given evaluation order falls within this mutable range.
     /// Corresponds to TS `inRange({id}, range)` / `isMutable(instr, place)`.
-    pub fn contains(&self, id: EvaluationOrder) -> bool {
-        id >= self.start && id < self.end
+    pub fn contains(&self, eval_order: EvaluationOrder) -> bool {
+        eval_order >= self.start && eval_order < self.end
+    }
+
+    /// Returns true if this range has the same identity as `other`.
+    /// In the TS compiler, this corresponds to checking whether two mutableRange
+    /// references point to the same JS object (=== identity).
+    pub fn same_range(&self, other: &MutableRange) -> bool {
+        self.id == other.id
     }
 }
 

@@ -348,17 +348,16 @@ pub fn merge_overlapping_reactive_scopes_hir(func: &mut HirFunction, env: &mut E
             scope_groups.push((scope_id, root_id));
         }
     });
-    // Collect root scopes' ORIGINAL ranges BEFORE updating them.
+    // Collect root scopes' ORIGINAL range IDs BEFORE updating them.
     // In TS, identifier.mutableRange shares the same object reference as scope.range.
     // When scope.range is updated, ALL identifiers referencing that range object
-    // automatically see the new values — even identifiers whose scope was later set to null.
-    // In Rust, we must explicitly find and update identifiers whose mutable_range matches
-    // a root scope's original range.
-    let mut original_root_ranges: HashMap<ScopeId, (EvaluationOrder, EvaluationOrder)> = HashMap::new();
+    // automatically see the new values. We use MutableRangeId to identify which
+    // identifiers share the same logical range as a root scope.
+    let mut original_root_range_ids: HashMap<ScopeId, react_compiler_hir::MutableRangeId> = HashMap::new();
     for (_, root_id) in &scope_groups {
-        if !original_root_ranges.contains_key(root_id) {
-            let range = &env.scopes[root_id.0 as usize].range;
-            original_root_ranges.insert(*root_id, (range.start, range.end));
+        if !original_root_range_ids.contains_key(root_id) {
+            let range_id = env.scopes[root_id.0 as usize].range.id;
+            original_root_range_ids.insert(*root_id, range_id);
         }
     }
 
@@ -370,14 +369,14 @@ pub fn merge_overlapping_reactive_scopes_hir(func: &mut HirFunction, env: &mut E
         root_range.start = EvaluationOrder(cmp::min(root_range.start.0, scope_start.0));
         root_range.end = EvaluationOrder(cmp::max(root_range.end.0, scope_end.0));
     }
-    // Sync mutable_range for ALL identifiers whose mutable_range matches the ORIGINAL
-    // range of a root scope that was updated. In TS, identifier.mutableRange shares the
-    // same object reference as scope.range, so when scope.range is updated, all identifiers
-    // referencing that range object automatically see the new values — even identifiers
-    // whose scope was later set to null. In Rust, we must explicitly find and update these.
+    // Sync mutable_range for ALL identifiers whose mutable_range has the same
+    // identity as a root scope's original range. In TS, identifier.mutableRange
+    // shares the same object reference as scope.range, so when scope.range is
+    // updated, all identifiers referencing that range object automatically see
+    // the new values. We use MutableRangeId for exact identity matching.
     for ident in &mut env.identifiers {
-        for (root_id, (orig_start, orig_end)) in &original_root_ranges {
-            if ident.mutable_range.start == *orig_start && ident.mutable_range.end == *orig_end {
+        for (root_id, orig_range_id) in &original_root_range_ids {
+            if ident.mutable_range.id == *orig_range_id {
                 let new_range = &env.scopes[root_id.0 as usize].range;
                 ident.mutable_range.start = new_range.start;
                 ident.mutable_range.end = new_range.end;
