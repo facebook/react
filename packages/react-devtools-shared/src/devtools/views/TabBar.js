@@ -24,6 +24,7 @@ type TabInfo = {
 };
 
 export type Props = {
+  compact?: boolean,
   currentTab: any,
   disabled?: boolean,
   id: string,
@@ -33,6 +34,7 @@ export type Props = {
 };
 
 export default function TabBar({
+  compact = false,
   currentTab,
   disabled = false,
   id: groupName,
@@ -118,10 +120,10 @@ export default function TabBar({
             <Icon
               className={`${
                 disabled ? styles.IconDisabled : ''
-              } ${iconSizeClassName}`}
+              } ${iconSizeClassName} ${compact ? styles.IconCompact : ''}`}
               type={icon}
             />
-            <span className={tabLabelClassName}>{label}</span>
+            {!compact && <span className={tabLabelClassName}>{label}</span>}
           </label>
         );
 

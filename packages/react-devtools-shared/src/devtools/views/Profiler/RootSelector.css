@@ -1,3 +1,10 @@
 .Spacer {
   flex: 1;
 }
+
+.Select {
+  min-width: 50px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
