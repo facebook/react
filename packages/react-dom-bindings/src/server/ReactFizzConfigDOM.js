@@ -4019,7 +4019,17 @@ function pushStartCustomElement(
             typeof propValue !== 'function' &&
             typeof propValue !== 'symbol'
           ) {
-            if (propValue === false) {
+            const prefix = attributeName.toLowerCase().slice(0, 5);
+            const propValueNeedsStringification =
+              prefix === 'data-' || prefix === 'aria-';
+            if (
+              propValueNeedsStringification &&
+              typeof propValue === 'boolean'
+            ) {
+              // aria and data attributes are stringified as 'true' if they have the boolean value `true`
+              // this is because data-foo="true" is the same as data-foo on the DOM
+              propValue = propValue ? 'true' : 'false';
+            } else if (propValue === false) {
               continue;
             } else if (propValue === true) {
               propValue = '';
