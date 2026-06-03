@@ -9647,11 +9647,10 @@ background-color: green;
       await waitForAll([]);
 
       // Title should now be hoisted
-      // Note: The title may have a style attribute from being previously hidden
-      const titleElement = getMeaningfulChildren(document.head);
-      expect(titleElement).toBeTruthy();
-      expect(titleElement.type).toBe('title');
-      expect(titleElement.props.children).toBe('Activity Title');
+      // The title retains an empty style attribute from being previously hidden
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title style="">Activity Title</title>,
+      );
     });
 
     // @gate enableActivity
@@ -9678,11 +9677,10 @@ background-color: green;
 
       // Only visible Activities' titles should be hoisted
       // Both visible titles are hoisted, but the last one in tree order wins
-      const titles = getMeaningfulChildren(document.head);
-      expect(Array.isArray(titles)).toBe(true);
-      expect(titles.length).toBe(2);
-      expect(titles[0].props.children).toBe('Third Title');
-      expect(titles[1].props.children).toBe('First Title');
+      expect(getMeaningfulChildren(document.head)).toEqual([
+        <title>Third Title</title>,
+        <title>First Title</title>,
+      ]);
     });
 
     // @gate enableActivity
@@ -9784,10 +9782,9 @@ background-color: green;
       });
       await waitForAll([]);
 
-      const titleElement = getMeaningfulChildren(document.head);
-      expect(titleElement).toBeTruthy();
-      expect(titleElement.type).toBe('title');
-      expect(titleElement.props.children).toBe('Reveal Me');
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title>Reveal Me</title>,
+      );
     });
 
     // @gate enableActivity
@@ -9826,10 +9823,9 @@ background-color: green;
       });
       await waitForAll([]);
 
-      const titleElement = getMeaningfulChildren(document.head);
-      expect(titleElement).toBeTruthy();
-      expect(titleElement.type).toBe('title');
-      expect(titleElement.props.children).toBe('Updated Hidden');
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title style="">Updated Hidden</title>,
+      );
     });
 
     // @gate enableActivity
@@ -9964,14 +9960,11 @@ background-color: green;
       });
       await waitForAll([]);
 
-      // The previously-hidden title that just became visible may carry a
-      // style="" attribute from hideInstance/unhideInstance. The semantic
-      // requirement is exactly one <title> with the correct text.
-      const titleElement = getMeaningfulChildren(document.head);
-      expect(titleElement).toBeTruthy();
-      expect(Array.isArray(titleElement)).toBe(false);
-      expect(titleElement.type).toBe('title');
-      expect(titleElement.props.children).toBe('StrictMode Hidden');
+      // The previously-hidden title that just became visible carries a
+      // style="" attribute from hideInstance/unhideInstance.
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title style="">StrictMode Hidden</title>,
+      );
     });
   });
 
