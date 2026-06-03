@@ -1276,6 +1276,7 @@ const bundles = [
       'zod-validation-error',
       'zod-validation-error/v4',
       'crypto',
+      'os',
       'util',
     ],
     tsconfig: './packages/eslint-plugin-react-hooks/tsconfig.json',
