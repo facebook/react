@@ -23,3 +23,5 @@ module.exports = {
     ['@babel/plugin-transform-block-scoping', {throwIfClosureRequired: true}],
   ],
 };
+
+let arr = [1, 2, 3];
