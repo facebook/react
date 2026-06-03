@@ -50,6 +50,30 @@ fn convert_opt_loc(
     loc.as_ref().map(convert_loc)
 }
 
+/// Serialize an expression to a serde_json::Value for UnsupportedNode's original_node.
+/// Returns None if serialization fails (should not happen for valid AST nodes).
+/// This should ONLY be called on error/bail paths — never eagerly before deciding
+/// to create an UnsupportedNode.
+fn serialize_expression(
+    expr: &react_compiler_ast::expressions::Expression,
+) -> Option<serde_json::Value> {
+    serde_json::to_value(expr).ok()
+}
+
+/// Serialize a statement to a serde_json::Value for UnsupportedNode's original_node.
+fn serialize_statement(
+    stmt: &react_compiler_ast::statements::Statement,
+) -> Option<serde_json::Value> {
+    serde_json::to_value(stmt).ok()
+}
+
+/// Serialize a pattern to a serde_json::Value for UnsupportedNode's original_node.
+fn serialize_pattern(
+    pat: &react_compiler_ast::patterns::PatternLike,
+) -> Option<serde_json::Value> {
+    serde_json::to_value(pat).ok()
+}
+
 fn pattern_like_loc(
     pattern: &react_compiler_ast::patterns::PatternLike,
 ) -> Option<react_compiler_ast::common::SourceLocation> {
@@ -500,7 +524,7 @@ fn lower_member_expression_with_object(
                     property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
                     value: InstructionValue::UnsupportedNode {
                         node_type: Some("OptionalMemberExpression".to_string()),
-                        original_node: None,
+                        original_node: serialize_expression(&react_compiler_ast::expressions::Expression::OptionalMemberExpression(member.clone())),
                         loc,
                     },
                 });
@@ -579,7 +603,7 @@ fn lower_member_expression_impl(
                     property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
                     value: InstructionValue::UnsupportedNode {
                         node_type: Some("MemberExpression".to_string()),
-                        original_node: None,
+                        original_node: serialize_expression(&react_compiler_ast::expressions::Expression::MemberExpression(member.clone())),
                         loc,
                     },
                 });
@@ -692,7 +716,7 @@ fn lower_expression(
                 })?;
                 return Ok(InstructionValue::UnsupportedNode {
                     node_type: Some("BinaryExpression".to_string()),
-                    original_node: None,
+                    original_node: serialize_expression(expr),
                     loc,
                 });
             }
@@ -734,7 +758,7 @@ fn lower_expression(
                                         })?;
                                         Ok(InstructionValue::UnsupportedNode {
                                             node_type: Some("UnaryExpression".to_string()),
-                                            original_node: None,
+                                            original_node: serialize_expression(expr),
                                             loc,
                                         })
                                     }
@@ -760,7 +784,7 @@ fn lower_expression(
                             })?;
                             Ok(InstructionValue::UnsupportedNode {
                                 node_type: Some("UnaryExpression".to_string()),
-                                original_node: None,
+                                original_node: serialize_expression(expr),
                                 loc,
                             })
                         }
@@ -778,7 +802,7 @@ fn lower_expression(
                     })?;
                     Ok(InstructionValue::UnsupportedNode {
                         node_type: Some("UnaryExpression".to_string()),
-                        original_node: None,
+                        original_node: serialize_expression(expr),
                         loc,
                     })
                 }
@@ -1011,7 +1035,7 @@ fn lower_expression(
                         })?;
                         return Ok(InstructionValue::UnsupportedNode {
                             node_type: Some("UpdateExpression".to_string()),
-                            original_node: None,
+                            original_node: serialize_expression(expr),
                             loc,
                         });
                     }
@@ -1034,7 +1058,7 @@ fn lower_expression(
                             })?;
                             return Ok(InstructionValue::UnsupportedNode {
                                 node_type: Some("UpdateExpression".to_string()),
-                                original_node: None,
+                                original_node: serialize_expression(expr),
                                 loc,
                             });
                         }
@@ -1052,7 +1076,7 @@ fn lower_expression(
                             })?;
                             return Ok(InstructionValue::UnsupportedNode {
                                 node_type: Some("UpdateExpression".to_string()),
-                                original_node: None,
+                                original_node: serialize_expression(expr),
                                 loc,
                             });
                         }
@@ -1101,7 +1125,7 @@ fn lower_expression(
                     })?;
                     Ok(InstructionValue::UnsupportedNode {
                         node_type: Some("UpdateExpression".to_string()),
-                        original_node: None,
+                        original_node: serialize_expression(expr),
                         loc,
                     })
                 }
@@ -1229,7 +1253,7 @@ fn lower_expression(
                                     })?;
                                     return Ok(InstructionValue::UnsupportedNode {
                                         node_type: Some("Identifier".to_string()),
-                                        original_node: None,
+                                        original_node: serialize_expression(&Expression::AssignmentExpression(expr.clone())),
                                         loc: ident_loc,
                                     });
                                 }
@@ -1413,7 +1437,7 @@ fn lower_expression(
                         })?;
                         return Ok(InstructionValue::UnsupportedNode {
                             node_type: Some("AssignmentExpression".to_string()),
-                            original_node: None,
+                            original_node: serialize_expression(&Expression::AssignmentExpression(expr.clone())),
                             loc,
                         });
                     }
@@ -1424,7 +1448,7 @@ fn lower_expression(
                     None => {
                         return Ok(InstructionValue::UnsupportedNode {
                             node_type: Some("AssignmentExpression".to_string()),
-                            original_node: None,
+                            original_node: serialize_expression(&Expression::AssignmentExpression(expr.clone())),
                             loc,
                         });
                     }
@@ -1563,7 +1587,7 @@ fn lower_expression(
                         })?;
                         Ok(InstructionValue::UnsupportedNode {
                             node_type: Some("AssignmentExpression".to_string()),
-                            original_node: None,
+                            original_node: serialize_expression(&Expression::AssignmentExpression(expr.clone())),
                             loc,
                         })
                     }
@@ -1584,7 +1608,7 @@ fn lower_expression(
                 })?;
                 return Ok(InstructionValue::UnsupportedNode {
                     node_type: Some("SequenceExpression".to_string()),
-                    original_node: None,
+                    original_node: serialize_expression(expr),
                     loc,
                 });
             }
@@ -1743,7 +1767,7 @@ fn lower_expression(
                 })?;
                 return Ok(InstructionValue::UnsupportedNode {
                     node_type: Some("TaggedTemplateExpression".to_string()),
-                    original_node: None,
+                    original_node: serialize_expression(expr),
                     loc,
                 });
             }
@@ -1763,7 +1787,7 @@ fn lower_expression(
                 })?;
                 return Ok(InstructionValue::UnsupportedNode {
                     node_type: Some("TaggedTemplateExpression".to_string()),
-                    original_node: None,
+                    original_node: serialize_expression(expr),
                     loc,
                 });
             }
@@ -1791,7 +1815,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("YieldExpression".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -1818,7 +1842,7 @@ fn lower_expression(
                 })?;
                 Ok(InstructionValue::UnsupportedNode {
                     node_type: Some("MetaProperty".to_string()),
-                    original_node: None,
+                    original_node: serialize_expression(expr),
                     loc,
                 })
             }
@@ -1835,7 +1859,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("ClassExpression".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -1850,7 +1874,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("PrivateName".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -1865,7 +1889,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("Super".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -1880,7 +1904,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("Import".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -1895,7 +1919,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("ThisExpression".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -2163,7 +2187,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("AssignmentPattern".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -2244,7 +2268,7 @@ fn lower_expression(
             })?;
             Ok(InstructionValue::UnsupportedNode {
                 node_type: Some("BigIntLiteral".to_string()),
-                original_node: None,
+                original_node: serialize_expression(expr),
                 loc,
             })
         }
@@ -4057,7 +4081,7 @@ fn lower_statement(
                 builder,
                 InstructionValue::UnsupportedNode {
                     node_type: Some("WithStatement".to_string()),
-                    original_node: None,
+                    original_node: serialize_statement(stmt),
                     loc,
                 },
             )?;
@@ -4080,7 +4104,7 @@ fn lower_statement(
                 builder,
                 InstructionValue::UnsupportedNode {
                     node_type: Some("ClassDeclaration".to_string()),
-                    original_node: None,
+                    original_node: serialize_statement(stmt),
                     loc,
                 },
             )?;
@@ -4115,7 +4139,7 @@ fn lower_statement(
                 builder,
                 InstructionValue::UnsupportedNode {
                     node_type: Some(node_type_name.to_string()),
-                    original_node: None,
+                    original_node: serialize_statement(stmt),
                     loc,
                 },
             )?;
@@ -4447,7 +4471,7 @@ fn lower_assignment(
                                 builder,
                                 InstructionValue::UnsupportedNode {
                                     node_type: Some("Identifier".to_string()),
-                                    original_node: None,
+                                    original_node: serialize_pattern(target),
                                     loc,
                                 },
                             )?;
@@ -4535,7 +4559,7 @@ fn lower_assignment(
                             builder,
                             InstructionValue::UnsupportedNode {
                                 node_type: Some("MemberExpression".to_string()),
-                                original_node: None,
+                                original_node: serialize_pattern(target),
                                 loc,
                             },
                         )?
@@ -4557,7 +4581,7 @@ fn lower_assignment(
                         builder,
                         InstructionValue::UnsupportedNode {
                             node_type: Some("MemberExpression".to_string()),
-                            original_node: None,
+                            original_node: serialize_pattern(target),
                             loc,
                         },
                     )?
