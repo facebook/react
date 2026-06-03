@@ -4851,12 +4851,21 @@ __DEV__ &&
         ? request.pendingRootTasks++
         : blockedBoundary.pendingTasks++;
       null !== row && row.pendingTasks++;
-      var task = {
+      var task$jscomp$0 = {
         replay: null,
         node: node,
         childIndex: childIndex,
-        ping: function () {
-          return pingTask(request, task);
+        ping: {
+          resolve: function () {
+            return pingTask(request, task$jscomp$0);
+          },
+          reject: function (error) {
+            var task = task$jscomp$0;
+            request.aborted
+              ? task.abortSet.delete(task) &&
+                finishAbortedTaskDEV(task, request, error)
+              : pingTask(request, task);
+          }
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: blockedSegment,
@@ -4871,10 +4880,10 @@ __DEV__ &&
         componentStack: componentStack,
         thenableState: thenableState
       };
-      task.legacyContext = legacyContext;
-      task.debugTask = debugTask;
-      abortSet.add(task);
-      return task;
+      task$jscomp$0.legacyContext = legacyContext;
+      task$jscomp$0.debugTask = debugTask;
+      abortSet.add(task$jscomp$0);
+      return task$jscomp$0;
     }
     function createReplayTask(
       request,
@@ -4900,12 +4909,21 @@ __DEV__ &&
         : blockedBoundary.pendingTasks++;
       null !== row && row.pendingTasks++;
       replay.pendingTasks++;
-      var task = {
+      var task$jscomp$0 = {
         replay: replay,
         node: node,
         childIndex: childIndex,
-        ping: function () {
-          return pingTask(request, task);
+        ping: {
+          resolve: function () {
+            return pingTask(request, task$jscomp$0);
+          },
+          reject: function (error) {
+            var task = task$jscomp$0;
+            request.aborted
+              ? task.abortSet.delete(task) &&
+                finishAbortedTaskDEV(task, request, error)
+              : pingTask(request, task);
+          }
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: null,
@@ -4920,10 +4938,10 @@ __DEV__ &&
         componentStack: componentStack,
         thenableState: thenableState
       };
-      task.legacyContext = legacyContext;
-      task.debugTask = debugTask;
-      abortSet.add(task);
-      return task;
+      task$jscomp$0.legacyContext = legacyContext;
+      task$jscomp$0.debugTask = debugTask;
+      abortSet.add(task$jscomp$0);
+      return task$jscomp$0;
     }
     function createPendingSegment(
       request,
@@ -7334,7 +7352,7 @@ __DEV__ &&
                 task,
                 childIndex
               ).ping;
-              node.then(request, request);
+              node.then(request.resolve, request.reject);
               task.formatContext = previousFormatContext;
               task.legacyContext = previousLegacyContext;
               task.context = previousContext;
@@ -7389,7 +7407,7 @@ __DEV__ &&
                   ? getThenableStateAfterSuspending()
                   : null;
               request = spawnNewSuspendedRenderTask(request, task, node).ping;
-              segment.then(request, request);
+              segment.then(request.resolve, request.reject);
               task.formatContext = previousFormatContext;
               task.legacyContext = previousLegacyContext;
               task.context = previousContext;
@@ -7936,7 +7954,7 @@ __DEV__ &&
                     "function" === typeof x.then
                   ) {
                     var ping = task$jscomp$0.ping;
-                    x.then(ping, ping);
+                    x.then(ping.resolve, ping.reject);
                     task$jscomp$0.thenableState =
                       thrownValue === SuspenseException
                         ? getThenableStateAfterSuspending()
@@ -8038,7 +8056,7 @@ __DEV__ &&
                       ? getThenableStateAfterSuspending()
                       : null;
                   var ping$jscomp$0 = task$jscomp$0.ping;
-                  x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
+                  x$jscomp$0.then(ping$jscomp$0.resolve, ping$jscomp$0.reject);
                 } else {
                   var errorInfo$jscomp$1 = getThrownInfo(
                     task$jscomp$0.componentStack
@@ -10562,5 +10580,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-classic-557e28fa-20260601";
+    exports.version = "19.3.0-www-classic-43bcbf80-20260603";
   })();

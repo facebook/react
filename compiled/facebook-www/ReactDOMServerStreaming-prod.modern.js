@@ -3880,8 +3880,16 @@ function createRenderTask(
     replay: null,
     node: node,
     childIndex: childIndex,
-    ping: function () {
-      request.pingedTasks.push(task);
+    ping: {
+      resolve: function () {
+        request.pingedTasks.push(task);
+      },
+      reject: function (error) {
+        request.aborted
+          ? task.abortSet.delete(task) &&
+            finishAbortedTask(task, request, error)
+          : request.pingedTasks.push(task);
+      }
     },
     blockedBoundary: blockedBoundary,
     blockedSegment: blockedSegment,
@@ -3925,8 +3933,16 @@ function createReplayTask(
     replay: replay,
     node: node,
     childIndex: childIndex,
-    ping: function () {
-      request.pingedTasks.push(task);
+    ping: {
+      resolve: function () {
+        request.pingedTasks.push(task);
+      },
+      reject: function (error) {
+        request.aborted
+          ? task.abortSet.delete(task) &&
+            finishAbortedTask(task, request, error)
+          : request.pingedTasks.push(task);
+      }
     },
     blockedBoundary: blockedBoundary,
     blockedSegment: null,
@@ -5544,7 +5560,7 @@ function renderNode(request, task, node, childIndex) {
               ? getThenableStateAfterSuspending()
               : null;
           request = spawnNewSuspendedReplayTask(request, task, childIndex).ping;
-          node.then(request, request);
+          node.then(request.resolve, request.reject);
           task.formatContext = previousFormatContext;
           task.context = previousContext;
           task.keyPath = previousKeyPath;
@@ -5595,7 +5611,7 @@ function renderNode(request, task, node, childIndex) {
               ? getThenableStateAfterSuspending()
               : null;
           request = spawnNewSuspendedRenderTask(request, task, node).ping;
-          segment.then(request, request);
+          segment.then(request.resolve, request.reject);
           task.formatContext = previousFormatContext;
           task.context = previousContext;
           task.keyPath = previousKeyPath;
@@ -6750,7 +6766,7 @@ exports.renderNextChunk = function (stream) {
                 "function" === typeof x.then
               ) {
                 var ping = task$jscomp$0.ping;
-                x.then(ping, ping);
+                x.then(ping.resolve, ping.reject);
                 task$jscomp$0.thenableState =
                   thrownValue === SuspenseException
                     ? getThenableStateAfterSuspending()
@@ -6837,7 +6853,7 @@ exports.renderNextChunk = function (stream) {
                     ? getThenableStateAfterSuspending()
                     : null;
                 var ping$jscomp$0 = task$jscomp$0.ping;
-                x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
+                x$jscomp$0.then(ping$jscomp$0.resolve, ping$jscomp$0.reject);
               } else {
                 var errorInfo$jscomp$0 = getThrownInfo(
                   task$jscomp$0.componentStack

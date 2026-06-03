@@ -4621,12 +4621,21 @@ __DEV__ &&
         ? request.pendingRootTasks++
         : blockedBoundary.pendingTasks++;
       null !== row && row.pendingTasks++;
-      var task = {
+      var task$jscomp$0 = {
         replay: null,
         node: node,
         childIndex: childIndex,
-        ping: function () {
-          request.pingedTasks.push(task);
+        ping: {
+          resolve: function () {
+            request.pingedTasks.push(task$jscomp$0);
+          },
+          reject: function (error) {
+            var task = task$jscomp$0;
+            request.aborted
+              ? task.abortSet.delete(task) &&
+                finishAbortedTaskDEV(task, request, error)
+              : request.pingedTasks.push(task);
+          }
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: blockedSegment,
@@ -4641,9 +4650,9 @@ __DEV__ &&
         componentStack: componentStack,
         thenableState: thenableState
       };
-      task.debugTask = debugTask;
-      abortSet.add(task);
-      return task;
+      task$jscomp$0.debugTask = debugTask;
+      abortSet.add(task$jscomp$0);
+      return task$jscomp$0;
     }
     function createReplayTask(
       request,
@@ -4669,12 +4678,21 @@ __DEV__ &&
         : blockedBoundary.pendingTasks++;
       null !== row && row.pendingTasks++;
       replay.pendingTasks++;
-      var task = {
+      var task$jscomp$0 = {
         replay: replay,
         node: node,
         childIndex: childIndex,
-        ping: function () {
-          request.pingedTasks.push(task);
+        ping: {
+          resolve: function () {
+            request.pingedTasks.push(task$jscomp$0);
+          },
+          reject: function (error) {
+            var task = task$jscomp$0;
+            request.aborted
+              ? task.abortSet.delete(task) &&
+                finishAbortedTaskDEV(task, request, error)
+              : request.pingedTasks.push(task);
+          }
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: null,
@@ -4689,9 +4707,9 @@ __DEV__ &&
         componentStack: componentStack,
         thenableState: thenableState
       };
-      task.debugTask = debugTask;
-      abortSet.add(task);
-      return task;
+      task$jscomp$0.debugTask = debugTask;
+      abortSet.add(task$jscomp$0);
+      return task$jscomp$0;
     }
     function createPendingSegment(
       request,
@@ -7115,7 +7133,7 @@ __DEV__ &&
                 task,
                 childIndex
               ).ping;
-              node.then(request, request);
+              node.then(request.resolve, request.reject);
               task.formatContext = previousFormatContext;
               task.context = previousContext;
               task.keyPath = previousKeyPath;
@@ -7168,7 +7186,7 @@ __DEV__ &&
                   ? getThenableStateAfterSuspending()
                   : null;
               request = spawnNewSuspendedRenderTask(request, task, node).ping;
-              segment.then(request, request);
+              segment.then(request.resolve, request.reject);
               task.formatContext = previousFormatContext;
               task.context = previousContext;
               task.keyPath = previousKeyPath;
@@ -10082,7 +10100,7 @@ __DEV__ &&
                     "function" === typeof x.then
                   ) {
                     var ping = task$jscomp$0.ping;
-                    x.then(ping, ping);
+                    x.then(ping.resolve, ping.reject);
                     task$jscomp$0.thenableState =
                       thrownValue === SuspenseException
                         ? getThenableStateAfterSuspending()
@@ -10184,7 +10202,10 @@ __DEV__ &&
                         ? getThenableStateAfterSuspending()
                         : null;
                     var ping$jscomp$0 = task$jscomp$0.ping;
-                    x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
+                    x$jscomp$0.then(
+                      ping$jscomp$0.resolve,
+                      ping$jscomp$0.reject
+                    );
                   } else {
                     var errorInfo$jscomp$0 = getThrownInfo(
                       task$jscomp$0.componentStack
