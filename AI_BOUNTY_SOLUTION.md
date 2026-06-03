@@ -5,10 +5,10 @@ This solution was compiled, validated, and packaged autonomously in an isolated 
 ## 📝 1. Executed Action Summary
 - **Target Upstream Repository**: `github.com/facebook/react`
 - **User Fork Destination**: `github.com/georgespeelman02-create/react`
-- **Issue Reference**: #12175
+- **Issue Reference**: #36611
 - **Solution Branch**: `refs/heads/bounty-auto-assign-12175`
 - **Verified Commit SHA**: `0x03fced76eaef59cfda892cfa7170884d`
-- **Submission Date**: `2026-06-03T09:59:19.697Z`
+- **Submission Date**: `2026-06-03T09:59:22.701Z`
 
 ## 🛠️ 2. Core Remediation Diff
 ```ts
