@@ -2710,6 +2710,24 @@ describe('ReactDOMComponent', () => {
       // without access to the event system (which we don't bundle).
     });
 
+    it('should warn when <title> has an Array of children (client)', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          React.createElement('title', null, 'My App', ' | Home'),
+        );
+      });
+      assertConsoleErrorDev([
+        'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length 2 instead.' +
+          ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
+          ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be common to combine text nodes and value nodes.' +
+          ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
+          ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.\n' +
+          '    in title (at **)',
+      ]);
+    });
+
     it('should warn about incorrect casing on properties', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
