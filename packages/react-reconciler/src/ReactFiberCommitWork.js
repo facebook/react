@@ -1497,9 +1497,8 @@ function commitDeletionEffectsOnFiber(
           // since mount), the instance was either never inserted or was
           // detached by the disappear traversal. Guard the removeChild so we
           // don't throw in those cases.
-          const instance = deletedFiber.stateNode;
-          if (instance.parentNode !== null) {
-            unmountHoistable(instance);
+          if (!offscreenSubtreeWasHidden) {
+            unmountHoistable(deletedFiber.stateNode);
           }
         }
         break;
@@ -2177,7 +2176,7 @@ function commitMutationEffectsOnFiber(
               // Instance was actually mounted in the document; it may not be
               // if it lives inside a hidden Activity boundary.
               const instance = current.stateNode;
-              if (instance !== null && instance.parentNode !== null) {
+              if (instance !== null && !offscreenSubtreeWasHidden) {
                 unmountHoistable(instance);
               }
             } else {
@@ -2592,6 +2591,14 @@ function commitMutationEffectsOnFiber(
               (finishedWork.mode & ConcurrentMode) !== NoMode
             ) {
               // Disappear the layout effects of all the children
+              const newOffscreenSubtreeIsHidden =
+                isHidden || offscreenSubtreeIsHidden;
+              const newOffscreenSubtreeWasHidden =
+                wasHidden || offscreenSubtreeWasHidden;
+              const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
+              const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+              offscreenSubtreeIsHidden = newOffscreenSubtreeIsHidden;
+              offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
 
               if (
@@ -2609,6 +2616,8 @@ function commitMutationEffectsOnFiber(
                   componentEffectEndTime,
                 );
               }
+              offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
+              offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
             }
           }
         }
@@ -3078,23 +3087,15 @@ export function disappearLayoutEffects(finishedWork: Fiber) {
       safelyDetachRef(finishedWork, finishedWork.return);
 
       if (supportsResources) {
-        // The disappear traversal runs from the mutation phase whenever an
-        // Activity transitions from visible to hidden. We piggy-back on it
-        // (rather than adding a separate recursive traversal) to remove
-        // hoisted metadata such as <title> and <meta> from the document.
-        //
         // We only act on Hoistable Instances (memoizedState === null).
         // Resources (memoizedState !== null) are ref-counted and intentionally
         // remain in the document across Activity visibility transitions;
         // they are released only on actual deletion.
-        //
-        // The parentNode guard makes this idempotent and safe under StrictMode
-        // dev double-invoke: if the instance is already detached we skip.
         const instance = finishedWork.stateNode;
         if (
           finishedWork.memoizedState === null &&
           instance !== null &&
-          instance.parentNode !== null
+          !offscreenSubtreeWasHidden
         ) {
           unmountHoistable(instance);
         }
@@ -3285,7 +3286,7 @@ export function reappearLayoutEffects(
         if (
           finishedWork.memoizedState === null &&
           instance !== null &&
-          instance.parentNode === null
+          !offscreenSubtreeIsHidden
         ) {
           // currentHoistableRoot is only maintained during the mutation phase.
           // Derive the hoistable root from the instance's owner document so
