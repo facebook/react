@@ -535,7 +535,7 @@ export function createInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
-    validateDOMNesting(type, hostContextDev.ancestorInfo);
+    validateDOMNesting(type, hostContextDev.ancestorInfo, hostContextDev.context);
     hostContextProd = hostContextDev.context;
   } else {
     hostContextProd = (hostContext: any);
@@ -761,6 +761,7 @@ export function createTextInstance(
         text,
         ancestor.tag,
         hostContextDev.ancestorInfo.implicitRootScope,
+        hostContextDev.context,
       );
     }
   }
@@ -4252,7 +4253,7 @@ export function validateHydratableInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
-    return validateDOMNesting(type, hostContextDev.ancestorInfo);
+    return validateDOMNesting(type, hostContextDev.ancestorInfo, hostContextDev.context);
   }
   return true;
 }
@@ -4294,6 +4295,7 @@ export function validateHydratableTextInstance(
         text,
         ancestor.tag,
         hostContextDev.ancestorInfo.implicitRootScope,
+        hostContextDev.context,
       );
     }
   }
@@ -4638,7 +4640,7 @@ export function resolveSingletonInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     if (validateDOMNestingDev) {
-      validateDOMNesting(type, hostContextDev.ancestorInfo);
+      validateDOMNesting(type, hostContextDev.ancestorInfo, hostContextDev.context);
     }
   }
   const ownerDocument = getOwnerDocumentFromRootContainer(

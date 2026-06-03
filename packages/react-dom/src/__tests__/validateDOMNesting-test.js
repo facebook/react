@@ -192,7 +192,7 @@ describe('validateDOMNesting', () => {
     expectWarnings(
       ['svg', 'foreignObject', 'body', 'p'],
       [
-        // TODO, this should say "In SVG",
+        // foreignObject is an HTML integration point: nested HTML uses the HTML namespace.
         'In HTML, <body> cannot be a child of <foreignObject>.\n' +
           'This will cause a hydration error.\n' +
           '\n' +
