@@ -276,11 +276,16 @@ type SuspenseBoundary = {
   errorComponentStack?: null | string, // the error component stack if it errors
 };
 
+type Ping = {
+  resolve: () => void,
+  reject: (error: mixed) => void,
+};
+
 type RenderTask = {
   replay: null,
   node: ReactNodeList,
   childIndex: number,
-  ping: () => void,
+  ping: Ping,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   blockedPreamble: null | PreambleState,
@@ -311,7 +316,7 @@ type ReplayTask = {
   replay: ReplaySet,
   node: ReactNodeList,
   childIndex: number,
-  ping: () => void,
+  ping: Ping,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: null, // we don't write to anything when we replay
   blockedPreamble: null,
@@ -810,6 +815,27 @@ function pingTask(request: Request, task: Task): void {
   }
 }
 
+function pingRejectedTask(request: Request, task: Task, error: mixed): void {
+  if (!request.aborted) {
+    // Replaying the task is what gives ordinary render errors their complete
+    // component stack.
+    pingTask(request, task);
+    return;
+  }
+  if (!task.abortSet.delete(task)) {
+    // finishAbort already completed this task with the request's abort reason.
+    return;
+  }
+  // abortTask synchronously claimed this task before abort listeners could
+  // reject its wakeable. Finish it with the more specific reason before the
+  // scheduled final abort uses the reason for the whole request.
+  if (__DEV__) {
+    finishAbortedTaskDEV(task, request, error);
+  } else {
+    finishAbortedTask(task, request, error);
+  }
+}
+
 function createSuspenseBoundary(
   request: Request,
   row: null | SuspenseListRow,
@@ -889,7 +915,10 @@ function createRenderTask(
     replay: null,
     node,
     childIndex,
-    ping: () => pingTask(request, task),
+    ping: {
+      resolve: () => pingTask(request, task),
+      reject: error => pingRejectedTask(request, task, error),
+    },
     blockedBoundary,
     blockedSegment,
     blockedPreamble,
@@ -945,7 +974,10 @@ function createReplayTask(
     replay,
     node,
     childIndex,
-    ping: () => pingTask(request, task),
+    ping: {
+      resolve: () => pingTask(request, task),
+      reject: error => pingRejectedTask(request, task, error),
+    },
     blockedBoundary,
     blockedSegment: null,
     blockedPreamble: null,
@@ -4204,7 +4236,7 @@ function renderNode(
             thenableState,
           );
           const ping = newTask.ping;
-          wakeable.then(ping, ping);
+          wakeable.then(ping.resolve, ping.reject);
 
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
@@ -4305,7 +4337,7 @@ function renderNode(
             thenableState,
           );
           const ping = newTask.ping;
-          wakeable.then(ping, ping);
+          wakeable.then(ping.resolve, ping.reject);
 
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
@@ -5216,7 +5248,7 @@ function retryRenderTask(
             : null;
         const ping = task.ping;
         // We've asserted that x is a thenable above
-        (x: any).then(ping, ping);
+        (x: any).then(ping.resolve, ping.reject);
         return;
       }
     }
@@ -5316,7 +5348,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       if (typeof x.then === 'function') {
         // Something suspended again, let's pick it back up later.
         const ping = task.ping;
-        x.then(ping, ping);
+        x.then(ping.resolve, ping.reject);
         task.thenableState =
           thrownValue === SuspenseException
             ? getThenableStateAfterSuspending()
