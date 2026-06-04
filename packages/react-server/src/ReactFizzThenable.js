@@ -69,11 +69,29 @@ export function trackUsedThenable<T>(
   // a listener that will update its status and result when it resolves.
   switch (thenable.status) {
     case 'fulfilled': {
+      // This could be a bad instrumentation that doesn't set .value.
+      // We're not type-checking since this is a hot path where you can
+      // track down easily when something becomes `undefined` unexpectedly.
       const fulfilledValue: T = thenable.value;
       return fulfilledValue;
     }
     case 'rejected': {
       const rejectedError = thenable.reason;
+
+      // Rejected Promises are rarer so we're doing an extra type-check in
+      // case of a bad instrumentation that doesn't set .reason
+      // If we end up throwing `undefined` it becomes hard to track down
+      // where that throw originated because no callstack would exist.
+      // React would still have a Component stack but that could only be used
+      // as an approximation.
+      if (rejectedError === undefined && !('reason' in thenable)) {
+        throw new Error(
+          'A rejected Promise was passed to React without a `reason` property. ' +
+            'React threw a generic error from where the Promise was used to assist in identifying the problematic Promise. ' +
+            "Make sure that instrumented Promises correctly set the `reason` property when setting `status` to `'rejected'`.",
+        );
+      }
+
       throw rejectedError;
     }
     default: {
@@ -257,7 +275,7 @@ export function ensureSuspendableThenableStateDEV(
     const lastThenable = thenableState[thenableState.length - 1];
     // Reset the last thenable back to pending.
     switch (lastThenable.status) {
-      case 'fulfilled':
+      case 'fulfilled': {
         const previousThenableValue = lastThenable.value;
         // $FlowIgnore[method-unbinding] We rebind .then immediately.
         const previousThenableThen = lastThenable.then.bind(lastThenable);
@@ -274,14 +292,25 @@ export function ensureSuspendableThenableStateDEV(
           lastThenable.value = previousThenableValue;
           lastThenable.status = 'fulfilled';
         };
-      case 'rejected':
+      }
+      case 'rejected': {
         const previousThenableReason = lastThenable.reason;
+        // $FlowIgnore[method-unbinding] We rebind .then immediately.
+        const previousThenableThen = lastThenable.then.bind(lastThenable);
         delete lastThenable.reason;
         delete (lastThenable: any).status;
+        // We'll call .then again if we resuspend. Since we potentially corrupted
+        // the internal state of unknown classes, we need to diffuse the potential
+        // crash by replacing the .then method with a noop.
+        // $FlowFixMe[cannot-write] Custom userspace Thenables may not be but native Promises are.
+        lastThenable.then = noop;
         return () => {
+          // $FlowFixMe[cannot-write] Custom userspace Thenables may not be but native Promises are.
+          lastThenable.then = previousThenableThen;
           lastThenable.reason = previousThenableReason;
           lastThenable.status = 'rejected';
         };
+      }
     }
     return noop;
   } else {

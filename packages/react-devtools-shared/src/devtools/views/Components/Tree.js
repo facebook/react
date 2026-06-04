@@ -384,6 +384,23 @@ export default function Tree(): React.Node {
 
   const handleMouseLeave = clearHighlightHostInstance;
 
+  // The synthetic onMouseLeave on the tree div only fires within the document,
+  // so we need a native listener on the document itself.
+  useEffect(() => {
+    const container = focusTargetRef.current;
+    if (container == null) {
+      return;
+    }
+    const ownerDocument = container.ownerDocument;
+    ownerDocument.addEventListener('mouseleave', clearHighlightHostInstance);
+    return () => {
+      ownerDocument.removeEventListener(
+        'mouseleave',
+        clearHighlightHostInstance,
+      );
+    };
+  }, [clearHighlightHostInstance]);
+
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
