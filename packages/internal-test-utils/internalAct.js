@@ -34,7 +34,6 @@ async function waitForMicrotasks() {
 
 function aggregateErrors(errors: Array<mixed>): mixed {
   if (errors.length > 1 && typeof AggregateError === 'function') {
-    // eslint-disable-next-line no-undef
     return new AggregateError(errors);
   }
   return errors[0];

@@ -46,6 +46,7 @@ import {trackAnimatingTask} from './ReactProfilerTimer';
 import {
   enableComponentPerformanceTrack,
   enableProfilerTimer,
+  enableViewTransitionForPersistenceMode,
 } from 'shared/ReactFeatureFlags';
 
 export let shouldStartViewTransition: boolean = false;
@@ -140,7 +141,46 @@ function applyViewTransitionToHostInstancesRecursive(
   stopAtNestedViewTransitions: boolean,
 ): boolean {
   if (!supportsMutation) {
-    return false;
+    if (enableViewTransitionForPersistenceMode) {
+      while (child !== null) {
+        if (child.tag === HostComponent) {
+          const instance: Instance = child.stateNode;
+          // TODO: calculate whether component is in viewport
+          shouldStartViewTransition = true;
+          applyViewTransitionName(
+            instance,
+            viewTransitionHostInstanceIdx === 0
+              ? name
+              : name + '_' + viewTransitionHostInstanceIdx,
+            className,
+          );
+          viewTransitionHostInstanceIdx++;
+        } else if (
+          child.tag === OffscreenComponent &&
+          child.memoizedState !== null
+        ) {
+          // Skip any hidden subtrees. They were or are effectively not there.
+        } else if (
+          child.tag === ViewTransitionComponent &&
+          stopAtNestedViewTransitions
+        ) {
+          // Skip any nested view transitions for updates since in that case the
+          // inner most one is the one that handles the update.
+        } else {
+          applyViewTransitionToHostInstancesRecursive(
+            child.child,
+            name,
+            className,
+            collectMeasurements,
+            stopAtNestedViewTransitions,
+          );
+        }
+        child = child.sibling;
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
   let inViewport = false;
   while (child !== null) {
@@ -649,7 +689,60 @@ function measureViewTransitionHostInstancesRecursive(
   stopAtNestedViewTransitions: boolean,
 ): boolean {
   if (!supportsMutation) {
-    return true;
+    if (enableViewTransitionForPersistenceMode) {
+      while (child !== null) {
+        if (child.tag === HostComponent) {
+          const instance: Instance = child.stateNode;
+          if (
+            previousMeasurements == null ||
+            viewTransitionHostInstanceIdx >= previousMeasurements.length
+          ) {
+            // If there was an insertion of extra nodes, we have to assume they affected the parent.
+            // It should have already been marked as an Update due to the mutation.
+            parentViewTransition.flags |= AffectedParentLayout;
+          }
+          // TODO: check if instance is out of viewport
+          if ((parentViewTransition.flags & Update) !== NoFlags) {
+            applyViewTransitionName(
+              instance,
+              viewTransitionHostInstanceIdx === 0
+                ? newName
+                : newName + '_' + viewTransitionHostInstanceIdx,
+              className,
+            );
+          }
+          // TODO: cancel transition by pushing into viewTransitionCancelableChildren
+          viewTransitionHostInstanceIdx++;
+        } else if (
+          child.tag === OffscreenComponent &&
+          child.memoizedState !== null
+        ) {
+          // Skip any hidden subtrees. They were or are effectively not there.
+        } else if (
+          child.tag === ViewTransitionComponent &&
+          stopAtNestedViewTransitions
+        ) {
+          // Skip any nested view transitions for updates since in that case the
+          // inner most one is the one that handles the update.
+          // If this inner boundary resized we need to bubble that information up.
+          parentViewTransition.flags |= child.flags & AffectedParentLayout;
+        } else {
+          measureViewTransitionHostInstancesRecursive(
+            parentViewTransition,
+            child.child,
+            newName,
+            oldName,
+            className,
+            previousMeasurements,
+            stopAtNestedViewTransitions,
+          );
+        }
+        child = child.sibling;
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
   let inViewport = false;
   while (child !== null) {

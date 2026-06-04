@@ -775,6 +775,13 @@ function applyCompiledFunctions(
 
   // Forget compiled the component, we need to update existing imports of useMemoCache
   if (compiledFns.length > 0) {
+    // Codegen may have registered `_c` for a function that was later discarded.
+    const anyAppliedUsesMemo = compiledFns.some(
+      result => result.compiledFn.memoSlotsUsed > 0,
+    );
+    if (!anyAppliedUsesMemo) {
+      programContext.removeMemoCacheImport();
+    }
     addImportsToProgram(program, programContext);
   }
 }
