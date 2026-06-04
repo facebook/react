@@ -18,6 +18,15 @@ const skipFilter = new Set([
   'todo-round3_promote_used_temps',
 
   /**
+   * `export as namespace` is a .d.ts-shaped construct; sprout's second-stage
+   * evaluator transform cannot evaluate it. The sibling todo-ts-* interop
+   * fixtures evaluate fine (they transform to CJS) and are deliberately not
+   * skipped. Remove or update this entry when the fixture is renamed after
+   * the Rust fix lands (the filter matches by basename).
+   */
+  'todo-ts-namespace-export-declaration',
+
+  /**
    * Observable different in logging between Forget and non-Forget
    */
   'early-return-no-declarations-reassignments-dependencies',

@@ -111,6 +111,46 @@ Each line names the failure mode and a sketch of where to look.
 	`TSTypeParameterInstantiation` in `convert_ast.rs` AND deserialization
 	in `convert_ast_reverse.rs::convert_ts_type_from_json`.
 
+## Cross-frontend: TypeScript module interop statements
+
+Three `todo-ts-*` fixtures pin how TS module-interop statements
+(`import x = require(...)`, `export = x`, `export as namespace X`) must
+behave: the statement is preserved in output and the file's functions
+still compile. The TS reference does both. The three frontends share
+the broken symptom today via three different root causes:
+
+- **Babel/NAPI** throws `Failed to parse AST JSON: unknown variant
+	TSImportEqualsDeclaration` (etc.) because the typed AST's
+	`#[serde(tag = "type")]` enums have no catch-all, failing the whole
+	file. The same root cause reds both `react_compiler_ast` fixture
+	tests (`round_trip` and `scope_resolution_rename`) under
+	`test-babel-ast.sh`.
+- **SWC**'s converter explicitly rewrites all three statements to
+	`EmptyStatement` (`react_compiler_swc/src/convert_ast.rs`,
+	`TsImportEquals` / `TsExportAssignment` / `TsNamespaceExport` arms),
+	erasing them from output with no error and no event.
+- **OXC** `todo!()`-panics in `react_compiler_oxc/src/convert_ast.rs`
+	(arms of the same three names; the sibling `TSGlobalDeclaration` arm
+	is also unmodeled but unreachable from Babel-parsed fixtures, which
+	represent `declare global` as `TSModuleDeclaration`). Deferred.
+
+Known-red until the fixes land: the three fixtures fail Babel and SWC
+e2e and `test-babel-ast.sh`, and the e2e totals elsewhere in this doc
+are stale by +3 fixtures.
+
+Planned fixes: (1) Babel path: unknown-statement tolerance in
+`react_compiler_ast` (untagged catch-all carrying the raw node,
+preserved through codegen and re-serialization); (2) SWC: replace the
+`EmptyStatement` arms with real preservation; mapping unknown nodes to
+`EmptyStatement` is the bug, not a fallback. Rename each fixture to
+drop the `todo-` prefix as it goes green end to end, and update the
+`SproutTodoFilter` entry for the namespace fixture in the same change
+(the filter matches by basename).
+
+- `todo-ts-import-equals-declaration.ts`
+- `todo-ts-export-assignment.ts`
+- `todo-ts-namespace-export-declaration.ts`
+
 ## Babel
 
 **TODO: scope this out.** Babel is at 1788 / 1795 (7 failures). These have
