@@ -545,6 +545,26 @@ impl ReverseCtx {
             | BabelStmt::DeclareInterface(_)
             | BabelStmt::DeclareTypeAlias(_)
             | BabelStmt::DeclareOpaqueType(_) => Stmt::Empty(EmptyStmt { span: DUMMY_SP }),
+            // Unreachable from the SWC path in this slice: the SWC forward
+            // converter rewrites unmodeled TS statements to EmptyStatement, so
+            // an `Unknown` never reaches here. Degrading it to EmptyStatement
+            // would silently drop the node, so emit a deliberate runtime
+            // tripwire (a `throw` in generated code) if this arm is ever
+            // reached without a matching forward-conversion policy.
+            BabelStmt::Unknown(unknown) => {
+                let message = format!(
+                    "[react-compiler] internal error: unmodeled statement `{}` reached the SWC reverse converter",
+                    unknown.node_type()
+                );
+                Stmt::Throw(ThrowStmt {
+                    span: DUMMY_SP,
+                    arg: Box::new(Expr::Lit(Lit::Str(Str {
+                        span: DUMMY_SP,
+                        value: self.wtf8(&message),
+                        raw: None,
+                    }))),
+                })
+            }
         }
     }
 

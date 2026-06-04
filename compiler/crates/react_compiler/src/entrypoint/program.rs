@@ -459,6 +459,9 @@ fn returns_non_node_in_stmt(stmt: &Statement, result: &mut bool) {
         Statement::WithStatement(with) => returns_non_node_in_stmt(&with.body, result),
         // Skip nested function/class declarations -- they have their own returns
         Statement::FunctionDeclaration(_) | Statement::ClassDeclaration(_) => {}
+        // Unmodeled statements are opaque to return analysis; functions
+        // containing them bail out in lowering before this matters.
+        Statement::Unknown(_) => {}
         _ => {}
     }
 }
@@ -607,6 +610,9 @@ fn calls_hooks_or_creates_jsx_in_stmt(stmt: &Statement) -> bool {
         // where Babel's traverse enters class bodies, only skipping nested functions)
         Statement::FunctionDeclaration(_) => false,
         Statement::ClassDeclaration(class) => calls_hooks_or_creates_jsx_in_class_body(&class.body),
+        // Unmodeled statements are preserved verbatim and never compiled, so
+        // hook/JSX content inside them cannot affect compilation decisions.
+        Statement::Unknown(_) => false,
         _ => false,
     }
 }
@@ -2164,6 +2170,29 @@ fn stmt_references_identifier_at_top_level(stmt: &Statement, name: &str) -> bool
             .argument
             .as_ref()
             .map_or(false, |e| expr_references_identifier_at_top_level(e, name)),
+        // Unmodeled statements (e.g. `export = X`) can reference top-level
+        // bindings; scan the raw node for a matching Identifier so the
+        // gating reference-before-declaration analysis does not miss them.
+        Statement::Unknown(unknown) => raw_node_references_identifier(unknown.raw(), name),
+        _ => false,
+    }
+}
+
+/// Conservatively detect an `Identifier` node with the given name anywhere in
+/// a raw unmodeled subtree.
+fn raw_node_references_identifier(value: &serde_json::Value, name: &str) -> bool {
+    match value {
+        serde_json::Value::Object(map) => {
+            if map.get("type").and_then(serde_json::Value::as_str) == Some("Identifier")
+                && map.get("name").and_then(serde_json::Value::as_str) == Some(name)
+            {
+                return true;
+            }
+            map.values().any(|v| raw_node_references_identifier(v, name))
+        }
+        serde_json::Value::Array(items) => {
+            items.iter().any(|v| raw_node_references_identifier(v, name))
+        }
         _ => false,
     }
 }

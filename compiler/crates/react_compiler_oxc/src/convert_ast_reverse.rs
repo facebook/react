@@ -387,6 +387,20 @@ impl<'a> ReverseCtx<'a> {
             | Statement::DeclareInterface(_)
             | Statement::DeclareTypeAlias(_)
             | Statement::DeclareOpaqueType(_) => self.builder.statement_empty(SPAN),
+            // The OXC forward converter never produces `Unknown` today.
+            // Degrading to an empty statement would silently drop the node,
+            // so emit a deliberate runtime tripwire (a `throw` in generated
+            // code) if this arm is ever reached.
+            Statement::Unknown(unknown) => {
+                let message = format!(
+                    "[react-compiler] internal error: unmodeled statement `{}` reached the OXC reverse converter",
+                    unknown.node_type()
+                );
+                let arg = self
+                    .builder
+                    .expression_string_literal(SPAN, self.atom(&message), None);
+                self.builder.statement_throw(SPAN, arg)
+            }
         }
     }
 

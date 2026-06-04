@@ -368,7 +368,9 @@ impl<'a> AstWalker<'a> {
             | Statement::DeclareInterface(_)
             | Statement::DeclareTypeAlias(_)
             | Statement::DeclareOpaqueType(_)
-            | Statement::EnumDeclaration(_) => {}
+            | Statement::EnumDeclaration(_)
+            // Unmodeled raw node: opaque, no compilable children to traverse.
+            | Statement::Unknown(_) => {}
         }
     }
 
@@ -1069,7 +1071,9 @@ pub fn walk_statement_mut(v: &mut impl MutVisitor, stmt: &mut Statement) -> Visi
         | Statement::DeclareInterface(_)
         | Statement::DeclareTypeAlias(_)
         | Statement::DeclareOpaqueType(_)
-        | Statement::EnumDeclaration(_) => {}
+        | Statement::EnumDeclaration(_)
+        // Unmodeled raw node: opaque, no compilable children to traverse.
+        | Statement::Unknown(_) => {}
     }
     VisitResult::Continue
 }
