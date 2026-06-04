@@ -254,7 +254,7 @@ function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {
   // current behavior we've used for several release cycles. Consider not
   // performing this check if the updated fiber already unmounted, since it's
   // not possible for that to cause an infinite update loop.
-  throwIfInfiniteUpdateLoopDetected();
+  throwIfInfiniteUpdateLoopDetected(false);
 
   // When a setState happens, we must ensure the root is scheduled. Because
   // update queues do not have a backpointer to the root, the only way to do

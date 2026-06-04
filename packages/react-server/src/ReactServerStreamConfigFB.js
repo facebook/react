@@ -18,6 +18,18 @@ export opaque type PrecomputedChunk = string;
 export opaque type Chunk = string;
 export opaque type BinaryChunk = string;
 
+export function scheduleMicrotask(callback: () => void) {
+  // TODO: Consider unifying this with the FB Flight stream config and
+  // adopting its microtask scheduling implementation.
+  callback();
+}
+
+export function scheduleWork(callback: () => void) {
+  // TODO: Consider unifying this with the FB Flight stream config and
+  // adopting its work scheduling implementation.
+  callback();
+}
+
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;

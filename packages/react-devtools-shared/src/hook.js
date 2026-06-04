@@ -17,6 +17,7 @@ import type {
   DevToolsBackend,
   DevToolsHookSettings,
   ProfilingSettings,
+  ReactBuildType,
 } from './backend/types';
 import type {ComponentFilter} from './frontend/types';
 
@@ -71,7 +72,7 @@ export function installHook(
     return null;
   }
 
-  function detectReactBuildType(renderer: ReactRenderer) {
+  function detectReactBuildType(renderer: ReactRenderer): ReactBuildType {
     try {
       if (typeof renderer.version === 'string') {
         // React DOM Fiber (16+)
@@ -211,7 +212,7 @@ export function installHook(
     const id = ++uidCounter;
     renderers.set(id, renderer);
 
-    const reactBuildType = hasDetectedBadDCE
+    const reactBuildType: ReactBuildType = hasDetectedBadDCE
       ? 'deadcode'
       : detectReactBuildType(renderer);
 

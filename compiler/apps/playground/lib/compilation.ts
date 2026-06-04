@@ -25,6 +25,7 @@ import BabelPluginReactCompiler, {
   type LoggerEvent,
 } from 'babel-plugin-react-compiler';
 import {transformFromAstSync} from '@babel/core';
+import JSON5 from 'json5';
 import type {
   CompilerOutput,
   CompilerTransformOutput,
@@ -126,6 +127,14 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
+export function parseConfigOverrides(configOverrides: string): any {
+  const trimmed = configOverrides.trim();
+  if (!trimmed) {
+    return {};
+  }
+  return JSON5.parse(trimmed);
+}
+
 function parseOptions(
   source: string,
   mode: 'compiler' | 'linter',
@@ -156,16 +165,7 @@ function parseOptions(
   });
 
   // Parse config overrides from config editor
-  let configOverrideOptions: any = {};
-  const configMatch = configOverrides.match(/^\s*import.*?\n\n\((.*)\)/s);
-  if (configOverrides.trim()) {
-    if (configMatch && configMatch[1]) {
-      const configString = configMatch[1].replace(/satisfies.*$/, '').trim();
-      configOverrideOptions = new Function(`return (${configString})`)();
-    } else {
-      throw new Error('Invalid override format');
-    }
-  }
+  const configOverrideOptions = parseConfigOverrides(configOverrides);
 
   const opts: PluginOptions = parsePluginOptions({
     ...parsedPragmaOptions,

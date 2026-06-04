@@ -1040,6 +1040,8 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     // Initialize any debug info and block the initializing chunk on any
     // unresolved entries.
     initializeDebugChunk(response, chunk);
+    // TODO: The chunk might have transitioned to ERRORED now.
+    // Should we return early if that happens?
   }
 
   try {
@@ -1075,6 +1077,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
 
     if (__DEV__) {
       processChunkDebugInfo(response, initializedChunk, value);
@@ -1097,6 +1100,7 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
     const initializedChunk: InitializedChunk<T> = (chunk: any);
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
+    initializedChunk.reason = null;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
@@ -3521,7 +3525,8 @@ function resolveErrorDev(
 
   let error;
   const errorOptions =
-    'cause' in errorInfo
+    // We don't serialize Error.cause in prod so we never need to deserialize
+    __DEV__ && 'cause' in errorInfo
       ? {
           cause: reviveModel(
             response,
@@ -3532,18 +3537,40 @@ function resolveErrorDev(
           ),
         }
       : undefined;
+  const isAggregateError =
+    typeof AggregateError !== 'undefined' && 'errors' in errorInfo;
+  const revivedErrors =
+    // We don't serialize AggregateError.errors in prod so we never need to deserialize
+    __DEV__ && isAggregateError
+      ? reviveModel(
+          response,
+          // $FlowFixMe[incompatible-cast]
+          (errorInfo.errors: JSONValue),
+          errorInfo,
+          'errors',
+        )
+      : null;
   const callStack = buildFakeCallStack(
     response,
     stack,
     env,
     false,
-    // $FlowFixMe[incompatible-use]
-    Error.bind(
-      null,
-      message ||
-        'An error occurred in the Server Components render but no message was provided',
-      errorOptions,
-    ),
+    isAggregateError
+      ? // $FlowFixMe[incompatible-use]
+        AggregateError.bind(
+          null,
+          revivedErrors,
+          message ||
+            'An error occurred in the Server Components render but no message was provided',
+          errorOptions,
+        )
+      : // $FlowFixMe[incompatible-use]
+        Error.bind(
+          null,
+          message ||
+            'An error occurred in the Server Components render but no message was provided',
+          errorOptions,
+        ),
   );
 
   let ownerTask: null | ConsoleTask = null;

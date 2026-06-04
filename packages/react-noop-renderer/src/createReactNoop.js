@@ -25,6 +25,7 @@ import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {TransitionTypes} from 'react/src/ReactTransitionType';
 import typeof * as HostConfig from 'react-reconciler/src/ReactFiberConfig';
 import typeof * as ReactFiberConfigWithNoMutation from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
+import typeof * as ReactFiberConfigWithNoViewTransition from 'react-reconciler/src/ReactFiberConfigWithNoViewTransition';
 import typeof * as ReactFiberConfigWithNoPersistence from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
 
 import typeof * as ReconcilerAPI from 'react-reconciler/src/ReactFiberReconciler';
@@ -709,7 +710,8 @@ function createReactNoop(
 
   const mutationHostConfig: Pick<
     HostConfig,
-    $Keys<ReactFiberConfigWithNoMutation>,
+    | $Keys<ReactFiberConfigWithNoMutation>
+    | $Keys<ReactFiberConfigWithNoViewTransition>,
   > = {
     supportsMutation: true,
 
