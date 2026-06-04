@@ -516,73 +516,59 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    // The same context object is shared by the Fizz server and the client
-    // renderer in this single-process test, which trips the "multiple
-    // renderers" dev warning. That doesn't happen in real apps where server and
-    // client are separate processes, so filter it out here.
-    const realConsoleError = console.error;
-    console.error = (...args) => {
-      if (
-        typeof args[0] === 'string' &&
-        args[0].includes('Detected multiple renderers')
-      ) {
-        return;
-      }
-      realConsoleError.apply(console, args);
-    };
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
 
-    try {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(<App />);
-        pipe(writable);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Loading...</div>
+      </div>,
+    );
+
+    // Hydration uses a different renderer runtime (Fiber instead of Fizz).
+    // We reset _currentRenderer here to not trigger a warning about multiple
+    // renderers concurrently using these contexts
+    NumberContext._currentRenderer = null;
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        errors.push(normalizeError(error.message));
+      },
+    });
+    await waitForAll([]);
+
+    // Shell hydrated, boundary still pending.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Loading...</div>
+      </div>,
+    );
+
+    // Update the context value in the already-hydrated ancestor BEFORE the
+    // streamed boundary content arrives and hydrates.
+    await clientAct(() => {
+      React.startTransition(() => {
+        setNumberExternal(1);
       });
+    });
 
-      expect(getVisibleChildren(container)).toEqual(
-        <div>
-          <div>Loading...</div>
-        </div>,
-      );
+    // Now the boundary content becomes available.
+    await act(() => {
+      resolveText('display');
+    });
+    await clientAct(async () => {});
 
-      const errors = [];
-      ReactDOMClient.hydrateRoot(container, <App />, {
-        onRecoverableError(error) {
-          errors.push(normalizeError(error.message));
-        },
-      });
-      await waitForAll([]);
-
-      // Shell hydrated, boundary still pending.
-      expect(getVisibleChildren(container)).toEqual(
-        <div>
-          <div>Loading...</div>
-        </div>,
-      );
-
-      // Update the context value in the already-hydrated ancestor BEFORE the
-      // streamed boundary content arrives and hydrates.
-      await clientAct(() => {
-        React.startTransition(() => {
-          setNumberExternal(1);
-        });
-      });
-
-      // Now the boundary content becomes available.
-      await act(() => {
-        resolveText('display');
-      });
-      await clientAct(async () => {});
-
-      // No hydration mismatch error should have been reported, and the boundary
-      // should reflect the updated context value.
-      expect(errors).toEqual([]);
-      expect(getVisibleChildren(container)).toEqual(
-        <div>
-          <div>Number: {'1'}</div>
-        </div>,
-      );
-    } finally {
-      console.error = realConsoleError;
-    }
+    // No hydration mismatch error should have been reported, and the boundary
+    // should reflect the updated context value.
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>Number: {'1'}</div>
+      </div>,
+    );
   });
 
   it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {
