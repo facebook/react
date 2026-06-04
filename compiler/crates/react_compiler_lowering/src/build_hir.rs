@@ -2408,6 +2408,7 @@ fn statement_start(stmt: &react_compiler_ast::statements::Statement) -> Option<u
         Statement::DeclareTypeAlias(s) => s.base.start,
         Statement::DeclareOpaqueType(s) => s.base.start,
         Statement::EnumDeclaration(s) => s.base.start,
+        Statement::Unknown(s) => s.base().start,
     }
 }
 
@@ -2458,6 +2459,7 @@ fn statement_end(stmt: &react_compiler_ast::statements::Statement) -> Option<u32
         Statement::DeclareTypeAlias(s) => s.base.end,
         Statement::DeclareOpaqueType(s) => s.base.end,
         Statement::EnumDeclaration(s) => s.base.end,
+        Statement::Unknown(s) => s.base().end,
     }
 }
 
@@ -2509,6 +2511,7 @@ fn statement_loc(stmt: &react_compiler_ast::statements::Statement) -> Option<Sou
         Statement::DeclareTypeAlias(s) => s.base.loc.clone(),
         Statement::DeclareOpaqueType(s) => s.base.loc.clone(),
         Statement::EnumDeclaration(s) => s.base.loc.clone(),
+        Statement::Unknown(s) => s.base().loc.clone(),
     };
     convert_opt_loc(&loc)
 }
@@ -4196,6 +4199,29 @@ fn lower_statement(
         | Statement::DeclareInterface(_)
         | Statement::DeclareTypeAlias(_)
         | Statement::DeclareOpaqueType(_) => {}
+        // The TS reference can only reach its equivalent default case via
+        // assertExhaustive (Babel's closed Statement type), so it crashes;
+        // here unmodeled syntax is reachable by construction and degrades
+        // like the other unsupported-statement arms instead.
+        Statement::Unknown(unknown) => {
+            let loc = convert_opt_loc(&unknown.base().loc);
+            let node_type = unknown.node_type().to_string();
+            builder.record_error(CompilerErrorDetail {
+                category: ErrorCategory::UnsupportedSyntax,
+                reason: format!("Unsupported statement kind '{node_type}'"),
+                description: None,
+                loc: loc.clone(),
+                suggestions: None,
+            })?;
+            lower_value_to_temporary(
+                builder,
+                InstructionValue::UnsupportedNode {
+                    node_type: Some(node_type),
+                    original_node: Some(unknown.raw().clone()),
+                    loc,
+                },
+            )?;
+        }
     }
     Ok(())
 }

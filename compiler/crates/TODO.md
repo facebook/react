@@ -134,9 +134,13 @@ the broken symptom today via three different root causes:
 	is also unmodeled but unreachable from Babel-parsed fixtures, which
 	represent `declare global` as `TSModuleDeclaration`). Deferred.
 
-Known-red until the fixes land: the three fixtures fail Babel and SWC
-e2e and `test-babel-ast.sh`, and the e2e totals elsewhere in this doc
-are stale by +3 fixtures.
+Known-red until the fixes land: the three fixtures fail SWC e2e (Babel
+e2e and the `round_trip` half of `test-babel-ast.sh` are green as of
+the unknown-statement tolerance slice; the scope-resolution half stays
+red corpus-wide on the pr-36173 tip because `babel-ast-to-json.mjs`
+still emits offset-based scope JSON without `_nodeId` after the node-ID
+migration, a pre-existing gap needing its own fix). The e2e totals
+elsewhere in this doc are stale by +3 fixtures plus tip drift.
 
 Planned fixes: (1) Babel path: unknown-statement tolerance in
 `react_compiler_ast` (untagged catch-all carrying the raw node,

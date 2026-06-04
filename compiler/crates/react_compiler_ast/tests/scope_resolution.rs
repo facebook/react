@@ -528,6 +528,10 @@ fn visit_stmt(stmt: &mut Statement, si: &ScopeInfo) {
             rename_id(&mut d.id, si);
             visit_json(&mut d.body, si);
         }
+        Statement::Unknown(d) => {
+            d.with_raw_mut(|raw| visit_json(raw, si))
+                .expect("identifier rename preserves the node `type`");
+        }
         Statement::BreakStatement(_)
         | Statement::ContinueStatement(_)
         | Statement::EmptyStatement(_)

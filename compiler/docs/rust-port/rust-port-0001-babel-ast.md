@@ -223,10 +223,15 @@ TypeScript and Flow type annotation bodies (e.g., `TSTypeAnnotation`, type param
 
 `File`, `Program`, `SourceType`, `InterpreterDirective`
 
-### No catch-all / Unknown variants
+### Catch-all / Unknown variants: statements only
 
-Enums do **not** have catch-all `Unknown(serde_json::Value)` variants. If a fixture contains a node type that isn't modeled, deserialization fails — this is intentional. It surfaces unsupported node types immediately so the representation can be updated, rather than silently passing data through an opaque blob. 
-This is distinct from unknown *fields*, which are silently dropped (see design decision #6 on `deny_unknown_fields`). An unknown field on a known node is harmless — an unknown node type is a gap in the model that should be fixed. All enums now use this strict approach — no `Unknown` catch-all variants remain.
+Most enums do **not** have catch-all `Unknown(serde_json::Value)` variants: an unmodeled node type fails deserialization so the gap gets fixed rather than silently passing through an opaque blob.
+
+`Statement` is the one deliberate exception. Real TS module-interop syntax (`import x = require(...)`, `export = x`, `export as namespace X`) is legal Babel output that the model does not cover, and failing deserialization there failed entire files the TS reference compiles fine. `Statement::Unknown(UnknownStatement)` carries the complete raw node: top-level unknowns are preserved verbatim in output, function-body unknowns degrade to the standard `UnsupportedNode` bailout. Deserialization still dispatches modeled `type` tags through a typed helper, so a malformed modeled node errors with its precise message instead of degrading to `Unknown`; only genuinely unmodeled tags take the catch-all. The `known_statements!` macro in `statements.rs` is the single source for that dispatch.
+
+Expression/declaration/pattern enums keep the strict no-catch-all rule.
+
+This is distinct from unknown *fields*, which are silently dropped (see design decision #6 on `deny_unknown_fields`). An unknown field on a known node is harmless.
 
 ### Union types as enums
 

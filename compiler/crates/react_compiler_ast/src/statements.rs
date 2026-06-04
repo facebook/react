@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::de::Error as _;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::common::BaseNode;
 
@@ -9,7 +10,7 @@ fn is_false(v: &bool) -> bool {
     !v
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type")]
 pub enum Statement {
     // Statements
@@ -61,6 +62,206 @@ pub enum Statement {
     DeclareTypeAlias(crate::declarations::DeclareTypeAlias),
     DeclareOpaqueType(crate::declarations::DeclareOpaqueType),
     EnumDeclaration(crate::declarations::EnumDeclaration),
+    /// Catch-all for statement `type`s the typed AST does not model, e.g. the
+    /// TypeScript module-interop statements `import x = require(...)`,
+    /// `export = x`, and `export as namespace X`. Carries the complete raw
+    /// Babel node so the Babel path can preserve unmodeled top-level
+    /// statements verbatim instead of failing the whole file.
+    ///
+    /// Deserialization dispatches through [`KnownStatement`]: a modeled `type`
+    /// whose body is malformed errors with the typed variant's precise message
+    /// rather than degrading to `Unknown`. Adding a variant to this enum
+    /// requires adding it to the `known_statements!` list below, which is the
+    /// single source for the dispatch enum, its `From` mapping, and
+    /// [`KNOWN_STATEMENT_TYPES`]. A variant added here but not there degrades
+    /// to `Unknown` silently; that is the one drift case structure cannot
+    /// catch.
+    #[serde(untagged)]
+    Unknown(UnknownStatement),
+}
+
+// NOTE: `Deserialize` for `Statement` is hand-written below; the
+// `#[serde(tag = "type")]` and `#[serde(untagged)]` attributes on the enum
+// configure only the derived `Serialize`.
+
+#[derive(Debug, Clone)]
+pub struct UnknownStatement {
+    raw: serde_json::Value,
+    base: BaseNode,
+}
+
+impl UnknownStatement {
+    pub fn from_raw(raw: serde_json::Value) -> Result<Self, String> {
+        match raw.get("type").and_then(serde_json::Value::as_str) {
+            Some(_) => {
+                // By-ref deserialization clones only the fields BaseNode
+                // reads, not the whole (arbitrarily large) unknown subtree.
+                let base = BaseNode::deserialize(&raw)
+                    .map_err(|err| format!("failed to read unknown statement base: {err}"))?;
+                Ok(Self { raw, base })
+            }
+            None => Err("unknown statement is missing a string `type` field".to_string()),
+        }
+    }
+
+    /// The node's `type` discriminant, read from the captured [`BaseNode`].
+    /// Falls back to `"Unknown"` rather than panicking if the raw node was
+    /// mutated out from under it.
+    pub fn node_type(&self) -> &str {
+        self.base.node_type.as_deref().unwrap_or("Unknown")
+    }
+
+    pub fn raw(&self) -> &serde_json::Value {
+        &self.raw
+    }
+
+    /// Mutate the raw node, then refresh the cached [`BaseNode`] so `base()`
+    /// and `node_type()` cannot drift from `raw`. Mutations that remove the
+    /// string `type` field are rejected and rolled back.
+    pub fn with_raw_mut<R>(
+        &mut self,
+        f: impl FnOnce(&mut serde_json::Value) -> R,
+    ) -> Result<R, String> {
+        let saved = self.raw.clone();
+        let result = f(&mut self.raw);
+        if self.raw.get("type").and_then(serde_json::Value::as_str).is_none() {
+            self.raw = saved;
+            return Err("unknown statement mutation removed the string `type` field".to_string());
+        }
+        match BaseNode::deserialize(&self.raw) {
+            Ok(base) => {
+                self.base = base;
+                Ok(result)
+            }
+            Err(err) => {
+                self.raw = saved;
+                Err(format!("failed to refresh unknown statement base: {err}"))
+            }
+        }
+    }
+
+    pub fn base(&self) -> &BaseNode {
+        &self.base
+    }
+}
+
+impl Serialize for UnknownStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.raw.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for UnknownStatement {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = serde_json::Value::deserialize(deserializer)?;
+        Self::from_raw(raw).map_err(D::Error::custom)
+    }
+}
+
+impl<'de> Deserialize<'de> for Statement {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = serde_json::Value::deserialize(deserializer)?;
+        let node_type = raw
+            .get("type")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| D::Error::custom("statement is missing a string `type` field"))?
+            .to_string();
+
+        if is_known_statement_type(&node_type) {
+            let known: KnownStatement = serde_json::from_value(raw).map_err(D::Error::custom)?;
+            Ok(known.into())
+        } else {
+            UnknownStatement::from_raw(raw)
+                .map(Statement::Unknown)
+                .map_err(D::Error::custom)
+        }
+    }
+}
+
+/// Single source of truth for the statement `type` tags [`Statement`] models.
+/// Generates the [`KnownStatement`] dispatch enum, its `From` mapping, and
+/// [`KNOWN_STATEMENT_TYPES`] from one list, so the three cannot drift from
+/// each other. A variant added to [`Statement`] but not listed here still
+/// degrades to [`Statement::Unknown`] silently; that residual gap is
+/// documented on the variant.
+macro_rules! known_statements {
+    ($($variant:ident => $ty:ty),+ $(,)?) => {
+        const KNOWN_STATEMENT_TYPES: &[&str] = &[$(stringify!($variant)),+];
+
+        fn is_known_statement_type(node_type: &str) -> bool {
+            KNOWN_STATEMENT_TYPES.contains(&node_type)
+        }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(tag = "type")]
+        enum KnownStatement {
+            $($variant($ty),)+
+        }
+
+        impl From<KnownStatement> for Statement {
+            fn from(value: KnownStatement) -> Self {
+                match value {
+                    $(KnownStatement::$variant(s) => Statement::$variant(s),)+
+                }
+            }
+        }
+    };
+}
+
+known_statements! {
+    BlockStatement => BlockStatement,
+    ReturnStatement => ReturnStatement,
+    IfStatement => IfStatement,
+    ForStatement => ForStatement,
+    WhileStatement => WhileStatement,
+    DoWhileStatement => DoWhileStatement,
+    ForInStatement => ForInStatement,
+    ForOfStatement => ForOfStatement,
+    SwitchStatement => SwitchStatement,
+    ThrowStatement => ThrowStatement,
+    TryStatement => TryStatement,
+    BreakStatement => BreakStatement,
+    ContinueStatement => ContinueStatement,
+    LabeledStatement => LabeledStatement,
+    ExpressionStatement => ExpressionStatement,
+    EmptyStatement => EmptyStatement,
+    DebuggerStatement => DebuggerStatement,
+    WithStatement => WithStatement,
+    VariableDeclaration => VariableDeclaration,
+    FunctionDeclaration => FunctionDeclaration,
+    ClassDeclaration => ClassDeclaration,
+    ImportDeclaration => crate::declarations::ImportDeclaration,
+    ExportNamedDeclaration => crate::declarations::ExportNamedDeclaration,
+    ExportDefaultDeclaration => crate::declarations::ExportDefaultDeclaration,
+    ExportAllDeclaration => crate::declarations::ExportAllDeclaration,
+    TSTypeAliasDeclaration => crate::declarations::TSTypeAliasDeclaration,
+    TSInterfaceDeclaration => crate::declarations::TSInterfaceDeclaration,
+    TSEnumDeclaration => crate::declarations::TSEnumDeclaration,
+    TSModuleDeclaration => crate::declarations::TSModuleDeclaration,
+    TSDeclareFunction => crate::declarations::TSDeclareFunction,
+    TypeAlias => crate::declarations::TypeAlias,
+    OpaqueType => crate::declarations::OpaqueType,
+    InterfaceDeclaration => crate::declarations::InterfaceDeclaration,
+    DeclareVariable => crate::declarations::DeclareVariable,
+    DeclareFunction => crate::declarations::DeclareFunction,
+    DeclareClass => crate::declarations::DeclareClass,
+    DeclareModule => crate::declarations::DeclareModule,
+    DeclareModuleExports => crate::declarations::DeclareModuleExports,
+    DeclareExportDeclaration => crate::declarations::DeclareExportDeclaration,
+    DeclareExportAllDeclaration => crate::declarations::DeclareExportAllDeclaration,
+    DeclareInterface => crate::declarations::DeclareInterface,
+    DeclareTypeAlias => crate::declarations::DeclareTypeAlias,
+    DeclareOpaqueType => crate::declarations::DeclareOpaqueType,
+    EnumDeclaration => crate::declarations::EnumDeclaration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -364,4 +565,164 @@ pub struct ClassDeclaration {
     pub type_parameters: Option<Box<serde_json::Value>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mixins: Option<Vec<serde_json::Value>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::Statement;
+
+    #[test]
+    fn unknown_statement_round_trips_at_program_level() {
+        let input = json!({
+            "type": "File",
+            "comments": [],
+            "errors": [],
+            "program": {
+                "type": "Program",
+                "sourceType": "module",
+                "interpreter": null,
+                "body": [
+                    {
+                        "type": "TSImportEqualsDeclaration",
+                        "start": 0,
+                        "end": 39,
+                        "importKind": "value",
+                        "isExport": false,
+                        "id": { "type": "Identifier", "name": "lib" },
+                        "moduleReference": {
+                            "type": "TSExternalModuleReference",
+                            "expression": { "type": "StringLiteral", "value": "shared-runtime" }
+                        }
+                    }
+                ],
+                "directives": []
+            }
+        });
+
+        let file: crate::File = serde_json::from_value(input.clone()).unwrap();
+
+        match &file.program.body[0] {
+            Statement::Unknown(unknown) => {
+                assert_eq!(unknown.node_type(), "TSImportEqualsDeclaration");
+            }
+            other => panic!("expected Unknown, got {other:?}"),
+        }
+        assert_eq!(serde_json::to_value(&file).unwrap(), input);
+    }
+
+    #[test]
+    fn unknown_statement_round_trips_inside_function_block() {
+        let input = json!({
+            "type": "FunctionDeclaration",
+            "id": null,
+            "generator": false,
+            "async": false,
+            "params": [],
+            "body": {
+                "type": "BlockStatement",
+                "body": [
+                    {
+                        "type": "TSExportAssignment",
+                        "expression": { "type": "Identifier", "name": "x" }
+                    }
+                ],
+                "directives": []
+            }
+        });
+
+        let stmt: Statement = serde_json::from_value(input.clone()).unwrap();
+        let Statement::FunctionDeclaration(function) = &stmt else {
+            panic!("expected function declaration, got {stmt:?}");
+        };
+        assert!(matches!(function.body.body[0], Statement::Unknown(_)));
+        assert_eq!(serde_json::to_value(&stmt).unwrap(), input);
+    }
+
+    #[test]
+    fn known_statement_type_uses_typed_variant() {
+        let stmt: Statement = serde_json::from_value(json!({
+            "type": "EmptyStatement"
+        }))
+        .unwrap();
+
+        assert!(matches!(stmt, Statement::EmptyStatement(_)));
+    }
+
+    #[test]
+    fn malformed_known_statement_type_errors() {
+        let err = serde_json::from_value::<Statement>(json!({
+            "type": "IfStatement",
+            "consequent": {
+                "type": "EmptyStatement"
+            }
+        }))
+        .unwrap_err();
+
+        assert!(
+            err.to_string().contains("missing field `test`"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn statement_without_type_field_errors() {
+        let err = serde_json::from_value::<Statement>(json!({
+            "start": 0,
+            "end": 1
+        }))
+        .unwrap_err();
+
+        assert!(
+            err.to_string().contains("`type`"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn non_object_statement_errors() {
+        let err = serde_json::from_value::<Statement>(json!([1, 2])).unwrap_err();
+        assert!(
+            err.to_string().contains("`type`"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn non_string_type_field_errors() {
+        let err = serde_json::from_value::<Statement>(json!({ "type": 7 })).unwrap_err();
+        assert!(
+            err.to_string().contains("`type`"),
+            "unexpected error: {err}"
+        );
+    }
+
+    /// Mutating the raw node through the scoped mutator refreshes the cached
+    /// base, and mutations that strip `type` are rejected.
+    #[test]
+    fn with_raw_mut_refreshes_base_and_guards_type() {
+        let raw = json!({
+            "type": "TSExportAssignment",
+            "start": 5,
+            "expression": { "type": "Identifier", "name": "x" }
+        });
+        let Statement::Unknown(mut unknown) = serde_json::from_value(raw).unwrap() else {
+            panic!("expected Unknown");
+        };
+
+        unknown
+            .with_raw_mut(|v| {
+                v["start"] = json!(9);
+                v["expression"]["name"] = json!("y");
+            })
+            .unwrap();
+        assert_eq!(unknown.base().start, Some(9));
+        assert_eq!(unknown.raw()["expression"]["name"], json!("y"));
+
+        let err = unknown.with_raw_mut(|v| {
+            v.as_object_mut().unwrap().remove("type");
+        });
+        assert!(err.is_err(), "type removal must be rejected");
+    }
 }

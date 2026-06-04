@@ -802,6 +802,7 @@ fn statement_loc(stmt: &Statement) -> &Option<AstSourceLocation> {
         Statement::DeclareTypeAlias(n) => &n.base.loc,
         Statement::DeclareOpaqueType(n) => &n.base.loc,
         Statement::EnumDeclaration(n) => &n.base.loc,
+        Statement::Unknown(n) => &n.base().loc,
     }
 }
 
@@ -1297,6 +1298,9 @@ fn statement_type_name(stmt: &Statement) -> &'static str {
         Statement::DeclareTypeAlias(_) => "DeclareTypeAlias",
         Statement::DeclareOpaqueType(_) => "DeclareOpaqueType",
         Statement::EnumDeclaration(_) => "EnumDeclaration",
+        // The real Babel `type` lives in the raw node, but this function
+        // returns &'static str; "Unknown" is the static stand-in.
+        Statement::Unknown(_) => "Unknown",
     }
 }
 
