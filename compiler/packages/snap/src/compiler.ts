@@ -120,7 +120,7 @@ export function parseInput(
   } else {
     return BabelParser.parse(input, {
       sourceFilename: filename,
-      plugins: ['typescript', 'jsx'],
+      plugins: ['typescript', 'jsx', 'explicitResourceManagement'],
       sourceType,
     });
   }
