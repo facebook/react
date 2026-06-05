@@ -50,6 +50,7 @@ const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 const internalRootNodeResourcesKey = '__reactResources$' + randomKey;
 const internalHoistableMarker = '__reactMarker$' + randomKey;
 const internalScrollTimer = '__reactScroll$' + randomKey;
+const internalLoadPendingKey = '__reactLoad$' + randomKey;
 
 type InstanceUnion =
   | Instance
@@ -384,6 +385,18 @@ export function setScrollEndTimer(node: EventTarget, timer: TimeoutID): void {
 
 export function clearScrollEndTimer(node: EventTarget): void {
   (node: any)[internalScrollTimer] = undefined;
+}
+
+export function markNodeAsPendingLoad(node: Node): void {
+  (node: any)[internalLoadPendingKey] = true;
+}
+
+export function clearPendingLoadOnNode(node: Node): void {
+  (node: any)[internalLoadPendingKey] = undefined;
+}
+
+export function isNodePendingLoad(node: Node): boolean {
+  return (node: any)[internalLoadPendingKey] === true;
 }
 
 export function isOwnedInstance(node: Node): boolean {
