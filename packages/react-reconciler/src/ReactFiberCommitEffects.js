@@ -145,11 +145,10 @@ export function commitHookEffectListMount(
   try {
     const updateQueue: FunctionComponentUpdateQueue | null =
       (finishedWork.updateQueue: any);
-    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-    if (lastEffect !== null) {
-      const firstEffect = lastEffect.next;
-      let effect = firstEffect;
-      do {
+    const effects = updateQueue !== null ? updateQueue.effects : null;
+    if (effects !== null) {
+      for (let i = 0; i < effects.length; i++) {
+        const effect = effects[i];
         if ((effect.tag & flags) === flags) {
           if (enableSchedulingProfiler) {
             if ((flags & HookPassive) !== NoHookEffect) {
@@ -238,8 +237,7 @@ export function commitHookEffectListMount(
             }
           }
         }
-        effect = effect.next;
-      } while (effect !== firstEffect);
+      }
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -254,11 +252,10 @@ export function commitHookEffectListUnmount(
   try {
     const updateQueue: FunctionComponentUpdateQueue | null =
       (finishedWork.updateQueue: any);
-    const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-    if (lastEffect !== null) {
-      const firstEffect = lastEffect.next;
-      let effect = firstEffect;
-      do {
+    const effects = updateQueue !== null ? updateQueue.effects : null;
+    if (effects !== null) {
+      for (let i = 0; i < effects.length; i++) {
+        const effect = effects[i];
         if ((effect.tag & flags) === flags) {
           // Unmount
           const inst = effect.inst;
@@ -294,8 +291,7 @@ export function commitHookEffectListUnmount(
             }
           }
         }
-        effect = effect.next;
-      } while (effect !== firstEffect);
+      }
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
