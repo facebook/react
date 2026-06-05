@@ -118,8 +118,8 @@ export function enqueueConcurrentHookUpdate<S, A>(
   update: HookUpdate<S, A>,
   lane: Lane,
 ): FiberRoot | null {
-  const concurrentQueue: ConcurrentQueue = (queue: any);
-  const concurrentUpdate: ConcurrentUpdate = (update: any);
+  const concurrentQueue: ConcurrentQueue = queue as any;
+  const concurrentUpdate: ConcurrentUpdate = update as any;
   enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane);
   return getRootForUpdatedFiber(fiber);
 }
@@ -133,8 +133,8 @@ export function enqueueConcurrentHookUpdateAndEagerlyBailout<S, A>(
   // only reason we queue it is in case there's a subsequent higher priority
   // update that causes it to be rebased.
   const lane = NoLane;
-  const concurrentQueue: ConcurrentQueue = (queue: any);
-  const concurrentUpdate: ConcurrentUpdate = (update: any);
+  const concurrentQueue: ConcurrentQueue = queue as any;
+  const concurrentUpdate: ConcurrentUpdate = update as any;
   enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane);
 
   // Usually we can rely on the upcoming render phase to process the concurrent
@@ -156,8 +156,8 @@ export function enqueueConcurrentClassUpdate<State>(
   update: ClassUpdate<State>,
   lane: Lane,
 ): FiberRoot | null {
-  const concurrentQueue: ConcurrentQueue = (queue: any);
-  const concurrentUpdate: ConcurrentUpdate = (update: any);
+  const concurrentQueue: ConcurrentQueue = queue as any;
+  const concurrentUpdate: ConcurrentUpdate = update as any;
   enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane);
   return getRootForUpdatedFiber(fiber);
 }
@@ -272,7 +272,7 @@ function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {
     node = parent;
     parent = node.return;
   }
-  return node.tag === HostRoot ? (node.stateNode: FiberRoot) : null;
+  return node.tag === HostRoot ? (node.stateNode as FiberRoot) : null;
 }
 
 function detectUpdateOnUnmountedFiber(sourceFiber: Fiber, parent: Fiber) {

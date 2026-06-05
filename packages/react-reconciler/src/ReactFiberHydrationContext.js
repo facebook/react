@@ -263,7 +263,7 @@ function tryHydrateInstance(
   // $FlowFixMe[invalid-compare]
   // $FlowFixMe[invalid-compare]
   if (instance !== null) {
-    fiber.stateNode = (instance: Instance);
+    fiber.stateNode = instance as Instance;
 
     if (__DEV__) {
       if (!didSuspendOrErrorDEV) {
@@ -301,7 +301,7 @@ function tryHydrateText(fiber: Fiber, nextInstance: any) {
   );
   // $FlowFixMe[invalid-compare]
   if (textInstance !== null) {
-    fiber.stateNode = (textInstance: TextInstance);
+    fiber.stateNode = textInstance as TextInstance;
     hydrationParentFiber = fiber;
     // Text Instances don't have children so there's nothing to hydrate.
     nextHydratableInstance = null;
@@ -844,7 +844,7 @@ function warnIfUnhydratedTailNodes(fiber: Fiber) {
       diffNode.serverTail.push(description);
       // $FlowFixMe[invalid-compare]
       if (description.type === 'Suspense') {
-        const suspenseInstance: SuspenseInstance = (nextInstance: any);
+        const suspenseInstance: SuspenseInstance = nextInstance as any;
         nextInstance =
           getNextHydratableInstanceAfterSuspenseInstance(suspenseInstance);
       } else {

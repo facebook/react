@@ -97,10 +97,10 @@ function render(model: ReactClientValue, options?: Options): Destination {
   const signal = options ? options.signal : undefined;
   if (signal) {
     if (signal.aborted) {
-      ReactNoopFlightServer.abort(request, (signal: any).reason);
+      ReactNoopFlightServer.abort(request, (signal as any).reason);
     } else {
       const listener = () => {
-        ReactNoopFlightServer.abort(request, (signal: any).reason);
+        ReactNoopFlightServer.abort(request, (signal as any).reason);
         signal.removeEventListener('abort', listener);
       };
       signal.addEventListener('abort', listener);

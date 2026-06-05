@@ -157,7 +157,7 @@ function applyDerivedStateFromProps(
   // base state.
   if (workInProgress.lanes === NoLanes) {
     // Queue is always non-null for classes
-    const updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any);
+    const updateQueue: UpdateQueue<any> = workInProgress.updateQueue as any;
     updateQueue.baseState = memoizedState;
   }
 }
@@ -574,7 +574,7 @@ function constructClassInstance(
   }
 
   if (typeof contextType === 'object' && contextType !== null) {
-    context = readContext((contextType: any));
+    context = readContext(contextType as any);
   } else if (!disableLegacyContext) {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     const contextTypes = ctor.contextTypes;
@@ -1192,7 +1192,7 @@ export function resolveClassComponentProps(
 
   // Remove ref from the props object, if it exists.
   if ('ref' in baseProps) {
-    newProps = ({}: any);
+    newProps = {} as any;
     for (const propName in baseProps) {
       if (propName !== 'ref') {
         newProps[propName] = baseProps[propName];

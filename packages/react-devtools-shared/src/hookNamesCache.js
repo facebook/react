@@ -115,7 +115,7 @@ export function loadHookNames(
       }
 
       // This assumes they won't throw.
-      callbacks.forEach(callback => callback((thenable: any).value));
+      callbacks.forEach(callback => callback((thenable as any).value));
       callbacks.clear();
       rejectCallbacks.clear();
     };
@@ -125,7 +125,7 @@ export function loadHookNames(
         timeoutID = null;
       }
       // This assumes they won't throw.
-      rejectCallbacks.forEach(callback => callback((thenable: any).reason));
+      rejectCallbacks.forEach(callback => callback((thenable as any).reason));
       rejectCallbacks.clear();
       callbacks.clear();
     };
@@ -159,7 +159,7 @@ export function loadHookNames(
 
             if (hookNames) {
               const fulfilledThenable: FulfilledThenable<HookNames> =
-                (thenable: any);
+                thenable as any;
               fulfilledThenable.status = 'fulfilled';
               fulfilledThenable.value = hookNames;
               status = 'success';
@@ -168,7 +168,7 @@ export function loadHookNames(
               wake();
             } else {
               const notFoundThenable: RejectedThenable<HookNames> =
-                (thenable: any);
+                thenable as any;
               notFoundThenable.status = 'rejected';
               notFoundThenable.reason = null;
               status = 'error';
@@ -190,7 +190,7 @@ export function loadHookNames(
             console.error(error);
 
             const rejectedThenable: RejectedThenable<HookNames> =
-              (thenable: any);
+              thenable as any;
             rejectedThenable.status = 'rejected';
             rejectedThenable.reason = null;
 
@@ -211,7 +211,7 @@ export function loadHookNames(
 
           didTimeout = true;
 
-          const timedoutThenable: RejectedThenable<HookNames> = (thenable: any);
+          const timedoutThenable: RejectedThenable<HookNames> = thenable as any;
           timedoutThenable.status = 'rejected';
           timedoutThenable.reason = null;
 

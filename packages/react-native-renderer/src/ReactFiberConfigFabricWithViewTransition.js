@@ -204,8 +204,8 @@ export function createViewTransitionInstance(
   fabricCreateViewTransitionInstance(name, tag);
   return {
     name,
-    old: new (ViewTransitionPseudoElement: any)('old', name),
-    new: new (ViewTransitionPseudoElement: any)('new', name),
+    old: new (ViewTransitionPseudoElement as any)('old', name),
+    new: new (ViewTransitionPseudoElement as any)('new', name),
   };
 }
 

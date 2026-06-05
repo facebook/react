@@ -97,11 +97,11 @@ export type SuspenseTreeAction =
 export type SuspenseTreeDispatch = (action: SuspenseTreeAction) => void;
 
 const SuspenseTreeStateContext: ReactContext<SuspenseTreeState> =
-  createContext<SuspenseTreeState>(((null: any): SuspenseTreeState));
+  createContext<SuspenseTreeState>(null as any as SuspenseTreeState);
 SuspenseTreeStateContext.displayName = 'SuspenseTreeStateContext';
 
 const SuspenseTreeDispatcherContext: ReactContext<SuspenseTreeDispatch> =
-  createContext<SuspenseTreeDispatch>(((null: any): SuspenseTreeDispatch));
+  createContext<SuspenseTreeDispatch>(null as any as SuspenseTreeDispatch);
 SuspenseTreeDispatcherContext.displayName = 'SuspenseTreeDispatcherContext';
 
 type Props = {

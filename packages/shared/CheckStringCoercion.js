@@ -23,8 +23,8 @@ function typeName(value: mixed): string {
     // toStringTag is needed for namespaced types like Temporal.Instant
     const hasToStringTag = typeof Symbol === 'function' && Symbol.toStringTag;
     const type =
-      (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
-      (value: any).constructor.name ||
+      (hasToStringTag && (value as any)[Symbol.toStringTag]) ||
+      (value as any).constructor.name ||
       'Object';
     // $FlowFixMe[incompatible-type]
     return type;
@@ -68,7 +68,7 @@ function testStringCoercion(value: mixed) {
   // ancestor components where the exception happened.
   //
   // eslint-disable-next-line react-internal/safe-string-coercion
-  return '' + (value: any);
+  return '' + (value as any);
 }
 
 export function checkAttributeStringCoercion(

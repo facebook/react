@@ -65,7 +65,7 @@ function bind(this: ServerReference<any>): any {
     const $$id = {value: this.$$id};
     const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
     return Object.defineProperties(
-      (newFn: any),
+      newFn as any,
       (__DEV__
         ? {
             $$typeof,
@@ -106,7 +106,7 @@ export function registerServerReference<T: Function>(
   };
   const $$bound = {value: null, configurable: true};
   return Object.defineProperties(
-    (reference: any),
+    reference as any,
     (__DEV__
       ? {
           $$typeof,

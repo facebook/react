@@ -129,7 +129,7 @@ function findHookNames(
 
   hooksList.map(hook => {
     // We already guard against a null HookSource in parseHookNames()
-    const hookSource = ((hook.hookSource: any): HookSource);
+    const hookSource = hook.hookSource as any as HookSource;
     const fileName = hookSource.fileName;
     if (!fileName) {
       return null; // Should not be reachable.
@@ -177,8 +177,8 @@ function findHookNames(
         getHookName(
           hook,
           hookParsedMetadata.originalSourceAST,
-          ((hookParsedMetadata.originalSourceCode: any): string),
-          ((originalSourceLineNumber: any): number),
+          hookParsedMetadata.originalSourceCode as any as string,
+          originalSourceLineNumber as any as number,
           originalSourceColumnNumber,
         ),
       );
@@ -255,7 +255,7 @@ function parseSourceAST(
 
       const {metadataConsumer, sourceMapConsumer} = hookParsedMetadata;
       const runtimeSourceCode =
-        ((hookSourceAndMetadata.runtimeSourceCode: any): string);
+        hookSourceAndMetadata.runtimeSourceCode as any as string;
       let hasHookMap = false;
       let originalSourceURL;
       let originalSourceCode;

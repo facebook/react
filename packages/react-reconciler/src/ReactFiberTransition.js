@@ -94,7 +94,7 @@ ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
     startAsyncTransitionTimer();
 
     // This is an async action
-    const thenable: Thenable<mixed> = (returnValue: any);
+    const thenable: Thenable<mixed> = returnValue as any;
     entangleAsyncAction(transition, thenable);
   }
   if (enableViewTransition) {
@@ -218,7 +218,7 @@ function peekCacheFromPool(): Cache | null {
   }
 
   // Otherwise, check the root's cache pool.
-  const root = (getWorkInProgressRoot(): any);
+  const root = getWorkInProgressRoot() as any;
   const cacheFromRootCachePool = root.pooledCache;
 
   return cacheFromRootCachePool;
@@ -242,7 +242,7 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   // - One of several fiber types: host root, cache boundary, suspense
   //   component. These retain and release in the commit phase.
 
-  const root = (getWorkInProgressRoot(): any);
+  const root = getWorkInProgressRoot() as any;
   const freshCache = createCache();
   root.pooledCache = freshCache;
   retainCache(freshCache);

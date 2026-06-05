@@ -171,9 +171,11 @@ function markWorkStarted(
 
   // This array is pre-initialized before processing starts.
   lanes.forEach(lane => {
-    ((currentProfilerData.laneToReactMeasureMap.get(
-      lane,
-    ): any): ReactMeasure[]).push(measure);
+    (
+      currentProfilerData.laneToReactMeasureMap.get(
+        lane,
+      ) as any as Array<ReactMeasure>
+    ).push(measure);
   });
 }
 
@@ -362,7 +364,7 @@ function processScreenshot(
   };
 
   // Delay processing until we've extracted snapshot dimensions.
-  let resolveFn = ((null: any): Function);
+  let resolveFn = null as any as Function;
   state.asyncProcessingPromises.push(
     new Promise(resolve => {
       resolveFn = resolve;
@@ -551,7 +553,7 @@ function processTimelineEvent(
         currentProfilerData.thrownErrors.push({
           componentName,
           message,
-          phase: ((phase: any): Phase),
+          phase: phase as any as Phase,
           timestamp: startTime,
           type: 'thrown-error',
         });
@@ -586,7 +588,7 @@ function processTimelineEvent(
           depth,
           duration: null,
           id,
-          phase: ((phase: any): Phase),
+          phase: phase as any as Phase,
           promiseName: promiseName || null,
           resolution: 'unresolved',
           timestamp: startTime,
@@ -628,7 +630,7 @@ function processTimelineEvent(
       } else if (name.startsWith('--render-start-')) {
         if (state.nextRenderShouldGenerateNewBatchID) {
           state.nextRenderShouldGenerateNewBatchID = false;
-          state.batchUID = ((state.uidCounter++: any): BatchUID);
+          state.batchUID = state.uidCounter++ as any as BatchUID;
         }
 
         // If this render is the result of a nested update, make a note of it.

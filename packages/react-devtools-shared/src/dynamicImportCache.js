@@ -93,7 +93,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
       }
 
       // This assumes they won't throw.
-      rejectCallbacks.forEach(callback => callback((thenable: any).reason));
+      rejectCallbacks.forEach(callback => callback((thenable as any).reason));
       rejectCallbacks.clear();
       callbacks.clear();
     };
@@ -115,7 +115,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
           return;
         }
 
-        const fulfilledThenable: FulfilledThenable<Module> = (thenable: any);
+        const fulfilledThenable: FulfilledThenable<Module> = thenable as any;
         fulfilledThenable.status = 'fulfilled';
         fulfilledThenable.value = module;
 
@@ -135,7 +135,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
 
         console.log(error);
 
-        const rejectedThenable: RejectedThenable<Module> = (thenable: any);
+        const rejectedThenable: RejectedThenable<Module> = thenable as any;
         rejectedThenable.status = 'rejected';
         rejectedThenable.reason = error;
 
@@ -156,7 +156,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
 
       didTimeout = true;
 
-      const rejectedThenable: RejectedThenable<Module> = (thenable: any);
+      const rejectedThenable: RejectedThenable<Module> = thenable as any;
       rejectedThenable.status = 'rejected';
       rejectedThenable.reason = null;
 

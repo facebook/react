@@ -127,7 +127,7 @@ function createReactNoop(
       prevParent !==
         // $FlowFixMe[prop-missing]
         // $FlowFixMe[incompatible-type]
-        (parentInstance: Instance).id
+        (parentInstance as Instance).id
     ) {
       throw new Error('Reparenting is not allowed');
     }
@@ -135,7 +135,7 @@ function createReactNoop(
     child.parent =
       // $FlowFixMe[prop-missing]
       // $FlowFixMe[incompatible-type]
-      (parentInstance: Instance).id;
+      (parentInstance as Instance).id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -161,7 +161,7 @@ function createReactNoop(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    if (typeof (parentInstance: any).rootID === 'string') {
+    if (typeof (parentInstance as any).rootID === 'string') {
       // Some calls to this aren't typesafe.
       // This helps surface mistakes in tests.
       throw new Error('appendChild() first argument is not an instance.');
@@ -205,7 +205,7 @@ function createReactNoop(
     child: Instance | TextInstance,
     beforeChild: Instance | TextInstance,
   ) {
-    if (typeof (parentInstance: any).rootID === 'string') {
+    if (typeof (parentInstance as any).rootID === 'string') {
       // Some calls to this aren't typesafe.
       // This helps surface mistakes in tests.
       throw new Error('insertBefore() first argument is not an instance.');
@@ -246,7 +246,7 @@ function createReactNoop(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    if (typeof (parentInstance: any).rootID === 'string') {
+    if (typeof (parentInstance as any).rootID === 'string') {
       // Some calls to this aren't typesafe.
       // This helps surface mistakes in tests.
       throw new Error('removeChild() first argument is not an instance.');
@@ -274,7 +274,7 @@ function createReactNoop(
         : // $FlowFixMe[incompatible-type] We're not typing immutable instances.
           (children ?? []),
       text: shouldSetTextContent(type, newProps)
-        ? computeText((newProps.children: any) + '', instance.context)
+        ? computeText((newProps.children as any) + '', instance.context)
         : null,
       prop: newProps.prop,
       hidden: !!newProps.hidden,
@@ -411,7 +411,7 @@ function createReactNoop(
     },
 
     getPublicInstance(instance: Instance): PublicInstance {
-      return (instance: any);
+      return instance as any;
     },
 
     HostTransitionContext: null,
@@ -440,7 +440,7 @@ function createReactNoop(
         parent: -1,
         text: shouldSetTextContent(type, props)
           ? // eslint-disable-next-line react-internal/safe-string-coercion
-            computeText((props.children: any) + '', hostContext)
+            computeText((props.children as any) + '', hostContext)
           : null,
         prop: props.prop,
         hidden: !!props.hidden,
@@ -696,7 +696,7 @@ function createReactNoop(
       return null;
     },
 
-    NotPendingTransition: (null: TransitionStatus),
+    NotPendingTransition: null as TransitionStatus,
 
     resetFormInstance(form: Instance) {},
 
@@ -755,7 +755,7 @@ function createReactNoop(
           checkPropStringCoercion(newProps.children, 'children');
         }
         instance.text = computeText(
-          (newProps.children: any) + '',
+          (newProps.children as any) + '',
           instance.context,
         );
       }
@@ -1071,9 +1071,9 @@ function createReactNoop(
     }
     if (isArray(child.children)) {
       // This is an instance.
-      const instance: Instance = (child: any);
+      const instance: Instance = child as any;
       const children = childToJSX(instance.children, instance.text);
-      const props = ({prop: instance.prop}: any);
+      const props = {prop: instance.prop} as any;
       if (instance.hidden) {
         props.hidden = true;
       }
@@ -1087,7 +1087,7 @@ function createReactNoop(
       return createJSXElementForTestComparison(instance.type, props);
     }
     // This is a text instance
-    const textInstance: TextInstance = (child: any);
+    const textInstance: TextInstance = child as any;
     if (textInstance.hidden) {
       return '';
     }
@@ -1450,7 +1450,7 @@ function createReactNoop(
         return null;
       }
       // Unsound duck typing.
-      const component = (componentOrElement: any);
+      const component = componentOrElement as any;
       if (typeof component.id === 'number') {
         return component;
       }

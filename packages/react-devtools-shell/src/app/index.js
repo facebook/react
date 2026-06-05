@@ -54,7 +54,7 @@ const unmountFunctions: Array<() => void | boolean> = [];
 function createContainer() {
   const container = document.createElement('div');
 
-  ((document.body: any): HTMLBodyElement).appendChild(container);
+  (document.body as any as HTMLBodyElement).appendChild(container);
 
   return container;
 }

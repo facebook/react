@@ -451,7 +451,7 @@ function SuspenseRectsTransition({id}: {id: Element['id']}): React$Node {
   });
 }
 
-const ViewBox = createContext<Rect>((null: any));
+const ViewBox = createContext<Rect>(null as any);
 
 function SuspenseRectsContainer({
   scaleRef,

@@ -48,7 +48,7 @@ function drawWeb(nodeToData: Map<HostInstance, Data>) {
   }
 
   const dpr = window.devicePixelRatio || 1;
-  const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
+  const canvasFlow: HTMLCanvasElement = canvas as any as HTMLCanvasElement;
   canvasFlow.width = window.innerWidth * dpr;
   canvasFlow.height = window.innerHeight * dpr;
   canvasFlow.style.width = `${window.innerWidth}px`;

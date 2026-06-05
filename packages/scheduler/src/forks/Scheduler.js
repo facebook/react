@@ -447,7 +447,7 @@ function unstable_getCurrentPriorityLevel(): PriorityLevel {
 }
 
 let isMessageLoopRunning = false;
-let taskTimeoutID: TimeoutID = (-1: any);
+let taskTimeoutID: TimeoutID = -1 as any;
 
 // Scheduler periodically yields in case there is other work on the main
 // thread, like user events. By default, it yields multiple times per frame.
@@ -580,7 +580,7 @@ function requestHostTimeout(
 function cancelHostTimeout() {
   // $FlowFixMe[not-a-function] nullable value
   localClearTimeout(taskTimeoutID);
-  taskTimeoutID = ((-1: any): TimeoutID);
+  taskTimeoutID = -1 as any as TimeoutID;
 }
 
 export {

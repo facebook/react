@@ -99,7 +99,7 @@ export function getInternalReactConstants(version: string): {
 
   const SuspenseyImagesMode = 0b0100000;
 
-  let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
+  let ReactTypeOfWork: WorkTagMap = null as any as WorkTagMap;
 
   // **********************************************************
   // The section below is copied from files in React repo.

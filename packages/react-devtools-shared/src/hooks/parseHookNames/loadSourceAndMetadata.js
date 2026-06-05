@@ -141,7 +141,7 @@ function extractAndLoadSourceMapJSON(
   locationKeyToHookSourceAndMetadata.forEach(hookSourceAndMetadata => {
     const sourceMapRegex = / ?sourceMappingURL=([^\s'"]+)/gm;
     const runtimeSourceCode =
-      ((hookSourceAndMetadata.runtimeSourceCode: any): string);
+      hookSourceAndMetadata.runtimeSourceCode as any as string;
 
     // TODO (named hooks) Search for our custom metadata first.
     // If it's found, we should use it rather than source maps.
@@ -175,9 +175,11 @@ function extractAndLoadSourceMapJSON(
             // Web apps like Code Sandbox embed multiple inline source maps.
             // In this case, we need to loop through and find the right one.
             // We may also need to trim any part of this string that isn't based64 encoded data.
-            const trimmed = ((sourceMappingURL.match(
-              /base64,([a-zA-Z0-9+\/=]+)/,
-            ): any): Array<string>)[1];
+            const trimmed = (
+              sourceMappingURL.match(
+                /base64,([a-zA-Z0-9+\/=]+)/,
+              ) as any as Array<string>
+            )[1];
             const decoded = withSyncPerfMeasurements(
               'decodeBase64String()',
               () => decodeBase64String(trimmed),
@@ -431,7 +433,7 @@ function initializeHookSourceAndMetadata(
     const locationKey = getHookSourceLocationKey(hookSource);
     if (!locationKeyToHookSourceAndMetadata.has(locationKey)) {
       // Can't be null because getHookSourceLocationKey() would have thrown
-      const runtimeSourceURL = ((hookSource.fileName: any): string);
+      const runtimeSourceURL = hookSource.fileName as any as string;
 
       const hookSourceAndMetadata: HookSourceAndMetadata = {
         hookSource,
@@ -477,7 +479,7 @@ function loadSourceFiles(
         return withAsyncPerfMeasurements(
           `fetchFileWithCaching("${url}")`,
           () => {
-            return ((fetchFileWithCaching: any): FetchFileWithCaching)(url);
+            return (fetchFileWithCaching as any as FetchFileWithCaching)(url);
           },
         );
       };

@@ -20,7 +20,7 @@ import {getPublicInstance} from './ReactFiberConfigFabric';
 // This is ok in DOM because they types are interchangeable, but in React Native
 // they aren't.
 function getInstanceFromNode(node: Instance | TextInstance): Fiber | null {
-  const instance: Instance = (node: $FlowFixMe); // In React Native, node is never a text instance
+  const instance: Instance = node as $FlowFixMe; // In React Native, node is never a text instance
 
   if (
     instance.canonical != null &&

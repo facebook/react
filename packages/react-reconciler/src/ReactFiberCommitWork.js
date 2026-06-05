@@ -333,7 +333,7 @@ function isHydratingParent(current: Fiber, finishedWork: Fiber): boolean {
     );
   } else if (finishedWork.tag === HostRoot) {
     return (
-      (current.memoizedState: RootState).isDehydrated &&
+      (current.memoizedState as RootState).isDehydrated &&
       (finishedWork.flags & ForceClientRender) === NoFlags
     );
   } else {
@@ -502,7 +502,7 @@ function commitBeforeMutationEffectsOnFiber(
     case SimpleMemoComponent: {
       if (!enableEffectEventMutationPhase && (flags & Update) !== NoFlags) {
         const updateQueue: FunctionComponentUpdateQueue | null =
-          (finishedWork.updateQueue: any);
+          finishedWork.updateQueue as any;
         const eventPayloads = updateQueue !== null ? updateQueue.events : null;
         if (eventPayloads !== null) {
           for (let ii = 0; ii < eventPayloads.length; ii++) {
@@ -579,7 +579,7 @@ function commitBeforeMutationEffectsDeletion(
     // Maybe we can repurpose one of the subtreeFlags positions for this instead?
     // Use it to store which part of the tree the focused instance is in?
     // This assumes we can safely determine that instance during the "render" phase.
-    if (doesFiberContain(deletion, ((focusedInstanceHandle: any): Fiber))) {
+    if (doesFiberContain(deletion, focusedInstanceHandle as any as Fiber)) {
       shouldFireAfterActiveInstanceBlur = true;
       beforeActiveInstanceBlur(deletion);
     }
@@ -928,9 +928,9 @@ function abortRootTransitions(
     const rootTransitions = root.incompleteTransitions;
     deletedTransitions.forEach(transition => {
       if (rootTransitions.has(transition)) {
-        const transitionInstance: TracingMarkerInstance = (rootTransitions.get(
+        const transitionInstance: TracingMarkerInstance = rootTransitions.get(
           transition,
-        ): any);
+        ) as any;
         if (transitionInstance.aborts === null) {
           transitionInstance.aborts = [];
         }
@@ -1578,15 +1578,15 @@ function commitDeletionEffectsOnFiber(
             commitHostRemoveChildFromContainer(
               deletedFiber,
               nearestMountedAncestor,
-              ((hostParent: any): Container),
-              (deletedFiber.stateNode: Instance | TextInstance),
+              hostParent as any as Container,
+              deletedFiber.stateNode as Instance | TextInstance,
             );
           } else {
             commitHostRemoveChild(
               deletedFiber,
               nearestMountedAncestor,
-              ((hostParent: any): Instance),
-              (deletedFiber.stateNode: Instance | TextInstance),
+              hostParent as any as Instance,
+              deletedFiber.stateNode as Instance | TextInstance,
             );
           }
         }
@@ -1607,7 +1607,7 @@ function commitDeletionEffectsOnFiber(
             const onDeleted = hydrationCallbacks.onDeleted;
             if (onDeleted) {
               onDeleted(
-                (deletedFiber.stateNode: SuspenseInstance | ActivityInstance),
+                deletedFiber.stateNode as SuspenseInstance | ActivityInstance,
               );
             }
           } catch (error) {
@@ -1628,13 +1628,13 @@ function commitDeletionEffectsOnFiber(
         if (hostParent !== null) {
           if (hostParentIsContainer) {
             clearSuspenseBoundaryFromContainer(
-              ((hostParent: any): Container),
-              (deletedFiber.stateNode: SuspenseInstance),
+              hostParent as any as Container,
+              deletedFiber.stateNode as SuspenseInstance,
             );
           } else {
             clearSuspenseBoundary(
-              ((hostParent: any): Instance),
-              (deletedFiber.stateNode: SuspenseInstance),
+              hostParent as any as Instance,
+              deletedFiber.stateNode as SuspenseInstance,
             );
           }
         }
@@ -1831,7 +1831,7 @@ function commitSuspenseCallback(finishedWork: Fiber) {
   if (enableSuspenseCallback && newState !== null) {
     const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
     if (typeof suspenseCallback === 'function') {
-      const retryQueue: RetryQueue | null = (finishedWork.updateQueue: any);
+      const retryQueue: RetryQueue | null = finishedWork.updateQueue as any;
       if (retryQueue !== null) {
         suspenseCallback(new Set(retryQueue));
       }
@@ -2067,7 +2067,7 @@ function commitMutationEffectsOnFiber(
       if (enableEffectEventMutationPhase) {
         if (flags & Update) {
           const updateQueue: FunctionComponentUpdateQueue | null =
-            (finishedWork.updateQueue: any);
+            finishedWork.updateQueue as any;
           const eventPayloads =
             updateQueue !== null ? updateQueue.events : null;
           if (eventPayloads !== null) {
@@ -2109,7 +2109,7 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Callback && offscreenSubtreeIsHidden) {
         const updateQueue: UpdateQueue<mixed> | null =
-          (finishedWork.updateQueue: any);
+          finishedWork.updateQueue as any;
         if (updateQueue !== null) {
           deferHiddenCallbacks(updateQueue);
         }
@@ -2121,7 +2121,7 @@ function commitMutationEffectsOnFiber(
       if (supportsResources) {
         // We cast because we always set the root at the React root and so it cannot be
         // null while we are processing mutation effects
-        const hoistableRoot: HoistableRoot = (currentHoistableRoot: any);
+        const hoistableRoot: HoistableRoot = currentHoistableRoot as any;
         recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork, lanes);
 
@@ -2449,7 +2449,7 @@ function commitMutationEffectsOnFiber(
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork, lanes);
       if (flags & Update) {
-        const retryQueue: RetryQueue | null = (finishedWork.updateQueue: any);
+        const retryQueue: RetryQueue | null = finishedWork.updateQueue as any;
         if (retryQueue !== null) {
           finishedWork.updateQueue = null;
           attachSuspenseRetryListeners(finishedWork, retryQueue);
@@ -2472,14 +2472,14 @@ function commitMutationEffectsOnFiber(
       //
       // Also, all this logic could/should move to the passive phase so it
       // doesn't block paint.
-      const offscreenFiber: Fiber = (finishedWork.child: any);
+      const offscreenFiber: Fiber = finishedWork.child as any;
       if (offscreenFiber.flags & Visibility) {
         // Throttle the appearance and disappearance of Suspense fallbacks.
         const isShowingFallback =
-          (finishedWork.memoizedState: SuspenseState | null) !== null;
+          (finishedWork.memoizedState as SuspenseState | null) !== null;
         const wasShowingFallback =
           current !== null &&
-          (current.memoizedState: SuspenseState | null) !== null;
+          (current.memoizedState as SuspenseState | null) !== null;
 
         if (alwaysThrottleRetries) {
           if (isShowingFallback !== wasShowingFallback) {
@@ -2501,7 +2501,7 @@ function commitMutationEffectsOnFiber(
         } catch (error) {
           captureCommitPhaseError(finishedWork, finishedWork.return, error);
         }
-        const retryQueue: RetryQueue | null = (finishedWork.updateQueue: any);
+        const retryQueue: RetryQueue | null = finishedWork.updateQueue as any;
         if (retryQueue !== null) {
           finishedWork.updateQueue = null;
           attachSuspenseRetryListeners(finishedWork, retryQueue);
@@ -2617,7 +2617,7 @@ function commitMutationEffectsOnFiber(
       // TODO: Move to passive phase
       if (flags & Update) {
         const offscreenQueue: OffscreenQueue | null =
-          (finishedWork.updateQueue: any);
+          finishedWork.updateQueue as any;
         if (offscreenQueue !== null) {
           const retryQueue = offscreenQueue.retryQueue;
           if (retryQueue !== null) {
@@ -2634,7 +2634,7 @@ function commitMutationEffectsOnFiber(
 
       if (flags & Update) {
         const retryQueue: Set<Wakeable> | null =
-          (finishedWork.updateQueue: any);
+          finishedWork.updateQueue as any;
         if (retryQueue !== null) {
           finishedWork.updateQueue = null;
           attachSuspenseRetryListeners(finishedWork, retryQueue);
@@ -2863,9 +2863,9 @@ function commitAfterMutationEffectsOnFiber(
         if (cancelableChildren !== null) {
           for (let i = 0; i < cancelableChildren.length; i += 3) {
             cancelViewTransitionName(
-              ((cancelableChildren[i]: any): Instance),
-              ((cancelableChildren[i + 1]: any): string),
-              ((cancelableChildren[i + 2]: any): Props),
+              cancelableChildren[i] as any as Instance,
+              cancelableChildren[i + 1] as any as string,
+              cancelableChildren[i + 2] as any as Props,
             );
           }
         }
@@ -3429,7 +3429,7 @@ function commitOffscreenPassiveMountEffects(
     // may add separate logs for pre-rendering, but it's not part of the
     // primary metrics.
     const offscreenState: OffscreenState = finishedWork.memoizedState;
-    const queue: OffscreenQueue | null = (finishedWork.updateQueue: any);
+    const queue: OffscreenQueue | null = finishedWork.updateQueue as any;
 
     // $FlowFixMe[invalid-compare]
     const isHidden = offscreenState !== null;
@@ -3579,7 +3579,7 @@ function recursivelyTraversePassiveMountEffects(
           committedLanes,
           committedTransitions,
           nextSibling !== null
-            ? ((nextSibling.actualStartTime: any): number)
+            ? (nextSibling.actualStartTime as any as number)
             : endTime,
         );
         child = nextSibling;
@@ -3653,12 +3653,12 @@ function commitPassiveMountOnFiber(
         enableProfilerTimer &&
         enableComponentPerformanceTrack &&
         (finishedWork.mode & ProfileMode) !== NoMode &&
-        ((finishedWork.actualStartTime: any): number) > 0 &&
+        (finishedWork.actualStartTime as any as number) > 0 &&
         (finishedWork.flags & PerformedWork) !== NoFlags
       ) {
         logComponentRender(
           finishedWork,
-          ((finishedWork.actualStartTime: any): number),
+          finishedWork.actualStartTime as any as number,
           endTime,
           inHydratedSubtree,
           committedLanes,
@@ -3689,12 +3689,12 @@ function commitPassiveMountOnFiber(
         enableProfilerTimer &&
         enableComponentPerformanceTrack &&
         (finishedWork.mode & ProfileMode) !== NoMode &&
-        ((finishedWork.actualStartTime: any): number) > 0
+        (finishedWork.actualStartTime as any as number) > 0
       ) {
         if ((finishedWork.flags & DidCapture) !== NoFlags) {
           logComponentErrored(
             finishedWork,
-            ((finishedWork.actualStartTime: any): number),
+            finishedWork.actualStartTime as any as number,
             endTime,
             // TODO: The captured values are all hidden inside the updater/callback closures so
             // we can't get to the errors but they're there so we should be able to log them.
@@ -3703,7 +3703,7 @@ function commitPassiveMountOnFiber(
         } else if ((finishedWork.flags & PerformedWork) !== NoFlags) {
           logComponentRender(
             finishedWork,
-            ((finishedWork.actualStartTime: any): number),
+            finishedWork.actualStartTime as any as number,
             endTime,
             inHydratedSubtree,
             committedLanes,
@@ -3729,7 +3729,7 @@ function commitPassiveMountOnFiber(
         // dehydrated and this wasn't a forced client render.
         inHydratedSubtree =
           finishedWork.alternate !== null &&
-          (finishedWork.alternate.memoizedState: RootState).isDehydrated &&
+          (finishedWork.alternate.memoizedState as RootState).isDehydrated &&
           (finishedWork.flags & ForceClientRender) === NoFlags;
       }
 
@@ -3871,7 +3871,7 @@ function commitPassiveMountOnFiber(
             // If there were no hydration errors, that suggests that this was an intentional client
             // rendered boundary.
             if (hydrationErrors !== null) {
-              const startTime: number = (finishedWork.actualStartTime: any);
+              const startTime: number = finishedWork.actualStartTime as any;
               logComponentErrored(
                 finishedWork,
                 startTime,
@@ -3929,7 +3929,7 @@ function commitPassiveMountOnFiber(
             // If there were no hydration errors, that suggests that this was an intentional client
             // rendered boundary.
             if (hydrationErrors !== null) {
-              const startTime: number = (finishedWork.actualStartTime: any);
+              const startTime: number = finishedWork.actualStartTime as any;
               logComponentErrored(
                 finishedWork,
                 startTime,
@@ -4082,7 +4082,7 @@ function commitPassiveMountOnFiber(
             !inHydratedSubtree
           ) {
             // Log the reappear in the render phase.
-            const startTime = ((finishedWork.actualStartTime: any): number);
+            const startTime = finishedWork.actualStartTime as any as number;
             if (startTime >= 0 && endTime - startTime > 0.05) {
               logComponentReappeared(finishedWork, startTime, endTime);
             }
@@ -4187,7 +4187,7 @@ function commitPassiveMountOnFiber(
       finishedWork.return.alternate !== null;
     if (isMount) {
       // Log the mount in the render phase.
-      const startTime = ((finishedWork.actualStartTime: any): number);
+      const startTime = finishedWork.actualStartTime as any as number;
       if (startTime >= 0 && endTime - startTime > 0.05) {
         logComponentMount(finishedWork, startTime, endTime);
       }
@@ -4251,7 +4251,7 @@ function recursivelyTraverseReconnectPassiveEffects(
         committedTransitions,
         childShouldIncludeWorkInProgressEffects,
         nextSibling !== null
-          ? ((nextSibling.actualStartTime: any): number)
+          ? (nextSibling.actualStartTime as any as number)
           : endTime,
       );
       child = nextSibling;
@@ -4295,12 +4295,12 @@ export function reconnectPassiveEffects(
     enableComponentPerformanceTrack &&
     includeWorkInProgressEffects &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.actualStartTime as any as number) > 0 &&
     (finishedWork.flags & PerformedWork) !== NoFlags
   ) {
     logComponentRender(
       finishedWork,
-      ((finishedWork.actualStartTime: any): number),
+      finishedWork.actualStartTime as any as number,
       endTime,
       inHydratedSubtree,
       committedLanes,
@@ -4521,7 +4521,7 @@ function recursivelyTraverseAtomicPassiveEffects(
           committedLanes,
           committedTransitions,
           nextSibling !== null
-            ? ((nextSibling.actualStartTime: any): number)
+            ? (nextSibling.actualStartTime as any as number)
             : endTime,
         );
         child = nextSibling;
@@ -4554,12 +4554,12 @@ function commitAtomicPassiveEffects(
     enableProfilerTimer &&
     enableComponentPerformanceTrack &&
     (finishedWork.mode & ProfileMode) !== NoMode &&
-    ((finishedWork.actualStartTime: any): number) > 0 &&
+    (finishedWork.actualStartTime as any as number) > 0 &&
     (finishedWork.flags & PerformedWork) !== NoFlags
   ) {
     logComponentRender(
       finishedWork,
-      ((finishedWork.actualStartTime: any): number),
+      finishedWork.actualStartTime as any as number,
       endTime,
       inHydratedSubtree,
       committedLanes,
@@ -4681,7 +4681,7 @@ function accumulateSuspenseyCommitOnFiber(
           suspendResource(
             suspendedState,
             // This should always be set by visiting HostRoot first
-            (currentHoistableRoot: any),
+            currentHoistableRoot as any,
             fiber.memoizedState,
             fiber.memoizedProps,
           );
@@ -4744,14 +4744,14 @@ function accumulateSuspenseyCommitOnFiber(
       break;
     }
     case OffscreenComponent: {
-      const isHidden = (fiber.memoizedState: OffscreenState | null) !== null;
+      const isHidden = (fiber.memoizedState as OffscreenState | null) !== null;
       if (isHidden) {
         // Don't suspend in hidden trees
       } else {
         const current = fiber.alternate;
         const wasHidden =
           current !== null &&
-          (current.memoizedState: OffscreenState | null) !== null;
+          (current.memoizedState as OffscreenState | null) !== null;
         if (wasHidden) {
           // This tree is being revealed. Visit all newly visible suspensey
           // instances, even if they're in the current tree.
@@ -5210,7 +5210,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
     case SuspenseComponent: {
       if (enableTransitionTracing) {
         // We need to mark this fiber's parents as deleted
-        const offscreenFiber: Fiber = (current.child: any);
+        const offscreenFiber: Fiber = current.child as any;
         const instance: OffscreenInstance = offscreenFiber.stateNode;
         const transitions = instance._transitions;
         if (transitions !== null) {

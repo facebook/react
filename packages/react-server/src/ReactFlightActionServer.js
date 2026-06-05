@@ -52,7 +52,7 @@ function loadServerReference<T>(
 ): Promise<T> {
   const id: ServerReferenceId = metaData.id;
   if (typeof id !== 'string') {
-    return (null: any);
+    return null as any;
   }
   const serverReference: ServerReference<T> =
     resolveServerReference<$FlowFixMe>(bundlerConfig, id);
@@ -62,7 +62,7 @@ function loadServerReference<T>(
   const preloadPromise = preloadModule(serverReference);
   const bound = metaData.bound;
   if (bound instanceof Promise) {
-    return Promise.all([(bound: any), preloadPromise]).then(
+    return Promise.all([bound as any, preloadPromise]).then(
       ([args]: Array<any>) => bindArgs(requireModule(serverReference), args),
     );
   } else if (preloadPromise) {
