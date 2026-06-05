@@ -81,7 +81,7 @@ export default function InspectedElementContextTree({
         {isEmpty && <div className={styles.Empty}>None</div>}
         {/* $FlowFixMe[constant-condition] */}
         {!isEmpty &&
-          (entries: any).map(([name, value]) => (
+          (entries as any).map(([name, value]) => (
             <KeyValue
               key={name}
               alphaSort={true}

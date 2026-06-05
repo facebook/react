@@ -1313,7 +1313,7 @@ export default class Store extends EventEmitter<{
       if (didMutate) {
         let weightAcrossRoots = 0;
         this._roots.forEach(rootID => {
-          const {weight} = ((this.getElementByID(rootID): any): Element);
+          const {weight} = this.getElementByID(rootID) as any as Element;
           weightAcrossRoots += weight;
         });
         this._weightAcrossRoots = weightAcrossRoots;
@@ -1426,7 +1426,7 @@ export default class Store extends EventEmitter<{
       switch (operation) {
         case TREE_OPERATION_ADD: {
           const id = operations[i + 1];
-          const type = ((operations[i + 2]: any): ElementType);
+          const type = operations[i + 2] as any as ElementType;
 
           i += 3;
 
@@ -1820,7 +1820,7 @@ export default class Store extends EventEmitter<{
           const parentID = operations[i + 2];
           const nameStringID = operations[i + 3];
           const isSuspended = operations[i + 4] === 1;
-          const numRects = ((operations[i + 5]: any): number);
+          const numRects = operations[i + 5] as any as number;
           let name = stringTable[nameStringID];
 
           if (this._idToSuspense.has(id)) {
@@ -2030,8 +2030,8 @@ export default class Store extends EventEmitter<{
           break;
         }
         case SUSPENSE_TREE_OPERATION_RESIZE: {
-          const id = ((operations[i + 1]: any): number);
-          const numRects = ((operations[i + 2]: any): number);
+          const id = operations[i + 1] as any as number;
+          const numRects = operations[i + 2] as any as number;
           i += 3;
 
           const suspense = this._idToSuspense.get(id);
@@ -2276,7 +2276,7 @@ export default class Store extends EventEmitter<{
       if (didCollapse) {
         let weightAcrossRoots = 0;
         this._roots.forEach(rootID => {
-          const {weight} = ((this.getElementByID(rootID): any): Element);
+          const {weight} = this.getElementByID(rootID) as any as Element;
           weightAcrossRoots += weight;
         });
         this._weightAcrossRoots = weightAcrossRoots;

@@ -25,7 +25,7 @@ import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
+  return ((fiber.child as any as Fiber).sibling as any as Fiber).child;
 }
 
 const emptyObject = {};

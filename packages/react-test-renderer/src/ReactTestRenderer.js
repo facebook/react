@@ -288,10 +288,10 @@ function getChildren(parent: Fiber) {
       if (node.return === startingNode) {
         break outer;
       }
-      node = (node.return: any);
+      node = node.return as any;
     }
-    (node.sibling: any).return = node.return;
-    node = (node.sibling: any);
+    (node.sibling as any).return = node.return;
+    node = node.sibling as any;
   }
   return children;
 }
@@ -509,7 +509,7 @@ function create(
     }
   }
   let container: Container = {
-    children: ([]: Array<Instance | TextInstance>),
+    children: [] as Array<Instance | TextInstance>,
     createNodeMock,
     tag: 'CONTAINER',
   };
@@ -605,31 +605,27 @@ function create(
     unstable_flushSync: flushSyncFromReconciler,
   };
 
-  Object.defineProperty(
-    entry,
-    'root',
-    ({
-      configurable: true,
-      enumerable: true,
-      get: function () {
-        if (root === null) {
-          throw new Error("Can't access .root on unmounted test renderer");
-        }
-        const children = getChildren(root.current);
-        if (children.length === 0) {
-          throw new Error("Can't access .root on unmounted test renderer");
-        } else if (children.length === 1) {
-          // Normally, we skip the root and just give you the child.
-          return children[0];
-        } else {
-          // However, we give you the root if there's more than one root child.
-          // We could make this the behavior for all cases but it would be a breaking change.
-          // $FlowFixMe[incompatible-use] found when upgrading Flow
-          return wrapFiber(root.current);
-        }
-      },
-    }: Object),
-  );
+  Object.defineProperty(entry, 'root', {
+    configurable: true,
+    enumerable: true,
+    get: function () {
+      if (root === null) {
+        throw new Error("Can't access .root on unmounted test renderer");
+      }
+      const children = getChildren(root.current);
+      if (children.length === 0) {
+        throw new Error("Can't access .root on unmounted test renderer");
+      } else if (children.length === 1) {
+        // Normally, we skip the root and just give you the child.
+        return children[0];
+      } else {
+        // However, we give you the root if there's more than one root child.
+        // We could make this the behavior for all cases but it would be a breaking change.
+        // $FlowFixMe[incompatible-use] found when upgrading Flow
+        return wrapFiber(root.current);
+      }
+    },
+  } as Object);
 
   return entry;
 }

@@ -1252,9 +1252,9 @@ export function applyDepartureTransitions(
     if (cancelableChildren !== null) {
       for (let i = 0; i < cancelableChildren.length; i += 3) {
         cancelViewTransitionName(
-          ((cancelableChildren[i]: any): Instance),
-          ((cancelableChildren[i + 1]: any): string),
-          ((cancelableChildren[i + 2]: any): Props),
+          cancelableChildren[i] as any as Instance,
+          cancelableChildren[i + 1] as any as string,
+          cancelableChildren[i + 2] as any as Props,
         );
       }
     }

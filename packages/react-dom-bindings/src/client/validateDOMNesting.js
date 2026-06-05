@@ -292,7 +292,7 @@ function updatedAncestorInfoDev(
 
     return ancestorInfo;
   } else {
-    return (null: any);
+    return null as any;
   }
 }
 

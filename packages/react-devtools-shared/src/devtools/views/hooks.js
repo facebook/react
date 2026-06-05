@@ -165,7 +165,7 @@ export function useLocalStorage<T>(
       console.log(error);
     }
     if (typeof initialValue === 'function') {
-      return ((initialValue: any): () => T)();
+      return (initialValue as any as () => T)();
     } else {
       return initialValue;
     }
@@ -188,7 +188,7 @@ export function useLocalStorage<T>(
     (value: $FlowFixMe) => {
       try {
         const valueToStore =
-          value instanceof Function ? (value: any)(storedValue) : value;
+          value instanceof Function ? (value as any)(storedValue) : value;
         localStorageSetItem(key, JSON.stringify(valueToStore));
 
         // Notify listeners that this setting has changed.

@@ -215,7 +215,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
 
 // This is used to represent a filtered Fiber but still lets us find its host instance.
 function createFilteredFiberInstance(fiber: Fiber): FilteredFiberInstance {
-  return ({
+  return {
     kind: FILTERED_FIBER_INSTANCE,
     id: 0,
     parent: null,
@@ -227,7 +227,7 @@ function createFilteredFiberInstance(fiber: Fiber): FilteredFiberInstance {
     suspendedBy: null,
     suspenseNode: null,
     data: fiber,
-  }: any);
+  } as any;
 }
 
 function createVirtualInstance(
@@ -290,14 +290,14 @@ export function getDispatcherRef(renderer: {
     // We got a legacy dispatcher injected, let's create a wrapper proxy to translate.
     return {
       get H() {
-        return (injectedRef: any).current;
+        return (injectedRef as any).current;
       },
       set H(value) {
-        (injectedRef: any).current = value;
+        (injectedRef as any).current = value;
       },
     };
   }
-  return (injectedRef: any);
+  return injectedRef as any;
 }
 
 // All environment names we've seen so far. This lets us create a list of filters to apply.
@@ -971,7 +971,7 @@ export function attach(
       currentRoot = rootInstance;
       unmountInstanceRecursively(rootInstance);
       rootToFiberInstanceMap.delete(root);
-      currentRoot = (null: any);
+      currentRoot = null as any;
     });
 
     if (
@@ -1040,7 +1040,7 @@ export function attach(
       currentRoot = newRoot;
       setRootPseudoKey(currentRoot.id, root.current);
       mountFiberRecursively(root.current, false);
-      currentRoot = (null: any);
+      currentRoot = null as any;
     });
 
     // We need to write back the new ID for the focused Fiber.
@@ -1278,7 +1278,7 @@ export function attach(
   }
 
   // When a mount or update is in progress, this value tracks the root that is being operated on.
-  let currentRoot: FiberInstance = (null: any);
+  let currentRoot: FiberInstance = null as any;
 
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
@@ -2884,7 +2884,7 @@ export function attach(
         for (let i = 0; i < debugInfo.length; i++) {
           const debugEntry = debugInfo[i];
           if (debugEntry.awaited) {
-            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            const asyncInfo: ReactAsyncInfo = debugEntry as any;
             insertSuspendedBy(asyncInfo);
           }
         }
@@ -2917,7 +2917,7 @@ export function attach(
         for (let j = 0; j < debugInfo.length; j++) {
           const debugEntry = debugInfo[j];
           if (debugEntry.awaited) {
-            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            const asyncInfo: ReactAsyncInfo = debugEntry as any;
             insertSuspendedBy(asyncInfo);
           }
         }
@@ -2989,14 +2989,14 @@ export function attach(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          byteSize = (resourceEntry.transferSize: any) || 0;
+          byteSize = (resourceEntry.transferSize as any) || 0;
         }
       }
     }
     const value = instance.sheet;
     const promise = Promise.resolve(value);
-    (promise: any).status = 'fulfilled';
-    (promise: any).value = value;
+    (promise as any).status = 'fulfilled';
+    (promise as any).value = value;
     const ioInfo: ReactIOInfo = {
       name: 'stylesheet',
       start,
@@ -3085,9 +3085,9 @@ export function attach(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          fileSize = (resourceEntry.decodedBodySize: any) || 0;
+          fileSize = (resourceEntry.decodedBodySize as any) || 0;
           // $FlowFixMe[prop-missing]
-          byteSize = (resourceEntry.transferSize: any) || 0;
+          byteSize = (resourceEntry.transferSize as any) || 0;
         }
       }
     }
@@ -3111,8 +3111,8 @@ export function attach(
       value.fileSize = fileSize;
     }
     const promise = Promise.resolve(value);
-    (promise: any).status = 'fulfilled';
-    (promise: any).value = value;
+    (promise as any).status = 'fulfilled';
+    (promise as any).value = value;
     const ioInfo: ReactIOInfo = {
       name: 'img',
       start,
@@ -3175,7 +3175,7 @@ export function attach(
           const debugEntry = fiber._debugInfo[i];
           if (debugEntry.awaited) {
             // Async Info
-            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            const asyncInfo: ReactAsyncInfo = debugEntry as any;
             if (level === virtualLevel) {
               // Track any async info between the previous virtual instance up until to this
               // instance and add it to the parent. This can add the same set multiple times
@@ -3189,7 +3189,7 @@ export function attach(
             continue;
           }
           // Scan up until the next Component to see if this component changed environment.
-          const componentInfo: ReactComponentInfo = (debugEntry: any);
+          const componentInfo: ReactComponentInfo = debugEntry as any;
           const secondaryEnv = getSecondaryEnvironmentName(fiber._debugInfo, i);
           if (componentInfo.env != null) {
             knownEnvironmentNames.add(componentInfo.env);
@@ -3789,7 +3789,7 @@ export function attach(
           // In some cases actualDuration might be 0 for fibers we worked on (particularly if we're using Date.now)
           // In other cases (e.g. Memo) actualDuration might be greater than 0 even if we "bailed out".
           const metadata =
-            ((currentCommitProfilingMetadata: any): CommitProfilingData);
+            currentCommitProfilingMetadata as any as CommitProfilingData;
           metadata.durations.push(id, actualDuration, selfDuration);
           metadata.maxActualDuration = Math.max(
             metadata.maxActualDuration,
@@ -3819,7 +3819,7 @@ export function attach(
           (fiber.alternate !== null && updaters.has(fiber.alternate)))
       ) {
         const metadata =
-          ((currentCommitProfilingMetadata: any): CommitProfilingData);
+          currentCommitProfilingMetadata as any as CommitProfilingData;
         if (metadata.updaters === null) {
           metadata.updaters = [];
         }
@@ -4044,7 +4044,7 @@ export function attach(
           const debugEntry = nextChild._debugInfo[i];
           if (debugEntry.awaited) {
             // Async Info
-            const asyncInfo: ReactAsyncInfo = (debugEntry: any);
+            const asyncInfo: ReactAsyncInfo = debugEntry as any;
             if (level === virtualLevel) {
               // Track any async info between the previous virtual instance up until to this
               // instance and add it to the parent. This can add the same set multiple times
@@ -4057,7 +4057,7 @@ export function attach(
             // Not a Component. Some other Debug Info.
             continue;
           }
-          const componentInfo: ReactComponentInfo = (debugEntry: any);
+          const componentInfo: ReactComponentInfo = debugEntry as any;
           const secondaryEnv = getSecondaryEnvironmentName(
             nextChild._debugInfo,
             i,
@@ -4218,7 +4218,7 @@ export function attach(
         if (existingInstance !== null) {
           // Common case. Match in the same parent.
           const fiberInstance: FiberInstance | FilteredFiberInstance =
-            (existingInstance: any); // Only matches if it's a Fiber.
+            existingInstance as any; // Only matches if it's a Fiber.
 
           // We keep track if the order of the children matches the previous order.
           // They are always different referentially, but if the instances line up
@@ -4235,7 +4235,7 @@ export function attach(
           updateFlags |= updateFiberRecursively(
             fiberInstance,
             nextChild,
-            (prevChild: any),
+            prevChild as any,
             traceNearestHostComponentUpdate,
           );
         } else if (prevChild !== null && shouldFilterFiber(nextChild)) {
@@ -5054,7 +5054,7 @@ export function attach(
 
         flushPendingEvents(currentRoot);
 
-        currentRoot = (null: any);
+        currentRoot = null as any;
       });
 
       needsToFlushComponentLogs = false;
@@ -5169,20 +5169,20 @@ export function attach(
 
     if (isProfiling && isProfilingSupported) {
       if (!shouldBailoutWithPendingOperations()) {
-        const commitProfilingMetadata =
-          ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-            currentRoot.id,
-          );
+        const commitProfilingMetadata = (
+          rootToCommitProfilingMetadataMap as any as CommitProfilingMetadataMap
+        ).get(currentRoot.id);
 
         if (commitProfilingMetadata != null) {
           commitProfilingMetadata.push(
-            ((currentCommitProfilingMetadata: any): CommitProfilingData),
+            currentCommitProfilingMetadata as any as CommitProfilingData,
           );
         } else {
-          ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
-            currentRoot.id,
-            [((currentCommitProfilingMetadata: any): CommitProfilingData)],
-          );
+          (
+            rootToCommitProfilingMetadataMap as any as CommitProfilingMetadataMap
+          ).set(currentRoot.id, [
+            currentCommitProfilingMetadata as any as CommitProfilingData,
+          ]);
         }
       }
     }
@@ -5196,7 +5196,7 @@ export function attach(
       hook.emit('traceUpdates', traceUpdatesForNodes);
     }
 
-    currentRoot = (null: any);
+    currentRoot = null as any;
   }
 
   function getResourceInstance(fiber: Fiber): HostInstance | null {
@@ -5331,7 +5331,7 @@ export function attach(
         const owner = getUnfilteredOwner(fiber);
         if (owner != null) {
           if (typeof owner.tag === 'number') {
-            return getDisplayNameForFiber((owner: any));
+            return getDisplayNameForFiber(owner as any);
           } else {
             return owner.name || '';
           }
@@ -5371,7 +5371,7 @@ export function attach(
     if (instance !== undefined) {
       if (instance.kind === FILTERED_FIBER_INSTANCE) {
         // A Filtered Fiber Instance will always have a Virtual Instance as a parent.
-        return ((instance.parent: any): VirtualInstance).id;
+        return (instance.parent as any as VirtualInstance).id;
       }
       return instance.id;
     }
@@ -5406,7 +5406,7 @@ export function attach(
   ): mixed {
     if (isMostRecentlyInspectedElement(id)) {
       return getInObject(
-        ((mostRecentlyInspectedElement: any): InspectedElement),
+        mostRecentlyInspectedElement as any as InspectedElement,
         path,
       );
     }
@@ -5532,21 +5532,21 @@ export function attach(
       return null;
     }
     if (typeof owner.tag === 'number') {
-      const ownerFiber: Fiber = (owner: any); // Refined
+      const ownerFiber: Fiber = owner as any; // Refined
       owner = ownerFiber._debugOwner;
     } else {
-      const ownerInfo: ReactComponentInfo = (owner: any); // Refined
+      const ownerInfo: ReactComponentInfo = owner as any; // Refined
       owner = ownerInfo.owner;
     }
     while (owner) {
       if (typeof owner.tag === 'number') {
-        const ownerFiber: Fiber = (owner: any); // Refined
+        const ownerFiber: Fiber = owner as any; // Refined
         if (!shouldFilterFiber(ownerFiber)) {
           return ownerFiber;
         }
         owner = ownerFiber._debugOwner;
       } else {
-        const ownerInfo: ReactComponentInfo = (owner: any); // Refined
+        const ownerInfo: ReactComponentInfo = owner as any; // Refined
         if (!shouldFilterVirtual(ownerInfo, null)) {
           return ownerInfo;
         }
@@ -5572,7 +5572,7 @@ export function attach(
         // isn't propagated down as the new owner. In that case we might match the alternate
         // instead. This is a bit hacky but the fastest check since type casting owner to a Fiber
         // needs a duck type check anyway.
-        parentInstance.data === (owner: any).alternate
+        parentInstance.data === (owner as any).alternate
       ) {
         if (parentInstance.kind === FILTERED_FIBER_INSTANCE) {
           return null;
@@ -5653,7 +5653,7 @@ export function attach(
       }
       let firstInstance: null | DevToolsInstance = null;
       if (filterByChildInstance === null) {
-        firstInstance = (set.values().next().value: any);
+        firstInstance = set.values().next().value as any;
       } else {
         // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (const childInstance of set.values()) {
@@ -6089,7 +6089,7 @@ export function attach(
         ? inspectRootsRaw(devtoolsInstance.id)
         : inspectFiberInstanceRaw(devtoolsInstance);
     }
-    (devtoolsInstance: FilteredFiberInstance); // assert exhaustive
+    devtoolsInstance as FilteredFiberInstance; // assert exhaustive
     throw new Error('Unsupported instance kind');
   }
 
@@ -6170,7 +6170,7 @@ export function attach(
       context = consumerResolvedContext._currentValue || null;
 
       // Look for overridden value.
-      let current = ((fiber: any): Fiber).return;
+      let current = (fiber as any as Fiber).return;
       while (current !== null) {
         const currentType = current.type;
         const currentTypeSymbol = getTypeSymbol(currentType);
@@ -6203,7 +6203,7 @@ export function attach(
       context = consumerResolvedContext._currentValue || null;
 
       // Look for overridden value.
-      let current = ((fiber: any): Fiber).return;
+      let current = (fiber as any as Fiber).return;
       while (current !== null) {
         const currentType = current.type;
         const currentTypeSymbol = getTypeSymbol(currentType);
@@ -6703,7 +6703,7 @@ export function attach(
   ): void {
     if (isMostRecentlyInspectedElement(id)) {
       const value = getInObject(
-        ((mostRecentlyInspectedElement: any): InspectedElement),
+        mostRecentlyInspectedElement as any as InspectedElement,
         path,
       );
       const key = `$reactTemp${count}`;
@@ -6721,7 +6721,7 @@ export function attach(
   ): ?string {
     if (isMostRecentlyInspectedElement(id)) {
       const valueToCopy = getInObject(
-        ((mostRecentlyInspectedElement: any): InspectedElement),
+        mostRecentlyInspectedElement as any as InspectedElement,
         path,
       );
 
@@ -6756,7 +6756,7 @@ export function attach(
             path,
             value: cleanForBridge(
               getInObject(
-                ((mostRecentlyInspectedElement: any): InspectedElement),
+                mostRecentlyInspectedElement as any as InspectedElement,
                 path,
               ),
               createIsPathAllowed(null, secondaryCategory),
@@ -7071,7 +7071,7 @@ export function attach(
           break;
         case 'hooks':
           if (typeof overrideHookStateDeletePath === 'function') {
-            overrideHookStateDeletePath(fiber, ((hookID: any): number), path);
+            overrideHookStateDeletePath(fiber, hookID as any as number, path);
           }
           break;
         case 'props':
@@ -7145,7 +7145,7 @@ export function attach(
           if (typeof overrideHookStateRenamePath === 'function') {
             overrideHookStateRenamePath(
               fiber,
-              ((hookID: any): number),
+              hookID as any as number,
               oldPath,
               newPath,
             );
@@ -7227,7 +7227,7 @@ export function attach(
           break;
         case 'hooks':
           if (typeof overrideHookState === 'function') {
-            overrideHookState(fiber, ((hookID: any): number), path, value);
+            overrideHookState(fiber, hookID as any as number, path, value);
           }
           break;
         case 'props':
@@ -7445,13 +7445,16 @@ export function attach(
         );
       }
       const rootID = rootInstance.id;
-      ((displayNamesByRootID: any): DisplayNamesByRootID).set(
+      (displayNamesByRootID as any as DisplayNamesByRootID).set(
         rootID,
         getDisplayNameForRoot(root.current),
       );
       const initialTreeBaseDurations: Array<[number, number]> = [];
       snapshotTreeBaseDurations(rootInstance, initialTreeBaseDurations);
-      (initialTreeBaseDurationsMap: any).set(rootID, initialTreeBaseDurations);
+      (initialTreeBaseDurationsMap as any).set(
+        rootID,
+        initialTreeBaseDurations,
+      );
     });
 
     isProfiling = true;
@@ -8113,7 +8116,7 @@ export function attach(
     // but it's at least somewhere within it.
     if (isError(unresolvedSource)) {
       return (instance.source = extractLocationFromOwnerStack(
-        (unresolvedSource: any),
+        unresolvedSource as any,
       ));
     }
     if (typeof unresolvedSource === 'string') {

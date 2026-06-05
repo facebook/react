@@ -547,12 +547,12 @@ export function createRenderState(
     for (let i = 0; i < bootstrapScripts.length; i++) {
       const scriptConfig = bootstrapScripts[i];
       let src, crossOrigin, integrity;
-      const props: PreloadAsProps = ({
+      const props: PreloadAsProps = {
         rel: 'preload',
         as: 'script',
         fetchPriority: 'low',
         nonce,
-      }: any);
+      } as any;
       if (typeof scriptConfig === 'string') {
         props.href = src = scriptConfig;
       } else {
@@ -605,11 +605,11 @@ export function createRenderState(
     for (let i = 0; i < bootstrapModules.length; i++) {
       const scriptConfig = bootstrapModules[i];
       let src, crossOrigin, integrity;
-      const props: PreloadModuleProps = ({
+      const props: PreloadModuleProps = {
         rel: 'modulepreload',
         fetchPriority: 'low',
         nonce: nonceScript,
-      }: any);
+      } as any;
       if (typeof scriptConfig === 'string') {
         props.href = src = scriptConfig;
       } else {
@@ -1502,15 +1502,15 @@ function pushSrcObjectAttribute(
   const suspenseCache: WeakMap<Blob, Thenable<string>> = blobCache;
   let thenable = suspenseCache.get(blob);
   if (thenable === undefined) {
-    thenable = ((readAsDataURL(blob): any): Thenable<string>);
+    thenable = readAsDataURL(blob) as any as Thenable<string>;
     thenable.then(
       result => {
-        (thenable: any).status = 'fulfilled';
-        (thenable: any).value = result;
+        (thenable as any).status = 'fulfilled';
+        (thenable as any).value = result;
       },
       error => {
-        (thenable: any).status = 'rejected';
-        (thenable: any).reason = error;
+        (thenable as any).status = 'rejected';
+        (thenable as any).reason = error;
       },
     );
     suspenseCache.set(blob, thenable);
@@ -1756,7 +1756,7 @@ function pushAttribute(
         typeof value !== 'function' &&
         typeof value !== 'symbol' &&
         !isNaN(value) &&
-        (value: any) >= 1
+        (value as any) >= 1
       ) {
         target.push(
           attributeSeparator,
@@ -2105,11 +2105,11 @@ function flattenOptionChildren(children: mixed): string {
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  Children.forEach((children: any), function (child) {
+  Children.forEach(children as any, function (child) {
     if (child == null) {
       return;
     }
-    content += (child: any);
+    content += child as any;
     if (__DEV__) {
       if (
         !didWarnInvalidOptionChildren &&
@@ -2935,9 +2935,9 @@ function pushLink(
         if (!styleQueue) {
           styleQueue = {
             precedence: stringToChunk(escapeTextForBrowser(precedence)),
-            rules: ([]: Array<Chunk | PrecomputedChunk>),
-            hrefs: ([]: Array<Chunk | PrecomputedChunk>),
-            sheets: (new Map(): Map<string, StylesheetResource>),
+            rules: [] as Array<Chunk | PrecomputedChunk>,
+            hrefs: [] as Array<Chunk | PrecomputedChunk>,
+            sheets: new Map() as Map<string, StylesheetResource>,
           };
           renderState.styles.set(precedence, styleQueue);
         }
@@ -3143,9 +3143,9 @@ function pushStyle(
       // to create a StyleQueue.
       styleQueue = {
         precedence: stringToChunk(escapeTextForBrowser(precedence)),
-        rules: ([]: Array<Chunk | PrecomputedChunk>),
-        hrefs: ([]: Array<Chunk | PrecomputedChunk>),
-        sheets: (new Map(): Map<string, StylesheetResource>),
+        rules: [] as Array<Chunk | PrecomputedChunk>,
+        hrefs: [] as Array<Chunk | PrecomputedChunk>,
+        sheets: new Map() as Map<string, StylesheetResource>,
       };
       renderState.styles.set(precedence, styleQueue);
     }
@@ -3426,25 +3426,22 @@ function pushImg(
         headers.highImagePreloads += header;
       } else {
         resource = [];
-        pushLinkImpl(
-          resource,
-          ({
-            rel: 'preload',
-            as: 'image',
-            // There is a bug in Safari where imageSrcSet is not respected on preload links
-            // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-            // This harms older browers that do not support imageSrcSet by making their preloads not work
-            // but this population is shrinking fast and is already small so we accept this tradeoff.
-            href: srcSet ? undefined : src,
-            imageSrcSet: srcSet,
-            imageSizes: sizes,
-            crossOrigin: crossOrigin,
-            integrity: props.integrity,
-            type: props.type,
-            fetchPriority: props.fetchPriority,
-            referrerPolicy: props.referrerPolicy,
-          }: PreloadProps),
-        );
+        pushLinkImpl(resource, {
+          rel: 'preload',
+          as: 'image',
+          // There is a bug in Safari where imageSrcSet is not respected on preload links
+          // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+          // This harms older browers that do not support imageSrcSet by making their preloads not work
+          // but this population is shrinking fast and is already small so we accept this tradeoff.
+          href: srcSet ? undefined : src,
+          imageSrcSet: srcSet,
+          imageSizes: sizes,
+          crossOrigin: crossOrigin,
+          integrity: props.integrity,
+          type: props.type,
+          fetchPriority: props.fetchPriority,
+          referrerPolicy: props.referrerPolicy,
+        } as PreloadProps);
         if (
           props.fetchPriority === 'high' ||
           renderState.highImagePreloads.size < 10
@@ -5276,7 +5273,7 @@ function flushStyleTagsLateForBoundary(
   if (hrefs.length) {
     writeChunk(
       this,
-      ((currentlyFlushingRenderState: any): RenderState).startInlineStyle,
+      (currentlyFlushingRenderState as any as RenderState).startInlineStyle,
     );
     writeChunk(this, lateStyleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
@@ -5396,7 +5393,7 @@ function flushStylesInPreamble(
   if (!hasStylesheets || hrefs.length) {
     writeChunk(
       this,
-      ((currentlyFlushingRenderState: any): RenderState).startInlineStyle,
+      (currentlyFlushingRenderState as any as RenderState).startInlineStyle,
     );
     writeChunk(this, styleTagResourceOpen1);
     writeChunk(this, styleQueue.precedence);
@@ -5764,7 +5761,7 @@ function writeStyleResourceDependencyHrefOnlyInJS(
   if (__DEV__) {
     checkAttributeStringCoercion(href, 'href');
   }
-  const coercedHref = '' + (href: any);
+  const coercedHref = '' + (href as any);
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
@@ -5778,7 +5775,7 @@ function writeStyleResourceDependencyInJS(
   props: Object,
 ) {
   // eslint-disable-next-line react-internal/safe-string-coercion
-  const coercedHref = sanitizeURL('' + (href: any));
+  const coercedHref = sanitizeURL('' + (href as any));
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
@@ -5787,7 +5784,7 @@ function writeStyleResourceDependencyInJS(
   if (__DEV__) {
     checkAttributeStringCoercion(precedence, 'precedence');
   }
-  const coercedPrecedence = '' + (precedence: any);
+  const coercedPrecedence = '' + (precedence as any);
   writeChunk(destination, arrayInterstitial);
   writeChunk(
     destination,
@@ -5852,7 +5849,7 @@ function writeStyleResourceAttributeInJS(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
+      attributeValue = '' + (value as any);
       break;
     }
     // Booleans
@@ -5870,7 +5867,7 @@ function writeStyleResourceAttributeInJS(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
+      attributeValue = '' + (value as any);
       break;
     }
     default: {
@@ -5889,7 +5886,7 @@ function writeStyleResourceAttributeInJS(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
+      attributeValue = '' + (value as any);
     }
   }
   writeChunk(destination, arrayInterstitial);
@@ -5958,7 +5955,7 @@ function writeStyleResourceDependencyHrefOnlyInAttr(
   if (__DEV__) {
     checkAttributeStringCoercion(href, 'href');
   }
-  const coercedHref = '' + (href: any);
+  const coercedHref = '' + (href as any);
   writeChunk(
     destination,
     stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
@@ -5972,7 +5969,7 @@ function writeStyleResourceDependencyInAttr(
   props: Object,
 ) {
   // eslint-disable-next-line react-internal/safe-string-coercion
-  const coercedHref = sanitizeURL('' + (href: any));
+  const coercedHref = sanitizeURL('' + (href as any));
   writeChunk(
     destination,
     stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
@@ -5981,7 +5978,7 @@ function writeStyleResourceDependencyInAttr(
   if (__DEV__) {
     checkAttributeStringCoercion(precedence, 'precedence');
   }
-  const coercedPrecedence = '' + (precedence: any);
+  const coercedPrecedence = '' + (precedence as any);
   writeChunk(destination, arrayInterstitial);
   writeChunk(
     destination,
@@ -6046,7 +6043,7 @@ function writeStyleResourceAttributeInAttr(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
+      attributeValue = '' + (value as any);
       break;
     }
 
@@ -6066,7 +6063,7 @@ function writeStyleResourceAttributeInAttr(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
+      attributeValue = '' + (value as any);
       break;
     }
     default: {
@@ -6085,7 +6082,7 @@ function writeStyleResourceAttributeInAttr(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
+      attributeValue = '' + (value as any);
     }
   }
   writeChunk(destination, arrayInterstitial);
@@ -6244,7 +6241,7 @@ function prefetchDNS(href: string) {
       } else {
         // Encode as element
         const resource: Resource = [];
-        pushLinkImpl(resource, ({href, rel: 'dns-prefetch'}: PreconnectProps));
+        pushLinkImpl(resource, {href, rel: 'dns-prefetch'} as PreconnectProps);
         renderState.preconnects.add(resource);
       }
     }
@@ -6302,10 +6299,11 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
         headers.preconnects += header;
       } else {
         const resource: Resource = [];
-        pushLinkImpl(
-          resource,
-          ({rel: 'preconnect', href, crossOrigin}: PreconnectProps),
-        );
+        pushLinkImpl(resource, {
+          rel: 'preconnect',
+          href,
+          crossOrigin,
+        } as PreconnectProps);
         renderState.preconnects.add(resource);
       }
     }
@@ -6376,11 +6374,11 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // When we have imageSrcSet the browser probably cannot load the right version from headers
           // (this should be verified by testing). For now we assume these need to go in the head
           // as elements even if headers are available.
-          const resource = ([]: Resource);
+          const resource = [] as Resource;
           pushLinkImpl(
             resource,
             Object.assign(
-              ({
+              {
                 rel: 'preload',
                 // There is a bug in Safari where imageSrcSet is not respected on preload links
                 // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
@@ -6388,7 +6386,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
                 // but this population is shrinking fast and is already small so we accept this tradeoff.
                 href: imageSrcSet ? undefined : href,
                 as,
-              }: PreloadAsProps),
+              } as PreloadAsProps,
               options,
             ),
           );
@@ -6409,10 +6407,10 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // we can return if we already have this resource
           return;
         }
-        const resource = ([]: Resource);
+        const resource = [] as Resource;
         pushLinkImpl(
           resource,
-          Object.assign(({rel: 'preload', href, as}: PreloadAsProps), options),
+          Object.assign({rel: 'preload', href, as} as PreloadAsProps, options),
         );
         resumableState.styleResources[key] =
           options &&
@@ -6430,12 +6428,12 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // we can return if we already have this resource
           return;
         }
-        const resource = ([]: Resource);
+        const resource = [] as Resource;
         renderState.preloads.scripts.set(key, resource);
         renderState.bulkPreloads.add(resource);
         pushLinkImpl(
           resource,
-          Object.assign(({rel: 'preload', href, as}: PreloadAsProps), options),
+          Object.assign({rel: 'preload', href, as} as PreloadAsProps, options),
         );
         resumableState.scriptResources[key] =
           options &&
@@ -6456,7 +6454,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
             return;
           }
         } else {
-          resources = ({}: ResumableState['unknownResources']['asType']);
+          resources = {} as ResumableState['unknownResources']['asType'];
           resumableState.unknownResources[as] = resources;
         }
         resources[key] = PRELOAD_NO_CREDS;
@@ -6489,13 +6487,13 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         } else {
           // We either don't have headers or we are preloading something that does
           // not warrant elevated priority so we encode as an element.
-          const resource = ([]: Resource);
+          const resource = [] as Resource;
           const props = Object.assign(
-            ({
+            {
               rel: 'preload',
               href,
               as,
-            }: PreloadAsProps),
+            } as PreloadAsProps,
             options,
           );
           pushLinkImpl(resource, props);
@@ -6543,7 +6541,7 @@ function preloadModule(
           // we can return if we already have this resource
           return;
         }
-        resource = ([]: Resource);
+        resource = [] as Resource;
         resumableState.moduleScriptResources[key] =
           options &&
           (typeof options.crossOrigin === 'string' ||
@@ -6564,10 +6562,10 @@ function preloadModule(
             return;
           }
         } else {
-          resources = ({}: ResumableState['moduleUnknownResources']['asType']);
+          resources = {} as ResumableState['moduleUnknownResources']['asType'];
           resumableState.moduleUnknownResources[as] = resources;
         }
-        resource = ([]: Resource);
+        resource = [] as Resource;
         resources[key] = PRELOAD_NO_CREDS;
       }
     }
@@ -6575,10 +6573,10 @@ function preloadModule(
     pushLinkImpl(
       resource,
       Object.assign(
-        ({
+        {
           rel: 'modulepreload',
           href,
-        }: PreloadModuleProps),
+        } as PreloadModuleProps,
         options,
       ),
     );
@@ -6623,9 +6621,9 @@ function preinitStyle(
       if (!styleQueue) {
         styleQueue = {
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
-          rules: ([]: Array<Chunk | PrecomputedChunk>),
-          hrefs: ([]: Array<Chunk | PrecomputedChunk>),
-          sheets: (new Map(): Map<string, StylesheetResource>),
+          rules: [] as Array<Chunk | PrecomputedChunk>,
+          hrefs: [] as Array<Chunk | PrecomputedChunk>,
+          sheets: new Map() as Map<string, StylesheetResource>,
         };
         renderState.styles.set(precedence, styleQueue);
       }
@@ -6633,11 +6631,11 @@ function preinitStyle(
       const resource = {
         state: PENDING,
         props: Object.assign(
-          ({
+          {
             rel: 'stylesheet',
             href,
             'data-precedence': precedence,
-          }: StylesheetProps),
+          } as StylesheetProps,
           options,
         ),
       };
@@ -6702,10 +6700,10 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
       resumableState.scriptResources[key] = EXISTS;
 
       const props: ScriptProps = Object.assign(
-        ({
+        {
           src,
           async: true,
-        }: ScriptProps),
+        } as ScriptProps,
         options,
       );
       if (resourceState) {
@@ -6764,11 +6762,11 @@ function preinitModuleScript(
       resumableState.moduleScriptResources[key] = EXISTS;
 
       const props = Object.assign(
-        ({
+        {
           src,
           type: 'module',
           async: true,
-        }: ModuleScriptProps),
+        } as ModuleScriptProps,
         options,
       );
       if (resourceState) {

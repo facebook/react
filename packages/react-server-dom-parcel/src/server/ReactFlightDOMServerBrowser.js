@@ -86,7 +86,7 @@ function startReadingFromDebugChannelReadableStream(
     value: ?any,
     ...
   }): void | Promise<void> {
-    const buffer: Uint8Array = (value: any);
+    const buffer: Uint8Array = value as any;
     stringBuffer += done
       ? readFinalStringChunk(stringDecoder, new Uint8Array(0))
       : readPartialStringChunk(stringDecoder, buffer);
@@ -138,10 +138,10 @@ export function renderToReadableStream(
   if (options && options.signal) {
     const signal = options.signal;
     if (signal.aborted) {
-      abort(request, (signal: any).reason);
+      abort(request, (signal as any).reason);
     } else {
       const listener = () => {
-        abort(request, (signal: any).reason);
+        abort(request, (signal as any).reason);
         signal.removeEventListener('abort', listener);
       };
       signal.addEventListener('abort', listener);
@@ -229,11 +229,11 @@ export function prerender(
     if (options && options.signal) {
       const signal = options.signal;
       if (signal.aborted) {
-        const reason = (signal: any).reason;
+        const reason = (signal as any).reason;
         abort(request, reason);
       } else {
         const listener = () => {
-          const reason = (signal: any).reason;
+          const reason = (signal as any).reason;
           abort(request, reason);
           signal.removeEventListener('abort', listener);
         };

@@ -128,7 +128,7 @@ function runTask<T>(
     const result = callback(didTimeout_DEPRECATED);
     if (typeof result === 'function') {
       // Assume this is a continuation
-      const continuation: SchedulerCallback<T> = (result: any);
+      const continuation: SchedulerCallback<T> = result as any;
       const continuationOptions = {
         signal: node._controller.signal,
       };

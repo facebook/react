@@ -97,7 +97,7 @@ export default function SidebarSelectedFiberInfo(): React.Node {
     const commitIndex = commitIndices[i];
 
     const {duration, timestamp} = profilerStore.getCommitData(
-      ((rootID: any): number),
+      rootID as any as number,
       commitIndex,
     );
 
@@ -136,7 +136,7 @@ export default function SidebarSelectedFiberInfo(): React.Node {
             compiledWithForget={node.compiledWithForget}
           />
         )}
-        <WhatChanged fiberID={((selectedFiberID: any): number)} />
+        <WhatChanged fiberID={selectedFiberID as any as number} />
         {listItems.length > 0 && (
           <div>
             <label className={styles.Label}>Rendered at: </label>

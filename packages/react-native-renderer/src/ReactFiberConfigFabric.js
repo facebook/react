@@ -810,7 +810,7 @@ FragmentInstance.prototype.getRootNode = function (
   }
   const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
   // $FlowFixMe[incompatible-use] Fabric PublicInstance is opaque
-  const rootNode = (parentHostInstance.getRootNode(getRootNodeOptions): Node);
+  const rootNode = parentHostInstance.getRootNode(getRootNodeOptions) as Node;
   return rootNode;
 };
 
@@ -840,9 +840,9 @@ function addFragmentHandleToFiber(
   fragmentInstance: FragmentInstanceType,
 ): boolean {
   if (enableFragmentRefsInstanceHandles) {
-    const instance = ((getPublicInstanceFromHostFiber(
+    const instance = getPublicInstanceFromHostFiber(
       child,
-    ): any): PublicInstanceWithFragmentHandles);
+    ) as any as PublicInstanceWithFragmentHandles;
     if (instance != null) {
       addFragmentHandleToInstance(instance, fragmentInstance);
     }
@@ -865,7 +865,7 @@ function addFragmentHandleToInstance(
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
-  const fragmentInstance = new (FragmentInstance: any)(fragmentFiber);
+  const fragmentInstance = new (FragmentInstance as any)(fragmentFiber);
   if (enableFragmentRefsInstanceHandles) {
     traverseFragmentInstance(
       fragmentFiber,
@@ -891,7 +891,7 @@ export function commitNewChildToFragmentInstance(
   if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
     return;
   }
-  const instance: Instance = (childInstance: any);
+  const instance: Instance = childInstance as any;
   const publicInstance = getPublicInstance(instance);
   if (fragmentInstance._observers !== null) {
     if (publicInstance == null) {
@@ -905,7 +905,7 @@ export function commitNewChildToFragmentInstance(
   }
   if (enableFragmentRefsInstanceHandles) {
     addFragmentHandleToInstance(
-      ((publicInstance: any): PublicInstanceWithFragmentHandles),
+      publicInstance as any as PublicInstanceWithFragmentHandles,
       fragmentInstance,
     );
   }
@@ -919,10 +919,10 @@ export function deleteChildFromFragmentInstance(
   if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
     return;
   }
-  const instance: Instance = (childInstance: any);
-  const publicInstance = ((getPublicInstance(
+  const instance: Instance = childInstance as any;
+  const publicInstance = getPublicInstance(
     instance,
-  ): any): PublicInstanceWithFragmentHandles);
+  ) as any as PublicInstanceWithFragmentHandles;
   if (enableFragmentRefsInstanceHandles) {
     if (publicInstance.reactFragments != null) {
       publicInstance.reactFragments.delete(fragmentInstance);
@@ -933,8 +933,8 @@ export function deleteChildFromFragmentInstance(
 export const NotPendingTransition: TransitionStatus = null;
 export const HostTransitionContext: ReactContext<TransitionStatus> = {
   $$typeof: REACT_CONTEXT_TYPE,
-  Provider: (null: any),
-  Consumer: (null: any),
+  Provider: null as any,
+  Consumer: null as any,
   _currentValue: NotPendingTransition,
   _currentValue2: NotPendingTransition,
   _threadCount: 0,

@@ -36,7 +36,7 @@ export function loadChunk(chunkId: string, filename: string): Promise<mixed> {
 // We cache ReactIOInfo across requests so that inner refreshes can dedupe with outer.
 const chunkIOInfoCache: Map<string, ReactIOInfo> = __DEV__
   ? new Map()
-  : (null: any);
+  : (null as any);
 
 export function addChunkDebugInfo(
   target: ReactDebugInfo,
@@ -69,7 +69,7 @@ export function addChunkDebugInfo(
           start = resourceEntry.startTime;
           end = start + resourceEntry.duration;
           // $FlowFixMe[prop-missing]
-          byteSize = (resourceEntry.transferSize: any) || 0;
+          byteSize = (resourceEntry.transferSize as any) || 0;
         }
       }
     }
@@ -108,13 +108,13 @@ export function addChunkDebugInfo(
         href +
         ':1:1';
     }
-    ioInfo = ({
+    ioInfo = {
       name: 'script',
       start: start,
       end: end,
       value: value,
       debugStack: fakeStack,
-    }: ReactIOInfo);
+    } as ReactIOInfo;
     if (byteSize > 0) {
       // $FlowFixMe[cannot-write]
       ioInfo.byteSize = byteSize;

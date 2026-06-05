@@ -63,9 +63,9 @@ export function getCommitTree({
     rootToCommitTreeMap.set(rootID, []);
   }
 
-  const commitTrees = ((rootToCommitTreeMap.get(
+  const commitTrees = rootToCommitTreeMap.get(
     rootID,
-  ): any): Array<CommitTree>);
+  ) as any as Array<CommitTree>;
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];
   }
@@ -87,7 +87,7 @@ export function getCommitTree({
     );
   }
 
-  let commitTree: CommitTree = ((null: any): CommitTree);
+  let commitTree: CommitTree = null as any as CommitTree;
   for (let index = commitTrees.length; index <= commitIndex; index++) {
     // Commits are generated sequentially and cached.
     // If this is the very first commit, start with the cached snapshot and apply the first mutation.
@@ -140,9 +140,9 @@ function recursivelyInitializeTree(
       hocDisplayNames: node.hocDisplayNames,
       key: node.key,
       parentID,
-      treeBaseDuration: ((dataForRoot.initialTreeBaseDurations.get(
+      treeBaseDuration: dataForRoot.initialTreeBaseDurations.get(
         id,
-      ): any): number),
+      ) as any as number,
       type: node.type,
       compiledWithForget: node.compiledWithForget,
     });
@@ -175,7 +175,7 @@ function updateTree(
   };
 
   let i = 2;
-  let id: number = ((null: any): number);
+  let id: number = null as any as number;
 
   // Reassemble the string table.
   const stringTable: Array<null | string> = [
@@ -199,8 +199,8 @@ function updateTree(
 
     switch (operation) {
       case TREE_OPERATION_ADD: {
-        id = ((operations[i + 1]: any): number);
-        const type = ((operations[i + 2]: any): ElementType);
+        id = operations[i + 1] as any as number;
+        const type = operations[i + 2] as any as ElementType;
 
         i += 3;
 
@@ -235,7 +235,7 @@ function updateTree(
 
           nodes.set(id, node);
         } else {
-          const parentID = ((operations[i]: any): number);
+          const parentID = operations[i] as any as number;
           i++;
 
           i++; // ownerID
@@ -283,11 +283,11 @@ function updateTree(
         break;
       }
       case TREE_OPERATION_REMOVE: {
-        const removeLength = ((operations[i + 1]: any): number);
+        const removeLength = operations[i + 1] as any as number;
         i += 2;
 
         for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
-          id = ((operations[i]: any): number);
+          id = operations[i] as any as number;
           i++;
 
           if (!nodes.has(id)) {
@@ -319,12 +319,12 @@ function updateTree(
         break;
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
-        id = ((operations[i + 1]: any): number);
-        const numChildren = ((operations[i + 2]: any): number);
-        const children = ((operations.slice(
+        id = operations[i + 1] as any as number;
+        const numChildren = operations[i + 2] as any as number;
+        const children = operations.slice(
           i + 3,
           i + 3 + numChildren,
-        ): any): Array<number>);
+        ) as any as Array<number>;
 
         i = i + 3 + numChildren;
 
@@ -414,19 +414,19 @@ function updateTree(
       }
 
       case SUSPENSE_TREE_OPERATION_REMOVE: {
-        const removeLength = ((operations[i + 1]: any): number);
+        const removeLength = operations[i + 1] as any as number;
         i += 2 + removeLength;
 
         break;
       }
 
       case SUSPENSE_TREE_OPERATION_REORDER_CHILDREN: {
-        const suspenseID = ((operations[i + 1]: any): number);
-        const numChildren = ((operations[i + 2]: any): number);
-        const children = ((operations.slice(
+        const suspenseID = operations[i + 1] as any as number;
+        const numChildren = operations[i + 2] as any as number;
+        const children = operations.slice(
           i + 3,
           i + 3 + numChildren,
-        ): any): Array<number>);
+        ) as any as Array<number>;
 
         i = i + 3 + numChildren;
 
@@ -442,18 +442,18 @@ function updateTree(
       }
 
       case SUSPENSE_TREE_OPERATION_RESIZE: {
-        const suspenseID = ((operations[i + 1]: any): number);
-        const numRects = ((operations[i + 2]: any): number);
+        const suspenseID = operations[i + 1] as any as number;
+        const numRects = operations[i + 2] as any as number;
 
         // $FlowFixMe[constant-condition]
         if (__DEBUG__) {
           if (numRects === -1) {
             debug('Suspense resize', `suspense ${suspenseID} rects null`);
           } else {
-            const rects = ((operations.slice(
+            const rects = operations.slice(
               i + 3,
               i + 3 + numRects * 4,
-            ): any): Array<number>);
+            ) as any as Array<number>;
             debug(
               'Suspense resize',
               `suspense ${suspenseID} rects [${rects.join(',')}]`,
@@ -468,7 +468,7 @@ function updateTree(
 
       case SUSPENSE_TREE_OPERATION_SUSPENDERS: {
         i++;
-        const changeLength = ((operations[i++]: any): number);
+        const changeLength = operations[i++] as any as number;
 
         for (let changeIndex = 0; changeIndex < changeLength; changeIndex++) {
           const suspenseNodeId = operations[i++];

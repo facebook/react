@@ -549,9 +549,9 @@ function RequestInstance(
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
   this.currentTask = null;
-  this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
-  this.completedBoundaries = ([]: Array<SuspenseBoundary>);
-  this.partialBoundaries = ([]: Array<SuspenseBoundary>);
+  this.clientRenderedBoundaries = [] as Array<SuspenseBoundary>;
+  this.completedBoundaries = [] as Array<SuspenseBoundary>;
+  this.partialBoundaries = [] as Array<SuspenseBoundary>;
   this.trackedPostpones = null;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.onAllReady = onAllReady === undefined ? noop : onAllReady;
@@ -914,7 +914,7 @@ function createRenderTask(
   if (row !== null) {
     row.pendingTasks++;
   }
-  const task: RenderTask = ({
+  const task: RenderTask = {
     replay: null,
     node,
     childIndex,
@@ -934,7 +934,7 @@ function createRenderTask(
     row,
     componentStack,
     thenableState,
-  }: any);
+  } as any;
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
   }
@@ -973,7 +973,7 @@ function createReplayTask(
     row.pendingTasks++;
   }
   replay.pendingTasks++;
-  const task: ReplayTask = ({
+  const task: ReplayTask = {
     replay,
     node,
     childIndex,
@@ -993,7 +993,7 @@ function createReplayTask(
     row,
     componentStack,
     thenableState,
-  }: any);
+  } as any;
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
   }
@@ -1057,7 +1057,7 @@ function pushHaltedAwaitOnComponentStack(
     for (let i = debugInfo.length - 1; i >= 0; i--) {
       const info = debugInfo[i];
       if (info.awaited != null) {
-        const asyncInfo: ReactAsyncInfo = (info: any);
+        const asyncInfo: ReactAsyncInfo = info as any;
         const bestStack =
           asyncInfo.debugStack == null ? asyncInfo.awaited : asyncInfo;
         if (bestStack.debugStack !== undefined) {
@@ -1067,7 +1067,7 @@ function pushHaltedAwaitOnComponentStack(
             owner: bestStack.owner,
             stack: bestStack.debugStack,
           };
-          task.debugTask = (bestStack.debugTask: any);
+          task.debugTask = bestStack.debugTask as any;
           break;
         }
       }
@@ -1137,7 +1137,7 @@ function pushSuspendedCallSiteOnComponentStack(
   setCaptureSuspendedCallSiteDEV(true);
   const restoreThenableState = ensureSuspendableThenableStateDEV(
     // refined at the callsite
-    ((task.thenableState: any): ThenableState),
+    task.thenableState as any as ThenableState,
   );
   try {
     rerenderStalledTask(request, task);
@@ -1177,7 +1177,7 @@ function pushServerComponentStack(
   if (debugInfo != null) {
     const stack: ReactDebugInfo = debugInfo;
     for (let i = 0; i < stack.length; i++) {
-      const componentInfo: ReactComponentInfo = (stack[i]: any);
+      const componentInfo: ReactComponentInfo = stack[i] as any;
       if (typeof componentInfo.name !== 'string') {
         continue;
       }
@@ -1190,7 +1190,7 @@ function pushServerComponentStack(
         owner: componentInfo.owner,
         stack: componentInfo.debugStack,
       };
-      task.debugTask = (componentInfo.debugTask: any);
+      task.debugTask = componentInfo.debugTask as any;
     }
   }
 }
@@ -1201,7 +1201,7 @@ function pushComponentStack(task: Task): void {
   // It's unfortunate that we need to do this refinement twice. Once for
   // the stack frame and then once again while actually
   if (typeof node === 'object' && node !== null) {
-    switch ((node: any).$$typeof) {
+    switch ((node as any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
         const element: any = node;
         const type = element.type;
@@ -1221,7 +1221,7 @@ function pushComponentStack(task: Task): void {
       }
       case REACT_LAZY_TYPE: {
         if (__DEV__) {
-          const lazyNode: LazyComponentType<any, any> = (node: any);
+          const lazyNode: LazyComponentType<any, any> = node as any;
           pushServerComponentStack(task, lazyNode._debugInfo);
         }
         break;
@@ -1230,7 +1230,7 @@ function pushComponentStack(task: Task): void {
         if (__DEV__) {
           const maybeUsable: Object = node;
           if (typeof maybeUsable.then === 'function') {
-            const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
+            const thenable: Thenable<ReactNodeList> = maybeUsable as any;
             pushServerComponentStack(task, thenable._debugInfo);
           }
         }
@@ -1488,7 +1488,7 @@ function renderSuspenseBoundary(
       const fallbackReplayNode: ReplayNode = [
         fallbackKeyPath[1],
         fallbackKeyPath[2],
-        ([]: Array<ReplayNode>),
+        [] as Array<ReplayNode>,
         null,
       ];
       trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
@@ -1987,7 +1987,10 @@ function renderSuspenseListRows(
     previousDebugTask = task.debugTask;
     // We read debugInfo from task.node.props.children instead of rows because it
     // might have been an unwrapped iterable so we read from the original node.
-    pushServerComponentStack(task, (task.node: any).props.children._debugInfo);
+    pushServerComponentStack(
+      task,
+      (task.node as any).props.children._debugInfo,
+    );
   }
 
   task.keyPath = keyPath;
@@ -2052,7 +2055,7 @@ function renderSuspenseListRows(
       }
     }
   } else {
-    task = ((task: any): RenderTask); // Refined
+    task = task as any as RenderTask; // Refined
     if (
       revealOrder !== 'backwards' &&
       revealOrder !== 'unstable_legacy-backwards'
@@ -2195,14 +2198,14 @@ function renderSuspenseList(
     }
     if (
       enableAsyncIterableChildren &&
-      typeof (children: any)[ASYNC_ITERATOR] === 'function'
+      typeof (children as any)[ASYNC_ITERATOR] === 'function'
     ) {
-      const iterator: AsyncIterator<ReactNodeList> = (children: any)[
+      const iterator: AsyncIterator<ReactNodeList> = (children as any)[
         ASYNC_ITERATOR
       ]();
       if (iterator) {
         if (__DEV__) {
-          validateAsyncIterable(task, (children: any), -1, iterator);
+          validateAsyncIterable(task, children as any, -1, iterator);
         }
         // TODO: Update the task.children to be the iterator to avoid asking
         // for new iterators, but we currently warn for rendering these
@@ -2365,7 +2368,7 @@ function renderHostElement(
     ));
     if (isPreambleContext(newContext)) {
       // $FlowFixMe[incompatible-type]: Refined
-      renderPreamble(request, (task: RenderTask), segment, children);
+      renderPreamble(request, task as RenderTask, segment, children);
     } else {
       // We use the non-destructive form because if something suspends, we still
       // need to pop back up and finish this subtree of HTML.
@@ -2431,7 +2434,7 @@ function finishClassComponent(
 ): ReactNodeList {
   let nextChildren;
   if (__DEV__) {
-    nextChildren = (callRenderInDEV(instance): any);
+    nextChildren = callRenderInDEV(instance) as any;
   } else {
     nextChildren = instance.render();
   }
@@ -2484,7 +2487,7 @@ export function resolveClassComponentProps(
 
   // Remove ref from the props object, if it exists.
   if ('ref' in baseProps) {
-    newProps = ({}: any);
+    newProps = {} as any;
     for (const propName in baseProps) {
       if (propName !== 'ref') {
         newProps[propName] = baseProps[propName];
@@ -2741,7 +2744,7 @@ function renderForwardRef(
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
-    propsWithoutRef = ({}: {[string]: any});
+    propsWithoutRef = {} as {[string]: any};
     for (const key in props) {
       // Since `ref` should only appear in props via the JSX transform, we can
       // assume that this is a plain object. So we don't need a
@@ -3060,7 +3063,7 @@ function renderElement(
       }
       // $FlowFixMe[invalid-compare]
       case REACT_CONSUMER_TYPE: {
-        const context: ReactContext<any> = (type: ReactConsumerType<any>)
+        const context: ReactContext<any> = (type as ReactConsumerType<any>)
           ._context;
         renderContextConsumer(request, task, keyPath, context, props);
         return;
@@ -3117,7 +3120,7 @@ function resumeNode(
   resumedSegment.parentFlushed = true;
   try {
     // Convert the current ReplayTask to a RenderTask.
-    const renderTask: RenderTask = (task: any);
+    const renderTask: RenderTask = task as any;
     renderTask.replay = null;
     renderTask.blockedSegment = resumedSegment;
     renderNode(request, task, node, childIndex);
@@ -3164,7 +3167,7 @@ function replayElement(
       if (name !== null && name !== node[0]) {
         throw new Error(
           'Expected the resume to render <' +
-            (node[0]: any) +
+            (node[0] as any) +
             '> in this slot but instead it rendered <' +
             name +
             '>. ' +
@@ -3292,7 +3295,7 @@ function validateIterable(
         }
         didWarnAboutGenerators = true;
       }
-    } else if ((iterable: any).entries === iteratorFn) {
+    } else if ((iterable as any).entries === iteratorFn) {
       // Warn about using Maps as children
       if (!didWarnAboutMaps) {
         console.error(
@@ -3405,7 +3408,7 @@ function retryNode(request: Request, task: Task): void {
 
   // Handle object types
   if (typeof node === 'object') {
-    switch ((node: any).$$typeof) {
+    switch ((node as any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
         const element: any = node;
         const type = element.type;
@@ -3486,7 +3489,7 @@ function retryNode(request: Request, task: Task): void {
             'Render them conditionally so that they only appear on the client render.',
         );
       case REACT_LAZY_TYPE: {
-        const lazyNode: LazyComponentType<any, any> = (node: any);
+        const lazyNode: LazyComponentType<any, any> = node as any;
         let resolvedNode;
         if (__DEV__) {
           resolvedNode = callLazyInitInDEV(lazyNode);
@@ -3537,14 +3540,14 @@ function retryNode(request: Request, task: Task): void {
 
     if (
       enableAsyncIterableChildren &&
-      typeof (node: any)[ASYNC_ITERATOR] === 'function'
+      typeof (node as any)[ASYNC_ITERATOR] === 'function'
     ) {
-      const iterator: AsyncIterator<ReactNodeList> = (node: any)[
+      const iterator: AsyncIterator<ReactNodeList> = (node as any)[
         ASYNC_ITERATOR
       ]();
       if (iterator) {
         if (__DEV__) {
-          validateAsyncIterable(task, (node: any), childIndex, iterator);
+          validateAsyncIterable(task, node as any, childIndex, iterator);
         }
         // TODO: Update the task.node to be the iterator to avoid asking
         // for new iterators, but we currently warn for rendering these
@@ -3606,7 +3609,7 @@ function retryNode(request: Request, task: Task): void {
     if (typeof maybeUsable.then === 'function') {
       // Clear any previous thenable state that was created by the unwrapping.
       task.thenableState = null;
-      const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
+      const thenable: Thenable<ReactNodeList> = maybeUsable as any;
       const result = renderNodeDestructive(
         request,
         task,
@@ -3617,7 +3620,7 @@ function retryNode(request: Request, task: Task): void {
     }
 
     if (maybeUsable.$$typeof === REACT_CONTEXT_TYPE) {
-      const context: ReactContext<ReactNodeList> = (maybeUsable: any);
+      const context: ReactContext<ReactNodeList> = maybeUsable as any;
       return renderNodeDestructive(
         request,
         task,
@@ -3824,9 +3827,9 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
     const previousComponentStack = task.componentStack;
     const stackFrame = createComponentStackFromType(
       task.componentStack,
-      (child: any).type,
-      (child: any)._owner,
-      (child: any)._debugStack,
+      (child as any).type,
+      (child as any)._owner,
+      (child as any)._debugStack,
     );
     task.componentStack = stackFrame;
     console.error(
@@ -3852,7 +3855,7 @@ function renderChildrenArray(
     previousDebugTask = task.debugTask;
     // We read debugInfo from task.node instead of children because it might have been an
     // unwrapped iterable so we read from the original node.
-    pushServerComponentStack(task, (task.node: any)._debugInfo);
+    pushServerComponentStack(task, (task.node as any)._debugInfo);
   }
   if (childIndex !== -1) {
     task.keyPath = [task.keyPath, 'Fragment', childIndex];
@@ -3971,7 +3974,7 @@ function trackPostponedBoundary(
     return suspenseBoundary;
   } else {
     // Upgrade to ReplaySuspenseBoundary.
-    const suspenseBoundary: ReplaySuspenseBoundary = (boundaryNode: any);
+    const suspenseBoundary: ReplaySuspenseBoundary = boundaryNode as any;
     suspenseBoundary[4] = fallbackReplayNode;
     suspenseBoundary[5] = boundary.rootSegmentID;
     return suspenseBoundary;
@@ -4052,7 +4055,7 @@ function trackPostpone(
         resumableNode = [
           keyPath[1],
           keyPath[2],
-          ([]: Array<ReplayNode>),
+          [] as Array<ReplayNode>,
           segment.id,
         ];
         addToReplayParent(resumableNode, keyPath[0], trackedPostpones);
@@ -4065,7 +4068,7 @@ function trackPostpone(
     if (keyPath === null) {
       slots = trackedPostpones.rootSlots;
       if (slots === null) {
-        slots = trackedPostpones.rootSlots = ({}: {[index: number]: number});
+        slots = trackedPostpones.rootSlots = {} as {[index: number]: number};
       } else if (typeof slots === 'number') {
         throw new Error(
           'It should not be possible to postpone both at the root of an element ' +
@@ -4076,19 +4079,19 @@ function trackPostpone(
       const workingMap = trackedPostpones.workingMap;
       let resumableNode = workingMap.get(keyPath);
       if (resumableNode === undefined) {
-        slots = ({}: {[index: number]: number});
-        resumableNode = ([
+        slots = {} as {[index: number]: number};
+        resumableNode = [
           keyPath[1],
           keyPath[2],
-          ([]: Array<ReplayNode>),
+          [] as Array<ReplayNode>,
           slots,
-        ]: ReplayNode);
+        ] as ReplayNode;
         workingMap.set(keyPath, resumableNode);
         addToReplayParent(resumableNode, keyPath[0], trackedPostpones);
       } else {
         slots = resumableNode[3];
         if (slots === null) {
-          slots = resumableNode[3] = ({}: {[index: number]: number});
+          slots = resumableNode[3] = {} as {[index: number]: number};
         } else if (typeof slots === 'number') {
           throw new Error(
             'It should not be possible to postpone both at the root of an element ' +
@@ -4225,7 +4228,7 @@ function renderNode(
   const segment = task.blockedSegment;
   if (segment === null) {
     // Replay
-    task = ((task: any): ReplayTask); // Refined
+    task = task as any as ReplayTask; // Refined
     const previousReplaySet: ReplaySet = task.replay;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
@@ -4248,7 +4251,7 @@ function renderNode(
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
-          const wakeable: Wakeable = (x: any);
+          const wakeable: Wakeable = x as any;
           const thenableState =
             thrownValue === SuspenseException
               ? getThenableStateAfterSuspending()
@@ -4350,7 +4353,7 @@ function renderNode(
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
-          const wakeable: Wakeable = (x: any);
+          const wakeable: Wakeable = x as any;
           const thenableState =
             thrownValue === SuspenseException
               ? getThenableStateAfterSuspending()
@@ -4645,7 +4648,7 @@ function abortRemainingReplayNodes(
     // Empty the set
     if (typeof slots === 'object') {
       for (const index in slots) {
-        delete slots[(index: any)];
+        delete slots[index as any];
       }
     }
   }
@@ -5276,7 +5279,7 @@ function retryRenderTask(
             : null;
         const ping = task.ping;
         // We've asserted that x is a thenable above
-        (x: any).then(ping.resolve, ping.reject);
+        (x as any).then(ping.resolve, ping.reject);
         return;
       }
     }
@@ -6384,12 +6387,12 @@ function addToReplayParent(
     const workingMap = trackedPostpones.workingMap;
     let parentNode = workingMap.get(parentKeyPath);
     if (parentNode === undefined) {
-      parentNode = ([
+      parentNode = [
         parentKeyPath[1],
         parentKeyPath[2],
-        ([]: Array<ReplayNode>),
+        [] as Array<ReplayNode>,
         null,
-      ]: ReplayNode);
+      ] as ReplayNode;
       workingMap.set(parentKeyPath, parentNode);
       addToReplayParent(parentNode, parentKeyPath[0], trackedPostpones);
     }

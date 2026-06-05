@@ -114,13 +114,13 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
     try {
       // $FlowFixMe[incompatible-type]: We don't want to use rest arguments since we transpile the code.
       const result = fn.apply(null, arguments);
-      const terminatedNode: TerminatedCacheNode<T> = (cacheNode: any);
+      const terminatedNode: TerminatedCacheNode<T> = cacheNode as any;
       terminatedNode.s = TERMINATED;
       terminatedNode.v = result;
       return result;
     } catch (error) {
       // We store the first error that's thrown and rethrow it.
-      const erroredNode: ErroredCacheNode<T> = (cacheNode: any);
+      const erroredNode: ErroredCacheNode<T> = cacheNode as any;
       erroredNode.s = ERRORED;
       erroredNode.v = error;
       throw error;

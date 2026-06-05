@@ -587,7 +587,7 @@ function readContextForConsumer<T>(
     : context._currentValue2;
 
   const contextItem = {
-    context: ((context: any): ReactContext<mixed>),
+    context: context as any as ReactContext<mixed>,
     memoizedValue: value,
     next: null,
   };

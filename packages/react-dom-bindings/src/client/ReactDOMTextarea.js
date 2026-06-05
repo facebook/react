@@ -66,7 +66,7 @@ export function updateTextarea(
   value: ?string,
   defaultValue: ?string,
 ) {
-  const node: HTMLTextAreaElement = (element: any);
+  const node: HTMLTextAreaElement = element as any;
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
@@ -96,7 +96,7 @@ export function initTextarea(
   defaultValue: ?string,
   children: ?string,
 ) {
-  const node: HTMLTextAreaElement = (element: any);
+  const node: HTMLTextAreaElement = element as any;
 
   let initialValue = value;
 
@@ -128,7 +128,7 @@ export function initTextarea(
   }
 
   const stringValue = getToStringValue(initialValue);
-  node.defaultValue = (stringValue: any); // This will be toString:ed.
+  node.defaultValue = stringValue as any; // This will be toString:ed.
 
   // This is in postMount because we need access to the DOM node, which is not
   // available until after the component has mounted.
@@ -146,7 +146,7 @@ export function initTextarea(
     }
   }
 
-  track((element: any));
+  track(element as any);
 }
 
 export function hydrateTextarea(
@@ -154,7 +154,7 @@ export function hydrateTextarea(
   value: ?string,
   defaultValue: ?string,
 ): void {
-  const node: HTMLTextAreaElement = (element: any);
+  const node: HTMLTextAreaElement = element as any;
   let initialValue = value;
   if (initialValue == null) {
     if (defaultValue == null) {
@@ -166,7 +166,7 @@ export function hydrateTextarea(
   // that any change event that fires will trigger onChange on the actual
   // current value.
   const stringValue = toString(getToStringValue(initialValue));
-  const changed = trackHydrated((node: any), stringValue, false);
+  const changed = trackHydrated(node as any, stringValue, false);
   if (changed) {
     // If the current value is different, that suggests that the user
     // changed it before hydration. Queue a replay of the change event.

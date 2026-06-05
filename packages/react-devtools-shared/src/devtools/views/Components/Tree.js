@@ -215,7 +215,7 @@ export default function Tree(): React.Node {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event: any).target.tagName === 'INPUT' || event.defaultPrevented) {
+      if ((event as any).target.tagName === 'INPUT' || event.defaultPrevented) {
         return;
       }
 

@@ -99,7 +99,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     useHttps = false,
     port = 8097,
     websocket,
-    resolveRNStyle = (null: $FlowFixMe),
+    resolveRNStyle = null as $FlowFixMe,
     retryConnectionDelay = 2000,
     isAppActive = () => true,
     onSettingsUpdated,
@@ -217,7 +217,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
         bridge,
         agent,
         // $FlowFixMe[constant-condition]
-        ((resolveRNStyle || hook.resolveRNStyle: any): ResolveNativeStyle),
+        (resolveRNStyle || hook.resolveRNStyle) as any as ResolveNativeStyle,
         nativeStyleEditorValidAttributes ||
           hook.nativeStyleEditorValidAttributes ||
           null,
@@ -241,36 +241,28 @@ export function connectToDevTools(options: ?ConnectOptions) {
       };
 
       if (!hook.hasOwnProperty('resolveRNStyle')) {
-        Object.defineProperty(
-          hook,
-          'resolveRNStyle',
-          ({
-            enumerable: false,
-            get() {
-              return lazyResolveRNStyle;
-            },
-            set(value: $FlowFixMe) {
-              lazyResolveRNStyle = value;
-              initAfterTick();
-            },
-          }: Object),
-        );
+        Object.defineProperty(hook, 'resolveRNStyle', {
+          enumerable: false,
+          get() {
+            return lazyResolveRNStyle;
+          },
+          set(value: $FlowFixMe) {
+            lazyResolveRNStyle = value;
+            initAfterTick();
+          },
+        } as Object);
       }
       if (!hook.hasOwnProperty('nativeStyleEditorValidAttributes')) {
-        Object.defineProperty(
-          hook,
-          'nativeStyleEditorValidAttributes',
-          ({
-            enumerable: false,
-            get() {
-              return lazyNativeStyleEditorValidAttributes;
-            },
-            set(value: $FlowFixMe) {
-              lazyNativeStyleEditorValidAttributes = value;
-              initAfterTick();
-            },
-          }: Object),
-        );
+        Object.defineProperty(hook, 'nativeStyleEditorValidAttributes', {
+          enumerable: false,
+          get() {
+            return lazyNativeStyleEditorValidAttributes;
+          },
+          set(value: $FlowFixMe) {
+            lazyNativeStyleEditorValidAttributes = value;
+            initAfterTick();
+          },
+        } as Object);
       }
     }
   };
@@ -311,7 +303,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
       }
     } catch (e) {
       console.error(
-        '[React DevTools] Failed to parse JSON: ' + (event.data: any),
+        '[React DevTools] Failed to parse JSON: ' + (event.data as any),
       );
       return;
     }

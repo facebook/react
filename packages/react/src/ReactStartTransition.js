@@ -47,7 +47,7 @@ export function startTransition(
   options?: StartTransitionOptions,
 ): void {
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: Transition = ({}: any);
+  const currentTransition: Transition = {} as any;
   if (enableViewTransition) {
     currentTransition.types =
       prevTransition !== null
@@ -137,7 +137,7 @@ export function startGestureTransition(
     );
   }
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: Transition = ({}: any);
+  const currentTransition: Transition = {} as any;
   if (enableViewTransition) {
     currentTransition.types = null;
   }

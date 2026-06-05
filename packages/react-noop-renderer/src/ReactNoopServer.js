@@ -69,7 +69,7 @@ function write(destination: Destination, buffer: Uint8Array): void {
     return;
   }
   // We assume one chunk is one instance.
-  const instance = JSON.parse(Buffer.from((buffer: any)).toString('utf8'));
+  const instance = JSON.parse(Buffer.from(buffer as any).toString('utf8'));
   if (stack.length === 0) {
     destination.root = instance;
   } else {

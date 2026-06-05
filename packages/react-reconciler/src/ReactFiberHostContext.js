@@ -46,7 +46,7 @@ function requiredContext<Value>(c: Value | null): Value {
       );
     }
   }
-  return (c: any);
+  return c as any;
 }
 
 function getCurrentRootHostContainer(): null | Container {

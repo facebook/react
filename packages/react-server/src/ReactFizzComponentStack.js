@@ -69,13 +69,13 @@ function describeComponentStackByType(
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
-        return describeFunctionComponentFrame((type: any).render);
+        return describeFunctionComponentFrame((type as any).render);
       }
       case REACT_MEMO_TYPE: {
-        return describeFunctionComponentFrame((type: any).type);
+        return describeFunctionComponentFrame((type as any).type);
       }
       case REACT_LAZY_TYPE: {
-        const lazyComponent: LazyComponent<any, any> = (type: any);
+        const lazyComponent: LazyComponent<any, any> = type as any;
         const payload = lazyComponent._payload;
         const init = lazyComponent._init;
         try {
@@ -174,7 +174,7 @@ export function getOwnerStackByComponentStackNodeInDev(
         owner = owner.owner;
       } else {
         // Client Component
-        const node: ComponentStackNode = (owner: any);
+        const node: ComponentStackNode = owner as any;
         if (node.stack != null) {
           if (typeof node.stack !== 'string') {
             ownerStack = node.stack = formatOwnerStack(node.stack);

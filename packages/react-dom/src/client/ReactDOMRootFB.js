@@ -135,11 +135,11 @@ export function createRoot(
   return createRootImpl(
     container,
     assign(
-      ({
+      {
         onUncaughtError: wwwOnUncaughtError,
         onCaughtError: wwwOnCaughtError,
         onDefaultTransitionIndicator: noopOnDefaultTransitionIndicator,
-      }: any),
+      } as any,
       options,
     ),
   );
@@ -154,11 +154,11 @@ export function hydrateRoot(
     container,
     initialChildren,
     assign(
-      ({
+      {
         onUncaughtError: wwwOnUncaughtError,
         onCaughtError: wwwOnCaughtError,
         onDefaultTransitionIndicator: noopOnDefaultTransitionIndicator,
-      }: any),
+      } as any,
       options,
     ),
   );
@@ -376,8 +376,8 @@ export function findDOMNode(
   if (componentOrElement == null) {
     return null;
   }
-  if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
-    return (componentOrElement: any);
+  if ((componentOrElement as any).nodeType === ELEMENT_NODE) {
+    return componentOrElement as any;
   }
   if (__DEV__) {
     return findHostInstanceWithWarning(componentOrElement, 'findDOMNode');
