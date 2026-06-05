@@ -98,9 +98,26 @@ function collectScopeInfo(ast) {
   const scopes = [];
   const bindings = [];
   const nodeToScope = {};
+  const nodeToScopeEnd = {};
   const referenceToBinding = {};
+  const refNodeIdToBinding = {};
+  const nodeIdToScope = {};
   let nextScopeId = 0;
   let nextBindingId = 0;
+  let nextNodeId = 1;
+
+  function getOrAssignNodeId(node) {
+    if (node._nodeId == null) {
+      node._nodeId = nextNodeId++;
+    }
+    return node._nodeId;
+  }
+
+  function mapRef(start, bindingId, node) {
+    referenceToBinding[String(start)] = bindingId;
+    const nodeId = getOrAssignNodeId(node);
+    refNodeIdToBinding[String(nodeId)] = bindingId;
+  }
 
   function ensureScope(babelScope) {
     if (scopeMap.has(babelScope)) return scopeMap.get(babelScope);
@@ -122,12 +139,15 @@ function collectScopeInfo(ast) {
       if (!bindingMap.has(binding)) {
         const bid = nextBindingId++;
         bindingMap.set(binding, bid);
+        const declarationNodeId = getOrAssignNodeId(binding.identifier);
         const bindingData = {
           id: bid,
           name,
           kind: getBindingKind(binding.kind),
           scope: id,
           declarationType: binding.path.node.type,
+          declarationStart: binding.identifier.start,
+          declarationNodeId,
         };
 
         // Import bindings
@@ -147,10 +167,15 @@ function collectScopeInfo(ast) {
       bindings: bindingsMap,
     });
 
-    // Record node_to_scope
+    // Record node_to_scope and node_to_scope_end
     const blockNode = babelScope.block;
     if (blockNode.start != null) {
       nodeToScope[String(blockNode.start)] = id;
+      if (blockNode.end != null) {
+        nodeToScopeEnd[String(blockNode.start)] = blockNode.end;
+      }
+      const scopeNodeId = getOrAssignNodeId(blockNode);
+      nodeIdToScope[String(scopeNodeId)] = id;
     }
 
     return id;
@@ -161,62 +186,64 @@ function collectScopeInfo(ast) {
       ensureScope(path.scope);
     },
     Identifier(path) {
+      getOrAssignNodeId(path.node);
       if (!path.isReferencedIdentifier()) return;
       const binding = path.scope.getBinding(path.node.name);
-      if (binding && bindingMap.has(binding)) {
-        referenceToBinding[String(path.node.start)] = bindingMap.get(binding);
+      if (binding && bindingMap.has(binding) && path.node.start != null) {
+        mapRef(path.node.start, bindingMap.get(binding), path.node);
       }
+    },
+    JSXIdentifier(path) {
+      getOrAssignNodeId(path.node);
     },
     AssignmentExpression(path) {
       const left = path.get("left");
       if (left.isLVal()) {
-        mapLValToBindings(left, bindingMap, referenceToBinding);
+        mapLValToBindings(left, bindingMap);
       }
     },
     UpdateExpression(path) {
       const argument = path.get("argument");
       if (argument.isLVal()) {
-        mapLValToBindings(argument, bindingMap, referenceToBinding);
+        mapLValToBindings(argument, bindingMap);
       }
     },
   });
 
-  // Map identifiers in assignment targets (LVal positions) to their bindings
-  // in referenceToBinding. This ensures the Rust compiler can resolve all
-  // identifier references, not just "referenced" ones.
-  function mapLValToBindings(lvalPath, bindingMap, refToBinding) {
+  // Map identifiers in assignment targets (LVal positions) to their bindings.
+  function mapLValToBindings(lvalPath, bindingMap) {
     const node = lvalPath.node;
     if (!node) return;
     switch (node.type) {
       case "Identifier": {
         const binding = lvalPath.scope.getBinding(node.name);
         if (binding && bindingMap.has(binding) && node.start != null) {
-          refToBinding[String(node.start)] = bindingMap.get(binding);
+          mapRef(node.start, bindingMap.get(binding), node);
         }
         break;
       }
       case "ArrayPattern": {
         for (const element of lvalPath.get("elements")) {
-          if (element.node) mapLValToBindings(element, bindingMap, refToBinding);
+          if (element.node) mapLValToBindings(element, bindingMap);
         }
         break;
       }
       case "ObjectPattern": {
         for (const property of lvalPath.get("properties")) {
           if (property.isObjectProperty()) {
-            mapLValToBindings(property.get("value"), bindingMap, refToBinding);
+            mapLValToBindings(property.get("value"), bindingMap);
           } else if (property.isRestElement()) {
-            mapLValToBindings(property, bindingMap, refToBinding);
+            mapLValToBindings(property, bindingMap);
           }
         }
         break;
       }
       case "AssignmentPattern": {
-        mapLValToBindings(lvalPath.get("left"), bindingMap, refToBinding);
+        mapLValToBindings(lvalPath.get("left"), bindingMap);
         break;
       }
       case "RestElement": {
-        mapLValToBindings(lvalPath.get("argument"), bindingMap, refToBinding);
+        mapLValToBindings(lvalPath.get("argument"), bindingMap);
         break;
       }
       default:
@@ -224,28 +251,39 @@ function collectScopeInfo(ast) {
     }
   }
 
-  // Record declaration identifiers in reference_to_binding
+  // Record declaration identifiers in reference_to_binding and refNodeIdToBinding
   for (const [binding, bid] of bindingMap) {
     if (binding.identifier && binding.identifier.start != null) {
-      referenceToBinding[String(binding.identifier.start)] = bid;
+      mapRef(binding.identifier.start, bid, binding.identifier);
     }
   }
 
-  return {
+  const result = {
     scopes,
     bindings,
     nodeToScope,
     referenceToBinding,
     programScope: 0,
   };
+  // Only include new fields when non-empty, matching Rust skip_serializing_if
+  if (Object.keys(nodeToScopeEnd).length > 0) {
+    result.nodeToScopeEnd = nodeToScopeEnd;
+  }
+  if (Object.keys(refNodeIdToBinding).length > 0) {
+    result.refNodeIdToBinding = refNodeIdToBinding;
+  }
+  if (Object.keys(nodeIdToScope).length > 0) {
+    result.nodeIdToScope = nodeIdToScope;
+  }
+  return result;
 }
 
 function renameIdentifiers(ast, scopeInfo) {
   traverse(ast, {
     Identifier(path) {
-      const start = path.node.start;
-      if (start != null && String(start) in scopeInfo.referenceToBinding) {
-        const bindingId = scopeInfo.referenceToBinding[String(start)];
+      const nodeId = path.node._nodeId;
+      if (nodeId != null && String(nodeId) in scopeInfo.refNodeIdToBinding) {
+        const bindingId = scopeInfo.refNodeIdToBinding[String(nodeId)];
         const binding = scopeInfo.bindings[bindingId];
         path.node.name = `${path.node.name}_${binding.scope}_${bindingId}`;
       }
@@ -273,21 +311,19 @@ for (const fixture of fixtures) {
       errorRecovery: true,
     });
 
-    const json = JSON.stringify(ast, null, 2);
+    // Collect scope info first — this assigns _nodeId to Identifier nodes
+    const scopeInfo = collectScopeInfo(ast);
 
+    // Serialize AST after scope collection so _nodeId fields are included
     const outPath = path.join(OUTPUT_DIR, fixture + ".json");
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, json);
+    fs.writeFileSync(outPath, JSON.stringify(ast, null, 2));
 
-    // Collect and write scope info
-    const scopeInfo = collectScopeInfo(ast);
+    // Write scope info
     const scopeOutPath = path.join(OUTPUT_DIR, fixture + ".scope.json");
     fs.writeFileSync(scopeOutPath, JSON.stringify(scopeInfo, null, 2));
 
-    // Create renamed AST for scope resolution verification.
-    // Traverse the live Babel AST (already serialized above) using
-    // @babel/traverse so that identifier resolution matches what you'd
-    // get from a standard Babel visitor with NodePath.
+    // Create renamed AST for scope resolution verification
     renameIdentifiers(ast, scopeInfo);
     const renamedOutPath = path.join(OUTPUT_DIR, fixture + ".renamed.json");
     fs.writeFileSync(renamedOutPath, JSON.stringify(ast, null, 2));
