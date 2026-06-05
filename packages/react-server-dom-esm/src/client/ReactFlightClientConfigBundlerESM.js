@@ -139,7 +139,7 @@ export function getModuleDebugInfo<T>(
   if (ioInfo === undefined) {
     let href;
     try {
-      // $FlowFixMe
+      // $FlowFixMe[incompatible-type]
       href = new URL(filename, document.baseURI).href;
     } catch (_) {
       href = filename;
@@ -162,10 +162,10 @@ export function getModuleDebugInfo<T>(
       }
     }
     const value = Promise.resolve(href);
-    // $FlowFixMe
+    // $FlowFixMe[prop-missing]
     value.status = 'fulfilled';
     // Is there some more useful representation for the chunk?
-    // $FlowFixMe
+    // $FlowFixMe[prop-missing]
     value.value = href;
     // Create a fake stack frame that points to the beginning of the chunk. This is
     // probably not source mapped so will link to the compiled source rather than

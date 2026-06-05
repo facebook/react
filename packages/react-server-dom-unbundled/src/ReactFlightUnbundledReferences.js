@@ -63,7 +63,7 @@ const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
 function bind(this: ServerReference<any>): any {
-  // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     if (__DEV__) {
@@ -261,6 +261,8 @@ function getReference(target: Function, name: string | symbol): $FlowFixMe {
 
         const clientReference: ClientReference<any> =
           registerClientReferenceImpl(({}: any), target.$$id, true);
+        // $FlowFixMe[incompatible-variance]
+        // $FlowFixMe[incompatible-type]
         const proxy = new Proxy(clientReference, proxyHandlers);
 
         // Treat this as a resolved Promise for React's use()
@@ -355,5 +357,8 @@ export function createClientModuleProxy<T>(
     moduleId,
     false,
   );
+  // $FlowFixMe[incompatible-variance]
+  // $FlowFixMe[incompatible-type]
+  // $FlowFixMe[incompatible-exact]
   return new Proxy(clientReference, proxyHandlers);
 }

@@ -283,10 +283,12 @@ function processEventDispatch(
       warning: null,
     };
 
+    // $FlowFixMe[incompatible-type]
     profilerData.nativeEvents.push(nativeEvent);
 
     // Keep track of curent event in case future ones overlap.
     // We separate them into different vertical lanes in this case.
+    // $FlowFixMe[incompatible-type]
     state.nativeEventStack.push(nativeEvent);
   }
 }

@@ -212,7 +212,7 @@ export function setValueForPropertyOnCustomComponent(
           node.removeAttribute(name);
         }
       }
-      // $FlowFixMe[incompatible-cast] value can't be casted to EventListener.
+      // $FlowFixMe[incompatible-type] value can't be casted to EventListener.
       node.addEventListener(eventName, (value: EventListener), useCapture);
       return;
     }

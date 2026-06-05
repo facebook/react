@@ -390,6 +390,7 @@ export function attach(
   ) {
     const isRoot = parentID === 0;
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.log(
         '%crecordMount()',
@@ -472,6 +473,7 @@ export function attach(
     parentID: number,
     rootID: number,
   ) {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.group('crawlAndRecordInitialMounts() id:', id);
     }
@@ -485,6 +487,7 @@ export function attach(
       );
     }
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.groupEnd();
     }
@@ -584,6 +587,7 @@ export function attach(
     }
     i += pendingOperations.length;
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       printOperationsArray(operations);
     }

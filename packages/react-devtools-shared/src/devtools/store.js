@@ -96,6 +96,7 @@ class RectRBush extends RBush<Rect> {
 }
 
 const debug = (methodName: string, ...args: Array<string>) => {
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log(
       `%cStore %c${methodName}`,
@@ -273,6 +274,7 @@ export default class Store extends EventEmitter<{
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('constructor', 'subscribing to Bridge');
     }
@@ -1055,6 +1057,7 @@ export default class Store extends EventEmitter<{
   ): Array<SuspenseTimelineStep> {
     const target: Array<SuspenseTimelineStep> = [];
     const focusedTransitionID = this._focusedTransition;
+    // $FlowFixMe[invalid-compare]
     if (focusedTransitionID === null) {
       return target;
     }
@@ -1373,6 +1376,7 @@ export default class Store extends EventEmitter<{
   };
 
   onBridgeOperations: (operations: Array<number>) => void = operations => {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.groupCollapsed('onBridgeOperations');
       debug('onBridgeOperations', operations.join(','));
@@ -1435,6 +1439,7 @@ export default class Store extends EventEmitter<{
           }
 
           if (type === ElementTypeRoot) {
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               debug('Add', `new root node ${id}`);
             }
@@ -1526,6 +1531,7 @@ export default class Store extends EventEmitter<{
             const nameProp = stringTable[namePropStringID];
             i++;
 
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               debug(
                 'Add',
@@ -1633,6 +1639,7 @@ export default class Store extends EventEmitter<{
 
             let parentElement: ?Element = null;
             if (parentID === 0) {
+              // $FlowFixMe[constant-condition]
               if (__DEBUG__) {
                 debug('Remove', `node ${id} root`);
               }
@@ -1643,6 +1650,7 @@ export default class Store extends EventEmitter<{
 
               haveRootsChanged = true;
             } else {
+              // $FlowFixMe[constant-condition]
               if (__DEBUG__) {
                 debug('Remove', `node ${id} from parent ${parentID}`);
               }
@@ -1721,6 +1729,7 @@ export default class Store extends EventEmitter<{
           }
           i += numChildren;
 
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug('Re-order', `Node ${id} children ${children.join(',')}`);
           }
@@ -1776,6 +1785,7 @@ export default class Store extends EventEmitter<{
             }
           }
 
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug(
               'Subtree mode',
@@ -1858,6 +1868,7 @@ export default class Store extends EventEmitter<{
             }
           }
 
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug('Suspense Add', `node ${id} as child of ${parentID}`);
           }
@@ -1931,10 +1942,12 @@ export default class Store extends EventEmitter<{
 
             let parentSuspense: ?SuspenseNode = null;
             if (parentID === 0) {
+              // $FlowFixMe[constant-condition]
               if (__DEBUG__) {
                 debug('Suspense remove', `node ${id} root`);
               }
             } else {
+              // $FlowFixMe[constant-condition]
               if (__DEBUG__) {
                 debug('Suspense Remove', `node ${id} from parent ${parentID}`);
               }
@@ -2005,6 +2018,7 @@ export default class Store extends EventEmitter<{
           }
           i += numChildren;
 
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug(
               'Re-order',
@@ -2063,6 +2077,7 @@ export default class Store extends EventEmitter<{
 
           suspense.rects = nextRects;
 
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug(
               'Resize',
@@ -2117,6 +2132,7 @@ export default class Store extends EventEmitter<{
               break;
             }
 
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               const previousHasUniqueSuspenders = suspense.hasUniqueSuspenders;
               debug(
@@ -2235,6 +2251,7 @@ export default class Store extends EventEmitter<{
       this.emit('suspenseTreeMutated', [removedSuspenseIDs]);
     }
 
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       console.log(printStore(this, true));
       console.groupEnd();
@@ -2319,6 +2336,7 @@ export default class Store extends EventEmitter<{
   }
 
   onBridgeShutdown: () => void = () => {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }

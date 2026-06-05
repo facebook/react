@@ -64,6 +64,7 @@ export function finishQueueingConcurrentUpdates(): void {
     const lane: Lane = concurrentQueues[i];
     concurrentQueues[i++] = null;
 
+    // $FlowFixMe[invalid-compare]
     if (queue !== null && update !== null) {
       const pending = queue.pending;
       if (pending === null) {

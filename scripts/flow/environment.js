@@ -85,7 +85,7 @@ declare class ScrollTimeline extends AnimationTimeline {
 // $FlowFixMe[libdef-override]
 declare opaque type React$Element<
   +ElementType: React$ElementType,
-  +P = React$ElementProps<ElementType>,
+  +P = React$ElementConfig<ElementType>,
 >: {
   +type: ElementType,
   +props: P,

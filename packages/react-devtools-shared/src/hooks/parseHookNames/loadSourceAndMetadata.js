@@ -128,6 +128,7 @@ function extractAndLoadSourceMapJSON(
   // Deduplicate fetches, since there can be multiple location keys per source map.
   const dedupedFetchPromises = new Map<string, Promise<$FlowFixMe>>();
 
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log(
       'extractAndLoadSourceMapJSON() load',
@@ -154,6 +155,7 @@ function extractAndLoadSourceMapJSON(
     );
 
     if (sourceMappingURLMatch == null) {
+      // $FlowFixMe[constant-condition]
       if (__DEBUG__) {
         console.log('extractAndLoadSourceMapJSON() No source map found');
       }
@@ -186,6 +188,7 @@ function extractAndLoadSourceMapJSON(
               () => JSON.parse(decoded),
             );
 
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               console.groupCollapsed(
                 'extractAndLoadSourceMapJSON() Inline source map',
@@ -271,6 +274,7 @@ function extractAndLoadSourceMapJSON(
               error => null,
             );
 
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             if (!dedupedFetchPromises.has(url)) {
               console.log(
@@ -309,6 +313,7 @@ function fetchFile(
 ): Promise<string> {
   return withCallbackPerfMeasurements(`${markName}("${url}")`, done => {
     return new Promise((resolve, reject) => {
+      // $FlowFixMe[incompatible-type]
       fetch(url, FETCH_OPTIONS).then(
         response => {
           if (response.ok) {
@@ -319,6 +324,7 @@ function fetchFile(
                 resolve(text);
               })
               .catch(error => {
+                // $FlowFixMe[constant-condition]
                 if (__DEBUG__) {
                   console.log(
                     `${markName}() Could not read text for url "${url}"`,
@@ -328,6 +334,7 @@ function fetchFile(
                 reject(null);
               });
           } else {
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               console.log(`${markName}() Got bad response for url "${url}"`);
             }
@@ -336,6 +343,7 @@ function fetchFile(
           }
         },
         error => {
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             console.log(`${markName}() Could not fetch file: ${error.message}`);
           }
@@ -371,6 +379,7 @@ export function flattenHooksList(hooksTree: HooksTree): HooksList {
     flattenHooksListImpl(hooksTree, hooksList);
   });
 
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log('flattenHooksList() hooksList:', hooksList);
   }
@@ -387,6 +396,7 @@ function flattenHooksListImpl(
 
     if (isUnnamedBuiltInHook(hook)) {
       // No need to load source code or do any parsing for unnamed hooks.
+      // $FlowFixMe[constant-condition]
       if (__DEBUG__) {
         console.log('flattenHooksListImpl() Skipping unnamed hook', hook);
       }
@@ -483,6 +493,7 @@ function loadSourceFiles(
               throw Error('Source code too large to parse');
             }
 
+            // $FlowFixMe[constant-condition]
             if (__DEBUG__) {
               console.groupCollapsed(
                 `loadSourceFiles() runtimeSourceURL "${runtimeSourceURL}"`,

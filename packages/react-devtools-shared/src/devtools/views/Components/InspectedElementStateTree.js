@@ -58,13 +58,16 @@ export default function InspectedElementStateTree({
     <div>
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>state</div>
+        {/* $FlowFixMe[constant-condition] */}
         {!isEmpty && (
           <Button onClick={handleCopy} title="Copy to clipboard">
             <ButtonIcon type="copy" />
           </Button>
         )}
       </div>
+      {/* $FlowFixMe[constant-condition] */}
       {isEmpty && <div className={styles.Empty}>None</div>}
+      {/* $FlowFixMe[constant-condition] */}
       {!isEmpty &&
         (entries: any).map(([name, value]) => (
           <KeyValue

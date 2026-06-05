@@ -393,7 +393,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
   ) {
     const originalMethod = descriptor.value;
     const originalName = Object.getOwnPropertyDescriptor(
-      // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
+      // $FlowFixMe[incompatible-type]: We should be able to get descriptors from any function.
       originalMethod,
       'name',
     );
@@ -422,6 +422,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         emitConsoleChunk(request, methodName, owner, env, stack, args);
       }
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       return originalMethod.apply(this, arguments);
     };
     if (originalName) {
@@ -438,6 +439,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
   }
 }
 
+// $FlowFixMe[invalid-compare]
 if (__DEV__ && typeof console === 'object' && console !== null) {
   // Instrument console to capture logs for replaying on the client.
   patchConsole(console, 'assert');
@@ -870,6 +872,7 @@ let currentRequest: null | Request = null;
 
 export function resolveRequest(): null | Request {
   if (currentRequest) return currentRequest;
+  // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     const store = requestStorage.getStore();
     if (store) return store;
@@ -1170,7 +1173,7 @@ function serializeReadableStream(
   // receiving side. It also implies that different chunks can be split up or merged as opposed
   // to a readable stream that happens to have Uint8Array as the type which might expect it to be
   // received in the same slices.
-  // $FlowFixMe: This is a Node.js extension.
+  // $FlowFixMe[prop-missing]: This is a Node.js extension.
   let supportsBYOB: void | boolean = stream.supportsBYOB;
   if (supportsBYOB === undefined) {
     try {
@@ -1248,7 +1251,8 @@ function serializeReadableStream(
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
-    // $FlowFixMe should be able to pass mixed
+    // $FlowFixMe[incompatible-type] should be able to pass mixed
+    // $FlowFixMe[incompatible-use]
     reader.cancel(reason).then(error, error);
   }
   function abortStream() {
@@ -1267,7 +1271,7 @@ function serializeReadableStream(
       erroredTask(request, streamTask, reason);
       enqueueFlush(request);
     }
-    // $FlowFixMe should be able to pass mixed
+    // $FlowFixMe[incompatible-use] should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
 
@@ -1381,7 +1385,7 @@ function serializeAsyncIterable(
     enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[prop-missing] should be able to pass mixed
       iterator.throw(reason).then(error, error);
     }
   }
@@ -1403,7 +1407,7 @@ function serializeAsyncIterable(
     }
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
-      // $FlowFixMe should be able to pass mixed
+      // $FlowFixMe[prop-missing] should be able to pass mixed
       iterator.throw(reason).then(error, error);
     }
   }
@@ -1603,10 +1607,10 @@ function processServerComponentReturnValue(
           // tempting to try to return the value from a generator.
           if (iterator === iterableChild) {
             const isGeneratorComponent =
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(Component) ===
                 '[object GeneratorFunction]' &&
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(iterableChild) ===
                 '[object Generator]';
             if (!isGeneratorComponent) {
@@ -1643,10 +1647,10 @@ function processServerComponentReturnValue(
           // tempting to try to return the value from a generator.
           if (iterator === iterableChild) {
             const isGeneratorComponent =
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(Component) ===
                 '[object AsyncGeneratorFunction]' &&
-              // $FlowIgnore[method-unbinding]
+              // $FlowFixMe[method-unbinding]
               Object.prototype.toString.call(iterableChild) ===
                 '[object AsyncGenerator]';
             if (!isGeneratorComponent) {
@@ -1746,6 +1750,7 @@ function renderFunctionComponent<Props>(
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
+    // $FlowFixMe[constant-condition]
     if (supportsComponentStorage) {
       // Run the component in an Async Context that tracks the current owner.
       if (task.debugTask) {
@@ -1789,6 +1794,7 @@ function renderFunctionComponent<Props>(
   if (request.status === ABORTING) {
     if (
       typeof result === 'object' &&
+      // $FlowFixMe[invalid-compare]
       result !== null &&
       typeof result.then === 'function' &&
       !isClientReference(result)
@@ -1894,6 +1900,7 @@ function warnForMissingKey(
       );
     };
 
+    // $FlowFixMe[constant-condition]
     if (supportsComponentStorage) {
       // Run the component in an Async Context that tracks the current owner.
       if (debugTask) {
@@ -3074,6 +3081,7 @@ function serializeServerReference(
       request.bundlerConfig,
       serverReference,
     );
+    // $FlowFixMe[constant-condition]
     if (error) {
       const frames = parseStackTrace(error, 1);
       if (frames.length > 0) {
@@ -3267,17 +3275,17 @@ function serializeDebugBlob(request: Request, blob: Blob): string {
     }
     // TODO: Emit the chunk early and refer to it later by dedupe.
     model.push(entry.value);
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     return reader.read().then(progress).catch(error);
   }
   function error(reason: mixed) {
     const digest = '';
     emitErrorChunk(request, id, digest, reason, true, null);
     enqueueFlush(request);
-    // $FlowFixMe should be able to pass mixed
+    // $FlowFixMe[incompatible-type] should be able to pass mixed
     reader.cancel(reason).then(noop, noop);
   }
-  // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   reader.read().then(progress).catch(error);
   return '$B' + id.toString(16);
 }
@@ -3315,7 +3323,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     // TODO: Emit the chunk early and refer to it later by dedupe.
     model.push(entry.value);
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     return reader.read().then(progress).catch(error);
   }
   function error(reason: mixed) {
@@ -3325,7 +3333,8 @@ function serializeBlob(request: Request, blob: Blob): string {
     request.cacheController.signal.removeEventListener('abort', abortBlob);
     erroredTask(request, newTask, reason);
     enqueueFlush(request);
-    // $FlowFixMe should be able to pass mixed
+    // $FlowFixMe[incompatible-type] should be able to pass mixed
+    // $FlowFixMe[incompatible-use]
     reader.cancel(reason).then(error, error);
   }
   function abortBlob() {
@@ -3344,13 +3353,13 @@ function serializeBlob(request: Request, blob: Blob): string {
       erroredTask(request, newTask, reason);
       enqueueFlush(request);
     }
-    // $FlowFixMe should be able to pass mixed
+    // $FlowFixMe[incompatible-use] should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
 
   request.cacheController.signal.addEventListener('abort', abortBlob);
 
-  // $FlowFixMe[incompatible-call]
+  // $FlowFixMe[incompatible-type]
   reader.read().then(progress).catch(error);
 
   return '$B' + newTask.id.toString(16);
@@ -3418,6 +3427,7 @@ function renderModel(
           getSuspendedThenable()
         : thrownValue;
 
+    // $FlowFixMe[invalid-compare]
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
@@ -3945,7 +3955,7 @@ function renderModelDestructive(
       }
     }
 
-    // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return value;
   }
 
@@ -3966,6 +3976,7 @@ function renderModelDestructive(
         return serializeDateFromDateJSON(value);
       }
     }
+    // $FlowFixMe[invalid-compare]
     if (value.length >= 1024 && byteLengthOfChunk !== null) {
       // For large strings, we encode them outside the JSON payload so that we
       // don't have to double encode and double parse the strings. This can also
@@ -4110,6 +4121,7 @@ function logRecoverableError(
   try {
     const onError = request.onError;
     if (__DEV__ && task !== null) {
+      // $FlowFixMe[constant-condition]
       if (supportsRequestStorage) {
         errorDigest = requestStorage.run(
           undefined,
@@ -4122,6 +4134,7 @@ function logRecoverableError(
       } else {
         errorDigest = callWithDebugContextInDEV(request, task, onError, error);
       }
+      // $FlowFixMe[constant-condition]
     } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
       errorDigest = requestStorage.run(undefined, onError, error);
@@ -4740,6 +4753,7 @@ function emitTextChunk(
   text: string,
   debug: boolean,
 ): void {
+  // $FlowFixMe[invalid-compare]
   if (byteLengthOfChunk === null) {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
@@ -5155,7 +5169,7 @@ function renderDebugModel(
       return instanceDescription;
     }
 
-    // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     return value;
   }
 
@@ -5307,6 +5321,7 @@ function serializeDebugModel(
   debugNoOutline = model;
   try {
     // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type]
     return (stringify(model, replacer): string);
   } catch (x) {
     // $FlowFixMe[incompatible-cast] stringify can return null
@@ -5370,10 +5385,10 @@ function emitOutlinedDebugModelChunk(
   }
   let json: string;
   try {
-    // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type] stringify can return null
     json = (stringify(model, replacer): string);
   } catch (x) {
-    // $FlowFixMe[incompatible-cast] stringify can return null
+    // $FlowFixMe[incompatible-type] stringify can return null
     json = (stringify(
       'Unknown Value: React could not send it from the server.\n' + x.message,
     ): string);
@@ -5724,6 +5739,7 @@ function emitChunk(
   const id = task.id;
   // For certain types we have special types, we typically outlined them but
   // we can emit them directly for this row instead of through an indirection.
+  // $FlowFixMe[invalid-compare]
   if (typeof value === 'string' && byteLengthOfChunk !== null) {
     if (enableTaint) {
       const tainted = TaintRegistryValues.get(value);
@@ -5942,6 +5958,7 @@ function retryTask(request: Request, task: Task): void {
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
         : thrownValue;
+    // $FlowFixMe[invalid-compare]
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
@@ -6282,6 +6299,7 @@ function flushCompletedChunks(request: Request): void {
 
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
+  // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     scheduleMicrotask(() => {
       requestStorage.run(request, performWork, request);

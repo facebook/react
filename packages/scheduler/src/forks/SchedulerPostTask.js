@@ -96,6 +96,7 @@ export function unstable_scheduleCallback<T>(
 
   const controller = new TaskController({priority: postTaskPriority});
   const postTaskOptions = {
+    // $FlowFixMe[invalid-compare]
     delay: typeof options === 'object' && options !== null ? options.delay : 0,
     signal: controller.signal,
   };

@@ -126,6 +126,7 @@ function createReactNoop(
       prevParent !== -1 &&
       prevParent !==
         // $FlowFixMe[prop-missing]
+        // $FlowFixMe[incompatible-type]
         (parentInstance: Instance).id
     ) {
       throw new Error('Reparenting is not allowed');
@@ -133,6 +134,7 @@ function createReactNoop(
 
     child.parent =
       // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-type]
       (parentInstance: Instance).id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
@@ -699,7 +701,7 @@ function createReactNoop(
     resetFormInstance(form: Instance) {},
 
     bindToConsole(methodName: $FlowFixMe, args: Array<any>, badgeName: string) {
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       return Function.prototype.bind.apply(
         // eslint-disable-next-line react-internal/no-production-logging
         console[methodName],
@@ -735,6 +737,7 @@ function createReactNoop(
       oldProps: Props,
       newProps: Props,
     ): void {
+      // $FlowFixMe[invalid-compare]
       if (oldProps === null) {
         throw new Error('Should have old props');
       }
@@ -1011,7 +1014,9 @@ function createReactNoop(
         $$typeof: REACT_ELEMENT_TYPE,
         key: null,
         props: props,
+        // $FlowFixMe[constant-condition]
         _owner: null,
+        // $FlowFixMe[constant-condition]
         _store: __DEV__ ? {} : undefined,
       };
       // $FlowFixMe[prop-missing]
@@ -1141,8 +1146,10 @@ function createReactNoop(
       const previousTransition = ReactSharedInternals.T;
       const preivousEventPriority = currentEventPriority;
       try {
+        // $FlowFixMe[constant-condition]
         ReactSharedInternals.T = null;
         currentEventPriority = DiscreteEventPriority;
+        // $FlowFixMe[constant-condition]
         if (fn) {
           return fn();
         } else {
@@ -1164,9 +1171,12 @@ function createReactNoop(
   }
   function onDefaultTransitionIndicator(): void | (() => void) {}
 
+  // $FlowFixMe[recursive-definition]
+  // $FlowFixMe[definition-cycle]
   let idCounter = 0;
 
-  // $FlowFixMe
+  // $FlowFixMe[definition-cycle]
+  // $FlowFixMe[recursive-definition]
   const ReactNoop = {
     _Scheduler: Scheduler,
 
@@ -1220,9 +1230,10 @@ function createReactNoop(
         root = NoopRenderer.createContainer(
           // $FlowFixMe[incompatible-call] -- Discovered when typechecking noop-renderer
           container,
+          // $FlowFixMe[incompatible-type]
           tag,
           null,
-          // $FlowFixMe[incompatible-call] -- Discovered when typechecking noop-renderer
+          // $FlowFixMe[incompatible-type] -- Discovered when typechecking noop-renderer
           null,
           false,
           '',
@@ -1247,9 +1258,10 @@ function createReactNoop(
       const fiberRoot = NoopRenderer.createContainer(
         // $FlowFixMe[incompatible-call]
         container,
+        // $FlowFixMe[incompatible-type]
         ConcurrentRoot,
         null,
-        // $FlowFixMe[incompatible-call]
+        // $FlowFixMe[incompatible-type]
         null,
         false,
         '',
@@ -1398,9 +1410,11 @@ function createReactNoop(
       if (disableLegacyMode) {
         throw new Error('createLegacyRoot: Unsupported Legacy Mode API.');
       }
+      // $FlowFixMe[incompatible-type]
       const rootID = DEFAULT_ROOT_ID;
       const container = ReactNoop.getOrCreateRootContainer(rootID, LegacyRoot);
       const root = roots.get(container.rootID);
+      // $FlowFixMe[incompatible-type]
       NoopRenderer.updateContainer(element, root, null, callback);
     },
 
@@ -1411,9 +1425,11 @@ function createReactNoop(
     ) {
       const container = ReactNoop.getOrCreateRootContainer(
         rootID,
+        // $FlowFixMe[incompatible-type]
         ConcurrentRoot,
       );
       const root = roots.get(container.rootID);
+      // $FlowFixMe[incompatible-type]
       NoopRenderer.updateContainer(element, root, null, callback);
     },
 
@@ -1543,8 +1559,9 @@ function createReactNoop(
             // $FlowFixMe[unsafe-addition]
             log(indent + '- ' + child.type + '#' + child.id);
 
+            // $FlowFixMe[incompatible-type]
             logHostInstances(
-              // $FlowFixMe[incompatible-call]
+              // $FlowFixMe[incompatible-type]
               child.children,
               depth + 1,
             );
@@ -1562,11 +1579,16 @@ function createReactNoop(
         const update = first;
         if (update !== null) {
           do {
+            // $FlowFixMe[unsafe-addition]
+            // $FlowFixMe[prop-missing]
             log(
               '  '.repeat(depth + 1) + '~',
-              // $FlowFixMe
+              // $FlowFixMe[invalid-compare]
+              // $FlowFixMe[prop-missing]
+              // $FlowFixMe[unsafe-addition]
               '[' + update.expirationTime + ']',
             );
+            // $FlowFixMe[invalid-compare]
           } while (update !== null);
         }
 
@@ -1575,12 +1597,17 @@ function createReactNoop(
           const firstPending = lastPending.next;
           const pendingUpdate = firstPending;
           if (pendingUpdate !== null) {
+            // $FlowFixMe[unsafe-addition]
+            // $FlowFixMe[prop-missing]
             do {
               log(
+                // $FlowFixMe[invalid-compare]
                 '  '.repeat(depth + 1) + '~',
-                // $FlowFixMe
+                // $FlowFixMe[prop-missing]
+                // $FlowFixMe[unsafe-addition]
                 '[' + pendingUpdate.expirationTime + ']',
               );
+              // $FlowFixMe[invalid-compare]
             } while (pendingUpdate !== null && pendingUpdate !== firstPending);
           }
         }
@@ -1597,11 +1624,12 @@ function createReactNoop(
             // $FlowFixMe[prop-missing]
             fiber.childExpirationTime +
             (fiber.pendingProps ? '*' : '') +
+            // $FlowFixMe[incompatible-type]
             ']',
         );
         if (fiber.updateQueue) {
           logUpdateQueue(
-            // $FlowFixMe[incompatible-call]
+            // $FlowFixMe[incompatible-type]
             fiber.updateQueue,
             depth,
           );

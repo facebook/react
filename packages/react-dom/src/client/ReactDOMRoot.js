@@ -187,6 +187,7 @@ export function createRoot(
   let onDefaultTransitionIndicator = defaultOnDefaultTransitionIndicator;
   let transitionCallbacks = null;
 
+  // $FlowFixMe[invalid-compare]
   if (options !== null && options !== undefined) {
     if (__DEV__) {
       if ((options: any).hydrate) {
@@ -196,6 +197,7 @@ export function createRoot(
       } else {
         if (
           typeof options === 'object' &&
+          // $FlowFixMe[invalid-compare]
           options !== null &&
           (options: any).$$typeof === REACT_ELEMENT_TYPE
         ) {
@@ -304,6 +306,7 @@ export function hydrateRoot(
   let onDefaultTransitionIndicator = defaultOnDefaultTransitionIndicator;
   let transitionCallbacks = null;
   let formState = null;
+  // $FlowFixMe[invalid-compare]
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;

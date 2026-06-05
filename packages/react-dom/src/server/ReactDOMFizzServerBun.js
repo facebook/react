@@ -78,7 +78,7 @@ function renderToReadableStream(
         {
           type: 'direct',
           pull: (controller): ?Promise<void> => {
-            // $FlowIgnore
+            // $FlowFixMe[incompatible-type]
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
@@ -87,6 +87,7 @@ function renderToReadableStream(
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
         {highWaterMark: 2048},
       ): any);
       // TODO: Move to sub-classing ReadableStream.

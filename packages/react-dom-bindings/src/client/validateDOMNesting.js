@@ -418,6 +418,7 @@ function isTagValidWithParent(
 
     case 'rp':
     case 'rt':
+      // $FlowFixMe[incompatible-type]
       return impliedEndTags.indexOf(parentTag) === -1;
 
     case 'caption':

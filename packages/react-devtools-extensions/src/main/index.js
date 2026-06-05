@@ -453,6 +453,7 @@ function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
   clearReactPollingInstance();
 
+  // $FlowFixMe[invalid-compare]
   if (store !== null) {
     // Store profiling data, so it can be used later
     profilingData = store.profilerStore.profilingData;

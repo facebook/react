@@ -57,7 +57,7 @@ const resource: Resource<
       resolveFn = resolve;
     });
 
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
+    // $FlowFixMe[incompatible-type] found when upgrading Flow
     inProgressRequests.set(element, {promise, resolveFn});
 
     return (promise: $FlowFixMe);
@@ -93,7 +93,7 @@ function useChangeOwnerAction(): (nextOwnerID: number) => void {
             resolveFn = resolve;
           });
 
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           inProgressRequests.set(element, {promise, resolveFn});
         }
 

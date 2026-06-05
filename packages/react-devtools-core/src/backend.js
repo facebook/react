@@ -51,6 +51,7 @@ let savedComponentFilters: Array<ComponentFilter> =
   getDefaultComponentFilters();
 
 function debug(methodName: string, ...args: Array<mixed>) {
+  // $FlowFixMe[constant-condition]
   if (__DEBUG__) {
     console.log(
       `%c[core/backend] %c${methodName}`,
@@ -154,12 +155,14 @@ export function connectToDevTools(options: ?ConnectOptions) {
       },
       send(event: string, payload: any, transferable?: Array<any>) {
         if (ws.readyState === ws.OPEN) {
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug('wall.send()', event, payload);
           }
 
           ws.send(JSON.stringify({event, payload}));
         } else {
+          // $FlowFixMe[constant-condition]
           if (__DEBUG__) {
             debug(
               'wall.send()',
@@ -186,7 +189,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     );
 
     // TODO (npm-packages) Warn if "isBackendStorageAPISupported"
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
+    // $FlowFixMe[incompatible-type] found when upgrading Flow
     const agent = new Agent(bridge, isProfiling, onReloadAndProfile);
     if (typeof onReloadAndProfileFlagsReset === 'function') {
       onReloadAndProfileFlagsReset();
@@ -210,9 +213,10 @@ export function connectToDevTools(options: ?ConnectOptions) {
     // Setup React Native style editor if the environment supports it.
     if (resolveRNStyle != null || hook.resolveRNStyle != null) {
       setupNativeStyleEditor(
-        // $FlowFixMe[incompatible-call] found when upgrading Flow
+        // $FlowFixMe[incompatible-type] found when upgrading Flow
         bridge,
         agent,
+        // $FlowFixMe[constant-condition]
         ((resolveRNStyle || hook.resolveRNStyle: any): ResolveNativeStyle),
         nativeStyleEditorValidAttributes ||
           hook.nativeStyleEditorValidAttributes ||
@@ -272,6 +276,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
   };
 
   function handleClose() {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('WebSocket.onclose');
     }
@@ -284,6 +289,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
   }
 
   function handleFailed() {
+    // $FlowFixMe[constant-condition]
     if (__DEBUG__) {
       debug('WebSocket.onerror');
     }
@@ -296,6 +302,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     try {
       if (typeof event.data === 'string') {
         data = JSON.parse(event.data);
+        // $FlowFixMe[constant-condition]
         if (__DEBUG__) {
           debug('WebSocket.onmessage', data);
         }

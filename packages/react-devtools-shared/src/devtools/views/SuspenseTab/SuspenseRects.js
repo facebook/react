@@ -522,6 +522,7 @@ function SuspenseRectsContainer({
     });
   }
 
+  // $FlowFixMe[incompatible-type]
   const isRootSelected = roots.includes(inspectedElementID);
   // When we're focusing a Transition, the first timeline step will not be a root.
   const isRootHovered = activityID === null && hoveredTimelineIndex === 0;

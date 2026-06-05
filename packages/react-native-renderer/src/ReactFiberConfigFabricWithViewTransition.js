@@ -94,7 +94,7 @@ export function cloneRootViewTransitionContainer(
   if (__DEV__) {
     console.warn('cloneRootViewTransitionContainer is not implemented');
   }
-  // $FlowFixMe[incompatible-return] Return empty stub
+  // $FlowFixMe[incompatible-type] Return empty stub
   return null;
 }
 

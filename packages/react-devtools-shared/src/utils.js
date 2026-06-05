@@ -597,7 +597,7 @@ export function parseElementDisplayNameFromBackend(
   }
 
   return {
-    // $FlowFixMe[incompatible-return]
+    // $FlowFixMe[incompatible-type]
     formattedDisplayName: displayName,
     hocDisplayNames,
     compiledWithForget: false,
@@ -976,6 +976,7 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
+      // $FlowFixMe[invalid-compare]
       if (typeof data.name === 'function' || data.name === '') {
         return '() => {}';
       }

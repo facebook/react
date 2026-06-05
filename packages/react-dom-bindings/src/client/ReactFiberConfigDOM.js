@@ -1112,6 +1112,7 @@ export function appendChildToContainer(
   // https://github.com/facebook/react/issues/11918
   const reactRootContainer = container._reactRootContainer;
   if (
+    // $FlowFixMe[invalid-compare]
     (reactRootContainer === null || reactRootContainer === undefined) &&
     parentNode.onclick === null
   ) {
@@ -1419,6 +1420,7 @@ export function unhideInstance(instance: Instance, props: Props): void {
   const styleProp = props[STYLE];
   const display =
     styleProp !== undefined &&
+    // $FlowFixMe[invalid-compare]
     styleProp !== null &&
     styleProp.hasOwnProperty('display')
       ? styleProp.display
@@ -1525,7 +1527,7 @@ export function applyViewTransitionName(
     // https://bugs.webkit.org/show_bug.cgi?id=290923
     const rects = instance.getClientRects();
     if (
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       countClientRects(rects) === 1
     ) {
       // If the instance has a single client rect, that means that it can be
@@ -1632,7 +1634,7 @@ export function cancelViewTransitionName(
   if (documentElement !== null) {
     documentElement.animate(
       {opacity: [0, 0], pointerEvents: ['none', 'none']},
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       {
         duration: 0,
         fill: 'forwards',
@@ -1669,7 +1671,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     documentElement.style.viewTransitionName = 'none';
     documentElement.animate(
       {opacity: [0, 0], pointerEvents: ['none', 'none']},
-      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       {
         duration: 0,
         fill: 'forwards',
@@ -1686,6 +1688,7 @@ export function cancelRootViewTransitionName(rootContainer: Container): void {
     documentElement.animate(
       {width: [0, 0], height: [0, 0]},
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       {
         duration: 0,
         fill: 'forwards',
@@ -1782,11 +1785,11 @@ function moveOutOfViewport(
   // while still letting it paint its "old" state to a snapshot.
   const transform = getComputedTransform(originalStyle);
   // Clear the long form properties.
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   element.style.translate = 'none';
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   element.style.scale = 'none';
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   element.style.rotate = 'none';
   // Apply a translate to move it way out of the viewport. This is applied first
   // so that it is in the coordinate space of the parent and not after applying
@@ -1869,7 +1872,7 @@ export function cloneRootViewTransitionContainer(
       if (getComputedStyle(positionedAncestor).position !== 'static') {
         break;
       }
-      // $FlowFixMe: This is refined.
+      // $FlowFixMe[incompatible-type]: This is refined.
       positionedAncestor = positionedAncestor.parentNode;
     }
 
@@ -2267,11 +2270,12 @@ export function startViewTransition(
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
       // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-type]
       const animations = documentElement.getAnimations({subtree: true});
       for (let i = 0; i < animations.length; i++) {
         const animation = animations[i];
         const effect: KeyframeEffect = (animation.effect: any);
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         const pseudoElement: ?string = effect.pseudoElement;
         if (
           pseudoElement != null &&
@@ -2313,13 +2317,13 @@ export function startViewTransition(
             height !== undefined
           ) {
             // Replace the keyframes with ones that don't animate the width/height.
-            // $FlowFixMe
+            // $FlowFixMe[incompatible-type]
             effect.setKeyframes(keyframes);
             // Read back the new animation to see what the underlying width/height of the pseudo-element was.
             const computedStyle = getComputedStyle(
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-type]
               effect.target,
-              // $FlowFixMe
+              // $FlowFixMe[prop-missing]
               effect.pseudoElement,
             );
             if (
@@ -2334,7 +2338,7 @@ export function startViewTransition(
               const last = keyframes[keyframes.length - 1];
               last.width = width;
               last.height = height;
-              // $FlowFixMe
+              // $FlowFixMe[incompatible-type]
               effect.setKeyframes(keyframes);
             }
           }
@@ -2536,7 +2540,7 @@ function animateGesture(
   const reverse = rangeStart > rangeEnd;
   if (timeline instanceof AnimationTimeline) {
     // Native Timeline
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // Set the timeline to the current gesture timeline to drive the updates.
@@ -2558,7 +2562,7 @@ function animateGesture(
     viewTransitionAnimations.push(animation);
   } else {
     // Custom Timeline
-    // $FlowFixMe[incompatible-call]
+    // $FlowFixMe[incompatible-type]
     const animation = targetElement.animate(keyframes, {
       pseudoElement: pseudoElement,
       // We reset all easing functions to linear so that it feels like you
@@ -2617,6 +2621,7 @@ export function startGestureTransition(
       const documentElement: Element = (ownerDocument.documentElement: any);
       // Loop through all View Transition Animations.
       // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-type]
       const animations = documentElement.getAnimations({subtree: true});
       // First do a pass to collect all known group and new items so we can look
       // up if they exist later.
@@ -2626,7 +2631,7 @@ export function startGestureTransition(
       let longestDuration = 0;
       for (let i = 0; i < animations.length; i++) {
         const effect: KeyframeEffect = (animations[i].effect: any);
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         const pseudoElement: ?string = effect.pseudoElement;
         if (pseudoElement == null) {
         } else if (
@@ -2661,7 +2666,7 @@ export function startGestureTransition(
           continue;
         }
         const effect: KeyframeEffect = (anim.effect: any);
-        // $FlowFixMe
+        // $FlowFixMe[prop-missing]
         const pseudoElement: ?string = effect.pseudoElement;
         if (
           pseudoElement != null &&
@@ -2721,7 +2726,7 @@ export function startGestureTransition(
           }
           animateGesture(
             effect.getKeyframes(),
-            // $FlowFixMe: Always documentElement atm.
+            // $FlowFixMe[incompatible-type]: Always documentElement atm.
             effect.target,
             pseudoElement,
             timeline,
@@ -2749,7 +2754,7 @@ export function startGestureTransition(
               const pseudoElementName = '::view-transition-group' + groupName;
               animateGesture(
                 [{}, {}],
-                // $FlowFixMe: Always documentElement atm.
+                // $FlowFixMe[incompatible-type]: Always documentElement atm.
                 effect.target,
                 pseudoElementName,
                 timeline,
@@ -2770,6 +2775,7 @@ export function startGestureTransition(
       // that never stops. This seems to keep all running Animations alive until
       // we explicitly abort (or something forces the View Transition to cancel).
       // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
       const blockingAnim = documentElement.animate([{}, {}], {
         pseudoElement: '::view-transition',
         duration: 1,
@@ -2892,6 +2898,7 @@ ViewTransitionPseudoElement.prototype.animate = function (
         }
       : Object.assign(
           (// $FlowFixMe[prop-missing]
+          // $FlowFixMe[incompatible-type]
           {}: KeyframeAnimationOptions),
           options,
         );
@@ -2908,6 +2915,7 @@ ViewTransitionPseudoElement.prototype.getAnimations = function (
   const selector = this._selector;
   const animations = scope.getAnimations(
     // $FlowFixMe[prop-missing]
+    // $FlowFixMe[incompatible-type]
     {subtree: true},
   );
   const result = [];
@@ -3352,7 +3360,7 @@ FragmentInstance.prototype.getRootNode = function (
   const parentHostInstance =
     getInstanceFromHostFiber<Instance>(parentHostFiber);
   const rootNode =
-    // $FlowFixMe[incompatible-cast] Flow expects Node
+    // $FlowFixMe[incompatible-type] Flow expects Node
     (parentHostInstance.getRootNode(getRootNodeOptions): Document | ShadowRoot);
   return rootNode;
 };
@@ -3476,6 +3484,7 @@ function validateDocumentPositionWithFiberTree(
     if (otherFiber === null) {
       // otherFiber could be null if its the document or body element
       const ownerDocument = otherNode.ownerDocument;
+      // $FlowFixMe[invalid-compare]
       return otherNode === ownerDocument || otherNode === ownerDocument.body;
     }
     return isFragmentContainedByFiber(fragmentFiber, otherFiber);
@@ -4829,11 +4838,11 @@ export type HoistableRoot = Document | ShadowRoot;
 export function getHoistableRoot(container: Container): HoistableRoot {
   // $FlowFixMe[method-unbinding]
   return typeof container.getRootNode === 'function'
-    ? /* $FlowFixMe[incompatible-cast] Flow types this as returning a `Node`,
+    ? /* $FlowFixMe[incompatible-type] Flow types this as returning a `Node`,
        * but it's either a `Document` or `ShadowRoot`. */
       (container.getRootNode(): Document | ShadowRoot)
     : container.nodeType === DOCUMENT_NODE
-      ? // $FlowFixMe[incompatible-cast] We've constrained this to be a Document which satisfies the return type
+      ? // $FlowFixMe[incompatible-type] We've constrained this to be a Document which satisfies the return type
         (container: Document)
       : container.ownerDocument;
 }
@@ -5151,12 +5160,14 @@ function preinitStyle(
     }
 
     // Construct a Resource and cache it
+    // $FlowFixMe[incompatible-type]
     resource = {
       type: 'stylesheet',
       instance,
       count: 1,
       state,
     };
+    // $FlowFixMe[incompatible-type]
     styles.set(key, resource);
     return;
   }
@@ -5570,7 +5581,7 @@ function preloadStylesheet(
     markNodeAsHoistable(instance);
     (ownerDocument.head: any).appendChild(instance);
   }
-  // $FlowFixMe: [incompatible-type] -- if instance is an Element it will also be an HTMLLinkElement
+  // $FlowFixMe[incompatible-type] -- if instance is an Element it will also be an HTMLLinkElement
   state.preload = instance;
   instance.addEventListener('load', () => (state.loading |= Loaded));
   instance.addEventListener('error', () => (state.loading |= Errored));

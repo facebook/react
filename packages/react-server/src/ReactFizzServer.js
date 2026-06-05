@@ -536,6 +536,7 @@ function RequestInstance(
     progressiveChunkSize === undefined
       ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
       : progressiveChunkSize;
+  // $FlowFixMe[constant-condition]
   this.status = isWorkLoopExternallyDriven ? OPEN : OPENING;
   this.fatalError = null;
   this.aborted = false;
@@ -791,6 +792,7 @@ let currentRequest: null | Request = null;
 
 export function resolveRequest(): null | Request {
   if (currentRequest) return currentRequest;
+  // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     const store = requestStorage.getStore();
     if (store) return store;
@@ -801,6 +803,7 @@ export function resolveRequest(): null | Request {
 function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
+  // $FlowFixMe[constant-condition]
   if (isWorkLoopExternallyDriven) {
     return;
   } else {
@@ -1410,7 +1413,7 @@ function renderSuspenseBoundary(
     }
     return;
   }
-  // $FlowFixMe: Refined.
+  // $FlowFixMe[incompatible-type]: Refined.
   const task: RenderTask = someTask;
 
   const prevKeyPath = task.keyPath;
@@ -2220,11 +2223,12 @@ function renderSuspenseList(
 
         let done = false;
 
+        // $FlowFixMe[invalid-compare]
         if (iterator === children) {
           // If it's an iterator we need to continue reading where we left
           // off. We can do that by reading the first few rows from the previous
           // thenable state.
-          // $FlowFixMe
+          // $FlowFixMe[underconstrained-implicit-instantiation]
           let step = readPreviousThenableFromState();
           while (step !== undefined) {
             if (step.done) {
@@ -2360,7 +2364,7 @@ function renderHostElement(
       props,
     ));
     if (isPreambleContext(newContext)) {
-      // $FlowFixMe: Refined
+      // $FlowFixMe[incompatible-type]: Refined
       renderPreamble(request, (task: RenderTask), segment, children);
     } else {
       // We use the non-destructive form because if something suspends, we still
@@ -2985,9 +2989,13 @@ function renderElement(
     // TODO: Delete in LegacyHidden. It's an unstable API only used in the
     // www build. As a migration step, we could add a special prop to Offscreen
     // that simulates the old behavior (no hiding, no change to effects).
+    // $FlowFixMe[invalid-compare]
     case REACT_LEGACY_HIDDEN_TYPE:
+    // $FlowFixMe[invalid-compare] -- falls through
     case REACT_STRICT_MODE_TYPE:
+    // $FlowFixMe[invalid-compare] -- falls through
     case REACT_PROFILER_TYPE:
+    // $FlowFixMe[invalid-compare] -- falls through
     case REACT_FRAGMENT_TYPE: {
       const prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
@@ -2995,14 +3003,17 @@ function renderElement(
       task.keyPath = prevKeyPath;
       return;
     }
+    // $FlowFixMe[invalid-compare]
     case REACT_ACTIVITY_TYPE: {
       renderActivity(request, task, keyPath, props);
       return;
     }
+    // $FlowFixMe[invalid-compare]
     case REACT_SUSPENSE_LIST_TYPE: {
       renderSuspenseList(request, task, keyPath, props);
       return;
     }
+    // $FlowFixMe[invalid-compare]
     case REACT_VIEW_TRANSITION_TYPE: {
       if (enableViewTransition) {
         renderViewTransition(request, task, keyPath, props);
@@ -3010,6 +3021,7 @@ function renderElement(
       }
       // Fallthrough
     }
+    // $FlowFixMe[invalid-compare]
     case REACT_SCOPE_TYPE: {
       if (enableScopeAPI) {
         const prevKeyPath = task.keyPath;
@@ -3020,33 +3032,40 @@ function renderElement(
       }
       throw new Error('ReactDOMServer does not yet support scope components.');
     }
+    // $FlowFixMe[invalid-compare]
     case REACT_SUSPENSE_TYPE: {
       renderSuspenseBoundary(request, task, keyPath, props);
       return;
     }
   }
 
+  // $FlowFixMe[invalid-compare]
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
+      // $FlowFixMe[invalid-compare]
       case REACT_FORWARD_REF_TYPE: {
         renderForwardRef(request, task, keyPath, type, props, ref);
         return;
       }
+      // $FlowFixMe[invalid-compare]
       case REACT_MEMO_TYPE: {
         renderMemo(request, task, keyPath, type, props, ref);
         return;
       }
+      // $FlowFixMe[invalid-compare]
       case REACT_CONTEXT_TYPE: {
         const context = type;
         renderContextProvider(request, task, keyPath, context, props);
         return;
       }
+      // $FlowFixMe[invalid-compare]
       case REACT_CONSUMER_TYPE: {
         const context: ReactContext<any> = (type: ReactConsumerType<any>)
           ._context;
         renderContextConsumer(request, task, keyPath, context, props);
         return;
       }
+      // $FlowFixMe[invalid-compare]
       case REACT_LAZY_TYPE: {
         renderLazyComponent(request, task, keyPath, type, props, ref);
         return;
@@ -3059,6 +3078,7 @@ function renderElement(
     if (
       type === undefined ||
       (typeof type === 'object' &&
+        // $FlowFixMe[invalid-compare]
         type !== null &&
         Object.keys(type).length === 0)
     ) {
@@ -3544,11 +3564,12 @@ function retryNode(request: Request, task: Task): void {
 
         let done = false;
 
+        // $FlowFixMe[invalid-compare]
         if (iterator === node) {
           // If it's an iterator we need to continue reading where we left
           // off. We can do that by reading the first few rows from the previous
           // thenable state.
-          // $FlowFixMe
+          // $FlowFixMe[underconstrained-implicit-instantiation]
           let step = readPreviousThenableFromState();
           while (step !== undefined) {
             if (step.done) {
@@ -3838,7 +3859,7 @@ function renderChildrenArray(
     if (task.replay !== null) {
       replayFragment(
         request,
-        // $FlowFixMe: Refined.
+        // $FlowFixMe[incompatible-type]: Refined.
         task,
         children,
         childIndex,
@@ -3978,6 +3999,7 @@ function trackPostpone(
     return;
   }
 
+  // $FlowFixMe[invalid-compare]
   if (boundary !== null && boundary.status === PENDING) {
     const boundaryNode = trackPostponedBoundary(
       request,
@@ -4009,6 +4031,7 @@ function trackPostpone(
   // We know that this will leave a hole so we might as well assign an ID now.
   // We might have one already if we had a parent that gave us its ID.
   if (segment.id === -1) {
+    // $FlowFixMe[invalid-compare]
     if (segment.parentFlushed && boundary !== null) {
       // If this segment's parent was already flushed, it means we really just
       // skipped the parent and this segment is now the root.
@@ -4221,6 +4244,7 @@ function renderNode(
 
       if (request.aborted) {
         // We are aborting so we can just bubble up to the task by falling through
+        // $FlowFixMe[invalid-compare]
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
@@ -4231,7 +4255,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4267,7 +4291,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedReplayTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4322,6 +4346,7 @@ function renderNode(
 
       if (request.aborted) {
         // We are aborting so we can just bubble up to the task by falling through
+        // $FlowFixMe[invalid-compare]
       } else if (typeof x === 'object' && x !== null) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
@@ -4332,7 +4357,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4367,7 +4392,7 @@ function renderNode(
               : null;
           const newTask = spawnNewSuspendedRenderTask(
             request,
-            // $FlowFixMe: Refined.
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
@@ -4663,7 +4688,9 @@ function abortTask(task: Task, request: Request): void {
         node !== null &&
         (isArray(node) ||
           typeof node[ASYNC_ITERATOR] === 'function' ||
+          // $FlowFixMe[invalid-compare]
           node.$$typeof === REACT_ELEMENT_TYPE ||
+          // $FlowFixMe[invalid-compare]
           node.$$typeof === REACT_LAZY_TYPE) &&
         isArray(node._debugInfo)
       ) {
@@ -4980,6 +5007,7 @@ function finishedSegment(
   boundary: Root | SuspenseBoundary,
   segment: Segment,
 ) {
+  // $FlowFixMe[invalid-compare]
   if (byteLengthOfChunk !== null) {
     // Count the bytes of all the chunks of this segment.
     const chunks = segment.chunks;
@@ -5149,13 +5177,13 @@ function retryTask(request: Request, task: Task): void {
   if (segment === null) {
     retryReplayTask(
       request,
-      // $FlowFixMe: Refined.
+      // $FlowFixMe[incompatible-type]: Refined.
       task,
     );
   } else {
     retryRenderTask(
       request,
-      // $FlowFixMe: Refined.
+      // $FlowFixMe[incompatible-type]: Refined.
       task,
       segment,
     );
@@ -5343,6 +5371,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       return;
     }
 
+    // $FlowFixMe[invalid-compare]
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
@@ -6148,11 +6177,13 @@ function flushCompletedQueues(
 }
 
 export function startWork(request: Request): void {
+  // $FlowFixMe[constant-condition]
   if (isWorkLoopExternallyDriven) {
     return;
   } else {
     request.flushScheduled = request.destination !== null;
     // When prerendering we use microtasks for pinging work
+    // $FlowFixMe[constant-condition]
     if (supportsRequestStorage) {
       scheduleMicrotask(() =>
         requestStorage.run(request, performWork, request),
@@ -6175,6 +6206,7 @@ export function startWork(request: Request): void {
         // During a prerender we don't want to be too aggressive in emitting early preloads
         // because we aren't responding to a live request and we can wait for the prerender to
         // postpone before we emit anything.
+        // $FlowFixMe[constant-condition]
         if (supportsRequestStorage) {
           requestStorage.run(
             request,
