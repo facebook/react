@@ -27635,11 +27635,17 @@ __DEV__ &&
       detachDeletedInstance(instance);
     }
     function getHoistableRoot(container) {
-      return "function" === typeof container.getRootNode
-        ? container.getRootNode()
-        : container.nodeType === DOCUMENT_NODE
-          ? container
-          : container.ownerDocument;
+      if ("function" === typeof container.getRootNode) {
+        var rootNode = container.getRootNode();
+        if (
+          rootNode.nodeType === DOCUMENT_NODE ||
+          rootNode.nodeType === DOCUMENT_FRAGMENT_NODE
+        )
+          return rootNode;
+      }
+      return container.nodeType === DOCUMENT_NODE
+        ? container
+        : container.ownerDocument;
     }
     function preconnectAs(rel, href, crossOrigin) {
       var ownerDocument = globalDocument;
@@ -33565,11 +33571,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.3.0-www-classic-43bcbf80-20260603" !== isomorphicReactPackageVersion)
+      if ("19.3.0-www-classic-900ae094-20260605" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.3.0-www-classic-43bcbf80-20260603\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.3.0-www-classic-900ae094-20260605\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -33612,10 +33618,10 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.3.0-www-classic-43bcbf80-20260603",
+          version: "19.3.0-www-classic-900ae094-20260605",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
-          reconcilerVersion: "19.3.0-www-classic-43bcbf80-20260603"
+          reconcilerVersion: "19.3.0-www-classic-900ae094-20260605"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -34394,5 +34400,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.3.0-www-classic-43bcbf80-20260603";
+    exports.version = "19.3.0-www-classic-900ae094-20260605";
   })();
