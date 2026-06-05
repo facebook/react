@@ -1043,7 +1043,7 @@ function getOutlinedModel<T>(
   switch (chunk.status) {
     case RESOLVED_MODEL:
       initializeModelChunk(chunk);
-      // $FlowFixMe[incompatible-cast] We just initialized this chunk so it can't be a ResolvedModelChunk anymore.
+      // $FlowFixMe[incompatible-type] We just initialized this chunk so it can't be a ResolvedModelChunk anymore.
       chunk = (chunk: Exclude<SomeChunk<T>, ResolvedModelChunk<T>>);
       break;
   }
@@ -1069,6 +1069,7 @@ function getOutlinedModel<T>(
         const name = path[i];
         if (
           typeof value === 'object' &&
+          // $FlowFixMe[invalid-compare] This check is still needed at runtime.
           value !== null &&
           (getPrototypeOf(value) === ObjectPrototype ||
             getPrototypeOf(value) === ArrayPrototype) &&
@@ -1079,7 +1080,7 @@ function getOutlinedModel<T>(
             localLength = 0;
             arrayRoot =
               rootArrayContexts.get(
-                // $FlowFixMe[incompatible-cast] Our `isArray` typing can't narrow `mixed`
+                // $FlowFixMe[incompatible-type] Our `isArray` typing can't narrow `mixed`
                 (value: $ReadOnlyArray<mixed>),
               ) || arrayRoot;
           } else {

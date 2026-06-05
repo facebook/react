@@ -5581,7 +5581,7 @@ function preloadStylesheet(
     markNodeAsHoistable(instance);
     (ownerDocument.head: any).appendChild(instance);
   }
-  // $FlowFixMe: [incompatible-type] -- if instance is an Element it will also be an HTMLLinkElement
+  // $FlowFixMe[incompatible-type] -- if instance is an Element it will also be an HTMLLinkElement
   state.preload = instance;
   instance.addEventListener('load', () => (state.loading |= Loaded));
   instance.addEventListener('error', () => (state.loading |= Errored));

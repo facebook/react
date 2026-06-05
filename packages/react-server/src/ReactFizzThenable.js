@@ -295,7 +295,7 @@ export function ensureSuspendableThenableStateDEV(
       }
       case 'rejected': {
         const previousThenableReason = lastThenable.reason;
-        // $FlowIgnore[method-unbinding] We rebind .then immediately.
+        // $FlowFixMe[method-unbinding] We rebind .then immediately.
         const previousThenableThen = lastThenable.then.bind(lastThenable);
         delete lastThenable.reason;
         delete (lastThenable: any).status;

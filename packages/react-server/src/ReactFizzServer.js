@@ -536,6 +536,7 @@ function RequestInstance(
     progressiveChunkSize === undefined
       ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
       : progressiveChunkSize;
+  // $FlowFixMe[constant-condition]
   this.status = isWorkLoopExternallyDriven ? OPEN : OPENING;
   this.fatalError = null;
   this.aborted = false;
@@ -802,6 +803,7 @@ export function resolveRequest(): null | Request {
 function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
+  // $FlowFixMe[constant-condition]
   if (isWorkLoopExternallyDriven) {
     return;
   } else {
@@ -6175,6 +6177,7 @@ function flushCompletedQueues(
 }
 
 export function startWork(request: Request): void {
+  // $FlowFixMe[constant-condition]
   if (isWorkLoopExternallyDriven) {
     return;
   } else {
