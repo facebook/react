@@ -9,6 +9,7 @@
 
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getCommitTree} from 'react-devtools-shared/src/devtools/views/Profiler/CommitTreeBuilder';
 import {getVersionedRenderImplementation} from './utils';
 
 describe('commit tree', () => {
@@ -30,6 +31,49 @@ describe('commit tree', () => {
   });
 
   const {render} = getVersionedRenderImplementation();
+
+  // @reactVersion >= 16.9
+  it('replays duplicate add operations without duplicating children for the same tree node', () => {
+    const Parent = () => {
+      Scheduler.unstable_advanceTime(1);
+      return <Child />;
+    };
+
+    const Child = () => {
+      Scheduler.unstable_advanceTime(2);
+      return null;
+    };
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => render(<Parent />));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const dataForRoot = store.profilerStore.getDataForRoot(rootID);
+    const firstCommitTree = getCommitTree({
+      commitIndex: 0,
+      profilerStore: store.profilerStore,
+      rootID,
+    });
+
+    // Replay a duplicated payload using the same snapshot and operations shape
+    // that ProfilerStore records from the renderer.
+    dataForRoot.operations.push(dataForRoot.operations[0].slice());
+
+    const secondCommitTree = getCommitTree({
+      commitIndex: 1,
+      profilerStore: store.profilerStore,
+      rootID,
+    });
+
+    expect(secondCommitTree.nodes.size).toBe(firstCommitTree.nodes.size);
+    expect(secondCommitTree.nodes.get(rootID)?.children).toEqual(
+      firstCommitTree.nodes.get(rootID)?.children,
+    );
+    secondCommitTree.nodes.forEach(node => {
+      expect(new Set(node.children).size).toBe(node.children.length);
+    });
+  });
 
   // @reactVersion >= 16.9
   it('should be able to rebuild the store tree for each commit', () => {
