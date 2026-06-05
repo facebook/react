@@ -7,10 +7,13 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.CurrentRenderInfo strong {
+  color: var(--color-text-primary);
+}
+
 .Content {
-  padding: 0.5rem;
+  padding: 0 0.5rem 0.5rem;
   user-select: none;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
