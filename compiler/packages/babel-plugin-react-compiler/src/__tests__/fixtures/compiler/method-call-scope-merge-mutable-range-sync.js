@@ -24,8 +24,8 @@ function Component({store}) {
   }
 
   return (
-    <tr key={store.id}>
-      <td>
+    <div key={store.id}>
+      <span>
         <span>
           {fbt(
             `Directory: ${fbt.param(
@@ -62,15 +62,15 @@ function Component({store}) {
             Copy
           </button>
         </span>
-      </td>
-      <td>
+      </span>
+      <span>
         <button onClick={() => setIsShown(true)} />
         <button onClick={() => console.log(id.toString())} />
         {isShown && (
           <button onClick={() => setIsShown(false)} />
         )}
-      </td>
-    </tr>
+      </span>
+    </div>
   );
 }
 
