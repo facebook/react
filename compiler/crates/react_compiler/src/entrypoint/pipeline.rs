@@ -1343,6 +1343,7 @@ fn outlined_assign_pattern_positions(
             let p = *pos;
             *pos += 1;
             id.base.start = Some(p);
+            id.base.node_id = Some(p);
             // Add as a binding
             if !fn_bindings.contains_key(&id.name) {
                 let binding_id = BindingId(bindings_list.len() as u32);
@@ -1354,7 +1355,7 @@ fn outlined_assign_pattern_positions(
                     scope: ScopeId(1),
                     declaration_type: "VariableDeclarator".to_string(),
                     declaration_start: Some(p),
-                    declaration_node_id: None,
+                    declaration_node_id: Some(p),
                     import: None,
                 });
                 ref_to_binding.insert(p, binding_id);
@@ -1486,6 +1487,7 @@ fn outlined_assign_expr_positions(
             let p = *pos;
             *pos += 1;
             id.base.start = Some(p);
+            id.base.node_id = Some(p);
             if let Some(&bid) = fn_bindings.get(&id.name) {
                 ref_to_binding.insert(p, bid);
             }
@@ -1544,6 +1546,7 @@ fn outlined_assign_jsx_name_positions(
             let p = *pos;
             *pos += 1;
             id.base.start = Some(p);
+            id.base.node_id = Some(p);
             if let Some(&bid) = fn_bindings.get(&id.name) {
                 ref_to_binding.insert(p, bid);
             }
@@ -1566,6 +1569,7 @@ fn outlined_assign_jsx_member_positions(
             let p = *pos;
             *pos += 1;
             id.base.start = Some(p);
+            id.base.node_id = Some(p);
             if let Some(&bid) = fn_bindings.get(&id.name) {
                 ref_to_binding.insert(p, bid);
             }

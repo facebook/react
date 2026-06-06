@@ -508,8 +508,12 @@ pub fn codegen_function(
         }
     }
 
-    // Process outlined functions
-    let outlined_entries = cx.env.take_outlined_functions();
+    // Process outlined functions.
+    // Use clone (not take) to match TS behavior: getOutlinedFunctions() returns
+    // a reference, so outlined functions persist on the environment and are also
+    // available to the parent function's codegen. The inner function codegen
+    // processes them here, and the parent/top-level codegen processes them again.
+    let outlined_entries = cx.env.get_outlined_functions().to_vec();
     let mut outlined: Vec<OutlinedFunction> = Vec::new();
     for entry in outlined_entries {
         let reactive_fn = build_reactive_function(&entry.func, cx.env)?;
