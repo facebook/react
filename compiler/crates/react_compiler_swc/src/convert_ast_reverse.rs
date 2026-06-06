@@ -313,7 +313,120 @@ impl ReverseCtx {
             BabelStmt::ExportAllDeclaration(d) => ModuleItem::ModuleDecl(ModuleDecl::ExportAll(
                 self.convert_export_all_declaration(d),
             )),
+            // The preserved TS module-interop statements are module
+            // declarations in swc, which `convert_statement` (returning
+            // `Stmt`) cannot represent, so they are rebuilt here.
+            BabelStmt::Unknown(unknown) => match self.convert_unknown_to_module_decl(unknown) {
+                Some(decl) => ModuleItem::ModuleDecl(decl),
+                None => ModuleItem::Stmt(self.convert_statement(stmt)),
+            },
             _ => ModuleItem::Stmt(self.convert_statement(stmt)),
+        }
+    }
+
+    /// Rebuild the TS module-interop statements carried as raw
+    /// [`BabelStmt::Unknown`] nodes. `None` (other node types, malformed raw
+    /// JSON) routes the caller to the runtime-throw tripwire; silently
+    /// dropping the statement is the failure mode this path exists to avoid.
+    fn convert_unknown_to_module_decl(
+        &self,
+        unknown: &babel_stmt::UnknownStatement,
+    ) -> Option<ModuleDecl> {
+        let raw = unknown.raw();
+        match unknown.node_type() {
+            "TSImportEqualsDeclaration" => {
+                let id = self.ident_from_raw(raw.get("id")?)?;
+                let module_ref = self.ts_module_ref_from_raw(raw.get("moduleReference")?)?;
+                // Some Babel versions omit `importKind` for value imports,
+                // so an absent key defaults to value.
+                let is_type_only = match raw.get("importKind") {
+                    None => false,
+                    Some(kind) => match kind.as_str() {
+                        Some("type") => true,
+                        Some("value") => false,
+                        _ => return None,
+                    },
+                };
+                let is_export = match raw.get("isExport") {
+                    None => false,
+                    Some(value) => value.as_bool()?,
+                };
+                Some(ModuleDecl::TsImportEquals(Box::new(TsImportEqualsDecl {
+                    span: self.span(unknown.base()),
+                    is_export,
+                    is_type_only,
+                    id,
+                    module_ref,
+                })))
+            }
+            "TSExportAssignment" => {
+                let expr: BabelExpr =
+                    serde_json::from_value(raw.get("expression")?.clone()).ok()?;
+                Some(ModuleDecl::TsExportAssignment(TsExportAssignment {
+                    span: self.span(unknown.base()),
+                    expr: Box::new(self.convert_expression(&expr)),
+                }))
+            }
+            "TSNamespaceExportDeclaration" => {
+                let id = self.ident_from_raw(raw.get("id")?)?;
+                Some(ModuleDecl::TsNamespaceExport(TsNamespaceExportDecl {
+                    span: self.span(unknown.base()),
+                    id,
+                }))
+            }
+            _ => None,
+        }
+    }
+
+    fn ident_from_raw(&self, raw: &serde_json::Value) -> Option<Ident> {
+        if raw.get("type").and_then(serde_json::Value::as_str) != Some("Identifier") {
+            return None;
+        }
+        let id: babel_expr::Identifier = serde_json::from_value(raw.clone()).ok()?;
+        Some(self.ident(&id.name, self.span_no_comments(&id.base)))
+    }
+
+    fn ts_module_ref_from_raw(&self, raw: &serde_json::Value) -> Option<TsModuleRef> {
+        match raw.get("type").and_then(serde_json::Value::as_str)? {
+            "TSExternalModuleReference" => {
+                let expr = raw.get("expression")?;
+                if expr.get("type").and_then(serde_json::Value::as_str) != Some("StringLiteral") {
+                    return None;
+                }
+                let lit: react_compiler_ast::literals::StringLiteral =
+                    serde_json::from_value(expr.clone()).ok()?;
+                let ref_base: BaseNode = serde_json::from_value(raw.clone()).ok()?;
+                Some(TsModuleRef::TsExternalModuleRef(TsExternalModuleRef {
+                    span: self.span_no_comments(&ref_base),
+                    expr: Str {
+                        span: self.span_no_comments(&lit.base),
+                        value: self.wtf8(&lit.value),
+                        raw: None,
+                    },
+                }))
+            }
+            "TSQualifiedName" | "Identifier" => self
+                .ts_entity_name_from_raw(raw)
+                .map(TsModuleRef::TsEntityName),
+            _ => None,
+        }
+    }
+
+    fn ts_entity_name_from_raw(&self, raw: &serde_json::Value) -> Option<TsEntityName> {
+        match raw.get("type").and_then(serde_json::Value::as_str)? {
+            "Identifier" => self.ident_from_raw(raw).map(TsEntityName::Ident),
+            "TSQualifiedName" => {
+                let base: BaseNode = serde_json::from_value(raw.clone()).ok()?;
+                let left = self.ts_entity_name_from_raw(raw.get("left")?)?;
+                let right: babel_expr::Identifier =
+                    serde_json::from_value(raw.get("right")?.clone()).ok()?;
+                Some(TsEntityName::TsQualifiedName(Box::new(TsQualifiedName {
+                    span: self.span_no_comments(&base),
+                    left,
+                    right: self.ident_name(&right.name, self.span_no_comments(&right.base)),
+                })))
+            }
+            _ => None,
         }
     }
 
@@ -545,12 +658,10 @@ impl ReverseCtx {
             | BabelStmt::DeclareInterface(_)
             | BabelStmt::DeclareTypeAlias(_)
             | BabelStmt::DeclareOpaqueType(_) => Stmt::Empty(EmptyStmt { span: DUMMY_SP }),
-            // Unreachable from the SWC path in this slice: the SWC forward
-            // converter rewrites unmodeled TS statements to EmptyStatement, so
-            // an `Unknown` never reaches here. Degrading it to EmptyStatement
-            // would silently drop the node, so emit a deliberate runtime
-            // tripwire (a `throw` in generated code) if this arm is ever
-            // reached without a matching forward-conversion policy.
+            // Only unknown node types without a reverse mapping reach this
+            // arm. Degrading to EmptyStatement would silently drop the node,
+            // so emit a deliberate runtime tripwire (a `throw` in generated
+            // code) instead.
             BabelStmt::Unknown(unknown) => {
                 let message = format!(
                     "[react-compiler] internal error: unmodeled statement `{}` reached the SWC reverse converter",

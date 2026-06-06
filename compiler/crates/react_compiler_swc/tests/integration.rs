@@ -607,3 +607,153 @@ fn reverse_convert_multiple_statement_types() {
     let swc_module = convert_program_to_swc(&file);
     assert_eq!(swc_module.module.body.len(), 5);
 }
+
+// ── TS module interop statements ────────────────────────────────────────────
+
+fn parse_ts_module(source: &str) -> swc_ecma_ast::Module {
+    let cm = Lrc::new(SourceMap::default());
+    let fm = cm.new_source_file(Lrc::new(FileName::Anon), source.to_string());
+    let mut errors = vec![];
+    parse_file_as_module(
+        &fm,
+        Syntax::Typescript(swc_ecma_parser::TsSyntax {
+            tsx: true,
+            ..Default::default()
+        }),
+        EsVersion::latest(),
+        None,
+        &mut errors,
+    )
+    .expect("Failed to parse")
+}
+
+/// The TS module-interop statements (`import x = require(...)`, `export = x`,
+/// `export as namespace X`) flow through `Statement::Unknown` (carrying the
+/// raw Babel shape), survive a JSON round trip like the real pipeline, get
+/// rebuilt as SWC module declarations, and print back as the source
+/// statements. The namespace export exercises the post-emit fixup for the
+/// upstream swc_ecma_codegen bug that prints `TsNamespaceExportDecl` as
+/// `export = X`.
+#[test]
+fn ts_module_interop_statements_round_trip() {
+    let source =
+        "import lib = require('shared-runtime');\nexport = lib;\nexport as namespace Foo;\n";
+    let module = parse_ts_module(source);
+    let file = convert_module(&module, source);
+
+    let expected_types = [
+        "TSImportEqualsDeclaration",
+        "TSExportAssignment",
+        "TSNamespaceExportDeclaration",
+    ];
+    assert_eq!(file.program.body.len(), 3);
+    for (stmt, expected) in file.program.body.iter().zip(expected_types) {
+        match stmt {
+            Statement::Unknown(unknown) => assert_eq!(unknown.node_type(), expected),
+            other => panic!("expected Unknown({expected}), got {other:?}"),
+        }
+    }
+
+    // Round trip through JSON like the compiler pipeline does.
+    let json = serde_json::to_value(&file).expect("serialize to JSON");
+    let deserialized: react_compiler_ast::File =
+        serde_json::from_value(json).expect("deserialize from JSON");
+
+    let swc_module = convert_program_to_swc(&deserialized).module;
+    assert_eq!(swc_module.body.len(), 3);
+    assert!(matches!(
+        &swc_module.body[0],
+        swc_ecma_ast::ModuleItem::ModuleDecl(swc_ecma_ast::ModuleDecl::TsImportEquals(_))
+    ));
+    assert!(matches!(
+        &swc_module.body[1],
+        swc_ecma_ast::ModuleItem::ModuleDecl(swc_ecma_ast::ModuleDecl::TsExportAssignment(_))
+    ));
+    assert!(matches!(
+        &swc_module.body[2],
+        swc_ecma_ast::ModuleItem::ModuleDecl(swc_ecma_ast::ModuleDecl::TsNamespaceExport(_))
+    ));
+
+    let code = react_compiler_swc::emit_with_comments(&swc_module, None, &[]);
+    assert!(
+        code.contains("import lib = require(\"shared-runtime\");"),
+        "missing import-equals in output: {code}"
+    );
+    assert!(
+        code.contains("export = lib"),
+        "missing export-assignment in output: {code}"
+    );
+    assert!(
+        code.contains("export as namespace Foo;"),
+        "missing namespace export in output: {code}"
+    );
+}
+
+/// A qualified-name module reference (`import a = b.c.d`) round-trips
+/// through the raw `TSQualifiedName` shape.
+#[test]
+fn ts_import_equals_qualified_name_round_trips() {
+    let source = "import a = b.c.d;\n";
+    let module = parse_ts_module(source);
+    let file = convert_module(&module, source);
+
+    let json = serde_json::to_value(&file).expect("serialize to JSON");
+    let deserialized: react_compiler_ast::File =
+        serde_json::from_value(json).expect("deserialize from JSON");
+
+    let swc_module = convert_program_to_swc(&deserialized).module;
+    let code = react_compiler_swc::emit_with_comments(&swc_module, None, &[]);
+    assert!(
+        code.contains("import a = b.c.d;"),
+        "missing qualified import-equals in output: {code}"
+    );
+}
+
+/// Round-trip a TS import-equals declaration source string and return the
+/// rebuilt SWC declaration plus the emitted code.
+fn round_trip_import_equals(source: &str) -> (swc_ecma_ast::TsImportEqualsDecl, String) {
+    let module = parse_ts_module(source);
+    let file = convert_module(&module, source);
+
+    let json = serde_json::to_value(&file).expect("serialize to JSON");
+    let deserialized: react_compiler_ast::File =
+        serde_json::from_value(json).expect("deserialize from JSON");
+
+    let swc_module = convert_program_to_swc(&deserialized).module;
+    let decl = match &swc_module.body[0] {
+        swc_ecma_ast::ModuleItem::ModuleDecl(swc_ecma_ast::ModuleDecl::TsImportEquals(d)) => {
+            (**d).clone()
+        }
+        other => panic!("expected TsImportEquals, got {other:?}"),
+    };
+    let code = react_compiler_swc::emit_with_comments(&swc_module, None, &[]);
+    (decl, code)
+}
+
+/// `import type x = require(...)` round-trips with `is_type_only`
+/// preserved through the raw `importKind: "type"` field.
+#[test]
+fn ts_import_equals_type_only_round_trips() {
+    let source = "import type x = require('shared-runtime');\n";
+    let (decl, code) = round_trip_import_equals(source);
+    assert!(decl.is_type_only, "is_type_only lost in round trip");
+    assert!(!decl.is_export);
+    assert!(
+        code.contains("import type x = require(\"shared-runtime\");"),
+        "missing type-only import-equals in output: {code}"
+    );
+}
+
+/// `export import x = require(...)` round-trips with `is_export` preserved
+/// through the raw `isExport: true` field.
+#[test]
+fn ts_import_equals_export_round_trips() {
+    let source = "export import x = require('shared-runtime');\n";
+    let (decl, code) = round_trip_import_equals(source);
+    assert!(decl.is_export, "is_export lost in round trip");
+    assert!(!decl.is_type_only);
+    assert!(
+        code.contains("export import x = require(\"shared-runtime\");"),
+        "missing exported import-equals in output: {code}"
+    );
+}
