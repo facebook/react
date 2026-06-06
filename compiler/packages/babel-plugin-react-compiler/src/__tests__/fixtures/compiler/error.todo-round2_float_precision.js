@@ -3,12 +3,10 @@
 /**
  * @flow strict-local
  */
-component RealTimeIcon(
-) renders SVGIconBase {
+component RealTimeIcon() renders SVGIconBase {
   return (
     <SVGIconBase
       aspectRatio={1.0666666666666667}
-      viewBox="0 0 16 15">
-    </SVGIconBase>
+      viewBox="0 0 16 15"></SVGIconBase>
   );
 }

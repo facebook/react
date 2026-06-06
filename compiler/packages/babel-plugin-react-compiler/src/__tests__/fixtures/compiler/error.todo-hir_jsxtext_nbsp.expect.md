@@ -8,8 +8,7 @@
 /**
  * @flow strict-local
  */
-export default component HeadlineWithAddOn(
-) {
+export default component HeadlineWithAddOn() {
   return (
     <Text>
       <Row>

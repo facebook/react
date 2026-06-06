@@ -39,3 +39,14 @@ compiler/*.ico
 compiler/*.svg
 compiler/*.lock
 compiler/*.toml
+
+# Flow `match` syntax fixtures: prettier's Flow parser cannot parse the
+# experimental syntax (snap parses them with hermes-parser and the
+# enableExperimentalFlowMatchSyntax flag). Unignore when prettier's Flow
+# support catches up.
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-expr-captured-var.flow.js
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-expr-jsx-spread.flow.js
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-expr-multi-gen-bindings.flow.js
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-expr-outlined-jsx.flow.js
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-expression-with-tuple-and-early-return.js
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-stmt-self-ref-const.flow.js

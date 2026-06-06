@@ -38,12 +38,12 @@ const stores = new Set<string>();
 
 function adHocSelector<T>(
   storeName: string,
-  genFunction: () => Promise<empty>,
+  genFunction: () => Promise<empty>
 ): SelectorStrict<LoadObject<unknown>, unknown, unknown> {
   invariant(
     !stores.has(storeName),
     'adHocSelector was run multiple times for store name %s',
-    storeName,
+    storeName
   );
   stores.add(storeName);
   class AdHocStore extends BaseSingleDataStore<T, void> {
@@ -53,14 +53,14 @@ function adHocSelector<T>(
   const adHocStore = new AdHocStore(storeName, DataAtom);
 
   return createLoadObjectSelector([storeToSelector(adHocStore)], () =>
-    adHocStore.getData(),
+    adHocStore.getData()
   );
 }
 
 // $FlowFixMe[incompatible-type]
 export default adHocSelector as <T>(
   storeName: string,
-  genFunction: () => Promise<empty>,
+  genFunction: () => Promise<empty>
 ) => SelectorStrict<LoadObject<T>>;
 
 ```
@@ -82,7 +82,7 @@ error.bug-hir_loc_diff_2.ts:49:25
      |                          ^^^^^^^^^^ this is uninitialized
   50 |
   51 |   return createLoadObjectSelector([storeToSelector(adHocStore)], () =>
-  52 |     adHocStore.getData(),
+  52 |     adHocStore.getData()
 ```
           
       

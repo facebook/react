@@ -352,9 +352,7 @@ function compileFixture(mode: CompileMode, fixturePath: string): CompileOutput {
     const result = babel.transformSync(source, {
       filename: fixturePath,
       sourceType: isScript ? 'script' : 'module',
-      ...(isFlow
-        ? {}
-        : {parserOpts: {plugins: ['typescript', 'jsx']}}),
+      ...(isFlow ? {} : {parserOpts: {plugins: ['typescript', 'jsx']}}),
       plugins: babelPlugins,
       configFile: false,
       babelrc: false,

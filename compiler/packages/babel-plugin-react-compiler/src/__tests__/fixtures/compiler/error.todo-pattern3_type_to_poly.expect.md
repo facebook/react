@@ -9,12 +9,12 @@
 /**
  * @flow strict
  */
-export default function flipAndAggregateObject<
-  TValue extends string,
->(obj: {+[key: TKey]: TValue, ...}): {} {
+export default function flipAndAggregateObject<TValue extends string>(obj: {
+  +[key: TKey]: TValue,
+  ...
+}): {} {
   return Object.entries(obj).reduce((acc, [currKey, currVal]) => {
-    return {
-    };
+    return {};
   }, {});
 }
 
@@ -24,7 +24,7 @@ export default function flipAndAggregateObject<
 ## Error
 
 ```
-Unexpected token (10:8)
+Unexpected token (9:2)
 ```
           
       

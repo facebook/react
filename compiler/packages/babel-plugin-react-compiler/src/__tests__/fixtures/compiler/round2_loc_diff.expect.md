@@ -7,8 +7,7 @@
 /**
  */
 window.ClientLogger = (function () {
-  function getURLFromQueryParams(
-  ): string {
+  function getURLFromQueryParams(): string {
     for (var key in queryParams) {
       if (value != null) {
         if (Array.isArray(value)) {
@@ -17,7 +16,7 @@ window.ClientLogger = (function () {
           }
           Object.keys(value).forEach(object_key => {
             paramParts.push(
-              key + `[${object_key}]=` + encodeURIComponent(value[object_key]),
+              key + `[${object_key}]=` + encodeURIComponent(value[object_key])
             );
           });
         }

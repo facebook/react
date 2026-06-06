@@ -69,9 +69,7 @@ if (positional.length < 2) {
   );
   console.error('');
   console.error('Arguments:');
-  console.error(
-    '  <config-path>    Path to the compiler configuration module',
-  );
+  console.error('  <config-path>    Path to the compiler configuration module');
   console.error(
     '  <source-root>    Root directory for resolving config source prefixes',
   );
@@ -98,9 +96,7 @@ const RESET = noColor ? '' : '\x1b[0m';
 
 // --- Load config ---
 if (!fs.existsSync(configPath)) {
-  console.error(
-    `${RED}ERROR: Could not find config at ${configPath}${RESET}`,
-  );
+  console.error(`${RED}ERROR: Could not find config at ${configPath}${RESET}`);
   process.exit(1);
 }
 if (!fs.existsSync(sourceRoot) || !fs.statSync(sourceRoot).isDirectory()) {

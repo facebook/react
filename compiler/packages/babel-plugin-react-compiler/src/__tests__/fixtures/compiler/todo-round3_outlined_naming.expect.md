@@ -14,7 +14,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 2, items: [1, 2, 3] }],
+  params: [{a: 1, b: 2, items: [1, 2, 3]}],
 };
 
 ```

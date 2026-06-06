@@ -6,12 +6,19 @@ function Component({items}) {
   const colgroup = useMemo(
     () => (
       <colgroup>
-        {items.map(item => <col key={item.id} />)}
+        {items.map(item => (
+          <col key={item.id} />
+        ))}
       </colgroup>
     ),
-    [items],
+    [items]
   );
-  return <table>{colgroup}<tbody /></table>;
+  return (
+    <table>
+      {colgroup}
+      <tbody />
+    </table>
+  );
 }
 
 ```
@@ -34,19 +41,23 @@ error.todo-jsx-intrinsic-tag-matches-local-binding.ts:2:2
      | ^^^^^^^^^^^
 >  4 |       <colgroup>
      | ^^^^^^^^^^^
->  5 |         {items.map(item => <col key={item.id} />)}
+>  5 |         {items.map(item => (
      | ^^^^^^^^^^^
->  6 |       </colgroup>
+>  6 |           <col key={item.id} />
      | ^^^^^^^^^^^
->  7 |     ),
+>  7 |         ))}
      | ^^^^^^^^^^^
->  8 |     [items],
+>  8 |       </colgroup>
      | ^^^^^^^^^^^
->  9 |   );
+>  9 |     ),
+     | ^^^^^^^^^^^
+> 10 |     [items]
+     | ^^^^^^^^^^^
+> 11 |   );
      | ^^^^^ [hoisting] EnterSSA: Expected identifier to be defined before being used
-  10 |   return <table>{colgroup}<tbody /></table>;
-  11 | }
-  12 |
+  12 |   return (
+  13 |     <table>
+  14 |       {colgroup}
 ```
           
       

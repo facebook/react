@@ -77,21 +77,22 @@ function lintWithBackend(
     if (useRust) {
       opts.__unstable_useRustCompiler = true;
     }
-    ruleConfig[`react-compiler/${name}`] = [
-      severity,
-      opts,
-    ];
+    ruleConfig[`react-compiler/${name}`] = [severity, opts];
   }
 
-  const messages = linter.verify(code, {
-    parser: 'hermes-eslint',
-    parserOptions: {
-      ecmaVersion: 2015,
-      sourceType: 'module',
-      enableExperimentalComponentSyntax: true,
+  const messages = linter.verify(
+    code,
+    {
+      parser: 'hermes-eslint',
+      parserOptions: {
+        ecmaVersion: 2015,
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+      rules: ruleConfig,
     },
-    rules: ruleConfig,
-  }, {filename});
+    {filename},
+  );
 
   // Filter out parser errors — only keep rule diagnostics
   const diagnostics: DiagnosticSummary[] = messages
@@ -134,17 +135,21 @@ function lintWithRule(
   const severity = mapErrorSeverityToESlint(ruleEntry.severity);
   if (severity === 'off') return [];
 
-  const messages = linter.verify(code, {
-    parser: 'hermes-eslint',
-    parserOptions: {
-      ecmaVersion: 2015,
-      sourceType: 'module',
-      enableExperimentalComponentSyntax: true,
+  const messages = linter.verify(
+    code,
+    {
+      parser: 'hermes-eslint',
+      parserOptions: {
+        ecmaVersion: 2015,
+        sourceType: 'module',
+        enableExperimentalComponentSyntax: true,
+      },
+      rules: {
+        [`react-compiler/${ruleName}`]: [severity, opts],
+      },
     },
-    rules: {
-      [`react-compiler/${ruleName}`]: [severity, opts],
-    },
-  }, {filename});
+    {filename},
+  );
 
   const diagnostics: DiagnosticSummary[] = messages
     .filter(m => m.ruleId != null)
@@ -494,12 +499,16 @@ describeIfRust('TS vs Rust backend comparison', () => {
 
       // First check: both backends agree on error count
       if (tsDiags.length !== rustDiags.length) {
-        const tsMessages = tsDiags.map(d => `  L${d.line}: ${d.message}`).join('\n');
-        const rustMessages = rustDiags.map(d => `  L${d.line}: ${d.message}`).join('\n');
+        const tsMessages = tsDiags
+          .map(d => `  L${d.line}: ${d.message}`)
+          .join('\n');
+        const rustMessages = rustDiags
+          .map(d => `  L${d.line}: ${d.message}`)
+          .join('\n');
         console.log(
           `\n⚠️  DIAGNOSTIC COUNT MISMATCH: ${tc.name}\n` +
-          `  TS (${tsDiags.length}):\n${tsMessages || '    (none)'}\n` +
-          `  Rust (${rustDiags.length}):\n${rustMessages || '    (none)'}\n`
+            `  TS (${tsDiags.length}):\n${tsMessages || '    (none)'}\n` +
+            `  Rust (${rustDiags.length}):\n${rustMessages || '    (none)'}\n`,
         );
       }
 
@@ -512,8 +521,8 @@ describeIfRust('TS vs Rust backend comparison', () => {
       if (JSON.stringify(tsDiags) !== JSON.stringify(rustDiags)) {
         console.log(
           `\n⚠️  DIAGNOSTIC MISMATCH: ${tc.name}\n` +
-          `  TS diagnostics:\n${tsDiags.map(d => `    L${d.line}: ${d.message}`).join('\n') || '    (none)'}\n` +
-          `  Rust diagnostics:\n${rustDiags.map(d => `    L${d.line}: ${d.message}`).join('\n') || '    (none)'}\n`
+            `  TS diagnostics:\n${tsDiags.map(d => `    L${d.line}: ${d.message}`).join('\n') || '    (none)'}\n` +
+            `  Rust diagnostics:\n${rustDiags.map(d => `    L${d.line}: ${d.message}`).join('\n') || '    (none)'}\n`,
         );
       }
 
@@ -540,8 +549,12 @@ describeIfRust('TS vs Rust backend comparison', () => {
       console.log('\nMismatched cases:');
       for (const m of mismatches) {
         console.log(`\n  ❌ ${m.name}`);
-        console.log(`     TS  (${m.ts.length}): ${m.ts.map(d => `L${d.line}:${d.message.slice(0, 60)}`).join(' | ') || '(none)'}`);
-        console.log(`     Rust(${m.rust.length}): ${m.rust.map(d => `L${d.line}:${d.message.slice(0, 60)}`).join(' | ') || '(none)'}`);
+        console.log(
+          `     TS  (${m.ts.length}): ${m.ts.map(d => `L${d.line}:${d.message.slice(0, 60)}`).join(' | ') || '(none)'}`,
+        );
+        console.log(
+          `     Rust(${m.rust.length}): ${m.rust.map(d => `L${d.line}:${d.message.slice(0, 60)}`).join(' | ') || '(none)'}`,
+        );
       }
     } else {
       console.log('\n✅ All diagnostics match between TS and Rust backends!');

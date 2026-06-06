@@ -6,18 +6,10 @@ const formatNumber = function (x: number, y: number): number {
   return Math.round((x - y) * 1000);
 };
 const PerfHelper = {
-  formatMetrics(
-  ): Metrics {
-    const sortedLogs = logs
-      .sort((entry1, entry2) => {
-      })
-      .filter(
-      );
-    if (
-      sortedLogs[0].begin < traceBeginTimeSec
-    ) {
+  formatMetrics(): Metrics {
+    const sortedLogs = logs.sort((entry1, entry2) => {}).filter();
+    if (sortedLogs[0].begin < traceBeginTimeSec) {
     }
-    sortedLogs.forEach((entry: TimeSliceEntry) => {
-    });
+    sortedLogs.forEach((entry: TimeSliceEntry) => {});
   },
 };

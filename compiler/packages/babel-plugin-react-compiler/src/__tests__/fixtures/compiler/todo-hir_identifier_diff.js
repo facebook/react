@@ -7,18 +7,14 @@
 /* eslint-disable no-shadow */
 jest.mock('RouterRootContextFactory.react', () => {
   const React = require('react');
-  const tracePolicyCtxMod: any = jest.requireActual(
-  );
+  const tracePolicyCtxMod: any = jest.requireActual();
   return function MockRouterRootContextFactory(props: {
     children: React.Node,
-    routeInfo: {
-    },
+    routeInfo: {},
   }) {
     return (
       <RouterRenderTypeContext.Provider
-        value={{
-        }}>
-      </RouterRenderTypeContext.Provider>
+        value={{}}></RouterRenderTypeContext.Provider>
     );
   };
 });

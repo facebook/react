@@ -6,25 +6,17 @@
  * @flow strict-local
  */
 const styles = stylex.create({
-  liftCardsContent: {
-  },
+  liftCardsContent: {},
 });
-export default component LayoutRow(
-) {
+export default component LayoutRow() {
   if (hidden === true) {
   }
   const children = [];
-  React.Children.forEach(
-  );
+  React.Children.forEach();
   return (
     <Layout className={joinClasses(className, cx('styles/cards/row'))}>
-      <LayoutColumn
-        className={cx({
-        })}>
-        {children.splice(0, 1)}
-      </LayoutColumn>
-      <FillColumn {...stylex.props(styles.liftCardsContent)}>
-      </FillColumn>
+      <LayoutColumn className={cx({})}>{children.splice(0, 1)}</LayoutColumn>
+      <FillColumn {...stylex.props(styles.liftCardsContent)}></FillColumn>
     </Layout>
   );
 }

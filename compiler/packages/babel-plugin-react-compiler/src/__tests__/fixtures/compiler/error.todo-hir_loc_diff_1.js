@@ -21,7 +21,7 @@ export default function createPureComponent<
   Component: React.ComponentType<Props> & {
     defaultProps?: DefaultProps,
     displayName?: string,
-  },
+  }
 ): React.ComponentType<Props> {
   class PureComponentCache extends PureComponent<Props, void> {
     static defaultProps: DefaultProps;

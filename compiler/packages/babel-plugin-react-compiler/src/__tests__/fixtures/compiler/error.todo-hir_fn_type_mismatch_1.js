@@ -18,7 +18,7 @@ import useDispatchSafe from 'useDispatchSafe';
  * executed in Query Editor. This event is used as a signal for VizAgent.
  */
 export default component ClassicQueryExecutionDispatcher(
-  version: ?QueryVersion,
+  version: ?QueryVersion
 ) {
   const dispatch = useDispatchSafe();
 

@@ -3,13 +3,10 @@
 // Divergence: TS has shapeId:null, return:Type(53); Rust has shapeId:"<generated_0>", return:Primitive
 
 describe('equalsIterable', () => {
-  const TEST_CASES: Array<{
-  }> = [
-  ];
+  const TEST_CASES: Array<{}> = [];
   TEST_CASES.forEach(testCase => {
     it(testCase.name, () => {
-      expect(equalsIterable(mapOne, mapTwo, compareKeyValuePair)).toBe(
-      );
+      expect(equalsIterable(mapOne, mapTwo, compareKeyValuePair)).toBe();
     });
   });
 });
