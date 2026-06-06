@@ -9,6 +9,7 @@ pub mod convert_scope;
 pub mod apply_renames;
 pub mod diagnostics;
 pub mod prefilter;
+pub(crate) mod ts_namespace_export_fixup;
 
 use apply_renames::apply_renames;
 use convert_ast::convert_module_with_source_type;
@@ -322,18 +323,23 @@ pub fn emit_with_comments(
 }
 
 /// Emit a full module to a string.
+///
+/// Records a source map during emission so the namespace-export fixup can
+/// anchor its line rewrites to the module items that produced them (see
+/// `ts_namespace_export_fixup`).
 fn emit_module_to_string(
     module: &swc_ecma_ast::Module,
     comments: Option<&swc_common::comments::SingleThreadedComments>,
 ) -> String {
     let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
     let mut buf = vec![];
+    let mut srcmap: Vec<(swc_common::BytePos, swc_common::LineCol)> = Vec::new();
     {
         let wr = swc_ecma_codegen::text_writer::JsWriter::new(
             cm.clone(),
             "\n",
             &mut buf,
-            None,
+            Some(&mut srcmap),
         );
         let mut emitter = swc_ecma_codegen::Emitter {
             cfg: swc_ecma_codegen::Config::default().with_minify(false),
@@ -343,7 +349,8 @@ fn emit_module_to_string(
         };
         swc_ecma_codegen::Node::emit_with(module, &mut emitter).unwrap();
     }
-    String::from_utf8(buf).unwrap()
+    let code = String::from_utf8(buf).unwrap();
+    ts_namespace_export_fixup::fix_ts_namespace_export_decls(&module.body, &code, &srcmap)
 }
 
 /// Insert blank lines into the emitted output at positions specified by
@@ -860,7 +867,9 @@ fn is_blank_line_before_comments(between: &str) -> bool {
     blank_before
 }
 
-/// Get the first non-empty line of a ModuleItem when emitted without comments.
+/// Get the first non-empty line of a ModuleItem when emitted without
+/// comments. Goes through `emit_module_to_string` so the text matches the
+/// final emitted output (including the namespace-export fixup).
 fn get_first_code_line(item: &swc_ecma_ast::ModuleItem) -> String {
     let single_module = swc_ecma_ast::Module {
         span: swc_common::DUMMY_SP,
@@ -868,24 +877,7 @@ fn get_first_code_line(item: &swc_ecma_ast::ModuleItem) -> String {
         shebang: None,
     };
 
-    let cm = swc_common::sync::Lrc::new(swc_common::SourceMap::default());
-    let mut buf = vec![];
-    {
-        let wr = swc_ecma_codegen::text_writer::JsWriter::new(
-            cm.clone(),
-            "\n",
-            &mut buf,
-            None,
-        );
-        let mut emitter = swc_ecma_codegen::Emitter {
-            cfg: swc_ecma_codegen::Config::default().with_minify(false),
-            cm,
-            comments: None,
-            wr: Box::new(wr),
-        };
-        swc_ecma_codegen::Node::emit_with(&single_module, &mut emitter).unwrap();
-    }
-    let code = String::from_utf8(buf).unwrap();
+    let code = emit_module_to_string(&single_module, None);
     code.lines()
         .find(|l| !l.trim().is_empty())
         .unwrap_or("")

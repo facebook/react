@@ -25,6 +25,14 @@ fn wtf8_to_string(value: &swc_atoms::Wtf8Atom) -> String {
     value.to_string_lossy().into_owned()
 }
 
+/// Wrap a raw Babel-shaped JSON node in [`Statement::Unknown`]. The caller
+/// constructs `raw` with a `type` tag, so `from_raw` cannot fail.
+fn unknown_statement(raw: serde_json::Value) -> Statement {
+    Statement::Unknown(
+        UnknownStatement::from_raw(raw).expect("raw unknown node is constructed with a `type` tag"),
+    )
+}
+
 /// Converts an SWC Module AST to the React compiler's Babel-compatible AST.
 pub fn convert_module(module: &swc::Module, source_text: &str) -> File {
     convert_module_with_source_type(module, source_text, SourceType::Module)
@@ -286,16 +294,96 @@ impl<'a> ConvertCtx<'a> {
             swc::ModuleDecl::ExportAll(d) => {
                 Statement::ExportAllDeclaration(self.convert_export_all(d))
             }
-            swc::ModuleDecl::TsImportEquals(d) => Statement::EmptyStatement(EmptyStatement {
-                base: self.make_base_node(d.span),
-            }),
-            swc::ModuleDecl::TsExportAssignment(d) => Statement::EmptyStatement(EmptyStatement {
-                base: self.make_base_node(d.span),
-            }),
-            swc::ModuleDecl::TsNamespaceExport(d) => Statement::EmptyStatement(EmptyStatement {
-                base: self.make_base_node(d.span),
-            }),
+            // These TS module-interop statements are not modeled by the
+            // typed AST. Carry them as raw Babel-compatible
+            // `Statement::Unknown` nodes (field names and nesting match
+            // `@babel/parser`, not byte-exact details like `extra`) so they
+            // survive the pipeline the same way Babel/NAPI input does.
+            swc::ModuleDecl::TsImportEquals(d) => self.convert_ts_import_equals(d),
+            swc::ModuleDecl::TsExportAssignment(d) => self.convert_ts_export_assignment(d),
+            swc::ModuleDecl::TsNamespaceExport(d) => self.convert_ts_namespace_export(d),
         }
+    }
+
+    // ===== TS module interop (raw unknown statements) =====
+
+    /// Build the base of a raw Babel-shaped JSON node: the `type` tag plus
+    /// the same `start`/`end`/`loc` fields the converter emits on typed
+    /// nodes via [`Self::make_base_node`].
+    fn raw_node_json(&self, node_type: &str, span: Span) -> serde_json::Value {
+        let mut base = self.make_base_node(span);
+        base.node_type = Some(node_type.to_string());
+        serde_json::to_value(base).expect("BaseNode serializes to JSON")
+    }
+
+    fn identifier_to_json(&self, id: &swc::Ident) -> serde_json::Value {
+        serde_json::to_value(Expression::Identifier(self.convert_ident_to_identifier(id)))
+            .expect("Identifier serializes to JSON")
+    }
+
+    fn ident_name_to_json(&self, id: &swc::IdentName) -> serde_json::Value {
+        serde_json::to_value(Expression::Identifier(Identifier {
+            base: self.make_base_node(id.span),
+            name: id.sym.to_string(),
+            type_annotation: None,
+            optional: None,
+            decorators: None,
+        }))
+        .expect("Identifier serializes to JSON")
+    }
+
+    /// Serialize a TS entity name (`a` or `a.b.c`) as the Babel
+    /// `Identifier` / `TSQualifiedName` shape.
+    fn ts_entity_name_to_json(&self, name: &swc::TsEntityName) -> serde_json::Value {
+        match name {
+            swc::TsEntityName::Ident(id) => self.identifier_to_json(id),
+            swc::TsEntityName::TsQualifiedName(q) => {
+                let mut raw = self.raw_node_json("TSQualifiedName", q.span);
+                raw["left"] = self.ts_entity_name_to_json(&q.left);
+                raw["right"] = self.ident_name_to_json(&q.right);
+                raw
+            }
+        }
+    }
+
+    /// `import x = require("mod")` / `import a = b.c` →
+    /// `TSImportEqualsDeclaration`.
+    fn convert_ts_import_equals(&self, d: &swc::TsImportEqualsDecl) -> Statement {
+        let mut raw = self.raw_node_json("TSImportEqualsDeclaration", d.span);
+        raw["importKind"] = serde_json::json!(if d.is_type_only { "type" } else { "value" });
+        raw["isExport"] = serde_json::json!(d.is_export);
+        raw["id"] = self.identifier_to_json(&d.id);
+        raw["moduleReference"] = match &d.module_ref {
+            swc::TsModuleRef::TsExternalModuleRef(r) => {
+                let mut module_ref = self.raw_node_json("TSExternalModuleReference", r.span);
+                module_ref["expression"] =
+                    serde_json::to_value(Expression::StringLiteral(StringLiteral {
+                        base: self.make_base_node(r.expr.span),
+                        value: wtf8_to_string(&r.expr.value),
+                    }))
+                    .expect("StringLiteral serializes to JSON");
+                module_ref
+            }
+            swc::TsModuleRef::TsEntityName(name) => self.ts_entity_name_to_json(name),
+        };
+        unknown_statement(raw)
+    }
+
+    /// `export = x` → `TSExportAssignment`. The expression goes through the
+    /// normal forward conversion; the typed AST serializes to the Babel
+    /// shape by construction.
+    fn convert_ts_export_assignment(&self, d: &swc::TsExportAssignment) -> Statement {
+        let mut raw = self.raw_node_json("TSExportAssignment", d.span);
+        raw["expression"] = serde_json::to_value(self.convert_expression(&d.expr))
+            .expect("Expression serializes to JSON");
+        unknown_statement(raw)
+    }
+
+    /// `export as namespace X` → `TSNamespaceExportDeclaration`.
+    fn convert_ts_namespace_export(&self, d: &swc::TsNamespaceExportDecl) -> Statement {
+        let mut raw = self.raw_node_json("TSNamespaceExportDeclaration", d.span);
+        raw["id"] = self.identifier_to_json(&d.id);
+        unknown_statement(raw)
     }
 
     // ===== Statements =====
