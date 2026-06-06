@@ -905,7 +905,8 @@ fn calls_hooks_or_creates_jsx_in_pattern(pattern: &PatternLike) -> bool {
         | PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => false,
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => false,
     }
 }
 
@@ -924,7 +925,8 @@ fn is_valid_props_annotation(param: &PatternLike) -> bool {
         | PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
         | PatternLike::TSNonNullExpression(_)
-        | PatternLike::TSTypeAssertion(_) => None,
+        | PatternLike::TSTypeAssertion(_)
+        | PatternLike::TypeCastExpression(_) => None,
     };
     let annot = match type_annotation {
         Some(val) => val,

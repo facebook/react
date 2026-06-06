@@ -788,6 +788,10 @@ fn visit_pat(pat: &mut PatternLike, si: &ScopeInfo) {
             visit_expr(&mut e.expression, si);
             visit_json(&mut e.type_annotation, si);
         }
+        PatternLike::TypeCastExpression(e) => {
+            visit_expr(&mut e.expression, si);
+            visit_json(&mut e.type_annotation, si);
+        }
     }
 }
 

@@ -219,6 +219,13 @@ fn walk_lval_for_reassignment(
                 convert_opt_loc(&node.base.loc),
             )?;
         }
+        PatternLike::TypeCastExpression(node) => {
+            record_unsupported_lval(
+                visitor.env,
+                "TypeCastExpression",
+                convert_opt_loc(&node.base.loc),
+            )?;
+        }
     }
     Ok(())
 }

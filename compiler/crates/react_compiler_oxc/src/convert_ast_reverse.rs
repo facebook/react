@@ -1182,7 +1182,8 @@ impl<'a> ReverseCtx<'a> {
             | PatternLike::TSAsExpression(_)
             | PatternLike::TSSatisfiesExpression(_)
             | PatternLike::TSNonNullExpression(_)
-            | PatternLike::TSTypeAssertion(_) => self
+            | PatternLike::TSTypeAssertion(_)
+            | PatternLike::TypeCastExpression(_) => self
                 .builder
                 .binding_pattern_binding_identifier(SPAN, self.atom("__member_pattern__")),
         }
@@ -1311,7 +1312,8 @@ impl<'a> ReverseCtx<'a> {
             PatternLike::TSAsExpression(_)
             | PatternLike::TSSatisfiesExpression(_)
             | PatternLike::TSNonNullExpression(_)
-            | PatternLike::TSTypeAssertion(_) => self
+            | PatternLike::TSTypeAssertion(_)
+            | PatternLike::TypeCastExpression(_) => self
                 .builder
                 .simple_assignment_target_assignment_target_identifier(
                     SPAN,
