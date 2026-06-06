@@ -181,6 +181,27 @@ export async function update(results: TestResults): Promise<void> {
  * Report test results to the user
  * @returns boolean indicatig whether all tests passed
  */
+// Fixtures where TS and Rust produce different output. Snapshots reflect Rust
+// output (source of truth). Skipped when running the TS compiler.
+const TS_SKIP_FIXTURES: Set<string> = new Set([
+  // Rust compiles successfully, TS would error. Renamed from error.todo-/error.bug-.
+  'todo-repro-named-function-with-shadowed-local-same-name',
+  'todo-jsx-intrinsic-tag-matches-local-binding',
+  'todo-hoist-type-alias-before-declaration',
+  'bug-invariant-local-or-context-references',
+  'bug-infer-mutation-aliasing-function-shadows-own-name',
+  'bug-context-variable-catch-in-lambda',
+  'new-mutability/todo-repro-named-function-with-shadowed-local-same-name',
+  // Error message/format divergences
+  'fbt/error.todo-locally-require-fbt',
+  // Minor output difference (TS adds unused runtime import)
+  'use-no-forget-multiple-with-eslint-suppression',
+  // Cosmetic blank-line/unused-var differences between Rust and TS codegen
+  'debugger',
+  'debugger-memoized',
+  'idx-no-outlining',
+  'optional-call-with-independently-memoizable-arg',
+]);
 export function report(
   results: TestResults,
   verbose: boolean = false,

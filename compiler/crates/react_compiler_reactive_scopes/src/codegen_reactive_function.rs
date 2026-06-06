@@ -1573,14 +1573,14 @@ fn codegen_instruction_nullable(
                 original_node: Some(node),
                 ..
             } => {
-                // We have the original AST node serialized as JSON; deserialize and emit it directly
-                let stmt: Statement = serde_json::from_value(node.clone()).map_err(|e| {
-                    invariant_err(
-                        &format!("Failed to deserialize original AST node: {}", e),
-                        None,
-                    )
-                })?;
-                return Ok(Some(stmt));
+                // If the original node is a Statement, emit it directly.
+                // Otherwise fall through to the expression codegen path which
+                // handles lvalue binding and temporary registration (matching
+                // TS codegen's `if (!t.isExpression(node)) return node` check).
+                if let Ok(stmt) = serde_json::from_value::<Statement>(node.clone()) {
+                    return Ok(Some(stmt));
+                }
+                // Expression node — fall through to general codegen
             }
             InstructionValue::ObjectMethod { loc, .. } => {
                 invariant(
