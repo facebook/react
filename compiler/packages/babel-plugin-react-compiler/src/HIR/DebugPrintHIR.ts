@@ -335,10 +335,15 @@ export class DebugPrinter {
         break;
       }
       case 'Primitive': {
+        // JSON.stringify maps non-finite numbers to "null", which both loses
+        // information and diverges from the Rust debug printer (NaN/Infinity).
         const val =
           instrValue.value === undefined
             ? 'undefined'
-            : JSON.stringify(instrValue.value);
+            : typeof instrValue.value === 'number' &&
+                !Number.isFinite(instrValue.value)
+              ? String(instrValue.value)
+              : JSON.stringify(instrValue.value);
         this.line(
           `Primitive { value: ${val}, loc: ${this.formatLoc(instrValue.loc)} }`,
         );
