@@ -5,14 +5,10 @@
  */
 export function makeComponentWithOnScroll<
   TElement extends ?HTMLElement = HTMLElement,
->(
-) {
-  component Wrapper(
-    ref?: TRefFor<TElement>,
-  ) {
+>() {
+  component Wrapper(ref?: TRefFor<TElement>) {
     const innerOnScroll = useCallback(
-      (e: SyntheticEvent<HTMLElement, Event>) => {
-      },
+      (e: SyntheticEvent<HTMLElement, Event>) => {}
     );
   }
 }

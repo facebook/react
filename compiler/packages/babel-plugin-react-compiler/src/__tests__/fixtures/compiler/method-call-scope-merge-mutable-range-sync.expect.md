@@ -28,35 +28,24 @@ function Component({store}) {
   }
 
   return (
-    <tr key={store.id}>
-      <td>
+    <div key={store.id}>
+      <span>
         <span>
           {fbt(
             `Directory: ${fbt.param(
               'store URI',
-              storeUri.replace('sftp://sftp.fb.com', ''),
+              storeUri.replace('sftp://sftp.fb.com', '')
             )}`,
-            'directory info',
+            'directory info'
           )}
         </span>
         <span>
-          {fbt(
-            `Schema: ${fbt.param('schema', documentSchema)}`,
-            'schema',
-          )}
-          ,{' '}
-          {fbt(
-            `Geos: ${fbt.param('geos', licensedGeos.length)}`,
-            'geos count',
-          )}
+          {fbt(`Schema: ${fbt.param('schema', documentSchema)}`, 'schema')},{' '}
+          {fbt(`Geos: ${fbt.param('geos', licensedGeos.length)}`, 'geos count')}
           ,{' '}
         </span>
-        {cwrSenderIds != null && (
-          <span>Sender ID: {cwrSenderIds[0]}</span>
-        )}
-        <span>
-          Ingestion: {ingestionEnabled ? 'Enabled' : 'Disabled'}
-        </span>
+        {cwrSenderIds != null && <span>Sender ID: {cwrSenderIds[0]}</span>}
+        <span>Ingestion: {ingestionEnabled ? 'Enabled' : 'Disabled'}</span>
         <span>
           {licensedGeos.toSorted().join(',')}
           <button
@@ -66,30 +55,30 @@ function Component({store}) {
             Copy
           </button>
         </span>
-      </td>
-      <td>
+      </span>
+      <span>
         <button onClick={() => setIsShown(true)} />
         <button onClick={() => console.log(id.toString())} />
-        {isShown && (
-          <button onClick={() => setIsShown(false)} />
-        )}
-      </td>
-    </tr>
+        {isShown && <button onClick={() => setIsShown(false)} />}
+      </span>
+    </div>
   );
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{
-    store: {
-      id: '1',
-      store_uri: 'sftp://sftp.fb.com/Music',
-      licensed_geos: ['US', 'GB'],
-      document_schema: 'CWR',
-      ingestion_enabled: true,
-      cwr_sender_ids: ['123'],
+  params: [
+    {
+      store: {
+        id: '1',
+        store_uri: 'sftp://sftp.fb.com/Music',
+        licensed_geos: ['US', 'GB'],
+        document_schema: 'CWR',
+        ingestion_enabled: true,
+        cwr_sender_ids: ['123'],
+      },
     },
-  }],
+  ],
 };
 
 ```
@@ -236,13 +225,13 @@ function Component(t0) {
     $[23] !== t7
   ) {
     t12 = (
-      <td>
+      <span>
         {t4}
         {t5}
         {t6}
         {t7}
         {t11}
-      </td>
+      </span>
     );
     $[19] = t11;
     $[20] = t4;
@@ -279,11 +268,11 @@ function Component(t0) {
   let t16;
   if ($[30] !== t14 || $[31] !== t15) {
     t16 = (
-      <td>
+      <span>
         {t13}
         {t14}
         {t15}
-      </td>
+      </span>
     );
     $[30] = t14;
     $[31] = t15;
@@ -294,10 +283,10 @@ function Component(t0) {
   let t17;
   if ($[33] !== t12 || $[34] !== t16 || $[35] !== t8) {
     t17 = (
-      <tr key={t8}>
+      <div key={t8}>
         {t12}
         {t16}
-      </tr>
+      </div>
     );
     $[33] = t12;
     $[34] = t16;
@@ -331,4 +320,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) licensedGeos.toSorted is not a function
+(kind: ok) <div><span><span>Directory: /Music</span><span>Schema: CWR, Geos: 2, </span><span>Sender ID: 123</span><span>Ingestion: Enabled</span><span>GB,US<button>Copy</button></span></span><span><button></button><button></button></span></div>

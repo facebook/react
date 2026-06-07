@@ -7,18 +7,15 @@
 // Also: error reason text differs
 
 const ConfirmationCodeInput = React.lazy(
-  () => import('ConfirmationCodeInput.react'),
+  () => import('ConfirmationCodeInput.react')
 ) as React.ComponentType<React.ElementConfig<ConfirmationCodeInputType>>;
 export const examples = [
   {
     render(): React.MixedElement {
       return (
         <ConfirmationCodeInput
-          helperText={
-            (isCompleted && `Your code entry is completed: ${value}`)
-          }
-          label={fbt(
-          )}
+          helperText={isCompleted && `Your code entry is completed: ${value}`}
+          label={fbt()}
         />
       );
     },
@@ -38,7 +35,7 @@ Todo: (BuildHIR::lowerExpression) Handle Import expressions
 error.todo-hir_unsupported_node_format.ts:6:8
   4 |
   5 | const ConfirmationCodeInput = React.lazy(
-> 6 |   () => import('ConfirmationCodeInput.react'),
+> 6 |   () => import('ConfirmationCodeInput.react')
     |         ^^^^^^ (BuildHIR::lowerExpression) Handle Import expressions
   7 | ) as React.ComponentType<React.ElementConfig<ConfirmationCodeInputType>>;
   8 | export const examples = [

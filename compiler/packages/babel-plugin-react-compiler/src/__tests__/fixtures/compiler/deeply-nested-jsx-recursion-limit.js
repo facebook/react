@@ -54,7 +54,9 @@ function DeeplyNestedComponent() {
                                                                                                   <div>
                                                                                                     <div>
                                                                                                       <div>
-                                                                                                        <span>leaf</span>
+                                                                                                        <span>
+                                                                                                          leaf
+                                                                                                        </span>
                                                                                                       </div>
                                                                                                     </div>
                                                                                                   </div>
@@ -107,4 +109,3 @@ function DeeplyNestedComponent() {
     </div>
   );
 }
-

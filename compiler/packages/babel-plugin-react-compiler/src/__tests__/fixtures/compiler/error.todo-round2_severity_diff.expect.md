@@ -7,20 +7,14 @@
 /**
  * @flow strict-local
  */
-import {
-} from 'PreloadingTTL';
-const preloadedRequests: Map<
-> = new Map();
-export function execute(
-): Promise<{error?: APIErrorEventArgs['error'], ...}> {
+import {} from 'PreloadingTTL';
+const preloadedRequests: Map<> = new Map();
+export function execute(): Promise<{error?: APIErrorEventArgs['error'], ...}> {
   if (request.params != null && !(request.params instanceof FormData)) {
     delete request.params?.__entryPointPreloaded;
   }
   if (!consumers) {
-    if (
-      APIRequestMatchingUtils.areRequestsEquivalent(
-      )
-    ) {
+    if (APIRequestMatchingUtils.areRequestsEquivalent()) {
     }
   }
 }
@@ -31,7 +25,7 @@ export function execute(
 ## Error
 
 ```
-Type argument list cannot be empty. (8:28)
+Type argument list cannot be empty. (7:28)
 ```
           
       

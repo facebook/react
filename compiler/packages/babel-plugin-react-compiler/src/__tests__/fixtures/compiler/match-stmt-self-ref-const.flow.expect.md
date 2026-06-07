@@ -11,7 +11,9 @@
 export default component MatchStmtSelfRefConst(x: string) {
   match (x) {
     'a' => {
-      const handler = () => { handler(); };
+      const handler = () => {
+        handler();
+      };
       document.addEventListener('click', handler);
     }
     _ => {}
@@ -33,6 +35,7 @@ export default function MatchStmtSelfRefConst(t0) {
     const handler = () => {
       handler();
     };
+
     document.addEventListener("click", handler);
     break bb0;
   }

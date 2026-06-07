@@ -4,6 +4,5 @@
  * @flow strict-local
  */
 export default component If(
-  fallback: React.Node | (() => React.Node) = <></>,
-) {
-}
+  fallback: React.Node | (() => React.Node) = <></>
+) {}

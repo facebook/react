@@ -4,8 +4,7 @@
 /**
  * @flow strict-local
  */
-export default component EmbedRich(
-) {
+export default component EmbedRich() {
   if (media) {
     if (post.videoUrl != null && post.videoUrl !== '') {
       renderAboveImage('EmbedVideo', <EmbedVideo post={post} />);

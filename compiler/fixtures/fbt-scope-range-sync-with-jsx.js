@@ -8,7 +8,7 @@ function Component({size, icon}) {
     <Badge icon={icon}>
       {fbt(
         `Available in ${fbt.param('size', size)} only`,
-        'Badge text with dynamic param',
+        'Badge text with dynamic param'
       )}
     </Badge>
   );

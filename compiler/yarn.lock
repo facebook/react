@@ -6398,6 +6398,11 @@ hermes-estree@0.26.0:
   resolved "https://registry.npmjs.org/hermes-estree/-/hermes-estree-0.26.0.tgz"
   integrity sha512-If1T7lhfXnGlVLbnsmwerNB5cyJm2oIE8TN1UKEq6/OUX1nOGUhjXMpqAwZ1wkkn9Brda0VRyJEWOGT2GgVcAQ==
 
+hermes-estree@0.28.1:
+  version "0.28.1"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.28.1.tgz#631e6db146b06e62fc1c630939acf4a3c77d1b24"
+  integrity sha512-w3nxl/RGM7LBae0v8LH2o36+8VqwOZGv9rX1wyoWT6YaKZLqpJZ0YQ5P0LVr3tuRpf7vCx0iIG4i/VmBJejxTQ==
+
 hermes-parser@0.25.1, hermes-parser@^0.25.1:
   version "0.25.1"
   resolved "https://registry.npmjs.org/hermes-parser/-/hermes-parser-0.25.1.tgz"
@@ -6411,6 +6416,13 @@ hermes-parser@0.26.0:
   integrity sha512-fWT40jJ/BtlzuyiiQS7lzNIlB5h6flVZoN8Jn8v5l987HL5dK9s+/4+py0FaBmeIEROC2zxt5qMLwXFTPLQ7BA==
   dependencies:
     hermes-estree "0.26.0"
+
+hermes-parser@^0.28.0:
+  version "0.28.1"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.28.1.tgz#17b9e6377f334b6870a1f6da2e123fdcd0b605ac"
+  integrity sha512-nf8o+hE8g7UJWParnccljHumE9Vlq8F7MqIdeahl+4x0tvCUJYRrT0L7h0MMg/X9YJmkNwsfbaNNrzPtFXOscg==
+  dependencies:
+    hermes-estree "0.28.1"
 
 homedir-polyfill@^1.0.1:
   version "1.0.3"
@@ -11058,6 +11070,11 @@ typescript-eslint@^8.16.0:
     "@typescript-eslint/eslint-plugin" "8.18.1"
     "@typescript-eslint/parser" "8.18.1"
     "@typescript-eslint/utils" "8.18.1"
+
+typescript@^5.0.0:
+  version "5.9.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.9.3.tgz#5b4f59e15310ab17a216f5d6cf53ee476ede670f"
+  integrity sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==
 
 typescript@^5.4.3:
   version "5.4.3"

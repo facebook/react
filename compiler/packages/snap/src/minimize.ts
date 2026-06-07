@@ -2055,10 +2055,7 @@ export function minimize(
 ): MinimizeResult {
   // Load the compiler plugin
   const pluginSrc = useRust ? BABEL_PLUGIN_RUST_SRC : BABEL_PLUGIN_SRC;
-  const importedCompilerPlugin = require(pluginSrc) as Record<
-    string,
-    unknown
-  >;
+  const importedCompilerPlugin = require(pluginSrc) as Record<string, unknown>;
   const BabelPluginReactCompiler = importedCompilerPlugin[
     'default'
   ] as PluginObj;

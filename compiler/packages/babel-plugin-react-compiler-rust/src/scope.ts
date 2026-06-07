@@ -97,12 +97,7 @@ function mapPatternIdentifiers(
       mapRef,
     );
   } else if (path.isRestElement()) {
-    mapPatternIdentifiers(
-      path.get('argument'),
-      bindingId,
-      bindingName,
-      mapRef,
-    );
+    mapPatternIdentifiers(path.get('argument'), bindingId, bindingName, mapRef);
   } else if (path.isMemberExpression()) {
     // MemberExpression in LVal position (e.g., a.b = ...)
     const obj = path.get('object');
@@ -431,4 +426,3 @@ function getImportData(binding: {
   }
   return undefined;
 }
-

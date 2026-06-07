@@ -8,8 +8,7 @@
 // Frontier: InferMutationAliasingRanges pass
 // Source: ParseBusinessProfile.js, EditorAdgroup...PluginCommon.js
 function useParseProfile(node) {
-  Object.keys(profile).forEach(key => {
-  });
+  Object.keys(profile).forEach(key => {});
   const commands = [];
   node.forEachChildWithTag('command', commandNode => {
     commands.push({name, description});

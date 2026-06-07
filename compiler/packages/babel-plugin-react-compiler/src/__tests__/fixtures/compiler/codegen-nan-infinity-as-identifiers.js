@@ -6,7 +6,12 @@ function Component({x}) {
   const nan = 0 / 0;
   const inf = 1 / 0;
   const negInf = -1 / 0;
-  return <div>{x ? nan : inf}{negInf}</div>;
+  return (
+    <div>
+      {x ? nan : inf}
+      {negInf}
+    </div>
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {

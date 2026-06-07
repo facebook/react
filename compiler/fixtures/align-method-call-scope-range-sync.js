@@ -12,5 +12,12 @@ function Component({items}) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{items: [{active: true, name: 'a'}, {active: false, name: 'b'}]}],
+  params: [
+    {
+      items: [
+        {active: true, name: 'a'},
+        {active: false, name: 'b'},
+      ],
+    },
+  ],
 };

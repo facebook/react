@@ -90,7 +90,7 @@ const ZG_TO_UNICODE_RULES = [
   [
     RegExp(
       '\u1040(\u102e|\u102f|\u102d\u102f|\u1030|\u1036|\u103d|\u103e)',
-      'g',
+      'g'
     ),
     '\u101d$1',
   ],
@@ -99,7 +99,7 @@ const ZG_TO_UNICODE_RULES = [
     // /([^\u1040\u1041\u1042\u1043\u1044\u1045\u1046\u1047\u1048\u1049])\u1040\u102b/u
     RegExp(
       '((?:[\0-\u103F\u104A-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))\u1040\u102B',
-      'g',
+      'g'
     ),
     '$1\u101d\u102b',
   ],
@@ -108,7 +108,7 @@ const ZG_TO_UNICODE_RULES = [
     // /([\u1040\u1041\u1042\u1043\u1044\u1045\u1046\u1047\u1048\u1049])\u1040\u102b([^\u1038])/u
     RegExp(
       '([\u1040-\u1049])\u1040\u102B((?:[\0-\u1037\u1039-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))',
-      'g',
+      'g'
     ),
     '$1\u101d\u102b$2',
   ],
@@ -118,7 +118,7 @@ const ZG_TO_UNICODE_RULES = [
     // /\u1040\u102d([^\u0020]?)/u
     RegExp(
       '\u1040\u102D((?:[\0-\x1F!-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])?)',
-      'g',
+      'g'
     ),
     '\u101d\u102d$1',
   ],
@@ -127,7 +127,7 @@ const ZG_TO_UNICODE_RULES = [
     // /([^\u1040-\u1049])\u1040([^\u1040-\u1049\u0020]|[\u104a\u104b])/u
     RegExp(
       '((?:[\0-\u103F\u104A-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))\u1040((?:[\0-\x1F!-\u103F\u104A-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])|[\u104A\u104B])',
-      'g',
+      'g'
     ),
     '$1\u101d$2',
   ],
@@ -136,7 +136,7 @@ const ZG_TO_UNICODE_RULES = [
     // /([^\u1040-\u1049])\u1040([$f$n$r])/u
     RegExp(
       '((?:[\0-\u103F\u104A-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))\u1040([$fnr])',
-      'g',
+      'g'
     ),
     '$1\u101d$2',
   ],
@@ -145,7 +145,7 @@ const ZG_TO_UNICODE_RULES = [
     // /([^\u1040-\u1049])\u1040$/u
     RegExp(
       '((?:[\0-\u103F\u104A-\uD7FF\uE000-\uFFFF]|[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]))\u1040$',
-      'g',
+      'g'
     ),
     '$1\u101d',
   ],
@@ -217,7 +217,7 @@ function convertZawgyiToUnicode(text: string): string {
   for (let i = 0; i < ZG_TO_UNICODE_RULES.length; i++) {
     result = result.replace(
       ZG_TO_UNICODE_RULES[i][0],
-      ZG_TO_UNICODE_RULES[i][1],
+      ZG_TO_UNICODE_RULES[i][1]
     );
   }
   return result;
@@ -225,10 +225,10 @@ function convertZawgyiToUnicode(text: string): string {
 
 function isZawgyiEncodedText(text: string): boolean {
   const unicodeMatches = text.match(
-    /\u103e|\u103f|\u100a\u103a|\u1014\u103a|\u1004\u103a|\u1031\u1038|\u1031\u102c|\u103a\u1038|\u1035|[\u1050-\u1059]|^([\u1000-\u1021]\u103c|[\u1000-\u1021]\u1031)/g,
+    /\u103e|\u103f|\u100a\u103a|\u1014\u103a|\u1004\u103a|\u1031\u1038|\u1031\u102c|\u103a\u1038|\u1035|[\u1050-\u1059]|^([\u1000-\u1021]\u103c|[\u1000-\u1021]\u1031)/g
   );
   const zawgyiMatches = text.match(
-    /\u102c\u1039|\u103a\u102c|\p{Z}(\u103b|\u1031|[\u107e-\u1084])[\u1000-\u1021]|^(\u103b|\u1031|[\u107e-\u1084])[\u1000-\u1021]|[\u1000-\u1021]\u1039[^\u1000-\u1021]|\u1025\u1039|\u1039\u1038|[\u102b-\u1030\u1031\u103a\u1038](\u103b|[\u107e-\u1084])[\u1000-\u1021]|\u1036\u102f|[\u1000-\u1021]\u1039\u1031|\u1064|\u1039\p{Z}|\u102c\u1031|[\u102b-\u1030\u103a\u1038]\u1031[\u1000-\u1021]|\u1031\u1031|\u102f\u102d|(\u1039$)/g,
+    /\u102c\u1039|\u103a\u102c|\p{Z}(\u103b|\u1031|[\u107e-\u1084])[\u1000-\u1021]|^(\u103b|\u1031|[\u107e-\u1084])[\u1000-\u1021]|[\u1000-\u1021]\u1039[^\u1000-\u1021]|\u1025\u1039|\u1039\u1038|[\u102b-\u1030\u1031\u103a\u1038](\u103b|[\u107e-\u1084])[\u1000-\u1021]|\u1036\u102f|[\u1000-\u1021]\u1039\u1031|\u1064|\u1039\p{Z}|\u102c\u1031|[\u102b-\u1030\u103a\u1038]\u1031[\u1000-\u1021]|\u1031\u1031|\u102f\u102d|(\u1039$)/g
   );
   const unicodeCount = unicodeMatches == null ? 0 : unicodeMatches.length;
   const zawgyiCount = zawgyiMatches == null ? 0 : zawgyiMatches.length;
@@ -248,7 +248,7 @@ function convertRecursively(node: Node): void {
     if (node.parentElement != null) {
       node.parentElement.setAttribute(
         'data-zg-pre-conversion',
-        node.textContent,
+        node.textContent
       );
     }
     node.textContent = convertZawgyiToUnicode(node.textContent);
@@ -262,7 +262,7 @@ function revertRecursively(node: Node): void {
   if (node.nodeType === Node.TEXT_NODE) {
     if (node.parentElement != null) {
       const previousText = node.parentElement.getAttribute(
-        'data-zg-pre-conversion',
+        'data-zg-pre-conversion'
       );
       if (previousText != null) {
         node.textContent = previousText;
@@ -276,7 +276,7 @@ function revertRecursively(node: Node): void {
 
 export function logEvent(
   event: string,
-  fontSignals: ?BurmeseFontSignals,
+  fontSignals: ?BurmeseFontSignals
 ): void {
   ZawgyiDetectionLogEvent.log(() => ({
     msite_event: event,

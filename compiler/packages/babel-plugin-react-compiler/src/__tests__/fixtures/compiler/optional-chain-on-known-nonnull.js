@@ -17,10 +17,11 @@ function Component({data}) {
   const [isSaving, setIsSaving] = useState(false);
   const triggerType = getTriggerType();
 
-  const controls = geography?.controls?.nodes.map(c => ({
-    title: c.name ?? '',
-    uniqueID: c.id ?? '',
-  })) ?? [];
+  const controls =
+    geography?.controls?.nodes.map(c => ({
+      title: c.name ?? '',
+      uniqueID: c.id ?? '',
+    })) ?? [];
 
   const handleSubmit = () => {
     setIsSaving(true);

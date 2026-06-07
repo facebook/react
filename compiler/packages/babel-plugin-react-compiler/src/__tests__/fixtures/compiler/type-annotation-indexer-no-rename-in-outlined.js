@@ -6,7 +6,7 @@ function Component({items}) {
         acc[item.order] = item;
         return acc;
       },
-      ({}: {[displayOrder: number]: {order: number, name: string}}),
+      ({}: {[displayOrder: number]: {order: number, name: string}})
     );
     submit(result);
   };

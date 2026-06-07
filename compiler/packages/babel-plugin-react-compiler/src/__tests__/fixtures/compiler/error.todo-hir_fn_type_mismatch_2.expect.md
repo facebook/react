@@ -42,7 +42,7 @@ export default function WidgetWithTooltip<
   Props extends {...},
   WidgetWithTooltipComponent extends React.ComponentType<Props>,
 >(
-  WrappedComponent: WidgetWithTooltipComponent,
+  WrappedComponent: WidgetWithTooltipComponent
 ): Class<
   React.Component<
     ExposedProps<React.ElementConfig<WidgetWithTooltipComponent>>,
@@ -53,7 +53,9 @@ export default function WidgetWithTooltip<
     state: CurrentState = {
       showNux:
         this.props.nuxProps.disabled !== true &&
-        !SimpleTooltipMessage.hasUserSeenMessage_LEGACY(this.props.nuxProps.type),
+        !SimpleTooltipMessage.hasUserSeenMessage_LEGACY(
+          this.props.nuxProps.type
+        ),
     };
 
     wrappedRef: {

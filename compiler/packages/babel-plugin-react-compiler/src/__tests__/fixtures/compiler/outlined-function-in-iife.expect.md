@@ -3,7 +3,7 @@
 
 ```javascript
 function Component() {
-  return (function() {
+  return (function () {
     function Inner() {
       return <div onClick={() => null} />;
     }

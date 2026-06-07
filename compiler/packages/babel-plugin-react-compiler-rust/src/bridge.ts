@@ -96,13 +96,15 @@ function sanitizeJsonSurrogates(json: string): string {
   // Encode lone surrogates as recoverable markers instead of replacing with
   // \uFFFD. This preserves the original surrogate values through the Rust
   // round-trip. restoreJsonSurrogates reverses this on the output side.
-  return json.replace(
-    /(?<!\\)\\u([dD][89aAbB][0-9a-fA-F]{2})(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
-    (_, hex) => `__SURROGATE_${hex.toUpperCase()}__`,
-  ).replace(
-    /(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})(?<!\\)\\u([dD][c-fC-F][0-9a-fA-F]{2})/g,
-    (_, hex) => `__SURROGATE_${hex.toUpperCase()}__`,
-  );
+  return json
+    .replace(
+      /(?<!\\)\\u([dD][89aAbB][0-9a-fA-F]{2})(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
+      (_, hex) => `__SURROGATE_${hex.toUpperCase()}__`,
+    )
+    .replace(
+      /(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})(?<!\\)\\u([dD][c-fC-F][0-9a-fA-F]{2})/g,
+      (_, hex) => `__SURROGATE_${hex.toUpperCase()}__`,
+    );
 }
 
 function restoreJsonSurrogates(json: string): string {
@@ -171,7 +173,9 @@ export function compileWithRustProfiled(
   const resultJson = compile(astJson, scopeJson, optionsJson);
   const t4 = performance.now();
 
-  const result = JSON.parse(restoreJsonSurrogates(resultJson)) as CompileResult & {
+  const result = JSON.parse(
+    restoreJsonSurrogates(resultJson),
+  ) as CompileResult & {
     timing?: Array<TimingEntry>;
   };
   const t5 = performance.now();

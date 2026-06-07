@@ -11,14 +11,16 @@
 
 export default component MatchExprOutlinedJsx(
   item: ?{status: string},
-  label: string,
+  label: string
 ) {
   return (
     <div>
-      {match (item?.status) {
-        'active' => <span>{label}</span>,
-        _ => <span>{'none'}</span>,
-      }}
+      {
+        match (item?.status) {
+          'active' => <span>{label}</span>,
+          _ => <span>{'none'}</span>,
+        }
+      }
     </div>
   );
 }

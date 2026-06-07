@@ -3,31 +3,19 @@
 /**
  * @flow strict-local
  */
-export default function withRemountOnChange<
-  OuterProps extends {
-  },
->(
-  shouldRemount: (
-  ) => boolean,
-): (
-) => React.ComponentType<OuterProps> {
+export default function withRemountOnChange<OuterProps extends {}>(
+  shouldRemount: () => boolean
+): () => React.ComponentType<OuterProps> {
   return function withRemountOnChangeInner(WrappedComponent) {
     return class Wrapper extends React.Component<OuterProps, WrapperState> {
-      static displayName: ?string = `withRemountOnChange(${getDisplayName(
-      )})`;
-      state: WrapperState = {
-      };
+      static displayName: ?string = `withRemountOnChange(${getDisplayName()})`;
+      state: WrapperState = {};
       componentDidUpdate(prevProps: OuterProps, prevState: WrapperState) {
-        if (
-          shouldRemount(
-          )
-        ) {
-          this.setState(({keyId}) => {
-          });
+        if (shouldRemount()) {
+          this.setState(({keyId}) => {});
         }
       }
-      render(): React.MixedElement {
-      }
+      render(): React.MixedElement {}
     };
   };
 }
