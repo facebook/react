@@ -10,7 +10,7 @@
 
 export default component MatchExprMultiGenBindings(
   x: ?{v: string},
-  y: ?{w: number},
+  y: ?{w: number}
 ) {
   const a = match (x?.v) {
     'yes' => 1,

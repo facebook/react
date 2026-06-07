@@ -7,7 +7,9 @@
 export default component MatchStmtSelfRefConst(x: string) {
   match (x) {
     'a' => {
-      const handler = () => { handler(); };
+      const handler = () => {
+        handler();
+      };
       document.addEventListener('click', handler);
     }
     _ => {}
