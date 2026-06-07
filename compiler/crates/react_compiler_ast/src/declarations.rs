@@ -342,7 +342,11 @@ pub struct DeclareFunction {
     #[serde(flatten)]
     pub base: BaseNode,
     pub id: Identifier,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::common::nullable_value"
+    )]
     pub predicate: Option<Box<serde_json::Value>>,
 }
 
