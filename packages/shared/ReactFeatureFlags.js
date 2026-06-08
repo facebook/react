@@ -80,6 +80,8 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enableViewTransition: boolean = true;
 
+export const enableViewTransitionForPersistenceMode: boolean = false;
+
 export const enableGestureTransition = __EXPERIMENTAL__;
 
 export const enableScrollEndPolyfill = __EXPERIMENTAL__;
@@ -142,6 +144,12 @@ export const transitionLaneExpirationMs = 5000;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection: boolean = false;
+/**
+ * When `enableInfiniteRenderLoopDetection` is on, forces the detection
+ * mechanism to throw instead of only warning in cases where it would
+ * otherwise downgrade to a warning.
+ */
+export const enableInfiniteRenderLoopDetectionForceThrow: boolean = false;
 
 export const enableFragmentRefs: boolean = true;
 export const enableFragmentRefsScrollIntoView: boolean = true;
@@ -250,3 +258,14 @@ export const enableAsyncDebugInfo: boolean = true;
 export const enableUpdaterTracking = __PROFILE__;
 
 export const ownerStackLimit = 1e4;
+
+// -----------------------------------------------------------------------------
+// eslint-plugin-react-hooks
+// -----------------------------------------------------------------------------
+export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
+export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;
+export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
+  | 'off'
+  | 'all'
+  | 'extra-only'
+  | 'missing-only' = 'off';
