@@ -186,8 +186,6 @@ export async function update(results: TestResults): Promise<void> {
 const TS_SKIP_FIXTURES: Set<string> = new Set([
   // Rust compiles successfully, TS would error. Renamed from error.todo-/error.bug-.
   'todo-hoist-type-alias-before-declaration',
-  'bug-invariant-local-or-context-references',
-  'bug-context-variable-catch-in-lambda',
   // Error message/format divergences
   'fbt/error.todo-locally-require-fbt',
   // Minor output difference (TS adds unused runtime import)
