@@ -2820,16 +2820,20 @@ fn lower_block_statement_inner(
                 .collect();
             let should_hoist = is_hoisted_kind || !refs_in_nested_fn.is_empty();
             if should_hoist {
-                // Only hoist if the binding is declared as a direct statement of
-                // THIS block. Bindings declared in child control flow blocks
-                // (if/for branches) will be hoisted when those blocks are
-                // recursively lowered. This prevents DeclareContext from being
-                // emitted before a control flow terminal for variables declared
-                // within a branch, which would widen the reactive scope.
-                if !is_binding_in_block_direct_statements(
-                    &builder.scope_info().bindings[binding_id.0 as usize],
-                    &block.body,
-                ) {
+                // Bindings pulled in from CHILD block scopes (the
+                // scope_bindings_with_children descent compensates for scope
+                // splitting) only hoist when declared as a direct statement of
+                // THIS block; ones declared inside nested control-flow blocks
+                // are handled when those blocks are recursively lowered. TS
+                // never sees child-block bindings here (Babel's
+                // stmt.scope.bindings holds only the block's own scope), so the
+                // guard must NOT apply to own-scope bindings: catch params and
+                // for-in/for-of head vars belong to the block's scope without
+                // being declared by any direct statement, and TS hoists them.
+                let binding_data = &builder.scope_info().bindings[binding_id.0 as usize];
+                if binding_data.scope != scope_id
+                    && !is_binding_in_block_direct_statements(binding_data, &block.body)
+                {
                     continue;
                 }
                 // For hoisted bindings (function declarations), use the first reference
@@ -6805,8 +6809,13 @@ fn gather_captured_context(
             continue;
         }
         // Skip function/class declaration names that are not expression references.
+        // Skip type-annotation references: TS's gatherCapturedContext traverse
+        // skips TypeAnnotation/TSTypeAnnotation/TypeAlias/TSTypeAliasDeclaration
+        // subtrees, so identifiers there never become captures (they DO still
+        // feed FindContextIdentifiers and the hoisting analysis, which have no
+        // such skip in TS).
         if let Some(entry) = identifier_locs.get(&ref_nid) {
-            if entry.is_declaration_name {
+            if entry.is_declaration_name || entry.in_type_annotation {
                 continue;
             }
         }
@@ -6822,6 +6831,17 @@ fn gather_captured_context(
         }
         if pure_scopes.contains(&binding.scope) {
             let ref_start = identifier_locs.get(&ref_nid).map(|e| e.start).unwrap_or(0);
+            // Skip references whose start offset aliases the binding's own
+            // declaration offset. Hermes desugars (component syntax) reuse the
+            // original source offsets for generated nodes, so a sibling
+            // reference structurally OUTSIDE this function (e.g. the forwardRef
+            // argument naming the desugared inner function) can fall inside the
+            // function's position range and alias the declaration position. In
+            // real source a non-declaration reference can never share its
+            // declaration's offset, so this only filters desugared aliases.
+            if binding.declaration_start == Some(ref_start) {
+                continue;
+            }
             let loc = identifier_locs.get(&ref_nid).map(|entry| {
                 if let Some(oe_loc) = &entry.opening_element_loc {
                     oe_loc.clone()

@@ -330,6 +330,43 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
     },
   });
 
+  // Babel's scope crawl does not collect every identifier that
+  // isReferencedIdentifier() classifies as a reference (observed: Flow
+  // FunctionTypeParam names resolving to value bindings are missing from
+  // binding.referencePaths under @babel/core's traversal). The TS compiler's
+  // FindContextIdentifiers and BuildHIR hoisting don't use referencePaths —
+  // they re-traverse Identifier nodes and call isReferencedIdentifier()
+  // directly, so they DO see these references. Replicate that view by mapping
+  // any referenced identifier the crawl missed.
+  program.traverse({
+    Identifier(path: NodePath<t.Identifier>) {
+      if (!path.isReferencedIdentifier()) {
+        return;
+      }
+      const node = path.node as any;
+      const start = node.start;
+      if (start == null) {
+        return;
+      }
+      if (node._nodeId != null && refNodeIdToBinding[node._nodeId] != null) {
+        return;
+      }
+      const binding = path.scope.getBinding(path.node.name);
+      if (binding == null) {
+        return;
+      }
+      const bindingScopeUid = String((binding.scope as any).uid);
+      const bindingScopeId = scopeUidToId.get(bindingScopeUid);
+      if (bindingScopeId == null) {
+        return;
+      }
+      const scopeData = scopes.find(s => s.id === bindingScopeId);
+      if (scopeData != null && path.node.name in scopeData.bindings) {
+        mapRef(start, scopeData.bindings[path.node.name], node);
+      }
+    },
+  });
+
   // Assign _nodeId to ALL Identifier and JSXIdentifier nodes in the AST,
   // not just those that resolve to bindings. This ensures global references
   // (Array, Error, etc.) also have _nodeId set, letting the Rust compiler

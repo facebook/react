@@ -251,15 +251,20 @@ fn convert_opt_loc(
     loc.as_ref().map(convert_loc)
 }
 
-/// Record the TS-faithful Todo for an unsupported assignment-target wrapper node,
-/// mirroring the TypeScript `FindContextIdentifiers` pass. Recorded via the
-/// environment's Todo mechanism (non-fatal under panicThreshold "none").
+/// Record the TS-faithful Todo for an unsupported assignment-target wrapper
+/// node, mirroring the TypeScript `FindContextIdentifiers` pass. TS throws
+/// immediately (CompilerError.throwTodo in handleAssignment's default case),
+/// aborting before BuildHIR ever runs or logs, so this must return Err rather
+/// than record-and-continue: otherwise Rust emits HIR debug entries for a
+/// function TS never lowered.
 fn record_unsupported_lval(
     env: &mut Environment,
     type_name: &str,
     loc: Option<SourceLocation>,
 ) -> Result<(), CompilerError> {
-    env.record_error(CompilerErrorDetail {
+    let _ = env;
+    let mut err = CompilerError::new();
+    err.push_error_detail(CompilerErrorDetail {
         category: ErrorCategory::Todo,
         reason: format!(
             "[FindContextIdentifiers] Cannot handle Object destructuring assignment target {type_name}"
@@ -267,7 +272,8 @@ fn record_unsupported_lval(
         description: None,
         loc,
         suggestions: None,
-    })
+    });
+    Err(err)
 }
 
 /// Check if a binding declared at `binding_scope` is captured by a function at `function_scope`.

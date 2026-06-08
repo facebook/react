@@ -35,6 +35,12 @@ pub struct IdentifierLocEntry {
     /// skip non-expression positions, matching the TS behavior where the
     /// Expression visitor doesn't visit declaration names.
     pub is_declaration_name: bool,
+    /// True if this identifier sits inside a type annotation subtree
+    /// (TypeAnnotation/TSTypeAnnotation/TypeAlias/TSTypeAliasDeclaration).
+    /// `gather_captured_context` skips these to match the TS
+    /// gatherCapturedContext traverse, which skips those subtrees; the
+    /// hoisting analysis and FindContextIdentifiers do NOT skip them in TS.
+    pub in_type_annotation: bool,
 }
 
 /// Index mapping node_id → IdentifierLocEntry for all Identifier
@@ -75,6 +81,7 @@ impl IdentifierLocVisitor {
                     is_jsx: false,
                     opening_element_loc: None,
                     is_declaration_name,
+                    in_type_annotation: false,
                 },
             );
         }
@@ -84,13 +91,25 @@ impl IdentifierLocVisitor {
     /// and JSXIdentifier nodes. Used for class bodies which are stored as untyped
     /// JSON and not walked by the typed AstWalker. This matches the TS behavior
     /// where gatherCapturedContext's Babel traverse walks into class bodies.
-    fn walk_json_for_identifiers(&mut self, value: &serde_json::Value) {
+    ///
+    /// `in_annotation` is true once the walk has descended through a type
+    /// annotation container node; identifiers found there are flagged so
+    /// `gather_captured_context` can mirror TS's TypeAnnotation subtree skip.
+    fn walk_json_for_identifiers(&mut self, value: &serde_json::Value, in_annotation: bool) {
         match value {
             serde_json::Value::Object(obj) => {
+                let node_in_annotation = in_annotation
+                    || matches!(
+                        obj.get("type").and_then(|t| t.as_str()),
+                        Some(
+                            "TypeAnnotation"
+                                | "TSTypeAnnotation"
+                                | "TypeAlias"
+                                | "TSTypeAliasDeclaration"
+                        )
+                    );
                 if let Some(serde_json::Value::String(ty)) = obj.get("type") {
-                    if (ty == "Identifier" || ty == "JSXIdentifier")
-                        && !self.is_json_node_in_type_annotation(obj)
-                    {
+                    if ty == "Identifier" || ty == "JSXIdentifier" {
                         if let (Some(nid), Some(start)) = (
                             obj.get("_nodeId").and_then(|s| s.as_u64()),
                             obj.get("start").and_then(|s| s.as_u64()),
@@ -103,35 +122,23 @@ impl IdentifierLocVisitor {
                                     is_jsx,
                                     opening_element_loc: None,
                                     is_declaration_name: false,
+                                    in_type_annotation: node_in_annotation,
                                 });
                             }
                         }
                     }
                 }
                 for (_, v) in obj {
-                    self.walk_json_for_identifiers(v);
+                    self.walk_json_for_identifiers(v, node_in_annotation);
                 }
             }
             serde_json::Value::Array(arr) => {
                 for v in arr {
-                    self.walk_json_for_identifiers(v);
+                    self.walk_json_for_identifiers(v, in_annotation);
                 }
             }
             _ => {}
         }
-    }
-
-    /// Check if a JSON Identifier node is nested inside a type annotation subtree.
-    /// We use a simple heuristic: always return false because:
-    /// 1. Type-only references are already filtered out of reference_to_binding
-    ///    by the scope.ts fix (findParent isTypeAnnotation check)
-    /// 2. Extra entries in identifier_locs for type-annotation identifiers are
-    ///    harmless — they only provide locations, they don't cause captures
-    fn is_json_node_in_type_annotation(
-        &self,
-        _obj: &serde_json::Map<String, serde_json::Value>,
-    ) -> bool {
-        false
     }
 
     fn extract_loc_from_json(
@@ -175,6 +182,7 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
                     is_jsx: true,
                     opening_element_loc: self.current_opening_element_loc.clone(),
                     is_declaration_name: false,
+                    in_type_annotation: false,
                 },
             );
         }
@@ -231,7 +239,7 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
         // The typed AstWalker skips class bodies (stored as Vec<serde_json::Value>),
         // but gatherCapturedContext in TS traverses them via Babel's traverse.
         for member in &node.body.body {
-            self.walk_json_for_identifiers(member);
+            self.walk_json_for_identifiers(member, false);
         }
     }
 
@@ -245,7 +253,7 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
         }
         // Walk class body JSON to index identifiers inside class methods
         for member in &node.body.body {
-            self.walk_json_for_identifiers(member);
+            self.walk_json_for_identifiers(member, false);
         }
     }
 }
@@ -315,7 +323,7 @@ pub fn build_identifier_loc_index(
         FunctionNode::ArrowFunctionExpression(a) => serde_json::to_value(&a.body).ok(),
     };
     if let Some(json) = body_json {
-        visitor.walk_json_for_identifiers(&json);
+        visitor.walk_json_for_identifiers(&json, false);
     }
 
     visitor.index
