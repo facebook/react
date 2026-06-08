@@ -1067,6 +1067,73 @@ impl<'a> HirBuilder<'a> {
             }
         }
     }
+
+    /// Like `is_context_identifier`, for callers that already resolved a
+    /// BindingId instead of going through a reference node.
+    pub fn is_context_binding(&self, binding_id: BindingId) -> bool {
+        let binding = &self.scope_info.bindings[binding_id.0 as usize];
+        if binding.scope == self.scope_info.program_scope {
+            return false;
+        }
+        self.context_identifiers.contains(&binding_id)
+    }
+
+    /// Resolve the binding for a function declaration's id the way TS does:
+    /// Babel's `path.scope.getBinding(name)` starts at the function's OWN
+    /// scope, so a body-level local (or parameter) that shadows the function's
+    /// name resolves to that inner binding rather than to the function's
+    /// hoisted binding in the parent scope.
+    ///
+    /// Babel's `scope.rename` re-keys a scope's bindings when the TS builder
+    /// renames a shadowed binding (e.g. `init` -> `init_0`), so a binding only
+    /// matches if its *current* name — the resolved HIR identifier name once
+    /// resolved — still equals `name`. A binding renamed *to* `name` overwrites
+    /// the original key in Babel and takes precedence over an unresolved
+    /// binding with that original name.
+    ///
+    /// Returns None when the walk resolves outside the compiled function
+    /// (degraded scope info); callers should fall back to node-based
+    /// resolution in that case.
+    pub fn get_function_declaration_binding(
+        &self,
+        function_scope: ScopeId,
+        name: &str,
+    ) -> Option<BindingId> {
+        // None = unresolved binding; Some(matches) = resolved, current name comparison
+        let resolved_name_matches = |bid: BindingId| -> Option<bool> {
+            let &identifier_id = self.bindings.get(&bid)?;
+            match &self.env.identifiers[identifier_id.0 as usize].name {
+                Some(IdentifierName::Named(n)) => Some(n == name),
+                _ => Some(false),
+            }
+        };
+        let mut current = Some(function_scope);
+        while let Some(id) = current {
+            let scope = &self.scope_info.scopes[id.0 as usize];
+            let mut found = scope
+                .bindings
+                .values()
+                .copied()
+                .find(|&bid| resolved_name_matches(bid) == Some(true));
+            if found.is_none() {
+                if let Some(&bid) = scope.bindings.get(name) {
+                    // Skip bindings that were renamed away from `name`.
+                    if resolved_name_matches(bid) != Some(false) {
+                        found = Some(bid);
+                    }
+                }
+            }
+            if let Some(bid) = found {
+                let binding_scope = self.scope_info.bindings[bid.0 as usize].scope;
+                if !self.is_scope_within_compiled_function(binding_scope) {
+                    return None;
+                }
+                return Some(bid);
+            }
+            current = scope.parent;
+        }
+        None
+    }
 }
 
 // ---------------------------------------------------------------------------
