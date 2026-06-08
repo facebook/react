@@ -119,6 +119,18 @@ impl SSABuilder {
         Ok(new_place)
     }
 
+    /// A function's context places capture a *binding*, not a value: the
+    /// variable is only read when the function is later called, so a context
+    /// place may reference a binding that is declared after the function
+    /// expression itself (eg `const colgroup = useMemo(() => <colgroup>...)`,
+    /// where the JSX tag name resolves to the variable being assigned). Unmark
+    /// such identifiers so the later declaration doesn't error; if the function
+    /// body actually *reads* the variable before it is defined, visiting the
+    /// body re-marks it and the hoisting bailout in define_place still applies.
+    fn unmark_unknown(&mut self, id: IdentifierId) {
+        self.unknown.remove(&id);
+    }
+
     fn get_place(&mut self, old_place: &Place, env: &mut Environment) -> Place {
         let current_id = self.current.expect("must be in a block");
         let new_id = self.get_id_at(old_place, current_id, env);
@@ -399,6 +411,14 @@ fn enter_ssa_impl(
 
             // Handle inner function SSA
             if let Some(fid) = func_expr_id {
+                let context_ids: Vec<IdentifierId> = env.functions[fid.0 as usize]
+                    .context
+                    .iter()
+                    .map(|place| place.identifier)
+                    .collect();
+                for id in context_ids {
+                    builder.unmark_unknown(id);
+                }
                 builder.processed_functions.push(fid);
                 let inner_func = &mut env.functions[fid.0 as usize];
                 let inner_entry = inner_func.body.entry;

@@ -320,7 +320,9 @@ export function extractScopeInfo(program: NodePath<t.Program>): ScopeInfo {
           if (scopeData != null && tagName in scopeData.bindings) {
             const start = name.node.start;
             if (start != null) {
-              referenceToBinding[start] = scopeData.bindings[tagName];
+              // mapRef also populates refNodeIdToBinding, the only map the
+              // Rust side consumes (referenceToBinding is deprecated there).
+              mapRef(start, scopeData.bindings[tagName], name.node);
             }
           }
         }
