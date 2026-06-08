@@ -1,10 +1,13 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::common::BaseNode;
-use crate::jsx::{JSXElement, JSXFragment};
+use crate::jsx::JSXElement;
+use crate::jsx::JSXFragment;
 use crate::literals::*;
 use crate::operators::*;
-use crate::patterns::{AssignmentPattern, PatternLike};
+use crate::patterns::AssignmentPattern;
+use crate::patterns::PatternLike;
 use crate::statements::BlockStatement;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -267,6 +270,13 @@ pub struct FunctionExpression {
         rename = "typeParameters"
     )]
     pub type_parameters: Option<Box<serde_json::Value>>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "predicate",
+        deserialize_with = "crate::common::nullable_value"
+    )]
+    pub predicate: Option<Box<serde_json::Value>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

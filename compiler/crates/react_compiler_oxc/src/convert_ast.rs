@@ -1888,6 +1888,7 @@ impl<'a> ConvertCtx<'a> {
                 .type_parameters
                 .as_ref()
                 .map(|_t| Box::new(serde_json::Value::Null)),
+            predicate: None,
         }
     }
 

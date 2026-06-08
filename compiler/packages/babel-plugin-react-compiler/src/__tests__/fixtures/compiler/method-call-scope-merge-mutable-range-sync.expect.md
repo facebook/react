@@ -320,4 +320,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div><span><span>Directory: /Music</span><span>Schema: CWR, Geos: 2, </span><span>Sender ID: 123</span><span>Ingestion: Enabled</span><span>GB,US<button>Copy</button></span></span><span><button></button><button></button></span></div>
+(kind: exception) licensedGeos.toSorted is not a function

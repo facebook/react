@@ -2212,6 +2212,7 @@ fn build_compiled_function_expression(codegen: &CodegenFunction) -> Expression {
         is_async: codegen.is_async,
         return_type: None,
         type_parameters: None,
+        predicate: None,
     })
 }
 
@@ -2231,6 +2232,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, node_id: u32) -> Option<Exp
                     is_async: f.is_async,
                     return_type: None,
                     type_parameters: None,
+                    predicate: None,
                 }));
             }
             None
@@ -2257,6 +2259,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, node_id: u32) -> Option<Exp
                         is_async: f.is_async,
                         return_type: None,
                         type_parameters: None,
+                        predicate: None,
                     }));
                 }
                 None
@@ -2278,6 +2281,7 @@ fn clone_original_fn_as_expression(stmt: &Statement, node_id: u32) -> Option<Exp
                                 is_async: f.is_async,
                                 return_type: None,
                                 type_parameters: None,
+                                predicate: None,
                             }));
                         }
                         None

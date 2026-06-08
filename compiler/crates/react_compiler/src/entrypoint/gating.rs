@@ -12,7 +12,8 @@ use react_compiler_ast::common::BaseNode;
 use react_compiler_ast::expressions::*;
 use react_compiler_ast::patterns::PatternLike;
 use react_compiler_ast::statements::*;
-use react_compiler_diagnostics::{CompilerDiagnostic, ErrorCategory};
+use react_compiler_diagnostics::CompilerDiagnostic;
+use react_compiler_diagnostics::ErrorCategory;
 
 use super::imports::ProgramContext;
 use super::plugin_options::GatingConfig;
@@ -434,6 +435,7 @@ fn build_function_expression(node: CompiledFunctionNode) -> Expression {
                 is_async: func_decl.is_async,
                 return_type: func_decl.return_type,
                 type_parameters: func_decl.type_parameters,
+                predicate: func_decl.predicate,
             })
         }
     }
@@ -475,9 +477,13 @@ fn get_fn_decl_name_from_export_default(stmt: &Statement) -> Option<String> {
 
 /// Extract a CompiledFunctionNode from a statement (for building the
 /// "original" side of the gating expression).
-fn extract_function_node_from_stmt(stmt: &Statement) -> Result<CompiledFunctionNode, CompilerDiagnostic> {
+fn extract_function_node_from_stmt(
+    stmt: &Statement,
+) -> Result<CompiledFunctionNode, CompilerDiagnostic> {
     match stmt {
-        Statement::FunctionDeclaration(fd) => Ok(CompiledFunctionNode::FunctionDeclaration(fd.clone())),
+        Statement::FunctionDeclaration(fd) => {
+            Ok(CompiledFunctionNode::FunctionDeclaration(fd.clone()))
+        }
         Statement::ExpressionStatement(es) => match es.expression.as_ref() {
             Expression::ArrowFunctionExpression(arrow) => {
                 Ok(CompiledFunctionNode::ArrowFunctionExpression(arrow.clone()))
@@ -545,7 +551,11 @@ fn extract_function_node_from_stmt(stmt: &Statement) -> Result<CompiledFunctionN
 
 /// Rename the function declaration at `body[index]` in place.
 /// Handles both bare FunctionDeclaration and ExportNamedDeclaration wrapping one.
-fn rename_fn_decl_at(body: &mut [Statement], index: usize, new_name: &str) -> Result<(), CompilerDiagnostic> {
+fn rename_fn_decl_at(
+    body: &mut [Statement],
+    index: usize,
+    new_name: &str,
+) -> Result<(), CompilerDiagnostic> {
     match &mut body[index] {
         Statement::FunctionDeclaration(fd) => {
             fd.id = Some(make_identifier(new_name));

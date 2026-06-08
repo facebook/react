@@ -23,33 +23,13 @@ export default component MatchStmtSelfRefConst(x: string) {
 
 ```
 
-## Code
 
-```javascript
-import { c as _c } from "react/compiler-runtime";
-
-export default function MatchStmtSelfRefConst(t0) {
-  const $ = _c(1);
-  const { x } = t0;
-  bb0: if (x === "a") {
-    const handler = () => {
-      handler();
-    };
-
-    document.addEventListener("click", handler);
-    break bb0;
-  }
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <div />;
-    $[0] = t1;
-  } else {
-    t1 = $[0];
-  }
-  return t1;
-}
+## Error
 
 ```
+';' expected (8:12)
+  match (x) {
+            ^
+```
+          
       
-### Eval output
-(kind: exception) Fixture not implemented

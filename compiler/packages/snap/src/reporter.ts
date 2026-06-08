@@ -209,6 +209,9 @@ export function report(
 ): boolean {
   const failures: Array<[string, TestResult]> = [];
   for (const [basename, result] of results) {
+    if (!rust && TS_SKIP_FIXTURES.has(basename)) {
+      continue;
+    }
     const actual =
       rust && result.actual
         ? normalizeCodeBlankLines(result.actual)

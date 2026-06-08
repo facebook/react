@@ -1020,6 +1020,7 @@ impl<'a> ConvertCtx<'a> {
                 .type_params
                 .as_ref()
                 .map(|_| Box::new(serde_json::Value::Null)),
+            predicate: None,
         }
     }
 
@@ -2101,9 +2102,7 @@ impl<'a> ConvertCtx<'a> {
 
     fn convert_ts_type_to_json(&self, ty: &swc::TsType) -> Option<serde_json::Value> {
         match ty {
-            swc::TsType::TsKeywordType(k)
-                if k.kind == swc::TsKeywordTypeKind::TsNumberKeyword =>
-            {
+            swc::TsType::TsKeywordType(k) if k.kind == swc::TsKeywordTypeKind::TsNumberKeyword => {
                 Some(serde_json::json!({ "type": "TSNumberKeyword" }))
             }
             // Skip generics: `convert_ts_type_annotation_from_json` ignores
