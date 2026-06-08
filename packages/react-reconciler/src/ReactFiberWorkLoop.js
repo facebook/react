@@ -1126,7 +1126,7 @@ export function performWorkOnRoot(
   forceSync: boolean,
 ): void {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    return;
+    throw new Error('Should not already be working.');
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -3520,7 +3520,7 @@ function completeRoot(
   flushRenderPhaseStrictModeWarningsInDEV();
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    return;
+    throw new Error('Should not already be working.');
   }
 
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
