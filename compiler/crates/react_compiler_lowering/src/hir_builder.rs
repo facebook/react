@@ -737,13 +737,12 @@ impl<'a> HirBuilder<'a> {
 
     /// Check if a name has a local binding (non-module-level).
     /// This is used for checking if fbt/fbs JSX tags are local bindings
-    /// (which is not supported). Unlike resolve_identifier, this doesn't
-    /// require a source position.
+    /// (which is not supported).
     pub fn has_local_binding(&self, name: &str) -> bool {
-        // Check used_names to see if this name has been bound locally
-        if let Some(&binding_id) = self.used_names.get(name) {
-            // Check that the binding is NOT in the program scope (i.e., it's local)
-            let binding = &self.scope_info.bindings[binding_id.0 as usize];
+        if let Some(binding) = self
+            .scope_info
+            .find_binding_in_descendants(name, self.component_scope)
+        {
             return binding.scope != self.scope_info.program_scope;
         }
         false
