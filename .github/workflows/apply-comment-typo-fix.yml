@@ -1,0 +1,30 @@
+name: Apply comment typo fix
+on:
+  push:
+    branches: [docs/fix-parameters-typo]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Correct spelling
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('compiler/packages/babel-plugin-react-compiler/src/HIR/Globals.ts')
+          text = path.read_text()
+          old = 'createRef takes no paramters'
+          new = 'createRef takes no parameters'
+          if old not in text:
+              raise SystemExit('Expected typo not found')
+          path.write_text(text.replace(old, new))
+          PY
+          rm .github/workflows/apply-comment-typo-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add compiler/packages/babel-plugin-react-compiler/src/HIR/Globals.ts .github/workflows/apply-comment-typo-fix.yml
+          git commit -m "docs: fix parameters spelling in comment"
+          git push
