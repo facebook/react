@@ -1189,7 +1189,6 @@ dependencies = [
  "react_compiler_ssa",
  "react_compiler_typeinference",
  "react_compiler_validation",
- "regex",
  "serde",
  "serde_json",
 ]
