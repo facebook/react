@@ -43,7 +43,7 @@ function Component({store}) {
         {cwrSenderIds != null && <span>Sender ID: {cwrSenderIds[0]}</span>}
         <span>Ingestion: {ingestionEnabled ? 'Enabled' : 'Disabled'}</span>
         <span>
-          {licensedGeos.toSorted().join(',')}
+          {[...licensedGeos].sort().join(',')}
           <button
             onClick={() => {
               console.log('copied');
