@@ -4020,27 +4020,12 @@ pub fn compile_program(mut file: File, scope: ScopeInfo, options: PluginOptions)
     // Now we can mutate file.program
     apply_compiled_functions(&replacements, &mut file.program, &mut context);
 
-    // Serialize the modified File AST directly to a JSON string and wrap as RawValue.
-    // This avoids double-serialization (File→Value→String) by going File→String directly.
-    // The RawValue is embedded verbatim when the CompileResult is serialized.
-    let ast = match serde_json::to_string(&file) {
-        Ok(s) => match serde_json::value::RawValue::from_string(s) {
-            Ok(raw) => Some(raw),
-            Err(e) => {
-                eprintln!("RUST COMPILER: Failed to create RawValue: {}", e);
-                None
-            }
-        },
-        Err(e) => {
-            eprintln!("RUST COMPILER: Failed to serialize AST: {}", e);
-            None
-        }
-    };
-
     let timing_entries = context.timing.into_entries();
 
+    // Return the compiled File by value; in-process Rust consumers use it
+    // directly, and the napi consumer serializes the whole result as before.
     CompileResult::Success {
-        ast,
+        ast: Some(file),
         events: context.events,
         ordered_log: context.ordered_log,
         renames: convert_renames(&context.renames),
