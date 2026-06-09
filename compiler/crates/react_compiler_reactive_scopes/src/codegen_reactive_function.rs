@@ -15,6 +15,7 @@ use std::collections::HashSet;
 
 use react_compiler_ast::common::BaseNode;
 use react_compiler_ast::common::Position as AstPosition;
+use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::SourceLocation as AstSourceLocation;
 use react_compiler_ast::expressions::ArrowFunctionBody;
 use react_compiler_ast::expressions::Expression;
@@ -1580,7 +1581,7 @@ fn codegen_unsupported_original_node(
 ) -> Result<UnsupportedOriginalNode, CompilerError> {
     let tag = node.get("type").and_then(serde_json::Value::as_str);
     if tag.is_some_and(is_known_statement_type) {
-        let stmt: Statement = serde_json::from_value(node.clone()).map_err(|e| {
+        let stmt: Statement = react_compiler_ast::common::from_value_via_text(node).map_err(|e| {
             invariant_err(
                 &format!("Failed to deserialize original AST node: {}", e),
                 None,
@@ -1588,12 +1589,12 @@ fn codegen_unsupported_original_node(
         })?;
         return Ok(UnsupportedOriginalNode::Statement(stmt));
     }
-    if serde_json::from_value::<Expression>(node.clone()).is_ok()
-        || serde_json::from_value::<PatternLike>(node.clone()).is_ok()
+    if react_compiler_ast::common::from_value_via_text::<Expression>(node).is_ok()
+        || react_compiler_ast::common::from_value_via_text::<PatternLike>(node).is_ok()
     {
         return Ok(UnsupportedOriginalNode::ExpressionCodegen);
     }
-    let unknown = UnknownStatement::from_raw(node.clone()).map_err(|e| {
+    let unknown = UnknownStatement::from_raw(RawNode::from_value(node)).map_err(|e| {
         invariant_err(
             &format!("Failed to read unsupported original AST node: {}", e),
             None,
@@ -2526,7 +2527,7 @@ fn codegen_base_instruction_value(
                     Expression::TSSatisfiesExpression(ast_expr::TSSatisfiesExpression {
                         base: BaseNode::typed("TSSatisfiesExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta,
+                        type_annotation: RawNode::from_value(&ta),
                     })
                 }
                 (Some("as"), Some(ta)) => {
@@ -2535,7 +2536,7 @@ fn codegen_base_instruction_value(
                     Expression::TSAsExpression(ast_expr::TSAsExpression {
                         base: BaseNode::typed("TSAsExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta,
+                        type_annotation: RawNode::from_value(&ta),
                     })
                 }
                 (Some("cast"), Some(ta)) => {
@@ -2544,7 +2545,7 @@ fn codegen_base_instruction_value(
                     Expression::TypeCastExpression(ast_expr::TypeCastExpression {
                         base: BaseNode::typed("TypeCastExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta,
+                        type_annotation: RawNode::from_value(&ta),
                     })
                 }
                 _ => expr,
@@ -2589,7 +2590,7 @@ fn codegen_base_instruction_value(
             // Try to deserialize the original AST node from JSON (mirrors statement-level handler)
             match original_node {
                 Some(node) => {
-                    match serde_json::from_value::<Expression>(node.clone()) {
+                    match react_compiler_ast::common::from_value_via_text::<Expression>(node) {
                         Ok(expr) => Ok(ExpressionOrJsxText::Expression(expr)),
                         Err(_) => {
                             // Not a valid expression — fall back to placeholder
@@ -4297,7 +4298,7 @@ mod tests {
         match codegen_unsupported_original_node(&node).unwrap() {
             UnsupportedOriginalNode::Statement(Statement::Unknown(unknown)) => {
                 assert_eq!(unknown.node_type(), "TSImportEqualsDeclaration");
-                assert_eq!(unknown.raw(), &node);
+                assert_eq!(unknown.raw().parse_value(), node);
             }
             UnsupportedOriginalNode::Statement(other) => {
                 panic!("expected Statement::Unknown, got {other:?}")

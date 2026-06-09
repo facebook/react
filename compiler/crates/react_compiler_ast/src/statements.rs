@@ -2,6 +2,7 @@ use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::common::BaseNode;
+use crate::common::RawNode;
 
 use crate::expressions::{Expression, Identifier};
 use crate::patterns::PatternLike;
@@ -86,17 +87,17 @@ pub enum Statement {
 
 #[derive(Debug, Clone)]
 pub struct UnknownStatement {
-    raw: serde_json::Value,
+    raw: RawNode,
     base: BaseNode,
 }
 
 impl UnknownStatement {
-    pub fn from_raw(raw: serde_json::Value) -> Result<Self, String> {
-        match raw.get("type").and_then(serde_json::Value::as_str) {
+    pub fn from_raw(raw: RawNode) -> Result<Self, String> {
+        match raw.type_name() {
             Some(_) => {
-                // By-ref deserialization clones only the fields BaseNode
-                // reads, not the whole (arbitrarily large) unknown subtree.
-                let base = BaseNode::deserialize(&raw)
+                // Parsing into BaseNode reads only the fields BaseNode declares,
+                // not the whole (arbitrarily large) unknown subtree.
+                let base = serde_json::from_str::<BaseNode>(raw.get())
                     .map_err(|err| format!("failed to read unknown statement base: {err}"))?;
                 Ok(Self { raw, base })
             }
@@ -111,7 +112,7 @@ impl UnknownStatement {
         self.base.node_type.as_deref().unwrap_or("Unknown")
     }
 
-    pub fn raw(&self) -> &serde_json::Value {
+    pub fn raw(&self) -> &RawNode {
         &self.raw
     }
 
@@ -120,15 +121,15 @@ impl UnknownStatement {
     /// string `type` field are rejected and rolled back.
     pub fn with_raw_mut<R>(
         &mut self,
-        f: impl FnOnce(&mut serde_json::Value) -> R,
+        f: impl FnOnce(&mut RawNode) -> R,
     ) -> Result<R, String> {
         let saved = self.raw.clone();
         let result = f(&mut self.raw);
-        if self.raw.get("type").and_then(serde_json::Value::as_str).is_none() {
+        if self.raw.type_name().is_none() {
             self.raw = saved;
             return Err("unknown statement mutation removed the string `type` field".to_string());
         }
-        match BaseNode::deserialize(&self.raw) {
+        match serde_json::from_str::<BaseNode>(self.raw.get()) {
             Ok(base) => {
                 self.base = base;
                 Ok(result)
@@ -159,7 +160,7 @@ impl<'de> Deserialize<'de> for UnknownStatement {
     where
         D: Deserializer<'de>,
     {
-        let raw = serde_json::Value::deserialize(deserializer)?;
+        let raw = RawNode::deserialize(deserializer)?;
         Self::from_raw(raw).map_err(D::Error::custom)
     }
 }
@@ -169,15 +170,14 @@ impl<'de> Deserialize<'de> for Statement {
     where
         D: Deserializer<'de>,
     {
-        let raw = serde_json::Value::deserialize(deserializer)?;
+        let raw = RawNode::deserialize(deserializer)?;
         let node_type = raw
-            .get("type")
-            .and_then(serde_json::Value::as_str)
-            .ok_or_else(|| D::Error::custom("statement is missing a string `type` field"))?
-            .to_string();
+            .type_name()
+            .ok_or_else(|| D::Error::custom("statement is missing a string `type` field"))?;
 
         if is_known_statement_type(&node_type) {
-            let known: KnownStatement = serde_json::from_value(raw).map_err(D::Error::custom)?;
+            let known: KnownStatement =
+                serde_json::from_str(raw.get()).map_err(D::Error::custom)?;
             Ok(known.into())
         } else {
             UnknownStatement::from_raw(raw)
@@ -508,20 +508,20 @@ pub struct FunctionDeclaration {
         skip_serializing_if = "Option::is_none",
         rename = "returnType"
     )]
-    pub return_type: Option<Box<serde_json::Value>>,
+    pub return_type: Option<RawNode>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
         rename = "typeParameters"
     )]
-    pub type_parameters: Option<Box<serde_json::Value>>,
+    pub type_parameters: Option<RawNode>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
         rename = "predicate",
         deserialize_with = "crate::common::nullable_value"
     )]
-    pub predicate: Option<Box<serde_json::Value>>,
+    pub predicate: Option<RawNode>,
     /// Set by the Hermes parser for Flow `component Foo(...) { ... }` syntax
     #[serde(
         default,
@@ -547,7 +547,7 @@ pub struct ClassDeclaration {
     pub super_class: Option<Box<Expression>>,
     pub body: crate::expressions::ClassBody,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub decorators: Option<Vec<serde_json::Value>>,
+    pub decorators: Option<Vec<RawNode>>,
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "abstract")]
     pub is_abstract: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -557,21 +557,21 @@ pub struct ClassDeclaration {
         skip_serializing_if = "Option::is_none",
         rename = "implements"
     )]
-    pub implements: Option<Vec<serde_json::Value>>,
+    pub implements: Option<Vec<RawNode>>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
         rename = "superTypeParameters"
     )]
-    pub super_type_parameters: Option<Box<serde_json::Value>>,
+    pub super_type_parameters: Option<RawNode>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
         rename = "typeParameters"
     )]
-    pub type_parameters: Option<Box<serde_json::Value>>,
+    pub type_parameters: Option<RawNode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub mixins: Option<Vec<serde_json::Value>>,
+    pub mixins: Option<Vec<RawNode>>,
 }
 
 #[cfg(test)]
@@ -579,6 +579,8 @@ mod tests {
     use serde_json::json;
 
     use super::Statement;
+    use crate::common::RawNode;
+    use crate::common::from_value_via_text;
 
     #[test]
     fn unknown_statement_round_trips_at_program_level() {
@@ -608,7 +610,7 @@ mod tests {
             }
         });
 
-        let file: crate::File = serde_json::from_value(input.clone()).unwrap();
+        let file: crate::File = crate::common::from_value_via_text(&input).unwrap();
 
         match &file.program.body[0] {
             Statement::Unknown(unknown) => {
@@ -639,7 +641,7 @@ mod tests {
             }
         });
 
-        let stmt: Statement = serde_json::from_value(input.clone()).unwrap();
+        let stmt: Statement = crate::common::from_value_via_text(&input).unwrap();
         let Statement::FunctionDeclaration(function) = &stmt else {
             panic!("expected function declaration, got {stmt:?}");
         };
@@ -659,7 +661,7 @@ mod tests {
 
     #[test]
     fn known_statement_type_uses_typed_variant() {
-        let stmt: Statement = serde_json::from_value(json!({
+        let stmt: Statement = from_value_via_text(&json!({
             "type": "EmptyStatement"
         }))
         .unwrap();
@@ -669,7 +671,7 @@ mod tests {
 
     #[test]
     fn malformed_known_statement_type_errors() {
-        let err = serde_json::from_value::<Statement>(json!({
+        let err = from_value_via_text::<Statement>(&json!({
             "type": "IfStatement",
             "consequent": {
                 "type": "EmptyStatement"
@@ -685,7 +687,7 @@ mod tests {
 
     #[test]
     fn statement_without_type_field_errors() {
-        let err = serde_json::from_value::<Statement>(json!({
+        let err = from_value_via_text::<Statement>(&json!({
             "start": 0,
             "end": 1
         }))
@@ -699,7 +701,7 @@ mod tests {
 
     #[test]
     fn non_object_statement_errors() {
-        let err = serde_json::from_value::<Statement>(json!([1, 2])).unwrap_err();
+        let err = from_value_via_text::<Statement>(&json!([1, 2])).unwrap_err();
         assert!(
             err.to_string().contains("`type`"),
             "unexpected error: {err}"
@@ -708,7 +710,7 @@ mod tests {
 
     #[test]
     fn non_string_type_field_errors() {
-        let err = serde_json::from_value::<Statement>(json!({ "type": 7 })).unwrap_err();
+        let err = from_value_via_text::<Statement>(&json!({ "type": 7 })).unwrap_err();
         assert!(
             err.to_string().contains("`type`"),
             "unexpected error: {err}"
@@ -724,21 +726,28 @@ mod tests {
             "start": 5,
             "expression": { "type": "Identifier", "name": "x" }
         });
-        let Statement::Unknown(mut unknown) = serde_json::from_value(raw).unwrap() else {
+        let Statement::Unknown(mut unknown) = crate::common::from_value_via_text(&raw).unwrap() else {
             panic!("expected Unknown");
         };
 
         unknown
             .with_raw_mut(|v| {
-                v["start"] = json!(9);
-                v["expression"]["name"] = json!("y");
+                let mut parsed = v.parse_value();
+                parsed["start"] = json!(9);
+                parsed["expression"]["name"] = json!("y");
+                *v = RawNode::from_value(&parsed);
             })
             .unwrap();
         assert_eq!(unknown.base().start, Some(9));
-        assert_eq!(unknown.raw()["expression"]["name"], json!("y"));
+        assert_eq!(
+            unknown.raw().parse_value()["expression"]["name"],
+            json!("y")
+        );
 
         let err = unknown.with_raw_mut(|v| {
-            v.as_object_mut().unwrap().remove("type");
+            let mut parsed = v.parse_value();
+            parsed.as_object_mut().unwrap().remove("type");
+            *v = RawNode::from_value(&parsed);
         });
         assert!(err.is_err(), "type removal must be rejected");
     }

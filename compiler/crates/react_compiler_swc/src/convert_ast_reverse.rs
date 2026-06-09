@@ -332,7 +332,8 @@ impl ReverseCtx {
         &self,
         unknown: &babel_stmt::UnknownStatement,
     ) -> Option<ModuleDecl> {
-        let raw = unknown.raw();
+        let raw = unknown.raw().parse_value();
+        let raw = &raw;
         match unknown.node_type() {
             "TSImportEqualsDeclaration" => {
                 let id = self.ident_from_raw(raw.get("id")?)?;
@@ -361,7 +362,7 @@ impl ReverseCtx {
             }
             "TSExportAssignment" => {
                 let expr: BabelExpr =
-                    serde_json::from_value(raw.get("expression")?.clone()).ok()?;
+                    react_compiler_ast::common::from_value_via_text(raw.get("expression")?).ok()?;
                 Some(ModuleDecl::TsExportAssignment(TsExportAssignment {
                     span: self.span(unknown.base()),
                     expr: Box::new(self.convert_expression(&expr)),
@@ -382,7 +383,7 @@ impl ReverseCtx {
         if raw.get("type").and_then(serde_json::Value::as_str) != Some("Identifier") {
             return None;
         }
-        let id: babel_expr::Identifier = serde_json::from_value(raw.clone()).ok()?;
+        let id: babel_expr::Identifier = react_compiler_ast::common::from_value_via_text(raw).ok()?;
         Some(self.ident(&id.name, self.span_no_comments(&id.base)))
     }
 
@@ -394,8 +395,8 @@ impl ReverseCtx {
                     return None;
                 }
                 let lit: react_compiler_ast::literals::StringLiteral =
-                    serde_json::from_value(expr.clone()).ok()?;
-                let ref_base: BaseNode = serde_json::from_value(raw.clone()).ok()?;
+                    react_compiler_ast::common::from_value_via_text(expr).ok()?;
+                let ref_base: BaseNode = react_compiler_ast::common::from_value_via_text(raw).ok()?;
                 Some(TsModuleRef::TsExternalModuleRef(TsExternalModuleRef {
                     span: self.span_no_comments(&ref_base),
                     expr: Str {
@@ -416,10 +417,10 @@ impl ReverseCtx {
         match raw.get("type").and_then(serde_json::Value::as_str)? {
             "Identifier" => self.ident_from_raw(raw).map(TsEntityName::Ident),
             "TSQualifiedName" => {
-                let base: BaseNode = serde_json::from_value(raw.clone()).ok()?;
+                let base: BaseNode = react_compiler_ast::common::from_value_via_text(raw).ok()?;
                 let left = self.ts_entity_name_from_raw(raw.get("left")?)?;
                 let right: babel_expr::Identifier =
-                    serde_json::from_value(raw.get("right")?.clone()).ok()?;
+                    react_compiler_ast::common::from_value_via_text(raw.get("right")?).ok()?;
                 Some(TsEntityName::TsQualifiedName(Box::new(TsQualifiedName {
                     span: self.span_no_comments(&base),
                     left,
@@ -1103,11 +1104,12 @@ impl ReverseCtx {
             BabelExpr::TSAsExpression(e) => {
                 let expr = Box::new(self.convert_expression(&e.expression));
                 let span = self.span(&e.base);
+                let annotation = e.type_annotation.parse_value();
                 // Check if this is "as const" — Babel represents it as
                 // TSAsExpression with typeAnnotation: TSTypeReference { typeName: Identifier { name: "const" } }
-                let is_as_const = e.type_annotation.get("type").and_then(|v| v.as_str())
+                let is_as_const = annotation.get("type").and_then(|v| v.as_str())
                     == Some("TSTypeReference")
-                    && e.type_annotation
+                    && annotation
                         .get("typeName")
                         .and_then(|tn| tn.get("name"))
                         .and_then(|n| n.as_str())
@@ -1116,7 +1118,7 @@ impl ReverseCtx {
                 if is_as_const {
                     Expr::TsConstAssertion(TsConstAssertion { span, expr })
                 } else {
-                    let type_ann = self.convert_ts_type_from_json(&e.type_annotation, span);
+                    let type_ann = self.convert_ts_type_from_json(&annotation, span);
                     Expr::TsAs(TsAsExpr {
                         span,
                         expr,
@@ -1588,7 +1590,8 @@ impl ReverseCtx {
                 bi.id.optional = id.optional.unwrap_or(false);
                 // Preserve type annotations if present
                 if let Some(ref type_ann) = id.type_annotation {
-                    bi.type_ann = self.convert_ts_type_annotation_from_json(type_ann);
+                    bi.type_ann =
+                        self.convert_ts_type_annotation_from_json(&type_ann.parse_value());
                 }
                 Pat::Ident(bi)
             }

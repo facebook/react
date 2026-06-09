@@ -790,7 +790,7 @@ fn calls_hooks_or_creates_jsx_in_class_body(
 ) -> bool {
     body.body
         .iter()
-        .any(|member| calls_hooks_or_creates_jsx_in_json(member))
+        .any(|member| calls_hooks_or_creates_jsx_in_json(&member.parse_value()))
 }
 
 fn calls_hooks_or_creates_jsx_in_json(value: &serde_json::Value) -> bool {
@@ -930,11 +930,11 @@ fn calls_hooks_or_creates_jsx_in_pattern(pattern: &PatternLike) -> bool {
 /// Returns false for primitive type annotations that indicate this is NOT a component.
 fn is_valid_props_annotation(param: &PatternLike) -> bool {
     let type_annotation = match param {
-        PatternLike::Identifier(id) => id.type_annotation.as_deref(),
-        PatternLike::ObjectPattern(op) => op.type_annotation.as_deref(),
-        PatternLike::ArrayPattern(ap) => ap.type_annotation.as_deref(),
-        PatternLike::AssignmentPattern(ap) => ap.type_annotation.as_deref(),
-        PatternLike::RestElement(re) => re.type_annotation.as_deref(),
+        PatternLike::Identifier(id) => id.type_annotation.as_ref(),
+        PatternLike::ObjectPattern(op) => op.type_annotation.as_ref(),
+        PatternLike::ArrayPattern(ap) => ap.type_annotation.as_ref(),
+        PatternLike::AssignmentPattern(ap) => ap.type_annotation.as_ref(),
+        PatternLike::RestElement(re) => re.type_annotation.as_ref(),
         PatternLike::MemberExpression(_)
         | PatternLike::TSAsExpression(_)
         | PatternLike::TSSatisfiesExpression(_)
@@ -943,7 +943,7 @@ fn is_valid_props_annotation(param: &PatternLike) -> bool {
         | PatternLike::TypeCastExpression(_) => None,
     };
     let annot = match type_annotation {
-        Some(val) => val,
+        Some(raw) => raw.parse_value(),
         None => return true, // No annotation = valid
     };
     let annot_type = match annot.get("type").and_then(|v| v.as_str()) {
@@ -2181,7 +2181,9 @@ fn stmt_references_identifier_at_top_level(stmt: &Statement, name: &str) -> bool
         // Unmodeled statements (e.g. `export = X`) can reference top-level
         // bindings; scan the raw node for a matching Identifier so the
         // gating reference-before-declaration analysis does not miss them.
-        Statement::Unknown(unknown) => raw_node_references_identifier(unknown.raw(), name),
+        Statement::Unknown(unknown) => {
+            raw_node_references_identifier(&unknown.raw().parse_value(), name)
+        }
         _ => false,
     }
 }
