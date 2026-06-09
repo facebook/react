@@ -59,8 +59,9 @@ if (!jsonMode) {
   );
 }
 
+// Profiling needs symbol names; override the release profile's strip=true.
 const cargoBuildArgs = releaseMode
-  ? '--release -p react_compiler_napi'
+  ? "--release --config 'profile.release.strip=false' -p react_compiler_napi"
   : '-p react_compiler_napi';
 
 try {
