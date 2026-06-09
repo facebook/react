@@ -43,7 +43,6 @@ use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
 use react_compiler_hir::environment_config::EnvironmentConfig;
 use react_compiler_lowering::FunctionNode;
-use regex::Regex;
 
 use super::compile_result::BindingRenameInfo;
 use super::compile_result::CodegenFunction;
@@ -175,26 +174,21 @@ fn find_directives_dynamic_gating<'a>(
         None => return Ok(None),
     };
 
-    let pattern = Regex::new(r"^use memo if\(([^\)]*)\)$").expect("Invalid dynamic gating regex");
-
     let mut errors: Vec<CompilerErrorDetail> = Vec::new();
     let mut matches: Vec<(&'a Directive, String)> = Vec::new();
 
     for directive in directives {
-        if let Some(caps) = pattern.captures(&directive.value.value) {
-            if let Some(m) = caps.get(1) {
-                let ident = m.as_str();
-                if is_valid_identifier(ident) {
-                    matches.push((directive, ident.to_string()));
-                } else {
-                    let mut detail = CompilerErrorDetail::new(
-                        ErrorCategory::Gating,
-                        "Dynamic gating directive is not a valid JavaScript identifier",
-                    )
-                    .with_description(format!("Found '{}'", directive.value.value));
-                    detail.loc = directive.base.loc.as_ref().map(convert_loc);
-                    errors.push(detail);
-                }
+        if let Some(ident) = parse_dynamic_gating_directive(&directive.value.value) {
+            if is_valid_identifier(ident) {
+                matches.push((directive, ident.to_string()));
+            } else {
+                let mut detail = CompilerErrorDetail::new(
+                    ErrorCategory::Gating,
+                    "Dynamic gating directive is not a valid JavaScript identifier",
+                )
+                .with_description(format!("Found '{}'", directive.value.value));
+                detail.loc = directive.base.loc.as_ref().map(convert_loc);
+                errors.push(detail);
             }
         }
     }
@@ -234,6 +228,20 @@ fn find_directives_dynamic_gating<'a>(
     } else {
         Ok(None)
     }
+}
+
+/// Parse a `use memo if(<condition>)` directive, returning the condition.
+/// Exact equivalent of the TS DYNAMIC_GATING_DIRECTIVE regex
+/// `^use memo if\(([^\)]*)\)$`: the condition may not contain `)` and the
+/// directive must end at the closing paren.
+fn parse_dynamic_gating_directive(value: &str) -> Option<&str> {
+    let condition = value
+        .strip_prefix("use memo if(")?
+        .strip_suffix(')')?;
+    if condition.contains(')') {
+        return None;
+    }
+    Some(condition)
 }
 
 /// Simple check for valid JavaScript identifier (alphanumeric + underscore + $, starting with letter/$/_ )
