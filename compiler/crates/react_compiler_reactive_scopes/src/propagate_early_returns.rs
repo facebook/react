@@ -10,16 +10,36 @@
 //!
 //! Corresponds to `src/ReactiveScopes/PropagateEarlyReturns.ts`.
 
-use react_compiler_hir::{
-    BlockId, Effect, EvaluationOrder, IdentifierId, IdentifierName, InstructionKind,
-    InstructionValue, LValue, NonLocalBinding, Place, PlaceOrSpread, PrimitiveValue,
-    PropertyLiteral, ReactiveFunction, ReactiveInstruction, ReactiveLabel,
-    ReactiveStatement, ReactiveTerminal, ReactiveTerminalStatement, ReactiveTerminalTargetKind,
-    ReactiveValue, ReactiveScopeBlock, ReactiveScopeDeclaration, ReactiveScopeEarlyReturn,
-    environment::Environment,
-};
+use react_compiler_hir::BlockId;
+use react_compiler_hir::Effect;
+use react_compiler_hir::EvaluationOrder;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::IdentifierName;
+use react_compiler_hir::InstructionKind;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::JsString;
+use react_compiler_hir::LValue;
+use react_compiler_hir::NonLocalBinding;
+use react_compiler_hir::Place;
+use react_compiler_hir::PlaceOrSpread;
+use react_compiler_hir::PrimitiveValue;
+use react_compiler_hir::PropertyLiteral;
+use react_compiler_hir::ReactiveFunction;
+use react_compiler_hir::ReactiveInstruction;
+use react_compiler_hir::ReactiveLabel;
+use react_compiler_hir::ReactiveScopeBlock;
+use react_compiler_hir::ReactiveScopeDeclaration;
+use react_compiler_hir::ReactiveScopeEarlyReturn;
+use react_compiler_hir::ReactiveStatement;
+use react_compiler_hir::ReactiveTerminal;
+use react_compiler_hir::ReactiveTerminalStatement;
+use react_compiler_hir::ReactiveTerminalTargetKind;
+use react_compiler_hir::ReactiveValue;
+use react_compiler_hir::environment::Environment;
 
-use crate::visitors::{ReactiveFunctionTransform, Transformed, transform_reactive_function};
+use crate::visitors::ReactiveFunctionTransform;
+use crate::visitors::Transformed;
+use crate::visitors::transform_reactive_function;
 
 /// The sentinel string used to detect early returns.
 /// TS: `EARLY_RETURN_SENTINEL` from CodegenReactiveFunction.
@@ -198,12 +218,13 @@ fn apply_early_return_to_scope(
     });
 
     // Add the early return identifier as a scope declaration
-    env.scopes[scope_id.0 as usize]
-        .declarations
-        .push((early_return.value, ReactiveScopeDeclaration {
+    env.scopes[scope_id.0 as usize].declarations.push((
+        early_return.value,
+        ReactiveScopeDeclaration {
             identifier: early_return.value,
             scope: scope_id,
-        }));
+        },
+    ));
 
     // Create temporary places for the sentinel initialization
     let sentinel_temp = create_temporary_place_id(env, loc);
@@ -248,7 +269,7 @@ fn apply_early_return_to_scope(
                     reactive: false,
                     loc: None, // GeneratedSource
                 },
-                property: PropertyLiteral::String("for".to_string()),
+                property: PropertyLiteral::String(JsString::from("for")),
                 loc,
             }),
             effects: None,
@@ -264,7 +285,7 @@ fn apply_early_return_to_scope(
                 loc: None, // GeneratedSource
             }),
             value: ReactiveValue::Instruction(InstructionValue::Primitive {
-                value: PrimitiveValue::String(EARLY_RETURN_SENTINEL.to_string()),
+                value: PrimitiveValue::String(JsString::from(EARLY_RETURN_SENTINEL)),
                 loc,
             }),
             effects: None,

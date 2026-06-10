@@ -26,16 +26,32 @@
 
 use std::collections::HashMap;
 
+use react_compiler_hir::BinaryOperator;
+use react_compiler_hir::BlockKind;
+use react_compiler_hir::FloatValue;
+use react_compiler_hir::FunctionId;
+use react_compiler_hir::GotoVariant;
+use react_compiler_hir::HirFunction;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::JsString;
+use react_compiler_hir::NonLocalBinding;
+use react_compiler_hir::Phi;
+use react_compiler_hir::Place;
+use react_compiler_hir::PrimitiveValue;
+use react_compiler_hir::PropertyLiteral;
+use react_compiler_hir::SourceLocation;
+use react_compiler_hir::Terminal;
+use react_compiler_hir::UnaryOperator;
+use react_compiler_hir::UpdateOperator;
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::{
-    BinaryOperator, BlockKind, FloatValue, FunctionId, GotoVariant, HirFunction, IdentifierId,
-    InstructionValue, NonLocalBinding, Phi, Place, PrimitiveValue, PropertyLiteral, SourceLocation,
-    Terminal, UnaryOperator, UpdateOperator, format_js_number,
-};
-use react_compiler_lowering::{
-    get_reverse_postordered_blocks, mark_instruction_ids, mark_predecessors,
-    remove_dead_do_while_statements, remove_unnecessary_try_catch, remove_unreachable_for_updates,
-};
+use react_compiler_hir::format_js_number;
+use react_compiler_lowering::get_reverse_postordered_blocks;
+use react_compiler_lowering::mark_instruction_ids;
+use react_compiler_lowering::mark_predecessors;
+use react_compiler_lowering::remove_dead_do_while_statements;
+use react_compiler_lowering::remove_unnecessary_try_catch;
+use react_compiler_lowering::remove_unreachable_for_updates;
 use react_compiler_ssa::enter_ssa::placeholder_function;
 
 use crate::merge_consecutive_blocks::merge_consecutive_blocks;
@@ -182,7 +198,10 @@ fn apply_constant_propagation(
                 ..
             } => {
                 let test_value = read(constants, test);
-                if let Some(Constant::Primitive { value: ref prim, .. }) = test_value {
+                if let Some(Constant::Primitive {
+                    value: ref prim, ..
+                }) = test_value
+                {
                     has_changes = true;
                     let target_block_id = if is_truthy(prim) {
                         *consequent
@@ -243,10 +262,7 @@ fn evaluate_phi(phi: &Phi, constants: &Constants) -> Option<Constant> {
                 continue;
             }
             Some(current) => match (current, operand_value) {
-                (
-                    Constant::Primitive { value: a, .. },
-                    Constant::Primitive { value: b, .. },
-                ) => {
+                (Constant::Primitive { value: a, .. }, Constant::Primitive { value: b, .. }) => {
                     // Use JS strict equality semantics: NaN !== NaN
                     if !js_strict_equal(a, b) {
                         return None;
@@ -303,7 +319,9 @@ fn evaluate_instruction(
             }) = prop_value
             {
                 match prim {
-                    PrimitiveValue::String(s) if is_valid_identifier(s) => {
+                    PrimitiveValue::String(s)
+                        if s.as_str().is_some_and(|s| is_valid_identifier(s)) =>
+                    {
                         let object = object.clone();
                         let loc = *loc;
                         let new_property = PropertyLiteral::String(s.clone());
@@ -345,7 +363,9 @@ fn evaluate_instruction(
             }) = prop_value
             {
                 match prim {
-                    PrimitiveValue::String(s) if is_valid_identifier(s) => {
+                    PrimitiveValue::String(s)
+                        if s.as_str().is_some_and(|s| is_valid_identifier(s)) =>
+                    {
                         let object = object.clone();
                         let store_value = value.clone();
                         let loc = *loc;
@@ -534,7 +554,7 @@ fn evaluate_instruction(
                 if let PropertyLiteral::String(prop_name) = property {
                     if prop_name == "length" {
                         // Use UTF-16 code unit count to match JS .length semantics
-                        let len = s.encode_utf16().count() as f64;
+                        let len = s.utf16_len() as f64;
                         let loc = *loc;
                         let result = Constant::Primitive {
                             value: PrimitiveValue::Number(FloatValue::new(len)),
@@ -558,10 +578,10 @@ fn evaluate_instruction(
         } => {
             if subexprs.is_empty() {
                 // No subexpressions: join all cooked quasis
-                let mut result_string = String::new();
+                let mut result_string = JsString::default();
                 for q in quasis {
                     match &q.cooked {
-                        Some(cooked) => result_string.push_str(cooked),
+                        Some(cooked) => result_string.push_js_string(cooked),
                         None => return None,
                     }
                 }
@@ -596,23 +616,23 @@ fn evaluate_instruction(
                     _ => return None,
                 };
 
-                let expression_str = match sub_prim {
-                    PrimitiveValue::Null => "null".to_string(),
-                    PrimitiveValue::Boolean(b) => b.to_string(),
-                    PrimitiveValue::Number(n) => format_js_number(n.value()),
+                let expression_str: JsString = match sub_prim {
+                    PrimitiveValue::Null => JsString::from("null"),
+                    PrimitiveValue::Boolean(b) => JsString::from(b.to_string()),
+                    PrimitiveValue::Number(n) => JsString::from(format_js_number(n.value())),
                     PrimitiveValue::String(s) => s.clone(),
                     // TS rejects undefined subexpression values
                     PrimitiveValue::Undefined => return None,
                 };
 
-                let suffix = match &quasis[quasi_index].cooked {
+                let suffix: JsString = match &quasis[quasi_index].cooked {
                     Some(s) => s.clone(),
                     None => return None,
                 };
                 quasi_index += 1;
 
-                result_string.push_str(&expression_str);
-                result_string.push_str(&suffix);
+                result_string.push_js_string(&expression_str);
+                result_string.push_js_string(&suffix);
             }
 
             let loc = *loc;
@@ -643,16 +663,12 @@ fn evaluate_instruction(
             }
             place_value
         }
-        InstructionValue::FunctionExpression {
-            lowered_func, ..
-        } => {
+        InstructionValue::FunctionExpression { lowered_func, .. } => {
             let func_id = lowered_func.func;
             process_inner_function(func_id, env, constants);
             None
         }
-        InstructionValue::ObjectMethod {
-            lowered_func, ..
-        } => {
+        InstructionValue::ObjectMethod { lowered_func, .. } => {
             let func_id = lowered_func.func;
             process_inner_function(func_id, env, constants);
             None
@@ -866,44 +882,44 @@ fn evaluate_binary_op(
 ) -> Option<PrimitiveValue> {
     match operator {
         BinaryOperator::Add => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() + r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() + r.value()),
+            )),
             (PrimitiveValue::String(l), PrimitiveValue::String(r)) => {
                 let mut s = l.clone();
-                s.push_str(r);
+                s.push_js_string(r);
                 Some(PrimitiveValue::String(s))
             }
             _ => None,
         },
         BinaryOperator::Subtract => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() - r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() - r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Multiply => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() * r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() * r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Divide => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() / r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() / r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Modulo => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() % r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() % r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Exponent => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(
-                PrimitiveValue::Number(FloatValue::new(l.value().powf(r.value()))),
-            ),
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value().powf(r.value())),
+            )),
             _ => None,
         },
         BinaryOperator::BitwiseOr => match (lhs, rhs) {
@@ -973,9 +989,7 @@ fn evaluate_binary_op(
             _ => None,
         },
         BinaryOperator::StrictEqual => Some(PrimitiveValue::Boolean(js_strict_equal(lhs, rhs))),
-        BinaryOperator::StrictNotEqual => {
-            Some(PrimitiveValue::Boolean(!js_strict_equal(lhs, rhs)))
-        }
+        BinaryOperator::StrictNotEqual => Some(PrimitiveValue::Boolean(!js_strict_equal(lhs, rhs))),
         BinaryOperator::Equal => Some(PrimitiveValue::Boolean(js_abstract_equal(lhs, rhs))),
         BinaryOperator::NotEqual => Some(PrimitiveValue::Boolean(!js_abstract_equal(lhs, rhs))),
         BinaryOperator::In | BinaryOperator::InstanceOf => None,
@@ -1063,7 +1077,7 @@ fn js_abstract_equal(lhs: &PrimitiveValue, rhs: &PrimitiveValue) -> bool {
         (PrimitiveValue::Number(n), PrimitiveValue::String(s))
         | (PrimitiveValue::String(s), PrimitiveValue::Number(n)) => {
             // String is coerced to number using JS ToNumber semantics
-            let sv = js_to_number(s);
+            let sv = js_to_number(&s.to_utf8_lossy());
             let nv = n.value();
             if nv.is_nan() || sv.is_nan() {
                 false

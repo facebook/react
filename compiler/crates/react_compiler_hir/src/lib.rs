@@ -11,6 +11,7 @@ pub mod visitors;
 
 use indexmap::IndexMap;
 use indexmap::IndexSet;
+pub use react_compiler_ast::js_string::JsString;
 pub use react_compiler_diagnostics::CompilerDiagnostic;
 pub use react_compiler_diagnostics::ErrorCategory;
 pub use react_compiler_diagnostics::GENERATED_SOURCE;
@@ -169,7 +170,7 @@ pub struct HirFunction {
     pub instructions: Vec<Instruction>,
     pub generator: bool,
     pub is_async: bool,
-    pub directives: Vec<String>,
+    pub directives: Vec<JsString>,
     pub aliasing_effects: Option<Vec<AliasingEffect>>,
 }
 
@@ -599,7 +600,7 @@ pub enum InstructionValue {
         loc: Option<SourceLocation>,
     },
     JSXText {
-        value: String,
+        value: JsString,
         loc: Option<SourceLocation>,
     },
     BinaryExpression {
@@ -845,7 +846,7 @@ pub enum PrimitiveValue {
     Undefined,
     Boolean(bool),
     Number(FloatValue),
-    String(String),
+    String(JsString),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -950,8 +951,8 @@ pub enum FunctionExpressionType {
 
 #[derive(Debug, Clone)]
 pub struct TemplateQuasi {
-    pub raw: String,
-    pub cooked: Option<String>,
+    pub raw: JsString,
+    pub cooked: Option<JsString>,
 }
 
 #[derive(Debug, Clone)]
@@ -1162,7 +1163,7 @@ impl std::fmt::Display for ObjectPropertyType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PropertyLiteral {
-    String(String),
+    String(JsString),
     Number(FloatValue),
 }
 

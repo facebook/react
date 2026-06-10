@@ -50,29 +50,75 @@ pub fn format_loc_value(loc: &SourceLocation) -> String {
 
 /// Format a string like JS `JSON.stringify`: escape control chars and quotes
 /// but preserve non-ASCII unicode (e.g. U+00A0 nbsp) as literal characters.
-pub fn format_js_string(s: &str) -> String {
-            let mut result = String::with_capacity(s.len() + 2);
+pub fn format_js_string(s: &crate::JsString) -> String {
+    match s.as_str() {
+        Some(utf8) => format_js_str(utf8),
+        None => {
+            // WTF-8 path: iterate bytes, emit \uXXXX for lone surrogates
+            let bytes = s.as_bytes();
+            let mut result = String::with_capacity(bytes.len() + 2);
             result.push('"');
-            for c in s.chars() {
-                match c {
-                    '"' => result.push_str("\\\""),
-                    '\\' => result.push_str("\\\\"),
-                    '\n' => result.push_str("\\n"),
-                    '\r' => result.push_str("\\r"),
-                    '\t' => result.push_str("\\t"),
-            '\u{0008}' => result.push_str("\\b"),
-            '\u{000c}' => result.push_str("\\f"),
-                    // Only escape C0 control chars (U+0000–U+001F), matching JS JSON.stringify.
-                    // Do NOT escape C1 controls (U+0080–U+009F) — JS outputs those as literal chars.
-                    c if (c as u32) <= 0x1F => {
-                result.push_str(&format!("\\u{:04x}", c as u32));
+            let mut i = 0;
+            while i < bytes.len() {
+                if let Some(cp) = react_compiler_ast::js_string::decode_surrogate_at(bytes, i) {
+                    result.push_str(&format!("\\u{:04x}", cp));
+                    i += 3;
+                } else {
+                    let len = match bytes[i] {
+                        0x00..=0x7F => 1,
+                        0xC0..=0xDF => 2,
+                        0xE0..=0xEF => 3,
+                        0xF0..=0xF7 => 4,
+                        _ => 1,
+                    };
+                    let end = (i + len).min(bytes.len());
+                    if let Ok(s) = std::str::from_utf8(&bytes[i..end]) {
+                        for c in s.chars() {
+                            match c {
+                                '"' => result.push_str("\\\""),
+                                '\\' => result.push_str("\\\\"),
+                                '\n' => result.push_str("\\n"),
+                                '\r' => result.push_str("\\r"),
+                                '\t' => result.push_str("\\t"),
+                                '\u{0008}' => result.push_str("\\b"),
+                                '\u{000c}' => result.push_str("\\f"),
+                                c if (c as u32) <= 0x1F => {
+                                    result.push_str(&format!("\\u{:04x}", c as u32));
+                                }
+                                c => result.push(c),
+                            }
+                        }
                     }
-                    c => result.push(c),
+                    i = end;
                 }
             }
             result.push('"');
             result
         }
+    }
+}
+
+fn format_js_str(s: &str) -> String {
+    let mut result = String::with_capacity(s.len() + 2);
+    result.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => result.push_str("\\\""),
+            '\\' => result.push_str("\\\\"),
+            '\n' => result.push_str("\\n"),
+            '\r' => result.push_str("\\r"),
+            '\t' => result.push_str("\\t"),
+            '\u{0008}' => result.push_str("\\b"),
+            '\u{000c}' => result.push_str("\\f"),
+            c if (c as u32) <= 0x1F => {
+                result.push_str(&format!("\\u{:04x}", c as u32));
+            }
+            c => result.push(c),
+        }
+    }
+    result.push('"');
+    result
+}
 
 pub fn format_primitive(prim: &crate::PrimitiveValue) -> String {
     match prim {
@@ -86,7 +132,7 @@ pub fn format_primitive(prim: &crate::PrimitiveValue) -> String {
 
 pub fn format_property_literal(prop: &crate::PropertyLiteral) -> String {
     match prop {
-        crate::PropertyLiteral::String(s) => s.clone(),
+        crate::PropertyLiteral::String(s) => s.to_string(),
         crate::PropertyLiteral::Number(n) => crate::format_js_number(n.value()),
     }
 }
@@ -473,7 +519,7 @@ impl<'a> PrintFormatter<'a> {
                         .iter()
                         .map(|p| {
                             let prop = match &p.property {
-                                crate::PropertyLiteral::String(s) => s.clone(),
+                                crate::PropertyLiteral::String(s) => s.to_string(),
                                 crate::PropertyLiteral::Number(n) => {
                                     crate::format_js_number(n.value())
                                 }

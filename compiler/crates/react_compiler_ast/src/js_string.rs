@@ -50,7 +50,7 @@ fn encode_surrogate(cp: u32) -> [u8; 3] {
 
 /// Check if a 3-byte WTF-8 sequence at `bytes[i..]` is a lone surrogate.
 /// Returns the surrogate codepoint if so.
-fn decode_surrogate_at(bytes: &[u8], i: usize) -> Option<u32> {
+pub fn decode_surrogate_at(bytes: &[u8], i: usize) -> Option<u32> {
     if i + 3 > bytes.len() {
         return None;
     }
@@ -258,6 +258,74 @@ impl JsString {
         match self {
             JsString::Utf8(s) => s.as_bytes(),
             JsString::Wtf8(b) => b,
+        }
+    }
+
+    /// Returns the string as a `&str`, panicking if it contains lone surrogates.
+    /// Use only when you know the string is valid UTF-8 (identifiers, tag names, etc.).
+    pub fn as_str_unwrap(&self) -> &str {
+        match self {
+            JsString::Utf8(s) => s,
+            JsString::Wtf8(_) => {
+                panic!("JsString contains lone surrogates, cannot convert to &str")
+            }
+        }
+    }
+
+    /// Check if the string contains a substring (UTF-8 only fast path).
+    pub fn contains(&self, pattern: &str) -> bool {
+        match self {
+            JsString::Utf8(s) => s.contains(pattern),
+            JsString::Wtf8(b) => {
+                // Search for the pattern bytes within the WTF-8 bytes
+                let pat = pattern.as_bytes();
+                b.windows(pat.len()).any(|w| w == pat)
+            }
+        }
+    }
+
+    /// Check if the string starts with a prefix.
+    pub fn starts_with(&self, prefix: &str) -> bool {
+        match self {
+            JsString::Utf8(s) => s.starts_with(prefix),
+            JsString::Wtf8(b) => b.starts_with(prefix.as_bytes()),
+        }
+    }
+
+    /// Get the inner String, consuming self. Panics if WTF-8.
+    pub fn into_string(self) -> String {
+        match self {
+            JsString::Utf8(s) => s,
+            JsString::Wtf8(_) => {
+                panic!("JsString contains lone surrogates, cannot convert to String")
+            }
+        }
+    }
+
+    /// Get the inner String if UTF-8, or lossy conversion if WTF-8.
+    pub fn into_string_lossy(self) -> String {
+        match self {
+            JsString::Utf8(s) => s,
+            JsString::Wtf8(_) => self.to_utf8_lossy().into_owned(),
+        }
+    }
+
+    /// Iterate over chars (UTF-8 fast path only, surrogates replaced with U+FFFD).
+    pub fn chars_lossy(&self) -> impl Iterator<Item = char> + '_ {
+        self.to_utf8_lossy().chars().collect::<Vec<_>>().into_iter()
+    }
+
+    /// Split the string at the first occurrence of a delimiter.
+    pub fn splitn_str(&self, n: usize, delimiter: &str) -> Vec<JsString> {
+        match self {
+            JsString::Utf8(s) => s.splitn(n, delimiter).map(JsString::from).collect(),
+            JsString::Wtf8(_) => {
+                let lossy = self.to_utf8_lossy();
+                lossy
+                    .splitn(n, delimiter)
+                    .map(|s| JsString::from(s.to_string()))
+                    .collect()
+            }
         }
     }
 }

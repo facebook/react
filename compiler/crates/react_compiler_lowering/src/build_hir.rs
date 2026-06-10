@@ -503,7 +503,7 @@ fn lower_member_expression_with_object(
 
     if !member.computed {
         let prop_literal = match member.property.as_ref() {
-            Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
+            Expression::Identifier(id) => PropertyLiteral::String(JsString::from(id.name.as_str())),
             Expression::NumericLiteral(lit) => {
                 PropertyLiteral::Number(FloatValue::new(lit.precise_value()))
             }
@@ -520,7 +520,7 @@ fn lower_member_expression_with_object(
                 })?;
                 return Ok(LoweredMemberExpression {
                     object,
-                    property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
+                    property: MemberProperty::Literal(PropertyLiteral::String(JsString::from(""))),
                     value: InstructionValue::UnsupportedNode {
                         node_type: Some("OptionalMemberExpression".to_string()),
                         original_node: serialize_expression(
@@ -586,7 +586,7 @@ fn lower_member_expression_impl(
     if !member.computed {
         // Non-computed: property must be an identifier or numeric literal
         let prop_literal = match member.property.as_ref() {
-            Expression::Identifier(id) => PropertyLiteral::String(id.name.clone()),
+            Expression::Identifier(id) => PropertyLiteral::String(JsString::from(id.name.as_str())),
             Expression::NumericLiteral(lit) => {
                 PropertyLiteral::Number(FloatValue::new(lit.precise_value()))
             }
@@ -603,7 +603,7 @@ fn lower_member_expression_impl(
                 })?;
                 return Ok(LoweredMemberExpression {
                     object,
-                    property: MemberProperty::Literal(PropertyLiteral::String("".to_string())),
+                    property: MemberProperty::Literal(PropertyLiteral::String(JsString::from(""))),
                     value: InstructionValue::UnsupportedNode {
                         node_type: Some("MemberExpression".to_string()),
                         original_node: serialize_expression(
@@ -751,7 +751,9 @@ fn lower_expression(
                                     Expression::Identifier(prop_id) => {
                                         Ok(InstructionValue::PropertyDelete {
                                             object,
-                                            property: PropertyLiteral::String(prop_id.name.clone()),
+                                            property: PropertyLiteral::String(JsString::from(
+                                                prop_id.name.as_str(),
+                                            )),
                                             loc,
                                         })
                                     }
@@ -1346,7 +1348,9 @@ fn lower_expression(
                                     builder,
                                     InstructionValue::PropertyStore {
                                         object,
-                                        property: PropertyLiteral::String(prop_id.name.clone()),
+                                        property: PropertyLiteral::String(JsString::from(
+                                            prop_id.name.as_str(),
+                                        )),
                                         value: right,
                                         loc: left_loc,
                                     },
@@ -4571,7 +4575,9 @@ fn lower_assignment(
                             builder,
                             InstructionValue::PropertyStore {
                                 object,
-                                property: PropertyLiteral::String(prop_id.name.clone()),
+                                property: PropertyLiteral::String(JsString::from(
+                                    prop_id.name.as_str(),
+                                )),
                                 value,
                                 loc,
                             },
@@ -6161,7 +6167,7 @@ fn lower_inner(
     }
 
     // Lower the body
-    let mut directives: Vec<String> = Vec::new();
+    let mut directives: Vec<JsString> = Vec::new();
     match body {
         FunctionBody::Expression(expr) => {
             let fallthrough = builder.reserve(BlockKind::Block);
@@ -6289,7 +6295,7 @@ fn lower_jsx_element_name(
             let place = lower_value_to_temporary(
                 builder,
                 InstructionValue::Primitive {
-                    value: PrimitiveValue::String(tag),
+                    value: PrimitiveValue::String(JsString::from(tag)),
                     loc: loc.clone(),
                 },
             )?;
@@ -6331,7 +6337,7 @@ fn lower_jsx_member_expression(
     let prop_name = &expr.property.name;
     let value = InstructionValue::PropertyLoad {
         object,
-        property: PropertyLiteral::String(prop_name.clone()),
+        property: PropertyLiteral::String(JsString::from(prop_name.as_str())),
         loc: expr_loc,
     };
     Ok(lower_value_to_temporary(builder, value)?)
@@ -6351,7 +6357,7 @@ fn lower_jsx_element(
             let value = if builder.fbt_depth > 0 {
                 Some(text.value.clone())
             } else {
-                trim_jsx_text(&text.value)
+                trim_jsx_text(text.value.as_str_unwrap()).map(JsString::from)
             };
             match value {
                 None => Ok(None),
@@ -6519,7 +6525,7 @@ fn lower_object_property_key(
     use react_compiler_ast::expressions::Expression;
     match key {
         Expression::StringLiteral(lit) => Ok(Some(ObjectPropertyKey::String {
-            name: lit.value.clone(),
+            name: lit.value.to_string(),
         })),
         Expression::Identifier(ident) if !computed => Ok(Some(ObjectPropertyKey::Identifier {
             name: ident.name.clone(),

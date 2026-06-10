@@ -1,13 +1,22 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
-use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory};
+use react_compiler_diagnostics::CompilerError;
+use react_compiler_diagnostics::CompilerErrorDetail;
+use react_compiler_diagnostics::ErrorCategory;
+use react_compiler_hir::HirFunction;
+use react_compiler_hir::IdentifierId;
+use react_compiler_hir::InstructionValue;
+use react_compiler_hir::PropertyLiteral;
 use react_compiler_hir::environment::Environment;
-use react_compiler_hir::{HirFunction, IdentifierId, InstructionValue, PropertyLiteral};
 
 /// Validates that capitalized functions are not called directly (they should be rendered as JSX).
 ///
 /// Port of ValidateNoCapitalizedCalls.ts.
-pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) -> Result<(), CompilerError> {
+pub fn validate_no_capitalized_calls(
+    func: &HirFunction,
+    env: &mut Environment,
+) -> Result<(), CompilerError> {
     // Build the allow list from global registry keys + config entries
     let mut allow_list: HashSet<String> = env.globals().keys().cloned().collect();
     if let Some(config_entries) = &env.config.validate_no_capitalized_calls {
@@ -54,15 +63,15 @@ pub fn validate_no_capitalized_calls(func: &HirFunction, env: &mut Environment) 
                 }
                 InstructionValue::PropertyLoad { property, .. } => {
                     if let PropertyLiteral::String(prop_name) = property {
-                        if prop_name.starts_with(|c: char| c.is_ascii_uppercase()) {
-                            capitalized_properties
-                                .insert(lvalue_id, prop_name.clone());
+                        if prop_name
+                            .as_str_unwrap()
+                            .starts_with(|c: char| c.is_ascii_uppercase())
+                        {
+                            capitalized_properties.insert(lvalue_id, prop_name.to_string());
                         }
                     }
                 }
-                InstructionValue::MethodCall {
-                    property, loc, ..
-                } => {
+                InstructionValue::MethodCall { property, loc, .. } => {
                     let property_id = property.identifier;
                     if let Some(prop_name) = capitalized_properties.get(&property_id) {
                         env.record_error(CompilerErrorDetail {

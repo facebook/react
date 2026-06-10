@@ -127,7 +127,7 @@ fn try_find_directive_enabling_memoization<'a>(
     // Check standard opt-in directives
     let opt_in = directives
         .iter()
-        .find(|d| OPT_IN_DIRECTIVES.contains(&d.value.value.as_str()));
+        .find(|d| OPT_IN_DIRECTIVES.contains(&d.value.value.as_str_unwrap()));
     if let Some(directive) = opt_in {
         return Ok(Some(directive));
     }
@@ -146,13 +146,16 @@ fn find_directive_disabling_memoization<'a>(
     opts: &PluginOptions,
 ) -> Option<&'a Directive> {
     if let Some(ref custom_directives) = opts.custom_opt_out_directives {
-        directives
-            .iter()
-            .find(|d| custom_directives.contains(&d.value.value))
+        directives.iter().find(|d| {
+            d.value
+                .value
+                .as_str()
+                .is_some_and(|s| custom_directives.contains(&s.to_string()))
+        })
     } else {
         directives
             .iter()
-            .find(|d| OPT_OUT_DIRECTIVES.contains(&d.value.value.as_str()))
+            .find(|d| OPT_OUT_DIRECTIVES.contains(&d.value.value.as_str_unwrap()))
     }
 }
 
@@ -178,7 +181,7 @@ fn find_directives_dynamic_gating<'a>(
     let mut matches: Vec<(&'a Directive, String)> = Vec::new();
 
     for directive in directives {
-        if let Some(ident) = parse_dynamic_gating_directive(&directive.value.value) {
+        if let Some(ident) = parse_dynamic_gating_directive(directive.value.value.as_str_unwrap()) {
             if is_valid_identifier(ident) {
                 matches.push((directive, ident.to_string()));
             } else {
@@ -202,7 +205,10 @@ fn find_directives_dynamic_gating<'a>(
     }
 
     if matches.len() > 1 {
-        let names: Vec<String> = matches.iter().map(|(d, _)| d.value.value.clone()).collect();
+        let names: Vec<String> = matches
+            .iter()
+            .map(|(d, _)| d.value.value.to_string())
+            .collect();
         let mut err = CompilerError::new();
         let mut detail = CompilerErrorDetail::new(
             ErrorCategory::Gating,
@@ -235,9 +241,7 @@ fn find_directives_dynamic_gating<'a>(
 /// `^use memo if\(([^\)]*)\)$`: the condition may not contain `)` and the
 /// directive must end at the closing paren.
 fn parse_dynamic_gating_directive(value: &str) -> Option<&str> {
-    let condition = value
-        .strip_prefix("use memo if(")?
-        .strip_suffix(')')?;
+    let condition = value.strip_prefix("use memo if(")?.strip_suffix(')')?;
     if condition.contains(')') {
         return None;
     }
@@ -1652,9 +1656,9 @@ fn has_memo_cache_function_import(program: &Program, module_name: &str) -> bool 
             if import.source.value == module_name {
                 for specifier in &import.specifiers {
                     if let ImportSpecifier::ImportSpecifier(data) = specifier {
-                        let imported_name = match &data.imported {
+                        let imported_name: &str = match &data.imported {
                             ModuleExportName::Identifier(id) => &id.name,
-                            ModuleExportName::StringLiteral(s) => &s.value,
+                            ModuleExportName::StringLiteral(s) => s.value.as_str_unwrap(),
                         };
                         if imported_name == "c" {
                             return true;
@@ -2198,11 +2202,12 @@ fn raw_node_references_identifier(value: &serde_json::Value, name: &str) -> bool
             {
                 return true;
             }
-            map.values().any(|v| raw_node_references_identifier(v, name))
+            map.values()
+                .any(|v| raw_node_references_identifier(v, name))
         }
-        serde_json::Value::Array(items) => {
-            items.iter().any(|v| raw_node_references_identifier(v, name))
-        }
+        serde_json::Value::Array(items) => items
+            .iter()
+            .any(|v| raw_node_references_identifier(v, name)),
         _ => false,
     }
 }

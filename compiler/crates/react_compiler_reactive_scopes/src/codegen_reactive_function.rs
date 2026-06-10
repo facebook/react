@@ -101,6 +101,7 @@ use react_compiler_hir::FunctionExpressionType;
 use react_compiler_hir::IdentifierId;
 use react_compiler_hir::InstructionKind;
 use react_compiler_hir::InstructionValue;
+use react_compiler_hir::JsString;
 use react_compiler_hir::JsxAttribute;
 use react_compiler_hir::JsxTag;
 use react_compiler_hir::LogicalOperator;
@@ -282,7 +283,7 @@ pub fn codegen_function(
                     })),
                     right: Box::new(Expression::StringLiteral(StringLiteral {
                         base: BaseNode::typed("StringLiteral"),
-                        value: hash.clone(),
+                        value: JsString::from(hash.clone()),
                     })),
                 })),
                 consequent: Box::new(Statement::BlockStatement(BlockStatement {
@@ -382,7 +383,9 @@ pub fn codegen_function(
                                                     arguments: vec![Expression::StringLiteral(
                                                         StringLiteral {
                                                             base: BaseNode::typed("StringLiteral"),
-                                                            value: MEMO_CACHE_SENTINEL.to_string(),
+                                                            value: JsString::from(
+                                                                MEMO_CACHE_SENTINEL,
+                                                            ),
                                                         },
                                                     )],
                                                     type_parameters: None,
@@ -421,7 +424,7 @@ pub fn codegen_function(
                                     )),
                                     right: Box::new(Expression::StringLiteral(StringLiteral {
                                         base: BaseNode::typed("StringLiteral"),
-                                        value: hash.clone(),
+                                        value: JsString::from(hash.clone()),
                                     })),
                                 },
                             )),
@@ -493,11 +496,11 @@ pub fn codegen_function(
                         arguments: vec![
                             Expression::StringLiteral(StringLiteral {
                                 base: BaseNode::typed("StringLiteral"),
-                                value: fn_name_str.to_string(),
+                                value: JsString::from(fn_name_str.to_string()),
                             }),
                             Expression::StringLiteral(StringLiteral {
                                 base: BaseNode::typed("StringLiteral"),
-                                value: filename_str.to_string(),
+                                value: JsString::from(filename_str.to_string()),
                             }),
                         ],
                         type_parameters: None,
@@ -669,7 +672,7 @@ fn codegen_reactive_function(
             base: BaseNode::typed("Directive"),
             value: DirectiveLiteral {
                 base: BaseNode::typed("DirectiveLiteral"),
-                value: d.clone(),
+                value: JsString::from(d.clone()),
             },
         })
         .collect();
@@ -2010,7 +2013,7 @@ fn codegen_instruction_value(
                         })?;
                         expressions.push(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
-                            value: format!("TODO handle declaration"),
+                            value: JsString::from("TODO handle declaration"),
                         }));
                     }
                     _ => {
@@ -2025,7 +2028,7 @@ fn codegen_instruction_value(
                         })?;
                         expressions.push(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
-                            value: format!("TODO handle statement"),
+                            value: JsString::from("TODO handle statement"),
                         }));
                     }
                 }
@@ -2714,7 +2717,7 @@ fn codegen_function_expression(
                         base: BaseNode::typed("ObjectProperty"),
                         key: Box::new(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
-                            value: hint.clone(),
+                            value: JsString::from(hint.clone()),
                         })),
                         value: Box::new(value),
                         computed: false,
@@ -2726,7 +2729,7 @@ fn codegen_function_expression(
             })),
             property: Box::new(Expression::StringLiteral(StringLiteral {
                 base: BaseNode::typed("StringLiteral"),
-                value: hint.clone(),
+                value: JsString::from(hint.clone()),
             })),
             computed: true,
         });
@@ -2848,7 +2851,7 @@ fn codegen_object_property_key(
     match key {
         ObjectPropertyKey::String { name } => Ok(Expression::StringLiteral(StringLiteral {
             base: BaseNode::typed("StringLiteral"),
-            value: name.clone(),
+            value: JsString::from(name.clone()),
         })),
         ObjectPropertyKey::Identifier { name } => Ok(Expression::Identifier(make_identifier(name))),
         ObjectPropertyKey::Computed { name } => {
@@ -2892,7 +2895,7 @@ fn codegen_jsx_expression(
         JsxTag::Builtin(builtin) => (
             Expression::StringLiteral(StringLiteral {
                 base: BaseNode::typed("StringLiteral"),
-                value: builtin.name.clone(),
+                value: JsString::from(builtin.name.clone()),
             }),
             None,
         ),
@@ -2901,7 +2904,7 @@ fn codegen_jsx_expression(
     let jsx_tag = expression_to_jsx_tag(&tag_value, jsx_tag_loc(tag))?;
 
     let is_fbt_tag = if let Expression::StringLiteral(ref s) = tag_value {
-        SINGLE_CHILD_FBT_TAGS.contains(&s.value.as_str())
+        SINGLE_CHILD_FBT_TAGS.contains(&s.value.as_str_unwrap())
     } else {
         false
     };
@@ -3002,7 +3005,7 @@ fn codegen_jsx_attribute(
             let inner_value = codegen_place_to_expression(cx, place)?;
             let attr_value = match &inner_value {
                 Expression::StringLiteral(s) => {
-                    if string_requires_expr_container(&s.value)
+                    if string_requires_expr_container(s.value.as_str_unwrap())
                         && !cx.fbt_operands.contains(&place.identifier)
                     {
                         Some(JSXAttributeValue::JSXExpressionContainer(
@@ -3058,6 +3061,7 @@ fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, Comp
         ExpressionOrJsxText::JsxText(text) => {
             if text
                 .value
+                .as_str_unwrap()
                 .contains(JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN)
             {
                 Ok(JSXChild::JSXExpressionContainer(JSXExpressionContainer {
@@ -3121,8 +3125,9 @@ fn expression_to_jsx_tag(
             convert_member_expression_to_jsx(me)?,
         )),
         Expression::StringLiteral(s) => {
-            if s.value.contains(':') {
-                let parts: Vec<&str> = s.value.splitn(2, ':').collect();
+            let s_str = s.value.as_str_unwrap();
+            if s_str.contains(':') {
+                let parts: Vec<&str> = s_str.splitn(2, ':').collect();
                 Ok(JSXElementName::JSXNamespacedName(JSXNamespacedName {
                     base: base_node_with_loc("JSXNamespacedName", loc),
                     namespace: JSXIdentifier {
@@ -3137,7 +3142,7 @@ fn expression_to_jsx_tag(
             } else {
                 Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
                     base: base_node_with_loc("JSXIdentifier", loc),
-                    name: s.value.clone(),
+                    name: s.value.to_string(),
                 }))
             }
         }
@@ -3746,7 +3751,7 @@ fn symbol_for(name: &str) -> Expression {
         })),
         arguments: vec![Expression::StringLiteral(StringLiteral {
             base: BaseNode::typed("StringLiteral"),
-            value: name.to_string(),
+            value: JsString::from(name),
         })],
         type_parameters: None,
         type_arguments: None,
@@ -3807,7 +3812,10 @@ fn codegen_primitive_value(value: &PrimitiveValue, loc: Option<DiagSourceLocatio
 
 fn property_literal_to_expression(prop: &PropertyLiteral) -> (Expression, bool) {
     match prop {
-        PropertyLiteral::String(s) => (Expression::Identifier(make_identifier(s)), false),
+        PropertyLiteral::String(s) => (
+            Expression::Identifier(make_identifier(s.as_str_unwrap())),
+            false,
+        ),
         PropertyLiteral::Number(n) => (
             Expression::NumericLiteral(NumericLiteral {
                 base: BaseNode::typed("NumericLiteral"),
@@ -3970,7 +3978,7 @@ fn dep_to_sort_key(dep: &react_compiler_hir::ReactiveScopeDependency, env: &Envi
     for entry in &dep.path {
         let prefix = if entry.optional { "?" } else { "" };
         let prop = match &entry.property {
-            PropertyLiteral::String(s) => s.clone(),
+            PropertyLiteral::String(s) => s.to_string(),
             PropertyLiteral::Number(n) => format!("{}", n),
         };
         parts.push(format!("{prefix}{prop}"));
@@ -4232,7 +4240,8 @@ mod tests {
     use react_compiler_ast::statements::Statement;
     use serde_json::json;
 
-    use super::{UnsupportedOriginalNode, codegen_unsupported_original_node};
+    use super::UnsupportedOriginalNode;
+    use super::codegen_unsupported_original_node;
 
     /// A modeled statement tag parses typed and is emitted directly.
     #[test]
