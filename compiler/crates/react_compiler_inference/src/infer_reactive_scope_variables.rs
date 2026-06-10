@@ -191,6 +191,7 @@ fn may_allocate(value: &InstructionValue, lvalue_type_is_primitive: bool) -> boo
         | InstructionValue::LoadGlobal { .. }
         | InstructionValue::MetaProperty { .. }
         | InstructionValue::TypeCastExpression { .. }
+        | InstructionValue::NonNullExpression { .. }
         | InstructionValue::LoadLocal { .. }
         | InstructionValue::LoadContext { .. }
         | InstructionValue::StoreContext { .. }

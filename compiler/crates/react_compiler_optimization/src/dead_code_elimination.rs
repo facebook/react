@@ -406,6 +406,7 @@ fn pruneable_value(
         | InstructionValue::PropertyLoad { .. }
         | InstructionValue::TemplateLiteral { .. }
         | InstructionValue::TypeCastExpression { .. }
+        | InstructionValue::NonNullExpression { .. }
         | InstructionValue::UnaryExpression { .. } => {
             // Definitely safe to prune since they are read-only
             true
