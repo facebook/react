@@ -53,6 +53,14 @@ fn compile_inner(
     // Check if profiling is enabled by peeking at the options JSON
     let profiling = options_json.contains("\"__profiling\":true");
 
+    // Extract the surrogate marker from options before deserializing AST.
+    // JsString's custom Deserialize reads this via a thread-local.
+    if let Ok(opts_peek) = serde_json::from_str::<serde_json::Value>(&options_json) {
+        if let Some(marker) = opts_peek.get("__surrogateMarker").and_then(|v| v.as_str()) {
+            react_compiler_ast::js_string::set_surrogate_marker(marker);
+        }
+    }
+
     let deser_start = Instant::now();
 
     let ast: File = from_json_str(&ast_json)

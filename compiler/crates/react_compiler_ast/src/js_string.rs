@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::fmt;
 use std::hash::Hash;
 use std::hash::Hasher;
@@ -7,6 +8,35 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde::de::Deserializer;
 use serde::ser::Serializer;
+
+// ---------------------------------------------------------------------------
+// Dynamic surrogate marker (thread-local)
+// ---------------------------------------------------------------------------
+
+thread_local! {
+    /// The surrogate marker prefix chosen by bridge.ts for this compilation.
+    /// Default: `__SURROGATE_`. bridge.ts may prepend `__ESC_` if the source
+    /// contains the default marker text, making it e.g. `__ESC___SURROGATE_`.
+    static SURROGATE_MARKER: RefCell<String> = RefCell::new("__SURROGATE_".to_string());
+}
+
+/// Set the surrogate marker for the current thread/compilation.
+/// Called from the NAPI entry point with the marker chosen by bridge.ts.
+pub fn set_surrogate_marker(marker: &str) {
+    SURROGATE_MARKER.with(|m| {
+        *m.borrow_mut() = marker.to_string();
+    });
+}
+
+/// Get the current surrogate marker prefix.
+fn get_marker_prefix() -> String {
+    SURROGATE_MARKER.with(|m| m.borrow().clone())
+}
+
+/// Get the full marker for a given hex codepoint (e.g. `__SURROGATE_D83E__`).
+fn make_marker(prefix: &str, hex: &str) -> String {
+    format!("{}{}__", prefix, hex)
+}
 
 /// A JavaScript string value that can contain lone surrogates (WTF-8).
 ///
@@ -90,31 +120,36 @@ fn utf8_seq_len(first_byte: u8) -> usize {
     }
 }
 
-/// Decode `__SURROGATE_XXXX__` markers in a string, producing WTF-8 bytes.
+/// Decode surrogate markers in a string, producing WTF-8 bytes.
+/// Uses the dynamic marker prefix from the thread-local (set by bridge.ts).
 /// Returns `None` if no markers are found (caller should use the original String).
 fn decode_markers(s: &str) -> Option<Vec<u8>> {
-    if !s.contains("__SURROGATE_") {
+    let prefix = get_marker_prefix();
+    if !s.contains(&prefix) {
         return None;
     }
 
+    let prefix_bytes = prefix.as_bytes();
+    let prefix_len = prefix_bytes.len();
+    // Full marker: prefix + 4 hex digits + "__" = prefix_len + 6
+    let marker_len = prefix_len + 6;
+
     let mut result = Vec::with_capacity(s.len());
     let bytes = s.as_bytes();
-    let marker_prefix = b"__SURROGATE_";
     let mut i = 0;
 
     while i < bytes.len() {
-        if i + 18 <= bytes.len()
-            && &bytes[i..i + 12] == marker_prefix
-            && bytes[i + 16] == b'_'
-            && bytes[i + 17] == b'_'
+        if i + marker_len <= bytes.len()
+            && &bytes[i..i + prefix_len] == prefix_bytes
+            && bytes[i + prefix_len + 4] == b'_'
+            && bytes[i + prefix_len + 5] == b'_'
         {
-            // Parse the 4 hex digits
-            let hex = &s[i + 12..i + 16];
+            let hex = &s[i + prefix_len..i + prefix_len + 4];
             if let Ok(cp) = u16::from_str_radix(hex, 16) {
                 let cp32 = cp as u32;
                 if (0xD800..=0xDFFF).contains(&cp32) {
                     result.extend_from_slice(&encode_surrogate(cp32));
-                    i += 18;
+                    i += marker_len;
                     continue;
                 }
             }
@@ -126,24 +161,23 @@ fn decode_markers(s: &str) -> Option<Vec<u8>> {
     Some(result)
 }
 
-/// Encode WTF-8 bytes back to a String with `__SURROGATE_XXXX__` markers
-/// for lone surrogates.
+/// Encode WTF-8 bytes back to a String with surrogate markers.
+/// Uses the dynamic marker prefix from the thread-local.
 fn encode_markers(bytes: &[u8]) -> String {
+    let prefix = get_marker_prefix();
     let mut result = String::with_capacity(bytes.len());
     let mut i = 0;
 
     while i < bytes.len() {
         if let Some(cp) = decode_surrogate_at(bytes, i) {
-            result.push_str(&format!("__SURROGATE_{:04X}__", cp));
+            result.push_str(&make_marker(&prefix, &format!("{:04X}", cp)));
             i += 3;
         } else {
             let len = utf8_seq_len(bytes[i]);
-            // Safety: the non-surrogate portions of WTF-8 are valid UTF-8
             let end = (i + len).min(bytes.len());
             if let Ok(s) = std::str::from_utf8(&bytes[i..end]) {
                 result.push_str(s);
             } else {
-                // Fallback: should not happen for well-formed WTF-8
                 result.push('\u{FFFD}');
             }
             i = end;
