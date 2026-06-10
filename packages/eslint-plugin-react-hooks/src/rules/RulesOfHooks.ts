@@ -23,11 +23,25 @@ import CodePathAnalyzer from '../code-path-analysis/code-path-analyzer';
 import {getAdditionalEffectHooksFromSettings} from '../shared/Utils';
 
 /**
- * Catch all identifiers that begin with "use" followed by an uppercase Latin
+ * Catch all identifiers that begin with "use" followed by an uppercase
  * character to exclude identifiers like "user".
+ *
+ * We use toUpperCase() comparison to support Unicode letters, not just A-Z.
  */
 function isHookName(s: string): boolean {
-  return s === 'use' || /^use[A-Z0-9]/.test(s);
+  if (s === 'use') {
+    return true;
+  }
+  if (s.length < 4 || !s.startsWith('use')) {
+    return false;
+  }
+  const fourthChar = s[3];
+  // Check if it's a digit or an uppercase letter (including Unicode)
+  const isDigit = fourthChar >= '0' && fourthChar <= '9';
+  const isUpperCaseLetter =
+    fourthChar === fourthChar.toUpperCase() &&
+    fourthChar !== fourthChar.toLowerCase();
+  return isDigit || isUpperCaseLetter;
 }
 
 /**
@@ -43,8 +57,15 @@ function isHook(node: Node): boolean {
     isHook(node.property)
   ) {
     const obj = node.object;
-    const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
+    // Check if namespace starts with uppercase letter (including Unicode)
+    if (obj.type === 'Identifier') {
+      const firstChar = obj.name[0];
+      return (
+        firstChar === firstChar.toUpperCase() &&
+        firstChar !== firstChar.toLowerCase()
+      );
+    }
+    return false;
   } else {
     return false;
   }
@@ -53,9 +74,17 @@ function isHook(node: Node): boolean {
 /**
  * Checks if the node is a React component name. React component names must
  * always start with an uppercase letter.
+ *
+ * We use toUpperCase() comparison to support Unicode letters, not just A-Z.
+ * This allows component names like "ÄndraVärde" to be recognized as valid
+ * React components.
  */
 function isComponentName(node: Node): boolean {
-  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
+  return (
+    node.type === 'Identifier' &&
+    node.name[0] === node.name[0].toUpperCase() &&
+    node.name[0] !== node.name[0].toLowerCase()
+  );
 }
 
 function isReactFunction(node: Node, functionName: string): boolean {

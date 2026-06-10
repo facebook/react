@@ -574,14 +574,24 @@ function codegenReactiveScope(
 
   for (const dep of [...scope.dependencies].sort(compareScopeDependency)) {
     const index = cx.nextCacheIndex;
-    const comparison = t.binaryExpression(
-      '!==',
-      t.memberExpression(
-        t.identifier(cx.synthesizeName('$')),
-        t.numericLiteral(index),
-        true,
+    // Use Object.is semantics for dependency comparison to handle NaN correctly
+    // Object.is(NaN, NaN) is true, NaN !== NaN is true, so we need !Object.is(a, b)
+    const comparison = t.unaryExpression(
+      '!',
+      t.callExpression(
+        t.memberExpression(
+          t.identifier('Object'),
+          t.identifier('is'),
+        ),
+        [
+          t.memberExpression(
+            t.identifier(cx.synthesizeName('$')),
+            t.numericLiteral(index),
+            true,
+          ),
+          codegenDependency(cx, dep),
+        ],
       ),
-      codegenDependency(cx, dep),
     );
     changeExpressions.push(comparison);
     /*
