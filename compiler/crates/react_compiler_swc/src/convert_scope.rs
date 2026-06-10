@@ -175,6 +175,11 @@ impl ScopeCollector {
         match pat {
             Pat::Ident(binding_ident) => {
                 let name = binding_ident.id.sym.to_string();
+                // TypeScript `this` pseudo-parameters are type annotations only.
+                // They are erased before emit and must not be registered as bindings.
+                if name == "this" {
+                    return;
+                }
                 let start = binding_ident.id.span.lo.0;
                 self.add_binding(
                     name,
