@@ -35,7 +35,13 @@
     "node": "^14.17.0 || ^16.0.0 || >= 18.0.0"
   },
   "peerDependencies": {
-    "eslint": ">=7"
+    "eslint": ">=7",
+    "babel-plugin-react-compiler-rust": "*"
+  },
+  "peerDependenciesMeta": {
+    "babel-plugin-react-compiler-rust": {
+      "optional": true
+    }
   },
   "repository": {
     "type": "git",
