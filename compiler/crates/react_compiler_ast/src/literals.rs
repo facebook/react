@@ -1,12 +1,14 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::common::BaseNode;
+use crate::js_string::JsString;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StringLiteral {
     #[serde(flatten)]
     pub base: BaseNode,
-    pub value: String,
+    pub value: JsString,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -78,7 +80,7 @@ pub struct TemplateElement {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TemplateElementValue {
-    pub raw: String,
+    pub raw: JsString,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cooked: Option<String>,
+    pub cooked: Option<JsString>,
 }

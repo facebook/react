@@ -1,8 +1,10 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::common::BaseNode;
 use crate::common::RawNode;
 use crate::expressions::Expression;
+use crate::js_string::JsString;
 use crate::literals::StringLiteral;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,7 +16,11 @@ pub struct JSXElement {
     #[serde(rename = "closingElement")]
     pub closing_element: Option<JSXClosingElement>,
     pub children: Vec<JSXChild>,
-    #[serde(rename = "selfClosing", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "selfClosing",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub self_closing: Option<bool>,
 }
 
@@ -146,7 +152,7 @@ pub struct JSXSpreadChild {
 pub struct JSXText {
     #[serde(flatten)]
     pub base: BaseNode,
-    pub value: String,
+    pub value: JsString,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
