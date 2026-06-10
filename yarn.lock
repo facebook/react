@@ -14237,6 +14237,11 @@ prepend-http@^2.0.0:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.8.8.tgz#e8c5d7e98a4305ffe3de2e1fc4aca1a71c28b1da"
   integrity sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==
 
+prettier-plugin-hermes-parser@^0.32.0:
+  version "0.32.0"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-hermes-parser/-/prettier-plugin-hermes-parser-0.32.0.tgz#647cf22d77c76f9537e82d9de72c1a18c0749a9f"
+  integrity sha512-Tx3rnrnu8z71g2AVXQYYlbHDuoXZ6vD4X/qTySGiqxebNNtFWqO04PcLEH7eTEXx8GhrfEE51oS19ZiglcdcLw==
+
 prettier@*, prettier@^3.3.3:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.3.3.tgz#30c54fe0be0d8d12e6ae61dbb10109ea00d53105"
