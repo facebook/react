@@ -1,6 +1,7 @@
 pub mod common;
 pub mod declarations;
 pub mod expressions;
+pub mod js_string;
 pub mod jsx;
 pub mod literals;
 pub mod operators;
@@ -9,10 +10,13 @@ pub mod scope;
 pub mod statements;
 pub mod visitor;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
-use crate::common::{BaseNode, Comment};
-use crate::statements::{Directive, Statement};
+use crate::common::BaseNode;
+use crate::common::Comment;
+use crate::statements::Directive;
+use crate::statements::Statement;
 
 /// The root type returned by @babel/parser
 #[derive(Debug, Clone, Serialize, Deserialize)]
