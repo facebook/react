@@ -54,8 +54,11 @@ impl RawNode {
     }
 
     /// Parse the subtree into a `serde_json::Value` for structural inspection.
+    /// RawNode text is valid JSON by construction, so failure here means a
+    /// broken invariant, not bad input; fail loudly rather than degrade.
     pub fn parse_value(&self) -> serde_json::Value {
-        serde_json::from_str(self.0.get()).unwrap_or(serde_json::Value::Null)
+        from_json_str_unbounded(self.0.get())
+            .expect("RawNode holds valid JSON by construction")
     }
 
     /// The node's `"type"` field, without parsing the whole subtree into a Value.
@@ -65,20 +68,23 @@ impl RawNode {
             #[serde(rename = "type")]
             type_name: Option<String>,
         }
-        serde_json::from_str::<TypeProbe>(self.0.get())
+        from_json_str_unbounded::<TypeProbe>(self.0.get())
             .ok()
             .and_then(|p| p.type_name)
     }
 }
 
-/// Deserialize an AST type from a `serde_json::Value` by round-tripping
-/// through text. Types carrying [`RawNode`] fields cannot be deserialized via
-/// `serde_json::from_value` (RawValue capture requires a text input buffer);
-/// every from-Value site must go through this instead. Cold paths only.
-pub fn from_value_via_text<T: serde::de::DeserializeOwned>(
-    value: &serde_json::Value,
+/// Parse JSON text with serde_json's recursion limit disabled. Every internal
+/// reparse of [`RawNode`] text must go through this: the napi entrypoint
+/// deserializes arbitrarily deep ASTs with the limit disabled (on a 64MB
+/// stack), and the tolerant statement path's reparses must not quietly
+/// reintroduce the default limit.
+pub fn from_json_str_unbounded<'de, T: serde::Deserialize<'de>>(
+    s: &'de str,
 ) -> serde_json::Result<T> {
-    serde_json::from_str(&value.to_string())
+    let mut deserializer = serde_json::Deserializer::from_str(s);
+    deserializer.disable_recursion_limit();
+    T::deserialize(&mut deserializer)
 }
 
 /// Custom deserializer that distinguishes "field absent" from "field: null".

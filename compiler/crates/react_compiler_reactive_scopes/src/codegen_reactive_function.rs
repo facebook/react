@@ -1581,7 +1581,7 @@ fn codegen_unsupported_original_node(
 ) -> Result<UnsupportedOriginalNode, CompilerError> {
     let tag = node.get("type").and_then(serde_json::Value::as_str);
     if tag.is_some_and(is_known_statement_type) {
-        let stmt: Statement = react_compiler_ast::common::from_value_via_text(node).map_err(|e| {
+        let stmt: Statement = serde_json::from_value(node.clone()).map_err(|e| {
             invariant_err(
                 &format!("Failed to deserialize original AST node: {}", e),
                 None,
@@ -1589,8 +1589,8 @@ fn codegen_unsupported_original_node(
         })?;
         return Ok(UnsupportedOriginalNode::Statement(stmt));
     }
-    if react_compiler_ast::common::from_value_via_text::<Expression>(node).is_ok()
-        || react_compiler_ast::common::from_value_via_text::<PatternLike>(node).is_ok()
+    if serde_json::from_value::<Expression>(node.clone()).is_ok()
+        || serde_json::from_value::<PatternLike>(node.clone()).is_ok()
     {
         return Ok(UnsupportedOriginalNode::ExpressionCodegen);
     }
@@ -2590,7 +2590,7 @@ fn codegen_base_instruction_value(
             // Try to deserialize the original AST node from JSON (mirrors statement-level handler)
             match original_node {
                 Some(node) => {
-                    match react_compiler_ast::common::from_value_via_text::<Expression>(node) {
+                    match serde_json::from_value::<Expression>(node.clone()) {
                         Ok(expr) => Ok(ExpressionOrJsxText::Expression(expr)),
                         Err(_) => {
                             // Not a valid expression — fall back to placeholder

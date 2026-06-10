@@ -97,7 +97,7 @@ impl UnknownStatement {
             Some(_) => {
                 // Parsing into BaseNode reads only the fields BaseNode declares,
                 // not the whole (arbitrarily large) unknown subtree.
-                let base = serde_json::from_str::<BaseNode>(raw.get())
+                let base = crate::common::from_json_str_unbounded::<BaseNode>(raw.get())
                     .map_err(|err| format!("failed to read unknown statement base: {err}"))?;
                 Ok(Self { raw, base })
             }
@@ -129,7 +129,7 @@ impl UnknownStatement {
             self.raw = saved;
             return Err("unknown statement mutation removed the string `type` field".to_string());
         }
-        match serde_json::from_str::<BaseNode>(self.raw.get()) {
+        match crate::common::from_json_str_unbounded::<BaseNode>(self.raw.get()) {
             Ok(base) => {
                 self.base = base;
                 Ok(result)
@@ -177,7 +177,7 @@ impl<'de> Deserialize<'de> for Statement {
 
         if is_known_statement_type(&node_type) {
             let known: KnownStatement =
-                serde_json::from_str(raw.get()).map_err(D::Error::custom)?;
+                crate::common::from_json_str_unbounded(raw.get()).map_err(D::Error::custom)?;
             Ok(known.into())
         } else {
             UnknownStatement::from_raw(raw)
@@ -580,7 +580,6 @@ mod tests {
 
     use super::Statement;
     use crate::common::RawNode;
-    use crate::common::from_value_via_text;
 
     #[test]
     fn unknown_statement_round_trips_at_program_level() {
@@ -610,7 +609,7 @@ mod tests {
             }
         });
 
-        let file: crate::File = crate::common::from_value_via_text(&input).unwrap();
+        let file: crate::File = serde_json::from_value(input.clone()).unwrap();
 
         match &file.program.body[0] {
             Statement::Unknown(unknown) => {
@@ -641,7 +640,7 @@ mod tests {
             }
         });
 
-        let stmt: Statement = crate::common::from_value_via_text(&input).unwrap();
+        let stmt: Statement = serde_json::from_value(input.clone()).unwrap();
         let Statement::FunctionDeclaration(function) = &stmt else {
             panic!("expected function declaration, got {stmt:?}");
         };
@@ -661,7 +660,7 @@ mod tests {
 
     #[test]
     fn known_statement_type_uses_typed_variant() {
-        let stmt: Statement = from_value_via_text(&json!({
+        let stmt: Statement = serde_json::from_value(json!({
             "type": "EmptyStatement"
         }))
         .unwrap();
@@ -671,7 +670,7 @@ mod tests {
 
     #[test]
     fn malformed_known_statement_type_errors() {
-        let err = from_value_via_text::<Statement>(&json!({
+        let err = serde_json::from_value::<Statement>(json!({
             "type": "IfStatement",
             "consequent": {
                 "type": "EmptyStatement"
@@ -687,7 +686,7 @@ mod tests {
 
     #[test]
     fn statement_without_type_field_errors() {
-        let err = from_value_via_text::<Statement>(&json!({
+        let err = serde_json::from_value::<Statement>(json!({
             "start": 0,
             "end": 1
         }))
@@ -701,7 +700,7 @@ mod tests {
 
     #[test]
     fn non_object_statement_errors() {
-        let err = from_value_via_text::<Statement>(&json!([1, 2])).unwrap_err();
+        let err = serde_json::from_value::<Statement>(json!([1, 2])).unwrap_err();
         assert!(
             err.to_string().contains("`type`"),
             "unexpected error: {err}"
@@ -710,7 +709,7 @@ mod tests {
 
     #[test]
     fn non_string_type_field_errors() {
-        let err = from_value_via_text::<Statement>(&json!({ "type": 7 })).unwrap_err();
+        let err = serde_json::from_value::<Statement>(json!({ "type": 7 })).unwrap_err();
         assert!(
             err.to_string().contains("`type`"),
             "unexpected error: {err}"
@@ -726,7 +725,7 @@ mod tests {
             "start": 5,
             "expression": { "type": "Identifier", "name": "x" }
         });
-        let Statement::Unknown(mut unknown) = crate::common::from_value_via_text(&raw).unwrap() else {
+        let Statement::Unknown(mut unknown) = serde_json::from_value(raw).unwrap() else {
             panic!("expected Unknown");
         };
 

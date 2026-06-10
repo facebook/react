@@ -362,7 +362,7 @@ impl ReverseCtx {
             }
             "TSExportAssignment" => {
                 let expr: BabelExpr =
-                    react_compiler_ast::common::from_value_via_text(raw.get("expression")?).ok()?;
+                    serde_json::from_value(raw.get("expression")?.clone()).ok()?;
                 Some(ModuleDecl::TsExportAssignment(TsExportAssignment {
                     span: self.span(unknown.base()),
                     expr: Box::new(self.convert_expression(&expr)),
@@ -383,7 +383,7 @@ impl ReverseCtx {
         if raw.get("type").and_then(serde_json::Value::as_str) != Some("Identifier") {
             return None;
         }
-        let id: babel_expr::Identifier = react_compiler_ast::common::from_value_via_text(raw).ok()?;
+        let id: babel_expr::Identifier = serde_json::from_value(raw.clone()).ok()?;
         Some(self.ident(&id.name, self.span_no_comments(&id.base)))
     }
 
@@ -395,8 +395,8 @@ impl ReverseCtx {
                     return None;
                 }
                 let lit: react_compiler_ast::literals::StringLiteral =
-                    react_compiler_ast::common::from_value_via_text(expr).ok()?;
-                let ref_base: BaseNode = react_compiler_ast::common::from_value_via_text(raw).ok()?;
+                    serde_json::from_value(expr.clone()).ok()?;
+                let ref_base: BaseNode = serde_json::from_value(raw.clone()).ok()?;
                 Some(TsModuleRef::TsExternalModuleRef(TsExternalModuleRef {
                     span: self.span_no_comments(&ref_base),
                     expr: Str {
@@ -417,10 +417,10 @@ impl ReverseCtx {
         match raw.get("type").and_then(serde_json::Value::as_str)? {
             "Identifier" => self.ident_from_raw(raw).map(TsEntityName::Ident),
             "TSQualifiedName" => {
-                let base: BaseNode = react_compiler_ast::common::from_value_via_text(raw).ok()?;
+                let base: BaseNode = serde_json::from_value(raw.clone()).ok()?;
                 let left = self.ts_entity_name_from_raw(raw.get("left")?)?;
                 let right: babel_expr::Identifier =
-                    react_compiler_ast::common::from_value_via_text(raw.get("right")?).ok()?;
+                    serde_json::from_value(raw.get("right")?.clone()).ok()?;
                 Some(TsEntityName::TsQualifiedName(Box::new(TsQualifiedName {
                     span: self.span_no_comments(&base),
                     left,
