@@ -13,6 +13,7 @@ use react_compiler_swc::convert_ast_reverse::convert_program_to_swc;
 use react_compiler_swc::convert_scope::build_scope_info;
 use react_compiler_swc::lint_source;
 use react_compiler_swc::prefilter::has_react_like_functions;
+use react_compiler_swc::transform;
 use react_compiler_swc::transform_source;
 use swc_common::FileName;
 use swc_common::SourceMap;
@@ -755,5 +756,40 @@ fn ts_import_equals_export_round_trips() {
     assert!(
         code.contains("export import x = require(\"shared-runtime\");"),
         "missing exported import-equals in output: {code}"
+    );
+}
+
+/// A TypeScript `this` parameter in a function expression (used to declare the
+/// type of `this` inside the function) should not trigger the
+/// "Expected a non-reserved identifier name" error. TypeScript erases `this`
+/// params before emitting JavaScript; the React Compiler processes TypeScript
+/// source and must not treat these type-only params as real identifiers.
+///
+/// Otherwise, we get "[ReactCompiler] Unexpected error: `this` is a reserved word in JavaScript"
+#[test]
+fn ts_this_param_in_function_expression_is_not_a_reserved_identifier_error() {
+    let source = r#"
+        'use client';
+
+        import * as React from 'react';
+
+        function useClickHandler() {
+            const [count, setCount] = React.useState(0);
+            function handleClick(this: HTMLElement) {
+                setCount(c => c + 1);
+            }
+            return handleClick;
+        }
+    "#;
+
+    let module = parse_ts_module(source);
+    let result = transform(&module, source, default_options());
+
+    // TypeScript `this` params are type annotations, not real JS identifiers.
+    // The compiler must not emit a "reserved word" diagnostic for them.
+    let diagnostics: Vec<_> = result.diagnostics;
+    assert!(
+        diagnostics.is_empty(),
+        "got unexpected diagnostic for TS `this` param: {diagnostics:#?}"
     );
 }
