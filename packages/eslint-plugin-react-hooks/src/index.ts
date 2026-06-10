@@ -75,23 +75,8 @@ const recommendedLatestRuleConfigs: Linter.RulesRecord = {
 const plugins = ['react-hooks'];
 
 type ReactHooksFlatConfig = {
-  plugins: {react: any};
+  plugins: {'react-hooks': typeof plugin};
   rules: Linter.RulesRecord;
-};
-
-const configs = {
-  recommended: {
-    plugins,
-    rules: recommendedRuleConfigs,
-  },
-  'recommended-latest': {
-    plugins,
-    rules: recommendedLatestRuleConfigs,
-  },
-  flat: {} as {
-    recommended: ReactHooksFlatConfig;
-    'recommended-latest': ReactHooksFlatConfig;
-  },
 };
 
 const plugin = {
@@ -100,18 +85,33 @@ const plugin = {
     version: '7.0.0',
   },
   rules,
-  configs,
+  configs: {
+    recommended: {
+      plugins,
+      rules: recommendedRuleConfigs,
+    },
+    'recommended-latest': {
+      plugins,
+      rules: recommendedLatestRuleConfigs,
+    },
+    flat: {
+      recommended: {
+        plugins: {'react-hooks': null as unknown as typeof plugin},
+        rules: recommendedRuleConfigs,
+      },
+      'recommended-latest': {
+        plugins: {'react-hooks': null as unknown as typeof plugin},
+        rules: recommendedLatestRuleConfigs,
+      },
+    } as {
+      recommended: ReactHooksFlatConfig;
+      'recommended-latest': ReactHooksFlatConfig;
+    },
+  },
 };
 
-Object.assign(configs.flat, {
-  'recommended-latest': {
-    plugins: {'react-hooks': plugin},
-    rules: configs['recommended-latest'].rules,
-  },
-  recommended: {
-    plugins: {'react-hooks': plugin},
-    rules: configs.recommended.rules,
-  },
-});
+// Assign the plugin reference after plugin object is created
+plugin.configs.flat.recommended.plugins['react-hooks'] = plugin;
+plugin.configs.flat['recommended-latest'].plugins['react-hooks'] = plugin;
 
 export default plugin;

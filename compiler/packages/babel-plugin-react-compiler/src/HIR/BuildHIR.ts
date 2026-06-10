@@ -3578,7 +3578,7 @@ function trimJsxText(original: string): string | null {
   let lastNonEmptyLine = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].match(/[^ \t]/)) {
+    if (lines[i].trim().length > 0) {
       lastNonEmptyLine = i;
     }
   }
