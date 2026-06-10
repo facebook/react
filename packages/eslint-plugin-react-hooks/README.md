@@ -133,11 +133,13 @@ This option accepts a regex to match the names of custom Hooks that have depende
   rules: {
     // ...
     "react-hooks/exhaustive-deps": ["warn", {
-      additionalHooks: "(useMyCustomHook|useMyOtherCustomHook)"
+      additionalHooks: "^(useMyCustomHook|useMyOtherCustomHook)$"
     }]
   }
 }
 ```
+
+**Note:** The regex should use anchors (`^` and `$`) to ensure exact matching. Without anchors, the pattern `(useMyCustomHook|useMyOtherCustomHook)` would also match `useMyCustomHook2` or `useMyOtherCustomHookTest`.
 
 We suggest to use this option **very sparingly, if at all**. Generally saying, we recommend most custom Hooks to not use the dependencies argument, and instead provide a higher-level API that is more focused around a specific use case.
 
