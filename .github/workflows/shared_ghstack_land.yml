@@ -1,0 +1,121 @@
+name: (Shared) ghstack land
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+jobs:
+  check_access:
+    runs-on: ubuntu-latest
+    outputs:
+      is_member_or_collaborator: ${{ steps.check_access.outputs.result }}
+    steps:
+      - name: Check access
+        id: check_access
+        if: ${{ github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'COLLABORATOR' }}
+        run: echo "is_member_or_collaborator=true" >> "$GITHUB_OUTPUT"
+
+  check_maintainer:
+    if: ${{ needs.check_access.outputs.is_member_or_collaborator == 'true' }}
+    needs: [check_access]
+    uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+    permissions:
+      # Used by check_maintainer
+      contents: read
+    with:
+      actor: ${{ github.event.comment.user.login }}
+
+  ghstack_land:
+    if: ${{ needs.check_maintainer.outputs.is_core_team == 'true' && github.event.issue.pull_request && startsWith(github.event.comment.body, '/land') }}
+    needs: [check_maintainer]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add reaction to comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const comment_id = "${{ github.event.comment.id }}"
+
+            await github.rest.reactions.createForCommitComment({
+              owner,
+              repo,
+              comment_id,
+              content: "rocket",
+            });
+      - name: Get PR details
+        id: get-pr
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          echo "PR number is $PR_NUMBER"
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+          # Get PR details using GitHub API
+          PR_DATA=$(curl -s \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "${{ github.api_url }}/repos/${{ github.repository }}/pulls/$PR_NUMBER")
+
+          # Extract useful information
+          PR_HEAD_REF=$(echo "$PR_DATA" | jq -r .head.ref)
+          PR_HEAD_SHA=$(echo "$PR_DATA" | jq -r .head.sha)
+          PR_URL="${{ github.server_url }}/${{ github.repository }}/pull/$PR_NUMBER"
+
+          echo "pr_branch=$PR_HEAD_REF" >> $GITHUB_OUTPUT
+          echo "pr_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_branch=$PR_HEAD_REF"
+          echo "pr_sha=$PR_HEAD_SHA"
+          echo "pr_url=$PR_URL"
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ghstack-pip-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install ghstack
+        run: pip install requests ghstack
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: |
+            **/node_modules
+          key: ghstack-node_modules-v6-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('.github/workflows/scripts/ghstack/yarn.lock') }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: yarn
+          cache-dependency-path: .github/workflows/scripts/ghstack/yarn.lock
+      - run: yarn install --cwd .github/workflows/scripts/ghstack --frozen-lockfile
+        if: steps.node_modules.outputs.cache-hit != 'true'
+      - name: Check Current CI Status
+        run: |
+          echo ${{ github.event.issue.number }}
+          yarn --cwd .github/workflows/scripts/ghstack check-permissions ${{ github.event.issue.number }} ${{steps.get-pr.outputs.pr_branch}}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Land It!
+        run: |
+          git config --global user.email "facebook-github-bot@users.noreply.github.com"
+          git config --global user.name "Facebook Community Bot"
+          cat <<EOF > ~/.ghstackrc
+          [ghstack]
+          github_url = github.com
+          github_oauth = $GITHUB_TOKEN
+          github_username = facebook-github-bot
+          remote_name = origin
+          EOF
+          ghstack land "${{ steps.get-pr.outputs.pr_url }}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
