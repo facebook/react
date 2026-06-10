@@ -30,5 +30,16 @@ module.exports = {
         parser: 'typescript',
       },
     },
+    {
+      // Flow `match` syntax fixtures: prettier's built-in Flow parser cannot
+      // parse the experimental syntax, hermes-parser can.
+      files: [
+        'compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/match-*',
+      ],
+      options: {
+        parser: 'hermes',
+        plugins: ['prettier-plugin-hermes-parser'],
+      },
+    },
   ],
 };
