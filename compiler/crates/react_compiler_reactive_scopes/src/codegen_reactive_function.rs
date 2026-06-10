@@ -15,6 +15,7 @@ use std::collections::HashSet;
 
 use react_compiler_ast::common::BaseNode;
 use react_compiler_ast::common::Position as AstPosition;
+use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::SourceLocation as AstSourceLocation;
 use react_compiler_ast::expressions::ArrowFunctionBody;
 use react_compiler_ast::expressions::Expression;
@@ -281,7 +282,7 @@ pub fn codegen_function(
                     })),
                     right: Box::new(Expression::StringLiteral(StringLiteral {
                         base: BaseNode::typed("StringLiteral"),
-                        value: hash.clone(),
+                        value: hash.clone().into(),
                     })),
                 })),
                 consequent: Box::new(Statement::BlockStatement(BlockStatement {
@@ -381,7 +382,7 @@ pub fn codegen_function(
                                                     arguments: vec![Expression::StringLiteral(
                                                         StringLiteral {
                                                             base: BaseNode::typed("StringLiteral"),
-                                                            value: MEMO_CACHE_SENTINEL.to_string(),
+                                                            value: MEMO_CACHE_SENTINEL.to_string().into(),
                                                         },
                                                     )],
                                                     type_parameters: None,
@@ -420,7 +421,7 @@ pub fn codegen_function(
                                     )),
                                     right: Box::new(Expression::StringLiteral(StringLiteral {
                                         base: BaseNode::typed("StringLiteral"),
-                                        value: hash.clone(),
+                                        value: hash.clone().into(),
                                     })),
                                 },
                             )),
@@ -492,11 +493,11 @@ pub fn codegen_function(
                         arguments: vec![
                             Expression::StringLiteral(StringLiteral {
                                 base: BaseNode::typed("StringLiteral"),
-                                value: fn_name_str.to_string(),
+                                value: fn_name_str.to_string().into(),
                             }),
                             Expression::StringLiteral(StringLiteral {
                                 base: BaseNode::typed("StringLiteral"),
-                                value: filename_str.to_string(),
+                                value: filename_str.to_string().into(),
                             }),
                         ],
                         type_parameters: None,
@@ -1593,7 +1594,7 @@ fn codegen_unsupported_original_node(
     {
         return Ok(UnsupportedOriginalNode::ExpressionCodegen);
     }
-    let unknown = UnknownStatement::from_raw(node.clone()).map_err(|e| {
+    let unknown = UnknownStatement::from_raw(RawNode::from_value(node)).map_err(|e| {
         invariant_err(
             &format!("Failed to read unsupported original AST node: {}", e),
             None,
@@ -2009,7 +2010,7 @@ fn codegen_instruction_value(
                         })?;
                         expressions.push(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
-                            value: format!("TODO handle declaration"),
+                            value: format!("TODO handle declaration").into(),
                         }));
                     }
                     _ => {
@@ -2024,7 +2025,7 @@ fn codegen_instruction_value(
                         })?;
                         expressions.push(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
-                            value: format!("TODO handle statement"),
+                            value: format!("TODO handle statement").into(),
                         }));
                     }
                 }
@@ -2526,7 +2527,7 @@ fn codegen_base_instruction_value(
                     Expression::TSSatisfiesExpression(ast_expr::TSSatisfiesExpression {
                         base: BaseNode::typed("TSSatisfiesExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta,
+                        type_annotation: RawNode::from_value(&ta),
                     })
                 }
                 (Some("as"), Some(ta)) => {
@@ -2535,7 +2536,7 @@ fn codegen_base_instruction_value(
                     Expression::TSAsExpression(ast_expr::TSAsExpression {
                         base: BaseNode::typed("TSAsExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta,
+                        type_annotation: RawNode::from_value(&ta),
                     })
                 }
                 (Some("cast"), Some(ta)) => {
@@ -2544,7 +2545,7 @@ fn codegen_base_instruction_value(
                     Expression::TypeCastExpression(ast_expr::TypeCastExpression {
                         base: BaseNode::typed("TypeCastExpression"),
                         expression: Box::new(expr),
-                        type_annotation: ta,
+                        type_annotation: RawNode::from_value(&ta),
                     })
                 }
                 _ => expr,
@@ -2713,7 +2714,7 @@ fn codegen_function_expression(
                         base: BaseNode::typed("ObjectProperty"),
                         key: Box::new(Expression::StringLiteral(StringLiteral {
                             base: BaseNode::typed("StringLiteral"),
-                            value: hint.clone(),
+                            value: hint.clone().into(),
                         })),
                         value: Box::new(value),
                         computed: false,
@@ -2725,7 +2726,7 @@ fn codegen_function_expression(
             })),
             property: Box::new(Expression::StringLiteral(StringLiteral {
                 base: BaseNode::typed("StringLiteral"),
-                value: hint.clone(),
+                value: hint.clone().into(),
             })),
             computed: true,
         });
@@ -2847,7 +2848,7 @@ fn codegen_object_property_key(
     match key {
         ObjectPropertyKey::String { name } => Ok(Expression::StringLiteral(StringLiteral {
             base: BaseNode::typed("StringLiteral"),
-            value: name.clone(),
+            value: name.clone().into(),
         })),
         ObjectPropertyKey::Identifier { name } => Ok(Expression::Identifier(make_identifier(name))),
         ObjectPropertyKey::Computed { name } => {
@@ -2891,7 +2892,7 @@ fn codegen_jsx_expression(
         JsxTag::Builtin(builtin) => (
             Expression::StringLiteral(StringLiteral {
                 base: BaseNode::typed("StringLiteral"),
-                value: builtin.name.clone(),
+                value: builtin.name.clone().into(),
             }),
             None,
         ),
@@ -2900,7 +2901,9 @@ fn codegen_jsx_expression(
     let jsx_tag = expression_to_jsx_tag(&tag_value, jsx_tag_loc(tag))?;
 
     let is_fbt_tag = if let Expression::StringLiteral(ref s) = tag_value {
-        SINGLE_CHILD_FBT_TAGS.contains(&s.value.as_str())
+        s.value
+            .as_str()
+            .is_some_and(|v| SINGLE_CHILD_FBT_TAGS.contains(&v))
     } else {
         false
     };
@@ -3001,7 +3004,7 @@ fn codegen_jsx_attribute(
             let inner_value = codegen_place_to_expression(cx, place)?;
             let attr_value = match &inner_value {
                 Expression::StringLiteral(s) => {
-                    if string_requires_expr_container(&s.value)
+                    if string_requires_expr_container(&s.value.to_marker_string())
                         && !cx.fbt_operands.contains(&place.identifier)
                     {
                         Some(JSXAttributeValue::JSXExpressionContainer(
@@ -3064,7 +3067,7 @@ fn codegen_jsx_element(cx: &mut Context, place: &Place) -> Result<JSXChild, Comp
                     expression: JSXExpressionContainerExpr::Expression(Box::new(
                         Expression::StringLiteral(StringLiteral {
                             base: base_node_with_loc("StringLiteral", loc),
-                            value: text.value.clone(),
+                            value: text.value.clone().into(),
                         }),
                     )),
                 }))
@@ -3120,8 +3123,11 @@ fn expression_to_jsx_tag(
             convert_member_expression_to_jsx(me)?,
         )),
         Expression::StringLiteral(s) => {
-            if s.value.contains(':') {
-                let parts: Vec<&str> = s.value.splitn(2, ':').collect();
+            // JSX tag names are identifier-shaped; the marker form preserves
+            // the pre-JsString behavior for pathological values.
+            let tag_text = s.value.to_marker_string();
+            if tag_text.contains(':') {
+                let parts: Vec<&str> = tag_text.splitn(2, ':').collect();
                 Ok(JSXElementName::JSXNamespacedName(JSXNamespacedName {
                     base: base_node_with_loc("JSXNamespacedName", loc),
                     namespace: JSXIdentifier {
@@ -3136,7 +3142,7 @@ fn expression_to_jsx_tag(
             } else {
                 Ok(JSXElementName::JSXIdentifier(JSXIdentifier {
                     base: base_node_with_loc("JSXIdentifier", loc),
-                    name: s.value.clone(),
+                    name: tag_text,
                 }))
             }
         }
@@ -3745,7 +3751,7 @@ fn symbol_for(name: &str) -> Expression {
         })),
         arguments: vec![Expression::StringLiteral(StringLiteral {
             base: BaseNode::typed("StringLiteral"),
-            value: name.to_string(),
+            value: name.to_string().into(),
         })],
         type_parameters: None,
         type_arguments: None,
@@ -3823,7 +3829,7 @@ fn convert_value_to_expression(value: ExpressionOrJsxText) -> Expression {
         ExpressionOrJsxText::Expression(e) => e,
         ExpressionOrJsxText::JsxText(text) => Expression::StringLiteral(StringLiteral {
             base: BaseNode::typed("StringLiteral"),
-            value: text.value,
+            value: text.value.into(),
         }),
     }
 }
@@ -4297,7 +4303,7 @@ mod tests {
         match codegen_unsupported_original_node(&node).unwrap() {
             UnsupportedOriginalNode::Statement(Statement::Unknown(unknown)) => {
                 assert_eq!(unknown.node_type(), "TSImportEqualsDeclaration");
-                assert_eq!(unknown.raw(), &node);
+                assert_eq!(unknown.raw().parse_value(), node);
             }
             UnsupportedOriginalNode::Statement(other) => {
                 panic!("expected Statement::Unknown, got {other:?}")

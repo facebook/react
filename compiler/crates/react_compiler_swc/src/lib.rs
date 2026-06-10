@@ -91,7 +91,7 @@ pub fn transform(
         react_compiler::entrypoint::program::compile_program(file, scope_info, options);
 
     let diagnostics = compile_result_to_diagnostics(&result);
-    let (program_json, events, renames) = match result {
+    let (program_ast, events, renames) = match result {
         react_compiler::entrypoint::compile_result::CompileResult::Success {
             ast,
             events,
@@ -103,14 +103,8 @@ pub fn transform(
         } => (None, events, Vec::new()),
     };
 
-    let conversion_result = program_json.and_then(|raw_json| {
-        // First parse to serde_json::Value which deduplicates "type" fields
-        // (the compiler output can produce duplicate "type" keys due to
-        // BaseNode.node_type + #[serde(tag = "type")] enum tagging)
-        let value: serde_json::Value = serde_json::from_str(raw_json.get()).ok()?;
-        let file: react_compiler_ast::File = serde_json::from_value(value).ok()?;
-        let result = convert_program_to_swc_with_source(&file, Some(source_text));
-        Some(result)
+    let conversion_result = program_ast.map(|file| {
+        convert_program_to_swc_with_source(&file, Some(source_text))
     });
 
     let (mut swc_module, mut comments) = match conversion_result {

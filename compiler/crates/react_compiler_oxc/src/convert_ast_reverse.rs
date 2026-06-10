@@ -116,6 +116,15 @@ impl<'a> ReverseCtx<'a> {
         Atom::from_in(s, self.allocator)
     }
 
+    /// OXC strings are UTF-8 only, so ill-formed values degrade to U+FFFD
+    /// here, matching how oxc's own parser represents them.
+    fn atom_js(&self, s: &react_compiler_diagnostics::JsString) -> Atom<'a> {
+        match s.as_str() {
+            Some(utf8) => self.atom(utf8),
+            None => Atom::from_in(s.to_string_lossy(), self.allocator),
+        }
+    }
+
     /// Convert a BaseNode's start/end into an OXC Span.
     /// Returns SPAN (0,0) if the base has no position info.
     fn span_from_base(&self, base: &BaseNode) -> Span {
@@ -500,7 +509,7 @@ impl<'a> ReverseCtx<'a> {
                 .expression_identifier(SPAN, self.atom(&id.name)),
             Expression::StringLiteral(lit) => {
                 self.builder
-                    .expression_string_literal(SPAN, self.atom(&lit.value), None)
+                    .expression_string_literal(SPAN, self.atom_js(&lit.value), None)
             }
             Expression::NumericLiteral(lit) => self.builder.expression_numeric_literal(
                 SPAN,
@@ -887,7 +896,7 @@ impl<'a> ReverseCtx<'a> {
                 .builder
                 .property_key_static_identifier(SPAN, self.atom(&id.name)),
             Expression::StringLiteral(s) => {
-                let lit = self.builder.string_literal(SPAN, self.atom(&s.value), None);
+                let lit = self.builder.string_literal(SPAN, self.atom_js(&s.value), None);
                 oxc::PropertyKey::StringLiteral(self.builder.alloc(lit))
             }
             Expression::NumericLiteral(n) => {
@@ -1521,7 +1530,7 @@ impl<'a> ReverseCtx<'a> {
         match value {
             JSXAttributeValue::StringLiteral(s) => {
                 self.builder
-                    .jsx_attribute_value_string_literal(SPAN, self.atom(&s.value), None)
+                    .jsx_attribute_value_string_literal(SPAN, self.atom_js(&s.value), None)
             }
             JSXAttributeValue::JSXExpressionContainer(ec) => {
                 let expr = self.convert_jsx_expression_container_expr(&ec.expression);
@@ -1609,7 +1618,7 @@ impl<'a> ReverseCtx<'a> {
         );
         let source = self
             .builder
-            .string_literal(SPAN, self.atom(&decl.source.value), None);
+            .string_literal(SPAN, self.atom_js(&decl.source.value), None);
         let import_kind = match decl.import_kind.as_ref() {
             Some(ImportKind::Type) => oxc::ImportOrExportKind::Type,
             _ => oxc::ImportOrExportKind::Value,
@@ -1673,7 +1682,7 @@ impl<'a> ReverseCtx<'a> {
             react_compiler_ast::declarations::ModuleExportName::StringLiteral(s) => {
                 oxc::ModuleExportName::StringLiteral(self.builder.string_literal(
                     SPAN,
-                    self.atom(&s.value),
+                    self.atom_js(&s.value),
                     None,
                 ))
             }
@@ -1696,7 +1705,7 @@ impl<'a> ReverseCtx<'a> {
         let source = decl
             .source
             .as_ref()
-            .map(|s| self.builder.string_literal(SPAN, self.atom(&s.value), None));
+            .map(|s| self.builder.string_literal(SPAN, self.atom_js(&s.value), None));
         let export_kind = match decl.export_kind.as_ref() {
             Some(ExportKind::Type) => oxc::ImportOrExportKind::Type,
             _ => oxc::ImportOrExportKind::Value,
@@ -1818,7 +1827,7 @@ impl<'a> ReverseCtx<'a> {
     ) -> oxc::ExportAllDeclaration<'a> {
         let source = self
             .builder
-            .string_literal(SPAN, self.atom(&decl.source.value), None);
+            .string_literal(SPAN, self.atom_js(&decl.source.value), None);
         let export_kind = match decl.export_kind.as_ref() {
             Some(ExportKind::Type) => oxc::ImportOrExportKind::Type,
             _ => oxc::ImportOrExportKind::Value,
