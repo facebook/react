@@ -1,11 +1,13 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-/// An AST subtree the compiler carries verbatim without inspecting (type
+/// An AST subtree the compiler does not model with typed nodes (type
 /// annotations, class bodies, parser extras). Wraps JSON text: serialization
-/// is pass-through and deserialization streams the subtree into text without
-/// building a `serde_json::Value`. Consumers that do need to look inside
-/// parse on demand via [`RawNode::parse_value`].
+/// is verbatim pass-through and deserialization streams the subtree into text
+/// without retaining a `serde_json::Value` tree. Consumers that inspect these
+/// subtrees parse on demand via [`RawNode::parse_value`]; paths that do so
+/// repeatedly per traversal pay a parse each time, so cache the parsed Value
+/// at the call site if it shows up in profiles.
 ///
 /// Deserialize is hand-implemented with a transcode rather than capturing a
 /// `RawValue` directly: most nodes sit under `#[serde(tag = "type")]` enums,
@@ -47,10 +49,6 @@ impl RawNode {
     /// The raw JSON text of this subtree.
     pub fn get(&self) -> &str {
         self.0.get()
-    }
-
-    pub fn is_null(&self) -> bool {
-        self.0.get() == "null"
     }
 
     /// Parse the subtree into a `serde_json::Value` for structural inspection.
