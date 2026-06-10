@@ -677,7 +677,7 @@ impl<'a> ConvertCtx<'a> {
                 .unwrap_or_default(),
             source: StringLiteral {
                 base: self.make_base_node(import.source.span),
-                value: import.source.value.to_string(),
+                value: import.source.value.to_string().into(),
             },
             import_kind: match import.import_kind {
                 oxc::ImportOrExportKind::Value => None,
@@ -738,7 +738,7 @@ impl<'a> ConvertCtx<'a> {
             key: self.convert_import_attribute_key(&attr.key),
             value: StringLiteral {
                 base: self.make_base_node(attr.value.span),
-                value: attr.value.value.to_string(),
+                value: attr.value.value.to_string().into(),
             },
         }
     }
@@ -773,7 +773,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::ModuleExportName::StringLiteral(s) => {
                 ModuleExportName::StringLiteral(StringLiteral {
                     base: self.make_base_node(s.span),
-                    value: s.value.to_string(),
+                    value: s.value.to_string().into(),
                 })
             }
         }
@@ -787,7 +787,7 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(export.span),
             source: StringLiteral {
                 base: self.make_base_node(export.source.span),
-                value: export.source.value.to_string(),
+                value: export.source.value.to_string().into(),
             },
             export_kind: match export.export_kind {
                 oxc::ImportOrExportKind::Value => None,
@@ -899,7 +899,7 @@ impl<'a> ConvertCtx<'a> {
                 .collect(),
             source: export.source.as_ref().map(|s| StringLiteral {
                 base: self.make_base_node(s.span),
-                value: s.value.to_string(),
+                value: s.value.to_string().into(),
             }),
             export_kind: match export.export_kind {
                 oxc::ImportOrExportKind::Value => None,
@@ -1032,7 +1032,7 @@ impl<'a> ConvertCtx<'a> {
             }),
             oxc::Expression::StringLiteral(s) => Expression::StringLiteral(StringLiteral {
                 base: self.make_base_node(s.span),
-                value: s.value.to_string(),
+                value: s.value.to_string().into(),
             }),
             oxc::Expression::TemplateLiteral(t) => {
                 Expression::TemplateLiteral(self.convert_template_literal(t))
@@ -2418,7 +2418,7 @@ impl<'a> ConvertCtx<'a> {
             oxc::JSXAttributeValue::StringLiteral(s) => {
                 JSXAttributeValue::StringLiteral(StringLiteral {
                     base: self.make_base_node(s.span),
-                    value: s.value.to_string(),
+                    value: s.value.to_string().into(),
                 })
             }
             oxc::JSXAttributeValue::ExpressionContainer(e) => {
@@ -2777,7 +2777,7 @@ macro_rules! impl_expression_like {
                     }),
                     Self::StringLiteral(e) => Expression::StringLiteral(StringLiteral {
                         base: ctx.make_base_node(e.span),
-                        value: e.value.to_string(),
+                        value: e.value.to_string().into(),
                     }),
                     Self::TemplateLiteral(e) => Expression::TemplateLiteral(ctx.convert_template_literal(e)),
                     Self::Identifier(e) => Expression::Identifier(ctx.convert_identifier_reference(e)),

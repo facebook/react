@@ -26,6 +26,12 @@ fn wtf8_to_string(value: &swc_atoms::Wtf8Atom) -> String {
     value.to_string_lossy().into_owned()
 }
 
+/// Lossless conversion of an SWC WTF-8 string to a [`JsString`]: unpaired
+/// surrogates survive as code units instead of being replaced with U+FFFD.
+fn wtf8_to_js_string(value: &swc_atoms::Wtf8Atom) -> react_compiler_diagnostics::JsString {
+    react_compiler_diagnostics::JsString::from_code_units(value.to_ill_formed_utf16().collect())
+}
+
 /// Wrap a raw Babel-shaped JSON node in [`Statement::Unknown`]. The caller
 /// constructs `raw` with a `type` tag, so `from_raw` cannot fail.
 fn unknown_statement(raw: serde_json::Value) -> Statement {
@@ -361,7 +367,7 @@ impl<'a> ConvertCtx<'a> {
                 module_ref["expression"] =
                     serde_json::to_value(Expression::StringLiteral(StringLiteral {
                         base: self.make_base_node(r.expr.span),
-                        value: wtf8_to_string(&r.expr.value),
+                        value: wtf8_to_js_string(&r.expr.value),
                     }))
                     .expect("StringLiteral serializes to JSON");
                 module_ref
@@ -881,7 +887,7 @@ impl<'a> ConvertCtx<'a> {
         match lit {
             swc::Lit::Str(s) => Expression::StringLiteral(StringLiteral {
                 base: self.make_base_node(s.span),
-                value: wtf8_to_string(&s.value),
+                value: wtf8_to_js_string(&s.value),
             }),
             swc::Lit::Bool(b) => Expression::BooleanLiteral(BooleanLiteral {
                 base: self.make_base_node(b.span),
@@ -906,7 +912,7 @@ impl<'a> ConvertCtx<'a> {
             }),
             swc::Lit::JSXText(t) => Expression::StringLiteral(StringLiteral {
                 base: self.make_base_node(t.span),
-                value: t.value.to_string(),
+                value: t.value.to_string().into(),
             }),
         }
     }
@@ -1738,7 +1744,7 @@ impl<'a> ConvertCtx<'a> {
         match value {
             swc::JSXAttrValue::Str(s) => JSXAttributeValue::StringLiteral(StringLiteral {
                 base: self.make_base_node(s.span),
-                value: wtf8_to_string(&s.value),
+                value: wtf8_to_js_string(&s.value),
             }),
             swc::JSXAttrValue::JSXExprContainer(ec) => {
                 JSXAttributeValue::JSXExpressionContainer(self.convert_jsx_expr_container(ec))
@@ -1819,7 +1825,7 @@ impl<'a> ConvertCtx<'a> {
                 .collect(),
             source: StringLiteral {
                 base: self.make_base_node(decl.src.span),
-                value: wtf8_to_string(&decl.src.value),
+                value: wtf8_to_js_string(&decl.src.value),
             },
             import_kind: if decl.type_only {
                 Some(ImportKind::Type)
@@ -1861,7 +1867,7 @@ impl<'a> ConvertCtx<'a> {
                                 },
                                 value: StringLiteral {
                                     base: self.make_base_node(s.span),
-                                    value: wtf8_to_string(&s.value),
+                                    value: wtf8_to_js_string(&s.value),
                                 },
                             });
                         }
@@ -1886,7 +1892,7 @@ impl<'a> ConvertCtx<'a> {
                         swc::ModuleExportName::Str(s) => {
                             ModuleExportName::StringLiteral(StringLiteral {
                                 base: self.make_base_node(s.span),
-                                value: wtf8_to_string(&s.value),
+                                value: wtf8_to_js_string(&s.value),
                             })
                         }
                     })
@@ -1940,7 +1946,7 @@ impl<'a> ConvertCtx<'a> {
                 .collect(),
             source: decl.src.as_ref().map(|s| StringLiteral {
                 base: self.make_base_node(s.span),
-                value: wtf8_to_string(&s.value),
+                value: wtf8_to_js_string(&s.value),
             }),
             export_kind: if decl.type_only {
                 Some(ExportKind::Type)
@@ -2054,7 +2060,7 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(decl.span),
             source: StringLiteral {
                 base: self.make_base_node(decl.src.span),
-                value: wtf8_to_string(&decl.src.value),
+                value: wtf8_to_js_string(&decl.src.value),
             },
             export_kind: if decl.type_only {
                 Some(ExportKind::Type)
@@ -2130,7 +2136,7 @@ impl<'a> ConvertCtx<'a> {
             }
             swc::ModuleExportName::Str(s) => ModuleExportName::StringLiteral(StringLiteral {
                 base: self.make_base_node(s.span),
-                value: wtf8_to_string(&s.value),
+                value: wtf8_to_js_string(&s.value),
             }),
         }
     }
@@ -2258,7 +2264,7 @@ impl<'a> ConvertCtx<'a> {
             }),
             swc::PropName::Str(s) => Expression::StringLiteral(StringLiteral {
                 base: self.make_base_node(s.span),
-                value: wtf8_to_string(&s.value),
+                value: wtf8_to_js_string(&s.value),
             }),
             swc::PropName::Num(n) => Expression::NumericLiteral(NumericLiteral {
                 base: self.make_base_node(n.span),

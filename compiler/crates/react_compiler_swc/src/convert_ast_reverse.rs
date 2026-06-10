@@ -138,6 +138,17 @@ impl ReverseCtx {
         Wtf8Atom::from(s)
     }
 
+    /// Lossless [`JsString`] to WTF-8: unpaired surrogates survive as code
+    /// units instead of degrading to U+FFFD.
+    fn wtf8_js(&self, s: &react_compiler_diagnostics::JsString) -> Wtf8Atom {
+        match s.as_str() {
+            Some(utf8) => Wtf8Atom::from(utf8),
+            None => Wtf8Atom::from(swc_atoms::wtf8::Wtf8Buf::from_ill_formed_utf16(
+                &s.code_units(),
+            )),
+        }
+    }
+
     /// Escape non-ASCII characters and special characters (like tab) in a string
     /// value to \uXXXX or \xXX sequences, matching Babel's codegen output.
     /// Returns the raw string representation wrapped in double quotes.
@@ -401,7 +412,7 @@ impl ReverseCtx {
                     span: self.span_no_comments(&ref_base),
                     expr: Str {
                         span: self.span_no_comments(&lit.base),
-                        value: self.wtf8(&lit.value),
+                        value: self.wtf8_js(&lit.value),
                         raw: None,
                     },
                 }))
@@ -784,8 +795,8 @@ impl ReverseCtx {
             }
             BabelExpr::StringLiteral(lit) => Expr::Lit(Lit::Str(Str {
                 span: self.span(&lit.base),
-                value: self.wtf8(&lit.value),
-                raw: self.escape_string_raw(&lit.value),
+                value: self.wtf8_js(&lit.value),
+                raw: lit.value.as_str().and_then(|utf8| self.escape_string_raw(utf8)),
             })),
             BabelExpr::NumericLiteral(lit) => {
                 // Convert -0.0 to 0.0 to match Babel's codegen behavior.
@@ -1433,7 +1444,7 @@ impl ReverseCtx {
             }
             BabelExpr::StringLiteral(s) => PropName::Str(Str {
                 span: self.span(&s.base),
-                value: self.wtf8(&s.value),
+                value: self.wtf8_js(&s.value),
                 raw: None,
             }),
             BabelExpr::NumericLiteral(n) => PropName::Num(Number {
@@ -1929,17 +1940,17 @@ impl ReverseCtx {
                 // For JSX attributes, if the value contains double quotes,
                 // use single quotes to avoid escaping issues that prettier
                 // can't parse (e.g., name="\"user\" name").
-                let raw = if s.value.contains('"') {
-                    Some(Atom::from(format!(
+                let raw = match s.value.as_str() {
+                    Some(utf8) if utf8.contains('"') => Some(Atom::from(format!(
                         "'{}'",
-                        s.value.replace('\\', "\\\\").replace('\'', "\\'")
-                    )))
-                } else {
-                    self.escape_string_raw(&s.value)
+                        utf8.replace('\\', "\\\\").replace('\'', "\\'")
+                    ))),
+                    Some(utf8) => self.escape_string_raw(utf8),
+                    None => None,
                 };
                 swc_ecma_ast::JSXAttrValue::Str(Str {
                     span: self.span(&s.base),
-                    value: self.wtf8(&s.value),
+                    value: self.wtf8_js(&s.value),
                     raw,
                 })
             }
@@ -2044,7 +2055,7 @@ impl ReverseCtx {
             .collect();
         let src = Box::new(Str {
             span: self.span(&decl.source.base),
-            value: self.wtf8(&decl.source.value),
+            value: self.wtf8_js(&decl.source.value),
             raw: None,
         });
         let type_only = matches!(decl.import_kind.as_ref(), Some(ImportKind::Type));
@@ -2114,7 +2125,7 @@ impl ReverseCtx {
             react_compiler_ast::declarations::ModuleExportName::StringLiteral(s) => {
                 swc_ecma_ast::ModuleExportName::Str(Str {
                     span: self.span(&s.base),
-                    value: self.wtf8(&s.value),
+                    value: self.wtf8_js(&s.value),
                     raw: None,
                 })
             }
@@ -2185,7 +2196,7 @@ impl ReverseCtx {
         let src = decl.source.as_ref().map(|s| {
             Box::new(Str {
                 span: self.span(&s.base),
-                value: self.wtf8(&s.value),
+                value: self.wtf8_js(&s.value),
                 raw: None,
             })
         });
@@ -2316,7 +2327,7 @@ impl ReverseCtx {
     ) -> swc_ecma_ast::ExportAll {
         let src = Box::new(Str {
             span: self.span(&decl.source.base),
-            value: self.wtf8(&decl.source.value),
+            value: self.wtf8_js(&decl.source.value),
             raw: None,
         });
         let type_only = matches!(decl.export_kind.as_ref(), Some(ExportKind::Type));
