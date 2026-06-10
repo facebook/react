@@ -14,7 +14,7 @@ import typeof * as DynamicExportsType from './ReactFeatureFlags.native-fb-dynami
 // Re-export dynamic flags from the internal module.
 // Intentionally using * because this import is compiled to a `require` call.
 import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
-const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
+const dynamicFlags: DynamicExportsType = dynamicFlagsUntyped as any;
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
@@ -47,6 +47,7 @@ export const enableCreateEventHandleAPI: boolean = false;
 export const enableMoveBefore: boolean = true;
 export const enableFizzExternalRuntime: boolean = true;
 export const enableInfiniteRenderLoopDetection: boolean = false;
+export const enableInfiniteRenderLoopDetectionForceThrow: boolean = false;
 export const enableLegacyCache: boolean = false;
 export const enableLegacyFBSupport: boolean = false;
 export const enableLegacyHidden: boolean = false;
@@ -94,4 +95,4 @@ export const eprh_enableExhaustiveEffectDependenciesCompilerLint:
   | 'missing-only' = 'off';
 
 // Flow magic to verify the exports of this file match the original version.
-((((null: any): ExportsType): FeatureFlagsType): ExportsType);
+null as any as ExportsType as FeatureFlagsType as ExportsType;
