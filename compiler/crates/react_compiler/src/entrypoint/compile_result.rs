@@ -30,7 +30,12 @@ pub struct LoggerPosition {
 
 impl LoggerSourceLocation {
     /// Create from a diagnostics SourceLocation, adding index and filename.
-    pub fn from_loc(loc: &SourceLocation, filename: Option<&str>, start_index: Option<u32>, end_index: Option<u32>) -> Self {
+    pub fn from_loc(
+        loc: &SourceLocation,
+        filename: Option<&str>,
+        start_index: Option<u32>,
+        end_index: Option<u32>,
+    ) -> Self {
         Self {
             start: LoggerPosition {
                 line: loc.start.line,

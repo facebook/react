@@ -3,10 +3,10 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
+pub mod apply_renames;
 pub mod convert_ast;
 pub mod convert_ast_reverse;
 pub mod convert_scope;
-pub mod apply_renames;
 pub mod diagnostics;
 pub mod prefilter;
 pub(crate) mod ts_namespace_export_fixup;
@@ -15,7 +15,7 @@ use apply_renames::apply_renames;
 use convert_ast::convert_module_with_source_type;
 use convert_ast_reverse::convert_program_to_swc_with_source;
 use convert_scope::build_scope_info;
-use diagnostics::{compile_result_to_diagnostics, DiagnosticMessage};
+use diagnostics::{DiagnosticMessage, compile_result_to_diagnostics};
 use prefilter::has_react_like_functions;
 use react_compiler::entrypoint::compile_result::LoggerEvent;
 use react_compiler::entrypoint::plugin_options::PluginOptions;
@@ -87,8 +87,7 @@ pub fn transform(
     };
     let file = convert_module_with_source_type(module, source_text, source_type);
     let scope_info = build_scope_info(module);
-    let result =
-        react_compiler::entrypoint::program::compile_program(file, scope_info, options);
+    let result = react_compiler::entrypoint::program::compile_program(file, scope_info, options);
 
     let diagnostics = compile_result_to_diagnostics(&result);
     let (program_ast, events, renames) = match result {
@@ -98,9 +97,9 @@ pub fn transform(
             renames,
             ..
         } => (ast, events, renames),
-        react_compiler::entrypoint::compile_result::CompileResult::Error {
-            events, ..
-        } => (None, events, Vec::new()),
+        react_compiler::entrypoint::compile_result::CompileResult::Error { events, .. } => {
+            (None, events, Vec::new())
+        }
     };
 
     let conversion_result = program_ast.map(|file| {
@@ -123,8 +122,7 @@ pub fn transform(
         // reflect original source positions. Babel's generator adds blank
         // lines between consecutive items when the original source had blank
         // lines between them (i.e., endLine(prev) + 1 < startLine(next)).
-        let blank_line_positions =
-            compute_blank_line_positions(&swc_mod.body, source_text);
+        let blank_line_positions = compute_blank_line_positions(&swc_mod.body, source_text);
 
         // Fix up dummy spans on compiler-generated items: SWC codegen skips
         // comments at BytePos(0) (DUMMY), so we give generated items a real
@@ -139,15 +137,15 @@ pub fn transform(
                         swc_common::Span::new(next_synthetic_pos, next_synthetic_pos);
                     next_synthetic_pos = next_synthetic_pos + swc_common::BytePos(1);
                     match item {
-                        swc_ecma_ast::ModuleItem::ModuleDecl(
-                            swc_ecma_ast::ModuleDecl::Import(import),
-                        ) => {
+                        swc_ecma_ast::ModuleItem::ModuleDecl(swc_ecma_ast::ModuleDecl::Import(
+                            import,
+                        )) => {
                             import.span = synthetic_span;
                             top_level_comment_target = Some(import.span.hi);
                         }
-                        swc_ecma_ast::ModuleItem::Stmt(
-                            swc_ecma_ast::Stmt::Decl(swc_ecma_ast::Decl::Var(var)),
-                        ) => {
+                        swc_ecma_ast::ModuleItem::Stmt(swc_ecma_ast::Stmt::Decl(
+                            swc_ecma_ast::Decl::Var(var),
+                        )) => {
                             var.span = synthetic_span;
                         }
                         _ => {}
@@ -351,10 +349,7 @@ fn emit_module_to_string(
 /// `blank_line_positions`. Each position includes a `first_code_line` that
 /// identifies the item's first line of code (without comments), used as
 /// a search anchor in the output.
-fn insert_blank_lines_in_output(
-    code: &str,
-    positions: &[BlankLinePosition],
-) -> String {
+fn insert_blank_lines_in_output(code: &str, positions: &[BlankLinePosition]) -> String {
     if positions.is_empty() {
         return code.to_string();
     }
@@ -369,12 +364,8 @@ fn insert_blank_lines_in_output(
 
     for pos in positions {
         let (first_code_line, before_comments) = match pos {
-            BlankLinePosition::BeforeItem { first_code_line } => {
-                (first_code_line.as_str(), true)
-            }
-            BlankLinePosition::BeforeCode { first_code_line } => {
-                (first_code_line.as_str(), false)
-            }
+            BlankLinePosition::BeforeItem { first_code_line } => (first_code_line.as_str(), true),
+            BlankLinePosition::BeforeCode { first_code_line } => (first_code_line.as_str(), false),
         };
 
         // Find this code line in the output (first unused match).
@@ -749,7 +740,8 @@ fn compute_blank_line_positions(
         let prev_hi_u = (prev_hi.0 as usize).saturating_sub(1);
         let curr_lo_u = (curr_lo.0 as usize).saturating_sub(1);
 
-        if prev_hi_u >= curr_lo_u || prev_hi_u > source_text.len() || curr_lo_u > source_text.len() {
+        if prev_hi_u >= curr_lo_u || prev_hi_u > source_text.len() || curr_lo_u > source_text.len()
+        {
             continue;
         }
 
@@ -781,7 +773,9 @@ fn compute_blank_line_positions(
 
         if blank_before && blank_after {
             // Both: add blank lines before AND after comments
-            result.push(BlankLinePosition::BeforeItem { first_code_line: first_code_line.clone() });
+            result.push(BlankLinePosition::BeforeItem {
+                first_code_line: first_code_line.clone(),
+            });
             result.push(BlankLinePosition::BeforeCode { first_code_line });
         } else if blank_after {
             result.push(BlankLinePosition::BeforeCode { first_code_line });

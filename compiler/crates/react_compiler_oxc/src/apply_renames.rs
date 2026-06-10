@@ -15,8 +15,8 @@ use std::collections::HashMap;
 
 use oxc_allocator::FromIn;
 use oxc_ast::ast::*;
-use oxc_ast_visit::walk_mut;
 use oxc_ast_visit::VisitMut;
+use oxc_ast_visit::walk_mut;
 use oxc_span::Atom;
 use react_compiler::entrypoint::compile_result::BindingRenameInfo;
 use react_compiler_ast::scope::BindingId;

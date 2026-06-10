@@ -163,11 +163,11 @@ impl<'a> ReverseCtx<'a> {
     }
 
     fn convert_directive(&self, d: &Directive) -> oxc::Directive<'a> {
-        let expression = self
-            .builder
-            .string_literal(SPAN, self.atom(&d.value.value), None);
+        let expression =
+            self.builder
+                .string_literal(SPAN, self.atom(d.value.value.as_str_unwrap()), None);
         self.builder
-            .directive(SPAN, expression, self.atom(&d.value.value))
+            .directive(SPAN, expression, self.atom(d.value.value.as_str_unwrap()))
     }
 
     // ===== Statements =====
@@ -498,10 +498,11 @@ impl<'a> ReverseCtx<'a> {
             Expression::Identifier(id) => self
                 .builder
                 .expression_identifier(SPAN, self.atom(&id.name)),
-            Expression::StringLiteral(lit) => {
-                self.builder
-                    .expression_string_literal(SPAN, self.atom(&lit.value), None)
-            }
+            Expression::StringLiteral(lit) => self.builder.expression_string_literal(
+                SPAN,
+                self.atom(lit.value.as_str_unwrap()),
+                None,
+            ),
             Expression::NumericLiteral(lit) => self.builder.expression_numeric_literal(
                 SPAN,
                 lit.value,
@@ -887,7 +888,9 @@ impl<'a> ReverseCtx<'a> {
                 .builder
                 .property_key_static_identifier(SPAN, self.atom(&id.name)),
             Expression::StringLiteral(s) => {
-                let lit = self.builder.string_literal(SPAN, self.atom(&s.value), None);
+                let lit =
+                    self.builder
+                        .string_literal(SPAN, self.atom(s.value.as_str_unwrap()), None);
                 oxc::PropertyKey::StringLiteral(self.builder.alloc(lit))
             }
             Expression::NumericLiteral(n) => {
@@ -908,8 +911,12 @@ impl<'a> ReverseCtx<'a> {
         tl: &react_compiler_ast::expressions::TemplateLiteral,
     ) -> oxc::TemplateLiteral<'a> {
         let quasis = self.builder.vec_from_iter(tl.quasis.iter().map(|q| {
-            let raw = self.atom(&q.value.raw);
-            let cooked = q.value.cooked.as_ref().map(|c| self.atom(c));
+            let raw = self.atom(q.value.raw.as_str_unwrap());
+            let cooked = q
+                .value
+                .cooked
+                .as_ref()
+                .map(|c| self.atom(c.as_str_unwrap()));
             let value = oxc::TemplateElementValue { raw, cooked };
             self.builder.template_element(SPAN, value, q.tail, false)
         }));
@@ -1519,10 +1526,11 @@ impl<'a> ReverseCtx<'a> {
 
     fn convert_jsx_attribute_value(&self, value: &JSXAttributeValue) -> oxc::JSXAttributeValue<'a> {
         match value {
-            JSXAttributeValue::StringLiteral(s) => {
-                self.builder
-                    .jsx_attribute_value_string_literal(SPAN, self.atom(&s.value), None)
-            }
+            JSXAttributeValue::StringLiteral(s) => self.builder.jsx_attribute_value_string_literal(
+                SPAN,
+                self.atom(s.value.as_str_unwrap()),
+                None,
+            ),
             JSXAttributeValue::JSXExpressionContainer(ec) => {
                 let expr = self.convert_jsx_expression_container_expr(&ec.expression);
                 self.builder
@@ -1563,7 +1571,10 @@ impl<'a> ReverseCtx<'a> {
 
     fn convert_jsx_child(&self, child: &JSXChild) -> oxc::JSXChild<'a> {
         match child {
-            JSXChild::JSXText(t) => self.builder.jsx_child_text(SPAN, self.atom(&t.value), None),
+            JSXChild::JSXText(t) => {
+                self.builder
+                    .jsx_child_text(SPAN, self.atom(t.value.as_str_unwrap()), None)
+            }
             JSXChild::JSXElement(el) => {
                 let element = self.convert_jsx_element(el);
                 let opening = element.opening_element;
@@ -1607,9 +1618,9 @@ impl<'a> ReverseCtx<'a> {
                 .iter()
                 .map(|s| self.convert_import_specifier(s)),
         );
-        let source = self
-            .builder
-            .string_literal(SPAN, self.atom(&decl.source.value), None);
+        let source =
+            self.builder
+                .string_literal(SPAN, self.atom(decl.source.value.as_str_unwrap()), None);
         let import_kind = match decl.import_kind.as_ref() {
             Some(ImportKind::Type) => oxc::ImportOrExportKind::Type,
             _ => oxc::ImportOrExportKind::Value,
@@ -1673,7 +1684,7 @@ impl<'a> ReverseCtx<'a> {
             react_compiler_ast::declarations::ModuleExportName::StringLiteral(s) => {
                 oxc::ModuleExportName::StringLiteral(self.builder.string_literal(
                     SPAN,
-                    self.atom(&s.value),
+                    self.atom(s.value.as_str_unwrap()),
                     None,
                 ))
             }
@@ -1693,10 +1704,10 @@ impl<'a> ReverseCtx<'a> {
                 .iter()
                 .map(|s| self.convert_export_specifier(s)),
         );
-        let source = decl
-            .source
-            .as_ref()
-            .map(|s| self.builder.string_literal(SPAN, self.atom(&s.value), None));
+        let source = decl.source.as_ref().map(|s| {
+            self.builder
+                .string_literal(SPAN, self.atom(s.value.as_str_unwrap()), None)
+        });
         let export_kind = match decl.export_kind.as_ref() {
             Some(ExportKind::Type) => oxc::ImportOrExportKind::Type,
             _ => oxc::ImportOrExportKind::Value,
@@ -1816,9 +1827,9 @@ impl<'a> ReverseCtx<'a> {
         &self,
         decl: &ExportAllDeclaration,
     ) -> oxc::ExportAllDeclaration<'a> {
-        let source = self
-            .builder
-            .string_literal(SPAN, self.atom(&decl.source.value), None);
+        let source =
+            self.builder
+                .string_literal(SPAN, self.atom(decl.source.value.as_str_unwrap()), None);
         let export_kind = match decl.export_kind.as_ref() {
             Some(ExportKind::Type) => oxc::ImportOrExportKind::Type,
             _ => oxc::ImportOrExportKind::Value,

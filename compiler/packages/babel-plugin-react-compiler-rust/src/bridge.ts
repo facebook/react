@@ -104,10 +104,7 @@ function chooseSurrogateMarker(json: string): string {
   return marker;
 }
 
-function sanitizeJsonSurrogates(
-  json: string,
-  marker: string,
-): string {
+function sanitizeJsonSurrogates(json: string, marker: string): string {
   return json
     .replace(
       /(?<!\\)\\u([dD][89aAbB][0-9a-fA-F]{2})(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
@@ -186,7 +183,12 @@ export function compileWithRustProfiled(
   const t2 = performance.now();
   const optionsWithCode =
     code != null
-      ? {...options, __sourceCode: code, __profiling: true, __surrogateMarker: marker}
+      ? {
+          ...options,
+          __sourceCode: code,
+          __profiling: true,
+          __surrogateMarker: marker,
+        }
       : {...options, __profiling: true, __surrogateMarker: marker};
   const optionsJson = JSON.stringify(optionsWithCode);
   const t3 = performance.now();

@@ -33,9 +33,7 @@ pub fn compile_result_to_diagnostics(result: &CompileResult) -> Vec<DiagnosticMe
                 }
             }
         }
-        CompileResult::Error {
-            error, events, ..
-        } => {
+        CompileResult::Error { error, events, .. } => {
             // Add the main error
             diagnostics.push(error_info_to_diagnostic(error));
 
@@ -65,7 +63,10 @@ fn error_info_to_diagnostic(error: &CompilerErrorInfo) -> DiagnosticMessage {
     }
 }
 
-fn error_detail_to_diagnostic(detail: &CompilerErrorDetailInfo, is_error: bool) -> DiagnosticMessage {
+fn error_detail_to_diagnostic(
+    detail: &CompilerErrorDetailInfo,
+    is_error: bool,
+) -> DiagnosticMessage {
     let message = if let Some(description) = &detail.description {
         format!(
             "[ReactCompiler] {}: {}. {}",

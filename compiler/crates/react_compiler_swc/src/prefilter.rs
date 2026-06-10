@@ -4,8 +4,8 @@
 // LICENSE file in the root directory of this source tree.
 
 use swc_ecma_ast::{
-    ArrowExpr, AssignExpr, AssignTarget, Callee, Class, Expr, FnDecl, FnExpr, MemberProp,
-    Module, Pat, SimpleAssignTarget, VarDeclarator, CallExpr,
+    ArrowExpr, AssignExpr, AssignTarget, CallExpr, Callee, Class, Expr, FnDecl, FnExpr, MemberProp,
+    Module, Pat, SimpleAssignTarget, VarDeclarator,
 };
 use swc_ecma_visit::Visit;
 
@@ -162,9 +162,7 @@ fn is_memo_or_forward_ref_call(call: &CallExpr) -> bool {
     match &call.callee {
         Callee::Expr(expr) => match &**expr {
             // Direct calls: memo(...) or forwardRef(...)
-            Expr::Ident(ident) => {
-                ident.sym == "memo" || ident.sym == "forwardRef"
-            }
+            Expr::Ident(ident) => ident.sym == "memo" || ident.sym == "forwardRef",
             // Member expression: React.memo(...) or React.forwardRef(...)
             Expr::Member(member) => {
                 if let Expr::Ident(obj) = &*member.obj {

@@ -3,9 +3,7 @@
 // This source code is licensed under the MIT license found in the
 // LICENSE file in the root directory of this source tree.
 
-use oxc_ast::ast::{
-    AssignmentTarget, Function, Program, VariableDeclarator,
-};
+use oxc_ast::ast::{AssignmentTarget, Function, Program, VariableDeclarator};
 use oxc_ast_visit::Visit;
 
 /// Checks if a program contains React-like functions (components or hooks).
@@ -37,9 +35,7 @@ impl<'a> Visit<'a> for ReactLikeVisitor {
 
         // Extract name from the binding identifier
         let name = match &decl.id {
-            oxc_ast::ast::BindingPattern::BindingIdentifier(ident) => {
-                Some(ident.name.to_string())
-            }
+            oxc_ast::ast::BindingPattern::BindingIdentifier(ident) => Some(ident.name.to_string()),
             _ => None,
         };
 
@@ -54,18 +50,13 @@ impl<'a> Visit<'a> for ReactLikeVisitor {
         self.current_name = prev_name;
     }
 
-    fn visit_assignment_expression(
-        &mut self,
-        expr: &oxc_ast::ast::AssignmentExpression<'a>,
-    ) {
+    fn visit_assignment_expression(&mut self, expr: &oxc_ast::ast::AssignmentExpression<'a>) {
         if self.found {
             return;
         }
 
         let name = match &expr.left {
-            AssignmentTarget::AssignmentTargetIdentifier(ident) => {
-                Some(ident.name.to_string())
-            }
+            AssignmentTarget::AssignmentTargetIdentifier(ident) => Some(ident.name.to_string()),
             _ => None,
         };
 

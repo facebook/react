@@ -45,7 +45,9 @@ pub fn apply_renames(module: &mut Module, renames: &[BindingRenameInfo]) {
         .reference_to_binding
         .iter()
         .filter_map(|(&position, binding_id)| {
-            renamed_bindings.get(binding_id).map(|renamed| (position, renamed.clone()))
+            renamed_bindings
+                .get(binding_id)
+                .map(|renamed| (position, renamed.clone()))
         })
         .collect();
 

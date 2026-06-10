@@ -361,9 +361,7 @@ impl Visit for ScopeCollector {
         let hoist_scope = self.enclosing_function_scope();
         let name = fn_decl.ident.sym.to_string();
         let start = fn_decl.ident.span.lo.0;
-        if let Some(&existing_id) =
-            self.scopes[hoist_scope.0 as usize].bindings.get(&name)
-        {
+        if let Some(&existing_id) = self.scopes[hoist_scope.0 as usize].bindings.get(&name) {
             self.redeclaration_refs.insert(start, existing_id);
         } else {
             self.add_binding(

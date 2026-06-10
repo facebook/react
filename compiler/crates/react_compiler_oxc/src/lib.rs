@@ -68,9 +68,9 @@ pub fn transform(
             renames,
             ..
         } => (ast, events, renames),
-        react_compiler::entrypoint::compile_result::CompileResult::Error {
-            events, ..
-        } => (None, events, Vec::new()),
+        react_compiler::entrypoint::compile_result::CompileResult::Error { events, .. } => {
+            (None, events, Vec::new())
+        }
     };
 
     // Build the rename plan from the original scope info + compiler renames.
@@ -146,8 +146,7 @@ pub fn emit(
         let comment_allocator = oxc_allocator::Allocator::default();
         // Parse as TSX to handle maximum syntax variety
         let source_type = oxc_span::SourceType::tsx();
-        let parsed =
-            oxc_parser::Parser::new(&comment_allocator, source, source_type).parse();
+        let parsed = oxc_parser::Parser::new(&comment_allocator, source, source_type).parse();
 
         // Collect the span starts of top-level statements in the compiled
         // program. Only comments attached to these positions should be
@@ -164,10 +163,8 @@ pub fn emit(
         }
 
         // Copy only comments attached to top-level statements.
-        let mut comments = oxc_allocator::Vec::with_capacity_in(
-            parsed.program.comments.len(),
-            allocator,
-        );
+        let mut comments =
+            oxc_allocator::Vec::with_capacity_in(parsed.program.comments.len(), allocator);
         for comment in &parsed.program.comments {
             if top_level_starts.contains(&comment.attached_to) {
                 comments.push(*comment);
@@ -178,8 +175,7 @@ pub fn emit(
         // Set the source_text so the codegen can extract comment content
         // from the original source spans.
         // We copy the source into the allocator to guarantee the lifetime.
-        let source_in_alloc =
-            oxc_allocator::StringBuilder::from_str_in(source, allocator);
+        let source_in_alloc = oxc_allocator::StringBuilder::from_str_in(source, allocator);
         program.source_text = source_in_alloc.into_str();
     }
 
