@@ -37,7 +37,7 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v4
-      - name: Restore cached node_modules
+      - name: Cache node_modules
         uses: actions/cache@v4
         id: node_modules
         with:
