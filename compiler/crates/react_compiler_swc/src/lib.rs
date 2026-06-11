@@ -102,9 +102,8 @@ pub fn transform(
         }
     };
 
-    let conversion_result = program_ast.map(|file| {
-        convert_program_to_swc_with_source(&file, Some(source_text))
-    });
+    let conversion_result =
+        program_ast.map(|file| convert_program_to_swc_with_source(&file, Some(source_text)));
 
     let (mut swc_module, mut comments) = match conversion_result {
         Some(result) => (Some(result.module), Some(result.comments)),

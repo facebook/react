@@ -7,8 +7,8 @@ use react_compiler_ast::File;
 use react_compiler_ast::Program;
 use react_compiler_ast::SourceType;
 use react_compiler_ast::common::BaseNode;
-use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::Position;
+use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::SourceLocation;
 use react_compiler_ast::declarations::*;
 use react_compiler_ast::expressions::*;
@@ -821,25 +821,28 @@ impl<'a> ConvertCtx<'a> {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
                 type_annotation: RawNode::from_value(
-                    &self.convert_ts_type_to_json(&e.type_ann)
+                    &self
+                        .convert_ts_type_to_json(&e.type_ann)
                         .unwrap_or(serde_json::Value::Null),
-                    ),
+                ),
             }),
             swc::Expr::TsSatisfies(e) => Expression::TSSatisfiesExpression(TSSatisfiesExpression {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
                 type_annotation: RawNode::from_value(
-                    &self.convert_ts_type_to_json(&e.type_ann)
+                    &self
+                        .convert_ts_type_to_json(&e.type_ann)
                         .unwrap_or(serde_json::Value::Null),
-                    ),
+                ),
             }),
             swc::Expr::TsTypeAssertion(e) => Expression::TSTypeAssertion(TSTypeAssertion {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
                 type_annotation: RawNode::from_value(
-                    &self.convert_ts_type_to_json(&e.type_ann)
+                    &self
+                        .convert_ts_type_to_json(&e.type_ann)
                         .unwrap_or(serde_json::Value::Null),
-                    ),
+                ),
             }),
             swc::Expr::TsNonNull(e) => Expression::TSNonNullExpression(TSNonNullExpression {
                 base: self.make_base_node(e.span),
@@ -1068,14 +1071,8 @@ impl<'a> ConvertCtx<'a> {
             generator: f.is_generator,
             is_async: f.is_async,
             declare: if func.declare { Some(true) } else { None },
-            return_type: f
-                .return_type
-                .as_ref()
-                .map(|_| RawNode::null()),
-            type_parameters: f
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            return_type: f.return_type.as_ref().map(|_| RawNode::null()),
+            type_parameters: f.type_params.as_ref().map(|_| RawNode::null()),
             predicate: None,
             component_declaration: false,
             hook_declaration: false,
@@ -1103,14 +1100,8 @@ impl<'a> ConvertCtx<'a> {
             body,
             generator: f.is_generator,
             is_async: f.is_async,
-            return_type: f
-                .return_type
-                .as_ref()
-                .map(|_| RawNode::null()),
-            type_parameters: f
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            return_type: f.return_type.as_ref().map(|_| RawNode::null()),
+            type_parameters: f.type_params.as_ref().map(|_| RawNode::null()),
             predicate: None,
         }
     }
@@ -1133,14 +1124,8 @@ impl<'a> ConvertCtx<'a> {
             generator: arrow.is_generator,
             is_async: arrow.is_async,
             expression: Some(is_expression),
-            return_type: arrow
-                .return_type
-                .as_ref()
-                .map(|_| RawNode::null()),
-            type_parameters: arrow
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            return_type: arrow.return_type.as_ref().map(|_| RawNode::null()),
+            type_parameters: arrow.type_params.as_ref().map(|_| RawNode::null()),
             predicate: None,
         }
     }
@@ -1249,10 +1234,7 @@ impl<'a> ConvertCtx<'a> {
         ObjectPattern {
             base: self.make_base_node(obj.span),
             properties,
-            type_annotation: obj
-                .type_ann
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_annotation: obj.type_ann.as_ref().map(|_| RawNode::null()),
             decorators: None,
         }
     }
@@ -1265,10 +1247,7 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|e| e.as_ref().map(|p| self.convert_pat(p)))
                 .collect(),
-            type_annotation: arr
-                .type_ann
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_annotation: arr.type_ann.as_ref().map(|_| RawNode::null()),
             decorators: None,
         }
     }
@@ -1423,10 +1402,7 @@ impl<'a> ConvertCtx<'a> {
                 generator: false,
                 is_async: false,
                 decorators: None,
-                return_type: g
-                    .type_ann
-                    .as_ref()
-                    .map(|_| RawNode::null()),
+                return_type: g.type_ann.as_ref().map(|_| RawNode::null()),
                 type_parameters: None,
                 predicate: None,
             }),
@@ -1475,16 +1451,8 @@ impl<'a> ConvertCtx<'a> {
                 generator: m.function.is_generator,
                 is_async: m.function.is_async,
                 decorators: None,
-                return_type: m
-                    .function
-                    .return_type
-                    .as_ref()
-                    .map(|_| RawNode::null()),
-                type_parameters: m
-                    .function
-                    .type_params
-                    .as_ref()
-                    .map(|_| RawNode::null()),
+                return_type: m.function.return_type.as_ref().map(|_| RawNode::null()),
+                type_parameters: m.function.type_params.as_ref().map(|_| RawNode::null()),
                 predicate: None,
             }),
             swc::Prop::Assign(a) => {
@@ -1561,10 +1529,7 @@ impl<'a> ConvertCtx<'a> {
             declare: if class.declare { Some(true) } else { None },
             implements: None,
             super_type_parameters: None,
-            type_parameters: c
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_parameters: c.type_params.as_ref().map(|_| RawNode::null()),
             mixins: None,
         }
     }
@@ -1588,10 +1553,7 @@ impl<'a> ConvertCtx<'a> {
             decorators: None,
             implements: None,
             super_type_parameters: None,
-            type_parameters: c
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_parameters: c.type_params.as_ref().map(|_| RawNode::null()),
         }
     }
 
@@ -1629,10 +1591,7 @@ impl<'a> ConvertCtx<'a> {
                 .map(|a| self.convert_jsx_attr_or_spread(a))
                 .collect(),
             self_closing,
-            type_parameters: el
-                .type_args
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_parameters: el.type_args.as_ref().map(|_| RawNode::null()),
         }
     }
 
@@ -1983,14 +1942,8 @@ impl<'a> ConvertCtx<'a> {
                     generator: func.is_generator,
                     is_async: func.is_async,
                     declare: None,
-                    return_type: func
-                        .return_type
-                        .as_ref()
-                        .map(|_| RawNode::null()),
-                    type_parameters: func
-                        .type_params
-                        .as_ref()
-                        .map(|_| RawNode::null()),
+                    return_type: func.return_type.as_ref().map(|_| RawNode::null()),
+                    type_parameters: func.type_params.as_ref().map(|_| RawNode::null()),
                     predicate: None,
                     component_declaration: false,
                     hook_declaration: false,
@@ -2017,10 +1970,7 @@ impl<'a> ConvertCtx<'a> {
                     declare: None,
                     implements: None,
                     super_type_parameters: None,
-                    type_parameters: class
-                        .type_params
-                        .as_ref()
-                        .map(|_| RawNode::null()),
+                    type_parameters: class.type_params.as_ref().map(|_| RawNode::null()),
                     mixins: None,
                 })
             }
@@ -2143,10 +2093,7 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(d.span),
             id: self.convert_ident_to_identifier(&d.id),
             type_annotation: RawNode::null(),
-            type_parameters: d
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_parameters: d.type_params.as_ref().map(|_| RawNode::null()),
             declare: if d.declare { Some(true) } else { None },
         }
     }
@@ -2156,10 +2103,7 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(d.span),
             id: self.convert_ident_to_identifier(&d.id),
             body: RawNode::null(),
-            type_parameters: d
-                .type_params
-                .as_ref()
-                .map(|_| RawNode::null()),
+            type_parameters: d.type_params.as_ref().map(|_| RawNode::null()),
             extends: if d.extends.is_empty() {
                 None
             } else {

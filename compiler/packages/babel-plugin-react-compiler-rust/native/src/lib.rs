@@ -55,10 +55,11 @@ fn compile_inner(
 
     // Extract the surrogate marker from options before deserializing AST.
     // JsString's custom Deserialize reads this via a thread-local.
+    // null = no surrogates in this compilation (skip all string scanning).
+    // string = marker prefix to decode surrogates from.
     if let Ok(opts_peek) = serde_json::from_str::<serde_json::Value>(&options_json) {
-        if let Some(marker) = opts_peek.get("__surrogateMarker").and_then(|v| v.as_str()) {
-            react_compiler_ast::js_string::set_surrogate_marker(marker);
-        }
+        let marker = opts_peek.get("__surrogateMarker").and_then(|v| v.as_str());
+        react_compiler_ast::js_string::set_surrogate_marker(marker);
     }
 
     let deser_start = Instant::now();

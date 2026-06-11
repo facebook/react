@@ -104,16 +104,27 @@ function chooseSurrogateMarker(json: string): string {
   return marker;
 }
 
-function sanitizeJsonSurrogates(json: string, marker: string): string {
-  return json
+function sanitizeJsonSurrogates(
+  json: string,
+  marker: string,
+): {json: string; hadSurrogates: boolean} {
+  let hadSurrogates = false;
+  const result = json
     .replace(
       /(?<!\\)\\u([dD][89aAbB][0-9a-fA-F]{2})(?!\\u[dD][c-fC-F][0-9a-fA-F]{2})/g,
-      (_, hex) => `${marker}${hex.toUpperCase()}__`,
+      (_, hex) => {
+        hadSurrogates = true;
+        return `${marker}${hex.toUpperCase()}__`;
+      },
     )
     .replace(
       /(?<!\\u[dD][89aAbB][0-9a-fA-F]{2})(?<!\\)\\u([dD][c-fC-F][0-9a-fA-F]{2})/g,
-      (_, hex) => `${marker}${hex.toUpperCase()}__`,
+      (_, hex) => {
+        hadSurrogates = true;
+        return `${marker}${hex.toUpperCase()}__`;
+      },
     );
+  return {json: result, hadSurrogates};
 }
 
 function restoreJsonSurrogates(json: string, marker: string): string {
@@ -132,19 +143,27 @@ export function compileWithRust(
 
   const astJson = JSON.stringify(ast);
   const marker = chooseSurrogateMarker(astJson);
-  const sanitizedAst = sanitizeJsonSurrogates(astJson, marker);
+  const {json: sanitizedAst, hadSurrogates} = sanitizeJsonSurrogates(
+    astJson,
+    marker,
+  );
 
+  const surrogateMarker = hadSurrogates ? marker : null;
   const optionsWithCode =
     code != null
-      ? {...options, __sourceCode: code, __surrogateMarker: marker}
-      : {...options, __surrogateMarker: marker};
+      ? {...options, __sourceCode: code, __surrogateMarker: surrogateMarker}
+      : {...options, __surrogateMarker: surrogateMarker};
   const resultJson = compile(
     sanitizedAst,
     JSON.stringify(scopeInfo),
     JSON.stringify(optionsWithCode),
   );
 
-  return JSON.parse(restoreJsonSurrogates(resultJson, marker)) as CompileResult;
+  return JSON.parse(
+    surrogateMarker != null
+      ? restoreJsonSurrogates(resultJson, surrogateMarker)
+      : resultJson,
+  ) as CompileResult;
 }
 
 export interface TimingEntry {
@@ -177,7 +196,11 @@ export function compileWithRustProfiled(
   const t0 = performance.now();
   const astJsonRaw = JSON.stringify(ast);
   const marker = chooseSurrogateMarker(astJsonRaw);
-  const astJson = sanitizeJsonSurrogates(astJsonRaw, marker);
+  const {json: astJson, hadSurrogates} = sanitizeJsonSurrogates(
+    astJsonRaw,
+    marker,
+  );
+  const surrogateMarker = hadSurrogates ? marker : null;
   const t1 = performance.now();
   const scopeJson = JSON.stringify(scopeInfo);
   const t2 = performance.now();
@@ -187,9 +210,9 @@ export function compileWithRustProfiled(
           ...options,
           __sourceCode: code,
           __profiling: true,
-          __surrogateMarker: marker,
+          __surrogateMarker: surrogateMarker,
         }
-      : {...options, __profiling: true, __surrogateMarker: marker};
+      : {...options, __profiling: true, __surrogateMarker: surrogateMarker};
   const optionsJson = JSON.stringify(optionsWithCode);
   const t3 = performance.now();
 
@@ -197,7 +220,9 @@ export function compileWithRustProfiled(
   const t4 = performance.now();
 
   const result = JSON.parse(
-    restoreJsonSurrogates(resultJson, marker),
+    surrogateMarker != null
+      ? restoreJsonSurrogates(resultJson, surrogateMarker)
+      : resultJson,
   ) as CompileResult & {
     timing?: Array<TimingEntry>;
   };

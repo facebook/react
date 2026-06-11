@@ -15,21 +15,23 @@ use serde::ser::Serializer;
 
 thread_local! {
     /// The surrogate marker prefix chosen by bridge.ts for this compilation.
-    /// Default: `__SURROGATE_`. bridge.ts may prepend `__ESC_` if the source
-    /// contains the default marker text, making it e.g. `__ESC___SURROGATE_`.
-    static SURROGATE_MARKER: RefCell<String> = RefCell::new("__SURROGATE_".to_string());
+    /// `None` means no surrogates were found in the input — skip all scanning.
+    /// `Some("__SURROGATE_")` is the default; bridge.ts may prepend `__ESC_`
+    /// if the source contains the default marker text.
+    static SURROGATE_MARKER: RefCell<Option<String>> = const { RefCell::new(None) };
 }
 
 /// Set the surrogate marker for the current thread/compilation.
-/// Called from the NAPI entry point with the marker chosen by bridge.ts.
-pub fn set_surrogate_marker(marker: &str) {
+/// Pass `None` when no surrogates were encoded (skips all string scanning).
+/// Pass `Some(marker)` with the prefix chosen by bridge.ts.
+pub fn set_surrogate_marker(marker: Option<&str>) {
     SURROGATE_MARKER.with(|m| {
-        *m.borrow_mut() = marker.to_string();
+        *m.borrow_mut() = marker.map(|s| s.to_string());
     });
 }
 
-/// Get the current surrogate marker prefix.
-fn get_marker_prefix() -> String {
+/// Get the current surrogate marker prefix. `None` = no surrogates, skip scanning.
+fn get_marker_prefix() -> Option<String> {
     SURROGATE_MARKER.with(|m| m.borrow().clone())
 }
 
@@ -124,7 +126,10 @@ fn utf8_seq_len(first_byte: u8) -> usize {
 /// Uses the dynamic marker prefix from the thread-local (set by bridge.ts).
 /// Returns `None` if no markers are found (caller should use the original String).
 fn decode_markers(s: &str) -> Option<Vec<u8>> {
-    let prefix = get_marker_prefix();
+    let prefix = match get_marker_prefix() {
+        Some(p) => p,
+        None => return None, // No surrogates in this compilation — skip scanning
+    };
     if !s.contains(&prefix) {
         return None;
     }
@@ -164,7 +169,7 @@ fn decode_markers(s: &str) -> Option<Vec<u8>> {
 /// Encode WTF-8 bytes back to a String with surrogate markers.
 /// Uses the dynamic marker prefix from the thread-local.
 fn encode_markers(bytes: &[u8]) -> String {
-    let prefix = get_marker_prefix();
+    let prefix = get_marker_prefix().unwrap_or_else(|| "__SURROGATE_".to_string());
     let mut result = String::with_capacity(bytes.len());
     let mut i = 0;
 
@@ -485,6 +490,11 @@ impl<'de> Deserialize<'de> for JsString {
 mod tests {
     use super::*;
 
+    /// Enable the default surrogate marker for tests that use __SURROGATE_ markers.
+    fn enable_marker() {
+        set_surrogate_marker(Some("__SURROGATE_"));
+    }
+
     #[test]
     fn utf8_fast_path() {
         let s = JsString::from("hello");
@@ -513,6 +523,7 @@ mod tests {
     #[test]
     fn serde_with_surrogate_marker() {
         let json = r#""before__SURROGATE_D83E__after""#;
+        enable_marker();
         let s: JsString = serde_json::from_str(json).unwrap();
         // Should be in Wtf8 variant
         assert!(s.as_str().is_none());
@@ -527,6 +538,7 @@ mod tests {
     #[test]
     fn serde_lone_high_surrogate() {
         let json = r#""__SURROGATE_D83E__""#;
+        enable_marker();
         let s: JsString = serde_json::from_str(json).unwrap();
         assert!(s.as_str().is_none());
         assert_eq!(s.utf16_len(), 1);
@@ -537,6 +549,7 @@ mod tests {
     #[test]
     fn serde_lone_low_surrogate() {
         let json = r#""__SURROGATE_DD21__""#;
+        enable_marker();
         let s: JsString = serde_json::from_str(json).unwrap();
         assert!(s.as_str().is_none());
         assert_eq!(s.utf16_len(), 1);
@@ -547,6 +560,7 @@ mod tests {
     #[test]
     fn serde_two_surrogates() {
         let json = r#""__SURROGATE_D83E____SURROGATE_DD21__""#;
+        enable_marker();
         let s: JsString = serde_json::from_str(json).unwrap();
         assert_eq!(s.utf16_len(), 2);
         let out = serde_json::to_string(&s).unwrap();
@@ -556,6 +570,7 @@ mod tests {
     #[test]
     fn sentinel_collision_resistance() {
         // Source code that literally contains the marker text
+        enable_marker();
         let json = r#""__SURROGATE_D83E__""#;
         let s: JsString = serde_json::from_str(json).unwrap();
         // This IS a real surrogate marker, so it should be decoded
@@ -596,6 +611,7 @@ mod tests {
     #[test]
     fn concat_utf8_wtf8() {
         let mut a = JsString::from("prefix");
+        enable_marker();
         let b: JsString = serde_json::from_str(r#""__SURROGATE_D83E__""#).unwrap();
         a.push_js_string(&b);
         assert!(a.as_str().is_none());
@@ -605,6 +621,7 @@ mod tests {
 
     #[test]
     fn concat_wtf8_utf8() {
+        enable_marker();
         let mut a: JsString = serde_json::from_str(r#""__SURROGATE_D83E__""#).unwrap();
         let b = JsString::from("suffix");
         a.push_js_string(&b);
@@ -634,6 +651,7 @@ mod tests {
 
     #[test]
     fn to_utf8_lossy_with_surrogates() {
+        enable_marker();
         let s: JsString = serde_json::from_str(r#""a__SURROGATE_D83E__b""#).unwrap();
         assert_eq!(s.to_utf8_lossy(), "a\u{FFFD}b");
     }

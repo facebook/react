@@ -1,7 +1,7 @@
+use react_compiler_ast::File;
 use react_compiler_ast::expressions::Identifier as AstIdentifier;
 use react_compiler_ast::patterns::PatternLike;
 use react_compiler_ast::statements::BlockStatement;
-use react_compiler_ast::File;
 use react_compiler_diagnostics::SourceLocation;
 use react_compiler_hir::ReactFunctionType;
 use serde::Serialize;

@@ -10,10 +10,10 @@ use react_compiler_ast::File;
 use react_compiler_ast::Program;
 use react_compiler_ast::SourceType;
 use react_compiler_ast::common::BaseNode;
-use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::Comment;
 use react_compiler_ast::common::CommentData;
 use react_compiler_ast::common::Position;
+use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::SourceLocation;
 use react_compiler_ast::declarations::*;
 use react_compiler_ast::expressions::*;
@@ -593,14 +593,8 @@ impl<'a> ConvertCtx<'a> {
             generator: func.generator,
             is_async: func.r#async,
             declare: if func.declare { Some(true) } else { None },
-            return_type: func
-                .return_type
-                .as_ref()
-                .map(|_t| RawNode::null()),
-            type_parameters: func
-                .type_parameters
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            return_type: func.return_type.as_ref().map(|_t| RawNode::null()),
+            type_parameters: func.type_parameters.as_ref().map(|_t| RawNode::null()),
             predicate: None,
             component_declaration: false,
             hook_declaration: false,
@@ -630,35 +624,20 @@ impl<'a> ConvertCtx<'a> {
             decorators: if class.decorators.is_empty() {
                 None
             } else {
-                Some(
-                    class
-                        .decorators
-                        .iter()
-                        .map(|_d| RawNode::null())
-                        .collect(),
-                )
+                Some(class.decorators.iter().map(|_d| RawNode::null()).collect())
             },
             is_abstract: if class.r#abstract { Some(true) } else { None },
             declare: if class.declare { Some(true) } else { None },
             implements: if class.implements.is_empty() {
                 None
             } else {
-                Some(
-                    class
-                        .implements
-                        .iter()
-                        .map(|_i| RawNode::null())
-                        .collect(),
-                )
+                Some(class.implements.iter().map(|_i| RawNode::null()).collect())
             },
             super_type_parameters: class
                 .super_type_arguments
                 .as_ref()
                 .map(|_t| RawNode::null()),
-            type_parameters: class
-                .type_parameters
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: class.type_parameters.as_ref().map(|_t| RawNode::null()),
             mixins: None,
         }
     }
@@ -961,20 +940,11 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(interface.span),
             id: self.convert_binding_identifier(&interface.id),
             body: RawNode::null(),
-            type_parameters: interface
-                .type_parameters
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: interface.type_parameters.as_ref().map(|_t| RawNode::null()),
             extends: if interface.extends.is_empty() {
                 None
             } else {
-                Some(
-                    interface
-                        .extends
-                        .iter()
-                        .map(|_e| RawNode::null())
-                        .collect(),
-                )
+                Some(interface.extends.iter().map(|_e| RawNode::null()).collect())
             },
             declare: if interface.declare { Some(true) } else { None },
         }
@@ -1270,14 +1240,8 @@ impl<'a> ConvertCtx<'a> {
             generator: false,
             is_async: arrow.r#async,
             expression: if arrow.expression { Some(true) } else { None },
-            return_type: arrow
-                .return_type
-                .as_ref()
-                .map(|_t| RawNode::null()),
-            type_parameters: arrow
-                .type_parameters
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            return_type: arrow.return_type.as_ref().map(|_t| RawNode::null()),
+            type_parameters: arrow.type_parameters.as_ref().map(|_t| RawNode::null()),
             predicate: None,
         }
     }
@@ -1610,10 +1574,7 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|a| self.convert_argument(a))
                 .collect(),
-            type_parameters: call
-                .type_arguments
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: call.type_arguments.as_ref().map(|_t| RawNode::null()),
             type_arguments: None,
             optional: if call.optional { Some(true) } else { None },
         }
@@ -1642,10 +1603,7 @@ impl<'a> ConvertCtx<'a> {
                         .map(|a| self.convert_argument(a))
                         .collect(),
                     optional: c.optional,
-                    type_parameters: c
-                        .type_arguments
-                        .as_ref()
-                        .map(|_t| RawNode::null()),
+                    type_parameters: c.type_arguments.as_ref().map(|_t| RawNode::null()),
                     type_arguments: None,
                 })
             }
@@ -1731,10 +1689,7 @@ impl<'a> ConvertCtx<'a> {
                         .map(|a| self.convert_argument(a))
                         .collect(),
                     optional: true,
-                    type_parameters: c
-                        .type_arguments
-                        .as_ref()
-                        .map(|_t| RawNode::null()),
+                    type_parameters: c.type_arguments.as_ref().map(|_t| RawNode::null()),
                     type_arguments: None,
                 })
             }
@@ -1773,10 +1728,7 @@ impl<'a> ConvertCtx<'a> {
                         .map(|a| self.convert_argument(a))
                         .collect(),
                     optional: false,
-                    type_parameters: c
-                        .type_arguments
-                        .as_ref()
-                        .map(|_t| RawNode::null()),
+                    type_parameters: c.type_arguments.as_ref().map(|_t| RawNode::null()),
                     type_arguments: None,
                 })
             }
@@ -1833,33 +1785,18 @@ impl<'a> ConvertCtx<'a> {
             decorators: if class.decorators.is_empty() {
                 None
             } else {
-                Some(
-                    class
-                        .decorators
-                        .iter()
-                        .map(|_d| RawNode::null())
-                        .collect(),
-                )
+                Some(class.decorators.iter().map(|_d| RawNode::null()).collect())
             },
             implements: if class.implements.is_empty() {
                 None
             } else {
-                Some(
-                    class
-                        .implements
-                        .iter()
-                        .map(|_i| RawNode::null())
-                        .collect(),
-                )
+                Some(class.implements.iter().map(|_i| RawNode::null()).collect())
             },
             super_type_parameters: class
                 .super_type_arguments
                 .as_ref()
                 .map(|_t| RawNode::null()),
-            type_parameters: class
-                .type_parameters
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: class.type_parameters.as_ref().map(|_t| RawNode::null()),
         }
     }
 
@@ -1886,14 +1823,8 @@ impl<'a> ConvertCtx<'a> {
             body: self.convert_function_body(func.body.as_ref().unwrap()),
             generator: func.generator,
             is_async: func.r#async,
-            return_type: func
-                .return_type
-                .as_ref()
-                .map(|_t| RawNode::null()),
-            type_parameters: func
-                .type_parameters
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            return_type: func.return_type.as_ref().map(|_t| RawNode::null()),
+            type_parameters: func.type_parameters.as_ref().map(|_t| RawNode::null()),
             predicate: None,
         }
     }
@@ -1924,10 +1855,7 @@ impl<'a> ConvertCtx<'a> {
                 .iter()
                 .map(|a| self.convert_argument(a))
                 .collect(),
-            type_parameters: new
-                .type_arguments
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: new.type_arguments.as_ref().map(|_t| RawNode::null()),
             type_arguments: None,
         }
     }
@@ -1983,14 +1911,8 @@ impl<'a> ConvertCtx<'a> {
                             generator: func.generator,
                             is_async: func.r#async,
                             decorators: None,
-                            return_type: func
-                                .return_type
-                                .as_ref()
-                                .map(|_| RawNode::null()),
-                            type_parameters: func
-                                .type_parameters
-                                .as_ref()
-                                .map(|_| RawNode::null()),
+                            return_type: func.return_type.as_ref().map(|_| RawNode::null()),
+                            type_parameters: func.type_parameters.as_ref().map(|_| RawNode::null()),
                             predicate: None,
                         });
                     }
@@ -2066,10 +1988,7 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(tagged.span),
             tag: Box::new(self.convert_expression(&tagged.tag)),
             quasi: self.convert_template_literal(&tagged.quasi),
-            type_parameters: tagged
-                .type_arguments
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: tagged.type_arguments.as_ref().map(|_t| RawNode::null()),
         }
     }
 
@@ -2281,10 +2200,7 @@ impl<'a> ConvertCtx<'a> {
                 .map(|a| self.convert_jsx_attribute_item(a))
                 .collect(),
             self_closing: false, // Will be set properly at JSXElement level if needed
-            type_parameters: opening
-                .type_arguments
-                .as_ref()
-                .map(|_t| RawNode::null()),
+            type_parameters: opening.type_arguments.as_ref().map(|_t| RawNode::null()),
         }
     }
 
@@ -2623,10 +2539,7 @@ impl<'a> ConvertCtx<'a> {
             result.push(PatternLike::RestElement(RestElement {
                 base: self.make_base_node(rest.rest.span),
                 argument: Box::new(self.convert_binding_pattern(&rest.rest.argument)),
-                type_annotation: rest
-                    .type_annotation
-                    .as_ref()
-                    .map(|_| RawNode::null()),
+                type_annotation: rest.type_annotation.as_ref().map(|_| RawNode::null()),
                 decorators: None,
             }));
         }
