@@ -22,6 +22,7 @@ import {
   reportGlobalError,
   processBinaryChunk,
   close,
+  listenToAbortSignal,
 } from 'react-client/src/ReactFlightClient';
 
 import {
@@ -82,6 +83,7 @@ export type Options = {
   environmentName?: string,
   startTime?: number,
   endTime?: number,
+  signal?: AbortSignal,
   // For the Edge client we only support a single-direction debug channel.
   debugChannel?: {readable?: ReadableStream, ...},
 };
@@ -155,6 +157,16 @@ export function createFromReadableStream<T>(
   options?: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
+  const cleanupAbort =
+    options && options.signal
+      ? listenToAbortSignal(response, options.signal)
+      : null;
+  const closeResponse = () => {
+    if (cleanupAbort !== null) {
+      cleanupAbort();
+    }
+    close(response);
+  };
 
   if (
     __DEV__ &&
@@ -165,18 +177,13 @@ export function createFromReadableStream<T>(
     let streamDoneCount = 0;
     const handleDone = () => {
       if (++streamDoneCount === 2) {
-        close(response);
+        closeResponse();
       }
     };
     startReadingFromStream(response, options.debugChannel.readable, handleDone);
     startReadingFromStream(response, stream, handleDone, stream);
   } else {
-    startReadingFromStream(
-      response,
-      stream,
-      close.bind(null, response),
-      stream,
-    );
+    startReadingFromStream(response, stream, closeResponse, stream);
   }
 
   return getRoot(response);

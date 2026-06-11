@@ -2504,6 +2504,34 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('');
   });
 
+  it('can abort a client response with a custom reason', async () => {
+    let streamController;
+    const stream = new ReadableStream({
+      start(controller) {
+        streamController = controller;
+      },
+    });
+    const abortController = new AbortController();
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      signal: abortController.signal,
+    });
+    const reason = new Error('stop parsing Flight');
+    let rejectedReason;
+
+    response.then(
+      () => {},
+      error => {
+        rejectedReason = error;
+      },
+    );
+
+    abortController.abort(reason);
+    streamController.close();
+    await 0;
+
+    expect(rejectedReason).toBe(reason);
+  });
+
   it('renders Suspense fallback for unresolved promises with unstable_allowPartialStream', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
@@ -3067,9 +3095,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2989,
+                3017,
                 19,
-                2973,
+                3001,
                 89,
               ],
             ],
