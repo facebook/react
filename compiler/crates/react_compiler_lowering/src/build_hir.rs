@@ -260,9 +260,9 @@ fn expression_type_name(expr: &react_compiler_ast::expressions::Expression) -> &
 /// or { "type": "TypeAnnotation", "typeAnnotation": { "type": "GenericTypeAnnotation", ... } }
 /// We extract the inner typeAnnotation's `type` field name.
 fn extract_type_annotation_name(
-    type_annotation: &Option<Box<serde_json::Value>>,
+    type_annotation: &Option<react_compiler_ast::common::RawNode>,
 ) -> Option<String> {
-    let val = type_annotation.as_ref()?;
+    let val = type_annotation.as_ref()?.parse_value();
     // Navigate: typeAnnotation.typeAnnotation.type
     let inner = val.get("typeAnnotation")?;
     let type_name = inner.get("type")?.as_str()?;
@@ -2205,30 +2205,30 @@ fn lower_expression(
         Expression::TSAsExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
             let value = lower_expression_to_temporary(builder, &ts.expression)?;
-            let type_annotation = &*ts.type_annotation;
-            let type_ = lower_type_annotation(type_annotation, builder);
-            let type_annotation_name = get_type_annotation_name(type_annotation);
+            let type_annotation = ts.type_annotation.parse_value();
+            let type_ = lower_type_annotation(&type_annotation, builder);
+            let type_annotation_name = get_type_annotation_name(&type_annotation);
             Ok(InstructionValue::TypeCastExpression {
                 value,
                 type_,
                 type_annotation_name,
                 type_annotation_kind: Some("as".to_string()),
-                type_annotation: Some(ts.type_annotation.clone()),
+                type_annotation: Some(Box::new(type_annotation)),
                 loc,
             })
         }
         Expression::TSSatisfiesExpression(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
             let value = lower_expression_to_temporary(builder, &ts.expression)?;
-            let type_annotation = &*ts.type_annotation;
-            let type_ = lower_type_annotation(type_annotation, builder);
-            let type_annotation_name = get_type_annotation_name(type_annotation);
+            let type_annotation = ts.type_annotation.parse_value();
+            let type_ = lower_type_annotation(&type_annotation, builder);
+            let type_annotation_name = get_type_annotation_name(&type_annotation);
             Ok(InstructionValue::TypeCastExpression {
                 value,
                 type_,
                 type_annotation_name,
                 type_annotation_kind: Some("satisfies".to_string()),
-                type_annotation: Some(ts.type_annotation.clone()),
+                type_annotation: Some(Box::new(type_annotation)),
                 loc,
             })
         }
@@ -2236,15 +2236,15 @@ fn lower_expression(
         Expression::TSTypeAssertion(ts) => {
             let loc = convert_opt_loc(&ts.base.loc);
             let value = lower_expression_to_temporary(builder, &ts.expression)?;
-            let type_annotation = &*ts.type_annotation;
-            let type_ = lower_type_annotation(type_annotation, builder);
-            let type_annotation_name = get_type_annotation_name(type_annotation);
+            let type_annotation = ts.type_annotation.parse_value();
+            let type_ = lower_type_annotation(&type_annotation, builder);
+            let type_annotation_name = get_type_annotation_name(&type_annotation);
             Ok(InstructionValue::TypeCastExpression {
                 value,
                 type_,
                 type_annotation_name,
                 type_annotation_kind: Some("as".to_string()),
-                type_annotation: Some(ts.type_annotation.clone()),
+                type_annotation: Some(Box::new(type_annotation)),
                 loc,
             })
         }
@@ -2252,11 +2252,11 @@ fn lower_expression(
         Expression::TypeCastExpression(tc) => {
             let loc = convert_opt_loc(&tc.base.loc);
             let value = lower_expression_to_temporary(builder, &tc.expression)?;
+            let annotation_value = tc.type_annotation.parse_value();
             // Flow TypeCastExpression: typeAnnotation is a TypeAnnotation node wrapping the actual type
-            let inner_type = tc
-                .type_annotation
+            let inner_type = annotation_value
                 .get("typeAnnotation")
-                .unwrap_or(&*tc.type_annotation);
+                .unwrap_or(&annotation_value);
             let type_ = lower_type_annotation(inner_type, builder);
             let type_annotation_name = get_type_annotation_name(inner_type);
             Ok(InstructionValue::TypeCastExpression {
@@ -2264,7 +2264,7 @@ fn lower_expression(
                 type_,
                 type_annotation_name,
                 type_annotation_kind: Some("cast".to_string()),
-                type_annotation: Some(tc.type_annotation.clone()),
+                type_annotation: Some(Box::new(annotation_value)),
                 loc,
             })
         }
@@ -4231,7 +4231,7 @@ fn lower_statement(
                 builder,
                 InstructionValue::UnsupportedNode {
                     node_type: Some(node_type),
-                    original_node: Some(unknown.raw().clone()),
+                    original_node: Some(unknown.raw().parse_value()),
                     loc,
                 },
             )?;

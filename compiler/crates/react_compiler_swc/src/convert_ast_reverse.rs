@@ -332,7 +332,8 @@ impl ReverseCtx {
         &self,
         unknown: &babel_stmt::UnknownStatement,
     ) -> Option<ModuleDecl> {
-        let raw = unknown.raw();
+        let raw = unknown.raw().parse_value();
+        let raw = &raw;
         match unknown.node_type() {
             "TSImportEqualsDeclaration" => {
                 let id = self.ident_from_raw(raw.get("id")?)?;
@@ -1103,11 +1104,12 @@ impl ReverseCtx {
             BabelExpr::TSAsExpression(e) => {
                 let expr = Box::new(self.convert_expression(&e.expression));
                 let span = self.span(&e.base);
+                let annotation = e.type_annotation.parse_value();
                 // Check if this is "as const" — Babel represents it as
                 // TSAsExpression with typeAnnotation: TSTypeReference { typeName: Identifier { name: "const" } }
-                let is_as_const = e.type_annotation.get("type").and_then(|v| v.as_str())
+                let is_as_const = annotation.get("type").and_then(|v| v.as_str())
                     == Some("TSTypeReference")
-                    && e.type_annotation
+                    && annotation
                         .get("typeName")
                         .and_then(|tn| tn.get("name"))
                         .and_then(|n| n.as_str())
@@ -1116,7 +1118,7 @@ impl ReverseCtx {
                 if is_as_const {
                     Expr::TsConstAssertion(TsConstAssertion { span, expr })
                 } else {
-                    let type_ann = self.convert_ts_type_from_json(&e.type_annotation, span);
+                    let type_ann = self.convert_ts_type_from_json(&annotation, span);
                     Expr::TsAs(TsAsExpr {
                         span,
                         expr,
@@ -1588,7 +1590,8 @@ impl ReverseCtx {
                 bi.id.optional = id.optional.unwrap_or(false);
                 // Preserve type annotations if present
                 if let Some(ref type_ann) = id.type_annotation {
-                    bi.type_ann = self.convert_ts_type_annotation_from_json(type_ann);
+                    bi.type_ann =
+                        self.convert_ts_type_annotation_from_json(&type_ann.parse_value());
                 }
                 Pat::Ident(bi)
             }
