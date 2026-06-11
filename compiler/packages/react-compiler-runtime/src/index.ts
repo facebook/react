@@ -7,6 +7,22 @@
 
 import * as React from 'react';
 
+export {
+  createDerivedTraceSelector as experimental_createDerivedTraceSelector,
+  createRenderTraceSession as experimental_createRenderTraceSession,
+  createTraceSelector as experimental_createTraceSelector,
+} from './traceTape';
+export type {
+  RenderTraceSession as ExperimentalRenderTraceSession,
+  TraceEqualityFn as ExperimentalTraceEqualityFn,
+  TraceRenderSessionOptions as ExperimentalTraceRenderSessionOptions,
+  TraceMutation as ExperimentalTraceMutation,
+  TraceRecorder as ExperimentalTraceRecorder,
+  TraceSelector as ExperimentalTraceSelector,
+  TraceTapeStats as ExperimentalTraceTapeStats,
+  TraceUpdateResult as ExperimentalTraceUpdateResult,
+} from './traceTape';
+
 const {useRef, useEffect, isValidElement} = React;
 const ReactSecretInternals =
   //@ts-ignore

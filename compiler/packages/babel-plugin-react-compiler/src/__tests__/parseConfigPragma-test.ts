@@ -14,16 +14,18 @@ describe('parseConfigPragmaForTests()', () => {
 
     // Validate defaults first to make sure that the parser is getting the value from the pragma,
     // and not just missing it and getting the default value
+    expect(defaultOptions.enableEmitTraceTape).toBe(false);
     expect(defaultConfig.enableForest).toBe(false);
     expect(defaultConfig.validateNoSetStateInEffects).toBe(false);
     expect(defaultConfig.validateNoSetStateInRender).toBe(true);
 
     const config = parseConfigPragmaForTests(
-      '@enableForest @validateNoSetStateInEffects:true @validateNoSetStateInRender:false',
+      '@enableForest @enableEmitTraceTape @validateNoSetStateInEffects:true @validateNoSetStateInRender:false',
       {compilationMode: defaultOptions.compilationMode},
     );
     expect(config).toEqual({
       ...defaultOptions,
+      enableEmitTraceTape: true,
       panicThreshold: 'all_errors',
       environment: {
         ...defaultOptions.environment,
