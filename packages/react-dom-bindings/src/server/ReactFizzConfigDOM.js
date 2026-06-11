@@ -326,10 +326,10 @@ const endAsyncScript = stringToPrecomputedChunk(' async=""></script>');
 const startInlineStyle = stringToPrecomputedChunk('<style');
 
 /**
- * This escaping function is designed to work with with inline scripts where the entire
+ * This escaping function is designed to work with inline scripts where the entire
  * contents are escaped. Because we know we are escaping the entire script we can avoid for instance
  * escaping html comment string sequences that are valid javascript as well because
- * if there are no sebsequent <script sequences the html parser will never enter
+ * if there are no subsequent <script sequences the html parser will never enter
  * script data double escaped state (see: https://www.w3.org/TR/html53/syntax.html#script-data-double-escaped-state)
  *
  * While untrusted script content should be made safe before using this api it will
@@ -2812,7 +2812,7 @@ function pushMeta(
 
     if (isFallback) {
       // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
-      // because they are likely superceded by primary content and we want to avoid needing to clean
+      // because they are likely superseded by primary content and we want to avoid needing to clean
       // them up when the primary content is ready. They are never hydrated on the client anyway because
       // boundaries in fallback are awaited or client render, in either case there is never hydration
       return null;
@@ -3015,7 +3015,7 @@ function pushLink(
 
     if (isFallback) {
       // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
-      // because they are likely superceded by primary content and we want to avoid needing to clean
+      // because they are likely superseded by primary content and we want to avoid needing to clean
       // them up when the primary content is ready. They are never hydrated on the client anyway because
       // boundaries in fallback are awaited or client render, in either case there is never hydration
       return null;
@@ -3590,7 +3590,7 @@ function pushTitle(
   ) {
     if (isFallback) {
       // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
-      // because they are likely superceded by primary content and we want to avoid needing to clean
+      // because they are likely superseded by primary content and we want to avoid needing to clean
       // them up when the primary content is ready. They are never hydrated on the client anyway because
       // boundaries in fallback are awaited or client render, in either case there is never hydration
       return null;
@@ -3686,7 +3686,7 @@ function pushStartHead(
     );
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
-    // Validation should warn that this tag is the the wrong spot.
+    // Validation should warn that this tag is in the wrong spot.
     return pushStartGenericElement(target, props, 'head', formatContext);
   }
 }
@@ -3720,7 +3720,7 @@ function pushStartBody(
     );
   } else {
     // This <head> is deep and is likely just an error. we emit it inline though.
-    // Validation should warn that this tag is the the wrong spot.
+    // Validation should warn that this tag is in the wrong spot.
     return pushStartGenericElement(target, props, 'body', formatContext);
   }
 }
@@ -3754,7 +3754,7 @@ function pushStartHtml(
     );
   } else {
     // This <html> is deep and is likely just an error. we emit it inline though.
-    // Validation should warn that this tag is the the wrong spot.
+    // Validation should warn that this tag is in the wrong spot.
     return pushStartGenericElement(target, props, 'html', formatContext);
   }
 }

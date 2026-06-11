@@ -234,7 +234,7 @@ describe('ReactDOMFizzServer', () => {
         bufferedContent.startsWith('<html ')
       ) {
         throw new Error(
-          'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+          'Received <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
         );
       }
 
@@ -4942,7 +4942,7 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
-  it('supresses hydration warnings when an error occurs within a Suspense boundary', async () => {
+  it('suppresses hydration warnings when an error occurs within a Suspense boundary', async () => {
     let isClient = false;
 
     function ThrowWhenHydrating({children}) {
