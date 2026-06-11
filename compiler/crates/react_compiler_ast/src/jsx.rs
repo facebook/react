@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::common::BaseNode;
+use crate::common::RawNode;
 use crate::expressions::Expression;
 use crate::literals::StringLiteral;
 
@@ -41,7 +42,7 @@ pub struct JSXOpeningElement {
         skip_serializing_if = "Option::is_none",
         rename = "typeParameters"
     )]
-    pub type_parameters: Option<Box<serde_json::Value>>,
+    pub type_parameters: Option<RawNode>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
