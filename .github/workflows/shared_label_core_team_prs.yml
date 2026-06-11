@@ -12,7 +12,7 @@ env:
 
 jobs:
   check_maintainer:
-    uses: facebook/react/.github/workflows/shared_check_maintainer.yml@main
+    uses: react/react/.github/workflows/shared_check_maintainer.yml@main
     permissions:
       # Used by check_maintainer
       contents: read
