@@ -94,7 +94,7 @@ export function getChartData({
     let maybeBadge = '';
     const maybeForgetBadge = compiledWithForget ? '✨ ' : '';
 
-    if (hocDisplayNames !== null && hocDisplayNames.length > 0) {
+    if (hocDisplayNames != null && hocDisplayNames.length > 0) {
       maybeBadge = ` (${hocDisplayNames[0]})`;
     }
 
