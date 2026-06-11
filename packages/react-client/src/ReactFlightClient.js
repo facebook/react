@@ -128,7 +128,7 @@ interface FlightStreamController {
   enqueueValue(value: any): void;
   enqueueModel(json: UninitializedModel): void;
   close(json: UninitializedModel): void;
-  error(error: Error): void;
+  error(error: mixed): void;
 }
 
 type UninitializedModel = string;
@@ -218,7 +218,7 @@ type ErroredChunk<T> = {
   value: null,
   reason: mixed,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
-  _debugChunk: null, // DEV-only
+  _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
@@ -859,11 +859,14 @@ function resolveModelChunk<T>(
   value: UninitializedModel,
 ): void {
   if (chunk.status !== PENDING) {
-    // If we get more data to an already resolved ID, we assume that it's
-    // a stream chunk since any other row shouldn't have more than one entry.
-    const streamChunk: InitializedStreamChunk<any> = chunk as any;
-    const controller = streamChunk.reason;
-    controller.enqueueModel(value);
+    // Only initialized stream chunks can receive additional model rows. A
+    // settled model can receive late rows after an abort, which we ignore so
+    // that the reader can continue processing its debug rows.
+    if (chunk.status === INITIALIZED && chunk.reason !== null) {
+      const streamChunk: InitializedStreamChunk<any> = chunk as any;
+      const controller = streamChunk.reason;
+      controller.enqueueModel(value);
+    }
     return;
   }
   releasePendingChunk(response, chunk);
@@ -940,7 +943,7 @@ let isInitializingDebugInfo: boolean = false;
 
 function initializeDebugChunk(
   response: Response,
-  chunk: ResolvedModelChunk<any> | PendingChunk<any>,
+  chunk: ResolvedModelChunk<any> | PendingChunk<any> | ErroredChunk<any>,
 ): void {
   const debugChunk = chunk._debugChunk;
   if (debugChunk !== null) {
@@ -1010,7 +1013,9 @@ function initializeDebugChunk(
         }
       }
     } catch (error) {
-      triggerErrorOnChunk(response, chunk, error);
+      if (chunk.status !== ERRORED) {
+        triggerErrorOnChunk(response, chunk, error);
+      }
     } finally {
       isInitializingDebugInfo = prevIsInitializingDebugInfo;
     }
@@ -1113,13 +1118,16 @@ function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
 // error upon read. Also notify any pending promises.
 export function reportGlobalError(
   weakResponse: WeakResponse,
-  error: Error,
+  error: mixed,
 ): void {
   if (hasGCedResponse(weakResponse)) {
     // Ignore close signal if we are not awaiting any more pending chunks.
     return;
   }
   const response = unwrapWeakResponse(weakResponse);
+  if (response._closed) {
+    return;
+  }
   response._closed = true;
   response._closedReason = error;
   response._chunks.forEach(chunk => {
@@ -3413,7 +3421,7 @@ function startAsyncIterable<T>(
         );
       }
     },
-    error(error: Error): void {
+    error(error: mixed): void {
       if (closed) {
         return;
       }
@@ -4101,7 +4109,6 @@ function resolveDebugModel(
   const parentChunk = getChunk(response, id);
   if (
     parentChunk.status === INITIALIZED ||
-    parentChunk.status === ERRORED ||
     parentChunk.status === HALTED ||
     parentChunk.status === BLOCKED
   ) {
@@ -5388,6 +5395,23 @@ export function close(weakResponse: WeakResponse): void {
   } else {
     reportGlobalError(weakResponse, new Error('Connection closed.'));
   }
+}
+
+export function listenToAbortSignal(
+  weakResponse: WeakResponse,
+  signal: AbortSignal,
+): () => void {
+  const listener = () => {
+    reportGlobalError(weakResponse, (signal as any).reason);
+  };
+  if (signal.aborted) {
+    listener();
+    return () => {};
+  }
+  signal.addEventListener('abort', listener);
+  return () => {
+    signal.removeEventListener('abort', listener);
+  };
 }
 
 function getCurrentOwnerInDEV(): null | ReactComponentInfo {

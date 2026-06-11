@@ -37,6 +37,7 @@ import {
   processStringChunk,
   processBinaryChunk,
   close,
+  listenToAbortSignal,
 } from 'react-client/src/ReactFlightClient';
 
 export * from './ReactFlightDOMClientEdge';
@@ -63,6 +64,7 @@ export type Options = {
   environmentName?: string,
   startTime?: number,
   endTime?: number,
+  signal?: AbortSignal,
   // For the Node.js client we only support a single-direction debug channel.
   debugChannel?: Readable,
 };
@@ -123,18 +125,28 @@ function createFromNodeStream<T>(
     __DEV__ && options && options.endTime != null ? options.endTime : undefined,
     debugChannel,
   );
+  const cleanupAbort =
+    options && options.signal
+      ? listenToAbortSignal(response, options.signal)
+      : null;
+  const closeResponse = () => {
+    if (cleanupAbort !== null) {
+      cleanupAbort();
+    }
+    close(response);
+  };
 
   if (__DEV__ && options && options.debugChannel) {
     let streamEndedCount = 0;
     const handleEnd = () => {
       if (++streamEndedCount === 2) {
-        close(response);
+        closeResponse();
       }
     };
     startReadingFromStream(response, options.debugChannel, handleEnd);
     startReadingFromStream(response, stream, handleEnd);
   } else {
-    startReadingFromStream(response, stream, close.bind(null, response));
+    startReadingFromStream(response, stream, closeResponse);
   }
 
   return getRoot(response);
