@@ -7,6 +7,7 @@ use react_compiler_ast::File;
 use react_compiler_ast::Program;
 use react_compiler_ast::SourceType;
 use react_compiler_ast::common::BaseNode;
+use react_compiler_ast::common::RawNode;
 use react_compiler_ast::common::Position;
 use react_compiler_ast::common::SourceLocation;
 use react_compiler_ast::declarations::*;
@@ -29,7 +30,8 @@ fn wtf8_to_string(value: &swc_atoms::Wtf8Atom) -> String {
 /// constructs `raw` with a `type` tag, so `from_raw` cannot fail.
 fn unknown_statement(raw: serde_json::Value) -> Statement {
     Statement::Unknown(
-        UnknownStatement::from_raw(raw).expect("raw unknown node is constructed with a `type` tag"),
+        UnknownStatement::from_raw(RawNode::from_value(&raw))
+            .expect("raw unknown node is constructed with a `type` tag"),
     )
 }
 
@@ -817,26 +819,26 @@ impl<'a> ConvertCtx<'a> {
             swc::Expr::TsAs(e) => Expression::TSAsExpression(TSAsExpression {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
-                type_annotation: Box::new(
-                    self.convert_ts_type_to_json(&e.type_ann)
+                type_annotation: RawNode::from_value(
+                    &self.convert_ts_type_to_json(&e.type_ann)
                         .unwrap_or(serde_json::Value::Null),
-                ),
+                    ),
             }),
             swc::Expr::TsSatisfies(e) => Expression::TSSatisfiesExpression(TSSatisfiesExpression {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
-                type_annotation: Box::new(
-                    self.convert_ts_type_to_json(&e.type_ann)
+                type_annotation: RawNode::from_value(
+                    &self.convert_ts_type_to_json(&e.type_ann)
                         .unwrap_or(serde_json::Value::Null),
-                ),
+                    ),
             }),
             swc::Expr::TsTypeAssertion(e) => Expression::TSTypeAssertion(TSTypeAssertion {
                 base: self.make_base_node(e.span),
                 expression: Box::new(self.convert_expression(&e.expr)),
-                type_annotation: Box::new(
-                    self.convert_ts_type_to_json(&e.type_ann)
+                type_annotation: RawNode::from_value(
+                    &self.convert_ts_type_to_json(&e.type_ann)
                         .unwrap_or(serde_json::Value::Null),
-                ),
+                    ),
             }),
             swc::Expr::TsNonNull(e) => Expression::TSNonNullExpression(TSNonNullExpression {
                 base: self.make_base_node(e.span),
@@ -846,7 +848,7 @@ impl<'a> ConvertCtx<'a> {
                 Expression::TSInstantiationExpression(TSInstantiationExpression {
                     base: self.make_base_node(e.span),
                     expression: Box::new(self.convert_expression(&e.expr)),
-                    type_parameters: Box::new(serde_json::Value::Null),
+                    type_parameters: RawNode::null(),
                 })
             }
             swc::Expr::TsConstAssertion(e) => {
@@ -862,7 +864,7 @@ impl<'a> ConvertCtx<'a> {
                 Expression::TSAsExpression(TSAsExpression {
                     base: self.make_base_node(e.span),
                     expression: Box::new(self.convert_expression(&e.expr)),
-                    type_annotation: Box::new(type_ann),
+                    type_annotation: RawNode::from_value(&type_ann),
                 })
             }
             swc::Expr::Invalid(i) => Expression::Identifier(Identifier {
@@ -1068,11 +1070,11 @@ impl<'a> ConvertCtx<'a> {
             return_type: f
                 .return_type
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             type_parameters: f
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             predicate: None,
             component_declaration: false,
             hook_declaration: false,
@@ -1103,11 +1105,11 @@ impl<'a> ConvertCtx<'a> {
             return_type: f
                 .return_type
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             type_parameters: f
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             predicate: None,
         }
     }
@@ -1133,11 +1135,11 @@ impl<'a> ConvertCtx<'a> {
             return_type: arrow
                 .return_type
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             type_parameters: arrow
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             predicate: None,
         }
     }
@@ -1249,7 +1251,7 @@ impl<'a> ConvertCtx<'a> {
             type_annotation: obj
                 .type_ann
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             decorators: None,
         }
     }
@@ -1265,7 +1267,7 @@ impl<'a> ConvertCtx<'a> {
             type_annotation: arr
                 .type_ann
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             decorators: None,
         }
     }
@@ -1423,7 +1425,7 @@ impl<'a> ConvertCtx<'a> {
                 return_type: g
                     .type_ann
                     .as_ref()
-                    .map(|_| Box::new(serde_json::Value::Null)),
+                    .map(|_| RawNode::null()),
                 type_parameters: None,
                 predicate: None,
             }),
@@ -1476,12 +1478,12 @@ impl<'a> ConvertCtx<'a> {
                     .function
                     .return_type
                     .as_ref()
-                    .map(|_| Box::new(serde_json::Value::Null)),
+                    .map(|_| RawNode::null()),
                 type_parameters: m
                     .function
                     .type_params
                     .as_ref()
-                    .map(|_| Box::new(serde_json::Value::Null)),
+                    .map(|_| RawNode::null()),
                 predicate: None,
             }),
             swc::Prop::Assign(a) => {
@@ -1561,7 +1563,7 @@ impl<'a> ConvertCtx<'a> {
             type_parameters: c
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             mixins: None,
         }
     }
@@ -1588,7 +1590,7 @@ impl<'a> ConvertCtx<'a> {
             type_parameters: c
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
         }
     }
 
@@ -1629,7 +1631,7 @@ impl<'a> ConvertCtx<'a> {
             type_parameters: el
                 .type_args
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
         }
     }
 
@@ -1983,11 +1985,11 @@ impl<'a> ConvertCtx<'a> {
                     return_type: func
                         .return_type
                         .as_ref()
-                        .map(|_| Box::new(serde_json::Value::Null)),
+                        .map(|_| RawNode::null()),
                     type_parameters: func
                         .type_params
                         .as_ref()
-                        .map(|_| Box::new(serde_json::Value::Null)),
+                        .map(|_| RawNode::null()),
                     predicate: None,
                     component_declaration: false,
                     hook_declaration: false,
@@ -2017,7 +2019,7 @@ impl<'a> ConvertCtx<'a> {
                     type_parameters: class
                         .type_params
                         .as_ref()
-                        .map(|_| Box::new(serde_json::Value::Null)),
+                        .map(|_| RawNode::null()),
                     mixins: None,
                 })
             }
@@ -2139,11 +2141,11 @@ impl<'a> ConvertCtx<'a> {
         TSTypeAliasDeclaration {
             base: self.make_base_node(d.span),
             id: self.convert_ident_to_identifier(&d.id),
-            type_annotation: Box::new(serde_json::Value::Null),
+            type_annotation: RawNode::null(),
             type_parameters: d
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             declare: if d.declare { Some(true) } else { None },
         }
     }
@@ -2152,11 +2154,11 @@ impl<'a> ConvertCtx<'a> {
         TSInterfaceDeclaration {
             base: self.make_base_node(d.span),
             id: self.convert_ident_to_identifier(&d.id),
-            body: Box::new(serde_json::Value::Null),
+            body: RawNode::null(),
             type_parameters: d
                 .type_params
                 .as_ref()
-                .map(|_| Box::new(serde_json::Value::Null)),
+                .map(|_| RawNode::null()),
             extends: if d.extends.is_empty() {
                 None
             } else {
@@ -2179,8 +2181,8 @@ impl<'a> ConvertCtx<'a> {
     fn convert_ts_module(&self, d: &swc::TsModuleDecl) -> TSModuleDeclaration {
         TSModuleDeclaration {
             base: self.make_base_node(d.span),
-            id: Box::new(serde_json::Value::Null),
-            body: Box::new(serde_json::Value::Null),
+            id: RawNode::null(),
+            body: RawNode::null(),
             declare: if d.declare { Some(true) } else { None },
             global: if d.global { Some(true) } else { None },
         }
@@ -2234,8 +2236,9 @@ impl<'a> ConvertCtx<'a> {
             base: self.make_base_node(id.id.span),
             name: id.id.sym.to_string(),
             type_annotation: id.type_ann.as_ref().map(|ann| {
-                Box::new(
-                    self.convert_ts_type_ann_to_json(ann)
+                RawNode::from_value(
+                    &self
+                        .convert_ts_type_ann_to_json(ann)
                         .unwrap_or(serde_json::Value::Null),
                 )
             }),
