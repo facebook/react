@@ -34,7 +34,8 @@ const REPO_ROOT = path.resolve(__dirname, '../..');
 const rawArgs = process.argv.slice(2);
 const noColor = rawArgs.includes('--no-color') || !!process.env.NO_COLOR;
 const variantIdx = rawArgs.indexOf('--variant');
-const variantArg = variantIdx >= 0 ? (rawArgs[variantIdx + 1] as 'babel') : null;
+const variantArg =
+  variantIdx >= 0 ? (rawArgs[variantIdx + 1] as 'babel') : null;
 const limitIdx = rawArgs.indexOf('--limit');
 const limitArg = limitIdx >= 0 ? parseInt(rawArgs[limitIdx + 1], 10) : 50;
 
@@ -360,7 +361,9 @@ async function runVariant(
     const tsEvents = normalizeEvents(tsRawEvents.get(fixturePath)!);
 
     writeProgress(
-      `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${s.failed} failed)`,
+      `  ${variant}: ${i + 1}/${fixtureInfos.length} (${s.passed} passed, ${
+        s.failed
+      } failed)`,
     );
 
     const variantResult = compileBabel(
