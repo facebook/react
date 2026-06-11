@@ -766,7 +766,6 @@ function setProp(
     case 'disablePictureInPicture':
     case 'disableRemotePlayback':
     case 'formNoValidate':
-    case 'hidden':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -786,6 +785,7 @@ function setProp(
       break;
     }
     // Overloaded Boolean
+    case 'hidden':
     case 'capture':
     case 'download': {
       // An attribute that can be used as a flag as well as with a value.
@@ -2866,7 +2866,6 @@ function diffHydratedGenericElement(
       case 'disablePictureInPicture':
       case 'disableRemotePlayback':
       case 'formNoValidate':
-      case 'hidden':
       case 'loop':
       case 'noModule':
       case 'noValidate':
@@ -2889,6 +2888,7 @@ function diffHydratedGenericElement(
         );
         continue;
       }
+      case 'hidden':
       case 'capture':
       case 'download': {
         hydrateOverloadedBooleanAttribute(

@@ -159,7 +159,7 @@ export type Props = {
   autoFocus?: boolean,
   children?: mixed,
   disabled?: boolean,
-  hidden?: boolean,
+  hidden?: boolean | string,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
   style?: {

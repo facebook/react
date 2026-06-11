@@ -1703,7 +1703,6 @@ function pushAttribute(
     case 'disablePictureInPicture':
     case 'disableRemotePlayback':
     case 'formNoValidate':
-    case 'hidden':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -1725,6 +1724,7 @@ function pushAttribute(
       }
       return;
     }
+    case 'hidden':
     case 'capture':
     case 'download': {
       // Overloaded Boolean
@@ -5852,12 +5852,19 @@ function writeStyleResourceAttributeInJS(
       attributeValue = '' + (value as any);
       break;
     }
-    // Booleans
+    // Overloaded Booleans
     case 'hidden': {
       if (value === false) {
         return;
       }
-      attributeValue = '';
+      if (value === true) {
+        attributeValue = '';
+      } else {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+        attributeValue = '' + (value: any);
+      }
       break;
     }
     // Santized URLs
@@ -6047,12 +6054,19 @@ function writeStyleResourceAttributeInAttr(
       break;
     }
 
-    // Booleans
+    // Overloaded Booleans
     case 'hidden': {
       if (value === false) {
         return;
       }
-      attributeValue = '';
+      if (value === true) {
+        attributeValue = '';
+      } else {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+        attributeValue = '' + (value: any);
+      }
       break;
     }
 
