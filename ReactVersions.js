@@ -41,6 +41,7 @@ const stablePackages = {
   'react-server-dom-webpack': ReactVersion,
   'react-server-dom-turbopack': ReactVersion,
   'react-server-dom-parcel': ReactVersion,
+  'react-server-dom-esm': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.34.0',
   'react-refresh': '0.19.0',
@@ -53,7 +54,7 @@ const stablePackages = {
 // These packages do not exist in the @canary or @latest channel, only
 // @experimental. We don't use semver, just the commit sha, so this is just a
 // list of package names instead of a map.
-const experimentalPackages = ['react-markup', 'react-server-dom-esm'];
+const experimentalPackages = ['react-markup'];
 
 module.exports = {
   ReactVersion,
