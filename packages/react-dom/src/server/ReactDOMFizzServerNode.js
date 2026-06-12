@@ -12,14 +12,14 @@ import type {
   PostponedState,
   ErrorInfo,
 } from 'react-server/src/ReactFizzServer';
-import type { ReactNodeList, ReactFormState } from 'shared/ReactTypes';
-import type { Writable } from 'stream';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
+import type {Writable} from 'stream';
 import type {
   BootstrapScriptDescriptor,
   HeadersDescriptor,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
-import type { Destination } from 'react-server/src/ReactServerStreamConfigNode';
-import type { ImportMap } from '../shared/ReactDOMTypes';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -40,9 +40,9 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-import { textEncoder } from 'react-server/src/ReactServerStreamConfigNode';
+import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
 
-import { ensureCorrectIsomorphicReactVersion } from '../shared/ensureCorrectIsomorphicReactVersion';
+import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
 ensureCorrectIsomorphicReactVersion();
 
 function createDrainHandler(destination: Destination, request: Request) {
@@ -60,9 +60,9 @@ function createCancelHandler(request: Request, reason: string) {
 type NonceOption =
   | string
   | {
-    script?: string,
-    style?: string,
-  };
+      script?: string,
+      style?: string,
+    };
 
 type Options = {
   identifierPrefix?: string,
@@ -168,19 +168,24 @@ function renderToPipeableStream(
 function createFakeWritableFromReadableStreamController(
   controller: ReadableStreamController,
 ): Writable {
+  // The current host config expects a Writable so we create
+  // a fake writable for now to push into the Readable.
   return {
     write(chunk: string | Uint8Array) {
       if (typeof chunk === 'string') {
         chunk = textEncoder.encode(chunk);
       }
       controller.enqueue(chunk);
+      // in web streams there is no backpressure so we can alwas write more
       return true;
     },
     end() {
       controller.close();
     },
     destroy(error) {
+      // $FlowFixMe[method-unbinding]
       if (typeof controller.error === 'function') {
+        // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
         controller.error(error);
       } else {
         controller.close();
@@ -189,6 +194,7 @@ function createFakeWritableFromReadableStreamController(
   } as any;
 }
 
+// TODO: Move to sub-classing ReadableStream.
 type ReactDOMServerReadableStream = ReadableStream & {
   allReady: Promise<void>,
 };
@@ -196,21 +202,35 @@ type ReactDOMServerReadableStream = ReadableStream & {
 type WebStreamsOptions = Omit<
   Options,
   'onShellReady' | 'onShellError' | 'onAllReady' | 'onHeaders',
-> & { signal: AbortSignal, onHeaders?: (headers: Headers) => void };
+> & {signal: AbortSignal, onHeaders?: (headers: Headers) => void};
 
-// FIXED: Added missing identifier 'renderToReadableStream'
-export function renderToReadableStream(
+function renderToReadableStream(
   children: ReactNodeList,
   options?: WebStreamsOptions,
 ): Promise<ReactDOMServerReadableStream> {
   return new Promise((resolve, reject) => {
     let onFatalError;
     let onAllReady;
-    let abortListener = null;
+
+    let abortListener: ?() => void = null;
+    const signal = options ? options.signal : null;
+
+    function cleanupAbortListener() {
+      if (signal && abortListener) {
+        signal.removeEventListener('abort', abortListener);
+        abortListener = null;
+      }
+    }
 
     const allReady = new Promise<void>((res, rej) => {
-      onAllReady = res;
-      onFatalError = rej;
+      onAllReady = () => {
+        cleanupAbortListener();
+        res();
+      };
+      onFatalError = (error: mixed) => {
+        cleanupAbortListener();
+        rej(error);
+      };
     });
 
     function onShellReady() {
@@ -230,33 +250,22 @@ export function renderToReadableStream(
             abort(request, reason);
           },
         },
-        { highWaterMark: 0 },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
+        {highWaterMark: 0},
       ) as any;
+      // TODO: Move to sub-classing ReadableStream.
       stream.allReady = allReady;
       resolve(stream);
     }
-    
     function onShellError(error: mixed) {
-      if (options && options.signal && abortListener) {
-        options.signal.removeEventListener('abort', abortListener);
-      }
-      allReady.catch(() => { });
+      cleanupAbortListener();
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
       reject(error);
     }
-
-    const wrappedOnAllReady = () => {
-      if (options && options.signal && abortListener) {
-        options.signal.removeEventListener('abort', abortListener);
-      }
-      if (typeof onAllReady === 'function') onAllReady();
-    };
-
-    const wrappedOnFatalError = (error: mixed) => {
-      if (options && options.signal && abortListener) {
-        options.signal.removeEventListener('abort', abortListener);
-      }
-      if (typeof onFatalError === 'function') onFatalError(error);
-    };
 
     const onHeaders = options ? options.onHeaders : undefined;
     let onHeadersImpl;
@@ -287,20 +296,19 @@ export function renderToReadableStream(
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
-      wrappedOnAllReady,
+      onAllReady,
       onShellReady,
       onShellError,
-      wrappedOnFatalError,
+      onFatalError,
       options ? options.formState : undefined,
     );
     if (options && options.signal) {
-      const signal = options.signal;
-      if (signal.aborted) {
+      if (signal && signal.aborted) {
         abort(request, (signal as any).reason);
-      } else {
+      } else if (signal) {
         abortListener = () => {
           abort(request, (signal as any).reason);
-          if (abortListener) signal.removeEventListener('abort', abortListener);
+          cleanupAbortListener();
         };
         signal.addEventListener('abort', abortListener);
       }
@@ -369,10 +377,9 @@ function resumeToPipeableStream(
 type WebStreamsResumeOptions = Omit<
   Options,
   'onShellReady' | 'onShellError' | 'onAllReady',
-> & { signal: AbortSignal };
+> & {signal: AbortSignal};
 
-// FIXED: Implemented fixed resume function with memory leak protection
-export function resume(
+function resume(
   children: ReactNodeList,
   postponedState: PostponedState,
   options?: WebStreamsResumeOptions,
@@ -380,11 +387,26 @@ export function resume(
   return new Promise((resolve, reject) => {
     let onFatalError;
     let onAllReady;
-    let abortListener = null;
+
+    let abortListener: ?() => void = null;
+    const signal = options ? options.signal : null;
+
+    function cleanupAbortListener() {
+      if (signal && abortListener) {
+        signal.removeEventListener('abort', abortListener);
+        abortListener = null;
+      }
+    }
 
     const allReady = new Promise<void>((res, rej) => {
-      onAllReady = res;
-      onFatalError = rej;
+      onAllReady = () => {
+        cleanupAbortListener();
+        res();
+      };
+      onFatalError = (error: mixed) => {
+        cleanupAbortListener();
+        rej(error);
+      };
     });
 
     function onShellReady() {
@@ -404,34 +426,22 @@ export function resume(
             abort(request, reason);
           },
         },
-        { highWaterMark: 0 },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        // $FlowFixMe[incompatible-type]
+        {highWaterMark: 0},
       ) as any;
+      // TODO: Move to sub-classing ReadableStream.
       stream.allReady = allReady;
       resolve(stream);
     }
-
-    function onShellError(error: any) {
-      if (options && options.signal && abortListener) {
-        options.signal.removeEventListener('abort', abortListener);
-      }
-      allReady.catch(() => { });
+    function onShellError(error: mixed) {
+      cleanupAbortListener();
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
       reject(error);
     }
-
-    const wrappedOnAllReady = () => {
-      if (options && options.signal && abortListener) {
-        options.signal.removeEventListener('abort', abortListener);
-      }
-      if (typeof onAllReady === 'function') onAllReady();
-    };
-
-    const wrappedOnFatalError = (error: mixed) => {
-      if (options && options.signal && abortListener) {
-        options.signal.removeEventListener('abort', abortListener);
-      }
-      if (typeof onFatalError === 'function') onFatalError(error);
-    };
-
     const request = resumeRequest(
       children,
       postponedState,
@@ -440,31 +450,30 @@ export function resume(
         options ? options.nonce : undefined,
       ),
       options ? options.onError : undefined,
-      wrappedOnAllReady,
+      onAllReady,
       onShellReady,
       onShellError,
-      wrappedOnFatalError,
+      onFatalError,
     );
-
     if (options && options.signal) {
-      const signal = options.signal;
-      if (signal.aborted) {
+      if (signal && signal.aborted) {
         abort(request, (signal as any).reason);
-      } else {
+      } else if (signal) {
         abortListener = () => {
           abort(request, (signal as any).reason);
-          if (abortListener) signal.removeEventListener('abort', abortListener);
+          cleanupAbortListener();
         };
         signal.addEventListener('abort', abortListener);
       }
     }
-
     startWork(request);
   });
 }
 
 export {
   renderToPipeableStream,
+  renderToReadableStream,
   resumeToPipeableStream,
+  resume,
   ReactVersion as version,
 };
