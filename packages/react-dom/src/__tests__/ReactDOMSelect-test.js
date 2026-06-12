@@ -486,6 +486,63 @@ describe('ReactDOMSelect', () => {
     expect(select.selectedIndex).toBe(-1);
   });
 
+  it('does not select the first option when size > 1 and value does not match', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <select size="2" value="does-not-exist" onChange={noop}>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+          <option value="gorilla">A gorilla!</option>
+        </select>,
+      );
+    });
+
+    const select = container.firstChild;
+
+    // On initial render the browser handles list box selection (nothing selected).
+    // On subsequent renders updateOptions runs; it must not fall back to the
+    // first option for a list box (size > 1).
+    await act(() => {
+      root.render(
+        <select size="2" value="does-not-exist" onChange={noop}>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+          <option value="gorilla">A gorilla!</option>
+        </select>,
+      );
+    });
+
+    expect(select.options[0].selected).toBe(false);
+    expect(select.options[1].selected).toBe(false);
+    expect(select.options[2].selected).toBe(false);
+    expect(select.selectedIndex).toBe(-1);
+  });
+
+  it('selects the matching option when size > 1 and value matches', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <select size="2" value="giraffe" onChange={noop}>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+          <option value="gorilla">A gorilla!</option>
+        </select>,
+      );
+    });
+
+    const select = container.firstChild;
+
+    expect(select.options[0].selected).toBe(false);
+    expect(select.options[1].selected).toBe(true);
+    expect(select.options[2].selected).toBe(false);
+    expect(select.value).toBe('giraffe');
+  });
+
   it('should remember value when switching to uncontrolled', async () => {
     const stub = (
       <select value={'giraffe'} onChange={noop}>
