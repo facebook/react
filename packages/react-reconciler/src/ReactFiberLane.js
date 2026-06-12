@@ -144,6 +144,9 @@ export function getLabelForLane(lane: Lane): string | void {
     if (lane & DefaultLane) {
       return 'Default';
     }
+    if (lane & GestureLane) {
+      return 'Gesture';
+    }
     if (lane & TransitionHydrationLane) {
       return 'TransitionHydration';
     }
