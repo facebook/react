@@ -211,9 +211,26 @@ function renderToReadableStream(
   return new Promise((resolve, reject) => {
     let onFatalError;
     let onAllReady;
+
+    let abortListener: ?() => void = null;
+    const signal = options ? options.signal : null;
+
+    function cleanupAbortListener() {
+      if (signal && abortListener) {
+        signal.removeEventListener('abort', abortListener);
+        abortListener = null;
+      }
+    }
+
     const allReady = new Promise<void>((res, rej) => {
-      onAllReady = res;
-      onFatalError = rej;
+      onAllReady = () => {
+        cleanupAbortListener();
+        res();
+      };
+      onFatalError = (error: mixed) => {
+        cleanupAbortListener();
+        rej(error);
+      };
     });
 
     function onShellReady() {
@@ -242,6 +259,7 @@ function renderToReadableStream(
       resolve(stream);
     }
     function onShellError(error: mixed) {
+      cleanupAbortListener();
       // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
       // However, `allReady` will be rejected by `onFatalError` as well.
       // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
@@ -285,15 +303,14 @@ function renderToReadableStream(
       options ? options.formState : undefined,
     );
     if (options && options.signal) {
-      const signal = options.signal;
-      if (signal.aborted) {
+      if (signal && signal.aborted) {
         abort(request, (signal as any).reason);
-      } else {
-        const listener = () => {
+      } else if (signal) {
+        abortListener = () => {
           abort(request, (signal as any).reason);
-          signal.removeEventListener('abort', listener);
+          cleanupAbortListener();
         };
-        signal.addEventListener('abort', listener);
+        signal.addEventListener('abort', abortListener);
       }
     }
     startWork(request);
@@ -370,9 +387,26 @@ function resume(
   return new Promise((resolve, reject) => {
     let onFatalError;
     let onAllReady;
+
+    let abortListener: ?() => void = null;
+    const signal = options ? options.signal : null;
+
+    function cleanupAbortListener() {
+      if (signal && abortListener) {
+        signal.removeEventListener('abort', abortListener);
+        abortListener = null;
+      }
+    }
+
     const allReady = new Promise<void>((res, rej) => {
-      onAllReady = res;
-      onFatalError = rej;
+      onAllReady = () => {
+        cleanupAbortListener();
+        res();
+      };
+      onFatalError = (error: mixed) => {
+        cleanupAbortListener();
+        rej(error);
+      };
     });
 
     function onShellReady() {
@@ -401,6 +435,7 @@ function resume(
       resolve(stream);
     }
     function onShellError(error: mixed) {
+      cleanupAbortListener();
       // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
       // However, `allReady` will be rejected by `onFatalError` as well.
       // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
@@ -421,15 +456,14 @@ function resume(
       onFatalError,
     );
     if (options && options.signal) {
-      const signal = options.signal;
-      if (signal.aborted) {
+      if (signal && signal.aborted) {
         abort(request, (signal as any).reason);
-      } else {
-        const listener = () => {
+      } else if (signal) {
+        abortListener = () => {
           abort(request, (signal as any).reason);
-          signal.removeEventListener('abort', listener);
+          cleanupAbortListener();
         };
-        signal.addEventListener('abort', listener);
+        signal.addEventListener('abort', abortListener);
       }
     }
     startWork(request);
