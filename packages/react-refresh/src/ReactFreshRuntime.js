@@ -509,8 +509,6 @@ export function injectIntoGlobalHook(globalObject: any): void {
     ) {
       const helpers = helpersByRendererID.get(id);
       if (helpers !== undefined) {
-        helpersByRoot.set(root, helpers);
-
         const current = root.current;
         const alternate = current.alternate;
 
@@ -530,6 +528,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
 
           if (!wasMounted && isMounted) {
             // Mount a new root.
+            helpersByRoot.set(root, helpers);
             mountedRoots.add(root);
             failedRoots.delete(root);
           } else if (wasMounted && isMounted) {
@@ -545,13 +544,14 @@ export function injectIntoGlobalHook(globalObject: any): void {
               helpersByRoot.delete(root);
             }
           } else if (!wasMounted && !isMounted) {
-            if (didError) {
+            if (didError && helpersByRoot.has(root)) {
               // We'll remount it on future edits.
               failedRoots.add(root);
             }
           }
         } else {
           // Mount a new root.
+          helpersByRoot.set(root, helpers);
           mountedRoots.add(root);
         }
       }
