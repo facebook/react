@@ -1767,7 +1767,7 @@ describe('ReactFlightDOMNode', () => {
     });
 
     // @gate __DEV__
-    it('should preserve a Flight client abort reason and late debug info when aborting Fizz', async () => {
+    it('should preserve a Flight stream error and late debug info when aborting Fizz', async () => {
       let resolveDynamicData1;
       let resolveDynamicData2;
       let resolveDynamicData3;
@@ -1836,29 +1836,48 @@ describe('ReactFlightDOMNode', () => {
       }
 
       let staticEndTime = -1;
-      const initialChunks = [];
-      const dynamicChunks = [];
+      const initialContentChunks = [];
+      const initialDebugChunks = [];
+      const dynamicDebugChunks = [];
 
       await new Promise(resolve => {
         setTimeout(() => {
+          const debugPassThrough = new Stream.PassThrough(streamOptions);
           const stream = ReactServerDOMServer.renderToPipeableStream(
             ReactServer.createElement(App),
             webpackMap,
-            {filterStackFrame},
+            {
+              filterStackFrame,
+              debugChannel: new Stream.Writable({
+                write(chunk, encoding, callback) {
+                  debugPassThrough.write(chunk, encoding);
+                  callback();
+                },
+                final(callback) {
+                  debugPassThrough.end();
+                  callback();
+                },
+              }),
+            },
           );
 
-          const passThrough = new Stream.PassThrough(streamOptions);
-          stream.pipe(passThrough);
+          const contentPassThrough = new Stream.PassThrough(streamOptions);
+          stream.pipe(contentPassThrough);
 
-          passThrough.on('data', chunk => {
+          contentPassThrough.on('data', chunk => {
             if (staticEndTime < 0) {
-              initialChunks.push(chunk);
-            } else {
-              dynamicChunks.push(chunk);
+              initialContentChunks.push(chunk);
             }
           });
+          contentPassThrough.on('end', resolve);
 
-          passThrough.on('end', resolve);
+          debugPassThrough.on('data', chunk => {
+            if (staticEndTime < 0) {
+              initialDebugChunks.push(chunk);
+            } else {
+              dynamicDebugChunks.push(chunk);
+            }
+          });
         });
         setTimeout(() => {
           resolveDynamicData1('Hi');
@@ -1874,10 +1893,13 @@ describe('ReactFlightDOMNode', () => {
         });
       });
 
-      const flightStream = new Stream.Readable({...streamOptions, read() {}});
-      const flightAbortController = new AbortController();
+      const contentStream = new Stream.Readable({
+        ...streamOptions,
+        read() {},
+      });
+      const debugStream = new Stream.Readable({...streamOptions, read() {}});
       const flightResponse = ReactServerDOMClient.createFromNodeStream(
-        flightStream,
+        contentStream,
         {
           moduleMap: null,
           moduleLoading: null,
@@ -1885,11 +1907,14 @@ describe('ReactFlightDOMNode', () => {
         },
         {
           endTime: staticEndTime,
-          signal: flightAbortController.signal,
+          debugChannel: debugStream,
         },
       );
-      for (let i = 0; i < initialChunks.length; i++) {
-        flightStream.push(initialChunks[i]);
+      for (let i = 0; i < initialContentChunks.length; i++) {
+        contentStream.push(initialContentChunks[i]);
+      }
+      for (let i = 0; i < initialDebugChunks.length; i++) {
+        debugStream.push(initialDebugChunks[i]);
       }
       const decoded = await flightResponse;
 
@@ -1897,7 +1922,7 @@ describe('ReactFlightDOMNode', () => {
         return decoded;
       }
 
-      const flightAbortReason = new Error('Flight client aborted');
+      const flightError = new Error('Flight stream errored');
       const fizzAbortReason = new Error('Fizz aborted');
       const fizzAbortController = new AbortController();
       const errors = [];
@@ -1918,20 +1943,20 @@ describe('ReactFlightDOMNode', () => {
                 ownerStack = React.captureOwnerStack
                   ? React.captureOwnerStack()
                   : null;
-                console.log({ownerStack, componentStack});
               },
             },
           );
         });
 
         setTimeout(() => {
-          // Reject the pending Flight chunks, deliver the rows that would have
-          // resolved them, and then synchronously begin the Fizz abort.
-          flightAbortController.abort(flightAbortReason);
-          for (let i = 0; i < dynamicChunks.length; i++) {
-            flightStream.push(dynamicChunks[i]);
+          // Error the content transport, deliver the delayed debug rows, and
+          // then synchronously begin the Fizz abort.
+          contentStream.emit('error', flightError);
+          for (let i = 0; i < dynamicDebugChunks.length; i++) {
+            debugStream.push(dynamicDebugChunks[i]);
           }
-          flightStream.push(null);
+          contentStream.push(null);
+          debugStream.push(null);
           fizzAbortController.abort(fizzAbortReason);
           resolve(result);
         });
@@ -1940,7 +1965,7 @@ describe('ReactFlightDOMNode', () => {
       const prerenderHTML = await readResult(prelude);
 
       expect(prerenderHTML).toBe('');
-      expect(errors).toEqual([flightAbortReason]);
+      expect(errors).toEqual([flightError]);
       expect(normalizeCodeLocInfo(componentStack)).toBe(
         '\n' +
           gate(flags =>

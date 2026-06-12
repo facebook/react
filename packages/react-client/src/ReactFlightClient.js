@@ -154,6 +154,7 @@ const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 const HALTED = 'halted'; // DEV-only. Means it never resolves even if connection closes.
+const DEBUG_INFO_FILTERED: SomeChunk<ReactDebugInfoEntry> = {} as any; // DEV-only
 
 const __PROTO__ = '__proto__';
 
@@ -164,6 +165,8 @@ type PendingChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
@@ -173,6 +176,8 @@ type BlockedChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
@@ -182,6 +187,8 @@ type ResolvedModelChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
@@ -191,6 +198,8 @@ type ResolvedModuleChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
@@ -200,6 +209,8 @@ type InitializedChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedStreamChunk<
@@ -211,6 +222,8 @@ type InitializedStreamChunk<
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -220,6 +233,8 @@ type ErroredChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type HaltedChunk<T> = {
@@ -229,6 +244,8 @@ type HaltedChunk<T> = {
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
+  _debugInfoBackupIndex?: number, // DEV-only
+  _debugInfoBackupRows?: Array<UninitializedModel>, // DEV-only
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
@@ -362,7 +379,8 @@ type Response = {
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugStartTime: number, // DEV-only
   _debugEndTime?: number, // DEV-only
-  _debugInfoFiltered: WeakSet<SomeChunk<any>>, // DEV-only
+  // Undefined: no readable debug channel, false: buffer backups, true: replay.
+  _replayDebugInfo?: boolean, // DEV-only
   _debugIOStarted: boolean, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _debugChannel?: void | DebugChannel, // DEV-only
@@ -499,11 +517,11 @@ function createErrorChunk<T>(
 function filterDebugInfo(
   response: Response,
   value: {_debugInfo: ReactDebugInfo, ...},
-): boolean {
+) {
   // $FlowFixMe[invalid-compare]
   if (response._debugEndTime === null) {
     // No end time was defined, so we keep all debug info entries.
-    return false;
+    return;
   }
 
   // Remove any debug info entries after the defined end time. For async info
@@ -513,12 +531,35 @@ function filterDebugInfo(
     response._debugEndTime -
     // $FlowFixMe[prop-missing]
     performance.timeOrigin;
-  const debugInfo = value._debugInfo;
+  const debugInfo = [];
+  for (let i = 0; i < value._debugInfo.length; i++) {
+    const info = value._debugInfo[i];
+    if (typeof info.time === 'number' && info.time > relativeEndTime) {
+      break;
+    }
+    debugInfo.push(info);
+  }
+  value._debugInfo = debugInfo;
+}
+
+function filterDebugInfoAfterError(
+  response: Response,
+  chunk: ErroredChunk<any>,
+): boolean {
+  // $FlowFixMe[invalid-compare]
+  if (response._debugEndTime === null) {
+    return false;
+  }
+
+  const relativeEndTime =
+    response._debugEndTime -
+    // $FlowFixMe[prop-missing]
+    performance.timeOrigin;
+  const debugInfo = chunk._debugInfo;
   for (let i = 0; i < debugInfo.length; i++) {
     const info = debugInfo[i];
     if (typeof info.time === 'number' && info.time > relativeEndTime) {
-      // Preserve the array identity because it may already be attached to the
-      // value that is suspended in another renderer.
+      // This array is already attached to the Lazy suspended in Fizz.
       debugInfo.length = i;
       return true;
     }
@@ -948,11 +989,10 @@ function initializeDebugChunk(
   response: Response,
   chunk: ResolvedModelChunk<any> | PendingChunk<any> | ErroredChunk<any>,
 ): void {
-  if (response._debugInfoFiltered.has(chunk)) {
-    chunk._debugChunk = null;
+  const debugChunk = chunk._debugChunk;
+  if (debugChunk === DEBUG_INFO_FILTERED) {
     return;
   }
-  const debugChunk = chunk._debugChunk;
   if (debugChunk !== null) {
     const debugInfo = chunk._debugInfo;
     const prevIsInitializingDebugInfo = isInitializingDebugInfo;
@@ -961,7 +1001,7 @@ function initializeDebugChunk(
       if (debugChunk.status === RESOLVED_MODEL) {
         // Find the index of this debug info by walking the linked list.
         let idx = debugInfo.length;
-        let c = debugChunk._debugChunk;
+        let c: null | SomeChunk<ReactDebugInfoEntry> = debugChunk._debugChunk;
         while (c !== null) {
           if (c.status !== INITIALIZED) {
             idx++;
@@ -1019,9 +1059,11 @@ function initializeDebugChunk(
             throw debugChunk.reason;
         }
       }
-      if (filterDebugInfo(response, chunk)) {
-        response._debugInfoFiltered.add(chunk);
-        chunk._debugChunk = null;
+      if (
+        chunk.status === ERRORED &&
+        filterDebugInfoAfterError(response, chunk)
+      ) {
+        chunk._debugChunk = DEBUG_INFO_FILTERED;
       }
     } catch (error) {
       if (chunk.status !== ERRORED) {
@@ -1136,6 +1178,10 @@ export function reportGlobalError(
     return;
   }
   const response = unwrapWeakResponse(weakResponse);
+  const replayDebugInfo = __DEV__ && response._replayDebugInfo === false;
+  if (replayDebugInfo === true) {
+    response._replayDebugInfo = true;
+  }
   if (response._closed) {
     return;
   }
@@ -1149,6 +1195,9 @@ export function reportGlobalError(
       triggerErrorOnChunk(response, chunk, error);
     } else if (chunk.status === INITIALIZED && chunk.reason !== null) {
       chunk.reason.error(error);
+    }
+    if (replayDebugInfo === true) {
+      replayDebugInfoBackupRows(response, chunk);
     }
   });
   if (__DEV__) {
@@ -2782,7 +2831,9 @@ function ResponseInstance(
       setTimeout(markIOStarted.bind(this), 0);
     }
     this._debugEndTime = debugEndTime == null ? null : debugEndTime;
-    this._debugInfoFiltered = new WeakSet();
+    if (debugChannel !== undefined && debugChannel.hasReadable) {
+      this._replayDebugInfo = false;
+    }
     this._debugFindSourceMapURL = findSourceMapURL;
     this._debugChannel = debugChannel;
     this._blockedConsole = null;
@@ -4113,12 +4164,11 @@ function initializeDebugInfo(
   return debugInfo;
 }
 
-function resolveDebugModel(
+function resolveDebugModelImpl(
   response: Response,
-  id: number,
   json: UninitializedModel,
+  parentChunk: SomeChunk<any>,
 ): void {
-  const parentChunk = getChunk(response, id);
   if (
     parentChunk.status === INITIALIZED ||
     parentChunk.status === HALTED ||
@@ -4132,6 +4182,9 @@ function resolveDebugModel(
     return;
   }
   const previousChunk = parentChunk._debugChunk;
+  if (previousChunk === DEBUG_INFO_FILTERED) {
+    return;
+  }
   const debugChunk: ResolvedModelChunk<ReactDebugInfoEntry> =
     createResolvedModelChunk(response, json);
   debugChunk._debugChunk = previousChunk; // Linked list of the debug chunks
@@ -4156,6 +4209,81 @@ function resolveDebugModel(
         parentChunk._debugChunk = null;
       }
     }
+  }
+}
+
+function resolveDebugModel(
+  response: Response,
+  id: number,
+  json: UninitializedModel,
+): void {
+  const parentChunk = getChunk(response, id);
+  switch (response._replayDebugInfo) {
+    case true:
+      // After a global error, backup rows become authoritative.
+      return;
+    case false: {
+      // Before an error, track regular rows so matching backups can be ignored.
+      const rows = parentChunk._debugInfoBackupRows;
+      const index = parentChunk._debugInfoBackupIndex || 0;
+      if (rows !== undefined && rows.length > 0) {
+        const nextIndex = index + 1;
+        if (nextIndex === rows.length) {
+          rows.length = 0;
+          parentChunk._debugInfoBackupIndex = 0;
+        } else {
+          parentChunk._debugInfoBackupIndex = nextIndex;
+        }
+      } else {
+        parentChunk._debugInfoBackupIndex = index + 1;
+      }
+      // Fallthrough
+    }
+    default:
+      resolveDebugModelImpl(response, json, parentChunk);
+  }
+}
+
+function resolveDebugModelBackup(
+  response: Response,
+  id: number,
+  json: UninitializedModel,
+): void {
+  const replayDebugInfo = response._replayDebugInfo;
+  if (replayDebugInfo === undefined) {
+    return;
+  }
+  const parentChunk = getChunk(response, id);
+  const rows = parentChunk._debugInfoBackupRows;
+  const index = parentChunk._debugInfoBackupIndex || 0;
+  if (index > 0 && (rows === undefined || rows.length === 0)) {
+    parentChunk._debugInfoBackupIndex = index - 1;
+    return;
+  }
+  if (replayDebugInfo === false) {
+    if (rows === undefined) {
+      parentChunk._debugInfoBackupRows = [json];
+    } else {
+      rows.push(json);
+    }
+    return;
+  }
+  resolveDebugModelImpl(response, json, parentChunk);
+}
+
+function replayDebugInfoBackupRows(
+  response: Response,
+  parentChunk: SomeChunk<any>,
+): void {
+  const rows = parentChunk._debugInfoBackupRows;
+  if (rows === undefined || rows.length === 0) {
+    return;
+  }
+  const index = parentChunk._debugInfoBackupIndex || 0;
+  parentChunk._debugInfoBackupIndex = 0;
+  parentChunk._debugInfoBackupRows = undefined;
+  for (let i = index; i < rows.length; i++) {
+    resolveDebugModelImpl(response, rows[i], parentChunk);
   }
 }
 
@@ -4943,6 +5071,13 @@ function processFullStringRow(
       }
       // Fallthrough to share the error with Console entries.
     }
+    case 66 /* "B" */: {
+      if (__DEV__) {
+        resolveDebugModelBackup(response, id, row);
+        return;
+      }
+      // Fallthrough to share the error with Console entries.
+    }
     case 74 /* "J" */: {
       if (enableProfilerTimer && enableAsyncDebugInfo) {
         resolveIOInfo(response, id, row);
@@ -5407,23 +5542,6 @@ export function close(weakResponse: WeakResponse): void {
   } else {
     reportGlobalError(weakResponse, new Error('Connection closed.'));
   }
-}
-
-export function listenToAbortSignal(
-  weakResponse: WeakResponse,
-  signal: AbortSignal,
-): () => void {
-  const listener = () => {
-    reportGlobalError(weakResponse, (signal as any).reason);
-  };
-  if (signal.aborted) {
-    listener();
-    return () => {};
-  }
-  signal.addEventListener('abort', listener);
-  return () => {
-    signal.removeEventListener('abort', listener);
-  };
 }
 
 function getCurrentOwnerInDEV(): null | ReactComponentInfo {
