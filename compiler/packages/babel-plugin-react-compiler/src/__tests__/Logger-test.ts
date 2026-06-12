@@ -7,6 +7,7 @@
 
 import * as t from '@babel/types';
 import invariant from 'invariant';
+import {ErrorCategory} from '../CompilerError';
 import {runBabelPluginReactCompiler} from '../Babel/RunReactCompilerBabelPlugin';
 import type {Logger, LoggerEvent} from '../Entrypoint';
 
@@ -67,4 +68,40 @@ it('logs failed compilation', () => {
   // Make sure event.fnLoc is different from event.detail.loc
   expect(event.fnLoc?.start).toEqual({column: 0, index: 0, line: 1});
   expect(event.fnLoc?.end).toEqual({column: 70, index: 70, line: 1});
+});
+
+it('reports set-state-in-effect error when setState is called inside useEffect via useEffectEvent', () => {
+  const logs: [string | null, LoggerEvent][] = [];
+  const logger: Logger = {
+    logEvent(filename, event) {
+      logs.push([filename, event]);
+    },
+  };
+
+  runBabelPluginReactCompiler(
+    `import {useEffect, useEffectEvent, useState} from 'react';
+    function Component() {
+      const [, setState] = useState('');
+      const onSetState = useEffectEvent(() => {
+        setState('test');
+      });
+      useEffect(() => {
+        onSetState();
+      }, []);
+      return null;
+    }`,
+    'test.js',
+    'flow',
+    {
+      logger,
+      panicThreshold: 'none',
+      outputMode: 'lint',
+      environment: {validateNoSetStateInEffects: true},
+    },
+  );
+
+  const [, event] = logs.at(0)!;
+  expect(event).toBeDefined();
+  expect(event.kind).toBe('CompileError');
+  expect(event.detail.category).toBe(ErrorCategory.EffectSetState);
 });

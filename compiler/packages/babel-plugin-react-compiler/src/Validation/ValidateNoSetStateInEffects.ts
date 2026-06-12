@@ -48,6 +48,10 @@ export function validateNoSetStateInEffects(
 ): Result<void, CompilerError> {
   const setStateFunctions: Map<IdentifierId, Place> = new Map();
   const errors = new CompilerError();
+
+  // In order to ensure that all HIR components that could contain setState have been iterated,
+  // we fully run the reconnaissance logic, then handle error finding on a separate pass.
+  // This makes setState HIR error analysis order independent.
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
@@ -112,71 +116,87 @@ export function validateNoSetStateInEffects(
                 setStateFunctions.set(instr.lvalue.identifier.id, setState);
               }
             }
-          } else if (
-            isUseEffectHookType(callee.identifier) ||
-            isUseLayoutEffectHookType(callee.identifier) ||
-            isUseInsertionEffectHookType(callee.identifier)
-          ) {
-            const arg = instr.value.args[0];
-            if (arg !== undefined && arg.kind === 'Identifier') {
-              const setState = setStateFunctions.get(arg.identifier.id);
-              if (setState !== undefined) {
-                const enableVerbose =
-                  env.config.enableVerboseNoSetStateInEffect;
-                if (enableVerbose) {
-                  errors.pushDiagnostic(
-                    CompilerDiagnostic.create({
-                      category: ErrorCategory.EffectSetState,
-                      reason:
-                        'Calling setState synchronously within an effect can trigger cascading renders',
-                      description:
-                        'Effects are intended to synchronize state between React and external systems. ' +
-                        'Calling setState synchronously causes cascading renders that hurt performance.\n\n' +
-                        'This pattern may indicate one of several issues:\n\n' +
-                        '**1. Non-local derived data**: If the value being set could be computed from props/state ' +
-                        'but requires data from a parent component, consider restructuring state ownership so the ' +
-                        'derivation can happen during render in the component that owns the relevant state.\n\n' +
-                        "**2. Derived event pattern**: If you're detecting when a prop changes (e.g., `isPlaying` " +
-                        'transitioning from false to true), this often indicates the parent should provide an event ' +
-                        'callback (like `onPlay`) instead of just the current state. Request access to the original event.\n\n' +
-                        "**3. Force update / external sync**: If you're forcing a re-render to sync with an external " +
-                        'data source (mutable values outside React), use `useSyncExternalStore` to properly subscribe ' +
-                        'to external state changes.\n\n' +
-                        'See: https://react.dev/learn/you-might-not-need-an-effect',
-                      suggestions: null,
-                    }).withDetails({
-                      kind: 'error',
-                      loc: setState.loc,
-                      message:
-                        'Avoid calling setState() directly within an effect',
-                    }),
-                  );
-                } else {
-                  errors.pushDiagnostic(
-                    CompilerDiagnostic.create({
-                      category: ErrorCategory.EffectSetState,
-                      reason:
-                        'Calling setState synchronously within an effect can trigger cascading renders',
-                      description:
-                        'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
-                        'In general, the body of an effect should do one or both of the following:\n' +
-                        '* Update external systems with the latest state from React.\n' +
-                        '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
-                        'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
-                        '(https://react.dev/learn/you-might-not-need-an-effect)',
-                      suggestions: null,
-                    }).withDetails({
-                      kind: 'error',
-                      loc: setState.loc,
-                      message:
-                        'Avoid calling setState() directly within an effect',
-                    }),
-                  );
-                }
-              }
-            }
           }
           break;
+        }
+      }
+    }
+  }
+
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind !== 'CallExpression' &&
+        instr.value.kind !== 'MethodCall'
+      ) {
+        continue;
+      }
+      const callee =
+        instr.value.kind === 'MethodCall'
+          ? instr.value.property
+          : instr.value.callee;
+      if (
+        isUseEffectHookType(callee.identifier) ||
+        isUseLayoutEffectHookType(callee.identifier) ||
+        isUseInsertionEffectHookType(callee.identifier)
+      ) {
+        const arg = instr.value.args[0];
+        if (arg !== undefined && arg.kind === 'Identifier') {
+          const setState = setStateFunctions.get(arg.identifier.id);
+          if (setState !== undefined) {
+            const enableVerbose =
+              env.config.enableVerboseNoSetStateInEffect;
+            if (enableVerbose) {
+              errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.EffectSetState,
+                  reason:
+                    'Calling setState synchronously within an effect can trigger cascading renders',
+                  description:
+                    'Effects are intended to synchronize state between React and external systems. ' +
+                    'Calling setState synchronously causes cascading renders that hurt performance.\n\n' +
+                    'This pattern may indicate one of several issues:\n\n' +
+                    '**1. Non-local derived data**: If the value being set could be computed from props/state ' +
+                    'but requires data from a parent component, consider restructuring state ownership so the ' +
+                    'derivation can happen during render in the component that owns the relevant state.\n\n' +
+                    "**2. Derived event pattern**: If you're detecting when a prop changes (e.g., `isPlaying` " +
+                    'transitioning from false to true), this often indicates the parent should provide an event ' +
+                    'callback (like `onPlay`) instead of just the current state. Request access to the original event.\n\n' +
+                    "**3. Force update / external sync**: If you're forcing a re-render to sync with an external " +
+                    'data source (mutable values outside React), use `useSyncExternalStore` to properly subscribe ' +
+                    'to external state changes.\n\n' +
+                    'See: https://react.dev/learn/you-might-not-need-an-effect',
+                  suggestions: null,
+                }).withDetails({
+                  kind: 'error',
+                  loc: setState.loc,
+                  message:
+                    'Avoid calling setState() directly within an effect',
+                }),
+              );
+            } else {
+              errors.pushDiagnostic(
+                CompilerDiagnostic.create({
+                  category: ErrorCategory.EffectSetState,
+                  reason:
+                    'Calling setState synchronously within an effect can trigger cascading renders',
+                  description:
+                    'Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. ' +
+                    'In general, the body of an effect should do one or both of the following:\n' +
+                    '* Update external systems with the latest state from React.\n' +
+                    '* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\n' +
+                    'Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. ' +
+                    '(https://react.dev/learn/you-might-not-need-an-effect)',
+                  suggestions: null,
+                }).withDetails({
+                  kind: 'error',
+                  loc: setState.loc,
+                  message:
+                    'Avoid calling setState() directly within an effect',
+                }),
+              );
+            }
+          }
         }
       }
     }
