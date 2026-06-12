@@ -100,6 +100,7 @@ export const disableLegacyMode: boolean = true;
 
 export const enableEagerAlternateStateNodeCleanup: boolean = true;
 
+export const enableViewTransitionParentEnterExit: boolean = false;
 export const enableViewTransitionForPersistenceMode: boolean = false;
 
 export const enableGestureTransition: boolean = false;
