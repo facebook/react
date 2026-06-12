@@ -981,10 +981,8 @@ export function scheduleUpdateOnFiber(
     }
   }
 
-  if (__DEV__) {
-    if (isFlushingPassiveEffects) {
-      didScheduleUpdateDuringPassiveEffects = true;
-    }
+  if (isFlushingPassiveEffects) {
+    didScheduleUpdateDuringPassiveEffects = true;
   }
 
   // Check if the work loop is currently suspended and waiting for data to
@@ -4195,10 +4193,8 @@ function flushSpawnedWork(): void {
     // There were no passive effects, so we can immediately release the cache
     // pool for this render.
     releaseRootPooledCache(root, root.pendingLanes);
-    if (__DEV__) {
-      nestedPassiveUpdateCount = 0;
-      rootWithPassiveNestedUpdates = null;
-    }
+    nestedPassiveUpdateCount = 0;
+    rootWithPassiveNestedUpdates = null;
   }
 
   // Read this again, since an effect might have updated it
@@ -4737,10 +4733,8 @@ function flushPassiveEffectsImpl() {
     setCurrentTrackFromLanes(lanes);
   }
 
-  if (__DEV__) {
-    isFlushingPassiveEffects = true;
-    didScheduleUpdateDuringPassiveEffects = false;
-  }
+  isFlushingPassiveEffects = true;
+  didScheduleUpdateDuringPassiveEffects = false;
 
   let passiveEffectStartTime = 0;
   if (enableProfilerTimer && enableComponentPerformanceTrack) {
@@ -4819,21 +4813,31 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (__DEV__) {
-    // If additional passive effects were scheduled, increment a counter. If this
-    // exceeds the limit, we'll fire a warning.
-    if (didScheduleUpdateDuringPassiveEffects) {
-      if (root === rootWithPassiveNestedUpdates) {
-        nestedPassiveUpdateCount++;
-      } else {
-        nestedPassiveUpdateCount = 0;
-        rootWithPassiveNestedUpdates = root;
-      }
+  // If additional passive effects were scheduled, increment a counter. If this
+  // exceeds the limit, throwIfInfiniteUpdateLoopDetected will throw in production.
+  if (didScheduleUpdateDuringPassiveEffects) {
+    if (root === rootWithPassiveNestedUpdates) {
+      nestedPassiveUpdateCount++;
     } else {
       nestedPassiveUpdateCount = 0;
+      rootWithPassiveNestedUpdates = root;
     }
-    isFlushingPassiveEffects = false;
-    didScheduleUpdateDuringPassiveEffects = false;
+  } else {
+    nestedPassiveUpdateCount = 0;
+  }
+  isFlushingPassiveEffects = false;
+  didScheduleUpdateDuringPassiveEffects = false;
+
+  if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
+    nestedPassiveUpdateCount = 0;
+    rootWithPassiveNestedUpdates = null;
+
+    throw new Error(
+      'Maximum update depth exceeded. This can happen when a component ' +
+        "calls setState inside useEffect, but useEffect either doesn't " +
+        'have a dependency array, or one of the dependencies changes on ' +
+        'every render.',
+    );
   }
 
   if (enableYieldingBeforePassive) {
@@ -5265,20 +5269,6 @@ export function throwIfInfiniteUpdateLoopDetected(
       );
     }
   }
-
-  if (__DEV__) {
-    if (nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT) {
-      nestedPassiveUpdateCount = 0;
-      rootWithPassiveNestedUpdates = null;
-
-      console.error(
-        'Maximum update depth exceeded. This can happen when a component ' +
-          "calls setState inside useEffect, but useEffect either doesn't " +
-          'have a dependency array, or one of the dependencies changes on ' +
-          'every render.',
-      );
-    }
-  }
 }
 
 function flushRenderPhaseStrictModeWarningsInDEV() {
@@ -5332,14 +5322,14 @@ function doubleInvokeEffectsInDEVIfNecessary(
     if (fiber.flags & PlacementDEV) {
       if (isInStrictMode) {
         runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
+        return;
       }
-    } else {
-      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
-        root,
-        fiber,
-        isInStrictMode,
-      );
     }
+    recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      fiber,
+      isInStrictMode,
+    );
     return;
   }
 
