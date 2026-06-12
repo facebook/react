@@ -57,9 +57,9 @@ describe('Trace updates highlighting (backend)', () => {
   // Renderers attach (and appear in hook.rendererInterfaces) only once React
   // has injected, i.e. after the first render — so call this after rendering.
   function enableTraceUpdates() {
-    for (const rendererInterface of hook.rendererInterfaces.values()) {
+    hook.rendererInterfaces.forEach(rendererInterface => {
       rendererInterface.setTraceUpdatesEnabled(true);
-    }
+    });
   }
 
   // @reactVersion >= 18.0
