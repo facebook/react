@@ -5,7 +5,8 @@ edition = "2024"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["raw_value", "unbounded_depth"] }
+serde-transcode = "1"
 indexmap = { version = "2", features = ["serde"] }
 
 [dev-dependencies]

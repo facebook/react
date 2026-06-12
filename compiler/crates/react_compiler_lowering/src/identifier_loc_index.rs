@@ -239,7 +239,7 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
         // The typed AstWalker skips class bodies (stored as Vec<serde_json::Value>),
         // but gatherCapturedContext in TS traverses them via Babel's traverse.
         for member in &node.body.body {
-            self.walk_json_for_identifiers(member, false);
+            self.walk_json_for_identifiers(&member.parse_value(), false);
         }
     }
 
@@ -253,7 +253,7 @@ impl<'ast> Visitor<'ast> for IdentifierLocVisitor {
         }
         // Walk class body JSON to index identifiers inside class methods
         for member in &node.body.body {
-            self.walk_json_for_identifiers(member, false);
+            self.walk_json_for_identifiers(&member.parse_value(), false);
         }
     }
 }
