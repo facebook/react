@@ -28,7 +28,7 @@
   "26": "Unexpected node: %s",
   "27": "Cannot initialize a transaction when there is already an outstanding transaction.",
   "28": "Transaction.closeAll(): Cannot close transaction when none are open.",
-  "29": "Accumulated items must be not be null or undefined.",
+  "29": "Accumulated items must not be null or undefined.",
   "30": "Accumulated items must not be null or undefined.",
   "31": "Objects are not valid as a React child (found: %s). If you meant to render a collection of children, use an array instead.",
   "32": "Unable to find element with ID %s.",
