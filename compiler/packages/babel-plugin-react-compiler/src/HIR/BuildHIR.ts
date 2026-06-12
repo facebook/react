@@ -3409,7 +3409,7 @@ function lowerJsxElementName(
   const exprLoc = exprNode.loc ?? GeneratedSource;
   if (exprPath.isJSXIdentifier()) {
     const tag: string = exprPath.node.name;
-    if (tag.match(/^[A-Z]/)) {
+    if (!tag.match(/^[a-z]/)) {
       const kind = getLoadKind(builder, exprPath);
       return lowerValueToTemporary(builder, {
         kind: kind,
