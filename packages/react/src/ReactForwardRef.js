@@ -9,6 +9,10 @@
 
 import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
+export function isForwardRef(type: mixed): boolean %checks {
+  return typeof type === 'object' && type !== null && type.$$typeof === REACT_FORWARD_REF_TYPE;
+}
+
 export function forwardRef<Props, ElementType: React$ElementType>(
   render: (
     props: Props,
