@@ -903,7 +903,11 @@ function lowerStatement(
     case 'VariableDeclaration': {
       const stmt = stmtPath as NodePath<t.VariableDeclaration>;
       const nodeKind: t.VariableDeclaration['kind'] = stmt.node.kind;
-      if (nodeKind === 'var') {
+      if (
+        nodeKind === 'var' ||
+        nodeKind === 'using' ||
+        nodeKind === 'await using'
+      ) {
         builder.recordError(
           new CompilerErrorDetail({
             reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
@@ -912,8 +916,8 @@ function lowerStatement(
             suggestions: null,
           }),
         );
-        // Treat `var` as `let` so references to the variable don't break
       }
+      // Treat `var` as `let` so references to the variable don't break
       const kind =
         nodeKind === 'let' || nodeKind === 'var'
           ? InstructionKind.Let
@@ -1183,6 +1187,17 @@ function lowerStatement(
         collection: {...value},
       });
       if (left.isVariableDeclaration()) {
+        const nodeKind = left.node.kind;
+        if (nodeKind === 'using' || nodeKind === 'await using') {
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in ForOfStatement`,
+              category: ErrorCategory.Todo,
+              loc: left.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
+        }
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
           reason: `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
@@ -1274,6 +1289,17 @@ function lowerStatement(
         value,
       });
       if (left.isVariableDeclaration()) {
+        const nodeKind = left.node.kind;
+        if (nodeKind === 'using' || nodeKind === 'await using') {
+          builder.recordError(
+            new CompilerErrorDetail({
+              reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in ForInStatement`,
+              category: ErrorCategory.Todo,
+              loc: left.node.loc ?? null,
+              suggestions: null,
+            }),
+          );
+        }
         const declarations = left.get('declarations');
         CompilerError.invariant(declarations.length === 1, {
           reason: `Expected only one declaration in the init of a ForInStatement, got ${declarations.length}`,

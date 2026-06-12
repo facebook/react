@@ -22,7 +22,7 @@ export function runBabelPluginReactCompiler(
 ): BabelCore.BabelFileResult {
   const ast = BabelParser.parse(text, {
     sourceFilename: file,
-    plugins: [language, 'jsx'],
+    plugins: [language, 'jsx', 'explicitResourceManagement'],
     sourceType: 'module',
   });
   const result = transformFromAstSync(ast, text, {

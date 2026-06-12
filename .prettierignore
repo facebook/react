@@ -22,6 +22,9 @@ compiler/**/.next
 
 # contains invalid graphql`...` which results in a promise rejection error from `yarn prettier-all`.
 compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/error.todo-kitchensink.js
+# contains explicit resource management syntax not yet parsed by prettier.
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/error.todo-await-using-declaration.js
+compiler/packages/babel-plugin-react-compiler/src/__tests__/fixtures/compiler/error.todo-using-declaration.js
 
 compiler/crates
 compiler/target

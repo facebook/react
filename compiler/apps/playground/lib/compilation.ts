@@ -88,7 +88,7 @@ function parseInput(
     });
   } else {
     return babelParse(input, {
-      plugins: ['typescript', 'jsx'],
+      plugins: ['typescript', 'jsx', 'explicitResourceManagement'],
       sourceType: 'module',
     }) as ParseResult<t.File>;
   }
