@@ -249,7 +249,7 @@ jobs:
           commit_message: |
             ${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
+            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/react/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
           branch: builds/facebook-www
           commit_user_name: ${{ github.triggering_actor }}
           commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
@@ -416,7 +416,7 @@ jobs:
           commit_message: |
             ${{ github.event.workflow_run.head_commit.message || format('Manual build of {0}', github.event.workflow_run.head_sha || github.sha) }}
 
-            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
+            DiffTrain build for [${{ github.event.workflow_run.head_sha || github.sha }}](https://github.com/react/react/commit/${{ github.event.workflow_run.head_sha || github.sha }})
           branch: builds/facebook-fbsource
           commit_user_name: ${{ github.triggering_actor }}
           commit_user_email: ${{ format('{0}@users.noreply.github.com', github.triggering_actor) }}
