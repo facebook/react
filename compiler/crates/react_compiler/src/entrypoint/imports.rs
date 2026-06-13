@@ -12,13 +12,17 @@ use react_compiler_ast::declarations::{
 };
 use react_compiler_ast::expressions::{CallExpression, Expression, Identifier};
 use react_compiler_ast::literals::StringLiteral;
-use react_compiler_ast::patterns::{ObjectPattern, ObjectPatternProp, ObjectPatternProperty, PatternLike};
+use react_compiler_ast::patterns::{
+    ObjectPattern, ObjectPatternProp, ObjectPatternProperty, PatternLike,
+};
 use react_compiler_ast::scope::ScopeInfo;
 use react_compiler_ast::statements::{
     Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use react_compiler_ast::{Program, SourceType};
-use react_compiler_diagnostics::{CompilerError, CompilerErrorDetail, ErrorCategory, Position, SourceLocation};
+use react_compiler_diagnostics::{
+    CompilerError, CompilerErrorDetail, ErrorCategory, Position, SourceLocation,
+};
 
 use super::compile_result::{DebugLogEntry, LoggerEvent, OrderedLogItem};
 use super::plugin_options::{CompilerTarget, PluginOptions};
@@ -238,7 +242,9 @@ impl ProgramContext {
 
     /// Log a compilation event.
     pub fn log_event(&mut self, event: LoggerEvent) {
-        self.ordered_log.push(OrderedLogItem::Event { event: event.clone() });
+        self.ordered_log.push(OrderedLogItem::Event {
+            event: event.clone(),
+        });
         self.events.push(event);
     }
 
@@ -280,8 +286,16 @@ pub fn validate_restricted_imports(
                 )
                 .with_description(format!("Import from module {}", import.source.value));
                 detail.loc = import.base.loc.as_ref().map(|loc| SourceLocation {
-                    start: Position { line: loc.start.line, column: loc.start.column, index: loc.start.index },
-                    end: Position { line: loc.end.line, column: loc.end.column, index: loc.end.index },
+                    start: Position {
+                        line: loc.start.line,
+                        column: loc.start.column,
+                        index: loc.start.index,
+                    },
+                    end: Position {
+                        line: loc.end.line,
+                        column: loc.end.column,
+                        index: loc.end.index,
+                    },
                 });
                 error.push_error_detail(detail);
             }
