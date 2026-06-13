@@ -182,7 +182,10 @@ fn apply_constant_propagation(
                 ..
             } => {
                 let test_value = read(constants, test);
-                if let Some(Constant::Primitive { value: ref prim, .. }) = test_value {
+                if let Some(Constant::Primitive {
+                    value: ref prim, ..
+                }) = test_value
+                {
                     has_changes = true;
                     let target_block_id = if is_truthy(prim) {
                         *consequent
@@ -243,10 +246,7 @@ fn evaluate_phi(phi: &Phi, constants: &Constants) -> Option<Constant> {
                 continue;
             }
             Some(current) => match (current, operand_value) {
-                (
-                    Constant::Primitive { value: a, .. },
-                    Constant::Primitive { value: b, .. },
-                ) => {
+                (Constant::Primitive { value: a, .. }, Constant::Primitive { value: b, .. }) => {
                     // Use JS strict equality semantics: NaN !== NaN
                     if !js_strict_equal(a, b) {
                         return None;
@@ -643,16 +643,12 @@ fn evaluate_instruction(
             }
             place_value
         }
-        InstructionValue::FunctionExpression {
-            lowered_func, ..
-        } => {
+        InstructionValue::FunctionExpression { lowered_func, .. } => {
             let func_id = lowered_func.func;
             process_inner_function(func_id, env, constants);
             None
         }
-        InstructionValue::ObjectMethod {
-            lowered_func, ..
-        } => {
+        InstructionValue::ObjectMethod { lowered_func, .. } => {
             let func_id = lowered_func.func;
             process_inner_function(func_id, env, constants);
             None
@@ -866,9 +862,9 @@ fn evaluate_binary_op(
 ) -> Option<PrimitiveValue> {
     match operator {
         BinaryOperator::Add => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() + r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() + r.value()),
+            )),
             (PrimitiveValue::String(l), PrimitiveValue::String(r)) => {
                 let mut s = l.clone();
                 s.push_str(r);
@@ -877,33 +873,33 @@ fn evaluate_binary_op(
             _ => None,
         },
         BinaryOperator::Subtract => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() - r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() - r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Multiply => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() * r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() * r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Divide => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() / r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() / r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Modulo => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => {
-                Some(PrimitiveValue::Number(FloatValue::new(l.value() % r.value())))
-            }
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value() % r.value()),
+            )),
             _ => None,
         },
         BinaryOperator::Exponent => match (lhs, rhs) {
-            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(
-                PrimitiveValue::Number(FloatValue::new(l.value().powf(r.value()))),
-            ),
+            (PrimitiveValue::Number(l), PrimitiveValue::Number(r)) => Some(PrimitiveValue::Number(
+                FloatValue::new(l.value().powf(r.value())),
+            )),
             _ => None,
         },
         BinaryOperator::BitwiseOr => match (lhs, rhs) {
@@ -973,9 +969,7 @@ fn evaluate_binary_op(
             _ => None,
         },
         BinaryOperator::StrictEqual => Some(PrimitiveValue::Boolean(js_strict_equal(lhs, rhs))),
-        BinaryOperator::StrictNotEqual => {
-            Some(PrimitiveValue::Boolean(!js_strict_equal(lhs, rhs)))
-        }
+        BinaryOperator::StrictNotEqual => Some(PrimitiveValue::Boolean(!js_strict_equal(lhs, rhs))),
         BinaryOperator::Equal => Some(PrimitiveValue::Boolean(js_abstract_equal(lhs, rhs))),
         BinaryOperator::NotEqual => Some(PrimitiveValue::Boolean(!js_abstract_equal(lhs, rhs))),
         BinaryOperator::In | BinaryOperator::InstanceOf => None,
