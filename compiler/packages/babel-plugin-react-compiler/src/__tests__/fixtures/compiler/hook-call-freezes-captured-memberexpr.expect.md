@@ -45,9 +45,9 @@ function Foo(t0) {
   }
   const x = t1;
   let t2;
-  if ($[2] !== x.inner) {
+  if ($[2] !== x?.inner) {
     t2 = () => x.inner;
-    $[2] = x.inner;
+    $[2] = x?.inner;
     $[3] = t2;
   } else {
     t2 = $[3];

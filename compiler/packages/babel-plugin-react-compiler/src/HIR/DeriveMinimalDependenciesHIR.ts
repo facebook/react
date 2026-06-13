@@ -28,6 +28,16 @@ export class ReactiveScopeDependencyTreeHIR {
    */
   #hoistableObjects: Map<Identifier, HoistableNode & {reactive: boolean}> =
     new Map();
+  /**
+   * Paths from deferred closures (event handlers, hook callbacks, returned
+   * functions). These cannot prove non-nullness at render time, but can be
+   * used to preserve fine-grained cache keys via optional access. When a
+   * dependency path would normally be truncated, we check this tree as a
+   * fallback — if the path exists here, we emit optional access (e.g.
+   * `user?.name`) instead of truncating to just `user`.
+   */
+  #deferredObjects: Map<Identifier, HoistableNode & {reactive: boolean}> =
+    new Map();
   #deps: Map<Identifier, DependencyNode & {reactive: boolean}> = new Map();
 
   /**
@@ -35,13 +45,34 @@ export class ReactiveScopeDependencyTreeHIR {
    * PropertyLoads. Note that we expect these to not contain duplicates (e.g.
    * both `a?.b` and `a.b`) only because CollectHoistablePropertyLoads merges
    * duplicates when traversing the CFG.
+   * @param deferredObjects a set of property paths from deferred closures,
+   * used as a fallback for optional cache key generation.
    */
-  constructor(hoistableObjects: Iterable<ReactiveScopeDependency>) {
-    for (const {path, identifier, reactive, loc} of hoistableObjects) {
+  constructor(
+    hoistableObjects: Iterable<ReactiveScopeDependency>,
+    deferredObjects?: Iterable<ReactiveScopeDependency>,
+  ) {
+    ReactiveScopeDependencyTreeHIR.#buildTree(
+      hoistableObjects,
+      this.#hoistableObjects,
+    );
+    if (deferredObjects != null) {
+      ReactiveScopeDependencyTreeHIR.#buildTree(
+        deferredObjects,
+        this.#deferredObjects,
+      );
+    }
+  }
+
+  static #buildTree(
+    objects: Iterable<ReactiveScopeDependency>,
+    tree: Map<Identifier, HoistableNode & {reactive: boolean}>,
+  ): void {
+    for (const {path, identifier, reactive, loc} of objects) {
       let currNode = ReactiveScopeDependencyTreeHIR.#getOrCreateRoot(
         identifier,
         reactive,
-        this.#hoistableObjects,
+        tree,
         path.length > 0 && path[0].optional ? 'Optional' : 'NonNull',
         loc,
       );
@@ -122,10 +153,18 @@ export class ReactiveScopeDependencyTreeHIR {
      */
     let hoistableCursor: HoistableNode | undefined =
       this.#hoistableObjects.get(identifier);
+    /**
+     * deferredCursor tracks the same path in the deferred objects tree.
+     * When the main hoistable tree doesn't have a path (would truncate),
+     * we check the deferred tree as a fallback to emit optional access.
+     */
+    let deferredCursor: HoistableNode | undefined =
+      this.#deferredObjects.get(identifier);
 
     // All properties read 'on the way' to a dependency are marked as 'access'
     for (const entry of path) {
       let nextHoistableCursor: HoistableNode | undefined;
+      let nextDeferredCursor: HoistableNode | undefined;
       let nextDepCursor: DependencyNode;
       if (entry.optional) {
         /**
@@ -135,6 +174,9 @@ export class ReactiveScopeDependencyTreeHIR {
          */
         if (hoistableCursor != null) {
           nextHoistableCursor = hoistableCursor?.properties.get(entry.property);
+        }
+        if (deferredCursor != null) {
+          nextDeferredCursor = deferredCursor.properties.get(entry.property);
         }
 
         let accessType;
@@ -166,20 +208,40 @@ export class ReactiveScopeDependencyTreeHIR {
         hoistableCursor.accessType === 'NonNull'
       ) {
         nextHoistableCursor = hoistableCursor.properties.get(entry.property);
+        if (deferredCursor != null) {
+          nextDeferredCursor = deferredCursor.properties.get(entry.property);
+        }
         nextDepCursor = makeOrMergeProperty(
           depCursor,
           entry.property,
           PropertyAccessType.UnconditionalAccess,
           entry.loc,
         );
+      } else if (deferredCursor != null) {
+        /**
+         * The main hoistable tree would truncate here, but the deferred
+         * tree has this path — emit optional access to preserve fine-grained
+         * cache keys. For example, `user.name` inside an onClick handler
+         * becomes `user?.name` in the cache key instead of truncating to
+         * just `user`.
+         */
+        nextDeferredCursor = deferredCursor.properties.get(entry.property);
+        nextDepCursor = makeOrMergeProperty(
+          depCursor,
+          entry.property,
+          PropertyAccessType.OptionalAccess,
+          entry.loc,
+        );
       } else {
         /**
-         * Break to truncate the dependency on its first non-optional entry that PropertyLoads are not hoistable from
+         * Break to truncate the dependency on its first non-optional entry
+         * that PropertyLoads are not hoistable from
          */
         break;
       }
       depCursor = nextDepCursor;
       hoistableCursor = nextHoistableCursor;
+      deferredCursor = nextDeferredCursor;
     }
     // mark the final node as a dependency
     depCursor.accessType = merge(

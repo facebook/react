@@ -55,7 +55,7 @@ function Content() {
   }
   const [users, setUsers] = useState(t0);
   let t1;
-  if ($[1] !== users.length) {
+  if ($[1] !== users?.length) {
     t1 = () => {
       if (users.length === 2) {
         let removedUserName = "";
@@ -69,7 +69,7 @@ function Content() {
         setAnnouncement(`Removed user (${removedUserName})`);
       }
     };
-    $[1] = users.length;
+    $[1] = users?.length;
     $[2] = t1;
   } else {
     t1 = $[2];

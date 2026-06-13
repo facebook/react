@@ -94,6 +94,7 @@ export function propagateScopeDependenciesHIR(fn: HIRFunction): void {
      */
     const tree = new ReactiveScopeDependencyTreeHIR(
       [...hoistables.assumedNonNullObjects].map(o => o.fullPath),
+      [...hoistables.deferredNonNullObjects].map(o => o.fullPath),
     );
     for (const dep of deps) {
       tree.addDependency({...dep});
