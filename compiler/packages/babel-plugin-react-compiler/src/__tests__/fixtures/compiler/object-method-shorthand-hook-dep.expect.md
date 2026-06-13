@@ -32,7 +32,7 @@ function useFoo() {
   let t0;
   if ($[0] !== state) {
     t0 = {
-      func() {
+      func: function () {
         return state;
       },
     };

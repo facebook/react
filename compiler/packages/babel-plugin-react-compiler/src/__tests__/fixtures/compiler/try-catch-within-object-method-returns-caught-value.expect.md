@@ -35,7 +35,7 @@ function Component(props) {
   let t0;
   if ($[0] !== props) {
     const object = {
-      foo() {
+      foo: function () {
         try {
           throwInput([props.value]);
         } catch (t1) {

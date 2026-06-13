@@ -1571,8 +1571,16 @@ function lowerObjectMethod(
   const loc = property.node.loc ?? GeneratedSource;
   const loweredFunc = lowerFunction(builder, property);
 
+  /*
+   * Lower ObjectMethod to FunctionExpression so that method shorthands
+   * receive per-function reactive scopes (same as arrow/function expression
+   * properties), producing more optimal memoization.
+   */
   return {
-    kind: 'ObjectMethod',
+    kind: 'FunctionExpression',
+    name: null,
+    nameHint: null,
+    type: 'FunctionExpression',
     loc,
     loweredFunc,
   };
@@ -1709,9 +1717,14 @@ function lowerExpression(
           if (!loweredKey) {
             continue;
           }
+          /*
+           * Use type 'property' since the ObjectMethod has been lowered to a
+           * FunctionExpression — it will be memoized independently just like
+           * an arrow/function-expression property.
+           */
           properties.push({
             kind: 'ObjectProperty',
-            type: 'method',
+            type: 'property',
             place,
             key: loweredKey,
           });

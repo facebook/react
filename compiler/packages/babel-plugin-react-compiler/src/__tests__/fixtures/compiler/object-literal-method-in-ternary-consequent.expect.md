@@ -34,7 +34,7 @@ function useHook(t0) {
   if ($[0] !== isCond || $[1] !== value) {
     t1 = isCond
       ? {
-          getValue() {
+          getValue: function () {
             return value;
           },
         }
