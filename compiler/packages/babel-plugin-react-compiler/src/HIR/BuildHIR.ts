@@ -3411,8 +3411,10 @@ function lowerJsxElementName(
     const tag: string = exprPath.node.name;
     /*
      * Tags beginning with a lowercase letter are host components (the JSX
-     * runtime receives them as strings). All other identifiers, including
-     * those beginning with `_` or `$`, are references to components in scope.
+     * runtime receives them as strings). Every other valid identifier
+     * reaching this branch -- including those beginning with `_` or `$` --
+     * is a reference to a component in scope. Invalid identifiers (e.g. a
+     * leading digit) are already rejected by Babel's JSX parser.
      */
     if (tag.match(/^[a-z]/)) {
       return {
