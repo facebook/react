@@ -711,6 +711,7 @@ function setProp(
     case 'contentEditable':
     case 'spellCheck':
     case 'draggable':
+    case 'writingsuggestions':
     case 'value':
     case 'autoReverse':
     case 'externalResourcesRequired':
@@ -2840,6 +2841,7 @@ function diffHydratedGenericElement(
         continue;
       }
       case 'draggable':
+      case 'writingsuggestions':
       case 'autoReverse':
       case 'externalResourcesRequired':
       case 'focusable':
