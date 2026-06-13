@@ -770,7 +770,7 @@ export function cloneAndReplaceKey(oldElement, newKey) {
 export function cloneElement(element, config, children) {
   if (element === null || element === undefined) {
     throw new Error(
-      `The argument must be a React element, but you passed ${element}.`,
+      `React.cloneElement(): The argument must be a React element, but you passed ${element === null ? 'null' : 'undefined'}.`,
     );
   }
 
