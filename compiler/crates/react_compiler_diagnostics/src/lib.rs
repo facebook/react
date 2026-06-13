@@ -1,6 +1,6 @@
 pub mod code_frame;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Error categories matching the TS ErrorCategory enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -180,12 +180,16 @@ impl CompilerDiagnostic {
 
     /// Create a diagnostic from a CompilerErrorDetail.
     pub fn from_detail(detail: CompilerErrorDetail) -> Self {
-        Self::new(detail.category, detail.reason.clone(), detail.description.clone())
-            .with_detail(CompilerDiagnosticDetail::Error {
-                loc: detail.loc,
-                message: Some(detail.reason),
-                identifier_name: None,
-            })
+        Self::new(
+            detail.category,
+            detail.reason.clone(),
+            detail.description.clone(),
+        )
+        .with_detail(CompilerDiagnosticDetail::Error {
+            loc: detail.loc,
+            message: Some(detail.reason),
+            identifier_name: None,
+        })
     }
 
     pub fn primary_location(&self) -> Option<&SourceLocation> {
@@ -194,7 +198,6 @@ impl CompilerDiagnostic {
             _ => None,
         })
     }
-
 }
 
 /// Legacy-style error detail (matches CompilerErrorDetail in TS)
@@ -387,11 +390,7 @@ impl From<CompilerError> for CompilerDiagnostic {
                 CompilerErrorOrDiagnostic::ErrorDetail(d) => CompilerDiagnostic::from_detail(d),
             }
         } else {
-            CompilerDiagnostic::new(
-                ErrorCategory::Invariant,
-                "Unknown compiler error",
-                None,
-            )
+            CompilerDiagnostic::new(ErrorCategory::Invariant, "Unknown compiler error", None)
         }
     }
 }
