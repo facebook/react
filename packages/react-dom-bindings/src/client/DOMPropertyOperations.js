@@ -42,7 +42,9 @@ export function getValueForAttribute(
       }
       return expected === undefined ? undefined : null;
     }
-    const value = node.getAttribute(name);
+    const tagName = node.tagName.toLowerCase();
+    const scriptNonce = tagName === "script" && name === "nonce";
+    const value = scriptNonce ? node.nonce : node.getAttribute(name);
     if (__DEV__) {
       checkAttributeStringCoercion(expected, name);
     }
