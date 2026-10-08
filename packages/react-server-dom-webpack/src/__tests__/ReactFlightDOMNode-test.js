@@ -12,9 +12,6 @@
 
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
-global.ReadableStream =
-  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
-
 let clientExports;
 let webpackMap;
 let webpackModules;
@@ -28,6 +25,7 @@ let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
+let assertConsoleErrorDev;
 let serverAct;
 
 // We test pass-through without encoding strings but it should work without it too.
@@ -41,6 +39,8 @@ describe('ReactFlightDOMNode', () => {
 
     patchSetImmediate();
     serverAct = require('internal-test-utils').serverAct;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -1184,11 +1184,14 @@ describe('ReactFlightDOMNode', () => {
     } else {
       // In environments where React can't detect detachment, we defensively copy the buffer.
       expect(bytes).toEqual(new Uint8Array(LARGE).fill(7));
-      assertConsoleErrorDev([
-        'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
-          'This negatively impacts performance. ' +
-          'Please upgrade to a modern Node.js version.',
-      ]);
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Node.js version.',
+        ],
+        {withoutStack: true},
+      );
     }
   });
 
@@ -1345,19 +1348,21 @@ describe('ReactFlightDOMNode', () => {
       assertConsoleErrorDev([
         'Error: Cannot transport a detached buffer. ' +
           'This usually happens when trying to transport multiple buffer-spanning views on the same underyling buffer. ' +
-          'Either reuse the exact same view by identity or copy the underlying buffer manually via `view.slice()`.' +
-          '\n    in <stack>',
+          'Either reuse the exact same view by identity or copy the underlying buffer manually via `view.slice()`.',
       ]);
     } else {
       const {first, second} = await result;
       expect(first).toEqual(new Uint8Array(LARGE).fill(1));
       expect(second).toEqual(new Uint8Array(LARGE).fill(1));
 
-      assertConsoleErrorDev([
-        'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
-          'This negatively impacts performance. ' +
-          'Please upgrade to a modern Node.js version.',
-      ]);
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Node.js version.',
+        ],
+        {withoutStack: true},
+      );
     }
   });
 
@@ -1477,17 +1482,18 @@ describe('ReactFlightDOMNode', () => {
       assertConsoleErrorDev([
         // React will not defensively copy when we can determine if the buffer is
         // detached later.
-        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer." +
-          '\n    in <stack>',
+        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
       ]);
     } else {
-      assertConsoleErrorDev([
-        'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
-          'This negatively impacts performance. ' +
-          'Please upgrade to a modern Node.js version.',
-        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer." +
-          '\n    in <stack>',
-      ]);
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Node.js version.',
+          "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+        ],
+        {withoutStack: true},
+      );
     }
 
     const partialPayload = payload;
