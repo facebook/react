@@ -63,7 +63,10 @@ import {
   rendererPackageName,
 } from './ReactFlightClientConfig';
 
-import {createBoundServerReference} from './ReactFlightReplyClient';
+import {
+  createBoundServerReference,
+  registerServerReference,
+} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
@@ -139,6 +142,9 @@ const ERRORED = 'rejected';
 
 const __PROTO__ = '__proto__';
 
+type RESPONSE_SYMBOL_TYPE = 'RESPONSE_SYMBOL'; // Fake symbol type.
+const RESPONSE_SYMBOL: RESPONSE_SYMBOL_TYPE = Symbol() as any;
+
 type PendingChunk<T> = {
   status: 'pending',
   value: null | Array<(T) => mixed>,
@@ -158,7 +164,7 @@ type BlockedChunk<T> = {
 type ResolvedModelChunk<T> = {
   status: 'resolved_model',
   value: UninitializedModel,
-  reason: null,
+  reason: {[RESPONSE_SYMBOL_TYPE]: Response},
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
@@ -414,7 +420,12 @@ function createResolvedModelChunk<T>(
   value: UninitializedModel,
 ): ResolvedModelChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(RESOLVED_MODEL, value, null, response);
+  return new ReactPromise(
+    RESOLVED_MODEL,
+    value,
+    {[RESPONSE_SYMBOL]: response},
+    response,
+  );
 }
 
 function createResolvedModuleChunk<T>(
@@ -477,7 +488,12 @@ function createResolvedIteratorResultChunk<T>(
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(RESOLVED_MODEL, iteratorResultJSON, null, response);
+  return new ReactPromise(
+    RESOLVED_MODEL,
+    iteratorResultJSON,
+    {[RESPONSE_SYMBOL]: response},
+    response,
+  );
 }
 
 function resolveIteratorResultChunk<T>(
@@ -510,6 +526,7 @@ function resolveModelChunk<T>(
   const resolvedChunk: ResolvedModelChunk<T> = (chunk: any);
   resolvedChunk.status = RESOLVED_MODEL;
   resolvedChunk.value = value;
+  resolvedChunk.reason = {[RESPONSE_SYMBOL]: chunk._response};
   if (resolveListeners !== null) {
     // This is unfortunate that we're reading this eagerly if
     // we already have listeners attached since they might no
@@ -553,6 +570,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   initializingHandler = null;
 
   const resolvedModel = chunk.value;
+  const response = chunk.reason[RESPONSE_SYMBOL];
 
   // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
@@ -563,7 +581,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   cyclicChunk.reason = null;
 
   try {
-    const value: T = parseModel(chunk._response, resolvedModel);
+    const value: T = parseModel(response, resolvedModel);
     // Invoke any listeners added while resolving this model. I.e. cyclic
     // references. This may or may not fully resolve the model depending on
     // if they were blocked.
@@ -1056,6 +1074,15 @@ function loadServerReference<A: Iterable<any>, T>(
   parentObject: Object,
   key: string,
 ): (...A) => Promise<T> {
+  if (key === 'then') {
+    // This should never happen because we always serialize objects with then-functions
+    // as "thenable" which reduces to a chunk with no other fields.
+    return null as any;
+  }
+  const id = metaData.id;
+  if (typeof id !== 'string') {
+    return null as any;
+  }
   if (!response._serverReferenceConfig) {
     // In the normal case, we can't load this Server Reference in the current environment and
     // we just return a proxy to it.
@@ -1068,20 +1095,26 @@ function loadServerReference<A: Iterable<any>, T>(
   }
   // If we have a module mapping we can load the real version of this Server Reference.
   const serverReference: ClientReference<T> =
-    resolveServerReference<$FlowFixMe>(
-      response._serverReferenceConfig,
-      metaData.id,
-    );
+    resolveServerReference<$FlowFixMe>(response._serverReferenceConfig, id);
 
+  const bound = metaData.bound;
   let promise: null | Thenable<any> = preloadModule(serverReference);
   if (!promise) {
-    if (!metaData.bound) {
-      return (requireModule(serverReference): any);
+    if (bound instanceof ReactPromise) {
+      promise = Promise.resolve(bound);
     } else {
-      promise = Promise.resolve(metaData.bound);
+      // We only await the bound arguments when they are one of our own chunks.
+      // Anything else could be a foreign thenable whose `then` we must not call.
+      const resolvedValue = (requireModule(serverReference): any);
+      registerServerReference(
+        resolvedValue,
+        {id, bound},
+        response._encodeFormAction,
+      );
+      return resolvedValue;
     }
-  } else if (metaData.bound) {
-    promise = Promise.all([promise, metaData.bound]);
+  } else if (bound instanceof ReactPromise) {
+    promise = Promise.all([promise, bound]);
   }
 
   let handler: InitializationHandler;
@@ -1101,12 +1134,21 @@ function loadServerReference<A: Iterable<any>, T>(
   function fulfill(): void {
     let resolvedValue = (requireModule(serverReference): any);
 
-    if (metaData.bound) {
-      // This promise is coming from us and should have initilialized by now.
-      const boundArgs: Array<any> = (metaData.bound: any).value.slice(0);
+    if (bound) {
+      // This promise is coming from us and should have initialized by now.
+      const promiseValue = (bound: any).value;
+      const boundArgs: Array<any> = isArray(promiseValue)
+        ? promiseValue.slice(0)
+        : [];
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
     }
+
+    registerServerReference(
+      resolvedValue,
+      {id, bound},
+      response._encodeFormAction,
+    );
 
     if (key !== __PROTO__) {
       parentObject[key] = resolvedValue;
@@ -1334,7 +1376,17 @@ function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   return model[Symbol.iterator]();
 }
 
-function createModel(response: Response, model: any): any {
+function createModel(
+  response: Response,
+  model: any,
+  parentObject: Object,
+  key: string,
+): any {
+  if (key === 'then' && typeof model === 'function') {
+    // This should never happen because we always serialize objects with then-functions
+    // as "thenable" which reduces to a chunk with no other fields.
+    return null;
+  }
   return model;
 }
 
