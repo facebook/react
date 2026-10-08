@@ -613,6 +613,7 @@ module.exports = {
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
     Required: 'readonly',
+    SharedArrayBuffer: 'readonly',
     StoreAsGlobal: 'readonly',
     symbol: 'readonly',
     SyntheticEvent: 'readonly',
