@@ -28,7 +28,7 @@ const streamOptions = {
   objectMode: true,
 };
 
-describe('ReactFlightTurbopackDOMNode', () => {
+describe('ReactFlightResultTurbopackDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
 

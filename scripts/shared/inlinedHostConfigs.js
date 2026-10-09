@@ -88,9 +88,12 @@ module.exports = [
       'react-server-dom-webpack/static',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-webpack/src/client/ReactFlightDOMResultClientNode.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
+      'react-server-dom-webpack/src/server/ReactFlightDOMResultServerNode.js',
+      'react-server-dom-webpack/src/server/ReactFlightDOMResultSerializationServerNode.js',
       'react-devtools-shared',
       'shared/ReactDOMSharedInternals',
       'react-server/src/ReactFlightServerConfigDebugNode.js',
@@ -127,11 +130,14 @@ module.exports = [
       'react-server-dom-webpack/static.node',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-webpack/src/client/ReactFlightDOMResultClientNode.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
       'react-server-dom-webpack/src/client/react-flight-dom-client.node',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node',
       'react-server-dom-webpack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-webpack/src/server/react-flight-dom-server.node
+      'react-server-dom-webpack/src/server/ReactFlightDOMResultServerNode.js',
+      'react-server-dom-webpack/src/server/ReactFlightDOMResultSerializationServerNode.js',
       'react-server-dom-webpack/node-register',
       'react-server-dom-webpack/src/ReactFlightWebpackNodeRegister.js',
       'react-devtools',
@@ -173,11 +179,13 @@ module.exports = [
       'react-server-dom-turbopack/static.node',
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
+      'react-server-dom-turbopack/src/client/ReactFlightDOMResultClientNode.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer.js',
       'react-server-dom-turbopack/src/client/react-flight-dom-client.node',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.node',
       'react-server-dom-turbopack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/src/server/react-flight-dom-server.node
+      'react-server-dom-turbopack/src/server/ReactFlightDOMResultServerNode.js',
       'react-server-dom-turbopack/node-register',
       'react-server-dom-turbopack/src/ReactFlightTurbopackNodeRegister.js',
       'react-devtools',
