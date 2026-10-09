@@ -10,7 +10,8 @@
 import type {Result} from 'shared/ReactFlightResult';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactDebugInfo, Thenable} from 'shared/ReactTypes';
-import {getRoot} from 'shared/ReactFlightResult';
+import {getRoot, getHintQueue, waitForHints} from 'shared/ReactFlightResult';
+import {dispatchHint} from './ReactFlightClientConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
@@ -321,5 +322,24 @@ export function readResult<T>(
     model => initializeModelChunk(response, chunk, model),
     error => triggerErrorOnChunk(chunk, error),
   );
+  const hints = getHintQueue(result);
+  let nextHintIndex = 0;
+  function flushHints(): void {
+    try {
+      const completedHints = hints.completedHints;
+      for (; nextHintIndex < completedHints.length; nextHintIndex++) {
+        const hint = completedHints[nextHintIndex];
+        dispatchHint(hint.code, hint.model);
+      }
+      if (!hints.closed) {
+        waitForHints(hints).then(flushHints, error =>
+          triggerErrorOnChunk(chunk, error),
+        );
+      }
+    } catch (error) {
+      triggerErrorOnChunk(chunk, error);
+    }
+  }
+  flushHints();
   return chunk as any;
 }
