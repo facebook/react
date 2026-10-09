@@ -975,61 +975,53 @@ describe('ReactFlightResultDOM', () => {
   });
 
   describe('taint', () => {
-    function clientReference(value) {
-      return Object.defineProperties(
-        function () {
-          throw new Error('Cannot call a client function from the server.');
-        },
-        {
-          $$typeof: {value: Symbol.for('react.client.reference')},
-          value: {value: value},
-        },
-      );
-    }
-
     // @gate enableTaint
-    it.skip('errors when a tainted object is serialized', async () => {
+    it('errors when a tainted object is serialized', async () => {
       function UserClient({user}) {
         return <span>{user.name}</span>;
       }
-      const User = clientReference(UserClient);
+      const User = clientExports(UserClient);
 
       const user = {
         name: 'Seb',
         age: 'rather not say',
       };
-      ReactServer.experimental_taintObjectReference(
+      FlightReact.experimental_taintObjectReference(
         "Don't pass the raw user object to the client",
         user,
       );
       const errors = [];
-      ReactNoopFlightServer.render(<User user={user} />, {
-        onError(x) {
-          errors.push(x.message);
-        },
-      });
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<User user={user} />, {
+          onError(x) {
+            errors.push(x.message);
+          },
+        }),
+      );
 
       expect(errors).toEqual(["Don't pass the raw user object to the client"]);
     });
 
     // @gate enableTaint
-    it.skip('errors with a specific message when a tainted function is serialized', async () => {
+    it('errors with a specific message when a tainted function is serialized', async () => {
       function UserClient({user}) {
         return <span>{user.name}</span>;
       }
-      const User = clientReference(UserClient);
+      const User = clientExports(UserClient);
 
       function change() {}
-      ReactServer.experimental_taintObjectReference(
+      FlightReact.experimental_taintObjectReference(
         'A change handler cannot be passed to a client component',
         change,
       );
       const errors = [];
-      ReactNoopFlightServer.render(<User onChange={change} />, {
-        onError(x) {
-          errors.push(x.message);
-        },
-      });
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<User onChange={change} />, {
+          onError(x) {
+            errors.push(x.message);
+          },
+        }),
+      );
 
       expect(errors).toEqual([
         'A change handler cannot be passed to a client component',
@@ -1037,29 +1029,34 @@ describe('ReactFlightResultDOM', () => {
     });
 
     // @gate enableTaint
-    it.skip('errors when a tainted string is serialized', async () => {
+    it('errors when a tainted string is serialized', async () => {
       function UserClient({user}) {
         return <span>{user.name}</span>;
       }
-      const User = clientReference(UserClient);
+      const User = clientExports(UserClient);
 
       const process = {
         env: {
           SECRET: '3e971ecc1485fe78625598bf9b6f85db',
         },
       };
-      ReactServer.experimental_taintUniqueValue(
+      FlightReact.experimental_taintUniqueValue(
         'Cannot pass a secret token to the client',
         process,
         process.env.SECRET,
       );
 
       const errors = [];
-      ReactNoopFlightServer.render(<User token={process.env.SECRET} />, {
-        onError(x) {
-          errors.push(x.message);
-        },
-      });
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(
+          <User token={process.env.SECRET} />,
+          {
+            onError(x) {
+              errors.push(x.message);
+            },
+          },
+        ),
+      );
 
       expect(errors).toEqual(['Cannot pass a secret token to the client']);
 
@@ -1069,17 +1066,17 @@ describe('ReactFlightResultDOM', () => {
     });
 
     // @gate enableTaint
-    it.skip('errors when a tainted bigint is serialized', async () => {
+    it('errors when a tainted bigint is serialized', async () => {
       function UserClient({user}) {
         return <span>{user.name}</span>;
       }
-      const User = clientReference(UserClient);
+      const User = clientExports(UserClient);
 
       const currentUser = {
         name: 'Seb',
         token: BigInt('0x3e971ecc1485fe78625598bf9b6f85dc'),
       };
-      ReactServer.experimental_taintUniqueValue(
+      FlightReact.experimental_taintUniqueValue(
         'Cannot pass a secret token to the client',
         currentUser,
         currentUser.token,
@@ -1090,21 +1087,23 @@ describe('ReactFlightResultDOM', () => {
       }
 
       const errors = [];
-      ReactNoopFlightServer.render(<App user={currentUser} />, {
-        onError(x) {
-          errors.push(x.message);
-        },
-      });
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<App user={currentUser} />, {
+          onError(x) {
+            errors.push(x.message);
+          },
+        }),
+      );
 
       expect(errors).toEqual(['Cannot pass a secret token to the client']);
     });
 
     // @gate enableTaint
-    it.skip('errors when a tainted binary value is serialized', async () => {
+    it('errors when a tainted binary value is serialized', async () => {
       function UserClient({user}) {
         return <span>{user.name}</span>;
       }
-      const User = clientReference(UserClient);
+      const User = clientExports(UserClient);
 
       const currentUser = {
         name: 'Seb',
@@ -1112,7 +1111,7 @@ describe('ReactFlightResultDOM', () => {
           0x3e971ecc, 0x1485fe78, 0x625598bf, 0x9b6f85dd,
         ]),
       };
-      ReactServer.experimental_taintUniqueValue(
+      FlightReact.experimental_taintUniqueValue(
         'Cannot pass a secret token to the client',
         currentUser,
         currentUser.token,
@@ -1124,28 +1123,30 @@ describe('ReactFlightResultDOM', () => {
       }
 
       const errors = [];
-      ReactNoopFlightServer.render(<App user={currentUser} />, {
-        onError(x) {
-          errors.push(x.message);
-        },
-      });
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<App user={currentUser} />, {
+          onError(x) {
+            errors.push(x.message);
+          },
+        }),
+      );
 
       expect(errors).toEqual(['Cannot pass a secret token to the client']);
     });
 
     // @gate enableTaint
-    it.skip('keep a tainted value tainted until the end of any pending requests', async () => {
+    it('keep a tainted value tainted until the end of any pending requests', async () => {
       function UserClient({user}) {
         return <span>{user.name}</span>;
       }
-      const User = clientReference(UserClient);
+      const User = clientExports(UserClient);
 
       function getUser() {
         const user = {
           name: 'Seb',
           token: '3e971ecc1485fe78625598bf9b6f85db',
         };
-        ReactServer.experimental_taintUniqueValue(
+        FlightReact.experimental_taintUniqueValue(
           'Cannot pass a secret token to the client',
           user,
           user.token,
@@ -1164,24 +1165,28 @@ describe('ReactFlightResultDOM', () => {
       }
 
       let errors = [];
-      ReactNoopFlightServer.render(<App />, {
-        onError(x) {
-          errors.push(x.message);
-        },
-      });
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<App />, {
+          onError(x) {
+            errors.push(x.message);
+          },
+        }),
+      );
 
       expect(errors).toEqual(['Cannot pass a secret token to the client']);
 
       // After the previous requests finishes, the token can be rendered again.
 
       errors = [];
-      ReactNoopFlightServer.render(
-        <User user={{token: '3e971ecc1485fe78625598bf9b6f85db'}} />,
-        {
-          onError(x) {
-            errors.push(x.message);
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(
+          <User user={{token: '3e971ecc1485fe78625598bf9b6f85db'}} />,
+          {
+            onError(x) {
+              errors.push(x.message);
+            },
           },
-        },
+        ),
       );
 
       expect(errors).toEqual([]);
