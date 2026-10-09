@@ -7,7 +7,22 @@
  * @flow
  */
 
-import type {Result, ModelReference} from 'shared/ReactFlightResult';
+import type {
+  ServerReferenceMetadata,
+  Result,
+  ModelReference,
+} from 'shared/ReactFlightResult';
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
+import type {
+  CallServerCallback,
+  EncodeFormActionCallback,
+} from './ReactFlightReplyClient';
+import {readTemporaryReference} from './ReactFlightTemporaryReferences';
+import {
+  createBoundServerReference,
+  registerBoundServerReference,
+  createServerObjectReference,
+} from './ReactFlightReplyClient';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {ReactDebugInfo, Thenable, Wakeable} from 'shared/ReactTypes';
@@ -16,9 +31,12 @@ import type {
   ClientReferenceMetadata,
   ServerConsumerModuleMap,
   ModuleLoading,
+  ServerManifest,
 } from './ReactFlightClientConfig';
 import {
   getIteratorEntries,
+  getTemporaryReference,
+  getServerReference,
   getRoot,
   getHintQueue,
   waitForHints,
@@ -36,6 +54,7 @@ import {
 import {
   dispatchHint,
   resolveClientReference,
+  resolveServerReference,
   prepareDestinationForModule,
   preloadModule,
   requireModule,
@@ -78,6 +97,10 @@ type ModelSubscription = {
 export type Response = {
   _result: Result<any>,
   _bundlerConfig: ServerConsumerModuleMap,
+  _serverReferenceConfig: null | ServerManifest,
+  _callServer: CallServerCallback,
+  _encodeFormAction: void | EncodeFormActionCallback,
+  _tempRefs: void | TemporaryReferenceSet,
   _moduleLoading: ModuleLoading,
   _nonce: void | string,
   _resolveClientReferenceMetadata: Object => null | ClientReferenceMetadata,
@@ -93,20 +116,30 @@ export type Response = {
   _preloads: Map<Object, ModelPreload>,
   _chunks: Set<SomeChunk<any>>,
   _completedElements: Array<ReactElement>, // DEV-only
+  _debugFindSourceMapURL: void | ((string, string) => null | string), // DEV-only
 };
 
 export function createResponse(
   result: Result<any>,
   bundlerConfig: ServerConsumerModuleMap,
+  serverReferenceConfig: null | ServerManifest,
   moduleLoading: ModuleLoading,
   resolveClientReferenceMetadata: Object => null | ClientReferenceMetadata,
+  callServer: CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
   onError: void | (mixed => ?string),
   allowPartialStream: boolean = false,
+  findSourceMapURL?: (string, string) => null | string,
 ): Response {
   const response: Response = {
     _result: result,
     _bundlerConfig: bundlerConfig,
+    _serverReferenceConfig: serverReferenceConfig,
+    _callServer: callServer,
+    _encodeFormAction: encodeFormAction,
+    _tempRefs: temporaryReferences,
     _moduleLoading: moduleLoading,
     _nonce: nonce,
     _resolveClientReferenceMetadata: resolveClientReferenceMetadata,
@@ -124,6 +157,7 @@ export function createResponse(
   } as any;
   if (__DEV__) {
     response._completedElements = [];
+    response._debugFindSourceMapURL = findSourceMapURL;
   }
   return response;
 }
@@ -579,7 +613,21 @@ function resolveModule(
       return chunk;
     }
     if (metadata === null) {
-      return null;
+      const serverReferenceMetadata = getServerReference(
+        response._result,
+        reference,
+      );
+      if (serverReferenceMetadata === undefined) {
+        return null;
+      }
+      chunk = createBlockedChunk<any>(response);
+      response._modules.set(reference, chunk);
+      if (response._closed) {
+        triggerErrorOnChunk(chunk, getClosedReason(response));
+        return chunk;
+      }
+      loadServerReference(response, serverReferenceMetadata, chunk);
+      return chunk;
     }
     chunk = createPendingChunk<any>(response);
     response._modules.set(reference, chunk);
@@ -672,6 +720,12 @@ function createElement(
       : null;
   if (moduleChunk !== null) {
     resolvedElement.type = createLazyChunkWrapper(moduleChunk);
+  } else if (
+    type !== null &&
+    (typeof type === 'object' || typeof type === 'function') &&
+    resolveTemporaryReference(response, type as any)
+  ) {
+    resolvedElement.type = response._models.get(type);
   }
   resolvedElement.props = readModel(response, element.props);
   if (__DEV__) {
@@ -851,6 +905,9 @@ function readObject(response: Response, object: {[key: string]: any}): any {
 }
 
 function readSpecialModel(response: Response, value: any): any {
+  if (resolveTemporaryReference(response, value)) {
+    return response._models.get(value);
+  }
   const moduleChunk = resolveModule(response, value);
   if (moduleChunk !== null) {
     return readChunk(moduleChunk);
@@ -1238,6 +1295,9 @@ function scanModel(
     return;
   }
   if (kind === 0) {
+    if (resolveTemporaryReference(response, value)) {
+      return;
+    }
     const chunk = resolveModule(response, value);
     if (chunk !== null) {
       if (chunk.status === RESOLVED_MODULE) {
@@ -1559,4 +1619,99 @@ export function readResult<T>(
   }
   flushHints();
   return chunk;
+}
+
+function resolveTemporaryReference(response: Response, value: Object): boolean {
+  const reference = getTemporaryReference(response._result, value);
+  if (reference === undefined) {
+    return false;
+  }
+  const temporaryReferences = response._tempRefs;
+  if (temporaryReferences == null) {
+    throw new Error(
+      'Missing a temporary reference set but the RSC response returned a temporary reference. ' +
+        'Pass a temporaryReference option with the set that was used with the reply.',
+    );
+  }
+  response._models.set(
+    value,
+    readTemporaryReference(temporaryReferences, '$' + reference),
+  );
+  return true;
+}
+
+function loadServerReference(
+  response: Response,
+  metaData: ServerReferenceMetadata,
+  chunk: SomeChunk<any>,
+): void {
+  if (metaData.isObjectReference) {
+    initializeChunk(chunk, createServerObjectReference(metaData.id));
+    return;
+  }
+  const bound =
+    metaData.bound === null ? null : readModel(response, metaData.bound);
+  if (bound !== null) {
+    bound.catch(noop);
+  }
+  if (!response._serverReferenceConfig) {
+    initializeChunk(
+      chunk,
+      createBoundServerReference(
+        __DEV__
+          ? {
+              id: metaData.id,
+              bound,
+              name: metaData.name,
+              env: metaData.env,
+              location: metaData.location,
+            }
+          : {id: metaData.id, bound},
+        response._callServer,
+        response._encodeFormAction,
+        __DEV__ ? response._debugFindSourceMapURL : undefined,
+      ),
+    );
+    return;
+  }
+  const serverReference = resolveServerReference<any>(
+    response._serverReferenceConfig,
+    metaData.id,
+  );
+  const promise = preloadModule(serverReference);
+  if (!promise && !bound) {
+    const resolvedValue = requireModule(serverReference) as any;
+    registerBoundServerReference(
+      resolvedValue,
+      metaData.id,
+      bound,
+      response._encodeFormAction,
+    );
+    initializeChunk(chunk, resolvedValue);
+    return;
+  }
+  subscribeToModel(
+    response,
+    Promise.all([promise, bound]),
+    ([, boundArgs]) => {
+      try {
+        let resolvedValue = requireModule(serverReference) as any;
+        if (boundArgs !== null) {
+          boundArgs = boundArgs.slice(0);
+          boundArgs.unshift(null);
+          resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+        }
+        registerBoundServerReference(
+          resolvedValue,
+          metaData.id,
+          bound,
+          response._encodeFormAction,
+        );
+        initializeChunk(chunk, resolvedValue);
+      } catch (error) {
+        triggerErrorOnChunk(chunk, error);
+      }
+    },
+    error => triggerErrorOnChunk(chunk, error),
+  );
 }

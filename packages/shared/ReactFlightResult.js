@@ -7,8 +7,9 @@
  * @flow
  */
 
+import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import type {ResultModel} from './ReactFlightResultModel';
-import type {Thenable} from './ReactTypes';
+import type {Thenable, ReactFunctionLocation} from './ReactTypes';
 import type {
   HintCode,
   HintModel,
@@ -27,6 +28,15 @@ export type ModelReference = {
   ...
 };
 
+export type ServerReferenceMetadata = {
+  +id: string,
+  +bound: null | Promise<Array<any>>,
+  +isObjectReference: boolean,
+  +name?: string, // DEV-only
+  +env?: string, // DEV-only
+  +location?: ReactFunctionLocation, // DEV-only
+};
+
 export type Hint = {+code: HintCode, +model: HintModel<any>};
 export type ErrorReference = {+digest: string};
 export type HintQueue = {
@@ -38,6 +48,7 @@ export type HintQueue = {
 
 export opaque type Result<T>: {abort(reason: mixed): void, ...} = {
   +root: ResultModel<T>,
+  +temporaryReferenceSet: void | TemporaryReferenceSet,
   closed: boolean,
   completionListeners: null | Set<() => void>,
   hintQueue: null | HintQueue,
@@ -48,6 +59,8 @@ export opaque type Result<T>: {abort(reason: mixed): void, ...} = {
   haltedModels: null | WeakSet<Object>,
   modelReferences: null | WeakMap<Object, Object>,
   valueReferences: null | WeakSet<Object>,
+  temporaryReferences: null | WeakMap<Object, string>,
+  serverReferences: null | WeakMap<Object, ServerReferenceMetadata>,
   formDataWithBlobs: null | WeakSet<FormData>,
   iteratorEntries: null | WeakMap<Object, $ReadOnlyArray<mixed>>,
   collectionEntries: null | WeakMap<Object, ResultModel<Array<any>>>,
@@ -64,9 +77,11 @@ function abortResult<T>(result: Result<T>, reason: mixed): void {
 export function createResult<T>(
   root: ResultModel<T>,
   abort: (reason: mixed) => void,
+  temporaryReferenceSet: void | TemporaryReferenceSet,
 ): Result<T> {
   const result: Result<T> = {
     root,
+    temporaryReferenceSet,
     closed: false,
     completionListeners: null,
     hintQueue: null,
@@ -77,6 +92,8 @@ export function createResult<T>(
     haltedModels: null,
     modelReferences: null,
     valueReferences: null,
+    temporaryReferences: null,
+    serverReferences: null,
     formDataWithBlobs: null,
     iteratorEntries: null,
     collectionEntries: null,
@@ -342,4 +359,52 @@ export function getIteratorEntries<T>(
 ): void | $ReadOnlyArray<mixed> {
   const iteratorEntries = result.iteratorEntries;
   return iteratorEntries === null ? undefined : iteratorEntries.get(iterator);
+}
+
+export function setServerReference<T>(
+  result: Result<T>,
+  value: Object,
+  metadata: ServerReferenceMetadata,
+): void {
+  let serverReferences = result.serverReferences;
+  if (serverReferences === null) {
+    result.serverReferences = serverReferences = new WeakMap();
+  }
+  serverReferences.set(value, metadata);
+}
+
+export function getServerReference<T>(
+  result: Result<T>,
+  value: Object,
+): void | ServerReferenceMetadata {
+  const serverReferences = result.serverReferences;
+  return serverReferences === null ? undefined : serverReferences.get(value);
+}
+
+export function setTemporaryReference<T>(
+  result: Result<T>,
+  value: Object,
+  reference: string,
+): void {
+  let temporaryReferences = result.temporaryReferences;
+  if (temporaryReferences === null) {
+    result.temporaryReferences = temporaryReferences = new WeakMap();
+  }
+  temporaryReferences.set(value, reference);
+}
+
+export function getTemporaryReference<T>(
+  result: Result<T>,
+  value: Object,
+): void | string {
+  const temporaryReferences = result.temporaryReferences;
+  return temporaryReferences === null
+    ? undefined
+    : temporaryReferences.get(value);
+}
+
+export function getTemporaryReferenceSet<T>(
+  result: Result<T>,
+): void | TemporaryReferenceSet {
+  return result.temporaryReferenceSet;
 }

@@ -10,6 +10,11 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Result, ModelReference} from 'shared/ReactFlightResult';
 import type {ResultModel} from 'shared/ReactFlightResultModel';
+import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
+import {
+  isOpaqueTemporaryReference,
+  resolveTemporaryReference,
+} from './ReactFlightServerTemporaryReferences';
 import type {ReactClientValue} from './ReactFlightServer';
 export type {ReactClientValue} from './ReactFlightServer';
 import type {ThenableState} from './ReactFlightThenable';
@@ -19,6 +24,7 @@ import type {
   FulfilledThenable,
   RejectedThenable,
   ReactKey,
+  ReactFunctionLocation,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
@@ -59,6 +65,9 @@ import {
   markFormDataWithBlobs,
   setIteratorEntries,
   getIteratorEntries,
+  setServerReference,
+  setTemporaryReference,
+  getTemporaryReference,
   setCollectionEntries,
   setModelInfo,
   getModelInfo,
@@ -77,7 +86,10 @@ import {scheduleWork, scheduleMicrotask} from './ReactServerStreamConfig';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
 import noop from 'shared/noop';
-import {enableTaint} from 'shared/ReactFeatureFlags';
+import {
+  enableTaint,
+  enableFlightObjectReferences,
+} from 'shared/ReactFeatureFlags';
 import binaryToComparableString from 'shared/binaryToComparableString';
 import {
   createHints,
@@ -87,6 +99,11 @@ import {
 import {resolveCache, setCurrentCache} from './flight/ReactFlightCurrentCache';
 import {
   isClientReference,
+  isServerReference,
+  getServerReferenceId,
+  getServerReferenceLocation,
+  parseStackTrace,
+  getServerReferenceBoundArguments,
   supportsRequestStorage,
   cacheStorage,
   requestStorage,
@@ -207,9 +224,12 @@ export type Request = {
   deferredBlobs: null | Array<Task>,
   taintCleanupQueue: Array<string | bigint>,
   abortableTasks: Set<Task>,
+  temporaryReferences: void | TemporaryReferenceSet,
+  createServerReference: (Function, Promise<Array<any>>) => Function,
   identifierPrefix: string,
   identifierCount: number,
   onError: mixed => ?string,
+  environmentName: () => string, // DEV-only
 };
 
 function defaultErrorHandler(error: mixed): void {
@@ -249,9 +269,13 @@ function RequestInstance(
   this: any,
   model: ReactClientValue,
   onError: void | (mixed => ?string),
+  identifierPrefix: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  createServerReference: (Function, Promise<Array<any>>) => Function,
   type: 20 | 21,
   onAllReady: () => void,
   onFatalError: mixed => void,
+  environmentName: void | string | (() => string),
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -292,8 +316,18 @@ function RequestInstance(
   }
   this.taintCleanupQueue = cleanupQueue;
   this.abortableTasks = new Set();
-  this.identifierPrefix = '';
+  this.identifierPrefix = identifierPrefix || '';
+  this.temporaryReferences = temporaryReferences;
+  this.createServerReference = createServerReference;
   this.identifierCount = 1;
+  if (__DEV__) {
+    this.environmentName =
+      environmentName === undefined
+        ? () => 'Server'
+        : typeof environmentName !== 'function'
+          ? () => environmentName
+          : environmentName;
+  }
   const rootTask = createTask(
     this,
     model,
@@ -302,7 +336,11 @@ function RequestInstance(
     createRootFormatContext(),
   );
   const root = rootTask.promise;
-  this.result = createResult(root, reason => abort(this, reason));
+  this.result = createResult(
+    root,
+    reason => abort(this, reason),
+    temporaryReferences,
+  );
   this.pingedTasks = [rootTask];
 }
 
@@ -328,10 +366,24 @@ export function emitHint<Code: HintCode>(
 
 export function createRequest(
   model: ReactClientValue,
-  onError?: mixed => ?string,
+  onError: void | (mixed => ?string),
+  identifierPrefix: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  createServerReference: (Function, Promise<Array<any>>) => Function,
+  environmentName?: string | (() => string),
 ): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new RequestInstance(model, onError, RENDER, noop, noop);
+  return new RequestInstance(
+    model,
+    onError,
+    identifierPrefix,
+    temporaryReferences,
+    createServerReference,
+    RENDER,
+    noop,
+    noop,
+    environmentName,
+  );
 }
 
 export function getResult(request: Request): Result<ReactClientValue> {
@@ -486,7 +538,11 @@ function renderElement(
   if (element.props.ref != null) {
     throw new Error('Not implemented.');
   }
-  if (typeof type === 'function' && !isClientReference(type)) {
+  if (
+    typeof type === 'function' &&
+    !isClientReference(type) &&
+    !isOpaqueTemporaryReference(type)
+  ) {
     return renderFunctionComponent(request, task, type, element.props, element);
   }
   if (type === REACT_FRAGMENT_TYPE && element.key === null) {
@@ -543,7 +599,8 @@ function renderElement(
   if (
     typeof type !== 'string' &&
     typeof type !== 'symbol' &&
-    !isClientReference(type)
+    !isClientReference(type) &&
+    !isOpaqueTemporaryReference(type)
   ) {
     throw new Error('Not implemented.');
   }
@@ -956,11 +1013,29 @@ function renderModelDestructive(
   }
   if (
     value !== null &&
-    (typeof value === 'object' || typeof value === 'function') &&
-    isClientReference(value)
+    (typeof value === 'object' || typeof value === 'function')
   ) {
-    return renderModelReference(task, value);
+    if (isClientReference(value)) {
+      return renderModelReference(task, value);
+    }
+    if (
+      (typeof value === 'function' || enableFlightObjectReferences) &&
+      isServerReference(value)
+    ) {
+      return renderModelReference(task, renderServerReference(request, value));
+    }
+    if (request.temporaryReferences !== undefined) {
+      const reference = resolveTemporaryReference(
+        request.temporaryReferences,
+        value as any,
+      );
+      if (reference !== undefined) {
+        setTemporaryReference(request.result, value as any, reference);
+        return renderModelReference(task, value);
+      }
+    }
   }
+
   if (enableTaint) {
     // Check the source before copying it. A copy does not carry its taint mark.
     if (typeof value === 'string' || typeof value === 'bigint') {
@@ -992,6 +1067,11 @@ function renderModelDestructive(
       return renderModelReference(task, new Date(value));
     }
     if (typeof value === 'function') {
+      if (isOpaqueTemporaryReference(value)) {
+        throw new Error(
+          'Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server.',
+        );
+      }
       throw new Error('Not implemented.');
     }
     if (typeof value === 'symbol') {
@@ -1264,6 +1344,7 @@ function resolveModel(
   if (
     value !== null &&
     typeof value === 'object' &&
+    !(enableFlightObjectReferences && isServerReference(value)) &&
     // $FlowFixMe[method-unbinding]
     typeof value.toJSON === 'function'
   ) {
@@ -2184,6 +2265,8 @@ function getOutlinedModelDependencies(
     if (
       kind === 0 &&
       (isClientReference(value) ||
+        isServerReference(value) ||
+        getTemporaryReference(request.result, value) !== undefined ||
         getValueReference(request.result, value) !== undefined)
     ) {
       return;
@@ -2294,6 +2377,8 @@ function resolveOutlinedModel(
     if (
       kind === 0 &&
       (isClientReference(value) ||
+        isServerReference(value) ||
+        getTemporaryReference(request.result, value) !== undefined ||
         getValueReference(request.result, value) !== undefined)
     ) {
       return value;
@@ -2648,15 +2733,23 @@ export function createPrerenderRequest(
   model: ReactClientValue,
   onAllReady: () => void,
   onFatalError: mixed => void,
-  onError?: mixed => ?string,
+  onError: void | (mixed => ?string),
+  identifierPrefix: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  createServerReference: (Function, Promise<Array<any>>) => Function,
+  environmentName?: string | (() => string),
 ): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new RequestInstance(
     model,
     onError,
+    identifierPrefix,
+    temporaryReferences,
+    createServerReference,
     PRERENDER,
     onAllReady,
     onFatalError,
+    environmentName,
   );
 }
 
@@ -2942,4 +3035,76 @@ function validateDeferredBlobs(request: Request): void {
       validateBlob(request, deferredBlobs[i]);
     }
   }
+}
+
+function renderServerReference(request: Request, reference: Object): Object {
+  const existingReference = getRenderedModel(request.modelEntries, reference);
+  if (existingReference !== undefined) {
+    return existingReference;
+  }
+  const bundlerConfig = null as any;
+  const serverReference = reference as any;
+  const id = getServerReferenceId(bundlerConfig, serverReference);
+  if (typeof reference !== 'function') {
+    setServerReference(request.result, reference, {
+      id,
+      bound: null,
+      isObjectReference: true,
+    });
+    setRenderedModel(request.modelEntries, reference, reference);
+    return reference;
+  }
+  const boundArgs = getServerReferenceBoundArguments(
+    bundlerConfig,
+    serverReference,
+  );
+  let location: null | ReactFunctionLocation = null;
+  if (__DEV__) {
+    const error = getServerReferenceLocation(bundlerConfig, serverReference);
+    // $FlowFixMe[constant-condition]
+    if (error) {
+      const frames = parseStackTrace(error, 1);
+      if (frames.length > 0) {
+        const firstFrame = frames[0];
+        location = [firstFrame[0], firstFrame[1], firstFrame[2], firstFrame[3]];
+      }
+    }
+  }
+  const serverReferenceMetadata: {
+    id: string,
+    bound: null | Promise<Array<any>>,
+    isObjectReference: boolean,
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
+  } =
+    __DEV__ && location !== null
+      ? {
+          id,
+          bound: null,
+          isObjectReference: false,
+          name: reference.name,
+          env: (0, request.environmentName)(),
+          location,
+        }
+      : {id, bound: null, isObjectReference: false};
+  if (boundArgs === null) {
+    setServerReference(request.result, reference, serverReferenceMetadata);
+    setRenderedModel(request.modelEntries, reference, reference);
+    return reference;
+  }
+  const newTask = createTask(
+    request,
+    boundArgs as any,
+    null,
+    false,
+    createRootFormatContext(),
+  );
+  newTask.promise.then(noop, noop);
+  const copy = request.createServerReference(reference, newTask.promise as any);
+  serverReferenceMetadata.bound = newTask.promise as any;
+  setServerReference(request.result, copy, serverReferenceMetadata);
+  setRenderedModel(request.modelEntries, reference, copy);
+  pingTask(request, newTask);
+  return copy;
 }

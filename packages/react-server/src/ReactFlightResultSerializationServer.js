@@ -8,8 +8,16 @@
  */
 
 import type {ResultModel} from 'shared/ReactFlightResultModel';
-import type {ErrorReference, ModelReference} from 'shared/ReactFlightResult';
-import type {ReactStackTrace, ReactKey} from 'shared/ReactTypes';
+import type {
+  ServerReferenceMetadata,
+  ErrorReference,
+  ModelReference,
+} from 'shared/ReactFlightResult';
+import type {
+  ReactStackTrace,
+  ReactKey,
+  ReactFunctionLocation,
+} from 'shared/ReactTypes';
 import {
   MODEL_KIND_MASK,
   MODEL_OBJECT,
@@ -29,6 +37,8 @@ import type {
   ClientReference,
   ClientReferenceKey,
   ClientReferenceMetadata,
+  ServerReference,
+  ServerReferenceId,
 } from './ReactFlightServerConfig';
 import {
   beginWriting,
@@ -54,11 +64,18 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import noop from 'shared/noop';
-import {enableTaint} from 'shared/ReactFeatureFlags';
+import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
+import {resolveTemporaryReference} from './ReactFlightServerTemporaryReferences';
+import {
+  enableTaint,
+  enableFlightObjectReferences,
+} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from './ReactSharedInternalsServer';
 import binaryToComparableString from 'shared/binaryToComparableString';
 import {
   isClientReference,
+  isServerReference,
+  getServerReferenceId,
   getClientReferenceKey,
   resolveClientReferenceMetadata,
   parseStackTrace,
@@ -124,6 +141,8 @@ type ModelParent = ReactClientObject | $ReadOnlyArray<ReactClientValue>;
 export type Input = {
   +root: ResultModel<ReactClientValue>,
   getIteratorEntries: Object => void | $ReadOnlyArray<mixed>,
+  temporaryReferences: void | TemporaryReferenceSet,
+  getServerReference: Object => void | ServerReferenceMetadata,
   getValueReference: Object => void | ModelReference,
   getModelInfo: Object => number,
   getCollectionEntries: Object => void | ResultModel<Array<any>>,
@@ -155,6 +174,8 @@ export type Request = {
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenImportStrings: Map<string, string>,
   writtenImportStringsSize: number,
+  writtenServerReferences: Map<ServerReference<any>, number>,
+  temporaryReferences: void | TemporaryReferenceSet,
   completedImportChunks: Array<Chunk>,
   writtenModels: WeakMap<Object, number>,
   writtenObjects: WeakMap<Object, string>,
@@ -200,12 +221,15 @@ function RequestInstance(
   input: Input,
   bundlerConfig: ClientManifest,
   onError: void | (mixed => ?string),
+  temporaryReferences: void | TemporaryReferenceSet,
 ) {
   const cleanupQueue: Array<string | bigint> = [];
   if (enableTaint) {
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
   this.taintCleanupQueue = cleanupQueue;
+  this.temporaryReferences = input.temporaryReferences || temporaryReferences;
+  this.writtenServerReferences = new Map();
   this.input = input;
   this.abortController = new AbortController();
   this.destination = null;
@@ -242,9 +266,15 @@ export function createRequest(
   input: Input,
   bundlerConfig: ClientManifest,
   onError?: mixed => ?string,
+  temporaryReferences?: TemporaryReferenceSet,
 ): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new RequestInstance(input, bundlerConfig, onError);
+  return new RequestInstance(
+    input,
+    bundlerConfig,
+    onError,
+    temporaryReferences,
+  );
 }
 
 function renderClientElement(
@@ -382,6 +412,26 @@ function renderModelDestructive(
       parentPropertyName,
       clientReference,
     );
+  }
+  if (
+    value !== null &&
+    (typeof value === 'object' || typeof value === 'function')
+  ) {
+    if (
+      (typeof value === 'function' || enableFlightObjectReferences) &&
+      isServerReference(value)
+    ) {
+      return serializeServerReference(request, value as any);
+    }
+    if (request.temporaryReferences !== undefined) {
+      const reference = resolveTemporaryReference(
+        request.temporaryReferences,
+        value as any,
+      );
+      if (reference !== undefined) {
+        return '$T' + reference;
+      }
+    }
   }
   if (value === null) {
     return null;
@@ -1822,4 +1872,65 @@ function serializeIterator(
 ): string {
   const id = outlineModel(request, entries);
   return '$i' + id.toString(16);
+}
+
+function serializeServerReference(
+  request: Request,
+  serverReference: ServerReference<any>,
+): string {
+  const isObjectReference =
+    enableFlightObjectReferences && typeof serverReference === 'object';
+  const writtenServerReferences = request.writtenServerReferences;
+  const existingId = writtenServerReferences.get(serverReference);
+  if (existingId !== undefined) {
+    return isObjectReference
+      ? serializeServerObjectReferenceID(existingId)
+      : serializeServerReferenceID(existingId);
+  }
+  const id = getServerReferenceId(request.bundlerConfig, serverReference);
+  let serverReferenceMetadata: {
+    id: ServerReferenceId,
+    bound?: null | Promise<Array<any>>,
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactFunctionLocation, // DEV-only
+  };
+  if (isObjectReference) {
+    serverReferenceMetadata = {id};
+  } else {
+    const input = request.input;
+    const metadata =
+      input === null ? undefined : input.getServerReference(serverReference);
+    if (metadata === undefined) {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        'A Result must record server references before serialization.',
+      );
+    }
+    const bound = metadata.bound;
+    const location = __DEV__ ? metadata.location : undefined;
+    serverReferenceMetadata =
+      __DEV__ && location != null
+        ? {
+            id,
+            bound,
+            name: metadata.name,
+            env: metadata.env,
+            location,
+          }
+        : {id, bound};
+  }
+  const metadataId = outlineModel(request, serverReferenceMetadata);
+  writtenServerReferences.set(serverReference, metadataId);
+  return isObjectReference
+    ? serializeServerObjectReferenceID(metadataId)
+    : serializeServerReferenceID(metadataId);
+}
+
+function serializeServerReferenceID(id: number): string {
+  return '$h' + id.toString(16);
+}
+
+function serializeServerObjectReferenceID(id: number): string {
+  return '$H' + id.toString(16);
 }

@@ -102,6 +102,8 @@ describe('ReactFlightResultDOM', () => {
       require('react-server-dom-webpack/static.node'),
     );
     const WebpackMock = require('./utils/WebpackMock');
+    serverExports = WebpackMock.serverExports;
+    webpackServerMap = WebpackMock.webpackServerMap;
     clientExports = WebpackMock.clientExports;
     clientExportsESM = WebpackMock.clientExportsESM;
     clientModuleError = WebpackMock.clientModuleError;
@@ -397,7 +399,7 @@ describe('ReactFlightResultDOM', () => {
     });
   }
 
-  it.skip('should be able to load a server reference on a consuming server if a mapping exists', async () => {
+  it('should be able to load a server reference on a consuming server if a mapping exists', async () => {
     function greet(name) {
       return 'hi, ' + name;
     }
@@ -405,16 +407,14 @@ describe('ReactFlightResultDOM', () => {
       greet,
     });
 
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        {
-          method: ServerModule.greet,
-          boundMethod: ServerModule.greet.bind(null, 'there'),
-        },
-        webpackMap,
-      ),
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult({
+        method: ServerModule.greet,
+        boundMethod: ServerModule.greet.bind(null, 'there'),
+      }),
     );
-    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+    const response = ReactServerDOMClientNode.createFromResult(flightResult, {
+      clientManifest: webpackMap,
       serverConsumerManifest: {
         moduleMap: webpackMap,
         serverModuleMap: webpackServerMap,
@@ -428,7 +428,7 @@ describe('ReactFlightResultDOM', () => {
     expect(result.boundMethod()).toBe('hi, there');
   });
 
-  it.skip('should be able to load a server reference on a consuming server if a mapping exists (async)', async () => {
+  it('should be able to load a server reference on a consuming server if a mapping exists (async)', async () => {
     let resolve;
     const chunkPromise = new Promise(r => (resolve = r));
 
@@ -442,16 +442,14 @@ describe('ReactFlightResultDOM', () => {
       chunkPromise,
     );
 
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        {
-          method: ServerModule.greet,
-          boundMethod: ServerModule.greet.bind(null, 'there'),
-        },
-        webpackMap,
-      ),
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult({
+        method: ServerModule.greet,
+        boundMethod: ServerModule.greet.bind(null, 'there'),
+      }),
     );
-    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+    const response = ReactServerDOMClientNode.createFromResult(flightResult, {
+      clientManifest: webpackMap,
       serverConsumerManifest: {
         moduleMap: webpackMap,
         serverModuleMap: webpackServerMap,
@@ -467,7 +465,7 @@ describe('ReactFlightResultDOM', () => {
     expect(result.boundMethod()).toBe('hi, there');
   });
 
-  it.skip('should load a server reference on a consuming server and pass it back', async () => {
+  it('should load a server reference on a consuming server and pass it back', async () => {
     function greet(name) {
       return 'hi, ' + name;
     }
@@ -482,16 +480,14 @@ describe('ReactFlightResultDOM', () => {
       ServerModule.greet.$$id,
     );
 
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
-        {
-          method: ServerModule.greet,
-          boundMethod: ServerModule.greet.bind(null, 'there'),
-        },
-        webpackMap,
-      ),
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult({
+        method: ServerModule.greet,
+        boundMethod: ServerModule.greet.bind(null, 'there'),
+      }),
     );
-    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+    const response = ReactServerDOMClientNode.createFromResult(flightResult, {
+      clientManifest: webpackMap,
       serverConsumerManifest: {
         moduleMap: webpackMap,
         serverModuleMap: webpackServerMap,
@@ -504,7 +500,7 @@ describe('ReactFlightResultDOM', () => {
     expect(result.method).toBe(greet);
     expect(result.boundMethod()).toBe('hi, there');
 
-    const body = await ReactServerDOMClient.encodeReply({
+    const body = await ReactServerDOMClientNode.encodeReply({
       method: result.method,
       boundMethod: result.boundMethod,
     });
@@ -516,7 +512,7 @@ describe('ReactFlightResultDOM', () => {
     expect(replyResult.boundMethod()).toBe('hi, there');
   });
 
-  it.skip('can pass JSX through a round trip using temporary references', async () => {
+  it('can pass JSX through a round trip using temporary references', async () => {
     function Component() {
       return <div />;
     }
@@ -539,14 +535,20 @@ describe('ReactFlightResultDOM', () => {
       webpackServerMap,
       {temporaryReferences: temporaryReferencesServer},
     );
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(serverPayload, null, {
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(serverPayload, {
         temporaryReferences: temporaryReferencesServer,
       }),
     );
-    const response = await ReactServerDOMClient.createFromReadableStream(
-      stream,
+    const response = await ReactServerDOMClientNode.createFromResult(
+      flightResult,
       {
+        clientManifest: webpackMap,
+        serverConsumerManifest: {
+          moduleMap: webpackMap,
+          serverModuleMap: webpackServerMap,
+          moduleLoading: webpackModuleLoading,
+        },
         temporaryReferences,
       },
     );
@@ -555,7 +557,7 @@ describe('ReactFlightResultDOM', () => {
     expect(response.children).toBe(children);
   });
 
-  it.skip('can pass JSX as root model through a round trip using temporary references', async () => {
+  it('can pass JSX as root model through a round trip using temporary references', async () => {
     const jsx = <div />;
 
     const temporaryReferences =
@@ -571,14 +573,20 @@ describe('ReactFlightResultDOM', () => {
       webpackServerMap,
       {temporaryReferences: temporaryReferencesServer},
     );
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(serverPayload, null, {
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(serverPayload, {
         temporaryReferences: temporaryReferencesServer,
       }),
     );
-    const response = await ReactServerDOMClient.createFromReadableStream(
-      stream,
+    const response = await ReactServerDOMClientNode.createFromResult(
+      flightResult,
       {
+        clientManifest: webpackMap,
+        serverConsumerManifest: {
+          moduleMap: webpackMap,
+          serverModuleMap: webpackServerMap,
+          moduleLoading: webpackModuleLoading,
+        },
         temporaryReferences,
       },
     );
@@ -587,7 +595,7 @@ describe('ReactFlightResultDOM', () => {
     await expect(response).toBe(jsx);
   });
 
-  it.skip('can pass a promise that resolves to JSX through a round trip using temporary references', async () => {
+  it('can pass a promise that resolves to JSX through a round trip using temporary references', async () => {
     const jsx = <div />;
     const promise = Promise.resolve(jsx);
 
@@ -607,14 +615,20 @@ describe('ReactFlightResultDOM', () => {
       webpackServerMap,
       {temporaryReferences: temporaryReferencesServer},
     );
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(serverPayload, null, {
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(serverPayload, {
         temporaryReferences: temporaryReferencesServer,
       }),
     );
-    const response = await ReactServerDOMClient.createFromReadableStream(
-      stream,
+    const response = await ReactServerDOMClientNode.createFromResult(
+      flightResult,
       {
+        clientManifest: webpackMap,
+        serverConsumerManifest: {
+          moduleMap: webpackMap,
+          serverModuleMap: webpackServerMap,
+          moduleLoading: webpackModuleLoading,
+        },
         temporaryReferences,
       },
     );
@@ -623,7 +637,7 @@ describe('ReactFlightResultDOM', () => {
     await expect(response.promise).resolves.toBe(jsx);
   });
 
-  it.skip('can return the same object using temporary references', async () => {
+  it('can return the same object using temporary references', async () => {
     const obj = {
       this: {is: 'a large object'},
       with: {many: 'properties in it'},
@@ -644,19 +658,24 @@ describe('ReactFlightResultDOM', () => {
       webpackServerMap,
       {temporaryReferences: temporaryReferencesServer},
     );
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(
         {
           root: serverPayload,
           obj: serverPayload.obj,
         },
-        null,
         {temporaryReferences: temporaryReferencesServer},
       ),
     );
-    const response = await ReactServerDOMClient.createFromReadableStream(
-      stream,
+    const response = await ReactServerDOMClientNode.createFromResult(
+      flightResult,
       {
+        clientManifest: webpackMap,
+        serverConsumerManifest: {
+          moduleMap: webpackMap,
+          serverModuleMap: webpackServerMap,
+          moduleLoading: webpackModuleLoading,
+        },
         temporaryReferences,
       },
     );

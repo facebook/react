@@ -24,6 +24,8 @@ import {
   getValueReference,
   getCollectionEntries,
   getIteratorEntries,
+  getServerReference,
+  getTemporaryReferenceSet,
   getModelInfo,
   isHalted,
 } from 'shared/ReactFlightResult';
@@ -95,6 +97,8 @@ export function createInput(result: Result<ReactClientValue>): Input {
   return {
     root: getRoot(result),
     getIteratorEntries: value => getIteratorEntries(result, value),
+    temporaryReferences: getTemporaryReferenceSet(result),
+    getServerReference: value => getServerReference(result, value),
     getValueReference: value => getValueReference(result, value),
     getModelInfo: value => getModelInfo(result, value),
     getCollectionEntries: value => getCollectionEntries(result, value),

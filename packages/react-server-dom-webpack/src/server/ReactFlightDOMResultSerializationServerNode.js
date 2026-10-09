@@ -8,6 +8,7 @@
  */
 
 import type {Writable} from 'stream';
+import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {
   Input,
@@ -43,8 +44,14 @@ export function renderToPipeableStream(
   webpackMap: ClientManifest,
   onError?: mixed => ?string,
   signal?: AbortSignal,
+  temporaryReferences?: TemporaryReferenceSet,
 ): PipeableStream {
-  const request = createRequest(input, webpackMap, onError);
+  const request = createRequest(
+    input,
+    webpackMap,
+    onError,
+    temporaryReferences,
+  );
   let hasStartedFlowing = false;
   startWork(request);
   if (signal !== undefined) {
