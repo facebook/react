@@ -263,7 +263,7 @@ describe('ReactFlightResultDOM', () => {
     };
   }
 
-  function createResponse(result) {
+  function createResponse(result, options) {
     return ReactServerDOMClientNode.createFromResult(result, {
       clientManifest: webpackMap,
       serverConsumerManifest: {
@@ -271,6 +271,7 @@ describe('ReactFlightResultDOM', () => {
         moduleLoading: null,
         serverModuleMap: null,
       },
+      onError: options === undefined ? undefined : options.onError,
     });
   }
 
@@ -1696,7 +1697,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
-  it.skip('should unwrap async module references using use', async () => {
+  it('should unwrap async module references using use', async () => {
     const AsyncModule = Promise.resolve('Async Text');
 
     function Print({response}) {
@@ -1718,12 +1719,10 @@ describe('ReactFlightResultDOM', () => {
       return <p>{text}</p>;
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<ServerComponent />, webpackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<ServerComponent />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1772,7 +1771,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
-  it.skip('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
+  it('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule() {
       return 'This should not be rendered';
     });
@@ -1801,16 +1800,14 @@ describe('ReactFlightResultDOM', () => {
       forceClientModuleProxy: true,
     });
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<AsyncModuleRef />, webpackMap, {
-        onError(error) {
-          return __DEV__ ? 'a dev digest' : `digest(${error.message})`;
-        },
-      }),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<AsyncModuleRef />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result, {
+      onError(error) {
+        return __DEV__ ? 'a dev digest' : `digest(${error.message})`;
+      },
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2052,7 +2049,7 @@ describe('ReactFlightResultDOM', () => {
     expect(result).toBe('<div>Cycle resolved</div>');
   });
 
-  it.skip('should progressively reveal server components', async () => {
+  it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
     // Client Components
@@ -2154,17 +2151,15 @@ describe('ReactFlightResultDOM', () => {
       return use(response).rootContent;
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(model, webpackMap, {
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(model, {
         onError(x) {
           reportedErrors.push(x);
           return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       }),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2256,7 +2251,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should handle streaming async server components', async () => {
+  it('should handle streaming async server components', async () => {
     const reportedErrors = [];
 
     const Row = async ({current, next}) => {
@@ -2310,16 +2305,14 @@ describe('ReactFlightResultDOM', () => {
     const [Posts, resolvePostsData] = makeDelayedText();
     const [Photos, resolvePhotosData] = makeDelayedText();
     const suspendedChunk = createSuspendedChunk(<p>loading</p>);
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(suspendedChunk.row, webpackMap, {
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(suspendedChunk.row, {
         onError(error) {
           reportedErrors.push(error);
         },
       }),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -2362,7 +2355,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should preserve state of client components on refetch', async () => {
+  it('should preserve state of client components on refetch', async () => {
     // Client
 
     function Page({response}) {
@@ -2390,14 +2383,10 @@ describe('ReactFlightResultDOM', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
-    const stream1 = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<App color="red" />, webpackMap),
+    const result1 = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<App color="red" />),
     );
-    pipe(stream1.writable);
-    const response1 = ReactServerDOMClient.createFromReadableStream(
-      stream1.readable,
-    );
+    const response1 = createResponse(result1);
     await act(() => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
@@ -2417,14 +2406,10 @@ describe('ReactFlightResultDOM', () => {
     expect(inputB.tagName).toBe('INPUT');
     inputB.value = 'goodbye';
 
-    const stream2 = getTestStream();
-    const {pipe: pipe2} = await serverAct(() =>
-      renderResultToPipeableStream(<App color="blue" />, webpackMap),
+    const result2 = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<App color="blue" />),
     );
-    pipe2(stream2.writable);
-    const response2 = ReactServerDOMClient.createFromReadableStream(
-      stream2.readable,
-    );
+    const response2 = createResponse(result2);
     await act(() => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
@@ -2503,7 +2488,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
-  it.skip('should be able to recover from a direct reference erroring client-side', async () => {
+  it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -2512,13 +2497,11 @@ describe('ReactFlightResultDOM', () => {
 
     const ClientReference = clientModuleError(new Error('module init error'));
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(
         <div>
           <ClientComponent prop={ClientReference} />
         </div>,
-        webpackMap,
         {
           onError(x) {
             reportedErrors.push(x);
@@ -2526,8 +2509,7 @@ describe('ReactFlightResultDOM', () => {
         },
       ),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2550,7 +2532,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should be able to recover from a direct reference erroring client-side async', async () => {
+  it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -2564,13 +2546,11 @@ describe('ReactFlightResultDOM', () => {
       }),
     );
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(
         <div>
           <ClientComponent prop={ClientReference} />
         </div>,
-        webpackMap,
         {
           onError(x) {
             reportedErrors.push(x);
@@ -2578,8 +2558,7 @@ describe('ReactFlightResultDOM', () => {
         },
       ),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2609,7 +2588,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should not retain stale error reason after reentrant module chunk initialization', async () => {
+  it('should not retain stale error reason after reentrant module chunk initialization', async () => {
     function MyComponent() {
       return <div>hello from client component</div>;
     }
@@ -2695,7 +2674,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toContain('hello from client component');
   });
 
-  it.skip('should be able to recover from a direct reference erroring server-side', async () => {
+  it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -2711,24 +2690,19 @@ describe('ReactFlightResultDOM', () => {
       });
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(
         <div>
           <ClientComponent />
         </div>,
-        webpackMap,
-        {
-          onError(x) {
-            reportedErrors.push(x.message);
-            return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
-          },
-        },
       ),
     );
-    pipe(writable);
-
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result, {
+      onError(x) {
+        reportedErrors.push(x.message);
+        return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+      },
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2763,7 +2737,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual(['bug in the bundler']);
   });
 
-  it.skip('should pass a Promise through props and be able use() it on the client', async () => {
+  it('should pass a Promise through props and be able use() it on the client', async () => {
     async function getData() {
       return 'async hello';
     }
@@ -2792,12 +2766,10 @@ describe('ReactFlightResultDOM', () => {
       );
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<ServerComponent />, webpackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<ServerComponent />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2807,7 +2779,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>async hello</p>');
   });
 
-  it.skip('should throw on the client if a passed promise eventually rejects', async () => {
+  it('should throw on the client if a passed promise eventually rejects', async () => {
     const reportedErrors = [];
     const theError = new Error('Server throw');
 
@@ -2847,17 +2819,15 @@ describe('ReactFlightResultDOM', () => {
       );
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<ServerComponent />, webpackMap, {
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<ServerComponent />, {
         onError(x) {
           reportedErrors.push(x);
           return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       }),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -2872,7 +2842,7 @@ describe('ReactFlightResultDOM', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  it.skip('should support float methods when rendering in Fiber', async () => {
+  it('should support float methods when rendering in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -2998,7 +2968,7 @@ describe('ReactFlightResultDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
-  it.skip('should support float methods when rendering in Fizz', async () => {
+  it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -3127,7 +3097,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('supports Float hints from concurrent Flight -> Fizz renders', async () => {
+  it('supports Float hints from concurrent Flight -> Fizz renders', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -3243,7 +3213,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('supports deduping hints by Float key', async () => {
+  it('supports deduping hints by Float key', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -3451,7 +3421,7 @@ describe('ReactFlightResultDOM', () => {
     }
   });
 
-  it.skip('should be able to render a client reference as return value', async () => {
+  it('should be able to render a client reference as return value', async () => {
     const ClientModule = clientExports({
       text: 'Hello World',
     });
@@ -3460,12 +3430,10 @@ describe('ReactFlightResultDOM', () => {
       return ClientModule.text;
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<ServerComponent />, webpackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<ServerComponent />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

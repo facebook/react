@@ -41,6 +41,7 @@ export function createFromResult<T>(
 ): Thenable<T> {
   const manifest = options.serverConsumerManifest;
   const response = createResponse(
+    result,
     manifest.moduleMap,
     manifest.moduleLoading,
     value => {

@@ -11,6 +11,14 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {Result} from 'shared/ReactFlightResult';
 import type {ResultModel} from 'shared/ReactFlightResultModel';
 import type {ClientReference} from './ReactFlightServerConfig';
+import type {ThenableState} from './ReactFlightThenable';
+import type {
+  Thenable,
+  PendingThenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
+import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   Hints,
   HintCode,
@@ -18,12 +26,26 @@ import type {
   FormatContext,
 } from './ReactFlightResultServerConfig';
 
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_FRAGMENT_TYPE,
+} from 'shared/ReactSymbols';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {
+  HooksDispatcher,
+  prepareToUseHooksForRequest,
+  resetHooksForRequest,
+  prepareToUseHooksForComponent,
+  getThenableStateAfterSuspending,
+} from './ReactFlightResultHooks';
+import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 import {
   createResult,
   completeResult,
   pushHint,
   closeHints,
+  setErrorDigest,
 } from 'shared/ReactFlightResult';
 import {
   createResultModel,
@@ -33,21 +55,33 @@ import {
 import {scheduleMicrotask} from './ReactServerStreamConfig';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import isArray from 'shared/isArray';
+import noop from 'shared/noop';
 import {
   createHints,
   createRootFormatContext,
   getChildFormatContext,
 } from './ReactFlightResultServerConfig';
 import {resolveCache, setCurrentCache} from './flight/ReactFlightCurrentCache';
-import {isClientReference} from './ReactFlightServerConfig';
+import {
+  isClientReference,
+  supportsRequestStorage,
+  cacheStorage,
+  requestStorage,
+} from './ReactFlightServerConfig';
+import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 
 const UNDEFINED_MODEL = Symbol();
 const PENDING = 0;
 const COMPLETED = 1;
+const RENDERING = 6;
 const ERRORED = 4;
+const OPENING = 10;
+const CLOSED = 14;
 
 export type ReactClientValue =
   | ReactElement
+  | LazyComponent<ReactClientValue, Thenable<ReactClientValue>>
+  | Promise<ReactClientValue>
   | ClientReference<any>
   | string
   | boolean
@@ -64,24 +98,53 @@ const ObjectPrototype = Object.prototype;
 type Task = {
   model: ReactClientValue,
   promise: ResultModel<ReactClientValue>,
-  status: 0 | 1 | 4,
+  status: 0 | 1 | 4 | 6,
   formatContext: FormatContext,
   isModelReference: boolean,
+  ping: () => void,
+  thenableState: ThenableState | null,
 };
 export type Request = {
+  status: 10 | 14,
   result: Result<ReactClientValue>,
   pingedTasks: Array<Task>,
   hints: Hints,
   cache: Map<Function, mixed>,
   cacheController: AbortController,
   modelEntries: WeakMap<Object, ReactClientValue>,
+  abortableTasks: Set<Task>,
+  identifierPrefix: string,
+  identifierCount: number,
+  onError: mixed => ?string,
 };
 
-function RequestInstance(this: any, model: ReactClientValue) {
+function defaultErrorHandler(error: mixed): void {
+  console['error'](error);
+}
+
+function RequestInstance(
+  this: any,
+  model: ReactClientValue,
+  onError: void | (mixed => ?string),
+) {
+  if (
+    ReactSharedInternals.A !== null &&
+    ReactSharedInternals.A !== DefaultAsyncDispatcher
+  ) {
+    throw new Error(
+      'Currently React only supports one RSC renderer at a time.',
+    );
+  }
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  this.status = OPENING;
+  this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.hints = createHints();
   this.cache = new Map();
   this.cacheController = new AbortController();
   this.modelEntries = new WeakMap();
+  this.abortableTasks = new Set();
+  this.identifierPrefix = '';
+  this.identifierCount = 1;
   const rootTask = createTask(this, model, createRootFormatContext());
   const root = rootTask.promise;
   this.result = createResult(root, () => {
@@ -110,9 +173,12 @@ export function emitHint<Code: HintCode>(
   pushHint(request.result, code, model);
 }
 
-export function createRequest(model: ReactClientValue): Request {
+export function createRequest(
+  model: ReactClientValue,
+  onError?: mixed => ?string,
+): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new RequestInstance(model);
+  return new RequestInstance(model, onError);
 }
 
 export function getResult(request: Request): Result<ReactClientValue> {
@@ -124,16 +190,47 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
   task: Task,
   Component: (p: Props, arg: void) => ReactClientValue,
   props: Props,
+  element: ReactElement,
 ): ReactClientValue {
+  const prevThenableState = task.thenableState;
+  task.thenableState = null;
+  prepareToUseHooksForComponent(prevThenableState, null);
   const result = Component(props, undefined);
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    !isClientReference(result) &&
+    typeof (result as any).then === 'function'
+  ) {
+    const thenable: Thenable<ReactClientValue> = result as any;
+    if (__DEV__) {
+      thenable.then(resolvedValue => {
+        if (
+          resolvedValue !== null &&
+          typeof resolvedValue === 'object' &&
+          (resolvedValue as any).$$typeof === REACT_ELEMENT_TYPE
+        ) {
+          (resolvedValue as any)._store.validated = 1;
+        }
+      }, noop);
+    }
+    const expandedThenable: Thenable<ReactClientValue> = renderThenable(
+      request,
+      task,
+      result,
+    ) as any;
+    const resolvedModel = createLazyWrapperAroundWakeable(expandedThenable);
+    request.modelEntries.set(element, resolvedModel);
+    task.isModelReference = true;
+    return resolvedModel;
+  }
   if (
     __DEV__ &&
     result !== null &&
     typeof result === 'object' &&
     (result as any).$$typeof === REACT_ELEMENT_TYPE
   ) {
-    const element: ReactElement = result as any;
-    element._store.validated = 1;
+    (result as any)._store.validated = 1;
   }
   return renderModelDestructive(request, task, result);
 }
@@ -148,10 +245,20 @@ function renderElement(
     throw new Error('Not implemented.');
   }
   if (typeof type === 'function' && !isClientReference(type)) {
-    return renderFunctionComponent(request, task, type, element.props);
+    return renderFunctionComponent(request, task, type, element.props, element);
   }
-  if (typeof type !== 'string' && !isClientReference(type)) {
+  if (type === REACT_FRAGMENT_TYPE) {
+    return renderModelDestructive(request, task, element.props.children);
+  }
+  if (
+    typeof type !== 'string' &&
+    typeof type !== 'symbol' &&
+    !isClientReference(type)
+  ) {
     throw new Error('Not implemented.');
+  }
+  if (typeof type === 'symbol') {
+    validateSymbol(type);
   }
   if (typeof type === 'string') {
     const parentFormatContext = task.formatContext;
@@ -174,18 +281,45 @@ function renderElement(
   return renderClientElement(request, task, type, element);
 }
 
+function validateSymbol(value: symbol): void {
+  // $FlowFixMe[incompatible-type] `description` might be undefined
+  const name: string = value.description;
+  if (Symbol.for(name) !== value) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'Only global symbols received from Symbol.for(...) can be passed to Client Components. ' +
+        `The symbol Symbol.for(${name}) cannot be found among global symbols.`,
+    );
+  }
+}
+
 function createTask(
   request: Request,
   model: ReactClientValue,
   formatContext: FormatContext,
 ): Task {
-  return {
+  const task: Task = {
     model,
     promise: createResultModel<ReactClientValue>(),
     status: PENDING,
     formatContext,
     isModelReference: false,
+    ping: () => pingTask(request, task),
+    thenableState: null,
   };
+  request.abortableTasks.add(task);
+  return task;
+}
+
+function pingTask(request: Request, task: Task): void {
+  if (request.status === CLOSED || task.status !== PENDING) {
+    return;
+  }
+  const pingedTasks = request.pingedTasks;
+  pingedTasks.push(task);
+  if (pingedTasks.length === 1) {
+    scheduleMicrotask(() => performWork(request));
+  }
 }
 
 function outlineModelWithFormatContext(
@@ -196,6 +330,13 @@ function outlineModelWithFormatContext(
   const newTask = createTask(request, value, formatContext);
   retryTask(request, newTask);
   if (newTask.status !== COMPLETED) {
+    if (newTask.status === PENDING) {
+      const lazy = createLazyWrapperAroundWakeable(newTask.promise as any);
+      if (value !== null && typeof value === 'object') {
+        request.modelEntries.set(value, lazy);
+      }
+      return lazy;
+    }
     throw newTask.promise.reason;
   }
   const model = newTask.model;
@@ -206,6 +347,175 @@ function outlineModelWithFormatContext(
     );
   }
   return model;
+}
+
+function readThenable<T>(thenable: Thenable<T>): T {
+  if (thenable.status === 'fulfilled') {
+    return thenable.value;
+  } else if (thenable.status === 'rejected') {
+    throw thenable.reason;
+  }
+  throw thenable;
+}
+
+function createLazyWrapperAroundWakeable(
+  thenable: Thenable<ReactClientValue>,
+): ReactClientValue {
+  switch (thenable.status) {
+    case 'fulfilled':
+      return thenable.value;
+    case 'rejected':
+      break;
+    default: {
+      if (typeof thenable.status === 'string') {
+        break;
+      }
+      const pendingThenable: PendingThenable<ReactClientValue> =
+        thenable as any;
+      pendingThenable.status = 'pending';
+      pendingThenable.then(
+        value => {
+          if (thenable.status === 'pending') {
+            const fulfilledThenable: FulfilledThenable<ReactClientValue> =
+              thenable as any;
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = value;
+          }
+        },
+        (error: mixed) => {
+          if (thenable.status === 'pending') {
+            const rejectedThenable: RejectedThenable<ReactClientValue> =
+              thenable as any;
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          }
+        },
+      );
+    }
+  }
+  const lazy: LazyComponent<ReactClientValue, Thenable<ReactClientValue>> = {
+    $$typeof: REACT_LAZY_TYPE,
+    _payload: thenable,
+    _init: readThenable,
+  };
+  return lazy;
+}
+
+function erroredTask(request: Request, task: Task, error: mixed): void {
+  task.status = ERRORED;
+  const digest = logRecoverableError(request, error);
+  setErrorDigest(request.result, task.promise, digest);
+  request.abortableTasks.delete(task);
+  rejectResultModel(task.promise, error);
+}
+
+function logRecoverableError(request: Request, error: mixed): string {
+  const prevCache = setCurrentCache(null);
+  let errorDigest;
+  try {
+    const onError = request.onError;
+    // $FlowFixMe[constant-condition]
+    if (supportsRequestStorage) {
+      errorDigest = cacheStorage.run(undefined, () =>
+        requestStorage.run(undefined, onError, error),
+      );
+    } else {
+      errorDigest = onError(error);
+    }
+  } finally {
+    setCurrentCache(prevCache);
+  }
+  if (errorDigest != null && typeof errorDigest !== 'string') {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
+    );
+  }
+  return errorDigest || '';
+}
+
+function fatalError(request: Request, error: mixed): void {
+  if (request.status === CLOSED) {
+    return;
+  }
+  request.status = CLOSED;
+  request.abortableTasks.forEach(task => {
+    task.status = ERRORED;
+    rejectResultModel(task.promise, error);
+  });
+  request.abortableTasks.clear();
+  request.pingedTasks = [];
+  closeHints(request.result);
+  completeResult(request.result);
+  request.cacheController.abort(error);
+}
+
+function renderThenable(
+  request: Request,
+  task: Task,
+  value: ReactClientValue,
+): ReactClientValue {
+  const thenable: Thenable<ReactClientValue> = value as any;
+  const newTask = createTask(request, value, task.formatContext);
+  request.modelEntries.set(thenable, newTask.promise);
+  switch (thenable.status) {
+    case 'fulfilled':
+      newTask.model = thenable.value;
+      pingTask(request, newTask);
+      break;
+    case 'rejected':
+      try {
+        erroredTask(request, newTask, thenable.reason);
+      } catch (error) {
+        fatalError(request, error);
+      }
+      break;
+    default: {
+      if (typeof thenable.status !== 'string') {
+        const pendingThenable: PendingThenable<ReactClientValue> =
+          thenable as any;
+        pendingThenable.status = 'pending';
+        pendingThenable.then(
+          fulfilledValue => {
+            if (thenable.status === 'pending') {
+              const fulfilledThenable: FulfilledThenable<ReactClientValue> =
+                thenable as any;
+              fulfilledThenable.status = 'fulfilled';
+              fulfilledThenable.value = fulfilledValue;
+            }
+          },
+          (error: mixed) => {
+            if (thenable.status === 'pending') {
+              const rejectedThenable: RejectedThenable<ReactClientValue> =
+                thenable as any;
+              rejectedThenable.status = 'rejected';
+              rejectedThenable.reason = error;
+            }
+          },
+        );
+      }
+      thenable.then(
+        fulfilledValue => {
+          if (newTask.status === PENDING) {
+            newTask.model = fulfilledValue;
+            pingTask(request, newTask);
+          }
+        },
+        reason => {
+          if (newTask.status === PENDING) {
+            try {
+              erroredTask(request, newTask, reason);
+            } catch (error) {
+              fatalError(request, error);
+            }
+            scheduleMicrotask(() => performWork(request));
+          }
+        },
+      );
+    }
+  }
+  task.isModelReference = true;
+  return newTask.promise;
 }
 
 function renderClientElement(
@@ -259,20 +569,39 @@ function renderModelDestructive(
   }
   if (value !== null && typeof value === 'object') {
     const existingModel = request.modelEntries.get(value);
-    if (existingModel !== undefined) {
+    if (
+      existingModel !== undefined &&
+      existingModel !== task.promise &&
+      !(
+        existingModel !== null &&
+        typeof existingModel === 'object' &&
+        (existingModel as any).$$typeof === REACT_LAZY_TYPE &&
+        (existingModel as any)._payload === task.promise
+      )
+    ) {
       task.isModelReference = true;
       return existingModel === UNDEFINED_MODEL ? undefined : existingModel;
     }
   }
   if (value === null || typeof value !== 'object') {
-    if (typeof value === 'function' || typeof value === 'symbol') {
+    if (typeof value === 'function') {
       throw new Error('Not implemented.');
+    }
+    if (typeof value === 'symbol') {
+      validateSymbol(value);
     }
     return value;
   }
   if ((value as any).$$typeof === REACT_ELEMENT_TYPE) {
     const element: ReactElement = value as any;
     return renderElement(request, task, element.type, element);
+  }
+  if ((value as any).$$typeof === REACT_LAZY_TYPE) {
+    const lazy: LazyComponent<ReactClientValue, any> = value as any;
+    return renderModelDestructive(request, task, lazy._init(lazy._payload));
+  }
+  if (typeof (value as any).then === 'function') {
+    return renderThenable(request, task, value);
   }
   if (isArray(value)) {
     return [];
@@ -288,7 +617,7 @@ function resolveModel(
   task: Task,
   value: ReactClientValue,
 ): ReactClientValue {
-  const rendered = renderModelDestructive(request, task, value);
+  const rendered = renderModel(request, task, value);
   if (
     task.isModelReference ||
     rendered === null ||
@@ -297,6 +626,52 @@ function resolveModel(
     return rendered;
   }
   return resolveModelFields(request, task, rendered);
+}
+
+function renderModel(
+  request: Request,
+  task: Task,
+  value: ReactClientValue,
+): ReactClientValue {
+  try {
+    return renderModelDestructive(request, task, value);
+  } catch (thrownValue) {
+    const error =
+      thrownValue === SuspenseException ? getSuspendedThenable() : thrownValue;
+    const model = task.model;
+    if (
+      model !== null &&
+      typeof model === 'object' &&
+      ((model as any).$$typeof === REACT_ELEMENT_TYPE ||
+        (model as any).$$typeof === REACT_LAZY_TYPE)
+    ) {
+      const newTask = createTask(request, model, task.formatContext);
+      const lazy = createLazyWrapperAroundWakeable(newTask.promise as any);
+      request.modelEntries.set(model, lazy);
+      if (
+        value !== model &&
+        value !== null &&
+        typeof value === 'object' &&
+        (value as any).$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        request.modelEntries.set(value, lazy);
+      }
+      if (
+        error != null &&
+        typeof error === 'object' &&
+        typeof (error as any).then === 'function'
+      ) {
+        newTask.thenableState = getThenableStateAfterSuspending();
+        const ping = newTask.ping;
+        (error as any).then(ping, ping);
+      } else {
+        erroredTask(request, newTask, error);
+      }
+      task.isModelReference = true;
+      return lazy;
+    }
+    throw error;
+  }
 }
 
 function resolveModelFields(
@@ -342,32 +717,102 @@ function resolveModelFields(
 }
 
 function retryTask(request: Request, task: Task): void {
+  if (request.status === CLOSED || task.status !== PENDING) {
+    return;
+  }
+  task.status = RENDERING;
+  const originalModel = task.model;
   try {
-    const resolvedModel = resolveModel(request, task, task.model);
+    const model = task.model;
+    const rendered = renderModelDestructive(request, task, model);
+    const resolvedModel =
+      task.isModelReference || rendered === null || typeof rendered !== 'object'
+        ? rendered
+        : resolveModelFields(request, task, rendered);
+    if (request.status === CLOSED) {
+      return;
+    }
     task.model = resolvedModel;
+    if (originalModel !== null && typeof originalModel === 'object') {
+      const existing = request.modelEntries.get(originalModel);
+      if (
+        existing !== null &&
+        typeof existing === 'object' &&
+        (existing as any).$$typeof === REACT_LAZY_TYPE &&
+        (existing as any)._payload === task.promise
+      ) {
+        request.modelEntries.set(
+          originalModel,
+          resolvedModel === undefined ? UNDEFINED_MODEL : resolvedModel,
+        );
+      }
+    }
     task.status = COMPLETED;
+    request.abortableTasks.delete(task);
     fulfillResultModel(task.promise, resolvedModel);
-  } catch (error) {
-    task.status = ERRORED;
-    rejectResultModel(task.promise, error);
+  } catch (thrownValue) {
+    if (request.status === CLOSED) {
+      return;
+    }
+    const error =
+      thrownValue === SuspenseException ? getSuspendedThenable() : thrownValue;
+    // $FlowFixMe[invalid-compare]
+    if (typeof error === 'object' && error !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof error.then === 'function') {
+        task.status = PENDING;
+        task.thenableState = getThenableStateAfterSuspending();
+        const ping = task.ping;
+        error.then(ping, ping);
+        return;
+      }
+    }
+    erroredTask(request, task, error);
   }
 }
 
 function performWork(request: Request): void {
+  if (request.status === CLOSED) {
+    return;
+  }
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = HooksDispatcher;
   const prevCache = setCurrentCache(request);
+  prepareToUseHooksForRequest(request);
   try {
     const pingedTasks = request.pingedTasks;
     request.pingedTasks = [];
     for (let i = 0; i < pingedTasks.length; i++) {
       retryTask(request, pingedTasks[i]);
     }
+  } catch (error) {
+    fatalError(request, error);
   } finally {
-    closeHints(request.result);
-    completeResult(request.result);
+    if (request.status !== CLOSED && request.abortableTasks.size === 0) {
+      request.status = CLOSED;
+      closeHints(request.result);
+      completeResult(request.result);
+      request.cacheController.abort(
+        new Error(
+          'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
+        ),
+      );
+    }
+    ReactSharedInternals.H = prevDispatcher;
+    resetHooksForRequest();
     setCurrentCache(prevCache);
   }
 }
 
 export function startWork(request: Request): void {
-  scheduleMicrotask(() => performWork(request));
+  // $FlowFixMe[constant-condition]
+  if (supportsRequestStorage) {
+    scheduleMicrotask(() => {
+      cacheStorage.run(request, () =>
+        requestStorage.run(undefined, performWork, request),
+      );
+    });
+  } else {
+    scheduleMicrotask(() => performWork(request));
+  }
 }

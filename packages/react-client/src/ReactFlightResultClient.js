@@ -10,14 +10,19 @@
 import type {Result} from 'shared/ReactFlightResult';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {ReactDebugInfo, Thenable} from 'shared/ReactTypes';
+import type {ReactDebugInfo, Thenable, Wakeable} from 'shared/ReactTypes';
 import type {
   ClientReference,
   ClientReferenceMetadata,
   ServerConsumerModuleMap,
   ModuleLoading,
 } from './ReactFlightClientConfig';
-import {getRoot, getHintQueue, waitForHints} from 'shared/ReactFlightResult';
+import {
+  getRoot,
+  getHintQueue,
+  waitForHints,
+  getErrorReference,
+} from 'shared/ReactFlightResult';
 import {
   dispatchHint,
   resolveClientReference,
@@ -33,7 +38,14 @@ import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 const ObjectPrototype = Object.prototype;
 
+type ModelSubscription = {
+  response: null | Response,
+  resolve: null | (any => mixed),
+  reject: null | (mixed => mixed),
+};
+
 export type Response = {
+  _result: Result<any>,
   _bundlerConfig: ServerConsumerModuleMap,
   _moduleLoading: ModuleLoading,
   _nonce: void | string,
@@ -42,12 +54,15 @@ export type Response = {
   _modules: Map<Object, SomeChunk<any>>,
   _closed: boolean,
   _closedReason: null | Error,
+  _disposed: boolean,
+  _subscriptions: null | Set<ModelSubscription>,
   _models: Map<Object, any>,
   _chunks: Set<SomeChunk<any>>,
   _completedElements: Array<ReactElement>, // DEV-only
 };
 
 export function createResponse(
+  result: Result<any>,
   bundlerConfig: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
   resolveClientReferenceMetadata: Object => null | ClientReferenceMetadata,
@@ -55,6 +70,7 @@ export function createResponse(
   onError: void | (mixed => ?string),
 ): Response {
   const response: Response = {
+    _result: result,
     _bundlerConfig: bundlerConfig,
     _moduleLoading: moduleLoading,
     _nonce: nonce,
@@ -63,6 +79,8 @@ export function createResponse(
     _modules: new Map(),
     _closed: false,
     _closedReason: null,
+    _disposed: false,
+    _subscriptions: null,
     _models: new Map(),
     _chunks: new Set(),
   } as any;
@@ -88,6 +106,22 @@ type InitializedChunk<T> = {
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 
+type BlockedChunk<T> = {
+  _debugInfo: ReactDebugInfo, // DEV-only
+  status: 'blocked',
+  value: null | Array<(T) => mixed>,
+  reason: null | Array<(mixed) => mixed>,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
+};
+
+type ResolvedModelChunk<T> = {
+  _debugInfo: ReactDebugInfo, // DEV-only
+  status: 'resolved_model',
+  value: T,
+  reason: Response,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
+};
+
 type ResolvedModuleChunk<T> = {
   _debugInfo: ReactDebugInfo, // DEV-only
   status: 'resolved_module',
@@ -106,12 +140,16 @@ type ErroredChunk<T> = {
 
 type SomeChunk<T> =
   | PendingChunk<T>
+  | BlockedChunk<T>
+  | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
 
 const PENDING = 'pending';
 const RESOLVED_MODULE = 'resolved_module';
+const RESOLVED_MODEL = 'resolved_model';
+const BLOCKED = 'blocked';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
@@ -131,7 +169,9 @@ function reactPromiseThen<T>(
   reject?: mixed => mixed,
 ): void {
   const chunk = this;
-  if (chunk.status === RESOLVED_MODULE) {
+  if (chunk.status === RESOLVED_MODEL) {
+    initializeResolvedModelChunk(chunk);
+  } else if (chunk.status === RESOLVED_MODULE) {
     initializeModuleChunk(chunk);
   }
   switch (chunk.status) {
@@ -141,6 +181,7 @@ function reactPromiseThen<T>(
       }
       break;
     case PENDING:
+    case BLOCKED:
       if (typeof resolve === 'function') {
         if (chunk.value === null) {
           chunk.value = [];
@@ -205,11 +246,30 @@ function wakeChunkIfInitialized<T>(
         rejectChunk(rejectListeners, chunk.reason);
       }
       break;
+    case PENDING:
+    case BLOCKED:
+      if (chunk.value === null) {
+        chunk.value = resolveListeners;
+      } else {
+        for (let i = 0; i < resolveListeners.length; i++) {
+          chunk.value.push(resolveListeners[i]);
+        }
+      }
+      if (rejectListeners !== null) {
+        if (chunk.reason === null) {
+          chunk.reason = rejectListeners;
+        } else {
+          for (let i = 0; i < rejectListeners.length; i++) {
+            chunk.reason.push(rejectListeners[i]);
+          }
+        }
+      }
+      break;
   }
 }
 
 function initializeChunk<T>(chunk: SomeChunk<T>, value: T): void {
-  if (chunk.status !== PENDING) {
+  if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     return;
   }
   const resolveListeners = chunk.value;
@@ -223,10 +283,16 @@ function initializeChunk<T>(chunk: SomeChunk<T>, value: T): void {
 }
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
-  if (chunk.status !== PENDING && chunk.status !== RESOLVED_MODULE) {
+  if (
+    chunk.status !== PENDING &&
+    chunk.status !== BLOCKED &&
+    chunk.status !== RESOLVED_MODEL &&
+    chunk.status !== RESOLVED_MODULE
+  ) {
     return;
   }
-  const listeners = chunk.reason;
+  const listeners =
+    chunk.status === PENDING || chunk.status === BLOCKED ? chunk.reason : null;
   const erroredChunk: ErroredChunk<T> = chunk as any;
   erroredChunk.status = ERRORED;
   erroredChunk.value = null;
@@ -254,21 +320,76 @@ function reportGlobalError(response: Response, error: Error): void {
 }
 
 export function stopReading(response: Response, reason: mixed): void {
-  if (!response._closed) {
-    const error =
-      reason instanceof Error ? reason : new Error('Connection closed.');
-    reportGlobalError(response, error);
+  if (response._disposed) {
+    return;
+  }
+  response._disposed = true;
+  const error =
+    reason instanceof Error ? reason : new Error('Connection closed.');
+  const subscriptions = response._subscriptions;
+  if (subscriptions !== null) {
+    subscriptions.forEach(subscription =>
+      detachModelSubscription(subscription),
+    );
+    response._subscriptions = null;
+  }
+  reportGlobalError(response, error);
+}
+
+function detachModelSubscription(subscription: ModelSubscription): void {
+  const response = subscription.response;
+  subscription.response = null;
+  subscription.resolve = null;
+  subscription.reject = null;
+  if (response !== null && response._subscriptions !== null) {
+    response._subscriptions.delete(subscription);
   }
 }
 
+function subscribeToModel(
+  response: Response,
+  source: Thenable<any> | Promise<any> | Wakeable,
+  resolve: any => mixed,
+  reject: mixed => mixed,
+): void {
+  if (response._disposed) {
+    return;
+  }
+  const subscription: ModelSubscription = {response, resolve, reject};
+  let subscriptions = response._subscriptions;
+  if (subscriptions === null) {
+    response._subscriptions = subscriptions = new Set();
+  }
+  subscriptions.add(subscription);
+  source.then(
+    model => {
+      const onResolve = subscription.resolve;
+      detachModelSubscription(subscription);
+      if (onResolve !== null) {
+        onResolve(model);
+      }
+    },
+    error => {
+      const onReject = subscription.reject;
+      detachModelSubscription(subscription);
+      if (onReject !== null) {
+        onReject(error);
+      }
+    },
+  );
+}
+
 function readChunk<T>(chunk: SomeChunk<T>): T {
-  if (chunk.status === RESOLVED_MODULE) {
+  if (chunk.status === RESOLVED_MODEL) {
+    initializeResolvedModelChunk(chunk);
+  } else if (chunk.status === RESOLVED_MODULE) {
     initializeModuleChunk(chunk);
   }
   switch (chunk.status) {
     case INITIALIZED:
       return chunk.value;
     case PENDING:
+    case BLOCKED:
       throw chunk;
     default:
       throw chunk.reason;
@@ -307,7 +428,7 @@ function resolveModuleChunk<T>(
   chunk: SomeChunk<T>,
   clientReference: ClientReference<T>,
 ): void {
-  if (chunk.status !== PENDING) {
+  if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
     return;
   }
   const resolveListeners = chunk.value;
@@ -351,12 +472,7 @@ function resolveClientReferenceError(response: Response, error: mixed): Error {
       resolvedError = new Error(message);
     }
   } else {
-    resolvedError = new Error(
-      'An error occurred in the Server Components render. The specific message is omitted in production' +
-        ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
-        ' may provide additional details about the nature of the error.',
-    );
-    resolvedError.stack = 'Error: ' + resolvedError.message;
+    resolvedError = resolveErrorProd(response);
   }
   (resolvedError as any).digest = digest || '';
   return resolvedError;
@@ -407,7 +523,9 @@ function resolveModule(
     );
     const promise = preloadModule(clientReference);
     if (promise) {
-      promise.then(
+      subscribeToModel(
+        response,
+        promise,
         resolveModuleChunk.bind(null, chunk, clientReference),
         triggerErrorOnChunk.bind(null, chunk),
       );
@@ -515,7 +633,9 @@ function readElement(
   const chunk = createPendingChunk<ReactElement>(response);
   const lazy = createLazyChunkWrapper(chunk);
   response._models.set(element, lazy);
-  promise.then(
+  subscribeToModel(
+    response,
+    promise,
     () => {
       if (response._closed) {
         return;
@@ -587,11 +707,69 @@ function readSpecialModel(response: Response, value: any): any {
   }
   if (value.$$typeof === REACT_ELEMENT_TYPE) {
     return readElement(response, value);
+  } else if (value.$$typeof === REACT_LAZY_TYPE) {
+    const chunk = createPendingChunk<any>(response);
+    const lazy = createLazyChunkWrapper(chunk);
+    if (__DEV__) {
+      const store = value._store;
+      lazy._store =
+        store === undefined ? undefined : createElementStore(store.validated);
+    }
+    response._models.set(value, lazy);
+    const source = value._payload;
+    subscribeToModel(
+      response,
+      source,
+      model => resolveModelChunk(response, chunk, model),
+      error =>
+        triggerErrorOnChunk(chunk, resolveError(response, source, error)),
+    );
+    return lazy;
+  } else if (typeof value.then === 'function') {
+    const chunk = createPendingChunk<any>(response);
+    response._models.set(value, chunk);
+    subscribeToModel(
+      response,
+      value,
+      model => resolveModelChunk(response, chunk, model),
+      error => triggerErrorOnChunk(chunk, resolveError(response, value, error)),
+    );
+    return chunk;
   }
   if (getPrototypeOf(value) === ObjectPrototype) {
     return readObject(response, value);
   }
   throw new Error('Not implemented.');
+}
+
+function resolveModelChunk<T>(
+  response: Response,
+  chunk: SomeChunk<T>,
+  model: T,
+): void {
+  if (chunk.status !== PENDING) {
+    return;
+  }
+  const resolveListeners = chunk.value;
+  const rejectListeners = chunk.reason;
+  const resolvedChunk: ResolvedModelChunk<T> = chunk as any;
+  resolvedChunk.status = RESOLVED_MODEL;
+  resolvedChunk.value = model;
+  resolvedChunk.reason = response;
+  if (resolveListeners !== null) {
+    initializeResolvedModelChunk(resolvedChunk);
+    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+  }
+}
+
+function initializeResolvedModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
+  const model = chunk.value;
+  const response = chunk.reason;
+  const blockedChunk: BlockedChunk<T> = chunk as any;
+  blockedChunk.status = BLOCKED;
+  blockedChunk.value = null;
+  blockedChunk.reason = null;
+  initializeModelChunk(response, blockedChunk, model);
 }
 
 function freezeCompletedElements(response: Response): void {
@@ -626,7 +804,9 @@ function initializeModelChunk<T>(
     if (promise === null) {
       initializeChunk(chunk, completeModel(response, model));
     } else {
-      promise.then(
+      subscribeToModel(
+        response,
+        promise,
         () => {
           if (response._closed) {
             return;
@@ -688,7 +868,11 @@ function scanModel(
     }
     return;
   }
-  if (value.$$typeof === REACT_ELEMENT_TYPE) {
+  if (
+    value.$$typeof === REACT_ELEMENT_TYPE ||
+    value.$$typeof === REACT_LAZY_TYPE ||
+    typeof value.then === 'function'
+  ) {
     return;
   }
   if (isArray(value)) {
@@ -703,6 +887,64 @@ function scanModel(
   }
 }
 
+function resolveErrorProd(response: Response): Error {
+  if (__DEV__) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveErrorProd should never be called in development mode. Use resolveErrorDev instead. This is a bug in React.',
+    );
+  }
+  const error = new Error(
+    'An error occurred in the Server Components render. The specific message is omitted in production' +
+      ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+      ' may provide additional details about the nature of the error.',
+  );
+  error.stack = 'Error: ' + error.message;
+  return error;
+}
+
+function resolveError(
+  response: Response,
+  thenable: Object,
+  error: mixed,
+): mixed {
+  const reference = getErrorReference(response._result, thenable);
+  if (reference === undefined) {
+    return error;
+  }
+  const existingError = response._models.get(reference);
+  if (existingError !== undefined) {
+    return existingError;
+  }
+  let resolvedError;
+  if (__DEV__) {
+    let name = 'Error';
+    let message;
+    try {
+      if (error instanceof Error) {
+        name = error.name;
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        message = String(error.message);
+      } else if (typeof error === 'object' && error !== null) {
+        message = describeObjectForErrorMessage(error);
+      } else {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        message = String(error);
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+    }
+    // eslint-disable-next-line react-internal/prod-error-codes
+    resolvedError = new Error(message);
+    resolvedError.name = name;
+  } else {
+    resolvedError = resolveErrorProd(response);
+  }
+  (resolvedError as any).digest = reference.digest;
+  response._models.set(reference, resolvedError);
+  return resolvedError;
+}
+
 export function readResult<T>(
   response: Response,
   result: Result<T>,
@@ -710,9 +952,11 @@ export function readResult<T>(
   const root = getRoot(result);
   const chunk = createPendingChunk<T>(response);
   response._models.set(root, chunk);
-  root.then(
-    model => initializeModelChunk(response, chunk, model),
-    error => triggerErrorOnChunk(chunk, error),
+  subscribeToModel(
+    response,
+    root,
+    model => resolveModelChunk(response, chunk, model),
+    error => triggerErrorOnChunk(chunk, resolveError(response, root, error)),
   );
   const hints = getHintQueue(result);
   let nextHintIndex = 0;
@@ -727,12 +971,12 @@ export function readResult<T>(
         dispatchHint(hint.code, hint.model);
       }
       if (!hints.closed) {
-        waitForHints(hints).then(flushHints, error =>
-          triggerErrorOnChunk(chunk, error),
+        subscribeToModel(response, waitForHints(hints), flushHints, error =>
+          stopReading(response, error),
         );
       }
     } catch (error) {
-      triggerErrorOnChunk(chunk, error);
+      stopReading(response, error);
     }
   }
   flushHints();
