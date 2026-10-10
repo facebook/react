@@ -1981,7 +1981,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<div><span>from-server</span></div>');
   });
 
-  it.skip('should resolve cyclic references in client component props after two rounds of serialization and deserialization', async () => {
+  it('should resolve cyclic references in client component props after two rounds of serialization and deserialization', async () => {
     const ClientComponent = clientExports(function ClientComponent({data}) {
       return (
         <div>{data.self === data ? 'Cycle resolved' : 'Cycle broken'}</div>
@@ -1998,14 +1998,14 @@ describe('ReactFlightResultDOM', () => {
     const cyclic = {self: null};
     cyclic.self = cyclic;
 
-    const stream1 = ReactServerDOMServer.renderToReadableStream(
+    const result1 = ReactServerDOMServer.renderToResult(
       <React.Fragment key="this-key-is-important-to-repro-a-prior-cycle-serialization-bug">
         <ClientComponent data={cyclic} />
       </React.Fragment>,
-      webpackMap,
     );
 
-    const promise = ReactServerDOMClient.createFromReadableStream(stream1, {
+    const promise = ReactServerDOMClientNode.createFromResult(result1, {
+      clientManifest: webpackMap,
       serverConsumerManifest: {
         moduleMap: {
           [clientModuleMetadata.id]: {
@@ -2022,8 +2022,8 @@ describe('ReactFlightResultDOM', () => {
     });
 
     const errors = [];
-    const stream2 = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(promise, webpackMap, {
+    const result2 = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(promise, {
         onError(error) {
           errors.push(error);
         },
@@ -2033,10 +2033,12 @@ describe('ReactFlightResultDOM', () => {
     expect(errors).toEqual([]);
 
     const element = await serverAct(() =>
-      ReactServerDOMClient.createFromReadableStream(stream2, {
+      ReactServerDOMClientNode.createFromResult(result2, {
+        clientManifest: webpackMap,
         serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
+          serverModuleMap: null,
         },
       }),
     );

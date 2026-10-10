@@ -8,8 +8,14 @@
  */
 
 import type {ResultModel} from 'shared/ReactFlightResultModel';
-import type {ErrorReference} from 'shared/ReactFlightResult';
+import type {ErrorReference, ModelReference} from 'shared/ReactFlightResult';
 import type {ReactStackTrace, ReactKey} from 'shared/ReactTypes';
+import {
+  MODEL_KIND_MASK,
+  MODEL_OBJECT,
+  MODEL_ARRAY,
+  MODEL_ELEMENT,
+} from 'shared/ReactFlightResult';
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 import type {
   ReactClientValue,
@@ -26,12 +32,14 @@ import type {
 } from './ReactFlightServerConfig';
 import {
   beginWriting,
+  writeChunk,
   writeChunkAndReturn,
   completeWriting,
   flushBuffered,
   close,
   closeWithError,
   stringToChunk,
+  byteLengthOfChunk,
   scheduleMicrotask,
   scheduleWork,
 } from './ReactServerStreamConfig';
@@ -74,6 +82,7 @@ const NOT_PLAIN_IMPORT_METADATA = {};
 const OPENING = 10;
 const CLOSING = 13;
 const CLOSED = 14;
+const NEXT_TWO_CHUNKS_ARE_ATOMIC: symbol = Symbol();
 const PENDING = 0;
 const COMPLETED = 1;
 const ERRORED = 4;
@@ -83,6 +92,7 @@ type Task = {
   id: number,
   model: ReactClientValue,
   status: 0 | 1 | 4 | 6,
+  returnedTupleReference: null | string,
 };
 export type InputThenableReader = {
   resolve: ReactClientValue => void,
@@ -100,6 +110,8 @@ type ModelParent = ReactClientObject | $ReadOnlyArray<ReactClientValue>;
 
 export type Input = {
   +root: ResultModel<ReactClientValue>,
+  getValueReference: Object => void | ModelReference,
+  getModelInfo: Object => number,
   subscribe: ({
     hint: (HintCode, HintModel<any>) => void,
     complete: () => void,
@@ -114,7 +126,7 @@ export type Request = {
   destination: null | Destination,
   status: 10 | 13 | 14,
   fatalError: mixed,
-  completedRegularChunks: Array<Chunk>,
+  completedRegularChunks: Array<Chunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC>,
   pendingChunks: number,
   nextChunkId: number,
   abortableTasks: Set<Task>,
@@ -127,6 +139,7 @@ export type Request = {
   writtenImportStringsSize: number,
   completedImportChunks: Array<Chunk>,
   writtenModels: WeakMap<Object, number>,
+  writtenObjects: WeakMap<Object, string>,
   inputSubscriptions: Set<() => void>,
   writtenSymbols: Map<symbol, number>,
   writtenErrors: WeakMap<ErrorReference, number>,
@@ -153,6 +166,7 @@ function RequestInstance(
   this.writtenImportStringsSize = 0;
   this.completedImportChunks = [];
   this.writtenModels = new WeakMap();
+  this.writtenObjects = new WeakMap();
   this.inputSubscriptions = new Set();
   this.writtenSymbols = new Map();
   this.writtenErrors = new WeakMap();
@@ -212,12 +226,93 @@ function serializeUndefined(): string {
   return '$undefined';
 }
 
+let modelRoot: null | ReactClientValue = null;
+// Approximate string length of the currently serializing row.
+// Used to power outlining heuristics.
+let serializedSize = 0;
+const MAX_ROW_SIZE = 3200;
+
+function deferTask(request: Request, task: Task): ReactJSONValue {
+  // The item is scheduled to be serialized after its parent in the stream.
+  const newTask = createTask(
+    request,
+    task.model, // the currently rendering element
+    request.abortableTasks,
+  );
+  if (typeof task.model === 'object' && task.model !== null) {
+    // This defining occurrence moves to the new row; aliases must follow it.
+    request.writtenObjects.set(task.model, serializeByValueID(newTask.id));
+  }
+
+  pingTask(request, newTask);
+  return serializeLazyID(newTask.id);
+}
+
+function outlineModel(request: Request, value: ReactClientValue): number {
+  const task = createTask(request, value, request.abortableTasks);
+  if (value !== null && typeof value === 'object') {
+    request.writtenObjects.set(value, serializeByValueID(task.id));
+  }
+  retryTask(request, task);
+  return task.id;
+}
+
+function renderObjectReference(
+  request: Request,
+  task: Task,
+  parent: ModelParent,
+  key: string,
+  value: Object,
+  parentReference?: null | string,
+): null | string {
+  const writtenObjects = request.writtenObjects;
+  const existingReference = writtenObjects.get(value);
+  if (existingReference !== undefined) {
+    if (modelRoot === value) {
+      if (existingReference !== serializeByValueID(task.id)) {
+        return existingReference;
+      }
+      modelRoot = null;
+    } else {
+      return existingReference;
+    }
+  } else if (key.indexOf(':') !== -1) {
+    return serializeByValueID(outlineModel(request, value));
+  } else {
+    if (parentReference === undefined) {
+      parentReference = writtenObjects.get(parent);
+    }
+    if (parentReference != null) {
+      let propertyName = key;
+      if (isArray(parent) && parent[0] === REACT_ELEMENT_TYPE) {
+        switch (key) {
+          case '1':
+            propertyName = 'type';
+            break;
+          case '2':
+            propertyName = 'key';
+            break;
+          case '3':
+            propertyName = 'props';
+            break;
+          case '4':
+            propertyName = '_owner';
+            break;
+        }
+      }
+      writtenObjects.set(value, parentReference + ':' + propertyName);
+    }
+  }
+  return null;
+}
+
 function renderModelDestructive(
   request: Request,
   task: Task,
   parent: ModelParent,
   parentPropertyName: string,
   value: ReactClientValue,
+  parentReference?: null | string,
 ): ReactJSONValue {
   task.model = value;
   if (
@@ -238,6 +333,51 @@ function renderModelDestructive(
     return null;
   }
   if (typeof value === 'object') {
+    const input = request.input;
+    const reference =
+      input === null ? undefined : input.getValueReference(value);
+    if (reference !== undefined) {
+      const id = serializeThenable(request, reference.root);
+      const path = [];
+      let location = reference;
+      let ancestor = location.parent;
+      while (ancestor !== null) {
+        path.push(location.key);
+        location = ancestor;
+        ancestor = location.parent;
+      }
+      let name = serializeByValueID(id);
+      for (let i = path.length - 1; i >= 0; i--) {
+        name += ':' + path[i];
+      }
+      return name;
+    }
+    const kind =
+      input === null ? 0 : input.getModelInfo(value) & MODEL_KIND_MASK;
+    if (
+      kind === MODEL_OBJECT ||
+      kind === MODEL_ARRAY ||
+      kind === MODEL_ELEMENT ||
+      (kind === 0 &&
+        (isArray(value) ||
+          (value as any).$$typeof === REACT_ELEMENT_TYPE ||
+          getPrototypeOf(value) === ObjectPrototype))
+    ) {
+      const objectReference = renderObjectReference(
+        request,
+        task,
+        parent,
+        parentPropertyName,
+        value,
+        parentReference,
+      );
+      if (objectReference !== null) {
+        return objectReference;
+      }
+    }
+    if (kind === MODEL_OBJECT || kind === MODEL_ARRAY) {
+      return value as any;
+    }
     if ((value as any).$$typeof === REACT_LAZY_TYPE) {
       const lazy: LazyComponent<ReactClientValue, any> = value as any;
       return serializeLazyID(serializeThenable(request, lazy._payload));
@@ -245,19 +385,41 @@ function renderModelDestructive(
     if (typeof (value as any).then === 'function') {
       return serializePromiseID(serializeThenable(request, value as any));
     }
-    if ((value as any).$$typeof === REACT_ELEMENT_TYPE) {
+    if (
+      kind === MODEL_ELEMENT ||
+      (value as any).$$typeof === REACT_ELEMENT_TYPE
+    ) {
       const element: ReactElement = value as any;
-      return renderClientElement(
+      if (serializedSize > MAX_ROW_SIZE) {
+        return deferTask(request, task);
+      }
+      const tuple = renderClientElement(
         element.type,
         element.key,
         element.props,
         __DEV__ ? element._store.validated : 0,
       );
+      const elementReference = request.writtenObjects.get(value);
+      if (!__DEV__) {
+        task.returnedTupleReference =
+          elementReference === undefined ? null : elementReference;
+      } else if (elementReference !== undefined) {
+        request.writtenObjects.set(tuple as any, elementReference);
+      }
+      return tuple;
     }
     return value as any;
   }
   if (typeof value === 'string') {
-    return value[0] === '$' ? '$' + value : value;
+    serializedSize += value.length;
+    // $FlowFixMe[invalid-compare]
+    if (value.length >= 1024 && byteLengthOfChunk !== null) {
+      // For large strings, we encode them outside the JSON payload so that we
+      // don't have to double encode and double parse the strings. This can also
+      // be more compact in case the string has a lot of escaped characters.
+      return serializeLargeTextString(request, value);
+    }
+    return escapeStringValue(value);
   }
   if (typeof value === 'boolean') {
     return value;
@@ -298,16 +460,33 @@ function renderModel(
   parent: ModelParent,
   key: string,
   value: ReactClientValue,
+  parentReference?: null | string,
 ): ReactJSONValue {
+  // First time we're serializing the key, we should add it to the size.
+  serializedSize += key.length;
+
   try {
-    return renderModelDestructive(request, task, parent, key, value);
+    return renderModelDestructive(
+      request,
+      task,
+      parent,
+      key,
+      value,
+      parentReference,
+    );
   } catch (thrownValue) {
     const model = task.model;
+    const kind =
+      model !== null && typeof model === 'object' && request.input !== null
+        ? request.input.getModelInfo(model) & MODEL_KIND_MASK
+        : 0;
     const wasReactNode =
       typeof model === 'object' &&
       model !== null &&
-      ((model as any).$$typeof === REACT_ELEMENT_TYPE ||
-        (model as any).$$typeof === REACT_LAZY_TYPE);
+      (kind === MODEL_ELEMENT ||
+        (kind === 0 &&
+          ((model as any).$$typeof === REACT_ELEMENT_TYPE ||
+            (model as any).$$typeof === REACT_LAZY_TYPE)));
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, thrownValue);
@@ -324,6 +503,7 @@ function resolveModel(
   parent: ModelParent,
   parentPropertyName: string,
   value: ReactClientValue,
+  parentReference?: null | string,
 ): ReactJSONValue {
   const rendered = renderModel(
     request,
@@ -331,11 +511,21 @@ function resolveModel(
     parent,
     parentPropertyName,
     value,
+    parentReference,
   );
   if (rendered === null || typeof rendered !== 'object') {
     return rendered;
   }
   if (isArray(rendered)) {
+    // In production, only renderClientElement returns an array distinct from its input.
+    if (!__DEV__ && rendered !== value) {
+      return resolveElementTuple(
+        request,
+        task,
+        rendered,
+        task.returnedTupleReference,
+      );
+    }
     let resolved: null | Array<ReactClientValue> = null;
     for (let i = 0; i < rendered.length; i++) {
       const child = rendered[i];
@@ -397,6 +587,73 @@ function resolveModel(
   return resolved === null ? rendered : resolved;
 }
 
+function resolveElementTuple(
+  request: Request,
+  task: Task,
+  tuple: Array<ReactClientValue>,
+  tupleReference: null | string,
+): Array<ReactClientValue> {
+  // The fresh tuple is private. Keep its element marker intact until all fields
+  // have used it to classify client types and lower type/props property paths.
+  const marker = resolveModel(
+    request,
+    task,
+    tuple,
+    '0',
+    tuple[0],
+    tupleReference,
+  );
+  const type = resolveModel(
+    request,
+    task,
+    tuple,
+    '1',
+    tuple[1],
+    tupleReference,
+  );
+  const key = resolveModel(request, task, tuple, '2', tuple[2], tupleReference);
+  const props = resolveModel(
+    request,
+    task,
+    tuple,
+    '3',
+    tuple[3],
+    tupleReference,
+  );
+  tuple[0] = marker;
+  tuple[1] = type;
+  tuple[2] = key;
+  tuple[3] = props;
+  return tuple;
+}
+
+function serializeLargeTextString(request: Request, text: string): string {
+  request.pendingChunks++;
+  const textId = request.nextChunkId++;
+  emitTextChunk(request, textId, text);
+  return serializeByValueID(textId);
+}
+
+function emitTextChunk(request: Request, id: number, text: string): void {
+  // $FlowFixMe[invalid-compare]
+  if (byteLengthOfChunk === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'Existence of byteLengthOfChunk should have already been checked. This is a bug in React.',
+    );
+  }
+  request.pendingChunks++;
+  const textChunk = stringToChunk(text);
+  const binaryLength = byteLengthOfChunk(textChunk);
+  const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
+  request.completedRegularChunks.push(
+    NEXT_TWO_CHUNKS_ARE_ATOMIC,
+    headerChunk,
+    textChunk,
+  );
+}
+
 function emitModelChunk(request: Request, id: number, json: string): void {
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
@@ -414,6 +671,7 @@ function createTask(
     id,
     status: PENDING,
     model,
+    returnedTupleReference: null,
   };
   abortSet.add(task);
   return task;
@@ -424,8 +682,21 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
   task.status = RENDERING;
+  // We stash the outer parent size so we can restore it when we exit.
+  const parentSerializedSize = serializedSize;
+  // We don't reset the serialized size counter from reentry because that indicates that we
+  // are outlining a model and we actually want to include that size into the parent since
+  // it will still block the parent row. It only restores to zero at the top of the stack.
   try {
     const model = task.model;
+    modelRoot = model;
+    if (
+      model !== null &&
+      typeof model === 'object' &&
+      !request.writtenObjects.has(model)
+    ) {
+      request.writtenObjects.set(model, serializeByValueID(task.id));
+    }
     const resolvedModel = resolveModel(request, task, {'': model}, '', model);
     const json = JSON.stringify(resolvedModel);
     emitModelChunk(request, task.id, json);
@@ -437,6 +708,8 @@ function retryTask(request: Request, task: Task): void {
     } catch (fatal) {
       fatalError(request, fatal);
     }
+  } finally {
+    serializedSize = parentSerializedSize;
   }
 }
 
@@ -978,8 +1251,28 @@ function flushCompletedChunks(request: Request): void {
     const regularChunks = request.completedRegularChunks;
     i = 0;
     for (; i < regularChunks.length; i++) {
-      request.pendingChunks--;
-      const keepWriting = writeChunkAndReturn(destination, regularChunks[i]);
+      const item = regularChunks[i];
+      let keepWriting: boolean;
+      if (typeof item === 'symbol') {
+        const headerChunk = regularChunks[i + 1];
+        const contentChunk = regularChunks[i + 2];
+        if (
+          i + 2 >= regularChunks.length ||
+          typeof headerChunk === 'symbol' ||
+          typeof contentChunk === 'symbol'
+        ) {
+          throw new Error(
+            'A chunk pair is incomplete. This is a bug in React.',
+          );
+        }
+        request.pendingChunks -= 2;
+        writeChunk(destination, headerChunk);
+        keepWriting = writeChunkAndReturn(destination, contentChunk);
+        i += 2;
+      } else {
+        request.pendingChunks--;
+        keepWriting = writeChunkAndReturn(destination, item);
+      }
       if (!keepWriting) {
         request.destination = null;
         i++;
@@ -1022,6 +1315,7 @@ function subscribeToInput(
   if (request.status > OPENING) {
     return;
   }
+  request.writtenModels.set(input.root, rootTask.id);
   subscribeToThenable(request, rootTask, input.root);
 }
 

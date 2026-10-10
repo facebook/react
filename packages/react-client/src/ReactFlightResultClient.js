@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Result} from 'shared/ReactFlightResult';
+import type {Result, ModelReference} from 'shared/ReactFlightResult';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {ReactDebugInfo, Thenable, Wakeable} from 'shared/ReactTypes';
@@ -22,6 +22,12 @@ import {
   getHintQueue,
   waitForHints,
   getErrorReference,
+  getValueReference,
+  getModelInfo,
+  MODEL_KIND_MASK,
+  MODEL_OBJECT,
+  MODEL_ARRAY,
+  MODEL_ELEMENT,
 } from 'shared/ReactFlightResult';
 import {
   dispatchHint,
@@ -37,6 +43,27 @@ import noop from 'shared/noop';
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 const ObjectPrototype = Object.prototype;
+
+type ModelPreload = {
+  model: Object,
+  index: number,
+  lowlink: number,
+  onStack: boolean,
+  cacheable: boolean,
+  chunk: null | SomeChunk<void>,
+  dependencies: null | Set<Wakeable>,
+};
+
+type PreloadState = {
+  nextIndex: number,
+  parent: null | ModelPreload,
+  stack: Array<ModelPreload>,
+};
+
+type PreloadDependencies = {
+  dependencies: null | Set<Wakeable>,
+  ...
+};
 
 type ModelSubscription = {
   response: null | Response,
@@ -57,6 +84,7 @@ export type Response = {
   _disposed: boolean,
   _subscriptions: null | Set<ModelSubscription>,
   _models: Map<Object, any>,
+  _preloads: Map<Object, ModelPreload>,
   _chunks: Set<SomeChunk<any>>,
   _completedElements: Array<ReactElement>, // DEV-only
 };
@@ -82,6 +110,7 @@ export function createResponse(
     _disposed: false,
     _subscriptions: null,
     _models: new Map(),
+    _preloads: new Map(),
     _chunks: new Set(),
   } as any;
   if (__DEV__) {
@@ -218,6 +247,18 @@ function createPendingChunk<T>(response: Response): SomeChunk<T> {
     triggerErrorOnChunk(chunk, getClosedReason(response));
   }
   return chunk;
+}
+
+function createBlockedChunk<T>(response: Response): SomeChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  const chunk = new ReactPromise(BLOCKED, null, null);
+  response._chunks.add(chunk);
+  return chunk;
+}
+
+function createErrorChunk<T>(error: mixed): SomeChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new ReactPromise(ERRORED, null, error);
 }
 
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
@@ -653,6 +694,67 @@ function readElement(
   return lazy;
 }
 
+function isLazyModel(response: Response, model: any): boolean {
+  return (
+    model !== null &&
+    typeof model === 'object' &&
+    model.$$typeof === REACT_LAZY_TYPE &&
+    getModelInfo(response._result, model) === 0
+  );
+}
+
+function isElementModel(response: Response, model: any): boolean {
+  if (
+    model === null ||
+    typeof model !== 'object' ||
+    model.$$typeof !== REACT_ELEMENT_TYPE
+  ) {
+    return false;
+  }
+  const kind = getModelInfo(response._result, model) & MODEL_KIND_MASK;
+  return kind === 0 || kind === MODEL_ELEMENT;
+}
+
+function readModelReference(
+  response: Response,
+  reference: ModelReference,
+  visitElement?: ReactElement => void,
+): any {
+  const source = reference.root;
+  if (source.status !== 'fulfilled') {
+    if (source.status === 'rejected') {
+      throw resolveError(response, source, source.reason);
+    }
+    throw source;
+  }
+  const keys = [];
+  let location = reference;
+  let parent = location.parent;
+  while (parent !== null) {
+    keys.push(location.key);
+    location = parent;
+    parent = location.parent;
+  }
+  let model: any = source.value;
+  for (let i = keys.length; i >= 0; i--) {
+    while (isLazyModel(response, model)) {
+      const lazy = model;
+      try {
+        model = lazy._init(lazy._payload);
+      } catch (error) {
+        throw resolveError(response, lazy._payload, error);
+      }
+    }
+    if (visitElement !== undefined && isElementModel(response, model)) {
+      visitElement(model);
+    }
+    if (i > 0) {
+      model = model[keys[i - 1]];
+    }
+  }
+  return model;
+}
+
 function readModel(response: Response, value: any): any {
   if (
     value === null ||
@@ -660,9 +762,24 @@ function readModel(response: Response, value: any): any {
   ) {
     return value;
   }
-  const existingModel = response._models.get(value);
+  const models = response._models;
+  const existingModel = models.get(value);
   if (existingModel !== undefined) {
     return existingModel;
+  }
+  const reference = getValueReference(response._result, value);
+  if (reference !== undefined) {
+    const model = readModel(response, readModelReference(response, reference));
+    models.set(value, model);
+    return model;
+  }
+  switch (getModelInfo(response._result, value) & MODEL_KIND_MASK) {
+    case MODEL_OBJECT:
+      return readObject(response, value);
+    case MODEL_ARRAY:
+      return readArray(response, value);
+    case MODEL_ELEMENT:
+      return readElement(response, value);
   }
   if (isArray(value)) {
     return readArray(response, value);
@@ -825,29 +942,168 @@ function initializeModelChunk<T>(
   }
 }
 
-function preloadModel(response: Response, model: any): Promise<void> | null {
-  const dependencies: Set<SomeChunk<any>> = new Set();
-  scanModel(response, model, dependencies);
-  if (dependencies.size === 0) {
+function waitForOutlinedModel(
+  response: Response,
+  model: any,
+  wakeable: Wakeable,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    function retry() {
+      try {
+        const pending = preloadModel(response, model, true);
+        if (pending === null) {
+          resolve();
+        } else {
+          subscribeToModel(response, pending, resolve, reject);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    }
+    subscribeToModel(response, wakeable, retry, retry);
+  });
+}
+
+function scanOutlinedModel(
+  response: Response,
+  model: any,
+  state: PreloadState,
+  chunks: PreloadDependencies,
+): void {
+  let value = model;
+  while (isLazyModel(response, value)) {
+    const lazy = value;
+    try {
+      value = lazy._init(lazy._payload);
+    } catch (error) {
+      const wakeable = error as Wakeable;
+      if (
+        lazy._payload.status !== 'rejected' &&
+        error !== null &&
+        typeof error === 'object' &&
+        // $FlowFixMe[method-unbinding]
+        typeof wakeable.then === 'function'
+      ) {
+        if (state.parent !== null) {
+          state.parent.cacheable = false;
+        }
+        addPreloadDependency(
+          chunks,
+          waitForOutlinedModel(response, model, wakeable),
+        );
+        return;
+      }
+      throw resolveError(response, lazy._payload, error);
+    }
+  }
+  if (isElementModel(response, value)) {
+    const type = value.type;
+    if (
+      type !== null &&
+      (typeof type === 'object' || typeof type === 'function')
+    ) {
+      resolveModule(response, type);
+    }
+    scanModel(response, value.props, state, chunks);
+  } else {
+    scanModel(response, value, state, chunks);
+  }
+}
+
+function createPreloadPromise(chunk: Wakeable): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    chunk.then(() => resolve(), reject);
+  });
+}
+
+function preloadModel(
+  response: Response,
+  model: any,
+  isOutlined: boolean = false,
+): Promise<void> | null {
+  if (
+    model === null ||
+    (typeof model !== 'object' && typeof model !== 'function') ||
+    response._models.get(model) === model
+  ) {
+    return null;
+  }
+  const state: PreloadState = {nextIndex: 0, parent: null, stack: []};
+  const pending: PreloadDependencies = {dependencies: null};
+  try {
+    if (isOutlined) {
+      scanOutlinedModel(response, model, state, pending);
+    } else {
+      scanModel(response, model, state, pending);
+    }
+  } catch (error) {
+    const chunk = createErrorChunk<void>(error);
+    for (let i = 0; i < state.stack.length; i++) {
+      const preload = state.stack[i];
+      preload.onStack = false;
+      preload.dependencies = null;
+      preload.chunk = chunk;
+    }
+    throw error;
+  }
+  const chunks = pending.dependencies;
+  if (chunks === null) {
     return null;
   }
   const promises = [];
-  dependencies.forEach(chunk => {
-    promises.push(createPreloadPromise(chunk));
-  });
+  const iterator = chunks.values();
+  for (let entry = iterator.next(); !entry.done; entry = iterator.next()) {
+    promises.push(createPreloadPromise(entry.value));
+  }
   return Promise.all(promises).then(noop);
 }
 
-function createPreloadPromise(chunk: SomeChunk<any>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    chunk.then(() => resolve(), reject);
-  });
+function scanModelReference(
+  response: Response,
+  value: Object,
+  reference: ModelReference,
+  state: PreloadState,
+  chunks: PreloadDependencies,
+): void {
+  try {
+    const root = reference.root;
+    if (root.status !== 'fulfilled') {
+      if (root.status === 'rejected') {
+        throw resolveError(response, root, root.reason);
+      }
+      throw root;
+    }
+    scanModel(response, root.value, state, chunks);
+    const model = readModelReference(response, reference, element => {
+      scanModel(response, element.props, state, chunks);
+    });
+    scanModel(response, model, state, chunks);
+  } catch (error) {
+    const wakeable = error as Wakeable;
+    if (
+      error !== null &&
+      typeof error === 'object' &&
+      // $FlowFixMe[method-unbinding]
+      typeof wakeable.then === 'function'
+    ) {
+      if (state.parent !== null) {
+        state.parent.cacheable = false;
+      }
+      addPreloadDependency(
+        chunks,
+        waitForOutlinedModel(response, value, wakeable),
+      );
+    } else {
+      throw error;
+    }
+  }
 }
 
 function scanModel(
   response: Response,
   value: any,
-  dependencies: Set<SomeChunk<any>>,
+  state: PreloadState,
+  chunks: PreloadDependencies,
 ): void {
   if (
     value === null ||
@@ -855,36 +1111,203 @@ function scanModel(
   ) {
     return;
   }
-  const chunk = resolveModule(response, value);
-  if (chunk !== null) {
-    if (chunk.status === RESOLVED_MODULE) {
-      initializeModuleChunk(chunk);
+  const existingModel = response._models.get(value);
+  if (existingModel !== undefined) {
+    return;
+  }
+  const info = getModelInfo(response._result, value);
+  const kind = info & MODEL_KIND_MASK;
+  if (kind === MODEL_ELEMENT) {
+    return;
+  }
+  if (kind === 0) {
+    const chunk = resolveModule(response, value);
+    if (chunk !== null) {
+      if (chunk.status === RESOLVED_MODULE) {
+        initializeModuleChunk(chunk);
+      }
+      if (chunk.status === ERRORED) {
+        throw chunk.reason;
+      }
+      if (chunk.status === PENDING || chunk.status === BLOCKED) {
+        addPreloadDependency(chunks, chunk);
+      }
+      return;
     }
-    if (chunk.status === ERRORED) {
-      throw chunk.reason;
+    if (
+      value.$$typeof === REACT_ELEMENT_TYPE ||
+      value.$$typeof === REACT_LAZY_TYPE ||
+      typeof value.then === 'function'
+    ) {
+      return;
     }
-    if (chunk.status === PENDING) {
-      dependencies.add(chunk);
+  }
+  let preload: void | ModelPreload = response._preloads.get(value);
+  const existingPreload = preload !== undefined;
+  const parent = state.parent;
+  if (preload === undefined) {
+    const index = state.nextIndex++;
+    preload = {
+      model: value,
+      index,
+      lowlink: index,
+      onStack: true,
+      cacheable: true as boolean,
+      chunk: null,
+      dependencies: null,
+    };
+    response._preloads.set(value, preload);
+    state.stack.push(preload);
+    state.parent = preload;
+    try {
+      scanModelFields(response, value, state, preload, kind);
+    } finally {
+      state.parent = parent;
+    }
+    if (preload.lowlink === preload.index) {
+      completeModelPreloads(response, state, preload);
+    }
+  }
+  if (parent !== null && !preload.cacheable) {
+    parent.cacheable = false;
+  }
+  if (preload.onStack) {
+    if (parent !== null) {
+      parent.lowlink = Math.min(
+        parent.lowlink,
+        existingPreload ? preload.index : preload.lowlink,
+      );
     }
     return;
   }
-  if (
-    value.$$typeof === REACT_ELEMENT_TYPE ||
-    value.$$typeof === REACT_LAZY_TYPE ||
-    typeof value.then === 'function'
-  ) {
+  const pending = preload.chunk;
+  if (pending !== null) {
+    if (pending.status === ERRORED) {
+      throw pending.reason;
+    }
+    if (pending.status !== INITIALIZED) {
+      addPreloadDependency(chunks, pending);
+    }
+  }
+}
+
+function completeModelPreloads(
+  response: Response,
+  state: PreloadState,
+  root: ModelPreload,
+): void {
+  const stack = state.stack;
+  if (stack[stack.length - 1] === root) {
+    stack.pop();
+    root.onStack = false;
+    root.chunk = createModelPreloadChunk(response, root.dependencies);
+    root.dependencies = null;
+    cacheModelPreload(response, root);
     return;
   }
-  if (isArray(value)) {
+  const group: Array<ModelPreload> = [];
+  let dependencies: null | Set<Wakeable> = null;
+  let cacheable = true;
+  let preload;
+  do {
+    preload = stack.pop();
+    if (preload === undefined) {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error('Expected a pending Result model preload.');
+    }
+    preload.onStack = false;
+    cacheable = cacheable && preload.cacheable;
+    group.push(preload);
+    const localDependencies = preload.dependencies;
+    if (localDependencies !== null) {
+      if (dependencies === null) {
+        dependencies = localDependencies;
+      } else {
+        const iterator = localDependencies.values();
+        for (
+          let entry = iterator.next();
+          !entry.done;
+          entry = iterator.next()
+        ) {
+          dependencies.add(entry.value);
+        }
+      }
+      preload.dependencies = null;
+    }
+  } while (preload !== root);
+
+  const chunk = createModelPreloadChunk(response, dependencies);
+  for (let i = 0; i < group.length; i++) {
+    preload = group[i];
+    preload.chunk = chunk;
+    preload.cacheable = cacheable;
+    cacheModelPreload(response, preload);
+  }
+}
+
+function addPreloadDependency(
+  preload: PreloadDependencies,
+  dependency: Wakeable,
+): void {
+  let dependencies = preload.dependencies;
+  if (dependencies === null) {
+    preload.dependencies = dependencies = new Set();
+  }
+  dependencies.add(dependency);
+}
+
+function createModelPreloadChunk(
+  response: Response,
+  dependencies: null | Set<Wakeable>,
+): null | SomeChunk<void> {
+  if (dependencies === null) {
+    return null;
+  }
+  const chunk = createBlockedChunk<void>(response);
+  let remaining = dependencies.size;
+  dependencies.forEach(dependency => {
+    dependency.then(
+      () => {
+        if (--remaining === 0) {
+          initializeChunk(chunk, undefined);
+        }
+      },
+      error => triggerErrorOnChunk(chunk, error),
+    );
+  });
+  return chunk;
+}
+
+function cacheModelPreload(response: Response, preload: ModelPreload): void {
+  if (!preload.cacheable) {
+    response._preloads.delete(preload.model);
+  }
+}
+
+function scanModelFields(
+  response: Response,
+  value: any,
+  state: PreloadState,
+  chunks: PreloadDependencies,
+  kind: number,
+): void {
+  const reference = getValueReference(response._result, value);
+  if (reference !== undefined) {
+    scanModelReference(response, value, reference, state, chunks);
+    return;
+  }
+  if (kind === MODEL_ARRAY || (kind === 0 && isArray(value))) {
     for (let i = 0; i < value.length; i++) {
-      scanModel(response, value[i], dependencies);
+      scanModel(response, value[i], state, chunks);
     }
   } else {
-    const keys = Object.keys(value);
+    const object: {[key: string]: any} = value;
+    const keys = Object.keys(object);
     for (let i = 0; i < keys.length; i++) {
-      scanModel(response, value[keys[i]], dependencies);
+      scanModel(response, object[keys[i]], state, chunks);
     }
   }
+  return;
 }
 
 function resolveErrorProd(response: Response): Error {
