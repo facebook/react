@@ -80,18 +80,21 @@ const MAX_IMPORT_METADATA_DEPTH = 16;
 const NOT_PLAIN_IMPORT_METADATA = {};
 
 const OPENING = 10;
+const OPEN = 11;
+const ABORTING = 12;
 const CLOSING = 13;
 const CLOSED = 14;
 const NEXT_TWO_CHUNKS_ARE_ATOMIC: symbol = Symbol();
 const PENDING = 0;
 const COMPLETED = 1;
+const ABORTED = 3;
 const ERRORED = 4;
 const RENDERING = 6;
 
 type Task = {
   id: number,
   model: ReactClientValue,
-  status: 0 | 1 | 4 | 6,
+  status: 0 | 1 | 3 | 4 | 6,
   returnedTupleReference: null | string,
 };
 export type InputThenableReader = {
@@ -124,7 +127,8 @@ export type Input = {
 export type Request = {
   input: null | Input,
   destination: null | Destination,
-  status: 10 | 13 | 14,
+  status: 10 | 11 | 12 | 13 | 14,
+  abortController: AbortController,
   fatalError: mixed,
   completedRegularChunks: Array<Chunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC>,
   pendingChunks: number,
@@ -154,6 +158,7 @@ function RequestInstance(
   onError: void | (mixed => ?string),
 ) {
   this.input = input;
+  this.abortController = new AbortController();
   this.destination = null;
   this.status = OPENING;
   this.fatalError = null;
@@ -487,6 +492,13 @@ function renderModel(
         (kind === 0 &&
           ((model as any).$$typeof === REACT_ELEMENT_TYPE ||
             (model as any).$$typeof === REACT_LAZY_TYPE)));
+    if (request.status === ABORTING) {
+      task.status = ABORTED;
+      const errorId = request.fatalError as any;
+      return wasReactNode
+        ? serializeLazyID(errorId)
+        : serializeByValueID(errorId);
+    }
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, thrownValue);
@@ -703,6 +715,14 @@ function retryTask(request: Request, task: Task): void {
     task.status = COMPLETED;
     request.abortableTasks.delete(task);
   } catch (error) {
+    if (request.status === ABORTING) {
+      request.abortableTasks.delete(task);
+      task.status = PENDING;
+      const errorId: number = request.fatalError as any;
+      abortTask(task, request, errorId);
+      finishAbortedTask(task, request, errorId);
+      return;
+    }
     try {
       erroredTask(request, task, error);
     } catch (fatal) {
@@ -950,14 +970,14 @@ function subscribeToThenable(
     input.subscribeToThenable(thenable, {
       resolve(value) {
         detach();
-        if (request.status === OPENING && task.status === PENDING) {
+        if (request.status <= OPEN && task.status === PENDING) {
           task.model = value;
           pingTask(request, task);
         }
       },
       reject(error, reference) {
         detach();
-        if (request.status === OPENING && task.status === PENDING) {
+        if (request.status <= OPEN && task.status === PENDING) {
           try {
             erroredInputTask(request, task, error, reference);
             enqueueFlush(request);
@@ -983,7 +1003,7 @@ function subscribeInput(
   }
   request.inputSubscriptions.add(detach);
   unsubscribe = subscribe(detach);
-  if (!active || request.status > OPENING) {
+  if (!active || request.status > OPEN) {
     detach();
   }
 }
@@ -992,6 +1012,10 @@ function serializeThenable(
   request: Request,
   thenable: ResultModel<ReactClientValue>,
 ): number {
+  if (request.input === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error('Cannot serialize a detached Result.');
+  }
   const existingId = request.writtenModels.get(thenable);
   if (existingId !== undefined) {
     return existingId;
@@ -1188,6 +1212,22 @@ function subscribeHints(request: Request): void {
   if (input === null) {
     return;
   }
+  let sourceComplete = false;
+  function completeInput(): void {
+    if (!sourceComplete) {
+      sourceComplete = true;
+      request.pendingChunks--;
+      enqueueFlush(request);
+    }
+  }
+  request.abortController.signal.addEventListener(
+    'abort',
+    () => {
+      completeInput();
+      cleanupInput(request);
+    },
+    {once: true},
+  );
   subscribeInput(request, detach =>
     input.subscribe({
       hint(code, model) {
@@ -1199,14 +1239,14 @@ function subscribeHints(request: Request): void {
       },
       complete() {
         detach();
-        request.pendingChunks--;
-        enqueueFlush(request);
+        completeInput();
       },
     }),
   );
 }
 
 function fatalError(request: Request, error: mixed): void {
+  request.abortController.abort(error);
   cleanupInput(request);
   const destination = request.destination;
   if (destination !== null) {
@@ -1300,6 +1340,11 @@ function flushCompletedChunks(request: Request): void {
     const currentDestination = request.destination;
     request.status = CLOSED;
     cleanupInput(request);
+    request.abortController.abort(
+      new Error(
+        'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
+      ),
+    );
     request.destination = null;
     close(currentDestination);
   }
@@ -1312,7 +1357,7 @@ function subscribeToInput(
 ): void {
   request.pendingChunks++;
   subscribeHints(request);
-  if (request.status > OPENING) {
+  if (request.status > OPEN) {
     return;
   }
   request.writtenModels.set(input.root, rootTask.id);
@@ -1321,6 +1366,11 @@ function subscribeToInput(
 
 export function startWork(request: Request): void {
   scheduleMicrotask(() => performWork(request));
+  scheduleWork(() => {
+    if (request.status === OPENING) {
+      request.status = OPEN;
+    }
+  });
 }
 
 export function startFlowing(request: Request, destination: Destination): void {
@@ -1344,8 +1394,83 @@ export function stopFlowing(request: Request): void {
   request.destination = null;
 }
 
+function abortTask(task: Task, request: Request, errorId: number): void {
+  if (task.status !== PENDING) {
+    return;
+  }
+  task.status = ABORTED;
+}
+
+function finishAbortedTask(
+  task: Task,
+  request: Request,
+  errorId: number,
+): void {
+  if (task.status !== ABORTED) {
+    return;
+  }
+  const ref = serializeByValueID(errorId);
+  const processedChunk = encodeReferenceChunk(request, task.id, ref);
+  request.completedErrorChunks.push(processedChunk);
+}
+
+function finishAbort(
+  request: Request,
+  abortedTasks: Set<Task>,
+  errorId: number,
+): void {
+  try {
+    abortedTasks.forEach(task => finishAbortedTask(task, request, errorId));
+    flushCompletedChunks(request);
+  } catch (error) {
+    logRecoverableError(request, error);
+    fatalError(request, error);
+  }
+}
+
+export function attachAbortSignal(request: Request, signal: AbortSignal): void {
+  if (signal.aborted) {
+    abort(request, signal.reason);
+    return;
+  }
+  signal.addEventListener(
+    'abort',
+    () => {
+      abort(request, signal.reason);
+    },
+    {signal: request.abortController.signal},
+  );
+}
+
 export function abort(request: Request, reason: mixed): void {
-  if (request.status !== CLOSED) {
-    fatalError(request, reason);
+  if (request.status > OPEN) {
+    return;
+  }
+  try {
+    request.status = ABORTING;
+    request.abortController.abort(reason);
+    const abortableTasks = request.abortableTasks;
+    if (abortableTasks.size > 0) {
+      const error =
+        reason === undefined
+          ? new Error('The render was aborted by the server without a reason.')
+          : typeof reason === 'object' &&
+              reason !== null &&
+              typeof reason.then === 'function'
+            ? new Error('The render was aborted by the server with a promise.')
+            : reason;
+      const digest = logRecoverableError(request, error);
+      const errorId = request.nextChunkId++;
+      request.fatalError = errorId;
+      request.pendingChunks++;
+      emitErrorChunk(request, errorId, digest, error);
+      abortableTasks.forEach(task => abortTask(task, request, errorId));
+      scheduleWork(() => finishAbort(request, abortableTasks, errorId));
+    } else {
+      flushCompletedChunks(request);
+    }
+  } catch (error) {
+    logRecoverableError(request, error);
+    fatalError(request, error);
   }
 }

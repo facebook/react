@@ -18,6 +18,8 @@ import type {
 import {
   createResponse,
   readResult,
+  stopReading,
+  addResponseCleanup,
 } from 'react-client/src/ReactFlightResultClient';
 import {
   isClientReference,
@@ -33,6 +35,7 @@ type Options = {
   },
   nonce?: string,
   onError?: mixed => ?string,
+  signal?: AbortSignal,
 };
 
 export function createFromResult<T>(
@@ -56,5 +59,17 @@ export function createFromResult<T>(
     options.nonce,
     options.onError,
   );
+  const signal = options.signal;
+  if (signal !== undefined) {
+    const onAbort = () => stopReading(response, signal.reason);
+    if (signal.aborted) {
+      onAbort();
+    } else {
+      signal.addEventListener('abort', onAbort, {once: true});
+      addResponseCleanup(response, () =>
+        signal.removeEventListener('abort', onAbort),
+      );
+    }
+  }
   return readResult(response, result);
 }

@@ -19,6 +19,7 @@ import {
   startFlowing,
   stopFlowing,
   abort,
+  attachAbortSignal,
 } from 'react-server/src/ReactFlightResultSerializationServer';
 
 export type PipeableStream = {
@@ -41,10 +42,14 @@ export function renderToPipeableStream(
   input: Input,
   webpackMap: ClientManifest,
   onError?: mixed => ?string,
+  signal?: AbortSignal,
 ): PipeableStream {
   const request = createRequest(input, webpackMap, onError);
   let hasStartedFlowing = false;
   startWork(request);
+  if (signal !== undefined) {
+    attachAbortSignal(request, signal);
+  }
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {

@@ -65,11 +65,27 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
 
   function renderResultToPipeableStream(model, manifest, options) {
     const result = ReactServerDOMServer.renderToResult(model, options);
-    return ReactServerDOMServer.renderResultToPipeableStream(
+    const stream = ReactServerDOMServer.renderResultToPipeableStream(
       result,
       manifest,
       options,
     );
+    return {
+      pipe(destination) {
+        destination.on('error', () =>
+          result.abort(
+            new Error('The destination stream errored while writing data.'),
+          ),
+        );
+        destination.on('close', () =>
+          result.abort(new Error('The destination stream closed early.')),
+        );
+        return stream.pipe(destination);
+      },
+      abort(reason) {
+        result.abort(reason);
+      },
+    };
   }
 
   function readResult(stream) {

@@ -83,6 +83,7 @@ export type Response = {
   _closedReason: null | Error,
   _disposed: boolean,
   _subscriptions: null | Set<ModelSubscription>,
+  _cleanups: null | Set<() => void>,
   _models: Map<Object, any>,
   _preloads: Map<Object, ModelPreload>,
   _chunks: Set<SomeChunk<any>>,
@@ -109,6 +110,7 @@ export function createResponse(
     _closedReason: null,
     _disposed: false,
     _subscriptions: null,
+    _cleanups: null,
     _models: new Map(),
     _preloads: new Map(),
     _chunks: new Set(),
@@ -374,7 +376,27 @@ export function stopReading(response: Response, reason: mixed): void {
     );
     response._subscriptions = null;
   }
+  const cleanups = response._cleanups;
+  if (cleanups !== null) {
+    cleanups.forEach(cleanup => cleanup());
+    response._cleanups = null;
+  }
   reportGlobalError(response, error);
+}
+
+export function addResponseCleanup(
+  response: Response,
+  cleanup: () => void,
+): void {
+  if (response._disposed) {
+    cleanup();
+    return;
+  }
+  let cleanups = response._cleanups;
+  if (cleanups === null) {
+    response._cleanups = cleanups = new Set();
+  }
+  cleanups.add(cleanup);
 }
 
 function detachModelSubscription(subscription: ModelSubscription): void {
