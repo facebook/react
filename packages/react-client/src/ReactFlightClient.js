@@ -1070,6 +1070,7 @@ type InitializationReference = {
   // Retain the whole carrier when a constructor waits for an input field.
   inputs: null | ConstructionInputs<ConstructionListener>,
   // Several input facts can wake the same operation. It finishes once.
+  queued: boolean,
   done: boolean,
   isDebug?: boolean, // DEV-only
 };
@@ -1095,6 +1096,7 @@ type ServerReferenceBinding = {
   moduleStatus: 0 | 1 | 2,
   moduleError: mixed,
   inputs: null | ConstructionInputs<ConstructionListener>,
+  queued: boolean,
   done: boolean,
 };
 type InitializationConsumer = InitializationReference | ServerReferenceBinding;
@@ -1897,8 +1899,20 @@ function enqueueConstructionPublication(
   drainConstruction(response);
 }
 
-// Installing one fact can finish several other operations. Public callbacks
-// run only after those installations and the enclosing reviver have returned.
+function enqueueConstructionOperation(
+  response: Response,
+  operation: InitializationConsumer,
+): void {
+  if (!operation.done && !operation.queued) {
+    operation.queued = true;
+    getConstructionState(response).operationQueue.push(operation);
+  }
+  drainConstruction(response);
+}
+
+// Installing one fact can finish several other operations. Coalesce input
+// wakeups within the batch, then run public callbacks after those operations
+// and the enclosing reviver have returned.
 function drainConstruction(response: Response): void {
   const state = response._construction;
   if (
@@ -1911,15 +1925,35 @@ function drainConstruction(response: Response): void {
   }
   state.draining = true;
   try {
-    const queue = state.publicationQueue;
-    for (let i = 0; i < queue.length; i++) {
-      const publication = queue[i];
-      if (publication.kind === CONSTRUCTION_PUBLICATION) {
-        publication.queued = false;
-        resumeConstructionPublication(response, publication);
+    const operations = state.operationQueue;
+    const publications = state.publicationQueue;
+    let operationIndex = 0;
+    let publicationIndex = 0;
+    while (
+      operationIndex < operations.length ||
+      publicationIndex < publications.length
+    ) {
+      while (operationIndex < operations.length) {
+        const operation = operations[operationIndex++];
+        if (operation.kind !== CONSTRUCTION_PUBLICATION) {
+          operation.queued = false;
+          if (operation.kind === CONSTRUCTION_BINDING) {
+            resumeServerReferenceBinding(response, operation);
+          } else {
+            resumeInitializationInputs(response, operation);
+          }
+        }
+      }
+      if (publicationIndex < publications.length) {
+        const publication = publications[publicationIndex++];
+        if (publication.kind === CONSTRUCTION_PUBLICATION) {
+          publication.queued = false;
+          resumeConstructionPublication(response, publication);
+        }
       }
     }
-    queue.length = 0;
+    operations.length = 0;
+    publications.length = 0;
   } finally {
     state.draining = false;
   }
@@ -2318,12 +2352,13 @@ function wakeConstructionReferences(
         enqueueConstructionPublication(response, reference);
       } else if (status === CONSTRUCTION_FAILED) {
         rejectInitializationConsumer(response, reference, value);
-      } else if (reference.kind === CONSTRUCTION_BINDING) {
-        resumeServerReferenceBinding(response, reference);
-      } else if (reference.inputs !== null) {
-        // This listener belongs to a constructor, not a selected path. The
-        // field is installed now; resume using the retained carrier.
-        resumeInitializationInputs(response, reference);
+      } else if (
+        reference.kind === CONSTRUCTION_BINDING ||
+        reference.inputs !== null
+      ) {
+        // Several slots can be installed in the same parse or wakeup.
+        // Resume their owning operation once after that batch returns.
+        enqueueConstructionOperation(response, reference);
       } else {
         fulfillReference(response, reference, value, reference.source);
       }
@@ -2590,6 +2625,7 @@ function createInitializationReference<T>(
     ),
     collection: null,
     inputs: null,
+    queued: false,
     done: false,
   };
   if (__DEV__) {
@@ -2910,6 +2946,7 @@ function loadServerReference<A: Iterable<any>, T>(
       modulePromise === null ? CONSTRUCTION_INSTALLED : CONSTRUCTION_PENDING,
     moduleError: null,
     inputs: null,
+    queued: false,
     done: false,
   };
 
@@ -2925,12 +2962,12 @@ function loadServerReference<A: Iterable<any>, T>(
     modulePromise.then(
       () => {
         binding.moduleStatus = CONSTRUCTION_INSTALLED;
-        resumeServerReferenceBinding(response, binding);
+        enqueueConstructionOperation(response, binding);
       },
       error => {
         binding.moduleStatus = CONSTRUCTION_FAILED;
         binding.moduleError = error;
-        resumeServerReferenceBinding(response, binding);
+        enqueueConstructionOperation(response, binding);
       },
     );
   }
