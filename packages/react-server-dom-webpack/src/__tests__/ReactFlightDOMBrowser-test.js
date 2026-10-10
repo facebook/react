@@ -424,6 +424,51 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<div><span>12345</span>12345</div>');
   });
 
+  it('waits for a Set referenced through unfinished element props', async () => {
+    let resolvePayload;
+    let resolveComponent;
+    const {value: payload} = clientExports(
+      {value: 'ready'},
+      'payload',
+      '/payload.js',
+      new Promise(resolve => (resolvePayload = resolve)),
+    );
+    const Widget = clientExports(
+      function Widget() {
+        return null;
+      },
+      'widget',
+      '/widget.js',
+      new Promise(resolve => (resolveComponent = resolve)),
+    );
+    const data = {};
+    const element = <Widget data={data} items={new Set([payload])} />;
+    data.alias = element.props;
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {element, items: element.props.items},
+        webpackMap,
+      ),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const observed = [];
+    await act(() => {
+      response.then(
+        value =>
+          observed.push(
+            value.items instanceof Set ? Array.from(value.items) : value.items,
+          ),
+        error => observed.push(error),
+      );
+    });
+    expect(observed).toEqual([]);
+
+    await act(() => resolvePayload());
+    expect(observed).toEqual([['ready']]);
+    await act(() => resolveComponent());
+  });
+
   it('should resolve deduped objects in nested children of blocked models', async () => {
     let resolveOuterClientComponentChunk;
     let resolveInnerClientComponentChunk;
@@ -3064,9 +3109,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                2992,
+                3037,
                 19,
-                2976,
+                3021,
                 89,
               ],
             ],

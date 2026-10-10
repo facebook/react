@@ -107,8 +107,19 @@ import {injectInternals} from './ReactFlightClientDevToolsHook';
 import type {
   ErroredInitializationHandler,
   InitializationHandler,
+  ConstructionFact,
+  ConstructionState,
 } from './ReactFlightClientConstruction';
-import {createInitializationHandler} from './ReactFlightClientConstruction';
+import {
+  CONSTRUCTION_INSTALLED,
+  CONSTRUCTION_FAILED,
+  createInitializationHandler,
+  createConstructionState,
+  getPendingConstructionField,
+  registerConstructionField,
+  settleConstructionField,
+  subscribeConstructionFact,
+} from './ReactFlightClientConstruction';
 
 import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
 
@@ -401,6 +412,7 @@ type Response = {
   _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
+  _construction: null | ConstructionState<InitializationReference>,
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
@@ -700,7 +712,7 @@ function rejectChunk(
     if (typeof listener === 'function') {
       listener(error);
     } else {
-      rejectReference(response, listener.handler, error);
+      rejectInitializationReference(response, listener, error);
     }
   }
 }
@@ -1025,17 +1037,26 @@ function resolveModuleChunk<T>(
   }
 }
 
+type ModelMapping<T> = (
+  response: Response,
+  model: any,
+  parentObject: Object,
+  key: string,
+  reference: null | InitializationReference,
+) => T;
+
 type InitializationReference = {
   handler: InitializationHandler,
   parentObject: Object,
   key: string,
-  map: (
-    response: Response,
-    model: any,
-    parentObject: Object,
-    key: string,
-  ) => any,
+  map: ModelMapping<any>,
   path: Array<string>,
+  // Retain the source chunk when a field wait replaces a chunk wait.
+  source: SomeChunk<any>,
+  // The result of installing this reference in parentObject[key].
+  assignment: ConstructionFact<InitializationReference>,
+  // A mapper can hand this assignment to asynchronous server-reference loading.
+  isMappingDeferred: boolean,
   isDebug?: boolean, // DEV-only
 };
 let initializingHandler: null | InitializationHandler = null;
@@ -1748,6 +1769,8 @@ function fulfillReference(
   fulfilledChunk: SomeChunk<any>,
 ): void {
   const {handler, parentObject, key, map, path} = reference;
+  reference.source = fulfilledChunk;
+  let mappedValue;
 
   try {
     for (let i = 1; i < path.length; i++) {
@@ -1819,9 +1842,9 @@ function fulfillReference(
               return;
             }
             default: {
-              rejectReference(
+              rejectInitializationReference(
                 response,
-                reference.handler,
+                reference,
                 referencedChunk.reason,
               );
               return;
@@ -1835,6 +1858,20 @@ function fulfillReference(
         value !== null &&
         hasOwnProperty.call(value, name)
       ) {
+        const fact = getPendingConstructionField(
+          response._construction,
+          value,
+          name,
+        );
+        if (fact !== undefined) {
+          // The object is available, but this field still has a reference
+          // waiting to resolve. Reading it now would return the placeholder.
+          // Wait for that field, then continue with its resolved value. The
+          // listener receives the field's value, so skip the path leading to it.
+          path.splice(0, i);
+          subscribeConstructionFact(fact, reference);
+          return;
+        }
         value = value[name];
       } else {
         throw new Error('Invalid reference.');
@@ -1873,14 +1910,14 @@ function fulfillReference(
       break;
     }
 
-    const mappedValue = map(response, value, parentObject, key);
+    mappedValue = map(response, value, parentObject, key, reference);
     if (key !== __PROTO__) {
       parentObject[key] = mappedValue;
     }
 
     // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && handler.value === null) {
+    if (key === '' && !handler.errored && handler.value === null) {
       handler.value = mappedValue;
     }
 
@@ -1923,24 +1960,88 @@ function fulfillReference(
       transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
     }
   } catch (error) {
-    rejectReference(response, reference.handler, error);
+    rejectInitializationReference(response, reference, error);
     return;
   }
 
+  // loadServerReference can take over this assignment while its module or
+  // bound arguments load. It will install the field and wake its readers when
+  // that work finishes. Returning its placeholder does not finish the field.
+  if (!reference.isMappingDeferred) {
+    finishInitializationField(
+      response,
+      parentObject,
+      key,
+      reference.assignment,
+      CONSTRUCTION_INSTALLED,
+      mappedValue,
+    );
+  }
   handler.deps--;
   initializeChunkIfUnblocked(response, handler);
 }
 
-function createInitializationReference(
+function getConstructionState(
+  response: Response,
+): ConstructionState<InitializationReference> {
+  let state = response._construction;
+  if (state === null) {
+    state = response._construction = createConstructionState();
+  }
+  return state;
+}
+
+function finishInitializationField(
+  response: Response,
   parentObject: Object,
   key: string,
-  map: (
-    response: Response,
-    model: any,
-    parentObject: Object,
-    key: string,
-  ) => any,
+  fact: ConstructionFact<InitializationReference>,
+  status: 1 | 2,
+  value: any,
+): void {
+  const listeners = settleConstructionField(
+    getConstructionState(response),
+    parentObject,
+    key,
+    fact,
+    status,
+    value,
+  );
+  if (listeners !== null) {
+    for (let i = 0; i < listeners.length; i++) {
+      const reference = listeners[i];
+      if (status === CONSTRUCTION_FAILED) {
+        rejectInitializationReference(response, reference, value);
+      } else {
+        fulfillReference(response, reference, value, reference.source);
+      }
+    }
+  }
+}
+
+function rejectInitializationReference(
+  response: Response,
+  reference: InitializationReference,
+  error: mixed,
+): void {
+  finishInitializationField(
+    response,
+    reference.parentObject,
+    reference.key,
+    reference.assignment,
+    CONSTRUCTION_FAILED,
+    error,
+  );
+  rejectReference(response, reference.handler, error);
+}
+
+function createInitializationReference(
+  response: Response,
+  parentObject: Object,
+  key: string,
+  map: ModelMapping<any>,
   path: Array<string>,
+  source: SomeChunk<any>,
   isAwaitingDebugInfo: boolean,
 ): InitializationReference {
   let handler: InitializationHandler;
@@ -1957,11 +2058,40 @@ function createInitializationReference(
     key,
     map,
     path,
+    source,
+    isMappingDeferred: false,
+    assignment: registerConstructionField(
+      getConstructionState(response),
+      parentObject,
+      key,
+    ),
   };
   if (__DEV__) {
     reference.isDebug = isAwaitingDebugInfo;
   }
   return reference;
+}
+
+function waitForConstructionField<T>(
+  response: Response,
+  fact: ConstructionFact<InitializationReference>,
+  parentObject: Object,
+  key: string,
+  map: ModelMapping<T>,
+  path: Array<string>,
+  chunk: SomeChunk<any>,
+): T {
+  const reference = createInitializationReference(
+    response,
+    parentObject,
+    key,
+    map,
+    path,
+    chunk,
+    isInitializingDebugInfo,
+  );
+  subscribeConstructionFact(fact, reference);
+  return null as any;
 }
 
 function rejectReference(
@@ -2020,7 +2150,7 @@ function waitForReference<T>(
   parentObject: Object,
   key: string,
   response: Response,
-  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  map: ModelMapping<T>,
   path: Array<string>,
   isAwaitingDebugInfo: boolean, // DEV-only
 ): T {
@@ -2045,10 +2175,12 @@ function waitForReference<T>(
   }
 
   const reference = createInitializationReference(
+    response,
     parentObject,
     key,
     map,
     path,
+    referencedChunk,
     isAwaitingDebugInfo,
   );
 
@@ -2143,6 +2275,7 @@ function loadServerReference<A: Iterable<any>, T>(
   metaData: ServerReferenceMetadata,
   parentObject: Object,
   key: string,
+  reference: null | InitializationReference,
 ): (...A) => Promise<T> {
   if (key === 'then') {
     // This should never happen because we always serialize objects with then-functions
@@ -2189,28 +2322,67 @@ function loadServerReference<A: Iterable<any>, T>(
   }
 
   let handler: InitializationHandler;
-  if (initializingHandler) {
+  if (reference !== null) {
+    // A deferred mapper still owns the original destination and handler.
+    handler = reference.handler;
+    handler.deps++;
+    reference.isMappingDeferred = true;
+  } else if (initializingHandler) {
     handler = initializingHandler;
     handler.deps++;
   } else {
     handler = initializingHandler = createInitializationHandler(null, 1);
   }
 
+  const assignment =
+    reference === null
+      ? registerConstructionField(
+          getConstructionState(response),
+          parentObject,
+          key,
+        )
+      : reference.assignment;
+
   function fulfill(): void {
-    initializeServerReference(
+    let resolvedValue;
+    try {
+      resolvedValue = initializeServerReference(
+        response,
+        serverReference,
+        id,
+        bound,
+        parentObject,
+        key,
+        handler,
+      );
+    } catch (error) {
+      reject(error);
+      return;
+    }
+
+    finishInitializationField(
       response,
-      serverReference,
-      id,
-      bound,
       parentObject,
       key,
-      handler,
+      assignment,
+      CONSTRUCTION_INSTALLED,
+      resolvedValue,
     );
     handler.deps--;
     initializeChunkIfUnblocked(response, handler);
   }
 
   function reject(error: mixed): void {
+    // The field's failure must reach selected-path readers as well as the
+    // owning chunk. Otherwise those readers would keep waiting for its value.
+    finishInitializationField(
+      response,
+      parentObject,
+      key,
+      assignment,
+      CONSTRUCTION_FAILED,
+      error,
+    );
     rejectReference(response, handler, error);
   }
 
@@ -2301,12 +2473,33 @@ function transferReferencedDebugInfo(
 // It's never mutated because only paths with entries get spliced in place.
 const EMPTY_REFERENCE_PATH: Array<string> = [];
 
+function recordFailedModelField(
+  response: Response,
+  parentObject: Object,
+  key: string,
+  error: mixed,
+): void {
+  const fact = registerConstructionField(
+    getConstructionState(response),
+    parentObject,
+    key,
+  );
+  finishInitializationField(
+    response,
+    parentObject,
+    key,
+    fact,
+    CONSTRUCTION_FAILED,
+    error,
+  );
+}
+
 function getOutlinedModel<T>(
   response: Response,
   reference: string,
   parentObject: Object,
   key: string,
-  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  map: ModelMapping<T>,
 ): T {
   // parseInt stops at the ':' so we only need to split when there's a path.
   const id = parseInt(reference, 16);
@@ -2379,6 +2572,12 @@ function getOutlinedModel<T>(
               return null as any;
             }
             default: {
+              recordFailedModelField(
+                response,
+                parentObject,
+                key,
+                referencedChunk.reason,
+              );
               // This is an error. Instead of erroring directly, we're going to encode this on
               // an initialization handler so that we can catch it at the nearest Element.
               if (initializingHandler) {
@@ -2409,6 +2608,26 @@ function getOutlinedModel<T>(
             getPrototypeOf(value) === ArrayPrototype) &&
           hasOwnProperty.call(value, name)
         ) {
+          // An initialized chunk can contain an object borrowed from another
+          // model that is still blocked. A reference in that object's field
+          // might not be resolved yet. Like fulfillReference, wait for the
+          // field instead of reading its placeholder.
+          const fact = getPendingConstructionField(
+            response._construction,
+            value,
+            name,
+          );
+          if (fact !== undefined) {
+            return waitForConstructionField(
+              response,
+              fact,
+              parentObject,
+              key,
+              map,
+              path.slice(i),
+              chunk,
+            );
+          }
           value = value[name];
         } else {
           throw new Error('Invalid reference.');
@@ -2440,7 +2659,7 @@ function getOutlinedModel<T>(
         break;
       }
 
-      const chunkValue = map(response, value, parentObject, key);
+      const chunkValue = map(response, value, parentObject, key, null);
       if (__DEV__) {
         if (
           parentObject[0] === REACT_ELEMENT_TYPE &&
@@ -2483,6 +2702,7 @@ function getOutlinedModel<T>(
       return null as any;
     }
     default:
+      recordFailedModelField(response, parentObject, key, chunk.reason);
       // This is an error. Instead of erroring directly, we're going to encode this on
       // an initialization handler so that we can catch it at the nearest Element.
       if (initializingHandler) {
@@ -3015,6 +3235,7 @@ function ResponseInstance(
   this._encodeFormAction = encodeFormAction;
   this._nonce = nonce;
   this._chunks = chunks;
+  this._construction = null;
   // Preserve a leading U+FEFF instead of consuming it as an encoding signature.
   this._stringDecoder = createStringDecoder(true);
   this._closed = false;

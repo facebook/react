@@ -3421,9 +3421,9 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       checkBorrowedProps('set-object'));
     it('keeps staged Set member cycles progressing without publishing placeholders', () =>
       checkBorrowedProps('staged-member'));
-    it.skip('waits for a Set selected directly from borrowed props', () =>
+    it('waits for a Set selected directly from borrowed props', () =>
       checkBorrowedProps('set-direct'));
-    it.skip('waits for a Map selected directly from borrowed props', () =>
+    it('waits for a Map selected directly from borrowed props', () =>
       checkBorrowedProps('map-direct'));
     it.skip('publishes a borrowed props subtree without its pending sibling', () =>
       checkBorrowedProps('subtree'));
@@ -3682,7 +3682,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
         checkSeparatePromiseMap,
       );
     }
-    it.skip('preserves a Blob reused after a self-referencing array', async () => {
+    it('preserves a Blob reused after a self-referencing array', async () => {
       const blob = new Blob(['payload'], {type: 'text/plain'});
       const array = [];
       array.push(blob, array);
@@ -3694,7 +3694,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'Blob alias after array cycle');
       watched.recheck();
     });
-    it.skip('resumes repeated Blob aliases after the selected field is installed', async () => {
+    it('resumes repeated Blob aliases after the selected field is installed', async () => {
       const ready = deferred();
       const bytes = new Uint8Array([1, 2, 3]);
       const blob = new Blob([bytes], {type: 'application/octet-stream'});
