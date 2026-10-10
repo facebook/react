@@ -4993,6 +4993,7 @@ describe('ReactFlightResultDOM', () => {
     beforeEach(() => {
       jest.resetModules();
       React = require('react');
+      ReactServer = FlightReact;
       use = React.use;
       ReactNoop = require('react-noop-renderer');
       act = require('internal-test-utils').act;
@@ -5822,7 +5823,7 @@ describe('ReactFlightResultDOM', () => {
     });
 
     // @gate __DEV__
-    it.skip('can get the component owner stacks during rendering in dev', () => {
+    it('can get the component owner stacks during rendering in dev', async () => {
       let stack;
 
       function Foo() {
@@ -5840,11 +5841,13 @@ describe('ReactFlightResultDOM', () => {
         stack = ReactServer.captureOwnerStack();
         return ReactServer.createElement('span', null, 'hi');
       }
-      ReactNoopFlightServer.render(
-        ReactServer.createElement(
-          'div',
-          null,
-          ReactServer.createElement(Foo, null),
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(
+          ReactServer.createElement(
+            'div',
+            null,
+            ReactServer.createElement(Foo, null),
+          ),
         ),
       );
 
@@ -5854,7 +5857,7 @@ describe('ReactFlightResultDOM', () => {
     });
 
     // @gate __DEV__
-    it.skip('can get the component owner stacks for onError in dev', async () => {
+    it('can get the component owner stacks for onError in dev', async () => {
       const thrownError = new Error('hi');
       let caughtError;
       let ownerStack;
@@ -5873,20 +5876,22 @@ describe('ReactFlightResultDOM', () => {
         throw thrownError;
       }
 
-      ReactNoopFlightServer.render(
-        ReactServer.createElement(
-          'div',
-          null,
-          ReactServer.createElement(Foo, null),
-        ),
-        {
-          onError(error, errorInfo) {
-            caughtError = error;
-            ownerStack = ReactServer.captureOwnerStack
-              ? ReactServer.captureOwnerStack()
-              : null;
+      await serverAct(() =>
+        ReactServerDOMServer.renderToResult(
+          ReactServer.createElement(
+            'div',
+            null,
+            ReactServer.createElement(Foo, null),
+          ),
+          {
+            onError(error, errorInfo) {
+              caughtError = error;
+              ownerStack = ReactServer.captureOwnerStack
+                ? ReactServer.captureOwnerStack()
+                : null;
+            },
           },
-        },
+        ),
       );
 
       expect(caughtError).toBe(thrownError);
@@ -5896,7 +5901,7 @@ describe('ReactFlightResultDOM', () => {
     });
 
     // @gate __DEV__
-    it.skip('can get the component owner stacks asynchronously', async () => {
+    it('can get the component owner stacks asynchronously', async () => {
       let stack;
 
       function Foo() {
@@ -5919,16 +5924,15 @@ describe('ReactFlightResultDOM', () => {
       }
 
       const stream = await serverAct(() =>
-        ReactServerDOMServer.renderToReadableStream(
+        ReactServerDOMServer.renderToResult(
           ReactServer.createElement(
             'div',
             null,
             ReactServer.createElement(Foo, null),
           ),
-          webpackMap,
         ),
       );
-      await readResult(stream);
+      await createResponse(stream);
 
       expect(normalizeCodeLocInfo(stack)).toBe(
         '\n    in Bar (at **)' + '\n    in Foo (at **)',
