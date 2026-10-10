@@ -2170,37 +2170,9 @@ function fulfillReference(
       }
     }
 
-    while (
-      typeof value === 'object' &&
-      value !== null &&
-      value.$$typeof === REACT_LAZY_TYPE
-    ) {
-      // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
-      // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
-      const referencedChunk: SomeChunk<any> = value._payload;
-      if (referencedChunk === handler.chunk) {
-        // This is a reference to the thing we're currently blocking. We can peak
-        // inside of it to get the value.
-        value = handler.value;
-        continue;
-      } else {
-        switch (referencedChunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(referencedChunk);
-            break;
-          case RESOLVED_MODULE:
-            initializeModuleChunk(referencedChunk);
-            break;
-        }
-        switch (referencedChunk.status) {
-          case INITIALIZED: {
-            value = referencedChunk.value;
-            continue;
-          }
-        }
-      }
-      break;
-    }
+    // Paths can use a private element identity to select a field. The final
+    // value still represents a suspended handle until its payload completes.
+    value = resolveLazy(value) as any;
 
     const collection = reference.collection;
     if (map !== createModel) {

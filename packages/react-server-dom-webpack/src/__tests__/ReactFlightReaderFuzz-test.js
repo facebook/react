@@ -3433,7 +3433,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       checkBorrowedProps('scalar', 'widget'));
     it('finishes borrowed props after an earlier component module failure', () =>
       checkBorrowedProps('scalar', 'widget-first'));
-    it.skip('preserves an element self-reference as a suspended handle', async () => {
+    it('preserves an element self-reference as a suspended handle', async () => {
       const payloadReady = deferred();
       const {value: payload} = WebpackMock.clientExports(
         {value: 'ready'},

@@ -515,6 +515,44 @@ describe('ReactFlightDOMBrowser', () => {
     expect(observed).toEqual(['ready']);
   });
 
+  it('can render an element reached through its own data after it suspends', async () => {
+    let resolvePayload;
+    const {value: payload} = clientExports(
+      {value: 'ready'},
+      'payload',
+      '/payload.js',
+      new Promise(resolve => (resolvePayload = resolve)),
+    );
+    const Widget = clientExports(function Widget({payload: value}) {
+      return <b>{value}</b>;
+    });
+    const data = {};
+    const element = <Widget data={data} payload={payload} />;
+    data.self = element;
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream({element, data}, webpackMap),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    let received;
+    await act(() => {
+      response.then(value => {
+        received = value;
+      });
+    });
+    expect(received).toBeDefined();
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Suspense fallback="Loading">{received.data.self}</Suspense>);
+    });
+    expect(container.textContent).toBe('Loading');
+
+    await act(() => resolvePayload());
+    expect(container.innerHTML).toBe('<b>ready</b>');
+  });
+
   it('should resolve deduped objects in nested children of blocked models', async () => {
     let resolveOuterClientComponentChunk;
     let resolveInnerClientComponentChunk;
@@ -3192,9 +3230,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                3120,
+                3158,
                 19,
-                3104,
+                3142,
                 89,
               ],
             ],
