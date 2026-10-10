@@ -80,3 +80,7 @@ export function rejectResultModel<T>(
   model.reason = error;
   model._reject(error);
 }
+
+export function getResultModel<T>(value: Object): null | ResultModel<T> {
+  return value.$$typeof === RESULT_MODEL_TYPE ? value : null;
+}

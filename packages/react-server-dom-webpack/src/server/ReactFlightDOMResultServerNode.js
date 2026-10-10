@@ -82,6 +82,7 @@ type Options = {
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
   environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
 };
 
 export function renderToResult(
@@ -95,6 +96,7 @@ export function renderToResult(
     options ? options.temporaryReferences : undefined,
     createServerReference,
     __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
   startWork(request);
   if (options && options.signal) {
@@ -117,6 +119,7 @@ export function prerenderToResult(
       options ? options.temporaryReferences : undefined,
       createServerReference,
       __DEV__ && options ? options.environmentName : undefined,
+      __DEV__ && options ? options.filterStackFrame : undefined,
     );
     startWork(request);
     const signal = options ? options.signal : undefined;
@@ -138,6 +141,8 @@ export function renderResultToPipeableStream(
     options ? options.onError : undefined,
     options ? options.signal : undefined,
     options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
 }
 

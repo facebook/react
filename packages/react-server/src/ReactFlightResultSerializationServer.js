@@ -17,6 +17,9 @@ import type {
   ReactStackTrace,
   ReactKey,
   ReactFunctionLocation,
+  ReactErrorInfoDev,
+  ReactErrorInfo,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import {
   MODEL_KIND_MASK,
@@ -169,6 +172,7 @@ export type Input = {
   getServerReference: Object => void | ServerReferenceMetadata,
   getValueReference: Object => void | ModelReference,
   getModelInfo: Object => number,
+  getErrorInfo: Error => void | ReactErrorInfoDev,
   getCollectionEntries: Object => void | ResultModel<Array<any>>,
   subscribe: ({
     hint: (HintCode, HintModel<any>) => void,
@@ -208,6 +212,8 @@ export type Request = {
   writtenErrors: WeakMap<ErrorReference, number>,
   completedErrorChunks: Array<Chunk>,
   onError: mixed => ?string,
+  environmentName: () => string, // DEV-only
+  filterStackFrame: (string, string, number, number) => boolean, // DEV-only
   taintCleanupQueue: Array<string | bigint>,
 };
 
@@ -240,12 +246,63 @@ function cleanupTaintQueue(request: Request): void {
   cleanupQueue.length = 0;
 }
 
+function defaultFilterStackFrame(
+  filename: string,
+  functionName: string,
+): boolean {
+  return (
+    filename !== '' &&
+    !filename.startsWith('node:') &&
+    !filename.includes('node_modules')
+  );
+}
+
+function devirtualizeURL(url: string): string {
+  if (url.startsWith('about://React/')) {
+    // This callsite is a virtual fake callsite that came from another Flight client.
+    // We need to reverse it back into the original location by stripping its prefix
+    // and suffix. We don't need the environment name because it's available on the
+    // parent object that will contain the stack.
+    const envIdx = url.indexOf('/', 'about://React/'.length);
+    const suffixIdx = url.lastIndexOf('?');
+    if (envIdx > -1 && suffixIdx > -1) {
+      return decodeURI(url.slice(envIdx + 1, suffixIdx));
+    }
+  }
+  return url;
+}
+
+function filterStackTrace(
+  request: Request,
+  stack: ReactStackTrace,
+): ReactStackTrace {
+  // Keep the same owner stack filtering as Flight.
+  const filterStackFrame = request.filterStackFrame;
+  const filteredStack: ReactStackTrace = [];
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+      // Preserve the source stack while devirtualizing its URL.
+      const clone: ReactCallSite = callsite.slice(0) as any;
+      clone[1] = url;
+      filteredStack.push(clone);
+    }
+  }
+  return filteredStack;
+}
+
 function RequestInstance(
   this: any,
   input: Input,
   bundlerConfig: ClientManifest,
   onError: void | (mixed => ?string),
   temporaryReferences: void | TemporaryReferenceSet,
+  environmentName: void | string | (() => string),
+  filterStackFrame: void | ((string, string) => boolean),
 ) {
   const cleanupQueue: Array<string | bigint> = [];
   if (enableTaint) {
@@ -274,6 +331,18 @@ function RequestInstance(
   this.writtenErrors = new WeakMap();
   this.completedErrorChunks = [];
   this.onError = onError === undefined ? defaultErrorHandler : onError;
+  if (__DEV__) {
+    this.environmentName =
+      environmentName === undefined
+        ? () => 'Server'
+        : typeof environmentName !== 'function'
+          ? () => environmentName
+          : environmentName;
+    this.filterStackFrame =
+      filterStackFrame === undefined
+        ? defaultFilterStackFrame
+        : filterStackFrame;
+  }
   this.pendingChunks = 0;
   this.nextChunkId = 0;
   this.abortableTasks = new Set();
@@ -291,6 +360,8 @@ export function createRequest(
   bundlerConfig: ClientManifest,
   onError?: mixed => ?string,
   temporaryReferences?: TemporaryReferenceSet,
+  environmentName?: string | (() => string),
+  filterStackFrame?: (string, string) => boolean,
 ): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new RequestInstance(
@@ -298,6 +369,8 @@ export function createRequest(
     bundlerConfig,
     onError,
     temporaryReferences,
+    environmentName,
+    filterStackFrame,
   );
 }
 
@@ -497,6 +570,7 @@ function renderModelDestructive(
           (value as any).$$typeof === REACT_ELEMENT_TYPE ||
           value instanceof Map ||
           value instanceof Set ||
+          value instanceof Error ||
           (typeof FormData === 'function' && value instanceof FormData) ||
           (typeof Blob === 'function' && value instanceof Blob) ||
           value instanceof ArrayBuffer ||
@@ -621,6 +695,9 @@ function renderModelDestructive(
     }
     if (typeof Blob === 'function' && value instanceof Blob) {
       return serializeBlob(request, value);
+    }
+    if (value instanceof Error) {
+      return serializeErrorValue(request, value);
     }
     if (isArray(value)) {
       return value as any;
@@ -1405,21 +1482,46 @@ function emitErrorChunk(
   digest: string,
   error: mixed,
 ): void {
-  let errorInfo;
+  let errorInfo: ReactErrorInfo;
   if (__DEV__) {
-    let name = 'Error';
-    let message;
+    let name: string = 'Error';
+    let message: string;
     let stack: ReactStackTrace;
-    let env = 'Server';
+    let env = (0, request.environmentName)();
+    let causeReference: null | string = null;
+    let errorsReference: null | string = null;
     try {
       if (error instanceof Error) {
-        name = error.name;
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        message = String(error.message);
-        stack = parseStackTrace(error, 0);
-        const errorEnv = (error as any).environmentName;
-        if (typeof errorEnv === 'string') {
-          env = errorEnv;
+        const input = request.input;
+        const capturedInfo =
+          input === null ? undefined : input.getErrorInfo(error);
+        if (capturedInfo !== undefined) {
+          name = capturedInfo.name;
+          message = capturedInfo.message;
+          stack = capturedInfo.stack;
+          env = capturedInfo.env;
+        } else {
+          name = error.name;
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          message = String(error.message);
+          stack = filterStackTrace(request, parseStackTrace(error, 0));
+          const errorEnv = (error as any).environmentName;
+          if (typeof errorEnv === 'string') {
+            env = errorEnv;
+          }
+        }
+        if ('cause' in error) {
+          const cause: ReactClientValue = error.cause as any;
+          const causeId = outlineModel(request, cause);
+          causeReference = serializeByValueID(causeId);
+        }
+        if (
+          typeof AggregateError !== 'undefined' &&
+          error instanceof AggregateError
+        ) {
+          const errors: ReactClientValue = error.errors as any;
+          const errorsId = outlineModel(request, errors);
+          errorsReference = serializeByValueID(errorsId);
         }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
@@ -1434,6 +1536,12 @@ function emitErrorChunk(
       stack = [];
     }
     errorInfo = {digest, name, message, stack, env, owner: null};
+    if (causeReference !== null) {
+      (errorInfo as ReactErrorInfoDev).cause = causeReference;
+    }
+    if (errorsReference !== null) {
+      (errorInfo as ReactErrorInfoDev).errors = errorsReference;
+    }
   } else {
     errorInfo = {digest};
   }
@@ -2174,6 +2282,60 @@ function serializeReadableStream(
     }),
   );
   return serializeByValueID(streamTask.id);
+}
+
+function serializeErrorValue(request: Request, error: Error): string {
+  if (__DEV__) {
+    let name: string = 'Error';
+    let message: string;
+    let stack: ReactStackTrace;
+    let env = (0, request.environmentName)();
+    const input = request.input;
+    const capturedInfo = input === null ? undefined : input.getErrorInfo(error);
+    if (capturedInfo !== undefined) {
+      name = capturedInfo.name;
+      message = capturedInfo.message;
+      stack = capturedInfo.stack;
+      env = capturedInfo.env;
+    } else {
+      try {
+        name = error.name;
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        message = String(error.message);
+        stack = filterStackTrace(request, parseStackTrace(error, 0));
+        const errorEnv = (error as any).environmentName;
+        if (typeof errorEnv === 'string') {
+          // This probably came from another FlightClient as a pass through.
+          // Keep the environment name.
+          env = errorEnv;
+        }
+      } catch (x) {
+        message = 'An error occurred but serializing the error message failed.';
+        stack = [];
+      }
+    }
+    const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
+    if ('cause' in error) {
+      const cause: ReactClientValue = error.cause as any;
+      const causeId = outlineModel(request, cause);
+      errorInfo.cause = serializeByValueID(causeId);
+    }
+    if (
+      typeof AggregateError !== 'undefined' &&
+      error instanceof AggregateError
+    ) {
+      const errors: ReactClientValue = error.errors as any;
+      const errorsId = outlineModel(request, errors);
+      errorInfo.errors = serializeByValueID(errorsId);
+    }
+    const id = outlineModel(request, errorInfo);
+    return '$Z' + id.toString(16);
+  } else {
+    // In prod we don't emit any information about this Error object to avoid
+    // unintentional leaks. Since this doesn't actually throw on the server
+    // we don't go through onError and so don't register any digest neither.
+    return '$Z';
+  }
 }
 
 function serializeWeakPromiseID(id: number): string {

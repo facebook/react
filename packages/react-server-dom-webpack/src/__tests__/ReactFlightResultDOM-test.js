@@ -4989,16 +4989,82 @@ describe('ReactFlightResultDOM', () => {
   });
 
   describe('validation and Error values', () => {
-    function clientReference(value) {
-      return Object.defineProperties(
-        function () {
-          throw new Error('Cannot call a client function from the server.');
-        },
-        {
-          $$typeof: {value: Symbol.for('react.client.reference')},
-          value: {value: value},
-        },
+    let ExpectedMessageErrorBoundary;
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      use = React.use;
+      ReactNoop = require('react-noop-renderer');
+      act = require('internal-test-utils').act;
+      ReactServerDOMClientNode = jest.requireActual(
+        'react-server-dom-webpack/client.node',
       );
+      startTransition = React.startTransition;
+      ExpectedMessageErrorBoundary = class extends React.Component {
+        state = {hasError: false, error: null};
+        static getDerivedStateFromError(error) {
+          return {
+            hasError: true,
+            error,
+          };
+        }
+        componentDidCatch(error, errorInfo) {
+          expect(error).toBe(this.state.error);
+          if (this.props.expectedStack !== undefined) {
+            expect(normalizeCodeLocInfo(errorInfo.componentStack)).toBe(
+              this.props.expectedStack,
+            );
+          }
+        }
+        componentDidMount() {
+          expect(this.state.hasError).toBe(true);
+          expect(this.state.error).toBeTruthy();
+          if (__DEV__) {
+            expect(this.state.error.message).toContain(
+              this.props.expectedMessage,
+            );
+            expect(this.state.error.digest).toBe('a dev digest');
+            expect(this.state.error.environmentName).toBe(
+              this.props.expectedEnviromentName || 'Server',
+            );
+            if (this.props.expectedErrorStack !== undefined) {
+              expect(this.state.error.stack).toContain(
+                this.props.expectedErrorStack,
+              );
+            }
+          } else {
+            expect(this.state.error.message).toBe(
+              'An error occurred in the Server Components render. The specific message is omitted in production' +
+                ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+                ' may provide additional details about the nature of the error.',
+            );
+            let expectedDigest = this.props.expectedMessage;
+            if (
+              expectedDigest.startsWith('{') ||
+              expectedDigest.startsWith('<')
+            ) {
+              expectedDigest = '{}';
+            } else if (expectedDigest.startsWith('[')) {
+              expectedDigest = '[]';
+            }
+            expect(this.state.error.digest).toContain(expectedDigest);
+            expect(this.state.error.environmentName).toBe(undefined);
+            expect(this.state.error.stack).toBe(
+              'Error: ' + this.state.error.message,
+            );
+          }
+        }
+        render() {
+          if (this.state.hasError) {
+            return this.state.error.message;
+          }
+          return this.props.children;
+        }
+      };
+    });
+
+    function clientReference(value) {
+      return clientExports(value);
     }
 
     function normalizeCodeLocInfo(str) {
@@ -5014,7 +5080,7 @@ describe('ReactFlightResultDOM', () => {
       );
     }
 
-    it.skip('can transport Error objects as values', async () => {
+    it('can transport Error objects as values', async () => {
       class CustomError extends Error {
         constructor(message) {
           super(message);
@@ -5038,10 +5104,12 @@ describe('ReactFlightResultDOM', () => {
         return <Component prop={error} />;
       }
 
-      const transport = ReactNoopFlightServer.render(<ServerComponent />);
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<ServerComponent />),
+      );
 
       await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+        ReactNoop.render(await createResponse(transport));
       });
 
       if (__DEV__) {
@@ -5064,7 +5132,7 @@ describe('ReactFlightResultDOM', () => {
       }
     });
 
-    it.skip('can transport Error.cause', async () => {
+    it('can transport Error.cause', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5090,17 +5158,19 @@ describe('ReactFlightResultDOM', () => {
         return <Component error={error} />;
       }
 
-      const transport = ReactNoopFlightServer.render(<ServerComponent />, {
-        onError(x) {
-          if (__DEV__) {
-            return 'a dev digest';
-          }
-          return `digest("${x.message}")`;
-        },
-      });
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<ServerComponent />, {
+          onError(x) {
+            if (__DEV__) {
+              return 'a dev digest';
+            }
+            return `digest("${x.message}")`;
+          },
+        }),
+      );
 
-      await act(() => {
-        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      await act(async () => {
+        ReactNoop.render(await createResponse(transport));
       });
 
       if (__DEV__) {
@@ -5130,7 +5200,7 @@ describe('ReactFlightResultDOM', () => {
       }
     });
 
-    it.skip('can transport AggregateError', async () => {
+    it('can transport AggregateError', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5160,17 +5230,19 @@ describe('ReactFlightResultDOM', () => {
         return <Component error={error} />;
       }
 
-      const transport = ReactNoopFlightServer.render(<ServerComponent />, {
-        onError(x) {
-          if (__DEV__) {
-            return 'a dev digest';
-          }
-          return `digest("${x.message}")`;
-        },
-      });
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<ServerComponent />, {
+          onError(x) {
+            if (__DEV__) {
+              return 'a dev digest';
+            }
+            return `digest("${x.message}")`;
+          },
+        }),
+      );
 
-      await act(() => {
-        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      await act(async () => {
+        ReactNoop.render(await createResponse(transport));
       });
 
       if (__DEV__) {
@@ -5209,7 +5281,7 @@ describe('ReactFlightResultDOM', () => {
       }
     });
 
-    it.skip('includes Error.cause in thrown errors', async () => {
+    it('includes Error.cause in thrown errors', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5231,19 +5303,21 @@ describe('ReactFlightResultDOM', () => {
         throw error;
       }
 
-      const transport = ReactNoopFlightServer.render(<ServerComponent />, {
-        onError(x) {
-          if (__DEV__) {
-            return 'a dev digest';
-          }
-          return `digest("${x.message}")`;
-        },
-      });
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<ServerComponent />, {
+          onError(x) {
+            if (__DEV__) {
+              return 'a dev digest';
+            }
+            return `digest("${x.message}")`;
+          },
+        }),
+      );
 
       let error;
       try {
-        await act(() => {
-          ReactNoop.render(ReactNoopFlightClient.read(transport));
+        await act(async () => {
+          ReactNoop.render(await createResponse(transport));
         });
       } catch (x) {
         error = x;
@@ -5276,7 +5350,7 @@ describe('ReactFlightResultDOM', () => {
       }
     });
 
-    it.skip('includes AggregateError.errors in thrown errors', async () => {
+    it('includes AggregateError.errors in thrown errors', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5309,19 +5383,21 @@ describe('ReactFlightResultDOM', () => {
         throw error;
       }
 
-      const transport = ReactNoopFlightServer.render(<ServerComponent />, {
-        onError(x) {
-          if (__DEV__) {
-            return 'a dev digest';
-          }
-          return `digest("${x.message}")`;
-        },
-      });
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<ServerComponent />, {
+          onError(x) {
+            if (__DEV__) {
+              return 'a dev digest';
+            }
+            return `digest("${x.message}")`;
+          },
+        }),
+      );
 
       let error;
       try {
-        await act(() => {
-          ReactNoop.render(ReactNoopFlightClient.read(transport));
+        await act(async () => {
+          ReactNoop.render(await createResponse(transport));
         });
       } catch (x) {
         error = x;
@@ -5584,7 +5660,7 @@ describe('ReactFlightResultDOM', () => {
       expect(cyclic2.cycle).toBe(cyclic2);
     });
 
-    it.skip('should error if a non-serializable value is passed to a host component', async () => {
+    it('should error if a non-serializable value is passed to a host component', async () => {
       function ClientImpl({children}) {
         return children;
       }
@@ -5635,29 +5711,38 @@ describe('ReactFlightResultDOM', () => {
           return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
       };
-      const event = ReactNoopFlightServer.render(<EventHandlerProp />, options);
-      const fn = ReactNoopFlightServer.render(<FunctionProp />, options);
-      const symbol = ReactNoopFlightServer.render(<SymbolProp />, options);
-      const refs = ReactNoopFlightServer.render(<RefProp />, options);
-      const eventClient = ReactNoopFlightServer.render(
-        <EventHandlerPropClient />,
-        options,
+      const event = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<EventHandlerProp />, options),
       );
-      const fnChildrenClient = ReactNoopFlightServer.render(
-        <FunctionChildrenClient />,
-        options,
+      const fn = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<FunctionProp />, options),
       );
-      const fnClient = ReactNoopFlightServer.render(
-        <FunctionPropClient />,
-        options,
+      const symbol = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<SymbolProp />, options),
       );
-      const symbolClient = ReactNoopFlightServer.render(
-        <SymbolPropClient />,
-        options,
+      const refs = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<RefProp />, options),
       );
-      const refsClient = ReactNoopFlightServer.render(
-        <RefPropClient />,
-        options,
+      const eventClient = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(
+          <EventHandlerPropClient />,
+          options,
+        ),
+      );
+      const fnChildrenClient = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(
+          <FunctionChildrenClient />,
+          options,
+        ),
+      );
+      const fnClient = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<FunctionPropClient />, options),
+      );
+      const symbolClient = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<SymbolPropClient />, options),
+      );
+      const refsClient = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(<RefPropClient />, options),
       );
 
       function Render({promise}) {
@@ -5668,48 +5753,46 @@ describe('ReactFlightResultDOM', () => {
         startTransition(() => {
           ReactNoop.render(
             <>
-              <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
-                <Render promise={ReactNoopFlightClient.read(event)} />
-              </ErrorBoundary>
-              <ErrorBoundary
+              <ExpectedMessageErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
+                <Render promise={createResponse(event)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary
                 expectedMessage={
                   __DEV__
                     ? 'Functions are not valid as a child of Client Components. This may happen if you return fn instead of <fn /> from render. Or maybe you meant to call this function rather than return it.'
                     : 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
                 }>
-                <Render promise={ReactNoopFlightClient.read(fn)} />
-              </ErrorBoundary>
-              <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to Client Components.">
-                <Render promise={ReactNoopFlightClient.read(symbol)} />
-              </ErrorBoundary>
-              <ErrorBoundary expectedMessage="Refs cannot be used in Server Components, nor passed to Client Components.">
-                <Render promise={ReactNoopFlightClient.read(refs)} />
-              </ErrorBoundary>
-              <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
-                <Render promise={ReactNoopFlightClient.read(eventClient)} />
-              </ErrorBoundary>
-              <ErrorBoundary
+                <Render promise={createResponse(fn)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to Client Components.">
+                <Render promise={createResponse(symbol)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary expectedMessage="Refs cannot be used in Server Components, nor passed to Client Components.">
+                <Render promise={createResponse(refs)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
+                <Render promise={createResponse(eventClient)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary
                 expectedMessage={
                   __DEV__
                     ? 'Functions are not valid as a child of Client Components. This may happen if you return Component instead of <Component /> from render. Or maybe you meant to call this function rather than return it.'
                     : 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
                 }>
-                <Render
-                  promise={ReactNoopFlightClient.read(fnChildrenClient)}
-                />
-              </ErrorBoundary>
-              <ErrorBoundary
+                <Render promise={createResponse(fnChildrenClient)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary
                 expectedMessage={
                   'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
                 }>
-                <Render promise={ReactNoopFlightClient.read(fnClient)} />
-              </ErrorBoundary>
-              <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to Client Components.">
-                <Render promise={ReactNoopFlightClient.read(symbolClient)} />
-              </ErrorBoundary>
-              <ErrorBoundary expectedMessage="Refs cannot be used in Server Components, nor passed to Client Components.">
-                <Render promise={ReactNoopFlightClient.read(refsClient)} />
-              </ErrorBoundary>
+                <Render promise={createResponse(fnClient)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to Client Components.">
+                <Render promise={createResponse(symbolClient)} />
+              </ExpectedMessageErrorBoundary>
+              <ExpectedMessageErrorBoundary expectedMessage="Refs cannot be used in Server Components, nor passed to Client Components.">
+                <Render promise={createResponse(refsClient)} />
+              </ExpectedMessageErrorBoundary>
             </>,
           );
         });

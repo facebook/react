@@ -46,12 +46,16 @@ export function renderToPipeableStream(
   onError?: mixed => ?string,
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
 ): PipeableStream {
   const request = createRequest(
     input,
     webpackMap,
     onError,
     temporaryReferences,
+    __DEV__ ? environmentName : undefined,
+    __DEV__ ? filterStackFrame : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -91,6 +95,8 @@ export type ReadableStreamOptions = {
   onError?: mixed => ?string,
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
 };
 
 function createFakeWritableFromReadableStreamController(
@@ -132,6 +138,8 @@ export function renderToReadableStream(
     webpackMap,
     options ? options.onError : undefined,
     options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
   if (options && options.signal) {
     attachAbortSignal(request, options.signal);

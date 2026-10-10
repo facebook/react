@@ -27,6 +27,9 @@ import type {
   RejectedThenable,
   ReactKey,
   ReactFunctionLocation,
+  ReactErrorInfoDev,
+  ReactStackTrace,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
@@ -61,6 +64,7 @@ import {
   pushHint,
   closeHints,
   setErrorDigest,
+  setErrorInfo,
   copyErrorReference,
   forwardModelReference,
   createValueReference,
@@ -86,6 +90,7 @@ import {
   createResultModel,
   fulfillResultModel,
   rejectResultModel,
+  getResultModel,
 } from 'shared/ReactFlightResultModel';
 import {scheduleWork, scheduleMicrotask} from './ReactServerStreamConfig';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -242,7 +247,57 @@ export type Request = {
   identifierCount: number,
   onError: mixed => ?string,
   environmentName: () => string, // DEV-only
+  filterStackFrame: (string, string, number, number) => boolean, // DEV-only
 };
+
+function defaultFilterStackFrame(
+  filename: string,
+  functionName: string,
+): boolean {
+  return (
+    filename !== '' &&
+    !filename.startsWith('node:') &&
+    !filename.includes('node_modules')
+  );
+}
+
+function devirtualizeURL(url: string): string {
+  if (url.startsWith('about://React/')) {
+    // This callsite is a virtual fake callsite that came from another Flight client.
+    // We need to reverse it back into the original location by stripping its prefix
+    // and suffix. We don't need the environment name because it's available on the
+    // parent object that will contain the stack.
+    const envIdx = url.indexOf('/', 'about://React/'.length);
+    const suffixIdx = url.lastIndexOf('?');
+    if (envIdx > -1 && suffixIdx > -1) {
+      return decodeURI(url.slice(envIdx + 1, suffixIdx));
+    }
+  }
+  return url;
+}
+
+function filterStackTrace(
+  request: Request,
+  stack: ReactStackTrace,
+): ReactStackTrace {
+  // Keep the same owner stack filtering as Flight.
+  const filterStackFrame = request.filterStackFrame;
+  const filteredStack: ReactStackTrace = [];
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    const url = devirtualizeURL(callsite[1]);
+    const lineNumber = callsite[2];
+    const columnNumber = callsite[3];
+    if (filterStackFrame(url, functionName, lineNumber, columnNumber)) {
+      // Preserve the source stack while devirtualizing its URL.
+      const clone: ReactCallSite = callsite.slice(0) as any;
+      clone[1] = url;
+      filteredStack.push(clone);
+    }
+  }
+  return filteredStack;
+}
 
 function defaultErrorHandler(error: mixed): void {
   console['error'](error);
@@ -288,6 +343,7 @@ function RequestInstance(
   onAllReady: () => void,
   onFatalError: mixed => void,
   environmentName: void | string | (() => string),
+  filterStackFrame: void | ((string, string) => boolean),
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -340,6 +396,10 @@ function RequestInstance(
         : typeof environmentName !== 'function'
           ? () => environmentName
           : environmentName;
+    this.filterStackFrame =
+      filterStackFrame === undefined
+        ? defaultFilterStackFrame
+        : filterStackFrame;
   }
   const rootTask = createTask(
     this,
@@ -384,6 +444,7 @@ export function createRequest(
   temporaryReferences: void | TemporaryReferenceSet,
   createServerReference: (Function, Promise<Array<any>>) => Function,
   environmentName?: string | (() => string),
+  filterStackFrame?: (string, string) => boolean,
 ): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new RequestInstance(
@@ -396,6 +457,7 @@ export function createRequest(
     noop,
     noop,
     environmentName,
+    filterStackFrame,
   );
 }
 
@@ -814,8 +876,41 @@ function erroredTask(request: Request, task: Task, error: mixed): void {
   task.status = ERRORED;
   const digest = logRecoverableError(request, error);
   setErrorDigest(request.result, task.promise, digest);
+  const model = task.model;
+  if (
+    model !== null &&
+    typeof model === 'object' &&
+    (model as any).$$typeof === REACT_ELEMENT_TYPE
+  ) {
+    const renderedModels = getRenderedModels(
+      request,
+      model,
+      task.keyPath,
+      task.implicitSlot,
+    );
+    if (getRenderedModel(renderedModels, model) === undefined) {
+      setRenderedModel(
+        renderedModels,
+        model,
+        createLazyWrapperAroundWakeable(task.promise as any),
+      );
+    }
+  }
   request.abortableTasks.delete(task);
-  task.reject(error);
+  if (__DEV__ && error instanceof Error) {
+    const normalized = outlineModel(request, error);
+    const pending =
+      normalized !== null && typeof normalized === 'object'
+        ? getResultModel<ReactClientValue>(normalized)
+        : null;
+    if (pending !== null) {
+      pending.then(task.reject, task.reject);
+    } else {
+      task.reject(normalized);
+    }
+  } else {
+    task.reject(error);
+  }
 }
 
 function logRecoverableError(request: Request, error: mixed): string {
@@ -1356,6 +1451,9 @@ function renderModelDestructive(
   }
   if (typeof FormData === 'function' && value instanceof FormData) {
     return renderModelReference(task, renderFormData(request, task, value));
+  }
+  if (value instanceof Error) {
+    return renderModelReference(task, renderErrorValue(request, task, value));
   }
   if (typeof Blob === 'function' && value instanceof Blob) {
     return renderModelReference(task, renderBlob(request, task, value));
@@ -2403,6 +2501,19 @@ function getOutlinedModelDependencies(
           visit(entries, record);
           return;
         }
+        if (value instanceof Error) {
+          if (__DEV__ && 'cause' in value) {
+            visit(value.cause, record);
+          }
+          if (
+            __DEV__ &&
+            typeof AggregateError !== 'undefined' &&
+            value instanceof AggregateError
+          ) {
+            visit(value.errors, record);
+          }
+          return;
+        }
       }
       const keys = Object.keys(value);
       for (let i = 0; i < keys.length; i++) {
@@ -2521,6 +2632,25 @@ function resolveOutlinedModel(
       }
       const entries =
         kind === 0 ? getIteratorEntries(request.result, value) : undefined;
+      if (kind === 0 && value instanceof Error) {
+        if (__DEV__ && 'cause' in value) {
+          const cause = resolve(value.cause);
+          if (!Object.is(cause, value.cause)) {
+            value.cause = cause;
+          }
+        }
+        if (
+          __DEV__ &&
+          typeof AggregateError !== 'undefined' &&
+          value instanceof AggregateError
+        ) {
+          const errors = resolve(value.errors);
+          if (errors !== value.errors) {
+            value.errors = errors;
+          }
+        }
+        return value;
+      }
       if (entries !== undefined) {
         resolve(entries);
         return value;
@@ -2999,6 +3129,7 @@ export function createPrerenderRequest(
   temporaryReferences: void | TemporaryReferenceSet,
   createServerReference: (Function, Promise<Array<any>>) => Function,
   environmentName?: string | (() => string),
+  filterStackFrame?: (string, string) => boolean,
 ): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new RequestInstance(
@@ -3011,6 +3142,7 @@ export function createPrerenderRequest(
     onAllReady,
     onFatalError,
     environmentName,
+    filterStackFrame,
   );
 }
 
@@ -3190,6 +3322,83 @@ function renderIterator(
     copy[i] = resolveModel(request, task, entries, '' + i, entries[i]);
   }
   return resolvedIterator;
+}
+
+function renderErrorValue(request: Request, task: Task, error: Error): Error {
+  if (__DEV__) {
+    if (task.formatContext !== createRootFormatContext()) {
+      return outlineModel(request, error) as any;
+    }
+    const isAggregateError =
+      typeof AggregateError !== 'undefined' && error instanceof AggregateError;
+    let name: string = 'Error';
+    let message: string;
+    let stack: ReactStackTrace;
+    let rawStack: void | string;
+    let env = (0, request.environmentName)();
+    try {
+      name = error.name;
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      stack = filterStackTrace(request, parseStackTrace(error, 0));
+      const errorEnv = (error as any).environmentName;
+      if (typeof errorEnv === 'string') {
+        env = errorEnv;
+      }
+      if ('cause' in error || isAggregateError) {
+        rawStack = error.stack;
+      }
+    } catch (x) {
+      message = 'An error occurred but serializing the error message failed.';
+      stack = [];
+      rawStack = '';
+    }
+    const errorInfo: ReactErrorInfoDev = {name, message, stack, env};
+    let copy = error;
+    if ('cause' in error || isAggregateError) {
+      const descriptors = Object.getOwnPropertyDescriptors(error as any);
+      delete descriptors.message;
+      delete descriptors.cause;
+      if ('cause' in error) {
+        descriptors.cause = {
+          value: null,
+          configurable: true,
+          writable: true,
+        };
+      }
+      if (isAggregateError) {
+        delete descriptors.errors;
+      }
+      descriptors.name = {value: name, configurable: true, writable: true};
+      descriptors.stack = {value: rawStack, configurable: true, writable: true};
+      descriptors.environmentName = {
+        value: env,
+        configurable: true,
+        writable: true,
+      };
+      copy = isAggregateError
+        ? new AggregateError([], message)
+        : // eslint-disable-next-line react-internal/prod-error-codes
+          new Error(message);
+      Object.setPrototypeOf(copy, getPrototypeOf(error));
+      Object.defineProperties(copy, descriptors);
+    }
+    setRenderedModel(request.modelEntries, error, copy);
+    task.keyPath = null;
+    task.implicitSlot = false;
+    if ('cause' in error) {
+      copy.cause = outlineModel(request, error.cause as any);
+    }
+    if (isAggregateError) {
+      (copy as any).errors = outlineModel(request, (error as any).errors);
+    }
+    const resolvedInfo = resolveModel(request, task, emptyRoot, '', errorInfo);
+    blockModelOnDependencies(request, copy, resolvedInfo);
+    setErrorInfo(request.result, copy, errorInfo);
+    return copy;
+  }
+  setRenderedModel(request.modelEntries, error, error);
+  return error;
 }
 
 function renderBlob(request: Request, task: Task, blob: Blob): Blob {
