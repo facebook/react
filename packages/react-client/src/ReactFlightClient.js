@@ -116,6 +116,7 @@ import type {
 import {
   CONSTRUCTION_REFERENCE,
   CONSTRUCTION_PUBLICATION,
+  CONSTRUCTION_BINDING,
   CONSTRUCTION_PENDING,
   CONSTRUCTION_INSTALLED,
   CONSTRUCTION_FAILED,
@@ -136,6 +137,7 @@ import {
   aliasConstructionField,
   getConstructionSequence,
   publishConstructionSequence,
+  captureConstructionValue,
 } from './ReactFlightClientConstruction';
 
 import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
@@ -217,8 +219,8 @@ const RESPONSE_SYMBOL: RESPONSE_SYMBOL_TYPE = Symbol() as any;
 
 type PendingChunk<T> = {
   status: 'pending',
-  value: null | Array<InitializationReference | (T => mixed)>,
-  reason: null | Array<InitializationReference | (mixed => mixed)>,
+  value: null | Array<InitializationConsumer | (T => mixed)>,
+  reason: null | Array<InitializationConsumer | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
@@ -226,8 +228,8 @@ type PendingChunk<T> = {
 };
 type PendingWeakChunk<T> = {
   status: 'pending_weak',
-  value: null | Array<InitializationReference | (T => mixed)>,
-  reason: null | Array<InitializationReference | (mixed => mixed)>,
+  value: null | Array<InitializationConsumer | (T => mixed)>,
+  reason: null | Array<InitializationConsumer | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null | SomeChunk<ReactDebugInfoEntry>, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
@@ -235,8 +237,8 @@ type PendingWeakChunk<T> = {
 };
 type BlockedChunk<T> = {
   status: 'blocked',
-  value: null | Array<InitializationReference | (T => mixed)>,
-  reason: null | Array<InitializationReference | (mixed => mixed)>,
+  value: null | Array<InitializationConsumer | (T => mixed)>,
+  reason: null | Array<InitializationConsumer | (mixed => mixed)>,
   _children: Array<SomeChunk<any>> | ProfilingResult, // Profiling-only
   _debugChunk: null, // DEV-only
   _debugInfo: ReactDebugInfo, // DEV-only
@@ -375,15 +377,13 @@ function reactPromiseThen<T>(
     case BLOCKED:
       if (typeof resolve === 'function') {
         if (chunk.value === null) {
-          chunk.value = [] as Array<InitializationReference | (T => mixed)>;
+          chunk.value = [] as Array<InitializationConsumer | (T => mixed)>;
         }
         chunk.value.push(resolve);
       }
       if (typeof reject === 'function') {
         if (chunk.reason === null) {
-          chunk.reason = [] as Array<
-            InitializationReference | (mixed => mixed),
-          >;
+          chunk.reason = [] as Array<InitializationConsumer | (mixed => mixed)>;
         }
         chunk.reason.push(reject);
       }
@@ -703,7 +703,7 @@ function processChunkDebugInfo<T>(
 
 function wakeChunk<T>(
   response: Response,
-  listeners: Array<InitializationReference | (T => mixed)>,
+  listeners: Array<InitializationConsumer | (T => mixed)>,
   value: T,
   chunk: InitializedChunk<T>,
 ): void {
@@ -712,7 +712,7 @@ function wakeChunk<T>(
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(response, listener, value, chunk);
+      fulfillInitializationConsumer(response, listener, value, chunk);
     }
   }
 
@@ -723,7 +723,7 @@ function wakeChunk<T>(
 
 function rejectChunk(
   response: Response,
-  listeners: Array<InitializationReference | (mixed => mixed)>,
+  listeners: Array<InitializationConsumer | (mixed => mixed)>,
   error: mixed,
 ): void {
   for (let i = 0; i < listeners.length; i++) {
@@ -731,7 +731,7 @@ function rejectChunk(
     if (typeof listener === 'function') {
       listener(error);
     } else {
-      rejectInitializationReference(response, listener, error);
+      rejectInitializationConsumer(response, listener, error);
     }
   }
 }
@@ -752,8 +752,8 @@ function getPrivateReferenceModel(
 function wakeChunkIfInitialized<T>(
   response: Response,
   chunk: SomeChunk<T>,
-  resolveListeners: Array<InitializationReference | (T => mixed)>,
-  rejectListeners: null | Array<InitializationReference | (mixed => mixed)>,
+  resolveListeners: Array<InitializationConsumer | (T => mixed)>,
+  rejectListeners: null | Array<InitializationConsumer | (mixed => mixed)>,
 ): void {
   switch (chunk.status) {
     case INITIALIZED:
@@ -765,10 +765,15 @@ function wakeChunkIfInitialized<T>(
       for (let i = 0; i < resolveListeners.length; i++) {
         const listener = resolveListeners[i];
         if (typeof listener !== 'function') {
-          const reference: InitializationReference = listener;
+          const reference: InitializationConsumer = listener;
           const model = getPrivateReferenceModel(response, chunk);
           if (model !== null) {
-            fulfillReference(response, reference, model.value, chunk);
+            fulfillInitializationConsumer(
+              response,
+              reference,
+              model.value,
+              chunk,
+            );
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -1078,8 +1083,22 @@ type ConstructionPublication = {
   queued: boolean,
   done: boolean,
 };
-
-type ConstructionListener = InitializationReference | ConstructionPublication;
+type ServerReferenceBinding = {
+  +kind: 2,
+  handler: InitializationHandler,
+  parentObject: Object,
+  key: string,
+  assignment: ConstructionFact<ConstructionListener>,
+  serverReference: ClientReference<any>,
+  id: string,
+  bound: null | Thenable<Array<any>>,
+  moduleStatus: 0 | 1 | 2,
+  moduleError: mixed,
+  inputs: null | ConstructionInputs<ConstructionListener>,
+  done: boolean,
+};
+type InitializationConsumer = InitializationReference | ServerReferenceBinding;
+type ConstructionListener = InitializationConsumer | ConstructionPublication;
 
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
@@ -1112,7 +1131,7 @@ function initializeDebugChunk(
         debugChunk,
         true,
       );
-      resolveInitializationReference<ReactDebugInfoEntry>(
+      resolveInitializationConsumer<ReactDebugInfoEntry>(
         response,
         reference,
         debugChunk,
@@ -1213,8 +1232,8 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       //
       // Every other listener waits for the model's references to finish.
       // Function listeners are public observations and always wait.
-      let available: null | Array<InitializationReference> = null;
-      let deferred: null | Array<InitializationReference | (T => mixed)> = null;
+      let available: null | Array<InitializationConsumer> = null;
+      let deferred: null | Array<InitializationConsumer | (T => mixed)> = null;
       for (let i = 0; i < listeners.length; i++) {
         const listener = listeners[i];
         if (
@@ -1250,7 +1269,12 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       }
       if (available !== null) {
         for (let i = 0; i < available.length; i++) {
-          fulfillReference(response, available[i], value, cyclicChunk);
+          fulfillInitializationConsumer(
+            response,
+            available[i],
+            value,
+            cyclicChunk,
+          );
         }
       }
     }
@@ -2293,7 +2317,9 @@ function wakeConstructionReferences(
       if (reference.kind === CONSTRUCTION_PUBLICATION) {
         enqueueConstructionPublication(response, reference);
       } else if (status === CONSTRUCTION_FAILED) {
-        rejectInitializationReference(response, reference, value);
+        rejectInitializationConsumer(response, reference, value);
+      } else if (reference.kind === CONSTRUCTION_BINDING) {
+        resumeServerReferenceBinding(response, reference);
       } else if (reference.inputs !== null) {
         // This listener belongs to a constructor, not a selected path. The
         // field is installed now; resume using the retained carrier.
@@ -2687,7 +2713,7 @@ function waitForReference<T>(
     isAwaitingDebugInfo,
   );
 
-  resolveInitializationReference(response, reference, referencedChunk);
+  resolveInitializationConsumer(response, reference, referencedChunk);
   return (
     reference.assignment.status === CONSTRUCTION_INSTALLED
       ? reference.assignment.value
@@ -2695,9 +2721,9 @@ function waitForReference<T>(
   ) as any;
 }
 
-function resolveInitializationReference<T>(
+function resolveInitializationConsumer<T>(
   response: Response,
-  reference: InitializationReference,
+  reference: InitializationConsumer,
   chunk: SomeChunk<T>,
 ): void {
   if (chunk.status === RESOLVED_MODEL) {
@@ -2707,10 +2733,10 @@ function resolveInitializationReference<T>(
   }
   switch (chunk.status) {
     case INITIALIZED:
-      fulfillReference(response, reference, chunk.value, chunk);
+      fulfillInitializationConsumer(response, reference, chunk.value, chunk);
       return;
     case ERRORED:
-      rejectInitializationReference(response, reference, chunk.reason);
+      rejectInitializationConsumer(response, reference, chunk.reason);
       return;
     case HALTED:
       return;
@@ -2719,7 +2745,7 @@ function resolveInitializationReference<T>(
     case PENDING_WEAK: {
       const head = getPrivateReferenceModel(response, chunk);
       if (head !== null) {
-        fulfillReference(response, reference, head.value, chunk);
+        fulfillInitializationConsumer(response, reference, head.value, chunk);
         return;
       }
       if (chunk.value === null) {
@@ -2752,17 +2778,15 @@ function initializeServerReference<T>(
   parentObject: Object,
   key: string,
   handler: InitializationHandler,
+  args: null | Array<any>,
 ): any {
   let resolvedValue = requireModule(serverReference) as any;
 
   if (bound) {
-    // This promise is coming from us and should have initialized by now.
-    const promiseValue = (bound as any).value;
-    const boundArgs: Array<any> = isArray(promiseValue)
-      ? promiseValue.slice(0)
-      : [];
+    const boundArgs: Array<any> = isArray(args) ? args.slice(0) : [];
     boundArgs.unshift(null); // this
     resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+    captureConstructionValue(response._construction, resolvedValue, boundArgs);
   }
 
   registerBoundServerReference(
@@ -2837,33 +2861,28 @@ function loadServerReference<A: Iterable<any>, T>(
     resolveServerReference<$FlowFixMe>(response._serverReferenceConfig, id);
 
   const bound = metaData.bound;
-  let promise: null | Thenable<any> = preloadModule(serverReference);
-  if (!promise) {
-    if (bound instanceof ReactPromise) {
-      promise = Promise.resolve(bound);
-    } else {
-      // We only await the bound arguments when they are one of our own chunks.
-      // Anything else could be a foreign thenable whose `then` we must not call.
-      const resolvedValue = requireModule(serverReference) as any;
-      registerBoundServerReference(
-        resolvedValue,
-        id,
-        bound,
-        response._encodeFormAction,
-      );
-      return resolvedValue;
-    }
-  } else if (bound instanceof ReactPromise) {
-    promise = Promise.all([promise, bound]);
+  const modulePromise = preloadModule(serverReference);
+  if (modulePromise === null && !(bound instanceof ReactPromise)) {
+    // We only await the bound arguments when they are one of our own chunks.
+    // Anything else could be a foreign thenable whose `then` we must not call.
+    const resolvedValue = requireModule(serverReference) as any;
+    registerBoundServerReference(
+      resolvedValue,
+      id,
+      bound,
+      response._encodeFormAction,
+    );
+    return resolvedValue;
   }
 
   let handler: InitializationHandler;
   if (reference !== null) {
-    // A deferred mapper still owns the original destination and handler.
+    // The mapper hands its destination to one binding operation. That
+    // operation retains the dependency until both inputs are installed.
     handler = reference.handler;
     handler.deps++;
     reference.isMappingDeferred = true;
-  } else if (initializingHandler) {
+  } else if (initializingHandler !== null) {
     handler = initializingHandler;
     handler.deps++;
   } else {
@@ -2878,58 +2897,170 @@ function loadServerReference<A: Iterable<any>, T>(
           key,
         )
       : reference.assignment;
+  const binding: ServerReferenceBinding = {
+    kind: CONSTRUCTION_BINDING,
+    handler,
+    parentObject,
+    key,
+    assignment,
+    serverReference,
+    id,
+    bound,
+    moduleStatus:
+      modulePromise === null ? CONSTRUCTION_INSTALLED : CONSTRUCTION_PENDING,
+    moduleError: null,
+    inputs: null,
+    done: false,
+  };
 
-  function fulfill(): void {
-    let resolvedValue;
-    try {
-      resolvedValue = initializeServerReference(
-        response,
-        serverReference,
-        id,
-        bound,
-        parentObject,
-        key,
-        handler,
-      );
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    finishInitializationField(
-      response,
-      parentObject,
-      key,
-      assignment,
-      CONSTRUCTION_INSTALLED,
-      resolvedValue,
+  if (bound instanceof ReactPromise) {
+    // Bound arguments are one of our native chunks. Internal consumers can
+    // use its array identity without waiting for its public contents.
+    const boundChunk: SomeChunk<Array<any>> = bound as any;
+    resolveInitializationConsumer(response, binding, boundChunk);
+  } else {
+    resumeServerReferenceBinding(response, binding);
+  }
+  if (modulePromise !== null) {
+    modulePromise.then(
+      () => {
+        binding.moduleStatus = CONSTRUCTION_INSTALLED;
+        resumeServerReferenceBinding(response, binding);
+      },
+      error => {
+        binding.moduleStatus = CONSTRUCTION_FAILED;
+        binding.moduleError = error;
+        resumeServerReferenceBinding(response, binding);
+      },
     );
-    handler.deps--;
-    initializeChunkIfUnblocked(response, handler);
   }
 
-  function reject(error: mixed): void {
-    // The field's failure must reach selected-path readers as well as the
-    // owning chunk. Otherwise those readers would keep waiting for its value.
-    finishInitializationField(
-      response,
-      parentObject,
-      key,
-      assignment,
-      CONSTRUCTION_FAILED,
-      error,
-    );
-    rejectReference(response, handler, error);
-  }
-
-  promise.then(fulfill, reject);
-
-  // Return a place holder value for now.
-  return null as any;
+  return (
+    assignment.status === CONSTRUCTION_INSTALLED ? assignment.value : null
+  ) as any;
 }
 
 // Chunk listeners and field listeners can wake the same binding. Its
 // destination has one producer and is installed or failed exactly once.
+function fulfillInitializationConsumer(
+  response: Response,
+  consumer: InitializationConsumer,
+  value: any,
+  source: SomeChunk<any>,
+): void {
+  if (consumer.kind === CONSTRUCTION_BINDING) {
+    if (consumer.done) {
+      return;
+    }
+    const args: Array<any> = isArray(value) ? value : [];
+    consumer.inputs = createConstructionInputs(args, false);
+    consumer.assignment.inputs = args;
+    resumeServerReferenceBinding(response, consumer);
+  } else {
+    fulfillReference(response, consumer, value, source);
+  }
+}
+
+function rejectInitializationConsumer(
+  response: Response,
+  consumer: InitializationConsumer,
+  error: mixed,
+): void {
+  if (consumer.kind === CONSTRUCTION_BINDING) {
+    rejectServerReferenceBinding(response, consumer, error);
+  } else {
+    rejectInitializationReference(response, consumer, error);
+  }
+}
+
+function resumeServerReferenceBinding(
+  response: Response,
+  binding: ServerReferenceBinding,
+): void {
+  if (binding.done) {
+    return;
+  }
+  if (binding.handler.errored) {
+    rejectServerReferenceBinding(response, binding, binding.handler.reason);
+    return;
+  }
+  if (binding.moduleStatus === CONSTRUCTION_FAILED) {
+    rejectServerReferenceBinding(response, binding, binding.moduleError);
+    return;
+  }
+  const inputs = binding.inputs;
+  let resolvedValue;
+  try {
+    // Check all available argument slots even while the module is loading.
+    // A failed argument must not wait for that unrelated service.
+    if (inputs !== null) {
+      const pending = readConstructionInputs(response._construction, inputs);
+      if (pending !== null) {
+        inputs.waiting = subscribeConstructionFacts(
+          inputs.waiting,
+          pending,
+          binding,
+        );
+        return;
+      }
+    } else if (binding.bound instanceof ReactPromise) {
+      return;
+    }
+    if (binding.moduleStatus !== CONSTRUCTION_INSTALLED) {
+      return;
+    }
+    let args = null;
+    if (inputs !== null) {
+      args = inputs.values;
+    } else if (binding.bound) {
+      args = (binding.bound as any).value;
+    }
+    resolvedValue = initializeServerReference(
+      response,
+      binding.serverReference,
+      binding.id,
+      binding.bound,
+      binding.parentObject,
+      binding.key,
+      binding.handler,
+      args,
+    );
+  } catch (error) {
+    rejectServerReferenceBinding(response, binding, error);
+    return;
+  }
+  binding.done = true;
+  finishInitializationField(
+    response,
+    binding.parentObject,
+    binding.key,
+    binding.assignment,
+    CONSTRUCTION_INSTALLED,
+    resolvedValue,
+  );
+  binding.handler.deps--;
+  initializeChunkIfUnblocked(response, binding.handler);
+}
+
+function rejectServerReferenceBinding(
+  response: Response,
+  binding: ServerReferenceBinding,
+  error: mixed,
+): void {
+  if (binding.done) {
+    return;
+  }
+  binding.done = true;
+  finishInitializationField(
+    response,
+    binding.parentObject,
+    binding.key,
+    binding.assignment,
+    CONSTRUCTION_FAILED,
+    error,
+  );
+  rejectReference(response, binding.handler, error);
+}
 
 function loadServerObjectReference(
   response: Response,
@@ -3505,7 +3636,7 @@ function defineLazyGetter<T>(
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
   const iterator = model[Symbol.iterator]();
-
+  captureConstructionValue(response._construction, iterator, model);
   return iterator;
 }
 

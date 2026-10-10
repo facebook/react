@@ -3833,7 +3833,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'array Set cycle');
       watched.recheck();
     });
-    it.skip('binds a containing array with a real null argument', async () => {
+    it('binds a containing array with a real null argument', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (container, other) => [container, other]},
@@ -3859,7 +3859,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'bound null argument');
       watched.recheck();
     });
-    it.skip('binds two references to its containing array', async () => {
+    it('binds two references to its containing array', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (left, right, other) => ({left, right, other})},
@@ -3888,7 +3888,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'repeated bound array arguments');
       watched.recheck();
     });
-    it.skip('binds an array reached through an ordinary object property', async () => {
+    it('binds an array reached through an ordinary object property', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (container, other) => [container, other]},
@@ -3915,7 +3915,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'nested bound array');
       watched.recheck();
     });
-    it.skip('binds an array reached through an array slot twice', async () => {
+    it('binds an array reached through an array slot twice', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (left, right, other) => ({left, right, other})},
@@ -3944,7 +3944,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'nested repeated bound array');
       watched.recheck();
     });
-    it.skip('binds an array reached through two ordinary containers', async () => {
+    it('binds an array reached through two ordinary containers', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (left, right, other) => ({left, right, other})},
@@ -3974,7 +3974,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'deep bound array');
       watched.recheck();
     });
-    it.skip('binds a root object to itself', async () => {
+    it('binds a root object to itself', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (container, other) => [container, other]},
@@ -4000,7 +4000,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'root bound object');
       watched.recheck();
     });
-    it.skip('binds an object reached through an ordinary property', async () => {
+    it('binds an object reached through an ordinary property', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: (container, other) => [container, other]},
@@ -4027,7 +4027,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'nested bound object');
       watched.recheck();
     });
-    it.skip('publishes a bound action beside its containing Set', async () => {
+    it('publishes a bound action beside its containing Set', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: container => container},
@@ -4064,7 +4064,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'separately exposed bound Set action');
       watched.recheck();
     });
-    it.skip('publishes a promised bound action with its containing Set', async () => {
+    it('publishes a promised bound action with its containing Set', async () => {
       const moduleReady = deferred();
       const {read} = WebpackMock.serverExports(
         {read: container => container},
@@ -4105,7 +4105,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'promised bound Set action');
       watched.recheck();
     });
-    it.skip('waits to publish an action bound to a Set with an unresolved member', async () => {
+    it('waits to publish an action bound to a Set with an unresolved member', async () => {
       const moduleReady = deferred();
       const memberReady = deferred();
       const {value: member} = WebpackMock.clientExports(
@@ -4224,9 +4224,9 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'bound Set service order');
       watched.recheck();
     }
-    it.skip('binds a Set after the module loads before its argument', () =>
+    it('binds a Set after the module loads before its argument', () =>
       checkBoundSetServiceOrder(false));
-    it.skip('binds a Set after its argument loads before the module', () =>
+    it('binds a Set after its argument loads before the module', () =>
       checkBoundSetServiceOrder(true));
     it('rejects a bound action when an argument module fails', async () => {
       const moduleReady = deferred();
@@ -4324,7 +4324,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       runCase(['bytes', 6, 'after-eof', 2]));
     it.skip('bytes seed=2 demand=late wrappers=0 [reader-byob-eof]', () =>
       runCase(['bytes', 2, 'late', 0]));
-    it.skip('finishes overlapping ordinary regions before publication', () =>
+    it('finishes overlapping ordinary regions before publication', () =>
       runCase(['joined', 1, 'early', 0]));
     it.skip('canceled stream ignores later writes without losing shared data', () =>
       runCase(['canceled-stream', 2, 'late', 0]));
@@ -4460,7 +4460,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
   // Rejecting-module graphs need the healthy-field repair.
   const pendingConstructionRepairs = new Set(['construction-failure']);
 
-  describe.skip('generated construction cases', () => {
+  describe('generated construction cases', () => {
     cases.forEach(spec => {
       if (deferredFamilies.has(spec[0])) {
         return;

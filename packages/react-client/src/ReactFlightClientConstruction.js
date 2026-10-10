@@ -60,6 +60,7 @@ export function createInitializationHandler(
 
 export const CONSTRUCTION_REFERENCE = 0;
 export const CONSTRUCTION_PUBLICATION = 1;
+export const CONSTRUCTION_BINDING = 2;
 
 export const CONSTRUCTION_PENDING = 0;
 export const CONSTRUCTION_INSTALLED = 1;
@@ -108,6 +109,7 @@ export type ConstructionState<Listener> = {
   heads: null | WeakMap<Object, ConstructionFact<Listener>>,
   publications: null | WeakMap<Object, Listener>,
   sequences: null | WeakMap<Object, ConstructionSequence>,
+  captures: null | WeakMap<Object, Array<any>>,
   debugLazies: null | WeakMap<Object, boolean>,
   debugReferences: null | WeakMap<Object, Set<string>>,
   publicationQueue: Array<Listener>,
@@ -125,6 +127,7 @@ export function createConstructionState<
     heads: null,
     publications: null,
     sequences: null,
+    captures: null,
     debugLazies: null,
     debugReferences: null,
     publicationQueue: [],
@@ -439,6 +442,22 @@ export function getConstructionSequence<Listener>(
   return sequence;
 }
 
+// Native iterators and bound functions retain model values without exposing
+// them as enumerable properties. Publication follows those same inputs.
+export function captureConstructionValue<Listener>(
+  state: null | ConstructionState<Listener>,
+  value: Object,
+  inputs: Array<any>,
+): void {
+  if (state !== null) {
+    let captures = state.captures;
+    if (captures === null) {
+      captures = state.captures = new WeakMap();
+    }
+    captures.set(value, inputs);
+  }
+}
+
 // Each reserved slot has a producer before any work runs. Only a contiguous
 // installed prefix is visible; an out-of-order completion never creates holes.
 export function publishConstructionSequence<Listener>(
@@ -497,7 +516,11 @@ export function readConstructionContents<Listener>(
         todo.push(collection.inputs);
       }
     }
-    if (value instanceof Set) {
+    const captured =
+      state.captures === null ? undefined : state.captures.get(value);
+    if (captured !== undefined) {
+      todo.push(captured);
+    } else if (value instanceof Set) {
       const iterator = value.values();
       let entry = iterator.next();
       while (!entry.done) {
