@@ -686,7 +686,7 @@ describe('ReactFlightResultDOM', () => {
     expect(response.obj).toBe(obj);
   });
 
-  it.skip('should supports ReadableStreams with typed arrays', async () => {
+  it('should supports ReadableStreams with typed arrays', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
     ]).buffer;
@@ -716,9 +716,11 @@ describe('ReactFlightResultDOM', () => {
       },
     });
 
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(s, {}),
-    );
+    const stream = await serverAct(() => {
+      const {writable, readable} = getTestStream();
+      renderResultToPipeableStream(s, {}).pipe(writable);
+      return readable;
+    });
 
     const [stream1, stream2] = passThrough(stream).tee();
 
@@ -744,7 +746,7 @@ describe('ReactFlightResultDOM', () => {
     expect(streamedBuffers).toEqual(buffers);
   });
 
-  it.skip('should support binary ReadableStreams', async () => {
+  it('should support binary ReadableStreams', async () => {
     const encoder = new TextEncoder();
     const words = ['Hello', 'streaming', 'world'];
 
@@ -759,9 +761,11 @@ describe('ReactFlightResultDOM', () => {
       },
     });
 
-    const rscStream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(stream, {}),
-    );
+    const rscStream = await serverAct(() => {
+      const {writable, readable} = getTestStream();
+      renderResultToPipeableStream(stream, {}).pipe(writable);
+      return readable;
+    });
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       rscStream,
@@ -785,7 +789,7 @@ describe('ReactFlightResultDOM', () => {
     expect(text).toBe('Hello streaming world ');
   });
 
-  it.skip('should support large binary ReadableStreams', async () => {
+  it('should support large binary ReadableStreams', async () => {
     const chunkCount = 100;
     const chunkSize = 1024;
     const expectedBytes = [];
@@ -805,9 +809,11 @@ describe('ReactFlightResultDOM', () => {
       },
     });
 
-    const rscStream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(stream, {}),
-    );
+    const rscStream = await serverAct(() => {
+      const {writable, readable} = getTestStream();
+      renderResultToPipeableStream(stream, {}).pipe(writable);
+      return readable;
+    });
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       // Use passThrough to split and rejoin chunks at arbitrary boundaries.
@@ -831,7 +837,7 @@ describe('ReactFlightResultDOM', () => {
     expect(receivedBytes).toEqual(expectedBytes);
   });
 
-  it.skip('should support BYOB binary ReadableStreams', async () => {
+  it('should support BYOB binary ReadableStreams', async () => {
     const sourceBytes = [
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
     ];
@@ -870,9 +876,11 @@ describe('ReactFlightResultDOM', () => {
       },
     });
 
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(s, {}),
-    );
+    const stream = await serverAct(() => {
+      const {writable, readable} = getTestStream();
+      renderResultToPipeableStream(s, {}).pipe(writable);
+      return readable;
+    });
 
     const [stream1, stream2] = passThrough(stream).tee();
 
@@ -1315,7 +1323,7 @@ describe('ReactFlightResultDOM', () => {
     expect(result.get('value')).toBe('hello');
   });
 
-  it.skip('can pass an async import to a ReadableStream while enqueuing in order', async () => {
+  it('can pass an async import to a ReadableStream while enqueuing in order', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
 
@@ -1333,18 +1341,10 @@ describe('ReactFlightResultDOM', () => {
       },
     });
 
-    const stream = await serverAct(() =>
-      passThrough(ReactServerDOMServer.renderToReadableStream(s, webpackMap)),
+    const expanded = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(s),
     );
-
-    const result = await serverAct(() =>
-      ReactServerDOMClient.createFromReadableStream(stream, {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
-      }),
-    );
+    const result = await serverAct(() => createResponse(expanded));
 
     const reader = result.getReader();
 
@@ -1359,7 +1359,7 @@ describe('ReactFlightResultDOM', () => {
     expect(await reader.read()).toEqual({value: undefined, done: true});
   });
 
-  it.skip('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
+  it('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
 
@@ -1374,24 +1374,10 @@ describe('ReactFlightResultDOM', () => {
       },
     };
 
-    const stream = await serverAct(() =>
-      passThrough(
-        ReactServerDOMServer.renderToReadableStream(
-          multiShotIterable,
-          webpackMap,
-        ),
-      ),
+    const expanded = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(multiShotIterable),
     );
-
-    // Parsing the root blocks because the module hasn't loaded yet
-    const result = await serverAct(() =>
-      ReactServerDOMClient.createFromReadableStream(stream, {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
-      }),
-    );
+    const result = await serverAct(() => createResponse(expanded));
 
     const iterator = result[Symbol.asyncIterator]();
 
@@ -4292,7 +4278,7 @@ describe('ReactFlightResultDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
   });
 
-  it.skip('will leave async iterables in an incomplete state when halting', async () => {
+  it('will leave async iterables in an incomplete state when halting', async () => {
     let resolve;
     const wait = new Promise(r => (resolve = r));
     const errors = [];

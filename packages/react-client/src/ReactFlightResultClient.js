@@ -23,6 +23,12 @@ import {
   registerBoundServerReference,
   createServerObjectReference,
 } from './ReactFlightReplyClient';
+import type {
+  ResultStreamController,
+  StreamReader,
+} from 'shared/ReactFlightResultReadableStream';
+import {closeReadableStream} from 'shared/ReactFlightResultReadableStream';
+import type {AsyncIterableController} from 'shared/ReactFlightResultAsyncIterable';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {ReactDebugInfo, Thenable, Wakeable} from 'shared/ReactTypes';
@@ -34,6 +40,8 @@ import type {
   ServerManifest,
 } from './ReactFlightClientConfig';
 import {
+  getAsyncIterable,
+  getReadableStream,
   getIteratorEntries,
   getTemporaryReference,
   getServerReference,
@@ -59,7 +67,11 @@ import {
   preloadModule,
   requireModule,
 } from './ReactFlightClientConfig';
-import {REACT_ELEMENT_TYPE, REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
+  ASYNC_ITERATOR,
+} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import noop from 'shared/noop';
@@ -90,6 +102,7 @@ type PreloadDependencies = {
 
 type ModelSubscription = {
   response: null | Response,
+  owner: null | Set<ModelSubscription>,
   resolve: null | (any => mixed),
   reject: null | (mixed => mixed),
 };
@@ -111,6 +124,7 @@ export type Response = {
   _closedReason: null | Error,
   _disposed: boolean,
   _subscriptions: null | Set<ModelSubscription>,
+  _streamErrors: null | Array<(Error) => void>,
   _cleanups: null | Set<() => void>,
   _models: Map<Object, any>,
   _preloads: Map<Object, ModelPreload>,
@@ -150,6 +164,7 @@ export function createResponse(
     _closedReason: null,
     _disposed: false,
     _subscriptions: null,
+    _streamErrors: null,
     _cleanups: null,
     _models: new Map(),
     _preloads: new Map(),
@@ -282,12 +297,14 @@ Object.defineProperty(ReactPromise.prototype, 'then', {
   value: reactPromiseThen,
 });
 
-function createPendingChunk<T>(response: Response): SomeChunk<T> {
+function createPendingChunk<T>(response: null | Response = null): SomeChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   const chunk = new ReactPromise(PENDING, null, null);
-  response._chunks.add(chunk);
-  if (response._closed) {
-    triggerErrorOnChunk(chunk, getClosedReason(response));
+  if (response !== null) {
+    response._chunks.add(chunk);
+    if (response._closed) {
+      triggerErrorOnChunk(chunk, getClosedReason(response));
+    }
   }
   return chunk;
 }
@@ -404,6 +421,13 @@ function reportGlobalError(response: Response, error: Error): void {
   }
   response._closed = true;
   response._closedReason = error;
+  const streamErrors = response._streamErrors;
+  response._streamErrors = null;
+  if (streamErrors !== null) {
+    for (let i = 0; i < streamErrors.length; i++) {
+      streamErrors[i](error);
+    }
+  }
   response._chunks.forEach(chunk => triggerErrorOnChunk(chunk, error));
 }
 
@@ -449,6 +473,11 @@ function detachModelSubscription(subscription: ModelSubscription): void {
   subscription.response = null;
   subscription.resolve = null;
   subscription.reject = null;
+  const owner = subscription.owner;
+  subscription.owner = null;
+  if (owner !== null) {
+    owner.delete(subscription);
+  }
   if (response !== null && response._subscriptions !== null) {
     response._subscriptions.delete(subscription);
   }
@@ -459,11 +488,15 @@ function subscribeToModel(
   source: Thenable<any> | Promise<any> | Wakeable,
   resolve: any => mixed,
   reject: mixed => mixed,
+  owner: null | Set<ModelSubscription> = null,
 ): void {
   if (response._disposed) {
     return;
   }
-  const subscription: ModelSubscription = {response, resolve, reject};
+  const subscription: ModelSubscription = {response, owner, resolve, reject};
+  if (owner !== null) {
+    owner.add(subscription);
+  }
   let subscriptions = response._subscriptions;
   if (subscriptions === null) {
     response._subscriptions = subscriptions = new Set();
@@ -995,6 +1028,14 @@ function readSpecialModel(response: Response, value: any): any {
     });
     return copy;
   }
+  const readableStream = getReadableStream(response._result, value);
+  if (readableStream !== undefined) {
+    return readReadableStream(response, value, readableStream);
+  }
+  const asyncIterable = getAsyncIterable(response._result, value);
+  if (asyncIterable !== undefined) {
+    return readAsyncIterable(response, value, asyncIterable);
+  }
   const iteratorEntries = getIteratorEntries(response._result, value);
   if (iteratorEntries !== undefined) {
     const copy: Array<any> = [];
@@ -1508,6 +1549,12 @@ function scanModelFields(
     }
   } else {
     if (kind === 0 && getPrototypeOf(value) !== ObjectPrototype) {
+      if (getReadableStream(response._result, value) !== undefined) {
+        return;
+      }
+      if (getAsyncIterable(response._result, value) !== undefined) {
+        return;
+      }
       const entries = getIteratorEntries(response._result, value);
       if (entries !== undefined) {
         scanModel(response, entries, state, chunks);
@@ -1714,4 +1761,454 @@ function loadServerReference(
     },
     error => triggerErrorOnChunk(chunk, error),
   );
+}
+
+function registerStreamError(
+  response: Response,
+  onError: Error => void,
+): () => void {
+  let streamErrors = response._streamErrors;
+  if (streamErrors === null) {
+    response._streamErrors = streamErrors = [];
+  }
+  streamErrors.push(onError);
+  return () => {
+    const errors = response._streamErrors;
+    if (errors !== null) {
+      const index = errors.indexOf(onError);
+      if (index !== -1) {
+        errors.splice(index, 1);
+      }
+    }
+  };
+}
+
+function readReadableStream<T>(
+  response: Response,
+  model: Object,
+  source: ResultStreamController<T>,
+): ReadableStream {
+  let controller: ReadableStreamController = null as any;
+  let closed = false;
+  let cancelled = false;
+  let unsubscribe = noop;
+  let unregisterError = noop;
+  const pendingChunks: Set<SomeChunk<T>> = new Set();
+  const subscriptions: Set<ModelSubscription> = new Set();
+  function subscribe(
+    wakeable: Thenable<any> | Promise<any> | Wakeable,
+    resolve: any => mixed,
+    reject: mixed => mixed = noop,
+  ): void {
+    subscribeToModel(response, wakeable, resolve, reject, subscriptions);
+  }
+  function cancel(reason: mixed): void {
+    if (cancelled) {
+      return;
+    }
+    cancelled = true;
+    closed = true;
+    unsubscribe();
+    unregisterError();
+    subscriptions.forEach(detachModelSubscription);
+    pendingChunks.forEach(chunk => triggerErrorOnChunk(chunk, reason));
+    pendingChunks.clear();
+    previousBlockedChunk = null;
+  }
+  const stream = new ReadableStream({
+    type: source.isByteStream ? 'bytes' : undefined,
+    start(c) {
+      controller = c;
+    },
+    cancel(reason) {
+      cancel(reason);
+    },
+  });
+  response._models.set(model, stream);
+  if (response._closed || isHaltedModel(response, model)) {
+    controller.error(getClosedReason(response));
+    return stream;
+  }
+  let previousBlockedChunk: SomeChunk<T> | null = null;
+  const reader: StreamReader<T> = {
+    halt() {
+      if (response._allowPartialStream) {
+        reader.close();
+      } else {
+        reader.error(getClosedReason(response));
+      }
+    },
+    enqueue(entry: Promise<T>) {
+      if (closed || cancelled) {
+        return;
+      }
+      const previous = previousBlockedChunk;
+      const chunk = createPendingChunk<T>();
+      pendingChunks.add(chunk);
+      previousBlockedChunk = chunk;
+      subscribe(
+        chunk,
+        value => {
+          pendingChunks.delete(chunk);
+          if (!cancelled) {
+            controller.enqueue(
+              source.isByteStream
+                ? new Uint8Array(value as any)
+                : (value as any),
+            );
+          }
+          if (previousBlockedChunk === chunk) {
+            previousBlockedChunk = null;
+          }
+        },
+        reason => {
+          pendingChunks.delete(chunk);
+          if (!cancelled) {
+            cancel(reason);
+            controller.error(reason as any);
+          }
+        },
+      );
+
+      if (isHaltedModel(response, entry)) {
+        if (previous === null) {
+          triggerErrorOnChunk(chunk, getClosedReason(response));
+        } else {
+          subscribe(
+            previous,
+            () => triggerErrorOnChunk(chunk, getClosedReason(response)),
+            reason => triggerErrorOnChunk(chunk, reason),
+          );
+        }
+        return;
+      }
+      subscribe(
+        entry,
+        value => {
+          if (chunk.status !== PENDING) {
+            return;
+          }
+          const blockedChunk: BlockedChunk<T> = chunk as any;
+          blockedChunk.status = BLOCKED;
+          try {
+            const pending = preloadModel(response, value);
+            if (pending !== null) {
+              pending.catch(noop);
+            }
+            const initialize = () => {
+              if (pending === null) {
+                initializeModelChunk(response, chunk, value);
+              } else {
+                subscribe(
+                  pending,
+                  () => initializeModelChunk(response, chunk, value),
+                  reason => triggerErrorOnChunk(chunk, reason),
+                );
+              }
+            };
+            if (previous === null) {
+              initialize();
+            } else {
+              subscribe(previous, initialize, reason =>
+                triggerErrorOnChunk(chunk, reason),
+              );
+            }
+          } catch (reason) {
+            if (previous === null) {
+              triggerErrorOnChunk(chunk, reason);
+            } else {
+              subscribe(
+                previous,
+                () => triggerErrorOnChunk(chunk, reason),
+                error => triggerErrorOnChunk(chunk, error),
+              );
+            }
+          }
+        },
+        reason => {
+          if (previous === null) {
+            triggerErrorOnChunk(chunk, resolveError(response, entry, reason));
+          } else {
+            subscribe(
+              previous,
+              () =>
+                triggerErrorOnChunk(
+                  chunk,
+                  resolveError(response, entry, reason),
+                ),
+              error => triggerErrorOnChunk(chunk, error),
+            );
+          }
+        },
+      );
+    },
+    close() {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      const previous = previousBlockedChunk;
+      previousBlockedChunk = null;
+      if (previous === null) {
+        if (!cancelled) {
+          closeReadableStream(controller, source.isByteStream);
+          unregisterError();
+        }
+      } else {
+        subscribe(previous, () => {
+          if (!cancelled) {
+            closeReadableStream(controller, source.isByteStream);
+            unregisterError();
+          }
+        });
+      }
+    },
+    error(reason: mixed) {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      const error = resolveError(response, model, reason);
+      const previous = previousBlockedChunk;
+      previousBlockedChunk = null;
+      if (previous === null) {
+        if (!cancelled) {
+          cancelled = true;
+          controller.error(error as any);
+          unregisterError();
+        }
+      } else {
+        subscribe(previous, () => {
+          if (!cancelled) {
+            cancelled = true;
+            controller.error(error as any);
+            unregisterError();
+          }
+        });
+      }
+    },
+  };
+  unregisterError = registerStreamError(response, error => {
+    cancel(error);
+    controller.error(error);
+  });
+  unsubscribe = source.subscribe(reader);
+  if (cancelled) {
+    unsubscribe();
+  }
+  return stream;
+}
+
+function asyncIterator(this: $AsyncIterator<any, any, void>) {
+  return this;
+}
+
+function readAsyncIterable<T>(
+  response: Response,
+  model: Object,
+  source: AsyncIterableController<T>,
+): $AsyncIterable<T, T, void> {
+  const buffer: Array<SomeChunk<IteratorResult<T, T>>> = [];
+  let closed = false;
+  let nextWriteIndex = 0;
+  let unsubscribe = noop;
+  let unregisterError = noop;
+  const subscriptions: Set<ModelSubscription> = new Set();
+
+  function release(): void {
+    if (closed && subscriptions.size === 0) {
+      unsubscribe();
+      unregisterError();
+    }
+  }
+
+  function rejectEntry(
+    chunk: SomeChunk<IteratorResult<T, T>>,
+    error: mixed,
+  ): void {
+    triggerErrorOnChunk(chunk, error);
+    release();
+  }
+
+  function resolveIteratorResult(
+    chunk: SomeChunk<IteratorResult<T, T>>,
+    entry: IteratorResult<T, T>,
+  ): void {
+    if (chunk.status !== PENDING) {
+      return;
+    }
+    const blockedChunk: BlockedChunk<IteratorResult<T, T>> = chunk as any;
+    blockedChunk.status = BLOCKED;
+    function initialize(): void {
+      if (chunk.status !== BLOCKED) {
+        return;
+      }
+      try {
+        const value = entry.done
+          ? readOutlinedModel(response, entry.value)
+          : readModel(response, entry.value);
+        freezeCompletedElements(response);
+        initializeChunk(
+          chunk,
+          entry.done ? {done: true, value} : {done: false, value},
+        );
+      } catch (error) {
+        triggerErrorOnChunk(chunk, error);
+      }
+      release();
+    }
+    try {
+      const pending = preloadModel(response, entry.value, !!entry.done);
+      if (pending === null) {
+        initialize();
+      } else {
+        subscribeToModel(
+          response,
+          pending,
+          initialize,
+          error => rejectEntry(chunk, error),
+          subscriptions,
+        );
+      }
+    } catch (error) {
+      rejectEntry(chunk, error);
+    }
+  }
+
+  function enqueue(entry: Promise<T>, done: boolean): void {
+    if (closed) {
+      return;
+    }
+    if (nextWriteIndex === buffer.length) {
+      buffer[nextWriteIndex] = createPendingChunk();
+    }
+    const chunk = buffer[nextWriteIndex++];
+    if (isHaltedModel(response, entry)) {
+      triggerErrorOnChunk(chunk, getClosedReason(response));
+      return;
+    }
+    subscribeToModel(
+      response,
+      entry,
+      value =>
+        resolveIteratorResult(
+          chunk,
+          done ? {done: true, value} : {done: false, value},
+        ),
+      reason => rejectEntry(chunk, resolveError(response, entry, reason)),
+      subscriptions,
+    );
+  }
+
+  function close(): void {
+    if (closed) {
+      return;
+    }
+    closed = true;
+    while (nextWriteIndex < buffer.length) {
+      initializeChunk(buffer[nextWriteIndex++], {done: true, value: undefined});
+    }
+    release();
+  }
+
+  function errorIterable(reason: mixed): void {
+    if (closed) {
+      return;
+    }
+    closed = true;
+    if (nextWriteIndex === buffer.length) {
+      buffer[nextWriteIndex] = createPendingChunk();
+    }
+    const error = resolveError(response, model, reason);
+    while (nextWriteIndex < buffer.length) {
+      triggerErrorOnChunk(buffer[nextWriteIndex++], error);
+    }
+    release();
+  }
+
+  function halt(): void {
+    if (response._allowPartialStream) {
+      close();
+    } else {
+      errorIterable(getClosedReason(response));
+    }
+  }
+
+  function getIterator(): $AsyncIterator<T, T, void> {
+    let nextReadIndex = 0;
+    const iterator: any = {
+      next(arg: void) {
+        if (arg !== undefined) {
+          throw new Error(
+            'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+          );
+        }
+        if (nextReadIndex === buffer.length) {
+          if (closed) {
+            // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors.
+            return new ReactPromise(
+              INITIALIZED,
+              {done: true, value: undefined},
+              null,
+            );
+          }
+          buffer[nextReadIndex] = createPendingChunk();
+        }
+        return buffer[nextReadIndex++];
+      },
+    };
+    iterator[ASYNC_ITERATOR] = asyncIterator;
+    return iterator;
+  }
+
+  const iterable: any = source.isIterator
+    ? getIterator()
+    : {[ASYNC_ITERATOR]: getIterator};
+  response._models.set(model, iterable);
+  if (response._closed) {
+    errorIterable(getClosedReason(response));
+  } else {
+    unregisterError = registerStreamError(response, error => {
+      unsubscribe();
+      subscriptions.forEach(detachModelSubscription);
+      for (let i = 0; i < buffer.length; i++) {
+        if (buffer[i].status === PENDING || buffer[i].status === BLOCKED) {
+          triggerErrorOnChunk(buffer[i], error);
+        }
+      }
+      errorIterable(error);
+    });
+    unsubscribe = source.subscribe({
+      enqueue,
+      close,
+      error: errorIterable,
+      halt,
+    });
+    if (closed) {
+      unsubscribe();
+    }
+  }
+  return iterable;
+}
+
+function readOutlinedModel(response: Response, model: any): any {
+  while (isLazyModel(response, model)) {
+    const lazy = model;
+    try {
+      model = lazy._init(lazy._payload);
+    } catch (error) {
+      throw resolveError(response, lazy._payload, error);
+    }
+  }
+  let value = readModel(response, model);
+  if (isElementModel(response, model)) {
+    while (value.$$typeof === REACT_LAZY_TYPE) {
+      const initializingElement = value._payload._initializingElement;
+      if (initializingElement !== undefined) {
+        return initializingElement;
+      }
+      value = value._init(value._payload);
+    }
+  }
+  return value;
 }

@@ -9,6 +9,8 @@
 
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import type {ResultModel} from './ReactFlightResultModel';
+import type {AsyncIterableController} from './ReactFlightResultAsyncIterable';
+import type {ResultStreamController} from './ReactFlightResultReadableStream';
 import type {Thenable, ReactFunctionLocation} from './ReactTypes';
 import type {
   HintCode,
@@ -62,6 +64,8 @@ export opaque type Result<T>: {abort(reason: mixed): void, ...} = {
   temporaryReferences: null | WeakMap<Object, string>,
   serverReferences: null | WeakMap<Object, ServerReferenceMetadata>,
   formDataWithBlobs: null | WeakSet<FormData>,
+  asyncIterables: null | WeakMap<Object, AsyncIterableController<any>>,
+  readableStreams: null | WeakMap<Object, ResultStreamController<any>>,
   iteratorEntries: null | WeakMap<Object, $ReadOnlyArray<mixed>>,
   collectionEntries: null | WeakMap<Object, ResultModel<Array<any>>>,
   modelInfo: null | Map<Object, number>,
@@ -95,6 +99,8 @@ export function createResult<T>(
     temporaryReferences: null,
     serverReferences: null,
     formDataWithBlobs: null,
+    asyncIterables: null,
+    readableStreams: null,
     iteratorEntries: null,
     collectionEntries: null,
     modelInfo: null,
@@ -407,4 +413,42 @@ export function getTemporaryReferenceSet<T>(
   result: Result<T>,
 ): void | TemporaryReferenceSet {
   return result.temporaryReferenceSet;
+}
+
+export function setReadableStream<T>(
+  result: Result<T>,
+  controller: ResultStreamController<any>,
+): void {
+  let readableStreams = result.readableStreams;
+  if (readableStreams === null) {
+    result.readableStreams = readableStreams = new WeakMap();
+  }
+  readableStreams.set(controller.stream, controller);
+}
+
+export function getReadableStream<T>(
+  result: Result<T>,
+  stream: Object,
+): void | ResultStreamController<any> {
+  const readableStreams = result.readableStreams;
+  return readableStreams === null ? undefined : readableStreams.get(stream);
+}
+
+export function setAsyncIterable<T>(
+  result: Result<T>,
+  controller: AsyncIterableController<any>,
+): void {
+  let asyncIterables = result.asyncIterables;
+  if (asyncIterables === null) {
+    result.asyncIterables = asyncIterables = new WeakMap();
+  }
+  asyncIterables.set(controller.iterable, controller);
+}
+
+export function getAsyncIterable<T>(
+  result: Result<T>,
+  iterable: Object,
+): void | AsyncIterableController<any> {
+  const asyncIterables = result.asyncIterables;
+  return asyncIterables === null ? undefined : asyncIterables.get(iterable);
 }

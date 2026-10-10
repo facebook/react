@@ -10,11 +10,15 @@
 import type {
   Input,
   InputThenableReader,
+  InputSequenceReader,
+  InputAsyncIterableReader,
 } from './ReactFlightResultSerializationServer';
 import type {ReactClientValue} from './ReactFlightResultServer';
-import type {Result} from 'shared/ReactFlightResult';
+import type {AsyncIterableController} from 'shared/ReactFlightResultAsyncIterable';
+import type {ResultStreamController} from 'shared/ReactFlightResultReadableStream';
+import type {ErrorReference, Result} from 'shared/ReactFlightResult';
 import type {HintQueue} from 'shared/ReactFlightResult';
-import type {ResultModel} from 'shared/ReactFlightResultModel';
+import type {Thenable} from 'shared/ReactTypes';
 import {
   getRoot,
   getHintQueue,
@@ -23,6 +27,8 @@ import {
   getErrorReference,
   getValueReference,
   getCollectionEntries,
+  getAsyncIterable,
+  getReadableStream,
   getIteratorEntries,
   getServerReference,
   getTemporaryReferenceSet,
@@ -33,7 +39,7 @@ import noop from 'shared/noop';
 
 function subscribeToThenable(
   result: Result<ReactClientValue>,
-  thenable: ResultModel<ReactClientValue>,
+  thenable: Thenable<ReactClientValue>,
   reader: InputThenableReader,
 ): () => void {
   if (isHalted(result, thenable)) {
@@ -96,6 +102,26 @@ function subscribeToThenable(
 export function createInput(result: Result<ReactClientValue>): Input {
   return {
     root: getRoot(result),
+    getReadableStream(value) {
+      const source = getReadableStream(result, value);
+      return source === undefined
+        ? undefined
+        : {
+            isByteStream: source.isByteStream,
+            subscribe: reader =>
+              subscribeToSequence(result, value, source, reader),
+          };
+    },
+    getAsyncIterable(value) {
+      const source = getAsyncIterable(result, value);
+      return source === undefined
+        ? undefined
+        : {
+            isIterator: source.isIterator,
+            subscribe: reader =>
+              subscribeToAsyncIterable(result, value, source, reader),
+          };
+    },
     getIteratorEntries: value => getIteratorEntries(result, value),
     temporaryReferences: getTemporaryReferenceSet(result),
     getServerReference: value => getServerReference(result, value),
@@ -143,4 +169,134 @@ export function createInput(result: Result<ReactClientValue>): Input {
       return detach;
     },
   };
+}
+
+function subscribeToSequence(
+  result: Result<any>,
+  model: Object,
+  source: ResultStreamController<any>,
+  reader: InputSequenceReader,
+): () => void {
+  const entries: Array<Promise<any>> = [];
+  let nextEntryIndex = 0;
+  let reading = false;
+  let draining = false;
+  let active = true;
+  let finish: null | (() => void) = null;
+  let unsubscribeSource = noop;
+  let unsubscribeEntry = noop;
+
+  function detach(): void {
+    active = false;
+    entries.length = 0;
+    unsubscribeSource();
+    unsubscribeEntry();
+  }
+
+  function error(reason: mixed, reference: void | ErrorReference): void {
+    if (active) {
+      detach();
+      reader.error(reason, reference);
+    }
+  }
+
+  function halt(): void {
+    if (active) {
+      detach();
+      reader.halt();
+    }
+  }
+
+  function readNext(): void {
+    if (!active || reading || draining) {
+      return;
+    }
+    draining = true;
+    try {
+      while (active && !reading) {
+        if (nextEntryIndex >= entries.length) {
+          if (finish !== null) {
+            finish();
+          }
+          break;
+        }
+        const entry = entries[nextEntryIndex++];
+        if (nextEntryIndex === entries.length) {
+          entries.length = 0;
+          nextEntryIndex = 0;
+        }
+        reading = true;
+        const unsubscribe = subscribeToThenable(result, entry, {
+          resolve(value) {
+            if (!active) {
+              return;
+            }
+            reading = false;
+            unsubscribeEntry = noop;
+            reader.progress({value});
+            readNext();
+          },
+          reject(reason, reference) {
+            if (!active) {
+              return;
+            }
+            reading = false;
+            unsubscribeEntry = noop;
+            reader.rejectEntry(reason, reference);
+            readNext();
+          },
+          halt,
+        });
+        if (!active || !reading) {
+          unsubscribe();
+        } else {
+          unsubscribeEntry = unsubscribe;
+        }
+      }
+    } finally {
+      draining = false;
+    }
+  }
+
+  unsubscribeSource = source.subscribe({
+    enqueue(entry) {
+      if (active) {
+        entries.push(entry);
+        readNext();
+      }
+    },
+    close() {
+      finish = () => {
+        detach();
+        reader.progress({done: true, value: undefined});
+      };
+      readNext();
+    },
+    error(reason) {
+      finish = () => error(reason, getErrorReference(result, model));
+      readNext();
+    },
+    halt() {
+      finish = halt;
+      readNext();
+    },
+  });
+  if (!active) {
+    unsubscribeSource();
+  }
+  return detach;
+}
+
+function subscribeToAsyncIterable(
+  result: Result<any>,
+  model: Object,
+  source: AsyncIterableController<any>,
+  reader: InputAsyncIterableReader,
+): () => void {
+  return source.subscribe({
+    enqueue: reader.enqueue,
+    close: reader.close,
+    error: reason => reader.error(reason, getErrorReference(result, model)),
+    halt: reader.halt,
+  });
 }

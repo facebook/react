@@ -9,6 +9,8 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Result, ModelReference} from 'shared/ReactFlightResult';
+import {createAsyncIterable} from 'shared/ReactFlightResultAsyncIterable';
+import {createReadableStream} from 'shared/ReactFlightResultReadableStream';
 import type {ResultModel} from 'shared/ReactFlightResultModel';
 import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences';
 import {
@@ -40,6 +42,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
   getIteratorFn,
+  ASYNC_ITERATOR,
   REACT_FRAGMENT_TYPE,
   REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
@@ -63,6 +66,8 @@ import {
   createValueReference,
   getValueReference,
   markFormDataWithBlobs,
+  setAsyncIterable,
+  setReadableStream,
   setIteratorEntries,
   getIteratorEntries,
   setServerReference,
@@ -495,6 +500,17 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
       result = {
         [Symbol.iterator]: function () {
           return iteratorFn.call(iterableChild) as any;
+        },
+      };
+    } else if (
+      typeof (result as any)[ASYNC_ITERATOR] === 'function' &&
+      (typeof ReadableStream !== 'function' ||
+        !(result instanceof ReadableStream))
+    ) {
+      const iterableChild: any = result;
+      result = {
+        [ASYNC_ITERATOR]: function () {
+          return iterableChild[ASYNC_ITERATOR]();
         },
       };
     }
@@ -1315,6 +1331,22 @@ function renderModelDestructive(
       value as any,
     );
   }
+  if (typeof ReadableStream === 'function' && value instanceof ReadableStream) {
+    return renderModelReference(
+      task,
+      renderReadableStream(request, task, value),
+    );
+  }
+  const getAsyncIterator = (value as any)[ASYNC_ITERATOR];
+  if (typeof getAsyncIterator === 'function') {
+    const model = renderAsyncFragment(
+      request,
+      task,
+      value as any,
+      getAsyncIterator,
+    );
+    return renderModelReference(task, model);
+  }
   if (Object.getPrototypeOf(value) !== ObjectPrototype) {
     throw new Error('Not implemented.');
   }
@@ -1780,7 +1812,8 @@ function getRenderedModels(
       isArray(value) ||
       (!(value instanceof Map) &&
         !(value instanceof Set) &&
-        getIteratorFn(value) !== null))
+        (getIteratorFn(value) !== null ||
+          typeof (value as any)[ASYNC_ITERATOR] === 'function')))
   ) {
     let keyedModels = request.renderedKeyedModels;
     if (keyedModels === null) {
@@ -2666,6 +2699,183 @@ function finishAbort(
   }
 }
 
+function renderAsyncIterable(
+  request: Request,
+  task: Task,
+  iterable: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
+): ReactClientValue {
+  const controller = createAsyncIterable<ReactClientValue>(
+    iterable === iterator,
+  );
+  const streamTask = createTask(
+    request,
+    task.model,
+    null,
+    false,
+    task.formatContext,
+  );
+  const resolvedIterable = controller.iterable;
+  setRenderedModel(
+    request.modelEntries,
+    iterable as any,
+    resolvedIterable as any,
+  );
+  setAsyncIterable(request.result, controller);
+
+  function progress(entry: IteratorResult<ReactClientValue, ReactClientValue>) {
+    if (streamTask.status !== PENDING) {
+      return;
+    }
+    const entryTask = createTask(
+      request,
+      entry.value,
+      null,
+      false,
+      entry.done ? createRootFormatContext() : streamTask.formatContext,
+    );
+    if (entry.done) {
+      streamTask.status = COMPLETED;
+      request.abortableTasks.delete(streamTask);
+      request.cacheController.signal.removeEventListener(
+        'abort',
+        abortIterable,
+      );
+      controller.close(entryTask.promise as any);
+    } else {
+      controller.enqueue(entryTask.promise as any);
+    }
+    request.pingedTasks.push(entryTask);
+    performWork(request);
+    if (!entry.done && streamTask.status === PENDING) {
+      next();
+    }
+  }
+
+  function throwIntoIterator(reason: mixed): void {
+    if (typeof (iterator as any).throw === 'function') {
+      try {
+        // $FlowFixMe[prop-missing] The optional iterator method accepts the reason.
+        iterator.throw(reason).then(noop, noop);
+      } catch (x) {
+        // The stream already contains the original error.
+      }
+    }
+  }
+
+  function error(reason: mixed): void {
+    if (streamTask.status !== PENDING) {
+      return;
+    }
+    request.cacheController.signal.removeEventListener('abort', abortIterable);
+    try {
+      erroredTask(request, streamTask, reason);
+      copyErrorReference(request.result, resolvedIterable, streamTask.promise);
+      controller.error(reason);
+    } catch (callbackError) {
+      controller.error(callbackError);
+      fatalError(request, callbackError);
+    } finally {
+      throwIntoIterator(reason);
+      scheduleMicrotask(() => performWork(request));
+    }
+  }
+
+  function abortIterable(): void {
+    const signal = request.cacheController.signal;
+    signal.removeEventListener('abort', abortIterable);
+    const reason = signal.reason;
+    if (request.type === PRERENDER) {
+      markHalted(request.result, resolvedIterable);
+      controller.halt();
+    } else {
+      streamTask.promise.then(noop, abortError => {
+        copyErrorReference(
+          request.result,
+          resolvedIterable,
+          streamTask.promise,
+        );
+        controller.error(abortError);
+      });
+    }
+    throwIntoIterator(reason);
+  }
+
+  function next(): void {
+    try {
+      iterator.next().then(progress, error);
+    } catch (x) {
+      error(x);
+    }
+  }
+
+  request.cacheController.signal.addEventListener('abort', abortIterable);
+  next();
+  return resolvedIterable as any;
+}
+
+function renderAsyncFragment(
+  request: Request,
+  task: Task,
+  children: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  getAsyncIterator: () => $AsyncIterator<
+    ReactClientValue,
+    ReactClientValue,
+    void,
+  >,
+): ReactClientValue {
+  const keyPath = task.keyPath;
+  const implicitSlot = task.implicitSlot;
+  task.keyPath = null;
+  task.implicitSlot = false;
+  const existingIterable = getRenderedModel(request.modelEntries, children);
+  const resolvedIterable =
+    existingIterable === undefined || existingIterable === task.promise
+      ? renderAsyncIterable(
+          request,
+          task,
+          children,
+          getAsyncIterator.call(children),
+        )
+      : existingIterable;
+  if (keyPath !== null) {
+    const props = {children: resolvedIterable};
+    let fragment: ReactElement;
+    if (__DEV__) {
+      fragment = {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: REACT_FRAGMENT_TYPE,
+        key: keyPath,
+        props,
+        _owner: null,
+        _store: {validated: 0},
+      } as any;
+      Object.defineProperties(fragment, {
+        ref: {value: null},
+        _debugInfo: {value: null, writable: true},
+        _debugStack: {value: null, writable: true},
+        _debugTask: {value: null, writable: true},
+      });
+    } else {
+      fragment = {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: REACT_FRAGMENT_TYPE,
+        key: keyPath,
+        ref: null,
+        props,
+      } as any;
+    }
+    const resolvedModel = implicitSlot ? [fragment as any] : (fragment as any);
+    setRenderedModel(
+      getRenderedModels(request, children, keyPath, implicitSlot),
+      children,
+      resolvedModel,
+    );
+    return resolvedModel;
+  }
+  return resolvedIterable;
+}
+
 export function attachAbortSignal(request: Request, signal: AbortSignal): void {
   if (signal.aborted) {
     abort(request, signal.reason);
@@ -3107,4 +3317,190 @@ function renderServerReference(request: Request, reference: Object): Object {
   setRenderedModel(request.modelEntries, reference, copy);
   pingTask(request, newTask);
   return copy;
+}
+
+function renderReadableStream(
+  request: Request,
+  task: Task,
+  stream: ReadableStream,
+): ReactClientValue {
+  // $FlowFixMe[prop-missing] This is a Node.js extension.
+  let supportsBYOB: void | boolean = stream.supportsBYOB;
+  if (supportsBYOB === undefined) {
+    try {
+      // $FlowFixMe[extra-arg] This argument is accepted.
+      stream.getReader({mode: 'byob'}).releaseLock();
+      supportsBYOB = true;
+    } catch (x) {
+      supportsBYOB = false;
+    }
+  }
+  const isByteStream: boolean = supportsBYOB;
+  const reader = stream.getReader();
+  const controller = createReadableStream<ReactClientValue>(isByteStream);
+  const streamTask = createTask(
+    request,
+    task.model,
+    task.keyPath,
+    task.implicitSlot,
+    task.formatContext,
+  );
+  const resolvedStream = controller.stream;
+  setRenderedModel(request.modelEntries, stream, resolvedStream);
+  setReadableStream(request.result, controller);
+
+  function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
+    if (streamTask.status !== PENDING) {
+      return;
+    }
+    if (entry.done) {
+      streamTask.status = COMPLETED;
+      request.abortableTasks.delete(streamTask);
+      request.cacheController.signal.removeEventListener('abort', abortStream);
+      controller.close();
+      scheduleMicrotask(() => performWork(request));
+      return;
+    }
+    let entryTask: Task | null = null;
+    try {
+      streamTask.model = entry.value;
+      if (isByteStream) {
+        const value = renderModelDestructive(
+          request,
+          streamTask,
+          emptyRoot,
+          '',
+          entry.value,
+        );
+        controller.enqueue(Promise.resolve(value));
+      } else {
+        entryTask = createTask(
+          request,
+          entry.value,
+          streamTask.keyPath,
+          streamTask.implicitSlot,
+          streamTask.formatContext,
+        );
+        controller.enqueue(entryTask.promise as any);
+        tryStreamTask(request, entryTask);
+      }
+      if (streamTask.status === PENDING) {
+        reader.read().then(progress, error);
+      }
+    } catch (x) {
+      error(x);
+      if (entryTask !== null && entryTask.status === RENDERING) {
+        copyErrorReference(
+          request.result,
+          entryTask.promise,
+          streamTask.promise,
+        );
+        entryTask.status = ERRORED;
+        entryTask.reject(x);
+        request.abortableTasks.delete(entryTask);
+      }
+    }
+  }
+
+  function cancelReader(reason: mixed): void {
+    // $FlowFixMe[incompatible-type] Stream cancellation accepts any reason.
+    reader.cancel(reason).then(noop, noop);
+  }
+
+  function error(reason: mixed): void {
+    if (streamTask.status !== PENDING) {
+      return;
+    }
+    request.cacheController.signal.removeEventListener('abort', abortStream);
+    try {
+      erroredTask(request, streamTask, reason);
+      copyErrorReference(request.result, resolvedStream, streamTask.promise);
+      controller.error(reason);
+    } catch (callbackError) {
+      controller.error(callbackError);
+      fatalError(request, callbackError);
+    } finally {
+      cancelReader(reason);
+      scheduleMicrotask(() => performWork(request));
+    }
+  }
+
+  function abortStream(): void {
+    const signal = request.cacheController.signal;
+    signal.removeEventListener('abort', abortStream);
+    const reason = signal.reason;
+    if (request.type === PRERENDER) {
+      markHalted(request.result, resolvedStream);
+      controller.halt();
+    } else {
+      streamTask.promise.then(noop, abortError => {
+        copyErrorReference(request.result, resolvedStream, streamTask.promise);
+        controller.error(abortError);
+      });
+    }
+    cancelReader(reason);
+  }
+
+  request.cacheController.signal.addEventListener('abort', abortStream);
+  reader.read().then(progress, error);
+  return resolvedStream;
+}
+
+function tryStreamTask(request: Request, task: Task): void {
+  const parentSerializedSize = serializedSize;
+  const prevDispatcher = ReactSharedInternals.H;
+  ReactSharedInternals.H = HooksDispatcher;
+  const prevCache = setCurrentCache(request);
+  prepareToUseHooksForRequest(request);
+  task.status = RENDERING;
+  try {
+    const value = resolveModel(request, task, emptyRoot, '', task.model);
+    const model = value;
+    if (request.status === CLOSED) {
+      return;
+    }
+    if (enableTaint) {
+      validateDeferredBlobs(request);
+    }
+    const outlinedModels = request.outlinedModels;
+    if (
+      outlinedModels !== null &&
+      waitForOutlinedModel(request, task, model, outlinedModels)
+    ) {
+      return;
+    }
+    completeTask(request, task, model);
+  } catch (error) {
+    if (request.status === ABORTING) {
+      abortTask(request, task);
+      return;
+    }
+    throw error;
+  } finally {
+    modelRoot = null;
+    try {
+      if (enableTaint) {
+        validateDeferredBlobs(request);
+      }
+      if (request.status !== CLOSED && request.abortableTasks.size === 0) {
+        request.status = CLOSED;
+        closeHints(request.result);
+        completeResult(request.result);
+        if (enableTaint) {
+          cleanupTaintQueue(request);
+        }
+        request.cacheController.abort(
+          new Error(
+            'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
+          ),
+        );
+        request.onAllReady();
+      }
+    } finally {
+      serializedSize = parentSerializedSize;
+      ReactSharedInternals.H = prevDispatcher;
+      resetHooksForRequest();
+      setCurrentCache(prevCache);
+    }
+  }
 }

@@ -123,6 +123,21 @@ type Task = {
   status: 0 | 1 | 3 | 4 | 6,
   returnedTupleReference: null | string,
 };
+export type InputSequenceEntry = {done?: boolean, value: ReactClientValue};
+export type InputSequenceReader = {
+  progress: InputSequenceEntry => void,
+  error: (mixed, void | ErrorReference) => void,
+  rejectEntry: (mixed, void | ErrorReference) => void,
+  halt: () => void,
+};
+
+export type InputAsyncIterableReader = {
+  enqueue: (Promise<ReactClientValue>, boolean) => void,
+  close: () => void,
+  error: (mixed, void | ErrorReference) => void,
+  halt: () => void,
+};
+
 export type InputThenableReader = {
   halt: () => void,
   resolve: ReactClientValue => void,
@@ -140,6 +155,14 @@ type ModelParent = ReactClientObject | $ReadOnlyArray<ReactClientValue>;
 
 export type Input = {
   +root: ResultModel<ReactClientValue>,
+  getReadableStream: Object => void | {
+    isByteStream: boolean,
+    subscribe: InputSequenceReader => () => void,
+  },
+  getAsyncIterable: Object => void | {
+    isIterator: boolean,
+    subscribe: InputAsyncIterableReader => () => void,
+  },
   getIteratorEntries: Object => void | $ReadOnlyArray<mixed>,
   temporaryReferences: void | TemporaryReferenceSet,
   getServerReference: Object => void | ServerReferenceMetadata,
@@ -477,7 +500,10 @@ function renderModelDestructive(
           (typeof Blob === 'function' && value instanceof Blob) ||
           value instanceof ArrayBuffer ||
           ArrayBuffer.isView(value) ||
-          (input !== null && input.getIteratorEntries(value) !== undefined) ||
+          (input !== null &&
+            (input.getReadableStream(value) !== undefined ||
+              input.getAsyncIterable(value) !== undefined ||
+              input.getIteratorEntries(value) !== undefined)) ||
           getPrototypeOf(value) === ObjectPrototype))
     ) {
       const objectReference = renderObjectReference(
@@ -603,6 +629,12 @@ function renderModelDestructive(
         throw new Error('A Result must record iterators before serialization.');
       }
       return serializeIterator(request, entries as any);
+    }
+    if (input !== null && input.getReadableStream(value) !== undefined) {
+      return serializeReadableStream(request, task, value);
+    }
+    if (input !== null && input.getAsyncIterable(value) !== undefined) {
+      return serializeAsyncIterable(request, task, value);
     }
     return value as any;
   }
@@ -1933,4 +1965,305 @@ function serializeServerReferenceID(id: number): string {
 
 function serializeServerObjectReferenceID(id: number): string {
   return '$H' + id.toString(16);
+}
+
+function emitChunk(
+  request: Request,
+  task: Task,
+  value: ReactClientValue,
+): void {
+  const id = task.id;
+  // For certain types we have special types, we typically outlined them but
+  // we can emit them directly for this row instead of through an indirection.
+  // $FlowFixMe[invalid-compare]
+  if (typeof value === 'string' && byteLengthOfChunk !== null) {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
+    emitTextChunk(request, id, value);
+    return;
+  }
+  const input = request.input;
+  const kind =
+    value !== null && typeof value === 'object' && input !== null
+      ? input.getModelInfo(value) & MODEL_KIND_MASK
+      : 0;
+  if (kind === 0) {
+    if (
+      enableFlightObjectReferences &&
+      typeof value === 'object' &&
+      value !== null &&
+      isServerReference(value)
+    ) {
+      // Streamed values reach this function before model serialization. Keep
+      // registered binary objects opaque instead of emitting their bytes.
+      const json = JSON.stringify(
+        serializeServerReference(request, value as any),
+      );
+      emitModelChunk(request, id, json);
+      return;
+    }
+    if (value instanceof ArrayBuffer) {
+      emitTypedArrayChunk(request, id, 'A', new Uint8Array(value));
+      return;
+    }
+    if (value instanceof Int8Array) {
+      // char
+      emitTypedArrayChunk(request, id, 'O', value);
+      return;
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      emitTypedArrayChunk(request, id, 'o', value);
+      return;
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      emitTypedArrayChunk(request, id, 'U', value);
+      return;
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      emitTypedArrayChunk(request, id, 'S', value);
+      return;
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      emitTypedArrayChunk(request, id, 's', value);
+      return;
+    }
+    if (value instanceof Int32Array) {
+      // long
+      emitTypedArrayChunk(request, id, 'L', value);
+      return;
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      emitTypedArrayChunk(request, id, 'l', value);
+      return;
+    }
+    if (value instanceof Float32Array) {
+      // float
+      emitTypedArrayChunk(request, id, 'G', value);
+      return;
+    }
+    if (value instanceof Float64Array) {
+      // double
+      emitTypedArrayChunk(request, id, 'g', value);
+      return;
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      emitTypedArrayChunk(request, id, 'M', value);
+      return;
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      emitTypedArrayChunk(request, id, 'm', value);
+      return;
+    }
+    if (value instanceof DataView) {
+      emitTypedArrayChunk(request, id, 'V', value);
+      return;
+    }
+  }
+  // For anything else we need to try to serialize it using JSON.
+  // We resolve the model tree first in pure JS to avoid the C++->JS boundary
+  // overhead of JSON.stringify's replacer callback.
+  const resolvedModel = resolveModel(request, task, {'': value}, '', value);
+  // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+  const json: string = JSON.stringify(resolvedModel);
+  emitModelChunk(request, task.id, json);
+}
+
+function serializeReadableStream(
+  request: Request,
+  task: Task,
+  stream: Object,
+): string {
+  const input = request.input;
+  const source = input === null ? undefined : input.getReadableStream(stream);
+  if (source === undefined) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error('A Result must record streams before serialization.');
+  }
+  const isByteStream = source.isByteStream;
+
+  const streamTask = createTask(request, task.model, request.abortableTasks);
+  // The task represents the Stop row. This adds a Start row.
+  request.pendingChunks++;
+  const startStreamRow =
+    streamTask.id.toString(16) + ':' + (isByteStream ? 'r' : 'R') + '\n';
+  request.writtenObjects.set(stream, serializeByValueID(streamTask.id));
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  function progress(entry: InputSequenceEntry): void {
+    if (streamTask.status !== PENDING) {
+      return;
+    }
+    if (entry.done) {
+      streamTask.status = COMPLETED;
+      const endStreamRow = streamTask.id.toString(16) + ':C\n';
+      request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      request.abortableTasks.delete(streamTask);
+      enqueueFlush(request);
+    } else {
+      request.pendingChunks++;
+      let pendingEntry = true;
+      try {
+        streamTask.model = entry.value;
+        if (isByteStream) {
+          const chunk: Uint8Array = streamTask.model as any;
+          emitTypedArrayChunk(request, streamTask.id, 'b', chunk);
+        } else {
+          tryStreamTask(request, streamTask);
+        }
+        pendingEntry = false;
+        enqueueFlush(request);
+      } catch (reason) {
+        if (pendingEntry) {
+          request.pendingChunks--;
+        }
+        error(reason, undefined);
+      }
+    }
+  }
+  function error(reason: mixed, reference: void | ErrorReference): void {
+    if (streamTask.status === PENDING) {
+      try {
+        erroredInputTask(request, streamTask, reason, reference);
+        scheduleMicrotask(() => flushCompletedChunks(request));
+      } catch (fatal) {
+        fatalError(request, fatal);
+      }
+    }
+  }
+
+  subscribeInput(request, detach =>
+    source.subscribe({
+      progress(entry) {
+        progress(entry);
+        if (streamTask.status !== PENDING) {
+          detach();
+        }
+      },
+      error(reason, reference) {
+        detach();
+        error(reason, reference);
+      },
+      rejectEntry(reason, reference) {
+        detach();
+        error(reason, reference);
+      },
+      halt() {
+        detach();
+        if (streamTask.status === PENDING) {
+          haltInputTask(request, streamTask);
+        }
+      },
+    }),
+  );
+  return serializeByValueID(streamTask.id);
+}
+
+function tryStreamTask(request: Request, task: Task): void {
+  const previousModelRoot = modelRoot;
+  const parentSerializedSize = serializedSize;
+  try {
+    modelRoot = null;
+    emitChunk(request, task, task.model);
+  } finally {
+    modelRoot = previousModelRoot;
+    serializedSize = parentSerializedSize;
+  }
+}
+
+function haltInputTask(request: Request, task: Task): void {
+  request.abortableTasks.delete(task);
+  haltTask(task, request);
+  finishHaltedTask(task, request);
+  enqueueFlush(request);
+}
+
+function serializeAsyncIterable(
+  request: Request,
+  task: Task,
+  iterable: Object,
+): string {
+  const input = request.input;
+  const source = input === null ? undefined : input.getAsyncIterable(iterable);
+  if (source === undefined) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'A Result must record async iterables before serialization.',
+    );
+  }
+  const streamTask = createTask(request, task.model, request.abortableTasks);
+  // The task represents the Stop row. This adds a Start row.
+  request.pendingChunks++;
+  const startStreamRow =
+    streamTask.id.toString(16) + ':' + (source.isIterator ? 'x' : 'X') + '\n';
+  request.writtenObjects.set(iterable, serializeByValueID(streamTask.id));
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  function error(reason: mixed, reference: void | ErrorReference): void {
+    if (streamTask.status === PENDING) {
+      try {
+        erroredInputTask(request, streamTask, reason, reference);
+        scheduleMicrotask(() => flushCompletedChunks(request));
+      } catch (fatal) {
+        fatalError(request, fatal);
+      }
+    }
+  }
+
+  subscribeInput(request, detach =>
+    source.subscribe({
+      enqueue(entry, done) {
+        if (streamTask.status !== PENDING) {
+          return;
+        }
+        try {
+          const entryId = serializeThenable(request, entry as any);
+          const reference = serializeByValueID(entryId);
+          if (done) {
+            streamTask.status = COMPLETED;
+            const endStreamRow =
+              streamTask.id.toString(16) +
+              ':C' +
+              JSON.stringify(reference) +
+              '\n';
+            request.completedRegularChunks.push(stringToChunk(endStreamRow));
+            request.abortableTasks.delete(streamTask);
+            detach();
+          } else {
+            request.pendingChunks++;
+            emitModelChunk(request, streamTask.id, JSON.stringify(reference));
+          }
+          enqueueFlush(request);
+        } catch (reason) {
+          detach();
+          error(reason, undefined);
+        }
+      },
+      close() {
+        detach();
+      },
+      error(reason, reference) {
+        detach();
+        error(reason, reference);
+      },
+      halt() {
+        detach();
+        if (streamTask.status === PENDING) {
+          haltInputTask(request, streamTask);
+        }
+      },
+    }),
+  );
+  return serializeByValueID(streamTask.id);
 }
