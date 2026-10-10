@@ -8,6 +8,7 @@
  */
 
 import type {Writable} from 'stream';
+import {textEncoder} from 'react-server/src/ReactServerStreamConfigNode';
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {
@@ -84,4 +85,76 @@ export function renderToPipeableStream(
       abort(request, reason);
     },
   };
+}
+
+export type ReadableStreamOptions = {
+  onError?: mixed => ?string,
+  signal?: AbortSignal,
+  temporaryReferences?: TemporaryReferenceSet,
+};
+
+function createFakeWritableFromReadableStreamController(
+  controller: ReadableStreamController,
+): Writable {
+  // The current host config expects a Writable so we create
+  // a fake writable for now to push into the Readable.
+  return {
+    write(chunk: string | Uint8Array) {
+      if (typeof chunk === 'string') {
+        chunk = textEncoder.encode(chunk);
+      }
+      controller.enqueue(chunk);
+      // in web streams there is no backpressure so we can always write more
+      return true;
+    },
+    end() {
+      controller.close();
+    },
+    destroy(error) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof controller.error === 'function') {
+        // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
+        controller.error(error);
+      } else {
+        controller.close();
+      }
+    },
+  } as any;
+}
+
+export function renderToReadableStream(
+  input: Input,
+  webpackMap: ClientManifest,
+  options?: ReadableStreamOptions,
+): ReadableStream {
+  const request = createRequest(
+    input,
+    webpackMap,
+    options ? options.onError : undefined,
+    options ? options.temporaryReferences : undefined,
+  );
+  if (options && options.signal) {
+    attachAbortSignal(request, options.signal);
+  }
+  let writable: Writable;
+  const stream = new ReadableStream(
+    {
+      type: 'bytes',
+      start: (controller): ?Promise<void> => {
+        writable = createFakeWritableFromReadableStreamController(controller);
+        startWork(request);
+      },
+      pull: (controller): ?Promise<void> => {
+        startFlowing(request, writable);
+      },
+      cancel: (reason): ?Promise<void> => {
+        stopFlowing(request);
+        abort(request, reason);
+      },
+    },
+    // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+    // $FlowFixMe[incompatible-type]
+    {highWaterMark: 0},
+  );
+  return stream;
 }

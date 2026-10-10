@@ -266,6 +266,21 @@ describe('ReactFlightResultDOM', () => {
     };
   }
 
+  function renderResultToReadableStream(model, manifest, options) {
+    const result = ReactServerDOMServer.renderToResult(model, options);
+    return ReactServerDOMServer.renderResultToReadableStream(
+      result,
+      manifest,
+      options,
+    );
+  }
+
+  function renderFizzToReadableStream(model) {
+    const {writable, readable} = getTestStream();
+    ReactDOMFizzServer.renderToPipeableStream(model).pipe(writable);
+    return readable;
+  }
+
   function createResponse(result, options) {
     return ReactServerDOMClientNode.createFromResult(result, {
       clientManifest: webpackMap,
@@ -4524,7 +4539,7 @@ describe('ReactFlightResultDOM', () => {
     return {searchParams, usedSearchParams};
   }
 
-  it.skip('emits the value of a weak-pending thenable that settles during the render', async () => {
+  it('emits the value of a weak-pending thenable that settles during the render', async () => {
     const {searchParams, usedSearchParams} = createSearchParams({q: 'react'});
 
     function Page() {
@@ -4533,31 +4548,26 @@ describe('ReactFlightResultDOM', () => {
 
     let response;
     await serverAct(() => {
-      const stream = ReactServerDOMServer.renderToReadableStream({
+      const expanded = ReactServerDOMServer.renderToResult({
         usedSearchParams,
         root: <Page />,
       });
       // Start consuming immediately, like a server that pipes the response
       // while it renders.
-      response = ReactServerDOMClient.createFromReadableStream(stream, {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
-      });
+      response = createResponse(expanded);
     });
 
     const result = await response;
     expect(await result.usedSearchParams).toBe(true);
 
     const ssrStream = await serverAct(() =>
-      ReactDOMServer.renderToReadableStream(result.root),
+      renderFizzToReadableStream(result.root),
     );
     expect(await readResult(ssrStream)).toBe('<div>Results for react</div>');
   });
 
   // @gate enableFlightWeakThenables
-  it.skip('completes the response without waiting for a weak-pending thenable that never settles', async () => {
+  it('completes the response without waiting for a weak-pending thenable that never settles', async () => {
     const {searchParams, usedSearchParams} = createSearchParams({q: 'react'});
 
     function Page() {
@@ -4565,7 +4575,7 @@ describe('ReactFlightResultDOM', () => {
     }
 
     const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream({
+      renderResultToReadableStream({
         usedSearchParams,
         root: <Page />,
       }),
@@ -4601,7 +4611,7 @@ describe('ReactFlightResultDOM', () => {
     expect(raced).toBe('never accessed');
   });
 
-  it.skip('emits the value of a weak-pending thenable that settles while the response is still streaming', async () => {
+  it('emits the value of a weak-pending thenable that settles while the response is still streaming', async () => {
     const {searchParams, usedSearchParams} = createSearchParams({q: 'react'});
 
     let resolveData;
@@ -4612,7 +4622,7 @@ describe('ReactFlightResultDOM', () => {
     }
 
     const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream({
+      renderResultToReadableStream({
         usedSearchParams,
         root: <Results />,
       }),
@@ -4646,13 +4656,13 @@ describe('ReactFlightResultDOM', () => {
     expect(await result.usedSearchParams).toBe(true);
 
     const ssrStream = await serverAct(() =>
-      ReactDOMServer.renderToReadableStream(result.root),
+      renderFizzToReadableStream(result.root),
     );
     expect(await readResult(ssrStream)).toBe('<div>Results for react</div>');
   });
 
   // @gate !enableFlightWeakThenables
-  it.skip('treats a weak-pending thenable like a normal pending thenable when the flag is off', async () => {
+  it('treats a weak-pending thenable like a normal pending thenable when the flag is off', async () => {
     const {searchParams, usedSearchParams} = createSearchParams({q: 'react'});
 
     function Page() {
@@ -4660,7 +4670,7 @@ describe('ReactFlightResultDOM', () => {
     }
 
     const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream({
+      renderResultToReadableStream({
         usedSearchParams,
         root: <Page />,
       }),
@@ -4697,7 +4707,7 @@ describe('ReactFlightResultDOM', () => {
   });
 
   // @gate enableFlightWeakThenables
-  it.skip('supports linked lists of weak-pending thenables', async () => {
+  it('supports linked lists of weak-pending thenables', async () => {
     // Weak thenables compose recursively: the value that a weak-pending
     // thenable settles with can itself contain more weak-pending thenables.
     // A linked list of them forms an async sequence that never blocks the
@@ -4766,7 +4776,7 @@ describe('ReactFlightResultDOM', () => {
     });
 
     const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream({
+      renderResultToReadableStream({
         accessedParams,
         page: <Page />,
         pending,

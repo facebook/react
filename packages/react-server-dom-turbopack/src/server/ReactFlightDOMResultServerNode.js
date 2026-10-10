@@ -15,7 +15,11 @@ import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemp
 import {registerServerReference} from '../ReactFlightTurbopackReferences';
 import noop from 'shared/noop';
 import type {Result} from 'shared/ReactFlightResult';
-import type {PipeableStream} from './ReactFlightDOMResultSerializationServerNode';
+export type {Result} from 'shared/ReactFlightResult';
+import type {
+  PipeableStream,
+  ReadableStreamOptions,
+} from './ReactFlightDOMResultSerializationServerNode';
 import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import {
   createRequest,
@@ -25,7 +29,10 @@ import {
   attachAbortSignal,
 } from 'react-server/src/ReactFlightResultServer';
 import {createInput} from 'react-server/src/ReactFlightResultSerialization';
-import {renderToPipeableStream} from './ReactFlightDOMResultSerializationServerNode';
+import {
+  renderToPipeableStream,
+  renderToReadableStream,
+} from './ReactFlightDOMResultSerializationServerNode';
 
 // $FlowFixMe[method-unbinding]
 const FunctionBind = Function.prototype.bind;
@@ -132,4 +139,13 @@ export function renderResultToPipeableStream(
     options ? options.signal : undefined,
     options ? options.temporaryReferences : undefined,
   );
+}
+
+export function renderResultToReadableStream(
+  result: Result<ReactClientValue>,
+  turbopackMap: ClientManifest,
+  options?: ReadableStreamOptions,
+): ReadableStream {
+  const input = createInput(result);
+  return renderToReadableStream(input, turbopackMap, options);
 }

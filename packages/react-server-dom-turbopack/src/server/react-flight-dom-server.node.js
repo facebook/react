@@ -28,4 +28,5 @@ export {
   renderToResult,
   prerenderToResult,
   renderResultToPipeableStream,
+  renderResultToReadableStream,
 } from './ReactFlightDOMResultServerNode';
