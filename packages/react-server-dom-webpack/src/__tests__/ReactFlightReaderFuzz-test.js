@@ -3214,7 +3214,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
 
     if (__DEV__) {
       if (host === 'edge') {
-        it.skip(
+        it(
           'completes cyclic collection inputs across cached and delayed delivery (Edge DEV)',
           checkCyclicInputDelivery,
         );
@@ -3225,7 +3225,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
         );
       }
     } else {
-      it.skip(
+      it(
         'completes cyclic collection inputs across cached and delayed delivery (PROD)',
         checkCyclicInputDelivery,
       );
@@ -3661,7 +3661,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       watched.recheck();
     }
     if (__DEV__) {
-      it.skip(
+      it(
         'copies complete Set input exposed by separate Promises [DEV]',
         checkSeparatePromiseSet,
       );
@@ -3672,7 +3672,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       );
     }
     if (__DEV__ && host === 'edge') {
-      it.skip(
+      it(
         'copies complete Map input exposed by separate Promises [DEV Edge]',
         checkSeparatePromiseMap,
       );
@@ -4315,7 +4315,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       it.skip('Node DEV writer debug inspection consumes the iterator', () =>
         runCase(['iterator-field', 75, 'late', 2]));
     } else {
-      it.skip('preserves iterator contents outside Node DEV debug inspection', () =>
+      it('preserves iterator contents outside Node DEV debug inspection', () =>
         runCase(['iterator-field', 75, 'late', 2]));
     }
     it.skip('bytes seed=3 demand=after-service wrappers=0 [reader-binary-ownership]', () =>

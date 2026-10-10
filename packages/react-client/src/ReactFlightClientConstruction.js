@@ -8,12 +8,15 @@
  */
 
 import type {BlockedChunk, FlightStreamController} from './ReactFlightClient';
+import type {ReactDebugInfo} from 'shared/ReactTypes';
+
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import hasOwnProperty from 'shared/hasOwnProperty';
+
 const ObjectPrototype = Object.prototype;
-export const CONSTRUCTION_REFERENCE = 0;
-export const CONSTRUCTION_PUBLICATION = 1;
+
+export type DebugInfoSource = {+_debugInfo: ReactDebugInfo, ...};
 
 export type PendingInitializationHandler = {
   parent: null | InitializationHandler,
@@ -23,6 +26,7 @@ export type PendingInitializationHandler = {
   // for every other model.
   reason: null | FlightStreamController,
   deps: number,
+  debugSources: null | Array<DebugInfoSource>,
   errored: false,
 };
 export type ErroredInitializationHandler = {
@@ -32,6 +36,7 @@ export type ErroredInitializationHandler = {
   // The error the handler was rejected with.
   reason: mixed,
   deps: number,
+  debugSources: null | Array<DebugInfoSource>,
   errored: true,
 };
 export type InitializationHandler =
@@ -48,9 +53,13 @@ export function createInitializationHandler(
     value: null,
     reason: null,
     deps,
+    debugSources: null,
     errored: false,
   };
 }
+
+export const CONSTRUCTION_REFERENCE = 0;
+export const CONSTRUCTION_PUBLICATION = 1;
 
 export const CONSTRUCTION_PENDING = 0;
 export const CONSTRUCTION_INSTALLED = 1;
@@ -66,18 +75,31 @@ export type ConstructionFact<Listener> = {
   value: any,
   listeners: null | Array<Listener>,
   inputs: any,
+  // Some producers install both a transport tuple and its native view.
+  aliases: null | Array<{object: Object, key: string}>,
 };
 
+// Reserving a collection makes its identity available, but its carrier can
+// still be loading. Record whether its entries have been installed separately
+// from the identity. This does not describe the entries' reachable contents.
 export type ConstructionCollection<Listener> = {
   value: Set<any> | Map<any, any>,
   entries: ConstructionFact<Listener>,
   inputs: null | Array<any>,
 };
 
+// Keep all known inputs while a constructor waits. Subscribe to every missing
+// field so failure is reported even if another input is still loading.
 export type ConstructionInputs<Listener> = {
   values: any,
   pairs: boolean,
   waiting: null | Set<ConstructionFact<Listener>>,
+};
+
+export type ConstructionSequence = {
+  values: Array<any>,
+  output: Array<any>,
+  published: number,
 };
 
 export type ConstructionState<Listener> = {
@@ -85,6 +107,9 @@ export type ConstructionState<Listener> = {
   collections: null | WeakMap<Object, ConstructionCollection<Listener>>,
   heads: null | WeakMap<Object, ConstructionFact<Listener>>,
   publications: null | WeakMap<Object, Listener>,
+  sequences: null | WeakMap<Object, ConstructionSequence>,
+  debugLazies: null | WeakMap<Object, boolean>,
+  debugReferences: null | WeakMap<Object, Set<string>>,
   publicationQueue: Array<Listener>,
   draining: boolean,
   waking: number,
@@ -99,6 +124,9 @@ export function createConstructionState<
     collections: null,
     heads: null,
     publications: null,
+    sequences: null,
+    debugLazies: null,
+    debugReferences: null,
     publicationQueue: [],
     draining: false,
     waking: 0,
@@ -130,6 +158,7 @@ function createConstructionFact<Listener>(): ConstructionFact<Listener> {
     value: null,
     listeners: null,
     inputs: null,
+    aliases: null,
   };
 }
 
@@ -151,6 +180,48 @@ export function registerConstructionField<Listener>(
   fields.set(key, fact);
   state.unfinished++;
   return fact;
+}
+
+// An alias uses the same producer and settlement, not a second obligation.
+// The adapter must install every physical destination before settling it.
+export function aliasConstructionField<Listener>(
+  state: ConstructionState<Listener>,
+  source: Object,
+  sourceKey: string,
+  object: Object,
+  key: string,
+): void {
+  const sourceFields = state.fields.get(source);
+  const fact =
+    sourceFields === undefined ? undefined : sourceFields.get(sourceKey);
+  if (fact === undefined) {
+    return;
+  }
+  let fields = state.fields.get(object);
+  if (fields === undefined) {
+    fields = new Map();
+    state.fields.set(object, fields);
+  }
+  fields.set(key, fact);
+  if (fact.aliases === null) {
+    fact.aliases = [{object, key}];
+  } else {
+    fact.aliases.push({object, key});
+  }
+}
+
+function removeConstructionField<Listener>(
+  state: ConstructionState<Listener>,
+  object: Object,
+  key: string,
+): void {
+  const fields = state.fields.get(object);
+  if (fields !== undefined) {
+    fields.delete(key);
+    if (fields.size === 0) {
+      state.fields.delete(object);
+    }
+  }
 }
 
 export function subscribeConstructionFact<Listener>(
@@ -196,12 +267,13 @@ export function settleConstructionField<Listener>(
     state.unfinished--;
     // The producer has installed the value. Later readers can use the field
     // directly instead of going through this fact.
-    const fields = state.fields.get(parentObject);
-    if (fields !== undefined) {
-      fields.delete(key);
-      if (fields.size === 0) {
-        state.fields.delete(parentObject);
+    removeConstructionField(state, parentObject, key);
+    const aliases = fact.aliases;
+    if (aliases !== null) {
+      for (let i = 0; i < aliases.length; i++) {
+        removeConstructionField(state, aliases[i].object, aliases[i].key);
       }
+      fact.aliases = null;
     }
   }
   // Failed assignments remain visible to later selected-path readers.
@@ -321,6 +393,8 @@ export function subscribeConstructionFacts<Listener>(
   return waiting;
 }
 
+// A parsed model can have a usable identity while some of its fields load.
+// This record is private availability, not permission to publish its contents.
 export function installConstructionHead<Listener>(
   state: ConstructionState<Listener>,
   chunk: Object,
@@ -347,6 +421,45 @@ export function getConstructionHead<Listener>(
   return state.heads.get(chunk);
 }
 
+export function getConstructionSequence<Listener>(
+  state: ConstructionState<Listener>,
+  owner: Object,
+  output: Array<any>,
+): ConstructionSequence {
+  let sequences = state.sequences;
+  if (sequences === null) {
+    sequences = state.sequences = new WeakMap();
+  }
+  let sequence = sequences.get(owner);
+  if (sequence === undefined) {
+    sequence = {values: [], output, published: 0};
+    sequences.set(owner, sequence);
+    sequences.set(sequence.values, sequence);
+  }
+  return sequence;
+}
+
+// Each reserved slot has a producer before any work runs. Only a contiguous
+// installed prefix is visible; an out-of-order completion never creates holes.
+export function publishConstructionSequence<Listener>(
+  state: ConstructionState<Listener>,
+  sequence: ConstructionSequence,
+): void {
+  while (sequence.published < sequence.values.length) {
+    const i = sequence.published;
+    if (
+      getPendingConstructionField(state, sequence.values, '' + i) !== undefined
+    ) {
+      return;
+    }
+    sequence.output.push(sequence.values[i]);
+    sequence.published++;
+  }
+}
+
+// Follow ordinary contents, including known inputs behind a reserved identity.
+// Cycles add no obligation by themselves: each identity is examined once, and
+// every pending field or entries fact remains part of the missing frontier.
 export function readConstructionContents<Listener>(
   state: ConstructionState<Listener>,
   root: any,
