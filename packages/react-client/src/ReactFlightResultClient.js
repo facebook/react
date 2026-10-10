@@ -18,12 +18,15 @@ import type {
   ModuleLoading,
 } from './ReactFlightClientConfig';
 import {
+  getIteratorEntries,
   getRoot,
   getHintQueue,
   waitForHints,
   getErrorReference,
   isHalted,
+  hasFormDataBlobs,
   getValueReference,
+  getCollectionEntries,
   getModelInfo,
   MODEL_KIND_MASK,
   MODEL_OBJECT,
@@ -891,6 +894,79 @@ function readSpecialModel(response: Response, value: any): any {
     );
     return chunk;
   }
+  if (value instanceof Date) {
+    return value;
+  }
+  if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
+    return value;
+  }
+  if (value instanceof Map) {
+    const copy: Map<any, any> = new Map();
+    response._models.set(value, copy);
+    const model = getCollectionEntries(response._result, value);
+    if (model !== undefined) {
+      const entries = readModel(
+        response,
+        readModelReference(response, {root: model, parent: null, key: ''}),
+      );
+      for (let i = 0; i < entries.length; i++) {
+        copy.set(entries[i][0], entries[i][1]);
+      }
+      return copy;
+    }
+    value.forEach((child: any, key: any) => {
+      copy.set(readModel(response, key), readModel(response, child));
+    });
+    return copy;
+  }
+  if (value instanceof Set) {
+    const copy: Set<any> = new Set();
+    response._models.set(value, copy);
+    const model = getCollectionEntries(response._result, value);
+    if (model !== undefined) {
+      const entries = readModel(
+        response,
+        readModelReference(response, {root: model, parent: null, key: ''}),
+      );
+      for (let i = 0; i < entries.length; i++) {
+        copy.add(entries[i]);
+      }
+      return copy;
+    }
+    value.forEach((child: any) => {
+      copy.add(readModel(response, child));
+    });
+    return copy;
+  }
+  const iteratorEntries = getIteratorEntries(response._result, value);
+  if (iteratorEntries !== undefined) {
+    const copy: Array<any> = [];
+    const iterator = copy.values();
+    response._models.set(value, iterator);
+    for (let i = 0; i < iteratorEntries.length; i++) {
+      copy[i] = readModel(response, iteratorEntries[i]);
+    }
+    return iterator;
+  }
+  if (typeof FormData === 'function' && value instanceof FormData) {
+    if (!hasFormDataBlobs(response._result, value)) {
+      return value;
+    }
+    const formData: FormData = value;
+    const entries = Array.from(formData.entries());
+    const copy = new FormData();
+    response._models.set(value, copy);
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      copy.append(entry[0], readModel(response, entry[1]));
+    }
+    return copy;
+  }
+  if (typeof Blob === 'function' && value instanceof Blob) {
+    const copy = new Blob([value], {type: value.type});
+    response._models.set(value, copy);
+    return copy;
+  }
   if (getPrototypeOf(value) === ObjectPrototype) {
     return readObject(response, value);
   }
@@ -1175,6 +1251,12 @@ function scanModel(
       }
       return;
     }
+    if (value instanceof Date) {
+      return;
+    }
+    if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
+      return;
+    }
     if (
       value.$$typeof === REACT_ELEMENT_TYPE ||
       value.$$typeof === REACT_LAZY_TYPE ||
@@ -1337,11 +1419,47 @@ function scanModelFields(
     scanModelReference(response, value, reference, state, chunks);
     return;
   }
+  const collection =
+    kind === 0 ? getCollectionEntries(response._result, value) : undefined;
+  if (collection !== undefined) {
+    scanModelReference(
+      response,
+      value,
+      {root: collection, parent: null, key: ''},
+      state,
+      chunks,
+    );
+    return;
+  }
   if (kind === MODEL_ARRAY || (kind === 0 && isArray(value))) {
     for (let i = 0; i < value.length; i++) {
       scanModel(response, value[i], state, chunks);
     }
+  } else if (kind === 0 && value instanceof Map) {
+    const iterator = value.entries();
+    for (let entry = iterator.next(); !entry.done; entry = iterator.next()) {
+      scanModel(response, entry.value[0], state, chunks);
+      scanModel(response, entry.value[1], state, chunks);
+    }
+  } else if (kind === 0 && value instanceof Set) {
+    const iterator = value.values();
+    for (let entry = iterator.next(); !entry.done; entry = iterator.next()) {
+      scanModel(response, entry.value, state, chunks);
+    }
   } else {
+    if (kind === 0 && getPrototypeOf(value) !== ObjectPrototype) {
+      const entries = getIteratorEntries(response._result, value);
+      if (entries !== undefined) {
+        scanModel(response, entries, state, chunks);
+        return;
+      }
+      if (typeof FormData === 'function' && value instanceof FormData) {
+        return;
+      }
+      if (typeof Blob === 'function' && value instanceof Blob) {
+        return;
+      }
+    }
     const object: {[key: string]: any} = value;
     const keys = Object.keys(object);
     for (let i = 0; i < keys.length; i++) {

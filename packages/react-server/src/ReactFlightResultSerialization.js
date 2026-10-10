@@ -22,6 +22,8 @@ import {
   subscribeToResult,
   getErrorReference,
   getValueReference,
+  getCollectionEntries,
+  getIteratorEntries,
   getModelInfo,
   isHalted,
 } from 'shared/ReactFlightResult';
@@ -92,8 +94,10 @@ function subscribeToThenable(
 export function createInput(result: Result<ReactClientValue>): Input {
   return {
     root: getRoot(result),
+    getIteratorEntries: value => getIteratorEntries(result, value),
     getValueReference: value => getValueReference(result, value),
     getModelInfo: value => getModelInfo(result, value),
+    getCollectionEntries: value => getCollectionEntries(result, value),
     subscribeToThenable: (thenable, reader) =>
       subscribeToThenable(result, thenable, reader),
     subscribe(reader) {

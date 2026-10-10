@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -882,23 +883,19 @@ describe('ReactFlightResultDOM', () => {
   });
 
   describe('synchronous iteration', () => {
-    function clientReference(value) {
-      return Object.defineProperties(
-        function () {
-          throw new Error('Cannot call a client function from the server.');
-        },
-        {
-          $$typeof: {value: Symbol.for('react.client.reference')},
-          value: {value: value},
-        },
-      );
-    }
+    beforeEach(() => {
+      jest.resetModules();
+      __unmockReact();
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      act = require('internal-test-utils').act;
+    });
 
-    it.skip('can render an iterable as an array', async () => {
+    it('can render an iterable as an array', async () => {
       function ItemListClient(props) {
         return <span>{props.items}</span>;
       }
-      const ItemList = clientReference(ItemListClient);
+      const ItemList = clientExports(ItemListClient);
 
       function Items() {
         const iterable = {
@@ -913,24 +910,30 @@ describe('ReactFlightResultDOM', () => {
 
       const model = <Items />;
 
-      const transport = ReactNoopFlightServer.render(model);
+      const flightResult = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(model),
+      );
+      const response = createResponse(flightResult);
 
       await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+        ReactNoop.render(await response);
       });
 
       expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
     });
 
-    it.skip('can render an iterator as a single shot iterator', async () => {
+    it('can render an iterator as a single shot iterator', async () => {
       const iterator = (function* () {
         yield 'A';
         yield 'B';
         yield 'C';
       })();
 
-      const transport = ReactNoopFlightServer.render(iterator);
-      const result = await ReactNoopFlightClient.read(transport);
+      const flightResult = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(iterator),
+      );
+      const response = createResponse(flightResult);
+      const result = await response;
 
       // The iterator should be the same as itself.
       expect(result[Symbol.iterator]()).toBe(result);
@@ -940,11 +943,11 @@ describe('ReactFlightResultDOM', () => {
       expect(Array.from(result)).toEqual([]);
     });
 
-    it.skip('can render a Generator Server Component as a fragment', async () => {
+    it('can render a Generator Server Component as a fragment', async () => {
       function ItemListClient(props) {
         return <span>{props.children}</span>;
       }
-      const ItemList = clientReference(ItemListClient);
+      const ItemList = clientExports(ItemListClient);
 
       function* Items() {
         yield 'A';
@@ -958,10 +961,13 @@ describe('ReactFlightResultDOM', () => {
         </ItemList>
       );
 
-      const transport = ReactNoopFlightServer.render(model);
+      const flightResult = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(model),
+      );
+      const response = createResponse(flightResult);
 
       await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+        ReactNoop.render(await response);
       });
 
       expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
@@ -1182,7 +1188,7 @@ describe('ReactFlightResultDOM', () => {
     });
   });
 
-  it.skip('should be able to serialize any kind of typed array', async () => {
+  it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
     ]).buffer;
@@ -1201,40 +1207,32 @@ describe('ReactFlightResultDOM', () => {
       new BigUint64Array(buffer, 0),
       new DataView(buffer, 3),
     ];
-    const stream = await serverAct(() =>
-      passThrough(ReactServerDOMServer.renderToReadableStream(buffers)),
-    );
-    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      serverConsumerManifest: {
-        moduleMap: null,
-        moduleLoading: null,
-      },
-    });
+    const {writable, readable} = getTestStream();
+    const stream = await serverAct(() => renderResultToPipeableStream(buffers));
+    stream.pipe(writable);
+    const result =
+      await ReactServerDOMClient.createFromReadableStream(readable);
     expect(result).toEqual(buffers);
   });
 
-  it.skip('should be able to serialize a blob', async () => {
+  it('should be able to serialize a blob', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
     ]);
     const blob = new Blob([bytes, bytes], {
       type: 'application/x-test',
     });
-    const stream = await serverAct(() =>
-      passThrough(ReactServerDOMServer.renderToReadableStream(blob)),
-    );
-    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      serverConsumerManifest: {
-        moduleMap: null,
-        moduleLoading: null,
-      },
-    });
+    const {writable, readable} = getTestStream();
+    const stream = await serverAct(() => renderResultToPipeableStream(blob));
+    stream.pipe(writable);
+    const result =
+      await ReactServerDOMClient.createFromReadableStream(readable);
     expect(result instanceof Blob).toBe(true);
     expect(result.size).toBe(bytes.length * 2);
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  it.skip('can transport FormData (blobs)', async () => {
+  it('can transport FormData (blobs)', async () => {
     const bytes = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
     ]);
@@ -1249,15 +1247,13 @@ describe('ReactFlightResultDOM', () => {
     expect(formData.get('file') instanceof File).toBe(true);
     expect(formData.get('file').name).toBe('filename.test');
 
+    const {writable, readable} = getTestStream();
     const stream = await serverAct(() =>
-      passThrough(ReactServerDOMServer.renderToReadableStream(formData)),
+      renderResultToPipeableStream(formData),
     );
-    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      serverConsumerManifest: {
-        moduleMap: null,
-        moduleLoading: null,
-      },
-    });
+    stream.pipe(writable);
+    const result =
+      await ReactServerDOMClient.createFromReadableStream(readable);
 
     expect(result instanceof FormData).toBe(true);
     expect(result.get('hi')).toBe('world');
@@ -1268,7 +1264,7 @@ describe('ReactFlightResultDOM', () => {
     expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  it.skip('can pass an async import that resolves later to an outline object like a Map', async () => {
+  it('can pass an async import that resolves later to an outline object like a Map', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
 
@@ -1280,20 +1276,12 @@ describe('ReactFlightResultDOM', () => {
     const map = new Map();
     map.set('value', awaitedValue);
 
-    const stream = await serverAct(() =>
-      passThrough(ReactServerDOMServer.renderToReadableStream(map, webpackMap)),
+    const flightResult = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(map),
     );
 
     // Parsing the root blocks because the module hasn't loaded yet
-    const resultPromise = ReactServerDOMClient.createFromReadableStream(
-      stream,
-      {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
-      },
-    );
+    const resultPromise = createResponse(flightResult);
 
     // Afterwards we finally resolve the module value so it's available on the client
     resolve('hello');
@@ -5887,30 +5875,29 @@ describe('ReactFlightResultDOM', () => {
   });
 
   describe('built-in values', () => {
-    function clientReference(value) {
-      return Object.defineProperties(
-        function () {
-          throw new Error('Cannot call a client function from the server.');
-        },
-        {
-          $$typeof: {value: Symbol.for('react.client.reference')},
-          value: {value: value},
-        },
-      );
-    }
+    beforeEach(() => {
+      jest.resetModules();
+      __unmockReact();
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      act = require('internal-test-utils').act;
+    });
 
-    it.skip('can transport BigInt', async () => {
+    it('can transport BigInt', async () => {
       function ComponentClient({prop}) {
         return `prop: ${prop} (${typeof prop})`;
       }
-      const Component = clientReference(ComponentClient);
+      const Component = clientExports(ComponentClient);
 
       const model = <Component prop={90071992547409910000n} />;
 
-      const transport = ReactNoopFlightServer.render(model);
+      const result = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(model),
+      );
+      const response = createResponse(result);
 
       await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+        ReactNoop.render(await response);
       });
 
       expect(ReactNoop).toMatchRenderedOutput(
@@ -5918,30 +5905,36 @@ describe('ReactFlightResultDOM', () => {
       );
     });
 
-    it.skip('can transport Date', async () => {
+    it('can transport Date', async () => {
       function ComponentClient({prop}) {
         return `prop: ${prop.toISOString()}`;
       }
-      const Component = clientReference(ComponentClient);
+      const Component = clientExports(ComponentClient);
 
       const model = <Component prop={new Date(1234567890123)} />;
 
-      const transport = ReactNoopFlightServer.render(model);
+      const result = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(model),
+      );
+      const response = createResponse(result);
 
       await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+        ReactNoop.render(await response);
       });
 
       expect(ReactNoop).toMatchRenderedOutput('prop: 2009-02-13T23:31:30.123Z');
     });
 
-    it.skip('can transport Date as a top-level value', async () => {
+    it('can transport Date as a top-level value', async () => {
       const date = new Date(0);
-      const transport = ReactNoopFlightServer.render(date);
+      const result = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(date),
+      );
+      const response = createResponse(result);
 
       let readValue;
       await act(async () => {
-        readValue = await ReactNoopFlightClient.read(transport);
+        readValue = await response;
       });
 
       expect(readValue).toEqual(date);

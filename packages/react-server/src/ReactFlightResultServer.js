@@ -10,7 +10,8 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Result, ModelReference} from 'shared/ReactFlightResult';
 import type {ResultModel} from 'shared/ReactFlightResultModel';
-import type {ClientReference} from './ReactFlightServerConfig';
+import type {ReactClientValue} from './ReactFlightServer';
+export type {ReactClientValue} from './ReactFlightServer';
 import type {ThenableState} from './ReactFlightThenable';
 import type {
   Thenable,
@@ -32,6 +33,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
+  getIteratorFn,
   REACT_FRAGMENT_TYPE,
   REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
@@ -54,6 +56,10 @@ import {
   forwardModelReference,
   createValueReference,
   getValueReference,
+  markFormDataWithBlobs,
+  setIteratorEntries,
+  getIteratorEntries,
+  setCollectionEntries,
   setModelInfo,
   getModelInfo,
   markHalted,
@@ -99,23 +105,35 @@ const RENDER = 20;
 const PRERENDER = 21;
 const CLOSED = 14;
 
-export type ReactClientValue =
-  | ReactElement
-  | LazyComponent<ReactClientValue, Thenable<ReactClientValue>>
-  | Promise<ReactClientValue>
-  | ClientReference<any>
-  | string
-  | boolean
-  | number
-  | symbol
-  | bigint
-  | null
-  | void
-  | Array<ReactClientValue>
-  | ReactClientObject
-  | ((...args: Array<mixed>) => mixed);
 export type ReactClientObject = {+[key: string]: ReactClientValue};
 const ObjectPrototype = Object.prototype;
+const DatePrototype = Date.prototype;
+// $FlowFixMe[method-unbinding]
+const dateToJSON = DatePrototype.toJSON;
+// $FlowFixMe[method-unbinding]
+const dateToISOString = DatePrototype.toISOString;
+// $FlowFixMe[method-unbinding]
+const dateValueOf = DatePrototype.valueOf;
+const dateToPrimitive = Date.prototype[Symbol.toPrimitive];
+// $FlowFixMe[method-unbinding]
+const dateGetTime = DatePrototype.getTime;
+
+function isSimpleDate(value: Date): boolean {
+  return (
+    getPrototypeOf(value) === DatePrototype &&
+    !hasOwnProperty.call(value, 'toJSON') &&
+    !hasOwnProperty.call(value, 'toISOString') &&
+    !hasOwnProperty.call(value, 'valueOf') &&
+    !hasOwnProperty.call(value, Symbol.toPrimitive) &&
+    // $FlowFixMe[method-unbinding]
+    DatePrototype.toJSON === dateToJSON &&
+    // $FlowFixMe[method-unbinding]
+    DatePrototype.toISOString === dateToISOString &&
+    // $FlowFixMe[method-unbinding]
+    DatePrototype.valueOf === dateValueOf &&
+    Date.prototype[Symbol.toPrimitive] === dateToPrimitive
+  );
+}
 const {getPrototypeOf} = Object;
 type Task = {
   model: ReactClientValue,
@@ -370,6 +388,25 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
     return resolvedModel;
   }
   if (
+    result !== null &&
+    typeof result === 'object' &&
+    (result as any).$$typeof !== REACT_ELEMENT_TYPE &&
+    !isClientReference(result) &&
+    !isArray(result) &&
+    !(result instanceof Map) &&
+    !(result instanceof Set)
+  ) {
+    const iteratorFn = getIteratorFn(result);
+    if (iteratorFn) {
+      const iterableChild: any = result;
+      result = {
+        [Symbol.iterator]: function () {
+          return iteratorFn.call(iterableChild) as any;
+        },
+      };
+    }
+  }
+  if (
     __DEV__ &&
     result !== null &&
     typeof result === 'object' &&
@@ -582,6 +619,23 @@ function outlineModelWithFormatContext(
     request.hasByValueModels = true;
   }
   return model;
+}
+
+function outlineModel(
+  request: Request,
+  value: ReactClientValue,
+): ReactClientValue {
+  if (value !== null && typeof value === 'object') {
+    const existingModel = getRenderedModel(request.modelEntries, value);
+    if (existingModel !== undefined) {
+      return existingModel === UNDEFINED_MODEL ? undefined : existingModel;
+    }
+  }
+  return outlineModelWithFormatContext(
+    request,
+    value,
+    createRootFormatContext(),
+  );
 }
 
 function readThenable<T>(thenable: Thenable<T>): T {
@@ -867,14 +921,22 @@ function renderModelDestructive(
     return renderModelReference(task, value);
   }
   if (value === null || typeof value !== 'object') {
+    if (typeof value === 'string') {
+      serializedSize += value.length;
+    }
+    if (
+      typeof value === 'string' &&
+      value[value.length - 1] === 'Z' &&
+      // $FlowFixMe[incompatible-use]
+      parent[parentPropertyName] instanceof Date
+    ) {
+      return renderModelReference(task, new Date(value));
+    }
     if (typeof value === 'function') {
       throw new Error('Not implemented.');
     }
     if (typeof value === 'symbol') {
       validateSymbol(value);
-    }
-    if (typeof value === 'string') {
-      serializedSize += value.length;
     }
     return value;
   }
@@ -891,6 +953,8 @@ function renderModelDestructive(
     elementType === REACT_ELEMENT_TYPE
       ? task.keyPath === null && !task.implicitSlot
       : (isArray(value) && task.keyPath === null) ||
+        value instanceof Map ||
+        value instanceof Set ||
         getPrototypeOf(value) === ObjectPrototype;
   const referenceEntry = canReference
     ? renderedModels === request.modelEntries
@@ -1058,6 +1122,49 @@ function renderModelDestructive(
   if (typeof (value as any).then === 'function') {
     return renderModelReference(task, renderThenable(request, task, value));
   }
+  if (value instanceof Date) {
+    const date: Date = value;
+    return renderModelReference(
+      task,
+      isSimpleDate(date)
+        ? new Date(dateGetTime.call(date))
+        : // Match Flight's '$D' + date.toJSON() coercion, including Symbols.
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          new Date('' + date.toJSON()),
+    );
+  }
+  if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
+    return renderModelReference(task, value);
+  }
+  if (value instanceof Map) {
+    return renderModelReference(task, renderMap(request, task, value));
+  }
+  if (value instanceof Set) {
+    return renderModelReference(task, renderSet(request, task, value));
+  }
+  if (typeof FormData === 'function' && value instanceof FormData) {
+    return renderModelReference(task, renderFormData(request, task, value));
+  }
+  if (typeof Blob === 'function' && value instanceof Blob) {
+    setRenderedModel(request.modelEntries, value, value);
+    return renderModelReference(task, value);
+  }
+  const iteratorFn = getIteratorFn(value);
+  if (iteratorFn) {
+    const iterator = iteratorFn.call(value);
+    if (iterator === value) {
+      return renderModelReference(
+        task,
+        renderIterator(request, task, iterator as any),
+      );
+    }
+    return renderFragment(
+      request,
+      task,
+      Array.from(iterator as any),
+      value as any,
+    );
+  }
   if (Object.getPrototypeOf(value) !== ObjectPrototype) {
     throw new Error('Not implemented.');
   }
@@ -1083,10 +1190,37 @@ function resolveModel(
   parentReference?: null | ModelReference,
   renderedRoot?: ReactClientValue,
 ): ReactClientValue {
+  let jsonValue: ReactClientValue = value;
+  if (
+    value !== null &&
+    typeof value === 'object' &&
+    // $FlowFixMe[method-unbinding]
+    typeof value.toJSON === 'function'
+  ) {
+    if (value instanceof Date && isSimpleDate(value)) {
+      const time = dateGetTime.call(value);
+      return renderModelReference(
+        task,
+        Number.isNaN(time) ? null : new Date(time),
+      );
+    }
+    jsonValue = (value as any).toJSON(key);
+  }
   const rendered =
-    renderedRoot !== undefined
+    renderedRoot !== undefined && jsonValue === value
       ? renderedRoot
-      : renderModel(request, task, parent, key, value, parentReference);
+      : renderModel(request, task, parent, key, jsonValue, parentReference);
+  if (renderedRoot !== undefined) {
+    task.renderedModel = rendered;
+    if (jsonValue !== value) {
+      let outlinedModels = request.outlinedModels;
+      if (outlinedModels === null) {
+        request.outlinedModels = outlinedModels = new WeakMap();
+      }
+      outlinedModels.set(renderedRoot as Object, task);
+      request.hasByValueModels = true;
+    }
+  }
   if (
     task.isModelReference ||
     rendered === null ||
@@ -1460,7 +1594,7 @@ function retryTask(request: Request, task: Task): void {
 
 function getRenderedModels(
   request: Request,
-  value: ReactClientValue,
+  value: ReactClientValue | ReactElement,
   keyPath: ReactKey,
   implicitSlot: boolean,
 ): WeakMap<Reference, ModelEntry> {
@@ -1470,7 +1604,10 @@ function getRenderedModels(
     typeof value === 'object' &&
     ((value as any).$$typeof === REACT_ELEMENT_TYPE ||
       typeof (value as any).then === 'function' ||
-      isArray(value))
+      isArray(value) ||
+      (!(value instanceof Map) &&
+        !(value instanceof Set) &&
+        getIteratorFn(value) !== null))
   ) {
     let keyedModels = request.renderedKeyedModels;
     if (keyedModels === null) {
@@ -1500,6 +1637,7 @@ function renderFragment(
   request: Request,
   task: Task,
   children: Array<ReactClientValue>,
+  source: Iterable<ReactClientValue> = children,
 ): ReactClientValue {
   const keyPath = task.keyPath;
   let resolvedModel: ReactClientValue;
@@ -1542,16 +1680,19 @@ function renderFragment(
       task.fieldParentReference = null;
     }
     setRenderedModel(
-      getRenderedModels(request, children, keyPath, task.implicitSlot),
-      children,
+      getRenderedModels(request, source, keyPath, task.implicitSlot),
+      source,
       resolvedModel,
     );
   } else {
     const copy: Array<ReactClientValue> = new Array(children.length);
     setRenderedModel(request.modelEntries, children, copy);
+    if (source !== children) {
+      setRenderedModel(request.modelEntries, source, copy);
+    }
     task.model = children;
     resolvedModel = copy;
-    task.fieldParentReference = undefined;
+    task.fieldParentReference = source === children ? undefined : null;
   }
   task.isModelReference = false;
   return resolvedModel;
@@ -1960,14 +2101,46 @@ function getOutlinedModelDependencies(
       visit(value.props, record);
     } else if (
       kind === 0 &&
-      (value.$$typeof === REACT_LAZY_TYPE || typeof value.then === 'function')
+      (value.$$typeof === REACT_LAZY_TYPE ||
+        typeof value.then === 'function' ||
+        value instanceof Date ||
+        value instanceof ArrayBuffer ||
+        ArrayBuffer.isView(value))
     ) {
       return;
     } else if (kind === MODEL_ARRAY || (kind === 0 && isArray(value))) {
       for (let i = 0; i < value.length; i++) {
         visit(value[i], record);
       }
+    } else if (kind === 0 && value instanceof Map) {
+      value.forEach((child: ReactClientValue, key: ReactClientValue) => {
+        visit(key, record);
+        visit(child, record);
+      });
+    } else if (kind === 0 && value instanceof Set) {
+      value.forEach((child: ReactClientValue) => visit(child, record));
     } else {
+      if (kind === 0 && getPrototypeOf(value) !== ObjectPrototype) {
+        if (typeof FormData === 'function' && value instanceof FormData) {
+          const iterator = value.entries();
+          for (
+            let entry = iterator.next();
+            !entry.done;
+            entry = iterator.next()
+          ) {
+            visit(entry.value[1], record);
+          }
+          return;
+        }
+        if (typeof Blob === 'function' && value instanceof Blob) {
+          return;
+        }
+        const entries = getIteratorEntries(request.result, value);
+        if (entries !== undefined) {
+          visit(entries, record);
+          return;
+        }
+      }
       const keys = Object.keys(value);
       for (let i = 0; i < keys.length; i++) {
         visit(value[keys[i]], record);
@@ -2044,7 +2217,11 @@ function resolveOutlinedModel(
       }
     } else if (
       kind === 0 &&
-      (value.$$typeof === REACT_LAZY_TYPE || typeof value.then === 'function')
+      (value.$$typeof === REACT_LAZY_TYPE ||
+        typeof value.then === 'function' ||
+        value instanceof Date ||
+        value instanceof ArrayBuffer ||
+        ArrayBuffer.isView(value))
     ) {
       return value;
     } else if (kind === MODEL_ARRAY || (kind === 0 && isArray(value))) {
@@ -2056,7 +2233,33 @@ function resolveOutlinedModel(
           }
         }
       }
+    } else if (kind === 0 && value instanceof Map) {
+      const entries: Array<[any, any]> = Array.from(value);
+      value.clear();
+      for (let i = 0; i < entries.length; i++) {
+        value.set(resolve(entries[i][0]), resolve(entries[i][1]));
+      }
+    } else if (kind === 0 && value instanceof Set) {
+      const entries: Array<any> = Array.from(value);
+      value.clear();
+      for (let i = 0; i < entries.length; i++) {
+        value.add(resolve(entries[i]));
+      }
     } else {
+      if (
+        kind === 0 &&
+        getPrototypeOf(value) !== ObjectPrototype &&
+        ((typeof FormData === 'function' && value instanceof FormData) ||
+          (typeof Blob === 'function' && value instanceof Blob))
+      ) {
+        return value;
+      }
+      const entries =
+        kind === 0 ? getIteratorEntries(request.result, value) : undefined;
+      if (entries !== undefined) {
+        resolve(entries);
+        return value;
+      }
       const keys = Object.keys(value);
       for (let i = 0; i < keys.length; i++) {
         const key = keys[i];
@@ -2371,4 +2574,166 @@ function finishAbortedTasks(request: Request): void {
     completeResult(request.result);
     request.onAllReady();
   }
+}
+
+function renderMap(
+  request: Request,
+  task: Task,
+  map: Map<ReactClientValue, ReactClientValue>,
+): ReactClientValue {
+  if (task.formatContext !== createRootFormatContext()) {
+    return outlineModel(request, map);
+  }
+  const entries = Array.from(map);
+  const copy: Map<ReactClientValue, ReactClientValue> = new Map();
+  setRenderedModel(request.modelEntries, map, copy);
+  const model = renderCollectionEntries(request, task, copy, entries);
+  const populate = (values: Array<[ReactClientValue, ReactClientValue]>) => {
+    for (let i = 0; i < values.length; i++) {
+      copy.set(values[i][0], values[i][1]);
+    }
+  };
+  const values = model.value;
+  if (model.status === 'fulfilled' && values !== undefined) {
+    populate(values);
+  } else {
+    model.then(populate, noop);
+  }
+  return copy;
+}
+
+function renderSet(
+  request: Request,
+  task: Task,
+  set: Set<ReactClientValue>,
+): ReactClientValue {
+  if (task.formatContext !== createRootFormatContext()) {
+    return outlineModel(request, set);
+  }
+  const entries = Array.from(set);
+  const copy: Set<ReactClientValue> = new Set();
+  setRenderedModel(request.modelEntries, set, copy);
+  const model = renderCollectionEntries(request, task, copy, entries);
+  const populate = (values: Array<ReactClientValue>) => {
+    for (let i = 0; i < values.length; i++) {
+      copy.add(values[i]);
+    }
+  };
+  const values = model.value;
+  if (model.status === 'fulfilled' && values !== undefined) {
+    populate(values);
+  } else {
+    model.then(populate, noop);
+  }
+  return copy;
+}
+
+function renderCollectionEntries(
+  request: Request,
+  task: Task,
+  collection: Object,
+  entries: Array<any>,
+): ResultModel<Array<any>> {
+  const reference = task.currentReference;
+  if (reference !== null) {
+    setModelReference(request, collection, reference);
+  }
+  const newTask = createTask(request, entries, null, false, task.formatContext);
+  setCollectionEntries(request.result, collection, newTask.promise as any);
+  retryTask(request, newTask);
+  return newTask.promise as any;
+}
+
+function renderFormData(
+  request: Request,
+  task: Task,
+  formData: FormData,
+): ReactClientValue {
+  if (task.formatContext !== createRootFormatContext()) {
+    return outlineModel(request, formData);
+  }
+  const entries: Array<[ReactClientValue, ReactClientValue]> = Array.from(
+    formData.entries(),
+  ) as any;
+  let hasBlob = false;
+  let hasOutlinedEntry = false;
+  setRenderedModel(request.modelEntries, formData, formData);
+  task.keyPath = null;
+  task.implicitSlot = false;
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const key = resolveModel(request, task, entry, '0', entry[0]);
+    const value = resolveModel(request, task, entry, '1', entry[1]);
+    if (typeof entry[1] !== 'string') {
+      hasBlob = true;
+    }
+    if (key !== entry[0] || value !== entry[1]) {
+      hasOutlinedEntry = true;
+      entry[0] = key;
+      entry[1] = value;
+    }
+  }
+  if (hasBlob) {
+    markFormDataWithBlobs(request.result, formData);
+  }
+  if (hasOutlinedEntry) {
+    blockModelOnDependencies(request, formData, entries);
+  }
+  return formData;
+}
+
+function blockModelOnDependencies(
+  request: Request,
+  model: ReactClientValue,
+  dependencyModel: ReactClientValue,
+): void {
+  const outlinedModels = request.outlinedModels;
+  if (outlinedModels === null) {
+    return;
+  }
+  const dependencies = getOutlinedModelDependencies(
+    request,
+    dependencyModel,
+    outlinedModels,
+  );
+  if (dependencies.size > 0) {
+    const newTask = createTask(
+      request,
+      model,
+      null,
+      false,
+      createRootFormatContext(),
+    );
+    outlinedModels.set(model as any, newTask);
+    blockTask(request, newTask, model, dependencies);
+  }
+}
+
+function renderIterator(
+  request: Request,
+  task: Task,
+  iterator: Iterator<ReactClientValue>,
+): Iterator<ReactClientValue> {
+  if (task.formatContext !== createRootFormatContext()) {
+    return outlineModel(request, iterator as any) as any;
+  }
+  const existingModel = getRenderedModel(request.modelEntries, iterator as any);
+  if (existingModel !== undefined && existingModel !== task.promise) {
+    return existingModel as any;
+  }
+  const entries = Array.from(iterator);
+  const copy: Array<ReactClientValue> = [];
+  const resolvedIterator = copy.values();
+  setRenderedModel(
+    request.modelEntries,
+    iterator as any,
+    resolvedIterator as any,
+  );
+  setIteratorEntries(request.result, resolvedIterator, copy);
+  task.keyPath = null;
+  task.implicitSlot = false;
+  for (let i = 0; i < entries.length; i++) {
+    copy[i] = resolveModel(request, task, entries, '' + i, entries[i]);
+  }
+  return resolvedIterator;
 }

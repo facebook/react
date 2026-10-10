@@ -48,6 +48,9 @@ export opaque type Result<T>: {abort(reason: mixed): void, ...} = {
   haltedModels: null | WeakSet<Object>,
   modelReferences: null | WeakMap<Object, Object>,
   valueReferences: null | WeakSet<Object>,
+  formDataWithBlobs: null | WeakSet<FormData>,
+  iteratorEntries: null | WeakMap<Object, $ReadOnlyArray<mixed>>,
+  collectionEntries: null | WeakMap<Object, ResultModel<Array<any>>>,
   modelInfo: null | Map<Object, number>,
 };
 
@@ -74,6 +77,9 @@ export function createResult<T>(
     haltedModels: null,
     modelReferences: null,
     valueReferences: null,
+    formDataWithBlobs: null,
+    iteratorEntries: null,
+    collectionEntries: null,
     modelInfo: null,
   };
   result.abort = abortResult.bind(null, result);
@@ -277,4 +283,63 @@ export function isHalted<T>(result: Result<T>, model: Object): boolean {
     current = reference;
   }
   return false;
+}
+
+export function setCollectionEntries<T>(
+  result: Result<T>,
+  collection: Object,
+  entries: ResultModel<Array<any>>,
+): void {
+  let collections = result.collectionEntries;
+  if (collections === null) {
+    result.collectionEntries = collections = new WeakMap();
+  }
+  collections.set(collection, entries);
+}
+
+export function getCollectionEntries<T>(
+  result: Result<T>,
+  collection: Object,
+): void | ResultModel<Array<any>> {
+  const collections = result.collectionEntries;
+  return collections === null ? undefined : collections.get(collection);
+}
+
+export function markFormDataWithBlobs<T>(
+  result: Result<T>,
+  formData: FormData,
+): void {
+  let formDataWithBlobs = result.formDataWithBlobs;
+  if (formDataWithBlobs === null) {
+    result.formDataWithBlobs = formDataWithBlobs = new WeakSet();
+  }
+  formDataWithBlobs.add(formData);
+}
+
+export function hasFormDataBlobs<T>(
+  result: Result<T>,
+  formData: FormData,
+): boolean {
+  const formDataWithBlobs = result.formDataWithBlobs;
+  return formDataWithBlobs !== null && formDataWithBlobs.has(formData);
+}
+
+export function setIteratorEntries<T>(
+  result: Result<T>,
+  iterator: Object,
+  entries: $ReadOnlyArray<mixed>,
+): void {
+  let iteratorEntries = result.iteratorEntries;
+  if (iteratorEntries === null) {
+    result.iteratorEntries = iteratorEntries = new WeakMap();
+  }
+  iteratorEntries.set(iterator, entries);
+}
+
+export function getIteratorEntries<T>(
+  result: Result<T>,
+  iterator: Object,
+): void | $ReadOnlyArray<mixed> {
+  const iteratorEntries = result.iteratorEntries;
+  return iteratorEntries === null ? undefined : iteratorEntries.get(iterator);
 }

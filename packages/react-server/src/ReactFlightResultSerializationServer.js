@@ -22,7 +22,7 @@ import type {
   ReactClientObject,
 } from './ReactFlightResultServer';
 import type {ReactElement} from 'shared/ReactElementType';
-import type {Chunk, Destination} from './ReactServerStreamConfig';
+import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 import type {HintCode, HintModel} from './ReactFlightResultServerConfig';
 import type {
   ClientManifest,
@@ -34,6 +34,8 @@ import {
   beginWriting,
   writeChunk,
   writeChunkAndReturn,
+  typedArrayToBinaryChunk,
+  byteLengthOfBinaryChunk,
   completeWriting,
   flushBuffered,
   close,
@@ -43,7 +45,11 @@ import {
   scheduleMicrotask,
   scheduleWork,
 } from './ReactServerStreamConfig';
-import {REACT_ELEMENT_TYPE, REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
+  getIteratorFn,
+} from 'shared/ReactSymbols';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -114,8 +120,10 @@ type ModelParent = ReactClientObject | $ReadOnlyArray<ReactClientValue>;
 
 export type Input = {
   +root: ResultModel<ReactClientValue>,
+  getIteratorEntries: Object => void | $ReadOnlyArray<mixed>,
   getValueReference: Object => void | ModelReference,
   getModelInfo: Object => number,
+  getCollectionEntries: Object => void | ResultModel<Array<any>>,
   subscribe: ({
     hint: (HintCode, HintModel<any>) => void,
     complete: () => void,
@@ -131,7 +139,9 @@ export type Request = {
   status: 10 | 11 | 12 | 13 | 14,
   abortController: AbortController,
   fatalError: mixed,
-  completedRegularChunks: Array<Chunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC>,
+  completedRegularChunks: Array<
+    Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
+  >,
   pendingChunks: number,
   nextChunkId: number,
   abortableTasks: Set<Task>,
@@ -367,6 +377,13 @@ function renderModelDestructive(
       (kind === 0 &&
         (isArray(value) ||
           (value as any).$$typeof === REACT_ELEMENT_TYPE ||
+          value instanceof Map ||
+          value instanceof Set ||
+          (typeof FormData === 'function' && value instanceof FormData) ||
+          (typeof Blob === 'function' && value instanceof Blob) ||
+          value instanceof ArrayBuffer ||
+          ArrayBuffer.isView(value) ||
+          (input !== null && input.getIteratorEntries(value) !== undefined) ||
           getPrototypeOf(value) === ObjectPrototype))
     ) {
       const objectReference = renderObjectReference(
@@ -391,6 +408,9 @@ function renderModelDestructive(
     if (typeof (value as any).then === 'function') {
       return serializePromiseID(serializeThenable(request, value as any));
     }
+    if (value instanceof Date) {
+      return serializeDate(value);
+    }
     if (
       kind === MODEL_ELEMENT ||
       (value as any).$$typeof === REACT_ELEMENT_TYPE
@@ -413,6 +433,82 @@ function renderModelDestructive(
         request.writtenObjects.set(tuple as any, elementReference);
       }
       return tuple;
+    }
+    if (value instanceof Map) {
+      return serializeMap(request, value);
+    }
+    if (value instanceof Set) {
+      return serializeSet(request, value);
+    }
+    if (value instanceof ArrayBuffer) {
+      return serializeTypedArray(request, 'A', new Uint8Array(value));
+    }
+    if (value instanceof Int8Array) {
+      // char
+      return serializeTypedArray(request, 'O', value);
+    }
+    if (value instanceof Uint8Array) {
+      // unsigned char
+      return serializeTypedArray(request, 'o', value);
+    }
+    if (value instanceof Uint8ClampedArray) {
+      // unsigned clamped char
+      return serializeTypedArray(request, 'U', value);
+    }
+    if (value instanceof Int16Array) {
+      // sort
+      return serializeTypedArray(request, 'S', value);
+    }
+    if (value instanceof Uint16Array) {
+      // unsigned short
+      return serializeTypedArray(request, 's', value);
+    }
+    if (value instanceof Int32Array) {
+      // long
+      return serializeTypedArray(request, 'L', value);
+    }
+    if (value instanceof Uint32Array) {
+      // unsigned long
+      return serializeTypedArray(request, 'l', value);
+    }
+    if (value instanceof Float32Array) {
+      // float
+      return serializeTypedArray(request, 'G', value);
+    }
+    if (value instanceof Float64Array) {
+      // double
+      return serializeTypedArray(request, 'g', value);
+    }
+    if (value instanceof BigInt64Array) {
+      // number
+      return serializeTypedArray(request, 'M', value);
+    }
+    if (value instanceof BigUint64Array) {
+      // unsigned number
+      // We use "m" instead of "n" since JSON can start with "null"
+      return serializeTypedArray(request, 'm', value);
+    }
+    if (value instanceof DataView) {
+      return serializeTypedArray(request, 'V', value);
+    }
+    if (typeof FormData === 'function' && value instanceof FormData) {
+      return serializeFormData(request, value);
+    }
+    if (typeof Blob === 'function' && value instanceof Blob) {
+      return serializeBlob(request, value);
+    }
+    if (isArray(value)) {
+      return value as any;
+    }
+    const iteratorFn = getIteratorFn(value);
+    if (iteratorFn) {
+      const entries =
+        input === null ? undefined : input.getIteratorEntries(value);
+      if (entries === undefined) {
+        // eslint-disable-next-line react-internal/prod-error-codes
+        throw new Error('A Result must record iterators before serialization.');
+      }
+      return serializeIterator(request, entries as any);
     }
     return value as any;
   }
@@ -456,6 +552,9 @@ function renderModelDestructive(
     emitSymbolChunk(request, symbolId, name);
     writtenSymbols.set(value, symbolId);
     return serializeByValueID(symbolId);
+  }
+  if (typeof value === 'bigint') {
+    return serializeBigInt(value);
   }
   throw new Error('Not implemented.');
 }
@@ -508,6 +607,16 @@ function renderModel(
       ? serializeLazyID(errorId)
       : serializeByValueID(errorId);
   }
+}
+
+function serializeDate(date: Date): string {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return '$D' + date.toJSON();
+}
+
+function serializeBigInt(n: bigint): string {
+  return '$n' + n.toString(10);
 }
 
 function resolveModel(
@@ -1257,6 +1366,7 @@ function subscribeHints(request: Request): void {
 
 function fatalError(request: Request, error: mixed): void {
   request.abortController.abort(error);
+  request.fatalError = error;
   cleanupInput(request);
   const destination = request.destination;
   if (destination !== null) {
@@ -1264,7 +1374,6 @@ function fatalError(request: Request, error: mixed): void {
     closeWithError(destination, error);
   } else {
     request.status = CLOSING;
-    request.fatalError = error;
   }
 }
 
@@ -1497,4 +1606,142 @@ export function abort(request: Request, reason: mixed): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   }
+}
+
+function serializeMap(
+  request: Request,
+  map: Map<ReactClientValue, ReactClientValue>,
+): string {
+  const input = request.input;
+  const model = input === null ? undefined : input.getCollectionEntries(map);
+  if (model !== undefined) {
+    const id = serializeThenable(request, model as any);
+    return '$Q' + id.toString(16);
+  }
+  const entries = Array.from(map);
+  const id = outlineModel(request, entries);
+  return '$Q' + id.toString(16);
+}
+
+function serializeSet(request: Request, set: Set<ReactClientValue>): string {
+  const input = request.input;
+  const model = input === null ? undefined : input.getCollectionEntries(set);
+  if (model !== undefined) {
+    const id = serializeThenable(request, model as any);
+    return '$W' + id.toString(16);
+  }
+  const entries = Array.from(set);
+  const id = outlineModel(request, entries);
+  return '$W' + id.toString(16);
+}
+
+function serializeTypedArray(
+  request: Request,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): string {
+  request.pendingChunks++;
+  const bufferId = request.nextChunkId++;
+  emitTypedArrayChunk(request, bufferId, tag, typedArray);
+  return serializeByValueID(bufferId);
+}
+
+function emitTypedArrayChunk(
+  request: Request,
+  id: number,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): void {
+  request.pendingChunks++;
+  const bytes = new Uint8Array(
+    new Uint8Array(
+      typedArray.buffer,
+      typedArray.byteOffset,
+      typedArray.byteLength,
+    ),
+  );
+  const binaryChunk = typedArrayToBinaryChunk(bytes);
+  const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
+  const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
+  // Push a NEXT_TWO_CHUNKS_ARE_ATOMIC sentinel before the header so that
+  // flushCompletedChunks can write the header and binary chunks atomically.
+  // Otherwise, if the destination's backpressure flips between the two writes,
+  // the content chunk would be stranded at the front of the queue and the next
+  // drain would emit Import or Hint chunks between the header and the content —
+  // and the Flight Client would frame those intervening bytes as this row's
+  // content.
+  request.completedRegularChunks.push(
+    NEXT_TWO_CHUNKS_ARE_ATOMIC,
+    headerChunk,
+    binaryChunk,
+  );
+}
+
+function serializeFormData(request: Request, formData: FormData): string {
+  const entries = Array.from(formData.entries());
+  const id = outlineModel(request, entries as any);
+  return '$K' + id.toString(16);
+}
+
+function serializeBlob(request: Request, blob: Blob): string {
+  const model: Array<string | Uint8Array> = [blob.type];
+  const reader = blob.stream().getReader();
+  const newTask = createTask(request, model, request.abortableTasks);
+
+  function progress(
+    entry: {done: false, value: Uint8Array} | {done: true, value: void},
+  ): Promise<void> | void {
+    if (newTask.status !== PENDING) {
+      return;
+    }
+    if (entry.done) {
+      request.abortController.signal.removeEventListener('abort', abortBlob);
+      pingTask(request, newTask);
+      return;
+    }
+    // TODO: Emit the chunk early and refer to it later by dedupe.
+    model.push(entry.value);
+    // $FlowFixMe[incompatible-type]
+    return reader.read().then(progress).catch(error);
+  }
+  function error(reason: mixed) {
+    if (newTask.status !== PENDING) {
+      return;
+    }
+    request.abortController.signal.removeEventListener('abort', abortBlob);
+    erroredTask(request, newTask, reason);
+    enqueueFlush(request);
+    // $FlowFixMe[incompatible-type] should be able to pass mixed
+    // $FlowFixMe[incompatible-use]
+    reader.cancel(reason).then(error, error);
+  }
+  function abortBlob() {
+    if (newTask.status !== PENDING) {
+      return;
+    }
+    const signal = request.abortController.signal;
+    signal.removeEventListener('abort', abortBlob);
+    const reason = signal.reason;
+    // TODO: Make this use abortTask() instead.
+    erroredTask(request, newTask, reason);
+    enqueueFlush(request);
+    // $FlowFixMe[incompatible-use] should be able to pass mixed
+    reader.cancel(reason).then(error, error);
+  }
+
+  request.abortController.signal.addEventListener('abort', abortBlob);
+
+  // $FlowFixMe[incompatible-type]
+  reader.read().then(progress).catch(error);
+
+  return '$B' + newTask.id.toString(16);
+}
+
+function serializeIterator(
+  request: Request,
+  entries: $ReadOnlyArray<ReactClientValue>,
+): string {
+  const id = outlineModel(request, entries);
+  return '$i' + id.toString(16);
 }
