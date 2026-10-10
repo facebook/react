@@ -98,6 +98,11 @@ import {
 } from 'shared/ReactFeatureFlags';
 import binaryToComparableString from 'shared/binaryToComparableString';
 import {
+  describeObjectForErrorMessage,
+  jsxPropsParents,
+  jsxChildrenParents,
+} from 'shared/ReactSerializationErrors';
+import {
   createHints,
   createRootFormatContext,
   getChildFormatContext,
@@ -555,7 +560,9 @@ function renderElement(
   element: ReactElement,
 ): ReactClientValue {
   if (element.props.ref != null) {
-    throw new Error('Not implemented.');
+    throw new Error(
+      'Refs cannot be used in Server Components, nor passed to Client Components.',
+    );
   }
   if (
     typeof type === 'function' &&
@@ -615,16 +622,8 @@ function renderElement(
       }
     }
   }
-  if (
-    typeof type !== 'string' &&
-    typeof type !== 'symbol' &&
-    !isClientReference(type) &&
-    !isOpaqueTemporaryReference(type)
-  ) {
-    throw new Error('Not implemented.');
-  }
   if (typeof type === 'symbol') {
-    validateSymbol(type);
+    validateSymbol(type, element as any, 'type');
   }
   if (typeof type === 'string') {
     const parentFormatContext = task.formatContext;
@@ -647,14 +646,18 @@ function renderElement(
   return renderClientElement(request, task, type, element);
 }
 
-function validateSymbol(value: symbol): void {
+function validateSymbol(
+  value: symbol,
+  parent: ModelParent,
+  parentPropertyName: string,
+): void {
   // $FlowFixMe[incompatible-type] `description` might be undefined
   const name: string = value.description;
   if (Symbol.for(name) !== value) {
-    // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
       'Only global symbols received from Symbol.for(...) can be passed to Client Components. ' +
-        `The symbol Symbol.for(${name}) cannot be found among global symbols.`,
+        `The symbol Symbol.for(${name}) cannot be found among global symbols.` +
+        describeObjectForErrorMessage(parent, parentPropertyName),
     );
   }
 }
@@ -943,6 +946,13 @@ function renderClientElement(
   element: ReactElement,
 ): ReactClientValue {
   let key = element.key;
+  if (__DEV__) {
+    const props = element.props;
+    jsxPropsParents.set(props, type);
+    if (typeof props.children === 'object' && props.children !== null) {
+      jsxChildrenParents.set(props.children, type);
+    }
+  }
   const keyPath = task.keyPath;
   if (key === null) {
     key = keyPath;
@@ -1095,10 +1105,38 @@ function renderModelDestructive(
           'Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server.',
         );
       }
-      throw new Error('Not implemented.');
+      if (/^on[A-Z]/.test(parentPropertyName)) {
+        throw new Error(
+          'Event handlers cannot be passed to Client Component props.' +
+            describeObjectForErrorMessage(parent, parentPropertyName) +
+            '\nIf you need interactivity, consider converting part of this to a Client Component.',
+        );
+      } else if (
+        __DEV__ &&
+        (jsxChildrenParents.has(parent) ||
+          (jsxPropsParents.has(parent) && parentPropertyName === 'children'))
+      ) {
+        const componentName = value.displayName || value.name || 'Component';
+        throw new Error(
+          'Functions are not valid as a child of Client Components. This may happen if ' +
+            'you return ' +
+            componentName +
+            ' instead of <' +
+            componentName +
+            ' /> from render. ' +
+            'Or maybe you meant to call this function rather than return it.' +
+            describeObjectForErrorMessage(parent, parentPropertyName),
+        );
+      }
+      throw new Error(
+        'Functions cannot be passed directly to Client Components ' +
+          'unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.' +
+          describeObjectForErrorMessage(parent, parentPropertyName),
+      );
     }
     if (typeof value === 'symbol') {
-      validateSymbol(value);
+      validateSymbol(value, parent, parentPropertyName);
     }
     return value;
   }
@@ -1354,8 +1392,16 @@ function renderModelDestructive(
     );
     return renderModelReference(task, model);
   }
-  if (Object.getPrototypeOf(value) !== ObjectPrototype) {
-    throw new Error('Not implemented.');
+  const prototype = getPrototypeOf(value);
+  if (
+    prototype !== ObjectPrototype &&
+    (prototype === null || getPrototypeOf(prototype) !== null)
+  ) {
+    throw new Error(
+      'Only plain objects, and a few built-ins, can be passed to Client Components ' +
+        'from Server Components. Classes or null prototypes are not supported.' +
+        describeObjectForErrorMessage(parent, parentPropertyName),
+    );
   }
   const copy: {[key: string]: ReactClientValue} = {};
   if (renderedModels !== request.modelEntries) {

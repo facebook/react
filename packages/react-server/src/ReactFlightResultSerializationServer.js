@@ -699,7 +699,8 @@ function renderModelDestructive(
     }
     return serializeBigInt(value);
   }
-  throw new Error('Not implemented.');
+  // eslint-disable-next-line react-internal/prod-error-codes
+  throw new Error('A Result must validate models before serialization.');
 }
 
 function renderModel(

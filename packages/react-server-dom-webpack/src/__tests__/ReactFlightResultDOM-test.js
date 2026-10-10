@@ -3389,7 +3389,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('should be able to include a client reference in printed errors', async () => {
+  it('should be able to include a client reference in printed errors', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -5716,15 +5716,17 @@ describe('ReactFlightResultDOM', () => {
       });
     });
 
-    it.skip('should error if a class instance is passed to a host component', () => {
+    it('should error if a class instance is passed to a host component', async () => {
       class Foo {
         method() {}
       }
       const errors = [];
-      ReactNoopFlightServer.render(<input value={new Foo()} />, {
-        onError(x) {
-          errors.push(x.message);
-        },
+      await serverAct(() => {
+        ReactServerDOMServer.renderToResult(<input value={new Foo()} />, {
+          onError(x) {
+            errors.push(x.message);
+          },
+        });
       });
 
       expect(errors).toEqual([
