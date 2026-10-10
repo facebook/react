@@ -17,6 +17,7 @@ import noop from 'shared/noop';
 import type {Result} from 'shared/ReactFlightResult';
 export type {Result} from 'shared/ReactFlightResult';
 import type {
+  Options as SerializationOptions,
   PipeableStream,
   ReadableStreamOptions,
 } from './ReactFlightDOMResultSerializationServerNode';
@@ -135,19 +136,10 @@ export function prerenderToResult(
 export function renderResultToPipeableStream(
   result: Result<ReactClientValue>,
   turbopackMap: ClientManifest,
-  options?: Options,
+  options?: SerializationOptions,
 ): PipeableStream {
   const input = createInput(result);
-  return renderToPipeableStream(
-    input,
-    turbopackMap,
-    options ? options.onError : undefined,
-    options ? options.signal : undefined,
-    options ? options.temporaryReferences : undefined,
-    __DEV__ && options ? options.startTime : undefined,
-    __DEV__ && options ? options.environmentName : undefined,
-    __DEV__ && options ? options.filterStackFrame : undefined,
-  );
+  return renderToPipeableStream(input, turbopackMap, options);
 }
 
 export function renderResultToReadableStream(

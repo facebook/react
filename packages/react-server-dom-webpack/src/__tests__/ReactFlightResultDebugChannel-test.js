@@ -10,6 +10,8 @@
 
 'use strict';
 
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
@@ -21,8 +23,10 @@ if (typeof File === 'undefined' || typeof FormData === 'undefined') {
 let act;
 let React;
 let ReactNoop;
-let ReactNoopFlightServer;
-let ReactNoopFlightClient;
+let ReactServerDOMServer;
+let ReactServerDOMClient;
+let Stream;
+let serverAct;
 let getDebugInfo;
 
 describe('ReactFlightResult debug channel', () => {
@@ -36,15 +40,15 @@ describe('ReactFlightResult debug channel', () => {
 
     jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
-    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-    // This stores the state so we need to preserve it
-    const flightModules = require('react-noop-renderer/flight-modules');
+    patchSetImmediate();
+    ReactServerDOMServer = require('react-server-dom-webpack/server.node');
+    serverAct = require('internal-test-utils').serverAct;
     jest.resetModules();
     __unmockReact();
-    jest.mock('react-noop-renderer/flight-modules', () => flightModules);
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    ReactNoopFlightClient = require('react-noop-renderer/flight-client');
+    ReactServerDOMClient = require('react-server-dom-webpack/client.node');
+    Stream = require('stream');
     act = require('internal-test-utils').act;
 
     getDebugInfo = require('internal-test-utils').getDebugInfo.bind(null, {
@@ -58,7 +62,7 @@ describe('ReactFlightResult debug channel', () => {
   });
 
   // @gate __DEV__ && enableComponentPerformanceTrack
-  it.skip('can render deep but cut off JSX in debug info', async () => {
+  it('can render deep but cut off JSX in debug info', async () => {
     function createDeepJSX(n) {
       if (n <= 0) {
         return null;
@@ -70,23 +74,45 @@ describe('ReactFlightResult debug channel', () => {
       return <div>not using props</div>;
     }
 
-    const debugChannel = {onMessage(message) {}};
+    const debugReadable = new Stream.PassThrough();
+    const debugChannel = new Stream.Duplex({
+      read() {},
+      write(chunk, encoding, callback) {
+        debugReadable.write(chunk, encoding);
+        callback();
+      },
+      final(callback) {
+        debugReadable.end();
+        callback();
+      },
+    });
 
-    const transport = ReactNoopFlightServer.render(
-      {
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult({
         root: (
           <ServerComponent>
             {createDeepJSX(100) /* deper than objectLimit */}
           </ServerComponent>
         ),
-      },
-      {debugChannel},
+      }),
+    );
+    const transport = new Stream.PassThrough();
+    await serverAct(() =>
+      ReactServerDOMServer.renderResultToPipeableStream(
+        result,
+        {},
+        {
+          debugChannel,
+        },
+      ).pipe(transport),
     );
 
     await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport, {
-        debugChannel,
-      });
+      const rootModel = await ReactServerDOMClient.createFromNodeStream(
+        transport,
+        {moduleMap: null, moduleLoading: null, serverModuleMap: null},
+        {debugChannel: debugReadable},
+      );
       const root = rootModel.root;
       const children = getDebugInfo(root)[1].props.children;
       expect(children.type).toBe('div');
@@ -95,5 +121,6 @@ describe('ReactFlightResult debug channel', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<div>not using props</div>);
+    debugChannel.push(null);
   });
 });
