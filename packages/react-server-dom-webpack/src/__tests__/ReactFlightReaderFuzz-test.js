@@ -3219,7 +3219,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
           checkCyclicInputDelivery,
         );
       } else {
-        it.skip(
+        it(
           'completes cyclic collection inputs across cached and delayed delivery (Node DEV)',
           checkCyclicInputDelivery,
         );
@@ -3666,7 +3666,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
         checkSeparatePromiseSet,
       );
     } else {
-      it.skip(
+      it(
         'copies complete Set input exposed by separate Promises',
         checkSeparatePromiseSet,
       );
@@ -3677,7 +3677,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
         checkSeparatePromiseMap,
       );
     } else {
-      it.skip(
+      it(
         'copies complete Map input exposed by separate Promises',
         checkSeparatePromiseMap,
       );
@@ -3780,7 +3780,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'selected Blob rejection');
     });
     // Compare contents at callback time; Flight may split an identity.
-    it.skip('preserves a root Set containing itself', async () => {
+    it('preserves a root Set containing itself', async () => {
       const source = new Set();
       source.add(source);
       input = roundTrip({host, Server, Client, model: source});
@@ -3790,7 +3790,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'root self Set');
       watched.recheck();
     });
-    it.skip('preserves a root Map containing itself', async () => {
+    it('preserves a root Map containing itself', async () => {
       const source = new Map();
       source.set('self', source);
       input = roundTrip({host, Server, Client, model: source});
@@ -3800,7 +3800,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'root self Map');
       watched.recheck();
     });
-    it.skip('preserves a nested Set containing itself', async () => {
+    it('preserves a nested Set containing itself', async () => {
       const nested = new Set();
       nested.add(nested);
       const source = [nested];
@@ -3811,7 +3811,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'nested self Set');
       watched.recheck();
     });
-    it.skip('preserves a nested Map containing itself', async () => {
+    it('preserves a nested Map containing itself', async () => {
       const nested = new Map();
       nested.set('self', nested);
       const source = [nested];
@@ -4287,7 +4287,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(() => received !== undefined, 'noncyclic bound action');
       expect(await received[0]()).toBe('ready');
     });
-    it.skip('preserves a Set containing an array back-reference', async () => {
+    it('preserves a Set containing an array back-reference', async () => {
       const source = new Set();
       source.add([source]);
       input = roundTrip({host, Server, Client, model: source});

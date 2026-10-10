@@ -109,10 +109,15 @@ import type {
   InitializationHandler,
   ConstructionFact,
   ConstructionState,
+  ConstructionInputs,
+  ConstructionCollection,
 } from './ReactFlightClientConstruction';
 import {
   CONSTRUCTION_INSTALLED,
   CONSTRUCTION_FAILED,
+  CONSTRUCTION_PENDING,
+  reserveConstructionCollection,
+  settleConstructionEntries,
   CONSTRUCTION_REFERENCE,
   CONSTRUCTION_PUBLICATION,
   readConstructionContents,
@@ -124,6 +129,8 @@ import {
   registerConstructionField,
   settleConstructionField,
   subscribeConstructionFact,
+  createConstructionInputs,
+  readConstructionInputs,
   subscribeConstructionFacts,
 } from './ReactFlightClientConstruction';
 
@@ -1072,6 +1079,8 @@ type InitializationReference = {
   assignment: ConstructionFact<ConstructionListener>,
   // A mapper can hand this assignment to asynchronous server-reference loading.
   isMappingDeferred: boolean,
+  collection: null | ConstructionCollection<ConstructionListener>,
+  inputs: null | ConstructionInputs<ConstructionListener>,
   done: boolean,
   isDebug?: boolean, // DEV-only
 };
@@ -2159,6 +2168,20 @@ function fulfillReference(
       break;
     }
 
+    const collection = reference.collection;
+    if (map !== createModel) {
+      reference.inputs = createConstructionInputs(
+        value,
+        map === createMap || map === createFormData,
+      );
+      if (collection !== null) {
+        collection.inputs = value;
+      } else {
+        reference.assignment.inputs = value;
+      }
+      resumeInitializationInputs(response, reference);
+      return;
+    }
     mappedValue = map(response, value, parentObject, key, reference);
     installInitializationReference(
       response,
@@ -2286,6 +2309,8 @@ function wakeConstructionReferences(
         enqueueConstructionPublication(response, reference);
       } else if (status === CONSTRUCTION_FAILED) {
         rejectInitializationReference(response, reference, value);
+      } else if (reference.inputs !== null) {
+        resumeInitializationInputs(response, reference);
       } else {
         fulfillReference(response, reference, value, reference.source);
       }
@@ -2324,6 +2349,10 @@ function rejectInitializationReference(
     return;
   }
   reference.done = true;
+  const collection = reference.collection;
+  if (collection !== null) {
+    finishCollectionEntries(response, collection, CONSTRUCTION_FAILED, error);
+  }
   finishInitializationField(
     response,
     reference.parentObject,
@@ -2333,6 +2362,169 @@ function rejectInitializationReference(
     error,
   );
   rejectReference(response, reference.handler, error);
+}
+
+function reserveInitializationCollection(
+  response: Response,
+  reference: InitializationReference,
+): void {
+  const map = reference.map;
+  if (map !== createSet && map !== createMap) {
+    return;
+  }
+  const value = map === createSet ? new Set<any>() : new Map<any, any>();
+  reference.collection = reserveConstructionCollection(
+    getConstructionState(response),
+    value,
+  );
+
+  // A carrier can refer back to this destination before it finishes loading.
+  // Install the identity before waking any references that select the field.
+  const {handler, parentObject, key} = reference;
+  if (key !== __PROTO__) {
+    parentObject[key] = value;
+  }
+  if (key === '' && !handler.errored && handler.value === null) {
+    handler.value = value;
+  }
+  finishInitializationField(
+    response,
+    parentObject,
+    key,
+    reference.assignment,
+    CONSTRUCTION_INSTALLED,
+    value,
+  );
+}
+
+function finishCollectionEntries(
+  response: Response,
+  collection: ConstructionCollection<ConstructionListener>,
+  status: 1 | 2,
+  value: any,
+): void {
+  const listeners = settleConstructionEntries(
+    getConstructionState(response),
+    collection,
+    status,
+    value,
+  );
+  wakeConstructionReferences(response, listeners, status, value);
+}
+
+function resumeInitializationInputs(
+  response: Response,
+  reference: InitializationReference,
+): void {
+  const collection = reference.collection;
+  const inputs = reference.inputs;
+  if (
+    reference.done ||
+    inputs === null ||
+    (collection !== null && collection.entries.status !== CONSTRUCTION_PENDING)
+  ) {
+    return;
+  }
+  if (reference.handler.errored) {
+    rejectInitializationReference(
+      response,
+      reference,
+      reference.handler.reason,
+    );
+    return;
+  }
+
+  let mappedValue;
+  try {
+    const pending = readConstructionInputs(response._construction, inputs);
+    if (pending !== null) {
+      // Retain one constructor dependency, but follow every missing input.
+      // A failed input must reject even if another service is still withheld.
+      inputs.waiting = subscribeConstructionFacts(
+        inputs.waiting,
+        pending,
+        reference,
+      );
+      return;
+    }
+    mappedValue =
+      collection === null
+        ? reference.map(
+            response,
+            inputs.values,
+            reference.parentObject,
+            reference.key,
+            reference,
+          )
+        : fillInitializationCollection(response, collection, inputs.values);
+    installInitializationReference(
+      response,
+      reference,
+      mappedValue,
+      reference.source,
+    );
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
+    return;
+  }
+  reference.inputs = null;
+  finishInitializationReference(response, reference, mappedValue);
+}
+
+function waitForConstructionInputs<T>(
+  response: Response,
+  inputs: ConstructionInputs<ConstructionListener>,
+  parentObject: Object,
+  key: string,
+  map: ModelMapping<T>,
+  chunk: SomeChunk<any>,
+): T {
+  const reference = createInitializationReference(
+    response,
+    parentObject,
+    key,
+    map,
+    [],
+    chunk,
+    isInitializingDebugInfo,
+  );
+  const collection = reference.collection;
+  if (collection !== null) {
+    collection.inputs = inputs.values;
+  } else {
+    reference.assignment.inputs = inputs.values;
+  }
+  reference.inputs = inputs;
+  // Reserving the identity can wake another reference. Recheck the inputs
+  // rather than subscribing to a fact that might have settled in that work.
+  resumeInitializationInputs(response, reference);
+  return (
+    reference.assignment.status === CONSTRUCTION_INSTALLED
+      ? reference.assignment.value
+      : null
+  ) as any;
+}
+
+function fillInitializationCollection(
+  response: Response,
+  collection: ConstructionCollection<ConstructionListener>,
+  model: Array<any>,
+): Set<any> | Map<any, any> {
+  const value = collection.value;
+  collection.inputs = model;
+  // Copy into the identity already installed at the destination. Allocating a
+  // second collection here would leave its back-references pointing elsewhere.
+  if (value instanceof Set) {
+    for (let i = 0; i < model.length; i++) {
+      value.add(model[i]);
+    }
+  } else {
+    for (let i = 0; i < model.length; i++) {
+      value.set(model[i][0], model[i][1]);
+    }
+  }
+  finishCollectionEntries(response, collection, CONSTRUCTION_INSTALLED, value);
+  return value;
 }
 
 function createInitializationReference(
@@ -2361,6 +2553,8 @@ function createInitializationReference(
     path,
     source,
     isMappingDeferred: false,
+    collection: null,
+    inputs: null,
     done: false,
     assignment: registerConstructionField(
       getConstructionState(response),
@@ -2371,6 +2565,7 @@ function createInitializationReference(
   if (__DEV__) {
     reference.isDebug = isAwaitingDebugInfo;
   }
+  reserveInitializationCollection(response, reference);
   return reference;
 }
 
@@ -2393,7 +2588,9 @@ function waitForConstructionField<T>(
     isInitializingDebugInfo,
   );
   subscribeConstructionFact(fact, reference);
-  return null as any;
+  return (
+    reference.collection === null ? null : reference.collection.value
+  ) as any;
 }
 
 function rejectReference(
@@ -2507,8 +2704,12 @@ function waitForReference<T>(
     referencedChunk.reason.push(reference);
   }
 
-  // Return a place holder value for now.
-  return null as any;
+  // A native collection has an identity before its entries are filled.
+  return (
+    reference.assignment.status === CONSTRUCTION_INSTALLED
+      ? reference.assignment.value
+      : null
+  ) as any;
 }
 
 type ServerReferenceMetadata = {
@@ -2970,6 +3171,27 @@ function getOutlinedModel<T>(
         break;
       }
 
+      if (
+        response._construction !== null &&
+        (map as ModelMapping<any>) !== createModel
+      ) {
+        const inputs: ConstructionInputs<ConstructionListener> =
+          createConstructionInputs(
+            value,
+            (map as ModelMapping<any>) === createMap ||
+              (map as ModelMapping<any>) === createFormData,
+          );
+        if (readConstructionInputs(response._construction, inputs) !== null) {
+          return waitForConstructionInputs(
+            response,
+            inputs,
+            parentObject,
+            key,
+            map,
+            chunk,
+          );
+        }
+      }
       const chunkValue = map(response, value, parentObject, key, null);
       if (__DEV__) {
         if (

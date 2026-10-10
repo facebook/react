@@ -2813,6 +2813,43 @@ describe('ReactFlightDOMBrowser', () => {
     expect(Array.from(responseBar)[0]).toBe(responseFoo);
   });
 
+  it('completes a cyclic Set exposed by separate Promise results', async () => {
+    let resolveSet;
+    let resolveArray;
+    const set = new Set();
+    const array = [set];
+    set.add(set);
+    set.add(array);
+    const model = {
+      set: new Promise(resolve => (resolveSet = resolve)),
+      array: new Promise(resolve => (resolveArray = resolve)),
+    };
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model, webpackMap),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    await serverAct(() => resolveSet(set));
+    await serverAct(() => resolveArray(array));
+
+    const observed = [];
+    await act(() => {
+      response.then(value => {
+        value.set.then(received => {
+          const [self, back] = Array.from(received);
+          observed.push([received.size, self instanceof Set, back[0].size]);
+        });
+        value.array.then(received => {
+          const [self, back] = Array.from(received[0]);
+          observed.push([received[0].size, self instanceof Set, back[0].size]);
+        });
+      });
+    });
+    expect(observed).toEqual([
+      [2, true, 2],
+      [2, true, 2],
+    ]);
+  });
+
   it('should resolve deduped references in maps used in client component props', async () => {
     const ClientComponent = clientExports(function ClientComponent({
       shared,
@@ -3155,9 +3192,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                3083,
+                3120,
                 19,
-                3067,
+                3104,
                 89,
               ],
             ],

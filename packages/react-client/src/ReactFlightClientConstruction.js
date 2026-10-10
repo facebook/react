@@ -65,10 +65,24 @@ export type ConstructionFact<Listener> = {
   status: 0 | 1 | 2, // pending, installed, failed
   value: any,
   listeners: null | Array<Listener>,
+  inputs: any,
+};
+
+export type ConstructionCollection<Listener> = {
+  value: Set<any> | Map<any, any>,
+  entries: ConstructionFact<Listener>,
+  inputs: null | Array<any>,
+};
+
+export type ConstructionInputs<Listener> = {
+  values: any,
+  pairs: boolean,
+  waiting: null | Set<ConstructionFact<Listener>>,
 };
 
 export type ConstructionState<Listener> = {
   fields: WeakMap<Object, Map<string, ConstructionFact<Listener>>>,
+  collections: null | WeakMap<Object, ConstructionCollection<Listener>>,
   heads: null | WeakMap<Object, ConstructionFact<Listener>>,
   publications: null | WeakMap<Object, Listener>,
   publicationQueue: Array<Listener>,
@@ -82,6 +96,7 @@ export function createConstructionState<
 >(): ConstructionState<Listener> {
   return {
     fields: new WeakMap(),
+    collections: null,
     heads: null,
     publications: null,
     publicationQueue: [],
@@ -114,6 +129,7 @@ function createConstructionFact<Listener>(): ConstructionFact<Listener> {
     status: CONSTRUCTION_PENDING,
     value: null,
     listeners: null,
+    inputs: null,
   };
 }
 
@@ -156,6 +172,9 @@ function settleConstructionFact<Listener>(
 ): null | Array<Listener> {
   fact.status = status;
   fact.value = value;
+  if (status === CONSTRUCTION_INSTALLED) {
+    fact.inputs = null;
+  }
   const listeners = fact.listeners;
   fact.listeners = null;
   return listeners;
@@ -187,6 +206,101 @@ export function settleConstructionField<Listener>(
   }
   // Failed assignments remain visible to later selected-path readers.
   return listeners;
+}
+
+export function reserveConstructionCollection<Listener>(
+  state: ConstructionState<Listener>,
+  value: Set<any> | Map<any, any>,
+): ConstructionCollection<Listener> {
+  const collection: ConstructionCollection<Listener> = {
+    value,
+    entries: createConstructionFact<Listener>(),
+    inputs: null,
+  };
+  let collections = state.collections;
+  if (collections === null) {
+    collections = state.collections = new WeakMap();
+  }
+  collections.set(value, collection);
+  state.unfinished++;
+  return collection;
+}
+
+export function settleConstructionEntries<Listener>(
+  state: ConstructionState<Listener>,
+  collection: ConstructionCollection<Listener>,
+  status: 1 | 2,
+  value: any,
+): null | Array<Listener> {
+  const fact = collection.entries;
+  if (fact.status !== CONSTRUCTION_PENDING) {
+    return null;
+  }
+  const listeners = settleConstructionFact(fact, status, value);
+  if (status === CONSTRUCTION_INSTALLED) {
+    state.unfinished--;
+    const collections = state.collections;
+    if (collections !== null) {
+      collections.delete(collection.value);
+    }
+    collection.inputs = null;
+  }
+  // The identity has already been installed. Retain a failed entries fact
+  // instead of replacing the identity's successful result with an error.
+  return listeners;
+}
+
+export function createConstructionInputs<Listener>(
+  values: any,
+  pairs: boolean,
+): ConstructionInputs<Listener> {
+  return {values, pairs, waiting: null};
+}
+
+export function readConstructionInputs<Listener>(
+  state: null | ConstructionState<Listener>,
+  inputs: ConstructionInputs<Listener>,
+): null | Array<ConstructionFact<Listener>> {
+  const values = inputs.values;
+  let pending: null | Array<ConstructionFact<Listener>> = null;
+  const fields = state === null ? undefined : state.fields.get(values);
+  if (fields !== undefined) {
+    const iterator = fields.values();
+    let entry = iterator.next();
+    while (!entry.done) {
+      const fact = entry.value;
+      if (fact.status === CONSTRUCTION_FAILED) {
+        throw fact.value;
+      }
+      if (pending === null) {
+        pending = [];
+      }
+      pending.push(fact);
+      entry = iterator.next();
+    }
+  }
+  if (inputs.pairs) {
+    for (let i = 0; i < values.length; i++) {
+      if (getPendingConstructionField(state, values, '' + i) !== undefined) {
+        continue;
+      }
+      const pair = values[i];
+      for (let j = 0; j < 2; j++) {
+        const fact = getPendingConstructionField(
+          state,
+          pair,
+          j === 0 ? '0' : '1',
+        );
+        if (fact !== undefined) {
+          if (pending === null) {
+            pending = [];
+          }
+          pending.push(fact);
+        }
+      }
+    }
+  }
+  return pending;
 }
 
 export function subscribeConstructionFacts<Listener>(
@@ -255,6 +369,21 @@ export function readConstructionContents<Listener>(
       continue;
     }
     seen.add(value);
+    const collection =
+      state.collections === null ? undefined : state.collections.get(value);
+    if (collection !== undefined) {
+      const fact = collection.entries;
+      if (fact.status === CONSTRUCTION_FAILED) {
+        throw fact.value;
+      }
+      if (pending === null) {
+        pending = [];
+      }
+      pending.push(fact);
+      if (collection.inputs !== null) {
+        todo.push(collection.inputs);
+      }
+    }
     if (value instanceof Set) {
       const iterator = value.values();
       let entry = iterator.next();
@@ -284,6 +413,9 @@ export function readConstructionContents<Listener>(
             pending = [];
           }
           pending.push(fact);
+          if (fact.inputs !== null) {
+            todo.push(fact.inputs);
+          }
         }
       }
     }
