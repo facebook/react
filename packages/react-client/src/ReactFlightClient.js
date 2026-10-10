@@ -104,6 +104,12 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 
 import {injectInternals} from './ReactFlightClientDevToolsHook';
 
+import type {
+  ErroredInitializationHandler,
+  InitializationHandler,
+} from './ReactFlightClientConstruction';
+import {createInitializationHandler} from './ReactFlightClientConstruction';
+
 import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -126,7 +132,12 @@ const ReactSharedInternals: SharedStateServer | SharedStateClient =
   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
   ReactSharedInteralsServer;
 
-export type {CallServerCallback, EncodeFormActionCallback};
+export type {
+  CallServerCallback,
+  EncodeFormActionCallback,
+  BlockedChunk,
+  FlightStreamController,
+};
 
 interface FlightStreamController {
   enqueueValue(value: any): void;
@@ -1027,28 +1038,6 @@ type InitializationReference = {
   path: Array<string>,
   isDebug?: boolean, // DEV-only
 };
-type PendingInitializationHandler = {
-  parent: null | InitializationHandler,
-  chunk: null | BlockedChunk<any>,
-  value: any,
-  // The controller of a stream whose chunk is blocked on its debug info. Null
-  // for every other model.
-  reason: null | FlightStreamController,
-  deps: number,
-  errored: false,
-};
-type ErroredInitializationHandler = {
-  parent: null | InitializationHandler,
-  chunk: null | BlockedChunk<any>,
-  value: null,
-  // The error the handler was rejected with.
-  reason: mixed,
-  deps: number,
-  errored: true,
-};
-type InitializationHandler =
-  | PendingInitializationHandler
-  | ErroredInitializationHandler;
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
 let isInitializingDebugInfo: boolean = false;
@@ -2027,14 +2016,7 @@ function waitForReference<T>(
     handler = initializingHandler;
     handler.deps++;
   } else {
-    handler = initializingHandler = {
-      parent: null,
-      chunk: null,
-      value: null,
-      reason: null,
-      deps: 1,
-      errored: false,
-    };
+    handler = initializingHandler = createInitializationHandler(null, 1);
   }
 
   const reference: InitializationReference = {
@@ -2125,14 +2107,7 @@ function loadServerReference<A: Iterable<any>, T>(
     handler = initializingHandler;
     handler.deps++;
   } else {
-    handler = initializingHandler = {
-      parent: null,
-      chunk: null,
-      value: null,
-      reason: null,
-      deps: 1,
-      errored: false,
-    };
+    handler = initializingHandler = createInitializationHandler(null, 1);
   }
 
   function fulfill(): void {
@@ -2395,14 +2370,10 @@ function getOutlinedModel<T>(
                 handler = initializingHandler;
                 handler.deps++;
               } else {
-                handler = initializingHandler = {
-                  parent: null,
-                  chunk: null,
-                  value: null,
-                  reason: null,
-                  deps: 1,
-                  errored: false,
-                };
+                handler = initializingHandler = createInitializationHandler(
+                  null,
+                  1,
+                );
               }
               return null as any;
             }
@@ -2506,14 +2477,7 @@ function getOutlinedModel<T>(
         handler = initializingHandler;
         handler.deps++;
       } else {
-        handler = initializingHandler = {
-          parent: null,
-          chunk: null,
-          value: null,
-          reason: null,
-          deps: 1,
-          errored: false,
-        };
+        handler = initializingHandler = createInitializationHandler(null, 1);
       }
       return null as any;
     }
@@ -2690,14 +2654,10 @@ function parseModelString(
         // a new element, we need to shadow it because we're now in a new scope.
         // This is effectively the "begin" or "push" phase of Element parsing.
         // We'll pop later when we parse the array itself.
-        initializingHandler = {
-          parent: initializingHandler,
-          chunk: null,
-          value: null,
-          reason: null,
-          deps: 0,
-          errored: false,
-        };
+        initializingHandler = createInitializationHandler(
+          initializingHandler,
+          0,
+        );
       }
       return REACT_ELEMENT_TYPE;
     }
