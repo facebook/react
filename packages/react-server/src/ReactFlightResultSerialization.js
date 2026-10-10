@@ -20,6 +20,10 @@ import type {ErrorReference, Result} from 'shared/ReactFlightResult';
 import type {HintQueue} from 'shared/ReactFlightResult';
 import type {Thenable} from 'shared/ReactTypes';
 import {
+  getResultModel,
+  subscribeToDebugInfo,
+} from 'shared/ReactFlightResultModel';
+import {
   getRoot,
   getHintQueue,
   waitForHints,
@@ -43,15 +47,28 @@ function subscribeToThenable(
   thenable: Thenable<ReactClientValue>,
   reader: InputThenableReader,
 ): () => void {
+  let unsubscribeDebug = noop;
+  if (__DEV__) {
+    const debug = reader.debug;
+    if (debug !== undefined) {
+      const model = getResultModel<ReactClientValue>(thenable);
+      if (model !== null) {
+        unsubscribeDebug = subscribeToDebugInfo(model, debug);
+      }
+    }
+  }
   if (isHalted(result, thenable)) {
+    unsubscribeDebug();
     reader.halt();
     return noop;
   }
   if (thenable.status === 'fulfilled') {
+    unsubscribeDebug();
     reader.resolve(thenable.value);
     return noop;
   }
   if (thenable.status === 'rejected') {
+    unsubscribeDebug();
     reader.reject(thenable.reason, getErrorReference(result, thenable));
     return noop;
   }
@@ -61,6 +78,8 @@ function subscribeToThenable(
   } = {result, reader};
   let unsubscribe = noop;
   function detach(): void {
+    unsubscribeDebug();
+    unsubscribeDebug = noop;
     subscription.result = null;
     subscription.reader = null;
     unsubscribe();
@@ -101,7 +120,7 @@ function subscribeToThenable(
 }
 
 export function createInput(result: Result<ReactClientValue>): Input {
-  return {
+  const input: Input = {
     root: getRoot(result),
     getReadableStream(value) {
       const source = getReadableStream(result, value);
@@ -171,6 +190,10 @@ export function createInput(result: Result<ReactClientValue>): Input {
       return detach;
     },
   };
+  if (__DEV__) {
+    input.debugStartTime = getRoot(result)._debugStartTime;
+  }
+  return input;
 }
 
 function subscribeToSequence(

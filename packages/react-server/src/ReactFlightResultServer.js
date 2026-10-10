@@ -31,6 +31,7 @@ import type {
   ReactStackTrace,
   ReactCallSite,
   ReactComponentInfo,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
@@ -63,6 +64,7 @@ import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 import {
   createResult,
   completeResult,
+  subscribeToResult,
   pushHint,
   closeHints,
   setErrorDigest,
@@ -93,6 +95,9 @@ import {
   fulfillResultModel,
   rejectResultModel,
   getResultModel,
+  pushDebugInfo,
+  subscribeToDebugInfo,
+  setDebugModel,
 } from 'shared/ReactFlightResultModel';
 import {scheduleWork, scheduleMicrotask} from './ReactServerStreamConfig';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -102,6 +107,7 @@ import {
   enableFlightWeakThenables,
   enableTaint,
   enableFlightObjectReferences,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import binaryToComparableString from 'shared/binaryToComparableString';
 import {
@@ -199,6 +205,8 @@ type Task = {
   isModelReference: boolean,
   ping: () => void,
   thenableState: ThenableState | null,
+  timed: boolean, // DEV-only
+  time: number, // DEV-only
   environmentName: string, // DEV-only
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
@@ -219,6 +227,7 @@ type ModelEntry =
   | {model: ReactClientValue, +root: void, +parent: null, +key: string};
 
 let modelRoot: null | ReactClientValue = null;
+let canEmitDebugInfo = false;
 let serializedSize = 0;
 const MAX_ROW_SIZE = 3200;
 const emptyRoot = {};
@@ -267,6 +276,8 @@ export type Request = {
   completedElements: Array<ReactElement>, // DEV-only
   didWarnForKey: null | WeakSet<ReactComponentInfo>, // DEV-only
   unkeyedElements: WeakSet<ReactElement>, // DEV-only
+  timeOrigin: number, // DEV-only
+  abortTime: number, // DEV-only
   environmentName: () => string, // DEV-only
   filterStackFrame: (string, string, number, number) => boolean, // DEV-only
 };
@@ -409,6 +420,7 @@ function RequestInstance(
   onFatalError: mixed => void,
   environmentName: void | string | (() => string),
   filterStackFrame: void | ((string, string) => boolean),
+  debugStartTime: void | number,
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -459,6 +471,13 @@ function RequestInstance(
     this.completedElements = [];
     this.didWarnForKey = null;
     this.unkeyedElements = new WeakSet();
+    this.timeOrigin =
+      typeof debugStartTime === 'number'
+        ? debugStartTime -
+          // $FlowFixMe[prop-missing]
+          performance.timeOrigin
+        : performance.now();
+    this.abortTime = -0.0;
     this.environmentName =
       environmentName === undefined
         ? () => 'Server'
@@ -478,6 +497,12 @@ function RequestInstance(
     createRootFormatContext(),
   );
   const root = rootTask.promise;
+  if (__DEV__) {
+    root._debugStartTime =
+      this.timeOrigin +
+      // $FlowFixMe[prop-missing]
+      performance.timeOrigin;
+  }
   this.result = createResult(
     root,
     reason => abort(this, reason),
@@ -514,6 +539,7 @@ export function createRequest(
   createServerReference: (Function, Promise<Array<any>>) => Function,
   environmentName?: string | (() => string),
   filterStackFrame?: (string, string) => boolean,
+  debugStartTime?: number,
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -530,6 +556,7 @@ export function createRequest(
     noop,
     environmentName,
     filterStackFrame,
+    debugStartTime,
   );
 }
 
@@ -544,6 +571,9 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
   props: Props,
   element: ReactElement,
 ): ReactClientValue {
+  if (__DEV__ && !canEmitDebugInfo) {
+    return outlineTask(request, task);
+  }
   const renderedModels = getRenderedModels(
     request,
     element,
@@ -567,7 +597,6 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
         name: (Component as any).displayName || Component.name || '',
         env: (0, request.environmentName)(),
         key: element.key,
-        owner: task.debugOwner,
         stack:
           task.debugStack === null
             ? null
@@ -575,13 +604,23 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
         props,
         debugStack: task.debugStack,
         debugTask: task.debugTask,
-      };
+      } as ReactComponentInfo;
+      if (task.debugOwner !== null) {
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.owner = task.debugOwner;
+      }
       if (
         element._store.validated === 2 ||
         request.unkeyedElements.has(element)
       ) {
         warnForMissingKey(request, key, componentDebugInfo, task.debugTask);
       }
+      if (enableProfilerTimer) {
+        task.time = performance.now();
+        pushDebugInfo(task.promise, {time: task.time});
+        task.timed = true;
+      }
+      pushDebugInfo(task.promise, componentDebugInfo);
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
     // $FlowFixMe[constant-condition]
@@ -709,7 +748,7 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
     const iteratorFn = getIteratorFn(result);
     if (iteratorFn) {
       const iterableChild: any = result;
-      result = {
+      const multiShot = {
         [Symbol.iterator]: function () {
           const iterator = iteratorFn.call(iterableChild);
           if (__DEV__) {
@@ -739,13 +778,17 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
           return iterator as any;
         },
       };
+      if (__DEV__) {
+        (multiShot as any)._debugInfo = iterableChild._debugInfo;
+      }
+      result = multiShot;
     } else if (
       typeof (result as any)[ASYNC_ITERATOR] === 'function' &&
       (typeof ReadableStream !== 'function' ||
         !(result instanceof ReadableStream))
     ) {
       const iterableChild: any = result;
-      result = {
+      const multiShot = {
         [ASYNC_ITERATOR]: function () {
           const iterator = iterableChild[ASYNC_ITERATOR]();
           if (__DEV__) {
@@ -775,6 +818,10 @@ function renderFunctionComponent<Props: {[name: string]: mixed}>(
           return iterator;
         },
       };
+      if (__DEV__) {
+        (multiShot as any)._debugInfo = iterableChild._debugInfo;
+      }
+      result = multiShot;
     }
   }
   request.renderingComponents.set(element, result);
@@ -958,9 +1005,17 @@ function createTask(
     implicitSlot,
   } as Omit<
     Task,
-    'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+    | 'environmentName'
+    | 'debugOwner'
+    | 'debugStack'
+    | 'debugTask'
+    | 'timed'
+    | 'time',
   > as any;
   if (__DEV__) {
+    task.timed = false;
+    task.time = request.timeOrigin;
+    promise._debugInfo = [];
     task.environmentName = request.environmentName();
     task.debugOwner = null;
     task.debugStack = null;
@@ -973,6 +1028,9 @@ function createTask(
 function pingTask(request: Request, task: Task): void {
   if (request.status === CLOSED || task.status !== PENDING) {
     return;
+  }
+  if (__DEV__) {
+    task.timed = true;
   }
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
@@ -1204,6 +1262,8 @@ function renderThenable(
   );
   if (__DEV__) {
     newTask.environmentName = task.environmentName;
+    newTask.time = task.time;
+    newTask.timed = task.timed;
     newTask.debugOwner = task.debugOwner;
     newTask.debugStack = task.debugStack;
     newTask.debugTask = task.debugTask;
@@ -1315,7 +1375,7 @@ function renderClientElement(
     } as any;
     Object.defineProperties(resolvedElement, {
       ref: {value: null},
-      _debugInfo: {value: element._debugInfo, writable: true},
+      _debugInfo: {value: null, writable: true},
       _debugStack: {
         value: element._debugStack === undefined ? null : element._debugStack,
         writable: true,
@@ -1617,6 +1677,13 @@ function renderModelDestructive(
     }
     const element: ReactElement = value as any;
     if (__DEV__) {
+      const debugInfo: ?ReactDebugInfo = element._debugInfo;
+      if (debugInfo) {
+        if (!canEmitDebugInfo) {
+          return outlineTask(request, task);
+        }
+        forwardDebugInfo(request, task, debugInfo);
+      }
       task.debugOwner = element._owner;
       task.debugStack = element._debugStack;
       task.debugTask = element._debugTask;
@@ -1674,6 +1741,15 @@ function renderModelDestructive(
     const resolvedModel = __DEV__ ? callLazyInitInDEV(lazy) : init(payload);
     if (request.status === ABORTING || request.status === CLOSED) {
       throw request.fatalError;
+    }
+    if (__DEV__) {
+      const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
+      if (debugInfo) {
+        if (!canEmitDebugInfo) {
+          return outlineTask(request, task);
+        }
+        forwardDebugInfo(request, task, debugInfo);
+      }
     }
     return renderModelDestructive(
       request,
@@ -2250,9 +2326,13 @@ function retryTask(request: Request, task: Task): void {
   const originalKeyPath = task.keyPath;
   const originalImplicitSlot = task.implicitSlot;
   const parentSerializedSize = serializedSize;
+  const prevCanEmitDebugInfo = canEmitDebugInfo;
   task.currentReference = task.reference;
   try {
     modelRoot = task.model;
+    if (__DEV__) {
+      canEmitDebugInfo = true;
+    }
     const rendered = renderModelDestructive(
       request,
       task,
@@ -2267,6 +2347,35 @@ function retryTask(request: Request, task: Task): void {
       (rendered as any).$$typeof === REACT_ELEMENT_TYPE
         ? rendered
         : task.model;
+    if (__DEV__) {
+      canEmitDebugInfo = false;
+      // Forwarding tasks inherit completion history from their source cell.
+      // Other tasks finish component rendering before resolving descendants.
+      let forwardsDebugInfo = false;
+      if (
+        rendered !== null &&
+        typeof rendered === 'object' &&
+        (rendered as any).$$typeof === REACT_LAZY_TYPE &&
+        getModelInfo(request.result, rendered) === 0
+      ) {
+        const lazy: LazyComponent<
+          ReactClientValue,
+          ResultModel<ReactClientValue>,
+        > = rendered as any;
+        const outlinedModels = request.outlinedModels;
+        forwardsDebugInfo =
+          outlinedModels === null || !outlinedModels.has(lazy._payload);
+      }
+      if (!forwardsDebugInfo) {
+        const currentEnv = request.environmentName();
+        if (currentEnv !== task.environmentName) {
+          pushDebugInfo(task.promise, {env: currentEnv});
+        }
+        if (enableProfilerTimer && task.timed) {
+          markOperationEndTime(request, task, performance.now());
+        }
+      }
+    }
     const resolvedModel =
       task.isModelReference || rendered === null || typeof rendered !== 'object'
         ? rendered
@@ -2335,6 +2444,9 @@ function retryTask(request: Request, task: Task): void {
         validateDeferredBlobs(request);
       }
     } finally {
+      if (__DEV__) {
+        canEmitDebugInfo = prevCanEmitDebugInfo;
+      }
       serializedSize = parentSerializedSize;
     }
   }
@@ -3161,6 +3273,14 @@ function blockTask(
 ): void {
   task.model = model;
   task.status = BLOCKED;
+  if (
+    __DEV__ &&
+    model !== null &&
+    typeof model === 'object' &&
+    (model as any).$$typeof === REACT_ELEMENT_TYPE
+  ) {
+    setDebugModel(task.promise, model);
+  }
   if (request.status === ABORTING) {
     abortTask(request, task);
     return;
@@ -3224,16 +3344,113 @@ function completeTask(
     if (outlinedModels === null || !outlinedModels.has(lazy._payload)) {
       const source = lazy._payload;
       forwardModelReference(request.result, task.promise, source);
-      source.then(task.resolve, error => {
-        copyErrorReference(request.result, task.promise, source);
-        task.reject(error);
-      });
+      let unsubscribeDebugInfo = noop;
+      if (__DEV__) {
+        const unsubscribeSource = subscribeToDebugInfo(source, info => {
+          forwardDebugInfo(request, task, [info]);
+        });
+        const unsubscribeResult = subscribeToResult(
+          request.result,
+          unsubscribeSource,
+        );
+        unsubscribeDebugInfo = () => {
+          unsubscribeSource();
+          unsubscribeResult();
+        };
+      }
+      source.then(
+        __DEV__
+          ? value => {
+              unsubscribeDebugInfo();
+              task.resolve(value);
+            }
+          : task.resolve,
+        error => {
+          if (__DEV__) {
+            unsubscribeDebugInfo();
+          }
+          copyErrorReference(request.result, task.promise, source);
+          task.reject(error);
+        },
+      );
       request.abortableTasks.delete(task);
       return;
     }
   }
   task.resolve(resolvedModel);
   request.abortableTasks.delete(task);
+}
+
+function recordTimingInfo(task: Task, time: number): void {
+  pushDebugInfo(task.promise, {time});
+}
+
+function markOperationEndTime(request: Request, task: Task, timestamp: number) {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  // Always emit a timing chunk even if it doesn't advance.
+  // This ensures that the end time of the previous entry isn't implied to be the start of the next one.
+  if (request.status === ABORTING && timestamp > request.abortTime) {
+    // If we're aborting then we don't emit any end times that happened after.
+    return;
+  }
+  if (timestamp > task.time) {
+    recordTimingInfo(task, timestamp);
+    task.time = timestamp;
+  } else {
+    recordTimingInfo(task, task.time);
+  }
+}
+
+function forwardDebugInfo(
+  request: Request,
+  task: Task,
+  debugInfo: ReactDebugInfo,
+): void {
+  for (let i = 0; i < debugInfo.length; i++) {
+    const info = debugInfo[i];
+    if (typeof info.time === 'number') {
+      markOperationEndTime(request, task, info.time);
+    } else {
+      pushDebugInfo(task.promise, info);
+    }
+  }
+}
+
+function outlineTask(request: Request, task: Task): ReactClientValue {
+  const source = task.model;
+  const renderedModels = getRenderedModels(
+    request,
+    source,
+    task.keyPath,
+    task.implicitSlot,
+  );
+  const newTask = createTask(
+    request,
+    task.model,
+    task.keyPath,
+    task.implicitSlot,
+    task.formatContext,
+  );
+  if (task.model !== null && typeof task.model === 'object') {
+    setModelReference(request, task.model, newTask.reference);
+  }
+  if (__DEV__) {
+    newTask.time = task.time;
+    newTask.debugOwner = task.debugOwner;
+    newTask.debugStack = task.debugStack;
+    newTask.debugTask = task.debugTask;
+  }
+  retryTask(request, newTask);
+  const model =
+    newTask.promise.status === 'fulfilled'
+      ? createResultValueReference(request, newTask.reference)
+      : createLazyWrapperAroundWakeable(newTask.promise as any);
+  if (source !== null && typeof source === 'object') {
+    setRenderedModel(renderedModels, source, model);
+  }
+  return renderModelReference(task, model);
 }
 
 function deferTask(request: Request, task: Task): ReactClientValue {
@@ -3245,6 +3462,7 @@ function deferTask(request: Request, task: Task): ReactClientValue {
     task.formatContext,
   );
   if (__DEV__) {
+    newTask.time = task.time;
     newTask.debugOwner = task.debugOwner;
     newTask.debugStack = task.debugStack;
     newTask.debugTask = task.debugTask;
@@ -3540,6 +3758,9 @@ export function abort(request: Request, reason: mixed): void {
   }
   try {
     request.status = ABORTING;
+    if (__DEV__) {
+      request.abortTime = performance.now();
+    }
     request.cacheController.abort(reason);
     if (request.type === PRERENDER) {
       finishAbort(request, reason, true);
@@ -3583,6 +3804,7 @@ export function createPrerenderRequest(
   createServerReference: (Function, Promise<Array<any>>) => Function,
   environmentName?: string | (() => string),
   filterStackFrame?: (string, string) => boolean,
+  debugStartTime?: number,
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -3599,6 +3821,7 @@ export function createPrerenderRequest(
     onFatalError,
     environmentName,
     filterStackFrame,
+    debugStartTime,
   );
 }
 

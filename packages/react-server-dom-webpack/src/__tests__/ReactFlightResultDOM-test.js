@@ -43,10 +43,9 @@ function gc() {
 }
 
 let ReactNoop;
-let ReactServer;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
-let getDebugInfo;
+let ReactServer;
 let act;
 let serverAct;
 let use;
@@ -4844,149 +4843,6 @@ describe('ReactFlightResultDOM', () => {
     }
     expect(accessed).toEqual(['a', 'c']);
   });
-  // @gate !__DEV__ || enableComponentPerformanceTrack
-  it.skip('uses the server component debug info as the element owner in DEV', async () => {
-    function Container({children}) {
-      return children;
-    }
-
-    function Greeting({firstName}) {
-      // We can't use JSX here because it'll use the Client React.
-      return ReactServer.createElement(
-        Container,
-        null,
-        ReactServer.createElement('span', null, 'Hello, ', firstName),
-      );
-    }
-
-    const model = {
-      greeting: ReactServer.createElement(Greeting, {firstName: 'Seb'}),
-    };
-
-    const transport = ReactNoopFlightServer.render(model);
-
-    await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      const greeting = rootModel.greeting;
-      // We've rendered down to the span.
-      expect(greeting.type).toBe('span');
-      if (__DEV__) {
-        const greetInfo = {
-          name: 'Greeting',
-          env: 'Server',
-          key: null,
-          stack: '    in Object.<anonymous> (at **)',
-          props: {
-            firstName: 'Seb',
-          },
-        };
-        expect(getDebugInfo(greeting)).toEqual([
-          {time: 12},
-          greetInfo,
-          {time: 13},
-          {
-            name: 'Container',
-            env: 'Server',
-            key: null,
-            owner: greetInfo,
-            stack: '    in Greeting (at **)',
-            props: {
-              children: expect.objectContaining({
-                type: 'span',
-                props: {
-                  children: ['Hello, ', 'Seb'],
-                },
-              }),
-            },
-          },
-          {time: 14},
-        ]);
-        // The owner that created the span was the outer server component.
-        // We expect the debug info to be referentially equal to the owner.
-        expect(greeting._owner).toBe(greeting._debugInfo[1]);
-      } else {
-        expect(greeting._debugInfo).toBe(undefined);
-        expect(greeting._owner).toBe(undefined);
-      }
-      ReactNoop.render(greeting);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
-  });
-
-  // @gate !__DEV__ || enableComponentPerformanceTrack
-  it.skip('supports async server component debug info as the element owner in DEV', async () => {
-    function Container({children}) {
-      return children;
-    }
-
-    const promise = Promise.resolve(true);
-    async function Greeting({firstName}) {
-      // We can't use JSX here because it'll use the Client React.
-      const child = ReactServer.createElement(
-        'span',
-        null,
-        'Hello, ' + firstName,
-      );
-      // Yield the synchronous pass
-      await promise;
-      // We should still be able to track owner using AsyncLocalStorage.
-      return ReactServer.createElement(Container, null, child);
-    }
-
-    const model = {
-      greeting: ReactServer.createElement(Greeting, {firstName: 'Seb'}),
-    };
-
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(model, webpackMap),
-    );
-
-    const rootModel = await serverAct(() =>
-      ReactServerDOMClient.createFromReadableStream(stream, {
-        serverConsumerManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
-      }),
-    );
-
-    const ssrStream = await serverAct(() =>
-      ReactDOMServer.renderToReadableStream(rootModel.greeting),
-    );
-    const result = await readResult(ssrStream);
-    expect(result).toEqual('<span>Hello, Seb</span>');
-
-    // Resolve the React Lazy wrapper which must have resolved by now.
-    const lazyWrapper = rootModel.greeting;
-    const greeting = lazyWrapper._init(lazyWrapper._payload);
-
-    // We've rendered down to the span.
-    expect(greeting.type).toBe('span');
-    if (__DEV__) {
-      const greetInfo = expect.objectContaining({
-        name: 'Greeting',
-        env: 'Server',
-      });
-      expect(greeting._debugInfo).toEqual([
-        {time: 12},
-        greetInfo,
-        {time: 13},
-        expect.objectContaining({
-          name: 'Container',
-          env: 'Server',
-          owner: greetInfo,
-        }),
-        {time: 14},
-      ]);
-      // The owner that created the span was the outer server component.
-      // We expect the debug info to be referentially equal to the owner.
-      expect(greeting._owner).toBe(greeting._debugInfo[1]);
-    } else {
-      expect(lazyWrapper._debugInfo).toBe(undefined);
-      expect(greeting._owner).toBe(undefined);
-    }
-  });
 
   describe('validation and Error values', () => {
     let ExpectedMessageErrorBoundary;
@@ -5938,49 +5794,6 @@ describe('ReactFlightResultDOM', () => {
         '\n    in Bar (at **)' + '\n    in Foo (at **)',
       );
     });
-  });
-
-  // @gate !__DEV__ || enableComponentPerformanceTrack
-  it.skip('can render a shared forwardRef Component', async () => {
-    const Greeting = React.forwardRef(function Greeting(
-      {firstName, lastName},
-      ref,
-    ) {
-      return (
-        <span ref={ref}>
-          Hello, {firstName} {lastName}
-        </span>
-      );
-    });
-
-    const root = <Greeting firstName="Seb" lastName="Smith" />;
-
-    const transport = ReactNoopFlightServer.render(root);
-
-    await act(async () => {
-      const result = await ReactNoopFlightClient.read(transport);
-      expect(getDebugInfo(result)).toEqual(
-        __DEV__
-          ? [
-              {time: 12},
-              {
-                name: 'Greeting',
-                env: 'Server',
-                key: null,
-                stack: '    in Object.<anonymous> (at **)',
-                props: {
-                  firstName: 'Seb',
-                  lastName: 'Smith',
-                },
-              },
-              {time: 13},
-            ]
-          : undefined,
-      );
-      ReactNoop.render(result);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
   });
 
   describe('built-in values', () => {

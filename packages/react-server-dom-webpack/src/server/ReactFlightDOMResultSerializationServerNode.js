@@ -46,6 +46,7 @@ export function renderToPipeableStream(
   onError?: mixed => ?string,
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
+  debugStartTime?: number,
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
 ): PipeableStream {
@@ -54,6 +55,7 @@ export function renderToPipeableStream(
     webpackMap,
     onError,
     temporaryReferences,
+    __DEV__ ? debugStartTime : undefined,
     __DEV__ ? environmentName : undefined,
     __DEV__ ? filterStackFrame : undefined,
   );
@@ -97,6 +99,7 @@ export type ReadableStreamOptions = {
   temporaryReferences?: TemporaryReferenceSet,
   environmentName?: string | (() => string),
   filterStackFrame?: (url: string, functionName: string) => boolean,
+  startTime?: number,
 };
 
 function createFakeWritableFromReadableStreamController(
@@ -138,6 +141,7 @@ export function renderToReadableStream(
     webpackMap,
     options ? options.onError : undefined,
     options ? options.temporaryReferences : undefined,
+    options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
   );

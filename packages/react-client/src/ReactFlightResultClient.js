@@ -33,6 +33,7 @@ import type {AsyncIterableController} from 'shared/ReactFlightResultAsyncIterabl
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
+  ReactComponentInfo,
   ReactDebugInfo,
   ReactErrorInfoDev,
   ReactStackTrace,
@@ -67,6 +68,12 @@ import {
   MODEL_ELEMENT,
   getErrorInfo,
 } from 'shared/ReactFlightResult';
+import {
+  getResultModelStatus,
+  getDebugModel,
+  subscribeToDebugInfo,
+} from 'shared/ReactFlightResultModel';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {
   dispatchHint,
   resolveClientReference,
@@ -206,6 +213,7 @@ type PendingChunk<T> = {
 };
 
 type HaltedChunk<T> = {
+  _debugInfo: ReactDebugInfo, // DEV-only
   status: 'halted',
   value: null,
   reason: null,
@@ -266,6 +274,8 @@ type SomeChunk<T> =
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk<T>;
+
+const supportsCreateTask = __DEV__ && !!(console as any).createTask;
 
 const PENDING = 'pending';
 const PENDING_WEAK = 'pending_weak';
@@ -839,6 +849,27 @@ function createElement(
   return resolvedElement;
 }
 
+function rejectElementChunk(
+  chunk: SomeChunk<any>,
+  element: ReactElement,
+  error: mixed,
+): void {
+  if (__DEV__) {
+    const erroredComponent: ReactComponentInfo = {
+      name: getComponentNameFromType(element.type) || '',
+      owner: element._owner,
+    };
+    // $FlowFixMe[cannot-write]
+    erroredComponent.debugStack = element._debugStack;
+    if (supportsCreateTask) {
+      // $FlowFixMe[cannot-write]
+      erroredComponent.debugTask = element._debugTask;
+    }
+    chunk._debugInfo.push(erroredComponent);
+  }
+  triggerErrorOnChunk(chunk, error);
+}
+
 function readElement(
   response: Response,
   element: ReactElement,
@@ -961,7 +992,24 @@ function readModel(response: Response, value: any): any {
   }
   const reference = getValueReference(response._result, value);
   if (reference !== undefined) {
-    const model = readModel(response, readModelReference(response, reference));
+    const referencedModel = readModelReference(response, reference);
+    let model;
+    if (
+      __DEV__ &&
+      reference.parent === null &&
+      referencedModel === reference.root.value
+    ) {
+      const chunk: SomeChunk<any> = readModel(response, reference.root);
+      if (chunk.status === RESOLVED_MODEL) {
+        initializeResolvedModelChunk(chunk);
+      }
+      model =
+        chunk.status === INITIALIZED
+          ? chunk.value
+          : readModel(response, referencedModel);
+    } else {
+      model = readModel(response, referencedModel);
+    }
     models.set(value, model);
     return model;
   }
@@ -1023,22 +1071,53 @@ function readSpecialModel(response: Response, value: any): any {
     const chunk = createPendingChunk<any>(response);
     const lazy = createLazyChunkWrapper(chunk);
     if (__DEV__) {
+      const debugInfo = value._debugInfo;
+      if (debugInfo !== undefined && debugInfo !== null) {
+        const localDebugInfo: ReactDebugInfo = chunk._debugInfo;
+        for (let i = 0; i < debugInfo.length; i++) {
+          localDebugInfo.push(debugInfo[i]);
+        }
+      }
       const store = value._store;
       lazy._store =
         store === undefined ? undefined : createElementStore(store.validated);
     }
     response._models.set(value, lazy);
     const source = value._payload;
+    if (__DEV__) {
+      subscribeChunkDebugInfo(response, chunk, source);
+    }
+    const reject = (error: mixed): void => {
+      if (__DEV__ && getResultModelStatus(source) !== null) {
+        const model = getDebugModel(source);
+        if (model !== undefined) {
+          rejectElementChunk(
+            chunk,
+            model,
+            resolveError(response, source, error),
+          );
+          return;
+        }
+      }
+      triggerErrorOnChunk(chunk, resolveError(response, source, error));
+    };
     if (response._closed || isHaltedModel(response, source)) {
       triggerErrorOnChunk(chunk, getClosedReason(response));
+      return lazy;
+    }
+    const resultModelStatus = getResultModelStatus(source);
+    if (resultModelStatus === 'fulfilled') {
+      resolveModelChunk(response, chunk, source.value);
+      return lazy;
+    } else if (resultModelStatus === 'rejected') {
+      reject(source.reason);
       return lazy;
     }
     subscribeToModel(
       response,
       source,
       model => resolveModelChunk(response, chunk, model),
-      error =>
-        triggerErrorOnChunk(chunk, resolveError(response, source, error)),
+      reject,
     );
     return lazy;
   } else if (typeof value.then === 'function') {
@@ -1048,6 +1127,9 @@ function readSpecialModel(response: Response, value: any): any {
       thenable.status === PENDING_WEAK,
     );
     response._models.set(value, chunk);
+    if (__DEV__) {
+      subscribeChunkDebugInfo(response, chunk, value);
+    }
     if (response._closed) {
       if (chunk.status === PENDING_WEAK) {
         haltChunk(chunk);
@@ -1066,6 +1148,14 @@ function readSpecialModel(response: Response, value: any): any {
     }
     if (chunk.status === PENDING_WEAK) {
       subscribeWeakModel(response, chunk, value);
+      return chunk;
+    }
+    const resultModelStatus = getResultModelStatus(value);
+    if (resultModelStatus === 'fulfilled') {
+      resolveModelChunk(response, chunk, value.value);
+      return chunk;
+    } else if (resultModelStatus === 'rejected') {
+      triggerErrorOnChunk(chunk, resolveError(response, value, value.reason));
       return chunk;
     }
     subscribeToModel(
@@ -1234,17 +1324,87 @@ function freezeCompletedElements(response: Response): void {
     const elements = response._completedElements;
     for (let i = 0; i < elements.length; i++) {
       Object.freeze(elements[i].props);
-      Object.freeze(elements[i]);
     }
     elements.length = 0;
   }
 }
 
-function completeModel(response: Response, model: any): any {
+function completeModel(
+  response: Response,
+  model: any,
+  debugInfo?: ReactDebugInfo,
+): any {
   try {
-    return readModel(response, model);
+    const value: any =
+      __DEV__ &&
+      debugInfo !== undefined &&
+      debugInfo.length > 0 &&
+      isArray(model) &&
+      (response._models.get(model) === undefined ||
+        response._models.get(model) === model)
+        ? readArray(response, model)
+        : readModel(response, model);
+    if (
+      __DEV__ &&
+      debugInfo !== undefined &&
+      debugInfo.length > 0 &&
+      value !== null &&
+      typeof value === 'object' &&
+      (value.$$typeof === REACT_ELEMENT_TYPE || isArray(value))
+    ) {
+      const resolvedDebugInfo = debugInfo.splice(0);
+      if (isArray(value._debugInfo)) {
+        // $FlowFixMe[method-unbinding]
+        value._debugInfo.unshift.apply(value._debugInfo, resolvedDebugInfo);
+      } else if (!Object.isFrozen(value)) {
+        Object.defineProperty(value, '_debugInfo', {
+          configurable: false,
+          enumerable: false,
+          value: resolvedDebugInfo,
+          writable: true,
+        });
+      }
+    }
+    return value;
   } finally {
     freezeCompletedElements(response);
+  }
+}
+
+function subscribeChunkDebugInfo(
+  response: Response,
+  chunk: SomeChunk<any>,
+  source: ResultModel<any>,
+): void {
+  if (
+    __DEV__ &&
+    !response._closed &&
+    getResultModelStatus(source) !== null &&
+    source._debugInfo !== undefined &&
+    !isHalted(response._result, source)
+  ) {
+    let debugChunk: null | SomeChunk<any> = chunk;
+    const unsubscribe = subscribeToDebugInfo(source, info => {
+      if (debugChunk !== null) {
+        debugChunk._debugInfo.push(info);
+      }
+    });
+    let owner: null | Response = response;
+    const cleanup = () => {
+      unsubscribe();
+      debugChunk = null;
+      if (owner !== null) {
+        if (owner._cleanups !== null) {
+          owner._cleanups.delete(cleanup);
+        }
+        owner = null;
+      }
+    };
+    if (response._cleanups === null) {
+      response._cleanups = new Set();
+    }
+    response._cleanups.add(cleanup);
+    source.then(cleanup, cleanup);
   }
 }
 
@@ -1259,7 +1419,10 @@ function initializeModelChunk<T>(
   try {
     const promise = preloadModel(response, model);
     if (promise === null) {
-      initializeChunk(chunk, completeModel(response, model));
+      initializeChunk(
+        chunk,
+        completeModel(response, model, __DEV__ ? chunk._debugInfo : undefined),
+      );
     } else {
       subscribeToModel(
         response,
@@ -1269,7 +1432,14 @@ function initializeModelChunk<T>(
             return;
           }
           try {
-            initializeChunk(chunk, completeModel(response, model));
+            initializeChunk(
+              chunk,
+              completeModel(
+                response,
+                model,
+                __DEV__ ? chunk._debugInfo : undefined,
+              ),
+            );
           } catch (error) {
             triggerErrorOnChunk(chunk, error);
           }
@@ -2652,8 +2822,6 @@ function buildFakeCallStack<T>(
   }
   return callStack;
 }
-
-const supportsCreateTask = __DEV__ && !!(console as any).createTask;
 
 function getRootTask(
   response: Response,
