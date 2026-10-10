@@ -208,10 +208,11 @@ function areHookInputsEqual(
     return false;
   }
 
-  if (__DEV__) {
-    // Don't bother comparing lengths in prod because these arrays should be
-    // passed inline.
-    if (nextDeps.length !== prevDeps.length) {
+  // A dependency list that grew or shrank is not the same input. Dev builds
+  // already warn about this rules-of-hooks violation; production must not
+  // treat the shared prefix as equal, or useMemo/useEffect keep a stale value.
+  if (nextDeps.length !== prevDeps.length) {
+    if (__DEV__) {
       console.error(
         'The final argument passed to %s changed size between renders. The ' +
           'order and size of this array must remain constant.\n\n' +
@@ -222,9 +223,10 @@ function areHookInputsEqual(
         `[${prevDeps.join(', ')}]`,
       );
     }
+    return false;
   }
   // $FlowFixMe[incompatible-use] found when upgrading Flow
-  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+  for (let i = 0; i < prevDeps.length; i++) {
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
