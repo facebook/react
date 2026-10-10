@@ -43,7 +43,6 @@ function gc() {
 }
 
 let ReactNoop;
-let ReactNoopFlightServer;
 let ReactNoopFlightClient;
 let ReactServer;
 let act;
@@ -5328,8 +5327,27 @@ describe('ReactFlightResultDOM', () => {
       }
     });
 
+    async function encodeConsoleResult(result) {
+      const stream = new Stream.PassThrough();
+      const chunks = [];
+      stream.on('data', chunk => chunks.push(chunk));
+      const done = new Promise((resolve, reject) => {
+        stream.on('end', resolve);
+        stream.on('error', reject);
+      });
+      ReactServerDOMServer.renderResultToPipeableStream(result, {}).pipe(
+        stream,
+      );
+      await done;
+      jest.resetModules();
+      __unmockReact();
+      React = require('react');
+      ReactNoopFlightClient = require('react-noop-renderer/flight-client');
+      return chunks;
+    }
+
     // @gate __DEV__
-    it.skip('replays logs, but not onError logs', async () => {
+    it('replays logs, but not onError logs', async () => {
       function foo() {
         return 'hello';
       }
@@ -5388,10 +5406,12 @@ describe('ReactFlightResultDOM', () => {
       jest.resetModules();
       jest.mock('react', () => require('react/react.react-server'));
       ReactServer = require('react');
-      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-      const transport = ReactNoopFlightServer.render({
-        root: ReactServer.createElement(App),
-      });
+      ReactServerDOMServer = require('react-server-dom-webpack/server.node');
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult({
+          root: ReactServer.createElement(App),
+        }),
+      );
       assertConsoleErrorDev(['Error: err' + '\n    in <stack>']);
 
       expect(mockConsoleLog).toHaveBeenCalledTimes(1);
@@ -5412,7 +5432,8 @@ describe('ReactFlightResultDOM', () => {
 
       // The error should not actually get logged because we're not awaiting the root
       // so it's not thrown but the server log also shouldn't be replayed.
-      await ReactNoopFlightClient.read(transport, {close: true});
+      const source = await encodeConsoleResult(transport);
+      await ReactNoopFlightClient.read(source, {close: true});
 
       expect(mockConsoleLog).toHaveBeenCalledTimes(1);
       expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
@@ -5468,7 +5489,7 @@ describe('ReactFlightResultDOM', () => {
     });
 
     // @gate __DEV__
-    it.skip('replays logs with cyclic objects', async () => {
+    it('replays logs with cyclic objects', async () => {
       const cyclic = {cycle: null};
       cyclic.cycle = cyclic;
 
@@ -5495,10 +5516,12 @@ describe('ReactFlightResultDOM', () => {
       jest.resetModules();
       jest.mock('react', () => require('react/react.react-server'));
       ReactServer = require('react');
-      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-      const transport = ReactNoopFlightServer.render({
-        root: ReactServer.createElement(App),
-      });
+      ReactServerDOMServer = require('react-server-dom-webpack/server.node');
+      const transport = await serverAct(() =>
+        ReactServerDOMServer.renderToResult({
+          root: ReactServer.createElement(App),
+        }),
+      );
 
       expect(mockConsoleLog).toHaveBeenCalledTimes(1);
       expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
@@ -5508,7 +5531,8 @@ describe('ReactFlightResultDOM', () => {
 
       // The error should not actually get logged because we're not awaiting the root
       // so it's not thrown but the server log also shouldn't be replayed.
-      await ReactNoopFlightClient.read(transport);
+      const source = await encodeConsoleResult(transport);
+      await ReactNoopFlightClient.read(source);
 
       expect(mockConsoleLog).toHaveBeenCalledTimes(1);
       expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');

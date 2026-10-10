@@ -17,6 +17,7 @@ import type {
   ErrorReference,
   ModelReference,
 } from 'shared/ReactFlightResult';
+import type {ConsoleEntry} from 'shared/ReactFlightResult';
 import type {
   Thenable,
   ReactDebugInfo,
@@ -98,11 +99,14 @@ import {
   getClientReferenceKey,
   resolveClientReferenceMetadata,
   parseStackTrace,
+  parseStackTracePrivate,
+  unbadgeConsole,
   supportsRequestStorage,
   cacheStorage,
   requestStorage,
 } from './ReactFlightServerConfig';
 import {setCurrentCache} from './flight/ReactFlightCurrentCache';
+import {setCurrentOwner, resolveOwner} from './flight/ReactFlightCurrentOwner';
 
 const stringify = JSON.stringify;
 const getPrototypeOf = Object.getPrototypeOf;
@@ -128,6 +132,7 @@ const doNotLimit: WeakSet<Reference> = __DEV__ ? new WeakSet() : (null as any);
 const CONSTRUCTOR_MARKER: symbol = __DEV__ ? Symbol() : (null as any);
 let debugModelRoot: mixed = null;
 let debugNoOutline: mixed = null;
+let currentRequest: null | Request = null;
 
 const OPENING = 10;
 const OPEN = 11;
@@ -150,6 +155,8 @@ type Task = {
   debugPendingTime: null | number, // DEV-only
   debugOwner: null | ReactComponentInfo, // DEV-only
   debugStack: null | Error, // DEV-only
+  debugTask: null | ConsoleTask, // DEV-only
+  environmentName: string, // DEV-only
 };
 export type InputSequenceEntry = {done?: boolean, value: ReactClientValue};
 export type InputSequenceReader = {
@@ -202,6 +209,7 @@ export type Input = {
   getCollectionEntries: Object => void | ResultModel<Array<any>>,
   subscribe: ({
     hint: (HintCode, HintModel<any>) => void,
+    console?: ConsoleEntry => void, // DEV-only
     complete: () => void,
   }) => () => void,
   subscribeToThenable: (
@@ -409,7 +417,12 @@ function RequestInstance(
       );
     }
   }
-  const rootTask = createTask(this, null, this.abortableTasks);
+  const rootTask = createTask(
+    this,
+    null,
+    this.abortableTasks,
+    __DEV__ ? this.timeOrigin : 0,
+  );
   subscribeToInput(this, input, rootTask);
 }
 
@@ -513,6 +526,7 @@ function deferTask(request: Request, task: Task): ReactJSONValue {
     __DEV__ ? task.time : 0,
     __DEV__ ? task.debugOwner : null,
     __DEV__ ? task.debugStack : null,
+    __DEV__ ? task.debugTask : null,
   );
   if (typeof task.model === 'object' && task.model !== null) {
     // This defining occurrence moves to the new row; aliases must follow it.
@@ -524,7 +538,12 @@ function deferTask(request: Request, task: Task): ReactJSONValue {
 }
 
 function outlineModel(request: Request, value: ReactClientValue): number {
-  const task = createTask(request, value, request.abortableTasks);
+  const task = createTask(
+    request,
+    value,
+    request.abortableTasks,
+    __DEV__ ? performance.now() : 0,
+  );
   if (value !== null && typeof value === 'object') {
     request.writtenObjects.set(value, serializeByValueID(task.id));
   }
@@ -590,6 +609,16 @@ function renderModelDestructive(
   parentReference?: null | string,
 ): ReactJSONValue {
   task.model = value;
+  if (__DEV__) {
+    if (parentPropertyName === '__proto__') {
+      callWithDebugContextInDEV(request, task, () => {
+        console.error(
+          'Expected not to serialize an object with own property `__proto__`. When parsed this property will be omitted.%s',
+          describeObjectForErrorMessage(parent, parentPropertyName),
+        );
+      });
+    }
+  }
   if (
     value !== null &&
     (typeof value === 'object' || typeof value === 'function') &&
@@ -638,7 +667,7 @@ function renderModelDestructive(
     const reference =
       input === null ? undefined : input.getValueReference(value);
     if (reference !== undefined) {
-      const id = serializeThenable(request, reference.root);
+      const id = serializeThenable(request, task, reference.root);
       const path = [];
       let location = reference;
       let ancestor = location.parent;
@@ -692,10 +721,10 @@ function renderModelDestructive(
     }
     if ((value as any).$$typeof === REACT_LAZY_TYPE) {
       const lazy: LazyComponent<ReactClientValue, any> = value as any;
-      return serializeLazyID(serializeThenable(request, lazy._payload));
+      return serializeLazyID(serializeThenable(request, task, lazy._payload));
     }
     if (typeof (value as any).then === 'function') {
-      const id = serializeThenable(request, value as any);
+      const id = serializeThenable(request, task, value as any);
       return enableFlightWeakThenables &&
         (value as any).status === 'pending_weak'
         ? serializeWeakPromiseID(id)
@@ -712,6 +741,7 @@ function renderModelDestructive(
       if (__DEV__) {
         task.debugOwner = element._owner;
         task.debugStack = element._debugStack;
+        task.debugTask = element._debugTask;
       }
       if (serializedSize > MAX_ROW_SIZE) {
         return deferTask(request, task);
@@ -880,6 +910,79 @@ function renderModelDestructive(
   throw new Error('A Result must validate models before serialization.');
 }
 
+function patchConsole(consoleInst: typeof console, methodName: string) {
+  const descriptor = Object.getOwnPropertyDescriptor(consoleInst, methodName);
+  if (
+    descriptor &&
+    (descriptor.configurable || descriptor.writable) &&
+    typeof descriptor.value === 'function'
+  ) {
+    const originalMethod = descriptor.value;
+    const originalName = Object.getOwnPropertyDescriptor(
+      // $FlowFixMe[incompatible-type]: We should be able to get descriptors from any function.
+      originalMethod,
+      'name',
+    );
+    const wrapperMethod = function (this: typeof console) {
+      const request = currentRequest;
+      if (methodName === 'assert' && arguments[0]) {
+        // assert doesn't emit anything unless first argument is falsy so we can skip it.
+      } else if (request !== null) {
+        // Extract the stack. Not all console logs print the full stack but they have at
+        // least the line it was called from. We could optimize transfer by keeping just
+        // one stack frame but keeping it simple for now and include all frames.
+        const stack = filterStackTrace(
+          request,
+          parseStackTracePrivate(new Error('react-stack-top-frame'), 1) || [],
+        );
+        request.pendingDebugChunks++;
+        const owner: null | ReactComponentInfo = resolveOwner();
+        const args = Array.from(arguments);
+        // Extract the env if this is a console log that was replayed from another env.
+        let env = unbadgeConsole(methodName, args);
+        if (env === null) {
+          // Otherwise add the current environment.
+          env = (0, request.environmentName)();
+        }
+
+        emitConsoleChunk(request, methodName, owner, env, stack, args);
+      }
+      // $FlowFixMe[incompatible-call]
+      // $FlowFixMe[incompatible-type]
+      return originalMethod.apply(this, arguments);
+    };
+    if (originalName) {
+      Object.defineProperty(
+        wrapperMethod,
+        // $FlowFixMe[cannot-write] yes it is
+        'name',
+        originalName,
+      );
+    }
+    Object.defineProperty(consoleInst, methodName, {
+      value: wrapperMethod,
+    });
+  }
+}
+
+// $FlowFixMe[invalid-compare]
+if (__DEV__ && typeof console === 'object' && console !== null) {
+  // Instrument console to capture logs for replaying on the client.
+  patchConsole(console, 'assert');
+  patchConsole(console, 'debug');
+  patchConsole(console, 'dir');
+  patchConsole(console, 'dirxml');
+  patchConsole(console, 'error');
+  patchConsole(console, 'group');
+  patchConsole(console, 'groupCollapsed');
+  patchConsole(console, 'groupEnd');
+  patchConsole(console, 'info');
+  patchConsole(console, 'log');
+  patchConsole(console, 'table');
+  patchConsole(console, 'trace');
+  patchConsole(console, 'warn');
+}
+
 function renderModel(
   request: Request,
   task: Task,
@@ -922,7 +1025,7 @@ function renderModel(
     }
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    const digest = logRecoverableError(request, thrownValue);
+    const digest = logRecoverableError(request, thrownValue, task);
     emitErrorChunk(request, errorId, digest, thrownValue);
     return wasReactNode
       ? serializeLazyID(errorId)
@@ -1767,6 +1870,38 @@ function emitTimingChunk(
   request.completedRegularChunks.push(stringToChunk(row));
 }
 
+function emitConsoleChunk(
+  request: Request,
+  methodName: string,
+  owner: null | ReactComponentInfo,
+  env: string,
+  stackTrace: ReactStackTrace,
+  args: Array<any>,
+): void {
+  if (owner != null) {
+    outlineComponentInfo(request, owner);
+  }
+  const payload = [methodName, stackTrace, owner, env];
+  // $FlowFixMe[method-unbinding]
+  payload.push.apply(payload, args);
+  const objectLimit = 500;
+  let json = serializeDebugModel(
+    request,
+    objectLimit + stackTrace.length,
+    payload,
+  );
+  if (json[0] !== '[') {
+    json = serializeDebugModel(request, 10 + stackTrace.length, [
+      methodName,
+      stackTrace,
+      owner,
+      env,
+      'Unknown Value: React could not send it from the server.',
+    ]);
+  }
+  request.completedDebugChunks.push(stringToChunk(':W' + json + '\n'));
+}
+
 function emitTimeOriginChunk(request: Request, timeOrigin: number): void {
   // We emit the time origin once. All ReactTimeInfo timestamps later in the stream
   // are relative to this time origin. This allows for more compact number encoding
@@ -1785,6 +1920,7 @@ function createTask(
   lastTimestamp: number = 0, // DEV-only
   debugOwner: null | ReactComponentInfo = null, // DEV-only
   debugStack: null | Error = null, // DEV-only
+  debugTask: null | ConsoleTask = null, // DEV-only
 ): Task {
   const id = request.nextChunkId++;
   request.pendingChunks++;
@@ -1795,13 +1931,20 @@ function createTask(
     returnedTupleReference: null,
   } as Omit<
     Task,
-    'time' | 'debugPendingTime' | 'debugOwner' | 'debugStack',
+    | 'time'
+    | 'debugPendingTime'
+    | 'debugOwner'
+    | 'debugStack'
+    | 'debugTask'
+    | 'environmentName',
   > as any;
   if (__DEV__) {
     task.time = lastTimestamp;
     task.debugPendingTime = null;
     task.debugOwner = debugOwner;
     task.debugStack = debugStack;
+    task.debugTask = debugTask;
+    task.environmentName = request.environmentName();
   }
   abortSet.add(task);
   return task;
@@ -1858,6 +2001,11 @@ function performWork(request: Request): void {
   if (request.status === CLOSED || request.status === CLOSING) {
     return;
   }
+  const prevRequest = currentRequest;
+  if (__DEV__) {
+    currentRequest = request;
+  }
+  const prevCache = setCurrentCache(null);
   try {
     const pingedTasks = request.pingedTasks;
     request.pingedTasks = [];
@@ -1869,7 +2017,26 @@ function performWork(request: Request): void {
     }
     flushCompletedChunks(request);
   } catch (error) {
+    logRecoverableError(request, error, null);
     fatalError(request, error);
+  } finally {
+    setCurrentCache(prevCache);
+    if (__DEV__) {
+      currentRequest = prevRequest;
+    }
+  }
+}
+
+function performWorkWithContext(request: Request): void {
+  // Leave expansion's request/cache context, including work queued
+  // synchronously while subscribing to input.
+  // $FlowFixMe[constant-condition]
+  if (supportsRequestStorage) {
+    cacheStorage.run(undefined, () =>
+      requestStorage.run(undefined, performWork, request),
+    );
+  } else {
+    performWork(request);
   }
 }
 
@@ -1880,7 +2047,7 @@ function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
-    scheduleMicrotask(() => performWork(request));
+    scheduleMicrotask(() => performWorkWithContext(request));
   }
 }
 
@@ -2422,6 +2589,7 @@ function subscribeInput(
 
 function serializeThenable(
   request: Request,
+  task: null | Task,
   thenable: ResultModel<ReactClientValue>,
 ): number {
   if (request.input === null) {
@@ -2432,7 +2600,15 @@ function serializeThenable(
   if (existingId !== undefined) {
     return existingId;
   }
-  const newTask = createTask(request, null, request.abortableTasks);
+  const newTask = createTask(
+    request,
+    null,
+    request.abortableTasks,
+    __DEV__ && task !== null ? task.time : __DEV__ ? request.timeOrigin : 0,
+    __DEV__ && task !== null ? task.debugOwner : null,
+    __DEV__ && task !== null ? task.debugStack : null,
+    __DEV__ && task !== null ? task.debugTask : null,
+  );
   request.writtenModels.set(thenable, newTask.id);
   subscribeToThenable(request, newTask, thenable);
   return newTask.id;
@@ -2473,7 +2649,7 @@ function serializeClientReference(
   } catch (error) {
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    const digest = logRecoverableError(request, error);
+    const digest = logRecoverableError(request, error, task);
     emitErrorChunk(request, errorId, digest, error);
     return serializeByValueID(errorId);
   }
@@ -2548,13 +2724,77 @@ function emitImportChunk(
   }
 }
 
-function logRecoverableError(request: Request, error: mixed): string {
+function callWithDebugContextInDEV<A, T>(
+  request: Request,
+  task: Task,
+  callback: A => T,
+  arg: A,
+): T {
+  // We don't have a Server Component instance associated with this callback and
+  // the nearest context is likely a Client Component being serialized. We create
+  // a fake owner during this callback so we can get the stack trace from it.
+  // This also gets sent to the client as the owner for the replaying log.
+  const componentDebugInfo: ReactComponentInfo = {
+    name: '',
+    env: task.environmentName,
+    key: null,
+    owner: task.debugOwner,
+  };
+  // $FlowFixMe[cannot-write]
+  componentDebugInfo.stack =
+    task.debugStack === null
+      ? null
+      : filterStackTrace(request, parseStackTrace(task.debugStack, 1));
+  // $FlowFixMe[cannot-write]
+  componentDebugInfo.debugStack = task.debugStack;
+  // $FlowFixMe[cannot-write]
+  componentDebugInfo.debugTask = task.debugTask;
+  const debugTask = task.debugTask;
+  // We don't need the async component storage context here so we only set the
+  // synchronous tracking of owner.
+  setCurrentOwner(componentDebugInfo);
+  try {
+    if (debugTask) {
+      return debugTask.run(callback.bind(null, arg));
+    }
+    return callback(arg);
+  } finally {
+    setCurrentOwner(null);
+  }
+}
+
+function logRecoverableError(
+  request: Request,
+  error: mixed,
+  task: Task | null = null, // DEV-only
+): string {
   const prevCache = setCurrentCache(null);
+  const prevRequest = currentRequest;
+  if (__DEV__) {
+    currentRequest = null;
+  }
   let errorDigest;
   try {
     const onError = request.onError;
-    // $FlowFixMe[constant-condition]
-    if (supportsRequestStorage) {
+    if (__DEV__ && task !== null) {
+      // $FlowFixMe[constant-condition]
+      if (supportsRequestStorage) {
+        errorDigest = cacheStorage.run(undefined, () =>
+          requestStorage.run(
+            undefined,
+            callWithDebugContextInDEV,
+            request,
+            task,
+            onError,
+            error,
+          ),
+        );
+      } else {
+        errorDigest = callWithDebugContextInDEV(request, task, onError, error);
+      }
+      // $FlowFixMe[constant-condition]
+    } else if (supportsRequestStorage) {
+      // Exit the request context while running callbacks.
       errorDigest = cacheStorage.run(undefined, () =>
         requestStorage.run(undefined, onError, error),
       );
@@ -2563,6 +2803,9 @@ function logRecoverableError(request: Request, error: mixed): string {
     }
   } finally {
     setCurrentCache(prevCache);
+    if (__DEV__) {
+      currentRequest = prevRequest;
+    }
   }
   if (errorDigest != null && typeof errorDigest !== 'string') {
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -2576,7 +2819,7 @@ function logRecoverableError(request: Request, error: mixed): string {
 function erroredTask(request: Request, task: Task, error: mixed): void {
   task.status = ERRORED;
   request.abortableTasks.delete(task);
-  const digest = logRecoverableError(request, error);
+  const digest = logRecoverableError(request, error, task);
   emitErrorChunk(request, task.id, digest, error);
 }
 
@@ -2866,6 +3109,20 @@ function subscribeHints(request: Request): void {
           fatalError(request, error);
         }
       },
+      console(entry) {
+        if (__DEV__) {
+          request.pendingDebugChunks++;
+          emitConsoleChunk(
+            request,
+            entry.methodName,
+            entry.owner,
+            entry.env,
+            entry.stack,
+            entry.args,
+          );
+          enqueueFlush(request);
+        }
+      },
       complete() {
         detach();
         completeInput();
@@ -3035,7 +3292,7 @@ function subscribeToInput(
 }
 
 export function startWork(request: Request): void {
-  scheduleMicrotask(() => performWork(request));
+  scheduleMicrotask(() => performWorkWithContext(request));
   scheduleWork(() => {
     if (request.status === OPENING) {
       request.status = OPEN;
@@ -3169,7 +3426,7 @@ function serializeMap(
   const input = request.input;
   const model = input === null ? undefined : input.getCollectionEntries(map);
   if (model !== undefined) {
-    const id = serializeThenable(request, model as any);
+    const id = serializeThenable(request, null, model as any);
     return '$Q' + id.toString(16);
   }
   const entries = Array.from(map);
@@ -3208,7 +3465,7 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   const input = request.input;
   const model = input === null ? undefined : input.getCollectionEntries(set);
   if (model !== undefined) {
-    const id = serializeThenable(request, model as any);
+    const id = serializeThenable(request, null, model as any);
     return '$W' + id.toString(16);
   }
   const entries = Array.from(set);
@@ -3358,7 +3615,15 @@ function serializeFormData(request: Request, formData: FormData): string {
 function serializeBlob(request: Request, blob: Blob): string {
   const model: Array<string | Uint8Array> = [blob.type];
   const reader = blob.stream().getReader();
-  const newTask = createTask(request, model, request.abortableTasks);
+  const newTask = createTask(
+    request,
+    model,
+    request.abortableTasks,
+    __DEV__ ? performance.now() : 0,
+    null,
+    null,
+    null,
+  );
 
   function progress(
     entry: {done: false, value: Uint8Array} | {done: true, value: void},
@@ -3715,7 +3980,15 @@ function serializeReadableStream(
   }
   const isByteStream = source.isByteStream;
 
-  const streamTask = createTask(request, task.model, request.abortableTasks);
+  const streamTask = createTask(
+    request,
+    task.model,
+    request.abortableTasks,
+    __DEV__ ? task.time : 0,
+    __DEV__ ? task.debugOwner : null,
+    __DEV__ ? task.debugStack : null,
+    __DEV__ ? task.debugTask : null,
+  );
   // The task represents the Stop row. This adds a Start row.
   request.pendingChunks++;
   const startStreamRow =
@@ -3989,7 +4262,15 @@ function serializeAsyncIterable(
       'A Result must record async iterables before serialization.',
     );
   }
-  const streamTask = createTask(request, task.model, request.abortableTasks);
+  const streamTask = createTask(
+    request,
+    task.model,
+    request.abortableTasks,
+    __DEV__ ? task.time : 0,
+    __DEV__ ? task.debugOwner : null,
+    __DEV__ ? task.debugStack : null,
+    __DEV__ ? task.debugTask : null,
+  );
   // The task represents the Stop row. This adds a Start row.
   request.pendingChunks++;
   const startStreamRow =
@@ -4015,7 +4296,7 @@ function serializeAsyncIterable(
           return;
         }
         try {
-          const entryId = serializeThenable(request, entry as any);
+          const entryId = serializeThenable(request, streamTask, entry as any);
           const reference = serializeByValueID(entryId);
           if (done) {
             streamTask.status = COMPLETED;
