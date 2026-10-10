@@ -89,6 +89,14 @@ export function getPendingConstructionField<Listener>(
   return fact;
 }
 
+function createConstructionFact<Listener>(): ConstructionFact<Listener> {
+  return {
+    status: CONSTRUCTION_PENDING,
+    value: null,
+    listeners: null,
+  };
+}
+
 export function registerConstructionField<Listener>(
   state: ConstructionState<Listener>,
   parentObject: Object,
@@ -103,11 +111,7 @@ export function registerConstructionField<Listener>(
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error('Two producers for one model field.');
   }
-  const fact: ConstructionFact<Listener> = {
-    status: CONSTRUCTION_PENDING,
-    value: null,
-    listeners: null,
-  };
+  const fact = createConstructionFact<Listener>();
   fields.set(key, fact);
   return fact;
 }
@@ -123,6 +127,19 @@ export function subscribeConstructionFact<Listener>(
   }
 }
 
+// The caller has checked that this fact is still pending.
+function settleConstructionFact<Listener>(
+  fact: ConstructionFact<Listener>,
+  status: 1 | 2,
+  value: any,
+): null | Array<Listener> {
+  fact.status = status;
+  fact.value = value;
+  const listeners = fact.listeners;
+  fact.listeners = null;
+  return listeners;
+}
+
 export function settleConstructionField<Listener>(
   state: ConstructionState<Listener>,
   parentObject: Object,
@@ -134,10 +151,7 @@ export function settleConstructionField<Listener>(
   if (fact.status !== CONSTRUCTION_PENDING) {
     return null;
   }
-  fact.status = status;
-  fact.value = value;
-  const listeners = fact.listeners;
-  fact.listeners = null;
+  const listeners = settleConstructionFact(fact, status, value);
   if (status === CONSTRUCTION_INSTALLED) {
     // The producer has installed the value. Later readers can use the field
     // directly instead of going through this fact.

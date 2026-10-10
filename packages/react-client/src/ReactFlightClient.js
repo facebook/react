@@ -1991,6 +1991,24 @@ function getConstructionState(
   return state;
 }
 
+function wakeConstructionReferences(
+  response: Response,
+  listeners: null | Array<InitializationReference>,
+  status: 1 | 2,
+  value: any,
+): void {
+  if (listeners !== null) {
+    for (let i = 0; i < listeners.length; i++) {
+      const reference = listeners[i];
+      if (status === CONSTRUCTION_FAILED) {
+        rejectInitializationReference(response, reference, value);
+      } else {
+        fulfillReference(response, reference, value, reference.source);
+      }
+    }
+  }
+}
+
 function finishInitializationField(
   response: Response,
   parentObject: Object,
@@ -2007,16 +2025,7 @@ function finishInitializationField(
     status,
     value,
   );
-  if (listeners !== null) {
-    for (let i = 0; i < listeners.length; i++) {
-      const reference = listeners[i];
-      if (status === CONSTRUCTION_FAILED) {
-        rejectInitializationReference(response, reference, value);
-      } else {
-        fulfillReference(response, reference, value, reference.source);
-      }
-    }
-  }
+  wakeConstructionReferences(response, listeners, status, value);
 }
 
 function rejectInitializationReference(
