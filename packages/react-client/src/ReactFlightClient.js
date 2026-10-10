@@ -1911,59 +1911,83 @@ function fulfillReference(
     }
 
     mappedValue = map(response, value, parentObject, key, reference);
-    if (key !== __PROTO__) {
-      parentObject[key] = mappedValue;
-    }
-
-    // If this is the root object for a model reference, where `handler.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && !handler.errored && handler.value === null) {
-      handler.value = mappedValue;
-    }
-
-    // If the parent object is an unparsed React element tuple, we also need to
-    // update the props and owner of the parsed element object (i.e.
-    // handler.value).
-    if (
-      parentObject[0] === REACT_ELEMENT_TYPE &&
-      typeof handler.value === 'object' &&
-      handler.value !== null &&
-      handler.value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      const element: any = handler.value;
-      switch (key) {
-        case '3':
-          if (__DEV__ && !reference.isDebug) {
-            transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
-          }
-          element.props = mappedValue;
-          break;
-        case '4':
-          // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
-          if (__DEV__) {
-            element._owner = mappedValue;
-          }
-          break;
-        case '5':
-          // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
-          if (__DEV__) {
-            element._debugStack = mappedValue;
-          }
-          break;
-        default:
-          if (__DEV__ && !reference.isDebug) {
-            transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
-          }
-          break;
-      }
-    } else if (__DEV__ && !reference.isDebug) {
-      transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
-    }
+    installInitializationReference(
+      response,
+      reference,
+      mappedValue,
+      fulfilledChunk,
+    );
   } catch (error) {
     rejectInitializationReference(response, reference, error);
     return;
   }
 
+  finishInitializationReference(response, reference, mappedValue);
+}
+
+function installInitializationReference(
+  response: Response,
+  reference: InitializationReference,
+  mappedValue: any,
+  fulfilledChunk: SomeChunk<any>,
+): void {
+  const {handler, parentObject, key} = reference;
+  if (key !== __PROTO__) {
+    parentObject[key] = mappedValue;
+  }
+
+  // If this is the root object for a model reference, where `handler.value`
+  // is a stale `null`, the resolved value can be used directly.
+  if (key === '' && !handler.errored && handler.value === null) {
+    handler.value = mappedValue;
+  }
+
+  // If the parent object is an unparsed React element tuple, we also need to
+  // update the props and owner of the parsed element object (i.e.
+  // handler.value).
+  if (
+    parentObject[0] === REACT_ELEMENT_TYPE &&
+    typeof handler.value === 'object' &&
+    handler.value !== null &&
+    handler.value.$$typeof === REACT_ELEMENT_TYPE
+  ) {
+    const element: any = handler.value;
+    switch (key) {
+      case '3':
+        if (__DEV__ && !reference.isDebug) {
+          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+        }
+        element.props = mappedValue;
+        break;
+      case '4':
+        // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
+        if (__DEV__) {
+          element._owner = mappedValue;
+        }
+        break;
+      case '5':
+        // This path doesn't call transferReferencedDebugInfo because this reference is to a debug chunk.
+        if (__DEV__) {
+          element._debugStack = mappedValue;
+        }
+        break;
+      default:
+        if (__DEV__ && !reference.isDebug) {
+          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+        }
+        break;
+    }
+  } else if (__DEV__ && !reference.isDebug) {
+    transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+  }
+}
+
+function finishInitializationReference(
+  response: Response,
+  reference: InitializationReference,
+  mappedValue: any,
+): void {
+  const {handler, parentObject, key} = reference;
   // loadServerReference can take over this assignment while its module or
   // bound arguments load. It will install the field and wake its readers when
   // that work finishes. Returning its placeholder does not finish the field.
