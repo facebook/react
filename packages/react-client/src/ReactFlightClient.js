@@ -113,12 +113,18 @@ import type {
 import {
   CONSTRUCTION_INSTALLED,
   CONSTRUCTION_FAILED,
+  CONSTRUCTION_REFERENCE,
+  CONSTRUCTION_PUBLICATION,
+  readConstructionContents,
+  installConstructionHead,
+  getConstructionHead,
   createInitializationHandler,
   createConstructionState,
   getPendingConstructionField,
   registerConstructionField,
   settleConstructionField,
   subscribeConstructionFact,
+  subscribeConstructionFacts,
 } from './ReactFlightClientConstruction';
 
 import {OMITTED_PROP_ERROR} from 'shared/ReactFlightPropertyAccess';
@@ -412,7 +418,8 @@ type Response = {
   _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
-  _construction: null | ConstructionState<InitializationReference>,
+  _initializingModels: number,
+  _construction: null | ConstructionState<ConstructionListener>,
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
@@ -762,11 +769,18 @@ function wakeChunkIfInitialized<T>(
         const listener = resolveListeners[i];
         if (typeof listener !== 'function') {
           const reference: InitializationReference = listener;
-          const cyclicHandler = resolveBlockedCycle(chunk, reference);
-          if (cyclicHandler !== null) {
+          const head = getConstructionHead(response._construction, chunk);
+          const cyclicHandler =
+            head === undefined ? resolveBlockedCycle(chunk, reference) : null;
+          if (head !== undefined || cyclicHandler !== null) {
             // This reference points back to this chunk. We can resolve the cycle by
             // using the value from that handler.
-            fulfillReference(response, reference, cyclicHandler.value, chunk);
+            fulfillReference(
+              response,
+              reference,
+              head !== undefined ? head.value : (cyclicHandler as any).value,
+              chunk,
+            );
             resolveListeners.splice(i, 1);
             i--;
             if (rejectListeners !== null) {
@@ -1046,6 +1060,7 @@ type ModelMapping<T> = (
 ) => T;
 
 type InitializationReference = {
+  +kind: 0,
   handler: InitializationHandler,
   parentObject: Object,
   key: string,
@@ -1054,11 +1069,24 @@ type InitializationReference = {
   // Retain the source chunk when a field wait replaces a chunk wait.
   source: SomeChunk<any>,
   // The result of installing this reference in parentObject[key].
-  assignment: ConstructionFact<InitializationReference>,
+  assignment: ConstructionFact<ConstructionListener>,
   // A mapper can hand this assignment to asynchronous server-reference loading.
   isMappingDeferred: boolean,
+  done: boolean,
   isDebug?: boolean, // DEV-only
 };
+type ConstructionPublication = {
+  +kind: 1,
+  chunk: BlockedChunk<any>,
+  value: any,
+  reason: InitializedChunk<any>['reason'],
+  handler: null | InitializationHandler,
+  waiting: null | Set<ConstructionFact<ConstructionListener>>,
+  queued: boolean,
+  done: boolean,
+};
+type ConstructionListener = InitializationReference | ConstructionPublication;
+
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
 let isInitializingDebugInfo: boolean = false;
@@ -1151,6 +1179,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
 
   const resolvedModel = chunk.value;
   const response = chunk.reason[RESPONSE_SYMBOL];
+  response._initializingModels++;
 
   // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
@@ -1271,7 +1300,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // of those resolves.
       return;
     }
-    initializeBlockedChunk(response, cyclicChunk, value, null);
+    requestConstructionPublication(response, cyclicChunk, value, null, handler);
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = chunk as any;
     erroredChunk.status = ERRORED;
@@ -1281,12 +1310,17 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     if ((enableProfilerTimer && enableComponentPerformanceTrack) || __DEV__) {
       initializingChunk = prevChunk;
     }
+    response._initializingModels--;
+    drainConstructionPublications(response);
   }
 }
 
 function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
   try {
     const value: T = requireModule(chunk.value);
+    // Client exports are external values. Their properties and getters are
+    // not reader construction dependencies.
+    markConstructionExternalValue(value);
     const initializedChunk: InitializedChunk<T> = chunk as any;
     initializedChunk.status = INITIALIZED;
     initializedChunk.value = value;
@@ -1759,7 +1793,212 @@ function initializeChunkIfUnblocked(
   // `handler.reason` is the controller of a stream whose chunk was blocked on
   // its debug info, and null otherwise. It becomes the initialized chunk's
   // `reason` either way.
-  initializeBlockedChunk(response, chunk, handler.value, handler.reason);
+  requestConstructionPublication(
+    response,
+    chunk,
+    handler.value,
+    handler.reason,
+    handler,
+  );
+}
+
+let constructionExternalValues: null | WeakSet<Object> = null;
+
+function markConstructionExternalValue(value: any): void {
+  if (typeof value === 'object' && value !== null) {
+    let externalValues = constructionExternalValues;
+    if (externalValues === null) {
+      externalValues = constructionExternalValues = new WeakSet();
+    }
+    externalValues.add(value);
+  }
+}
+
+function isConstructionBoundary(value: any): boolean {
+  return (
+    (constructionExternalValues !== null &&
+      constructionExternalValues.has(value)) ||
+    value instanceof ReactPromise ||
+    value.$$typeof === REACT_LAZY_TYPE
+  );
+}
+
+function requestConstructionPublication(
+  response: Response,
+  chunk: BlockedChunk<any>,
+  value: any,
+  reason: InitializedChunk<any>['reason'],
+  handler: null | InitializationHandler,
+): void {
+  const state = response._construction;
+  if (state === null) {
+    initializeBlockedChunk(response, chunk, value, reason);
+    return;
+  }
+  releaseLocalConstructionReferences(response, chunk, value);
+  let publications = state.publications;
+  const existing = publications === null ? undefined : publications.get(chunk);
+  if (existing !== undefined && existing.kind === CONSTRUCTION_PUBLICATION) {
+    enqueueConstructionPublication(response, existing);
+    return;
+  }
+  const publication: ConstructionPublication = {
+    kind: CONSTRUCTION_PUBLICATION,
+    chunk,
+    value,
+    reason,
+    handler,
+    waiting: null,
+    queued: false,
+    done: false,
+  };
+  if (publications === null) {
+    publications = state.publications = new WeakMap();
+  }
+  publications.set(chunk, publication);
+  enqueueConstructionPublication(response, publication);
+}
+
+function enqueueConstructionPublication(
+  response: Response,
+  publication: ConstructionPublication,
+): void {
+  if (!publication.done && !publication.queued) {
+    publication.queued = true;
+    getConstructionState(response).publicationQueue.push(publication);
+  }
+  drainConstructionPublications(response);
+}
+
+function drainConstructionPublications(response: Response): void {
+  const state = response._construction;
+  if (
+    state === null ||
+    state.draining ||
+    state.waking !== 0 ||
+    response._initializingModels !== 0
+  ) {
+    return;
+  }
+  state.draining = true;
+  try {
+    const queue = state.publicationQueue;
+    for (let i = 0; i < queue.length; i++) {
+      const publication = queue[i];
+      if (publication.kind === CONSTRUCTION_PUBLICATION) {
+        publication.queued = false;
+        resumeConstructionPublication(response, publication);
+      }
+    }
+    queue.length = 0;
+  } finally {
+    state.draining = false;
+  }
+}
+
+function resumeConstructionPublication(
+  response: Response,
+  publication: ConstructionPublication,
+): void {
+  if (publication.done) {
+    return;
+  }
+  const state = getConstructionState(response);
+  const {chunk, handler} = publication;
+  if ((chunk as SomeChunk<any>).status !== BLOCKED) {
+    publication.done = true;
+    if (state.publications !== null) {
+      state.publications.delete(chunk);
+    }
+    return;
+  }
+  if (handler !== null && handler.errored) {
+    return;
+  }
+  let pending: null | Array<ConstructionFact<ConstructionListener>>;
+  try {
+    pending = readConstructionContents(
+      state,
+      handler === null ? publication.value : handler.value,
+      isConstructionBoundary,
+    );
+  } catch (error) {
+    publication.done = true;
+    if (state.publications !== null) {
+      state.publications.delete(chunk);
+    }
+    if (handler === null) {
+      triggerErrorOnChunk(response, chunk, error);
+    } else {
+      rejectReference(response, handler, error);
+    }
+    return;
+  }
+  if (pending !== null) {
+    publication.waiting = subscribeConstructionFacts(
+      publication.waiting,
+      pending,
+      publication,
+    );
+    return;
+  }
+  if (handler !== null && handler.deps !== 0) {
+    return;
+  }
+  publication.done = true;
+  if (state.publications !== null) {
+    state.publications.delete(chunk);
+  }
+  initializeBlockedChunk(
+    response,
+    chunk,
+    handler === null ? publication.value : handler.value,
+    publication.reason,
+  );
+}
+
+// Internal references can use a locally complete value while application
+// callbacks wait for its contents. Other blocked models still use cycle search.
+function releaseLocalConstructionReferences(
+  response: Response,
+  chunk: BlockedChunk<any>,
+  value: any,
+): void {
+  const state = getConstructionState(response);
+  if (getConstructionHead(state, chunk) !== undefined) {
+    return;
+  }
+  installConstructionHead(state, chunk, value);
+  const listeners = chunk.value;
+  if (listeners === null) {
+    return;
+  }
+  const internal = [];
+  const publicListeners: Array<InitializationReference | (any => mixed)> = [];
+  const rejectListeners = chunk.reason;
+  for (let i = 0; i < listeners.length; i++) {
+    const listener = listeners[i];
+    if (typeof listener === 'function') {
+      publicListeners.push(listener);
+    } else {
+      internal.push(listener);
+      if (rejectListeners !== null) {
+        const index = rejectListeners.indexOf(listener);
+        if (index !== -1) {
+          rejectListeners.splice(index, 1);
+        }
+      }
+    }
+  }
+  chunk.value = publicListeners.length === 0 ? null : publicListeners;
+  state.waking++;
+  try {
+    for (let i = 0; i < internal.length; i++) {
+      fulfillReference(response, internal[i], value, chunk);
+    }
+  } finally {
+    state.waking--;
+  }
 }
 
 function fulfillReference(
@@ -1768,6 +2007,9 @@ function fulfillReference(
   value: any,
   fulfilledChunk: SomeChunk<any>,
 ): void {
+  if (reference.done) {
+    return;
+  }
   const {handler, parentObject, key, map, path} = reference;
   reference.source = fulfilledChunk;
   let mappedValue;
@@ -1806,14 +2048,21 @@ function fulfillReference(
               // It is possible that we're blocked on our own chunk if it's a cycle.
               // Before adding the listener to the inner chunk, let's check if it would
               // result in a cycle.
-              const cyclicHandler = resolveBlockedCycle(
+              const head = getConstructionHead(
+                response._construction,
                 referencedChunk,
-                reference,
               );
-              if (cyclicHandler !== null) {
+              const cyclicHandler =
+                head === undefined
+                  ? resolveBlockedCycle(referencedChunk, reference)
+                  : null;
+              if (head !== undefined || cyclicHandler !== null) {
                 // This reference points back to this chunk. We can resolve the cycle by
                 // using the value from that handler.
-                value = cyclicHandler.value;
+                value =
+                  head !== undefined
+                    ? head.value
+                    : (cyclicHandler as any).value;
                 continue;
               }
               // Fallthrough
@@ -1987,6 +2236,10 @@ function finishInitializationReference(
   reference: InitializationReference,
   mappedValue: any,
 ): void {
+  if (reference.done) {
+    return;
+  }
+  reference.done = true;
   const {handler, parentObject, key} = reference;
   // loadServerReference can take over this assignment while its module or
   // bound arguments load. It will install the field and wake its readers when
@@ -2007,7 +2260,7 @@ function finishInitializationReference(
 
 function getConstructionState(
   response: Response,
-): ConstructionState<InitializationReference> {
+): ConstructionState<ConstructionListener> {
   let state = response._construction;
   if (state === null) {
     state = response._construction = createConstructionState();
@@ -2017,19 +2270,29 @@ function getConstructionState(
 
 function wakeConstructionReferences(
   response: Response,
-  listeners: null | Array<InitializationReference>,
+  listeners: null | Array<ConstructionListener>,
   status: 1 | 2,
   value: any,
 ): void {
-  if (listeners !== null) {
+  if (listeners === null) {
+    return;
+  }
+  const state = getConstructionState(response);
+  state.waking++;
+  try {
     for (let i = 0; i < listeners.length; i++) {
       const reference = listeners[i];
-      if (status === CONSTRUCTION_FAILED) {
+      if (reference.kind === CONSTRUCTION_PUBLICATION) {
+        enqueueConstructionPublication(response, reference);
+      } else if (status === CONSTRUCTION_FAILED) {
         rejectInitializationReference(response, reference, value);
       } else {
         fulfillReference(response, reference, value, reference.source);
       }
     }
+  } finally {
+    state.waking--;
+    drainConstructionPublications(response);
   }
 }
 
@@ -2037,7 +2300,7 @@ function finishInitializationField(
   response: Response,
   parentObject: Object,
   key: string,
-  fact: ConstructionFact<InitializationReference>,
+  fact: ConstructionFact<ConstructionListener>,
   status: 1 | 2,
   value: any,
 ): void {
@@ -2057,6 +2320,10 @@ function rejectInitializationReference(
   reference: InitializationReference,
   error: mixed,
 ): void {
+  if (reference.done) {
+    return;
+  }
+  reference.done = true;
   finishInitializationField(
     response,
     reference.parentObject,
@@ -2086,6 +2353,7 @@ function createInitializationReference(
   }
 
   const reference: InitializationReference = {
+    kind: CONSTRUCTION_REFERENCE,
     handler,
     parentObject,
     key,
@@ -2093,6 +2361,7 @@ function createInitializationReference(
     path,
     source,
     isMappingDeferred: false,
+    done: false,
     assignment: registerConstructionField(
       getConstructionState(response),
       parentObject,
@@ -2107,7 +2376,7 @@ function createInitializationReference(
 
 function waitForConstructionField<T>(
   response: Response,
-  fact: ConstructionFact<InitializationReference>,
+  fact: ConstructionFact<ConstructionListener>,
   parentObject: Object,
   key: string,
   map: ModelMapping<T>,
@@ -2217,6 +2486,15 @@ function waitForReference<T>(
     isAwaitingDebugInfo,
   );
 
+  const head = getConstructionHead(response._construction, referencedChunk);
+  if (head !== undefined) {
+    fulfillReference(response, reference, head.value, referencedChunk);
+    return (
+      reference.assignment.status === CONSTRUCTION_INSTALLED
+        ? reference.assignment.value
+        : null
+    ) as any;
+  }
   // Add "listener".
   if (referencedChunk.value === null) {
     referencedChunk.value = [reference];
@@ -3006,7 +3284,12 @@ function parseModelString(
               'Pass a temporaryReference option with the set that was used with the reply.',
           );
         }
-        return readTemporaryReference(temporaryReferences, reference);
+        const temporaryValue: any = readTemporaryReference(
+          temporaryReferences,
+          reference,
+        );
+        markConstructionExternalValue(temporaryValue);
+        return temporaryValue;
       }
       case 'Q': {
         // Map
@@ -3269,6 +3552,7 @@ function ResponseInstance(
   this._nonce = nonce;
   this._chunks = chunks;
   this._construction = null;
+  this._initializingModels = 0;
   // Preserve a leading U+FEFF instead of consuming it as an encoding signature.
   this._stringDecoder = createStringDecoder(true);
   this._closed = false;

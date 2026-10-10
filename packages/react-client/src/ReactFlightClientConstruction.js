@@ -8,6 +8,12 @@
  */
 
 import type {BlockedChunk, FlightStreamController} from './ReactFlightClient';
+import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
+import hasOwnProperty from 'shared/hasOwnProperty';
+const ObjectPrototype = Object.prototype;
+export const CONSTRUCTION_REFERENCE = 0;
+export const CONSTRUCTION_PUBLICATION = 1;
 
 export type PendingInitializationHandler = {
   parent: null | InitializationHandler,
@@ -63,12 +69,26 @@ export type ConstructionFact<Listener> = {
 
 export type ConstructionState<Listener> = {
   fields: WeakMap<Object, Map<string, ConstructionFact<Listener>>>,
+  heads: null | WeakMap<Object, ConstructionFact<Listener>>,
+  publications: null | WeakMap<Object, Listener>,
+  publicationQueue: Array<Listener>,
+  draining: boolean,
+  waking: number,
+  unfinished: number,
 };
 
 export function createConstructionState<
   Listener,
 >(): ConstructionState<Listener> {
-  return {fields: new WeakMap()};
+  return {
+    fields: new WeakMap(),
+    heads: null,
+    publications: null,
+    publicationQueue: [],
+    draining: false,
+    waking: 0,
+    unfinished: 0,
+  };
 }
 
 // Installed fields are read directly. A pending producer must be waited on,
@@ -113,6 +133,7 @@ export function registerConstructionField<Listener>(
   }
   const fact = createConstructionFact<Listener>();
   fields.set(key, fact);
+  state.unfinished++;
   return fact;
 }
 
@@ -153,6 +174,7 @@ export function settleConstructionField<Listener>(
   }
   const listeners = settleConstructionFact(fact, status, value);
   if (status === CONSTRUCTION_INSTALLED) {
+    state.unfinished--;
     // The producer has installed the value. Later readers can use the field
     // directly instead of going through this fact.
     const fields = state.fields.get(parentObject);
@@ -165,4 +187,106 @@ export function settleConstructionField<Listener>(
   }
   // Failed assignments remain visible to later selected-path readers.
   return listeners;
+}
+
+export function subscribeConstructionFacts<Listener>(
+  waiting: null | Set<ConstructionFact<Listener>>,
+  pending: Array<ConstructionFact<Listener>>,
+  listener: Listener,
+): Set<ConstructionFact<Listener>> {
+  if (waiting === null) {
+    waiting = new Set();
+  }
+  for (let i = 0; i < pending.length; i++) {
+    const fact = pending[i];
+    if (!waiting.has(fact)) {
+      waiting.add(fact);
+      subscribeConstructionFact(fact, listener);
+    }
+  }
+  return waiting;
+}
+
+export function installConstructionHead<Listener>(
+  state: ConstructionState<Listener>,
+  chunk: Object,
+  value: any,
+): void {
+  let heads = state.heads;
+  if (heads === null) {
+    heads = state.heads = new WeakMap();
+  }
+  if (!heads.has(chunk)) {
+    const fact = createConstructionFact<Listener>();
+    settleConstructionFact(fact, CONSTRUCTION_INSTALLED, value);
+    heads.set(chunk, fact);
+  }
+}
+
+export function getConstructionHead<Listener>(
+  state: null | ConstructionState<Listener>,
+  chunk: Object,
+): void | ConstructionFact<Listener> {
+  if (state === null || state.heads === null) {
+    return undefined;
+  }
+  return state.heads.get(chunk);
+}
+
+export function readConstructionContents<Listener>(
+  state: ConstructionState<Listener>,
+  root: any,
+  isBoundary: any => boolean,
+): null | Array<ConstructionFact<Listener>> {
+  if (state.unfinished === 0) {
+    return null;
+  }
+  const todo: Array<any> = [root];
+  const seen = new Set<Object>();
+  let pending: null | Array<ConstructionFact<Listener>> = null;
+  for (let i = 0; i < todo.length; i++) {
+    const value = todo[i];
+    if (
+      value === null ||
+      (typeof value !== 'object' && typeof value !== 'function') ||
+      seen.has(value) ||
+      isBoundary(value)
+    ) {
+      continue;
+    }
+    seen.add(value);
+    if (value instanceof Set) {
+      const iterator = value.values();
+      let entry = iterator.next();
+      while (!entry.done) {
+        todo.push(entry.value);
+        entry = iterator.next();
+      }
+    } else if (value instanceof Map) {
+      const iterator = value.entries();
+      let entry = iterator.next();
+      while (!entry.done) {
+        todo.push(entry.value[0], entry.value[1]);
+        entry = iterator.next();
+      }
+    } else if (isArray(value) || getPrototypeOf(value) === ObjectPrototype) {
+      const keys = Object.keys(value);
+      for (let j = 0; j < keys.length; j++) {
+        const key = keys[j];
+        const fact = getPendingConstructionField(state, value, key);
+        if (fact === undefined) {
+          const field = Object.getOwnPropertyDescriptor(value, key);
+          if (field !== undefined && hasOwnProperty.call(field, 'value')) {
+            todo.push(field.value);
+          }
+        } else {
+          if (pending === null) {
+            pending = [];
+          }
+          pending.push(fact);
+        }
+      }
+    }
+  }
+  return pending;
 }

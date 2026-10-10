@@ -469,6 +469,52 @@ describe('ReactFlightDOMBrowser', () => {
     await act(() => resolveComponent());
   });
 
+  it('waits for shared props contents without waiting for the component module', async () => {
+    let resolvePayload;
+    let resolveComponent;
+    const {value: payload} = clientExports(
+      {value: 'ready'},
+      'payload',
+      '/payload.js',
+      new Promise(resolve => (resolvePayload = resolve)),
+    );
+    const Widget = clientExports(
+      function Widget() {
+        return null;
+      },
+      'widget',
+      '/widget.js',
+      new Promise(resolve => (resolveComponent = resolve)),
+    );
+    const data = {};
+    const element = <Widget data={data} payload={payload} />;
+    data.alias = element.props;
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {element, props: element.props},
+        webpackMap,
+      ),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const observed = [];
+    await act(() => {
+      response.then(value => {
+        // Capture the field when it is delivered. A later write must not
+        // hide a callback that received an unfinished props object.
+        observed.push(value.props.payload);
+      });
+    });
+    expect(observed).toEqual([]);
+
+    await act(() => resolvePayload());
+    expect(observed).toEqual(['ready']);
+
+    // The component is still unavailable, but its shared data is complete.
+    await act(() => resolveComponent());
+    expect(observed).toEqual(['ready']);
+  });
+
   it('should resolve deduped objects in nested children of blocked models', async () => {
     let resolveOuterClientComponentChunk;
     let resolveInnerClientComponentChunk;
@@ -3109,9 +3155,9 @@ describe('ReactFlightDOMBrowser', () => {
               [
                 "Object.<anonymous>",
                 "/packages/react-server-dom-webpack/src/__tests__/ReactFlightDOMBrowser-test.js",
-                3037,
+                3083,
                 19,
-                3021,
+                3067,
                 89,
               ],
             ],

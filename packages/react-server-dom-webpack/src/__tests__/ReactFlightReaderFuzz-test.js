@@ -3407,17 +3407,17 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
         siblingReady.resolve();
       }
     }
-    it.skip('waits for borrowed props before publishing an ordinary alias', () =>
+    it('waits for borrowed props before publishing an ordinary alias', () =>
       checkBorrowedProps('scalar'));
-    it.skip('waits for borrowed props nested object contents', () =>
+    it('waits for borrowed props nested object contents', () =>
       checkBorrowedProps('object'));
-    it.skip('waits for borrowed props nested array contents', () =>
+    it('waits for borrowed props nested array contents', () =>
       checkBorrowedProps('array'));
-    it.skip('waits for borrowed props Set contents', () =>
+    it('waits for borrowed props Set contents', () =>
       checkBorrowedProps('set'));
-    it.skip('waits for borrowed props Map contents', () =>
+    it('waits for borrowed props Map contents', () =>
       checkBorrowedProps('map'));
-    it.skip('waits for ordinary contents inside borrowed props Set members', () =>
+    it('waits for ordinary contents inside borrowed props Set members', () =>
       checkBorrowedProps('set-object'));
     it('keeps staged Set member cycles progressing without publishing placeholders', () =>
       checkBorrowedProps('staged-member'));
@@ -3425,13 +3425,13 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       checkBorrowedProps('set-direct'));
     it('waits for a Map selected directly from borrowed props', () =>
       checkBorrowedProps('map-direct'));
-    it.skip('publishes a borrowed props subtree without its pending sibling', () =>
+    it('publishes a borrowed props subtree without its pending sibling', () =>
       checkBorrowedProps('subtree'));
-    it.skip('rejects an ordinary borrowed props alias when its payload fails', () =>
+    it('rejects an ordinary borrowed props alias when its payload fails', () =>
       checkBorrowedProps('scalar', 'payload'));
-    it.skip('preserves borrowed props after the component module fails', () =>
+    it('preserves borrowed props after the component module fails', () =>
       checkBorrowedProps('scalar', 'widget'));
-    it.skip('finishes borrowed props after an earlier component module failure', () =>
+    it('finishes borrowed props after an earlier component module failure', () =>
       checkBorrowedProps('scalar', 'widget-first'));
     it.skip('preserves an element self-reference as a suspended handle', async () => {
       const payloadReady = deferred();
