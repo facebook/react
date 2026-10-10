@@ -107,6 +107,12 @@ import {
   MODEL_ARRAY,
   MODEL_ELEMENT,
   MODEL_KIND_MASK,
+  MODEL_REUSABLE,
+  MODEL_NO_EAGER_DEPENDENCIES,
+  MAX_JSON_MODEL_WORK,
+  packModelInfo,
+  getJSONValueWork,
+  addJSONWorkCredit,
 } from 'shared/ReactFlightResult';
 import {
   createResultModel,
@@ -219,6 +225,7 @@ type Task = {
   promise: ResultModel<ReactClientValue>,
   status: 0 | 1 | 3 | 4 | 5 | 6,
   renderedModel: ReactClientValue,
+  resolvedModelInfo: number,
   modelDependencies: null | Set<ResultModel<ReactClientValue>>,
   reference: ModelReference,
   currentReference: null | ModelReference,
@@ -1119,6 +1126,7 @@ function createTask(
     currentReference: reference,
     fieldParentReference: undefined,
     renderedModel: undefined,
+    resolvedModelInfo: 0,
     modelDependencies: null,
     resolve: value => fulfillResultModel(promise, value),
     reject: error => rejectResultModel(promise, error),
@@ -1937,14 +1945,17 @@ function renderModelDestructive(
   if (value instanceof Set) {
     return renderModelReference(task, renderSet(request, task, value));
   }
-  if (typeof FormData === 'function' && value instanceof FormData) {
-    return renderModelReference(task, renderFormData(request, task, value));
-  }
-  if (value instanceof Error) {
-    return renderModelReference(task, renderErrorValue(request, task, value));
-  }
-  if (typeof Blob === 'function' && value instanceof Blob) {
-    return renderModelReference(task, renderBlob(request, task, value));
+  const prototype = getPrototypeOf(value);
+  if (prototype !== ObjectPrototype) {
+    if (typeof FormData === 'function' && value instanceof FormData) {
+      return renderModelReference(task, renderFormData(request, task, value));
+    }
+    if (value instanceof Error) {
+      return renderModelReference(task, renderErrorValue(request, task, value));
+    }
+    if (typeof Blob === 'function' && value instanceof Blob) {
+      return renderModelReference(task, renderBlob(request, task, value));
+    }
   }
   const iteratorFn = getIteratorFn(value);
   if (iteratorFn) {
@@ -1978,7 +1989,6 @@ function renderModelDestructive(
     );
     return renderModelReference(task, model);
   }
-  const prototype = getPrototypeOf(value);
   if (
     prototype !== ObjectPrototype &&
     (prototype === null || getPrototypeOf(prototype) !== null)
@@ -2069,6 +2079,7 @@ function resolveModel(
             throwTaintViolation(tainted.message);
           }
         }
+        task.resolvedModelInfo = 0;
         return renderModelReference(
           task,
           Number.isNaN(time) ? null : new Date(time),
@@ -2147,22 +2158,26 @@ function resolveModel(
         request.hasByValueModels = true;
       }
     }
-    if (
-      task.isModelReference ||
-      rendered === null ||
-      typeof rendered !== 'object'
-    ) {
+    if (task.isModelReference) {
+      task.resolvedModelInfo =
+        rendered !== null && typeof rendered === 'object'
+          ? getModelInfo(request.result, rendered)
+          : 0;
       return rendered;
     }
-    const stack = request.resolvingModelStack;
-    stack.push(rendered);
+    if (rendered === null || typeof rendered !== 'object') {
+      task.resolvedModelInfo = 0;
+      return rendered;
+    }
+    const resolvingModelStack = request.resolvingModelStack;
+    resolvingModelStack.push(rendered);
     if (request.resolvingModels !== null) {
       request.resolvingModels.add(rendered);
     }
     try {
       return resolveModelFields(request, task, rendered);
     } finally {
-      stack.pop();
+      resolvingModelStack.pop();
       if (request.resolvingModels !== null) {
         request.resolvingModels.delete(rendered);
       }
@@ -2338,15 +2353,16 @@ function resolveModelFields(
   const parentReference = task.fieldParentReference;
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
-  task.keyPath = null;
-  task.implicitSlot = false;
   if ((rendered as any).$$typeof === REACT_ELEMENT_TYPE) {
     const element: ReactElement = rendered as any;
     const prevDependencies = task.modelDependencies;
     task.modelDependencies = null;
+    task.keyPath = null;
+    task.implicitSlot = false;
     try {
+      // Flight visits the element tuple's marker and key as well as its fields.
       serializedSize += 2;
-      if (typeof element.key === 'string') {
+      if (element.key !== null && typeof element.key === 'string') {
         serializedSize += element.key.length;
       }
       element.type = resolveModel(
@@ -2365,6 +2381,7 @@ function resolveModelFields(
         element.props,
         parentReference,
       );
+      const propsInfo = task.resolvedModelInfo;
       const resolved = renderOutlinedElement(
         request,
         task,
@@ -2374,7 +2391,18 @@ function resolveModelFields(
         prevImplicitSlot,
         task.modelDependencies,
       );
-      setModelInfo(request.result, element, MODEL_ELEMENT);
+      const directlyReusable =
+        !__DEV__ &&
+        resolved === rendered &&
+        (typeof element.type === 'string' ||
+          typeof element.type === 'symbol') &&
+        (element.props === null ||
+          (typeof element.props !== 'object' &&
+            typeof element.props !== 'function') ||
+          (propsInfo & MODEL_REUSABLE) !== 0);
+      const info = MODEL_ELEMENT | (directlyReusable ? MODEL_REUSABLE : 0);
+      setModelInfo(request.result, element, info);
+      task.resolvedModelInfo = resolved === rendered ? info : 0;
       return resolved;
     } catch (error) {
       markErroredModel(
@@ -2393,21 +2421,63 @@ function resolveModelFields(
   if (isArray(rendered)) {
     const children: Array<ReactClientValue> = model as any;
     const copy: Array<ReactClientValue> = rendered as any;
+    task.keyPath = null;
+    task.implicitSlot = false;
     try {
+      let directlyReusable = true;
+      let noEagerDependencies = true;
+      let jsonWork = 1;
+      // Each container earns local credit once; child containers earn their own.
+      let localWork = 1;
       for (let i = 0; i < children.length; i++) {
         if (i in children) {
-          copy[i] = resolveModel(
+          const key = '' + i;
+          const child = resolveModel(
             request,
             task,
             children,
-            '' + i,
+            key,
             children[i],
             parentReference,
           );
+          const info = task.resolvedModelInfo;
+          copy[i] = child;
+          const isObject =
+            child !== null &&
+            (typeof child === 'object' || typeof child === 'function');
+          if (isObject && (info & MODEL_REUSABLE) === 0) {
+            directlyReusable = false;
+          }
+          if (
+            isObject &&
+            (info & (MODEL_REUSABLE | MODEL_NO_EAGER_DEPENDENCIES)) === 0 &&
+            (info & MODEL_KIND_MASK) !== MODEL_ELEMENT
+          ) {
+            noEagerDependencies = false;
+          }
+          const childWork = getJSONValueWork(child, info);
+          localWork += key.length + 1 + (isObject ? 0 : childWork);
+          if (jsonWork !== 0) {
+            jsonWork += key.length + 1 + childWork;
+            if (childWork === 0 || jsonWork > MAX_JSON_MODEL_WORK) {
+              jsonWork = 0;
+            }
+          }
+        } else {
+          directlyReusable = false;
+          jsonWork = 0;
         }
       }
       copy.length = children.length;
-      setModelInfo(request.result, copy, MODEL_ARRAY);
+      const info = packModelInfo(
+        MODEL_ARRAY |
+          (directlyReusable ? MODEL_REUSABLE : 0) |
+          (noEagerDependencies ? MODEL_NO_EAGER_DEPENDENCIES : 0),
+        jsonWork,
+      );
+      setModelInfo(request.result, copy, info);
+      task.resolvedModelInfo = info;
+      addJSONWorkCredit(request.result, localWork);
       return copy;
     } catch (error) {
       markErroredModel(request, task, model, prevKeyPath, prevImplicitSlot);
@@ -2416,7 +2486,14 @@ function resolveModelFields(
   }
   const object: ReactClientObject = model as any;
   const copy: {[key: string]: ReactClientValue} = rendered as any;
+  task.keyPath = null;
+  task.implicitSlot = false;
   try {
+    let directlyReusable = true;
+    let noEagerDependencies = true;
+    let jsonWork = 1;
+    // Recursive JSON work counts shared children again; local credit does not.
+    let localWork = 1;
     for (const key in object) {
       if (hasOwnProperty.call(object, key)) {
         const child = resolveModel(
@@ -2427,19 +2504,49 @@ function resolveModelFields(
           object[key],
           parentReference,
         );
+        const info = task.resolvedModelInfo;
+        const isObject =
+          child !== null &&
+          (typeof child === 'object' || typeof child === 'function');
+        if (isObject && (info & MODEL_REUSABLE) === 0) {
+          directlyReusable = false;
+        }
+        if (
+          isObject &&
+          (info & (MODEL_REUSABLE | MODEL_NO_EAGER_DEPENDENCIES)) === 0 &&
+          (info & MODEL_KIND_MASK) !== MODEL_ELEMENT
+        ) {
+          noEagerDependencies = false;
+        }
+        const childWork = getJSONValueWork(child, info);
+        localWork += key.length + 1 + (isObject ? 0 : childWork);
+        if (jsonWork !== 0) {
+          jsonWork += key.length + 1 + childWork;
+          if (childWork === 0 || jsonWork > MAX_JSON_MODEL_WORK) {
+            jsonWork = 0;
+          }
+        }
         if (key === '__proto__') {
           Object.defineProperty(copy, key, {
             value: child,
             enumerable: true,
-            configurable: true,
             writable: true,
+            configurable: true,
           });
         } else {
           copy[key] = child;
         }
       }
     }
-    setModelInfo(request.result, copy, MODEL_OBJECT);
+    const info = packModelInfo(
+      MODEL_OBJECT |
+        (directlyReusable ? MODEL_REUSABLE : 0) |
+        (noEagerDependencies ? MODEL_NO_EAGER_DEPENDENCIES : 0),
+      jsonWork,
+    );
+    setModelInfo(request.result, copy, info);
+    task.resolvedModelInfo = info;
+    addJSONWorkCredit(request.result, localWork);
     return copy;
   } catch (error) {
     markErroredModel(request, task, model, prevKeyPath, prevImplicitSlot);

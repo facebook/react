@@ -39,6 +39,7 @@ import {
   getServerReference,
   getTemporaryReferenceSet,
   getModelInfo,
+  getJSONWorkCredit,
   isHalted,
 } from 'shared/ReactFlightResult';
 import noop from 'shared/noop';
@@ -148,6 +149,7 @@ export function createInput(result: Result<ReactClientValue>): Input {
     getServerReference: value => getServerReference(result, value),
     getValueReference: value => getValueReference(result, value),
     getModelInfo: value => getModelInfo(result, value),
+    getJSONWorkCredit: () => getJSONWorkCredit(result),
     getErrorInfo: value => getErrorInfo(result, value),
     getCollectionEntries: value => getCollectionEntries(result, value),
     subscribeToThenable: (thenable, reader) =>

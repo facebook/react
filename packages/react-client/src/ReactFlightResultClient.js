@@ -63,6 +63,8 @@ import {
   getCollectionEntries,
   getModelInfo,
   MODEL_KIND_MASK,
+  MODEL_REUSABLE,
+  MODEL_NO_EAGER_DEPENDENCIES,
   MODEL_OBJECT,
   MODEL_ARRAY,
   MODEL_ELEMENT,
@@ -985,6 +987,10 @@ function readModel(response: Response, value: any): any {
   ) {
     return value;
   }
+  const info = getModelInfo(response._result, value);
+  if (!__DEV__ && (info & MODEL_REUSABLE) !== 0) {
+    return value;
+  }
   const models = response._models;
   const existingModel = models.get(value);
   if (existingModel !== undefined) {
@@ -1013,7 +1019,10 @@ function readModel(response: Response, value: any): any {
     models.set(value, model);
     return model;
   }
-  switch (getModelInfo(response._result, value) & MODEL_KIND_MASK) {
+  if (__DEV__ && (info & MODEL_REUSABLE) !== 0) {
+    return isArray(value) ? readArray(response, value) : value;
+  }
+  switch (info & MODEL_KIND_MASK) {
     case MODEL_OBJECT:
       return readObject(response, value);
     case MODEL_ARRAY:
@@ -1209,6 +1218,9 @@ function readSpecialModel(response: Response, value: any): any {
       copy.add(readModel(response, child));
     });
     return copy;
+  }
+  if (getPrototypeOf(value) === ObjectPrototype) {
+    return readObject(response, value);
   }
   const readableStream = getReadableStream(response._result, value);
   if (readableStream !== undefined) {
@@ -1537,7 +1549,10 @@ function preloadModel(
   if (
     model === null ||
     (typeof model !== 'object' && typeof model !== 'function') ||
-    response._models.get(model) === model
+    response._models.get(model) === model ||
+    (getModelInfo(response._result, model) &
+      (MODEL_REUSABLE | MODEL_NO_EAGER_DEPENDENCIES)) !==
+      0
   ) {
     return null;
   }
@@ -1629,6 +1644,9 @@ function scanModel(
     return;
   }
   const info = getModelInfo(response._result, value);
+  if ((info & (MODEL_REUSABLE | MODEL_NO_EAGER_DEPENDENCIES)) !== 0) {
+    return;
+  }
   const kind = info & MODEL_KIND_MASK;
   if (kind === MODEL_ELEMENT) {
     return;

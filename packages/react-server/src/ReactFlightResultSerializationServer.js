@@ -37,6 +37,7 @@ import {
   MODEL_OBJECT,
   MODEL_ARRAY,
   MODEL_ELEMENT,
+  getJSONModelWork,
 } from 'shared/ReactFlightResult';
 import {
   describeObjectForErrorMessage,
@@ -211,6 +212,7 @@ export type Input = {
   getServerReference: Object => void | ServerReferenceMetadata,
   getValueReference: Object => void | ModelReference,
   getModelInfo: Object => number,
+  getJSONWorkCredit: () => number,
   getErrorInfo: Error => void | ReactErrorInfoDev,
   getCollectionEntries: Object => void | ResultModel<Array<any>>,
   subscribe: ({
@@ -233,6 +235,7 @@ export type Request = {
     Chunk | BinaryChunk | typeof NEXT_TWO_CHUNKS_ARE_ATOMIC,
   >,
   pendingChunks: number,
+  jsonWorkSpent: number,
   nextChunkId: number,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
@@ -399,6 +402,7 @@ function RequestInstance(
         : filterStackFrame;
   }
   this.pendingChunks = 0;
+  this.jsonWorkSpent = 0;
   this.nextChunkId = 0;
   this.abortableTasks = new Set();
   this.pingedTasks = [];
@@ -622,6 +626,7 @@ function renderModelDestructive(
   parentPropertyName: string,
   value: ReactClientValue,
   parentReference?: null | string,
+  modelInfo?: number,
 ): ReactJSONValue {
   task.model = value;
   if (__DEV__) {
@@ -698,7 +703,11 @@ function renderModelDestructive(
       return name;
     }
     const kind =
-      input === null ? 0 : input.getModelInfo(value) & MODEL_KIND_MASK;
+      (modelInfo === undefined
+        ? input === null
+          ? 0
+          : input.getModelInfo(value)
+        : modelInfo) & MODEL_KIND_MASK;
     if (
       kind === MODEL_OBJECT ||
       kind === MODEL_ARRAY ||
@@ -1005,6 +1014,7 @@ function renderModel(
   key: string,
   value: ReactClientValue,
   parentReference?: null | string,
+  modelInfo?: number,
 ): ReactJSONValue {
   // First time we're serializing the key, we should add it to the size.
   serializedSize += key.length;
@@ -1017,6 +1027,7 @@ function renderModel(
       key,
       value,
       parentReference,
+      modelInfo,
     );
   } catch (thrownValue) {
     const model = task.model;
@@ -1071,8 +1082,14 @@ function resolveModel(
   parent: ModelParent,
   parentPropertyName: string,
   value: ReactClientValue,
+  rowRoot: boolean = false,
   parentReference?: null | string,
 ): ReactJSONValue {
+  const input = request.input;
+  const modelInfo =
+    value !== null && typeof value === 'object' && input !== null
+      ? input.getModelInfo(value)
+      : 0;
   const rendered = renderModel(
     request,
     task,
@@ -1080,9 +1097,30 @@ function resolveModel(
     parentPropertyName,
     value,
     parentReference,
+    modelInfo,
   );
   if (rendered === null || typeof rendered !== 'object') {
     return rendered;
+  }
+  // A pure row has no outlining decisions. After the threshold, omitted size
+  // cannot change its truth in this traversal, so a skip adds no serializedSize.
+  // Directly projected objects can acquire object taints before encoding.
+  // A certificate cannot replace live nested taint checks when taint is enabled.
+  if (
+    !__DEV__ &&
+    !enableTaint &&
+    rendered === value &&
+    (rowRoot || serializedSize > MAX_ROW_SIZE) &&
+    input !== null
+  ) {
+    const work = getJSONModelWork(modelInfo);
+    if (
+      work !== 0 &&
+      request.jsonWorkSpent + work <= input.getJSONWorkCredit()
+    ) {
+      request.jsonWorkSpent += work;
+      return rendered;
+    }
   }
   if (isArray(rendered)) {
     // In production, only renderClientElement returns an array distinct from its input.
@@ -1169,6 +1207,7 @@ function resolveElementTuple(
     tuple,
     '0',
     tuple[0],
+    false,
     tupleReference,
   );
   const type = resolveModel(
@@ -1177,15 +1216,25 @@ function resolveElementTuple(
     tuple,
     '1',
     tuple[1],
+    false,
     tupleReference,
   );
-  const key = resolveModel(request, task, tuple, '2', tuple[2], tupleReference);
+  const key = resolveModel(
+    request,
+    task,
+    tuple,
+    '2',
+    tuple[2],
+    false,
+    tupleReference,
+  );
   const props = resolveModel(
     request,
     task,
     tuple,
     '3',
     tuple[3],
+    false,
     tupleReference,
   );
   tuple[0] = marker;
@@ -2022,7 +2071,14 @@ function retryTask(request: Request, task: Task): void {
     ) {
       request.writtenObjects.set(model, serializeByValueID(task.id));
     }
-    const resolvedModel = resolveModel(request, task, {'': model}, '', model);
+    const resolvedModel = resolveModel(
+      request,
+      task,
+      {'': model},
+      '',
+      model,
+      true,
+    );
     const json = JSON.stringify(resolvedModel);
     emitModelChunk(request, task.id, json);
     task.status = COMPLETED;
@@ -4177,7 +4233,14 @@ function emitChunk(
   // For anything else we need to try to serialize it using JSON.
   // We resolve the model tree first in pure JS to avoid the C++->JS boundary
   // overhead of JSON.stringify's replacer callback.
-  const resolvedModel = resolveModel(request, task, {'': value}, '', value);
+  const resolvedModel = resolveModel(
+    request,
+    task,
+    {'': value},
+    '',
+    value,
+    true,
+  );
   // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
   const json: string = JSON.stringify(resolvedModel);
   emitModelChunk(request, task.id, json);
