@@ -19,6 +19,10 @@ import {
   createResponse,
   readResult,
 } from 'react-client/src/ReactFlightResultClient';
+import {
+  isClientReference,
+  resolveClientReferenceMetadata,
+} from '../server/ReactFlightServerConfigWebpackBundler';
 
 type Options = {
   clientManifest: ClientManifest,
@@ -27,12 +31,29 @@ type Options = {
     moduleLoading: ModuleLoading,
     serverModuleMap: null | ServerManifest,
   },
+  nonce?: string,
+  onError?: mixed => ?string,
 };
 
 export function createFromResult<T>(
   result: Result<T>,
   options: Options,
 ): Thenable<T> {
-  const response = createResponse();
+  const manifest = options.serverConsumerManifest;
+  const response = createResponse(
+    manifest.moduleMap,
+    manifest.moduleLoading,
+    value => {
+      if (!isClientReference(value)) {
+        return null;
+      }
+      return resolveClientReferenceMetadata(
+        options.clientManifest,
+        value as any,
+      ) as any;
+    },
+    options.nonce,
+    options.onError,
+  );
   return readResult(response, result);
 }

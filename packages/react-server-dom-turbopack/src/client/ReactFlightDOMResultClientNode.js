@@ -1,0 +1,59 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+import type {Thenable} from 'shared/ReactTypes';
+import type {Result} from 'shared/ReactFlightResult';
+import type {ClientManifest} from '../server/ReactFlightServerConfigTurbopackBundler';
+import type {
+  ServerConsumerModuleMap,
+  ModuleLoading,
+  ServerManifest,
+} from 'react-client/src/ReactFlightClientConfig';
+import {
+  createResponse,
+  readResult,
+} from 'react-client/src/ReactFlightResultClient';
+import {
+  isClientReference,
+  resolveClientReferenceMetadata,
+} from '../server/ReactFlightServerConfigTurbopackBundler';
+
+type Options = {
+  clientManifest: ClientManifest,
+  serverConsumerManifest: {
+    moduleMap: ServerConsumerModuleMap,
+    moduleLoading: ModuleLoading,
+    serverModuleMap: null | ServerManifest,
+  },
+  nonce?: string,
+  onError?: mixed => ?string,
+};
+
+export function createFromResult<T>(
+  result: Result<T>,
+  options: Options,
+): Thenable<T> {
+  const manifest = options.serverConsumerManifest;
+  const response = createResponse(
+    manifest.moduleMap,
+    manifest.moduleLoading,
+    value => {
+      if (!isClientReference(value)) {
+        return null;
+      }
+      return resolveClientReferenceMetadata(
+        options.clientManifest,
+        value as any,
+      ) as any;
+    },
+    options.nonce,
+    options.onError,
+  );
+  return readResult(response, result);
+}

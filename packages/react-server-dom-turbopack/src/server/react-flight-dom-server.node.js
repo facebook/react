@@ -23,3 +23,8 @@ export {
   createClientModuleProxy,
   createTemporaryReferenceSet,
 } from './ReactFlightDOMServerNode';
+
+export {
+  renderToResult,
+  renderResultToPipeableStream,
+} from './ReactFlightDOMResultServerNode';

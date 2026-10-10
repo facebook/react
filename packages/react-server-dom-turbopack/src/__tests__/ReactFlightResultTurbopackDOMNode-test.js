@@ -63,6 +63,15 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
     use = React.use;
   });
 
+  function renderResultToPipeableStream(model, manifest, options) {
+    const result = ReactServerDOMServer.renderToResult(model, options);
+    return ReactServerDOMServer.renderResultToPipeableStream(
+      result,
+      manifest,
+      options,
+    );
+  }
+
   function readResult(stream) {
     return new Promise((resolve, reject) => {
       let buffer = '';
@@ -106,7 +115,7 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
     return {delayedStream, resolveDelayedStream};
   }
 
-  it.skip('should allow an alternative module mapping to be used for SSR', async () => {
+  it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
     }
@@ -135,19 +144,20 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToPipeableStream(<App />, turbopackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<App />),
     );
-    const readable = new Stream.PassThrough();
-
-    stream.pipe(readable);
 
     let response;
     function ClientRoot() {
       if (!response) {
-        response = ReactServerDOMClient.createFromNodeStream(readable, {
-          moduleMap: translationMap,
-          moduleLoading: turbopackModuleLoading,
+        response = ReactServerDOMClient.createFromResult(result, {
+          clientManifest: turbopackMap,
+          serverConsumerManifest: {
+            moduleMap: translationMap,
+            moduleLoading: turbopackModuleLoading,
+            serverModuleMap: null,
+          },
         });
       }
       return use(response);
@@ -156,8 +166,8 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
     const ssrStream = await serverAct(() =>
       ReactDOMServer.renderToPipeableStream(<ClientRoot />),
     );
-    const result = await readResult(ssrStream);
-    expect(result).toEqual(
+    const html = await readResult(ssrStream);
+    expect(html).toEqual(
       '<script src="/prefix/path/to/chunk.js" async=""></script><span>Client Component</span>',
     );
   });
@@ -187,7 +197,7 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
     const debugReadable = new Stream.PassThrough(streamOptions);
 
     const rscStream = await serverAct(() =>
-      ReactServerDOMServer.renderToPipeableStream(
+      renderResultToPipeableStream(
         ReactServer.createElement(App, null),
         turbopackMap,
         {
@@ -284,7 +294,7 @@ describe('ReactFlightResultTurbopackDOMNode', () => {
     const {delayedStream, resolveDelayedStream} = createDelayedStream();
 
     const rscStream = await serverAct(() =>
-      ReactServerDOMServer.renderToPipeableStream(
+      renderResultToPipeableStream(
         ReactServer.createElement(App, null),
         turbopackMap,
         {

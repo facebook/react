@@ -194,6 +194,7 @@ module.exports = [
       'react-server-dom-turbopack/src/server/react-flight-dom-server.node',
       'react-server-dom-turbopack/src/server/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/src/server/react-flight-dom-server.node
       'react-server-dom-turbopack/src/server/ReactFlightDOMResultServerNode.js',
+      'react-server-dom-turbopack/src/server/ReactFlightDOMResultSerializationServerNode.js',
       'react-server-dom-turbopack/node-register',
       'react-server-dom-turbopack/src/ReactFlightTurbopackNodeRegister.js',
       'react-devtools',

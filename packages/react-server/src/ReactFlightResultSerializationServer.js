@@ -15,6 +15,12 @@ import type {
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Chunk, Destination} from './ReactServerStreamConfig';
 import type {HintCode, HintModel} from './ReactFlightResultServerConfig';
+import type {
+  ClientManifest,
+  ClientReference,
+  ClientReferenceKey,
+  ClientReferenceMetadata,
+} from './ReactFlightServerConfig';
 import {
   beginWriting,
   writeChunkAndReturn,
@@ -30,6 +36,31 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import noop from 'shared/noop';
+import {
+  isClientReference,
+  getClientReferenceKey,
+  resolveClientReferenceMetadata,
+} from './ReactFlightServerConfig';
+
+const stringify = JSON.stringify;
+const getPrototypeOf = Object.getPrototypeOf;
+const ObjectPrototype = Object.prototype;
+let importStringRequest: null | Request = null;
+
+// Bundler metadata repeats the same chunk URLs across every client reference of
+// a route, so strings in it at least this long get outlined and deduplicated
+// when they repeat. The threshold is bounded away from zero because outlining
+// something as short as an export name costs more than copying it.
+const MIN_DEDUPLICATED_IMPORT_STRING_LENGTH = 16;
+
+// Tracked strings are retained for the rest of the request, so their combined
+// length is capped.
+const MAX_DEDUPLICATED_IMPORT_STRINGS_SIZE = 32768;
+
+// Bundler metadata is two or three levels deep. The bound is only there so a
+// cycle ends up in stringify itself, which throws its own error for it.
+const MAX_IMPORT_METADATA_DEPTH = 16;
+const NOT_PLAIN_IMPORT_METADATA = {};
 
 const OPENING = 10;
 const CLOSING = 13;
@@ -74,9 +105,18 @@ export type Request = {
   completedHintChunks: Array<Chunk>,
   flushScheduled: boolean,
   inputUnsubscribe: () => void,
+  bundlerConfig: ClientManifest,
+  writtenClientReferences: Map<ClientReferenceKey, number>,
+  writtenImportStrings: Map<string, string>,
+  writtenImportStringsSize: number,
+  completedImportChunks: Array<Chunk>,
 };
 
-function RequestInstance(this: any, input: Input) {
+function RequestInstance(
+  this: any,
+  input: Input,
+  bundlerConfig: ClientManifest,
+) {
   this.input = input;
   this.destination = null;
   this.status = OPENING;
@@ -85,6 +125,11 @@ function RequestInstance(this: any, input: Input) {
   this.completedHintChunks = [];
   this.flushScheduled = false;
   this.inputUnsubscribe = noop;
+  this.bundlerConfig = bundlerConfig;
+  this.writtenClientReferences = new Map();
+  this.writtenImportStrings = new Map();
+  this.writtenImportStringsSize = 0;
+  this.completedImportChunks = [];
   this.pendingChunks = 0;
   this.nextChunkId = 0;
   this.abortableTasks = new Set();
@@ -93,13 +138,16 @@ function RequestInstance(this: any, input: Input) {
   subscribeToInput(this, input, rootTask);
 }
 
-export function createRequest(input: Input): Request {
+export function createRequest(
+  input: Input,
+  bundlerConfig: ClientManifest,
+): Request {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new RequestInstance(input);
+  return new RequestInstance(input, bundlerConfig);
 }
 
 function renderClientElement(
-  type: string,
+  type: any,
   key: null | string,
   props: ReactClientValue,
   validated: number,
@@ -139,6 +187,20 @@ function renderModelDestructive(
   value: ReactClientValue,
 ): ReactJSONValue {
   task.model = value;
+  if (
+    value !== null &&
+    (typeof value === 'object' || typeof value === 'function') &&
+    isClientReference(value)
+  ) {
+    const clientReference: ClientReference<any> = value as any;
+    return serializeClientReference(
+      request,
+      task,
+      parent,
+      parentPropertyName,
+      clientReference,
+    );
+  }
   if (value === null) {
     return null;
   }
@@ -316,6 +378,211 @@ function pingTask(request: Request, task: Task): void {
   }
 }
 
+function serializeByValueID(id: number): string {
+  return '$' + id.toString(16);
+}
+
+function serializeLazyID(id: number): string {
+  return '$L' + id.toString(16);
+}
+
+function escapeStringValue(value: string): string {
+  if (value[0] === '$') {
+    // We need to escape $ prefixed strings since we use those to encode
+    // references to IDs and as special symbol values.
+    return '$' + value;
+  } else {
+    return value;
+  }
+}
+
+function serializeImportString(request: Request, value: string): string {
+  // No maximum length because import strings are short and repeat often.
+  // Deduping model strings too would need one to skip very long strings.
+  if (value.length < MIN_DEDUPLICATED_IMPORT_STRING_LENGTH) {
+    return escapeStringValue(value);
+  }
+  const writtenStrings = request.writtenImportStrings;
+  const existing = writtenStrings.get(value);
+  if (existing !== undefined) {
+    return existing;
+  }
+  const size = request.writtenImportStringsSize + value.length;
+  if (size > MAX_DEDUPLICATED_IMPORT_STRINGS_SIZE) {
+    // The map is full. Strings already outlined keep deduping; new ones are
+    // written out every time.
+    return escapeStringValue(value);
+  }
+  request.writtenImportStringsSize = size;
+  // Chunk names are almost always shared, so the first occurrence is outlined
+  // right away instead of waiting for a repeat.
+  request.pendingChunks++;
+  const outlinedId = request.nextChunkId++;
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(escapeStringValue(value));
+  // The client reads import metadata synchronously, so this row has to have
+  // been written by the time the referencing row arrives. Import chunks are
+  // flushed ahead of regular ones, which regular chunks can't guarantee.
+  request.completedImportChunks.push(
+    stringToChunk(outlinedId.toString(16) + ':' + json + '\n'),
+  );
+  const ref = serializeByValueID(outlinedId);
+  writtenStrings.set(value, ref);
+  return ref;
+}
+
+function importMetadataReplacer(key: string, value: mixed): mixed {
+  if (typeof value === 'string') {
+    const request = importStringRequest;
+    if (request === null) {
+      return escapeStringValue(value);
+    }
+    return serializeImportString(request, value);
+  }
+  return value;
+}
+
+function stringifyImportMetadataWithReplacer(
+  request: Request,
+  clientReferenceMetadata: ClientReferenceMetadata,
+  debug: boolean,
+): string {
+  const prevRequest = importStringRequest;
+  // The debug channel cannot reference string rows in the main stream.
+  importStringRequest = __DEV__ && debug ? null : request;
+  try {
+    // $FlowFixMe[incompatible-type] stringify can return null
+    return stringify(clientReferenceMetadata, importMetadataReplacer);
+  } finally {
+    importStringRequest = prevRequest;
+  }
+}
+
+function transformImportMetadata(
+  request: Request,
+  value: mixed,
+  depth: number,
+): mixed {
+  switch (typeof value) {
+    case 'string':
+      return serializeImportString(request, value);
+    case 'number':
+    case 'boolean':
+    case 'undefined':
+      return value;
+    case 'object': {
+      if (value === null) {
+        return null;
+      }
+      if (depth > MAX_IMPORT_METADATA_DEPTH) {
+        return NOT_PLAIN_IMPORT_METADATA;
+      }
+      const object = value as {+[string]: mixed};
+      if (typeof object.toJSON === 'function') {
+        return NOT_PLAIN_IMPORT_METADATA;
+      }
+      if (isArray(value)) {
+        const length = value.length;
+        const copy: Array<mixed> = new Array(length);
+        for (let i = 0; i < length; i++) {
+          const element = value[i];
+          if (typeof element === 'string') {
+            copy[i] = serializeImportString(request, element);
+            continue;
+          }
+          const child = transformImportMetadata(request, element, depth + 1);
+          if (child === NOT_PLAIN_IMPORT_METADATA) {
+            return NOT_PLAIN_IMPORT_METADATA;
+          }
+          copy[i] = child;
+        }
+        return copy;
+      }
+      const proto = getPrototypeOf(value);
+      if (proto !== ObjectPrototype && proto !== null) {
+        return NOT_PLAIN_IMPORT_METADATA;
+      }
+      const keys = Object.keys(value);
+      const copy: {[string]: mixed} = {};
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (key in ObjectPrototype) {
+          // The copy inherits from Object.prototype, so assigning this key would
+          // hit an accessor like __proto__ or, if the prototype is frozen, throw.
+          return NOT_PLAIN_IMPORT_METADATA;
+        }
+        const element = object[key];
+        if (typeof element === 'string') {
+          copy[key] = serializeImportString(request, element);
+          continue;
+        }
+        const child = transformImportMetadata(request, element, depth + 1);
+        if (child === NOT_PLAIN_IMPORT_METADATA) {
+          return NOT_PLAIN_IMPORT_METADATA;
+        }
+        copy[key] = child;
+      }
+      return copy;
+    }
+    default:
+      return NOT_PLAIN_IMPORT_METADATA;
+  }
+}
+
+function stringifyImportMetadata(
+  request: Request,
+  clientReferenceMetadata: ClientReferenceMetadata,
+  debug: boolean,
+): string {
+  if (!(__DEV__ && debug)) {
+    const copy = transformImportMetadata(request, clientReferenceMetadata, 0);
+    if (copy !== NOT_PLAIN_IMPORT_METADATA) {
+      // $FlowFixMe[incompatible-type] stringify can return null
+      return stringify(copy);
+    }
+  }
+  return stringifyImportMetadataWithReplacer(
+    request,
+    clientReferenceMetadata,
+    debug,
+  );
+}
+
+function serializeClientReference(
+  request: Request,
+  task: Task,
+  parent: ModelParent,
+  parentPropertyName: string,
+  clientReference: ClientReference<any>,
+): string {
+  const clientReferenceKey = getClientReferenceKey(clientReference);
+  const writtenClientReferences = request.writtenClientReferences;
+  const existingId = writtenClientReferences.get(clientReferenceKey);
+  if (existingId !== undefined) {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
+      return serializeLazyID(existingId);
+    }
+    return serializeByValueID(existingId);
+  }
+  const clientReferenceMetadata: ClientReferenceMetadata =
+    resolveClientReferenceMetadata(request.bundlerConfig, clientReference);
+  const json = stringifyImportMetadata(request, clientReferenceMetadata, false);
+  request.pendingChunks++;
+  const importId = request.nextChunkId++;
+  emitImportChunk(request, importId, json);
+  writtenClientReferences.set(clientReferenceKey, importId);
+  if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
+    return serializeLazyID(importId);
+  }
+  return serializeByValueID(importId);
+}
+
+function emitImportChunk(request: Request, id: number, json: string): void {
+  const row = id.toString(16) + ':I' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedImportChunks.push(processedChunk);
+}
+
 function emitHintChunk<Code: HintCode>(
   request: Request,
   code: Code,
@@ -387,8 +654,20 @@ function flushCompletedChunks(request: Request): void {
   }
   beginWriting(destination);
   try {
-    const hintChunks = request.completedHintChunks;
+    const importsChunks = request.completedImportChunks;
     let i = 0;
+    for (; i < importsChunks.length; i++) {
+      request.pendingChunks--;
+      const keepWriting = writeChunkAndReturn(destination, importsChunks[i]);
+      if (!keepWriting) {
+        request.destination = null;
+        i++;
+        break;
+      }
+    }
+    importsChunks.splice(0, i);
+    const hintChunks = request.completedHintChunks;
+    i = 0;
     for (; i < hintChunks.length; i++) {
       const keepWriting = writeChunkAndReturn(destination, hintChunks[i]);
       if (!keepWriting) {

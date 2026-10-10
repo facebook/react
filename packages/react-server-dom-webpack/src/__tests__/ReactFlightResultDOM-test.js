@@ -1542,7 +1542,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  it.skip('should be able to esm compat test module references', async () => {
+  it('should be able to esm compat test module references', async () => {
     const ESMCompatModule = {
       __esModule: true,
       default: function ({greeting}) {
@@ -1575,12 +1575,10 @@ describe('ReactFlightResultDOM', () => {
       clientExports(ESMCompatModule),
     );
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<Component greeting={hi} />, webpackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<Component greeting={hi} />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1590,7 +1588,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  it.skip('should be able to render a named component export', async () => {
+  it('should be able to render a named component export', async () => {
     const Module = {
       Component: function ({greeting}) {
         return greeting + ' World';
@@ -1611,15 +1609,10 @@ describe('ReactFlightResultDOM', () => {
 
     const {Component} = clientExports(Module);
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
-        <Component greeting={'Hello'} />,
-        webpackMap,
-      ),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<Component greeting={'Hello'} />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1629,7 +1622,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  it.skip('should be able to render a module split named component export', async () => {
+  it('should be able to render a module split named component export', async () => {
     const Module = {
       // This gets split into a separate module from the original one.
       split: function ({greeting}) {
@@ -1651,15 +1644,10 @@ describe('ReactFlightResultDOM', () => {
 
     const {split: Component} = clientExports(Module);
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
-        <Component greeting={'Hello'} />,
-        webpackMap,
-      ),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<Component greeting={'Hello'} />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1669,7 +1657,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  it.skip('should unwrap async module references', async () => {
+  it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
     });
@@ -1693,15 +1681,12 @@ describe('ReactFlightResultDOM', () => {
     const AsyncModuleRef = await clientExports(AsyncModule);
     const AsyncModuleRef2 = await clientExports(AsyncModule2);
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(
         <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-        webpackMap,
       ),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1748,7 +1733,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>Async Text</p>');
   });
 
-  it.skip('should unwrap async ESM module references', async () => {
+  it('should unwrap async ESM module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
     });
@@ -1772,15 +1757,12 @@ describe('ReactFlightResultDOM', () => {
     const AsyncModuleRef = await clientExportsESM(AsyncModule);
     const AsyncModuleRef2 = await clientExportsESM(AsyncModule2);
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(
         <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-        webpackMap,
       ),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1845,7 +1827,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('should be able to import a name called "then"', async () => {
+  it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
         return 'and then';
@@ -1866,12 +1848,10 @@ describe('ReactFlightResultDOM', () => {
 
     const ThenRef = clientExports(thenExports).then;
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<ThenRef />, webpackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<ThenRef />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1881,7 +1861,7 @@ describe('ReactFlightResultDOM', () => {
     expect(container.innerHTML).toBe('<p>and then</p>');
   });
 
-  it.skip('throws when accessing a member below the client exports', () => {
+  it('throws when accessing a member below the client exports', () => {
     const ClientModule = clientExports({
       Component: {deep: 'thing'},
     });
@@ -1895,7 +1875,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('throws when await a client module prop of client exports', async () => {
+  it('throws when await a client module prop of client exports', async () => {
     const ClientModule = clientExports({
       Component: {deep: 'thing'},
     });
@@ -1909,7 +1889,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('throws when accessing a symbol prop from client exports', () => {
+  it('throws when accessing a symbol prop from client exports', () => {
     const symbol = Symbol('test');
     const ClientModule = clientExports({
       Component: {deep: 'thing'},
@@ -1923,7 +1903,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('does not throw when toString:ing client exports', () => {
+  it('does not throw when toString:ing client exports', () => {
     const ClientModule = clientExports({
       Component: {deep: 'thing'},
     });
@@ -1935,14 +1915,14 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('does not throw when React inspects any deep props', () => {
+  it('does not throw when React inspects any deep props', () => {
     const ClientModule = clientExports({
       Component: function () {},
     });
     <ClientModule.Component key="this adds instrumentation" />;
   });
 
-  it.skip('does not throw when accessing a Context.Provider from client exports', () => {
+  it('does not throw when accessing a Context.Provider from client exports', () => {
     const Context = React.createContext();
     const ClientModule = clientExports({
       Context,
@@ -1953,7 +1933,7 @@ describe('ReactFlightResultDOM', () => {
     expect(dotting).not.toThrow();
   });
 
-  it.skip('can render a client Context.Provider from a server component', async () => {
+  it('can render a client Context.Provider from a server component', async () => {
     // Create a context in a client module
     const TestContext = React.createContext('default');
     const ClientModule = clientExports({
@@ -1990,12 +1970,10 @@ describe('ReactFlightResultDOM', () => {
       );
     }
 
-    const {writable, readable} = getTestStream();
-    const {pipe} = await serverAct(() =>
-      renderResultToPipeableStream(<ServerApp />, webpackMap),
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(<ServerApp />),
     );
-    pipe(writable);
-    const response = ReactServerDOMClient.createFromReadableStream(readable);
+    const response = createResponse(result);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

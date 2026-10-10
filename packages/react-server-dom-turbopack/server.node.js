@@ -9,6 +9,8 @@
 
 export {
   renderToPipeableStream,
+  renderToResult,
+  renderResultToPipeableStream,
   renderToReadableStream,
   decodeReply,
   decodeReplyFromBusboy,
