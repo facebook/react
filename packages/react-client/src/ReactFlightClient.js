@@ -1931,6 +1931,39 @@ function fulfillReference(
   initializeChunkIfUnblocked(response, handler);
 }
 
+function createInitializationReference(
+  parentObject: Object,
+  key: string,
+  map: (
+    response: Response,
+    model: any,
+    parentObject: Object,
+    key: string,
+  ) => any,
+  path: Array<string>,
+  isAwaitingDebugInfo: boolean,
+): InitializationReference {
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
+  } else {
+    handler = initializingHandler = createInitializationHandler(null, 1);
+  }
+
+  const reference: InitializationReference = {
+    handler,
+    parentObject,
+    key,
+    map,
+    path,
+  };
+  if (__DEV__) {
+    reference.isDebug = isAwaitingDebugInfo;
+  }
+  return reference;
+}
+
 function rejectReference(
   response: Response,
   handler: InitializationHandler,
@@ -2011,24 +2044,13 @@ function waitForReference<T>(
     }
   }
 
-  let handler: InitializationHandler;
-  if (initializingHandler) {
-    handler = initializingHandler;
-    handler.deps++;
-  } else {
-    handler = initializingHandler = createInitializationHandler(null, 1);
-  }
-
-  const reference: InitializationReference = {
-    handler,
+  const reference = createInitializationReference(
     parentObject,
     key,
     map,
     path,
-  };
-  if (__DEV__) {
-    reference.isDebug = isAwaitingDebugInfo;
-  }
+    isAwaitingDebugInfo,
+  );
 
   // Add "listener".
   if (referencedChunk.value === null) {
@@ -2046,15 +2068,79 @@ function waitForReference<T>(
   return null as any;
 }
 
+type ServerReferenceMetadata = {
+  id: any,
+  bound: null | Thenable<Array<any>>,
+  name?: string, // DEV-only
+  env?: string, // DEV-only
+  location?: ReactFunctionLocation, // DEV-only
+};
+
+function initializeServerReference<T>(
+  response: Response,
+  serverReference: ClientReference<T>,
+  id: string,
+  bound: null | Thenable<Array<any>>,
+  parentObject: Object,
+  key: string,
+  handler: InitializationHandler,
+): any {
+  let resolvedValue = requireModule(serverReference) as any;
+
+  if (bound) {
+    // This promise is coming from us and should have initialized by now.
+    const promiseValue = (bound as any).value;
+    const boundArgs: Array<any> = isArray(promiseValue)
+      ? promiseValue.slice(0)
+      : [];
+    boundArgs.unshift(null); // this
+    resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+  }
+
+  registerBoundServerReference(
+    resolvedValue,
+    id,
+    bound,
+    response._encodeFormAction,
+  );
+
+  if (key !== __PROTO__) {
+    parentObject[key] = resolvedValue;
+  }
+
+  // If this is the root object for a model reference, where `handler.value`
+  // is a stale `null`, the resolved value can be used directly.
+  if (key === '' && handler.value === null) {
+    handler.value = resolvedValue;
+  }
+
+  // If the parent object is an unparsed React element tuple, we also need to
+  // update the props and owner of the parsed element object (i.e.
+  // handler.value).
+  if (
+    parentObject[0] === REACT_ELEMENT_TYPE &&
+    typeof handler.value === 'object' &&
+    handler.value !== null &&
+    handler.value.$$typeof === REACT_ELEMENT_TYPE
+  ) {
+    const element: any = handler.value;
+    switch (key) {
+      case '3':
+        element.props = resolvedValue;
+        break;
+      case '4':
+        if (__DEV__) {
+          element._owner = resolvedValue;
+        }
+        break;
+    }
+  }
+  return resolvedValue;
+}
+
 function loadServerReference<A: Iterable<any>, T>(
   response: Response,
-  metaData: {
-    id: any,
-    bound: null | Thenable<Array<any>>,
-    name?: string, // DEV-only
-    env?: string, // DEV-only
-    location?: ReactFunctionLocation, // DEV-only
-  },
+  metaData: ServerReferenceMetadata,
   parentObject: Object,
   key: string,
 ): (...A) => Promise<T> {
@@ -2111,106 +2197,21 @@ function loadServerReference<A: Iterable<any>, T>(
   }
 
   function fulfill(): void {
-    let resolvedValue = requireModule(serverReference) as any;
-
-    if (bound) {
-      // This promise is coming from us and should have initialized by now.
-      const promiseValue = (bound as any).value;
-      const boundArgs: Array<any> = isArray(promiseValue)
-        ? promiseValue.slice(0)
-        : [];
-      boundArgs.unshift(null); // this
-      resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
-    }
-
-    registerBoundServerReference(
-      resolvedValue,
+    initializeServerReference(
+      response,
+      serverReference,
       id,
       bound,
-      response._encodeFormAction,
+      parentObject,
+      key,
+      handler,
     );
-
-    if (key !== __PROTO__) {
-      parentObject[key] = resolvedValue;
-    }
-
-    // If this is the root object for a model reference, where `handler.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && handler.value === null) {
-      handler.value = resolvedValue;
-    }
-
-    // If the parent object is an unparsed React element tuple, we also need to
-    // update the props and owner of the parsed element object (i.e.
-    // handler.value).
-    if (
-      parentObject[0] === REACT_ELEMENT_TYPE &&
-      typeof handler.value === 'object' &&
-      handler.value !== null &&
-      handler.value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      const element: any = handler.value;
-      switch (key) {
-        case '3':
-          element.props = resolvedValue;
-          break;
-        case '4':
-          if (__DEV__) {
-            element._owner = resolvedValue;
-          }
-          break;
-      }
-    }
-
     handler.deps--;
     initializeChunkIfUnblocked(response, handler);
   }
 
   function reject(error: mixed): void {
-    if (handler.errored) {
-      // We've already errored. We could instead build up an AggregateError
-      // but if there are multiple errors we just take the first one like
-      // Promise.all.
-      return;
-    }
-    const blockedValue = handler.value;
-    const erroredHandler: ErroredInitializationHandler = handler as any;
-    erroredHandler.errored = true;
-    erroredHandler.value = null;
-    erroredHandler.reason = error;
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-
-    if (__DEV__) {
-      if (
-        typeof blockedValue === 'object' &&
-        blockedValue !== null &&
-        blockedValue.$$typeof === REACT_ELEMENT_TYPE
-      ) {
-        const element = blockedValue;
-        // Conceptually the error happened inside this Element but right before
-        // it was rendered. We don't have a client side component to render but
-        // we can add some DebugInfo to explain that this was conceptually a
-        // Server side error that errored inside this element. That way any stack
-        // traces will point to the nearest JSX that errored - e.g. during
-        // serialization.
-        const erroredComponent: ReactComponentInfo = {
-          name: getComponentNameFromType(element.type) || '',
-          owner: element._owner,
-        };
-        // $FlowFixMe[cannot-write]
-        erroredComponent.debugStack = element._debugStack;
-        if (supportsCreateTask) {
-          // $FlowFixMe[cannot-write]
-          erroredComponent.debugTask = element._debugTask;
-        }
-        chunk._debugInfo.push(erroredComponent);
-      }
-    }
-
-    triggerErrorOnChunk(response, chunk, error);
+    rejectReference(response, handler, error);
   }
 
   promise.then(fulfill, reject);
