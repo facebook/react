@@ -8,7 +8,10 @@
  */
 
 import type {ResultModel} from 'shared/ReactFlightResultModel';
-import {getResultModelStatus} from 'shared/ReactFlightResultModel';
+import {
+  getResultModelStatus,
+  getResultModel,
+} from 'shared/ReactFlightResultModel';
 import type {
   ServerReferenceMetadata,
   ErrorReference,
@@ -19,6 +22,8 @@ import type {
   ReactDebugInfo,
   ReactDebugInfoEntry,
   ReactComponentInfo,
+  ReactIOInfo,
+  ReactAsyncInfo,
   ReactCallSite,
   ReactErrorInfo,
   ReactStackTrace,
@@ -2141,10 +2146,22 @@ function serializeDebugThenable(
   thenable: Thenable<any>,
 ): string {
   // Like serializeThenable but for renderDebugModel
+  const model = __DEV__ ? getResultModel<any>(thenable) : null;
+  const source = model === null ? undefined : model._debugSource;
+  if (source !== undefined) {
+    const existing = request.writtenDebugObjects.get(source);
+    if (existing !== undefined) {
+      request.writtenDebugObjects.set(thenable, existing);
+      return existing;
+    }
+  }
   request.pendingDebugChunks++;
   const id = request.nextChunkId++;
   const ref = serializePromiseID(id);
   request.writtenDebugObjects.set(thenable, ref);
+  if (source !== undefined) {
+    request.writtenDebugObjects.set(source, ref);
+  }
 
   if (__DEV__ && getResultModelStatus(thenable) !== null) {
     const input = request.input;
@@ -2317,6 +2334,48 @@ function forwardDebugInfo(
         // Emit a reference to the outlined one.
         request.pendingChunks++;
         emitDebugChunk(request, id, info);
+      } else if (info.awaited) {
+        const ioInfo = info.awaited;
+        // Outline the IO info in case the same I/O is awaited in more than one place.
+        outlineIOInfo(request, ioInfo);
+        // Ensure the owner is already outlined.
+        if (info.owner != null) {
+          outlineComponentInfo(request, info.owner);
+        }
+        // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+        let debugStack;
+        if (info.stack == null && info.debugStack != null) {
+          // If we have a debugStack but no parsed stack we should parse it.
+          debugStack = filterStackTrace(
+            request,
+            parseStackTrace(info.debugStack, 1),
+          );
+        } else {
+          debugStack = info.stack;
+        }
+        const debugAsyncInfo: Omit<ReactAsyncInfo, 'debugTask' | 'debugStack'> =
+          {
+            awaited: ioInfo,
+          };
+        if (info.env != null) {
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.env = info.env;
+        } else {
+          // If we're forwarding IO info from this environment, an empty env is effectively the "client" side.
+          // The "client" from the perspective of our client will be this current environment.
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.env = (0, request.environmentName)();
+        }
+        if (info.owner != null) {
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.owner = info.owner;
+        }
+        if (debugStack != null) {
+          // $FlowFixMe[cannot-write]
+          debugAsyncInfo.stack = debugStack;
+        }
+        request.pendingChunks++;
+        emitDebugChunk(request, id, debugAsyncInfo);
       } else {
         request.pendingChunks++;
         emitDebugChunk(request, id, info);
@@ -3417,6 +3476,102 @@ function serializeServerReferenceID(id: number): string {
 
 function serializeServerObjectReferenceID(id: number): string {
   return '$H' + id.toString(16);
+}
+
+function emitIOInfoChunk(
+  request: Request,
+  id: number,
+  name: string,
+  start: number,
+  end: number,
+  value: ?Promise<mixed>,
+  env: ?string,
+  owner: ?ReactComponentInfo,
+  stack: ?ReactStackTrace,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'emitIOInfoChunk should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  let objectLimit = 10;
+  if (stack) {
+    objectLimit += stack.length;
+  }
+
+  const relativeStartTimestamp = start - request.timeOrigin;
+  const relativeEndTimestamp = end - request.timeOrigin;
+  const debugIOInfo: Omit<ReactIOInfo, 'debugTask' | 'debugStack'> = {
+    name: name,
+    start: relativeStartTimestamp,
+    end: relativeEndTimestamp,
+  };
+  if (env != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.env = env;
+  }
+  if (stack != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.stack = stack;
+  }
+  if (owner != null) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.owner = owner;
+  }
+  if (value !== undefined) {
+    // $FlowFixMe[cannot-write]
+    debugIOInfo.value = value;
+  }
+  const json: string = serializeDebugModel(request, objectLimit, debugIOInfo);
+  const row = id.toString(16) + ':J' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedDebugChunks.push(processedChunk);
+}
+
+function outlineIOInfo(request: Request, ioInfo: ReactIOInfo): void {
+  if (request.writtenDebugObjects.has(ioInfo)) {
+    // Already written
+    return;
+  }
+  // We can't serialize the ConsoleTask/Error objects so we need to omit them before serializing.
+  request.pendingDebugChunks++;
+  const id = request.nextChunkId++;
+  const owner = ioInfo.owner;
+  // Ensure the owner is already outlined.
+  if (owner != null) {
+    outlineComponentInfo(request, owner);
+  }
+  let debugStack;
+  if (ioInfo.stack == null && ioInfo.debugStack != null) {
+    // If we have a debugStack but no parsed stack we should parse it.
+    debugStack = filterStackTrace(
+      request,
+      parseStackTrace(ioInfo.debugStack, 1),
+    );
+  } else {
+    debugStack = ioInfo.stack;
+  }
+  let env = ioInfo.env;
+  if (env == null) {
+    // If we're forwarding IO info from this environment, an empty env is effectively the "client" side.
+    // The "client" from the perspective of our client will be this current environment.
+    env = (0, request.environmentName)();
+  }
+  emitIOInfoChunk(
+    request,
+    id,
+    ioInfo.name,
+    ioInfo.start,
+    ioInfo.end,
+    ioInfo.value,
+    env,
+    owner,
+    debugStack,
+  );
+  request.writtenDebugObjects.set(ioInfo, serializeByValueID(id));
 }
 
 function emitChunk(

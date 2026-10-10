@@ -8,7 +8,7 @@
  */
 
 import noop from './noop';
-import type {ReactDebugInfo, ReactDebugInfoEntry} from './ReactTypes';
+import type {Thenable, ReactDebugInfo, ReactDebugInfoEntry} from './ReactTypes';
 
 const RESULT_MODEL_TYPE = Symbol.for('react.result.model');
 type Outcome<T> = {+value: T};
@@ -19,6 +19,7 @@ export opaque type ResultModel<T>: Promise<T> & {
   +reason: mixed,
   _debugInfo: ReactDebugInfo, // DEV-only
   _debugStartTime?: number, // DEV-only
+  _debugSource?: Thenable<T>, // DEV-only
   ...
 } = Promise<T> & {
   _promise: Promise<Outcome<T>>,
@@ -29,6 +30,7 @@ export opaque type ResultModel<T>: Promise<T> & {
   reason: mixed,
   _debugInfo: ReactDebugInfo, // DEV-only
   _debugStartTime?: number, // DEV-only
+  _debugSource?: Thenable<T>, // DEV-only
   _debugModel?: T, // DEV-only
   _debugListeners?: Set<(ReactDebugInfoEntry) => void>, // DEV-only
 };

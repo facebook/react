@@ -58,7 +58,7 @@ describe('ReactFlightResultAsyncDebugInfo', () => {
     });
   }
 
-  it.skip('adds a description to I/O', async () => {
+  it('adds a description to I/O', async () => {
     async function getData(url) {
       // just wait a macrotask for this call to get picked up
       await new Promise(resolve => {
@@ -83,7 +83,11 @@ describe('ReactFlightResultAsyncDebugInfo', () => {
       return 'Hi, Sebbie';
     }
 
-    const stream = ReactServerDOMServer.renderToPipeableStream(<Component />);
+    const expanded = ReactServerDOMServer.renderToResult(<Component />);
+    const stream = ReactServerDOMServer.renderResultToPipeableStream(
+      expanded,
+      {},
+    );
 
     const readable = new Stream.PassThrough(streamOptions);
 
