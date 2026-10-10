@@ -26,5 +26,6 @@ export {
 
 export {
   renderToResult,
+  prerenderToResult,
   renderResultToPipeableStream,
 } from './ReactFlightDOMResultServerNode';

@@ -22,6 +22,7 @@ import {
   getHintQueue,
   waitForHints,
   getErrorReference,
+  isHalted,
   getValueReference,
   getModelInfo,
   MODEL_KIND_MASK,
@@ -78,6 +79,7 @@ export type Response = {
   _nonce: void | string,
   _resolveClientReferenceMetadata: Object => null | ClientReferenceMetadata,
   _onError: mixed => ?string,
+  _allowPartialStream: boolean,
   _modules: Map<Object, SomeChunk<any>>,
   _closed: boolean,
   _closedReason: null | Error,
@@ -97,6 +99,7 @@ export function createResponse(
   resolveClientReferenceMetadata: Object => null | ClientReferenceMetadata,
   nonce: void | string,
   onError: void | (mixed => ?string),
+  allowPartialStream: boolean = false,
 ): Response {
   const response: Response = {
     _result: result,
@@ -105,6 +108,7 @@ export function createResponse(
     _nonce: nonce,
     _resolveClientReferenceMetadata: resolveClientReferenceMetadata,
     _onError: onError || defaultErrorHandler,
+    _allowPartialStream: allowPartialStream,
     _modules: new Map(),
     _closed: false,
     _closedReason: null,
@@ -351,6 +355,10 @@ function getClosedReason(response: Response): Error {
     response._closedReason = error = new Error('Connection closed.');
   }
   return error;
+}
+
+function isHaltedModel(response: Response, model: Object): boolean {
+  return !response._allowPartialStream && isHalted(response._result, model);
 }
 
 function reportGlobalError(response: Response, error: Error): void {
@@ -856,6 +864,10 @@ function readSpecialModel(response: Response, value: any): any {
     }
     response._models.set(value, lazy);
     const source = value._payload;
+    if (response._closed || isHaltedModel(response, source)) {
+      triggerErrorOnChunk(chunk, getClosedReason(response));
+      return lazy;
+    }
     subscribeToModel(
       response,
       source,
@@ -867,6 +879,10 @@ function readSpecialModel(response: Response, value: any): any {
   } else if (typeof value.then === 'function') {
     const chunk = createPendingChunk<any>(response);
     response._models.set(value, chunk);
+    if (response._closed || isHaltedModel(response, value)) {
+      triggerErrorOnChunk(chunk, getClosedReason(response));
+      return chunk;
+    }
     subscribeToModel(
       response,
       value,
@@ -999,6 +1015,9 @@ function scanOutlinedModel(
       value = lazy._init(lazy._payload);
     } catch (error) {
       const wakeable = error as Wakeable;
+      if (isHaltedModel(response, lazy._payload)) {
+        throw getClosedReason(response);
+      }
       if (
         lazy._payload.status !== 'rejected' &&
         error !== null &&
@@ -1353,6 +1372,9 @@ function resolveError(
   thenable: Object,
   error: mixed,
 ): mixed {
+  if (isHaltedModel(response, thenable)) {
+    return getClosedReason(response);
+  }
   const reference = getErrorReference(response._result, thenable);
   if (reference === undefined) {
     return error;
@@ -1395,14 +1417,7 @@ export function readResult<T>(
   result: Result<T>,
 ): Thenable<T> {
   const root = getRoot(result);
-  const chunk = createPendingChunk<T>(response);
-  response._models.set(root, chunk);
-  subscribeToModel(
-    response,
-    root,
-    model => resolveModelChunk(response, chunk, model),
-    error => triggerErrorOnChunk(chunk, resolveError(response, root, error)),
-  );
+  const chunk = readModel(response, root);
   const hints = getHintQueue(result);
   let nextHintIndex = 0;
   function flushHints(): void {
@@ -1425,5 +1440,5 @@ export function readResult<T>(
     }
   }
   flushHints();
-  return chunk as any;
+  return chunk;
 }

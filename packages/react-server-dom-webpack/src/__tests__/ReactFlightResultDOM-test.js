@@ -240,7 +240,7 @@ describe('ReactFlightResultDOM', () => {
     ReactServerDOMServer.renderResultToPipeableStream(
       result,
       manifest,
-      options,
+      options ? {onError: options.onError} : undefined,
     ).pipe(prelude);
     return {prelude};
   }
@@ -4147,7 +4147,7 @@ describe('ReactFlightResultDOM', () => {
     );
   });
 
-  it.skip('can prerender', async () => {
+  it('can prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -4169,16 +4169,13 @@ describe('ReactFlightResultDOM', () => {
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
-        pendingResult: prerenderResultToNodeStream(<App />, webpackMap),
+        pendingResult: ReactServerDOMStaticServer.prerenderToResult(<App />),
       };
     });
 
     resolveGreeting();
-    const {prelude} = await pendingResult;
-
-    const response = ReactServerDOMClient.createFromReadableStream(
-      Readable.toWeb(prelude),
-    );
+    const result = await pendingResult;
+    const response = createResponse(result);
 
     const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
 
@@ -4205,7 +4202,7 @@ describe('ReactFlightResultDOM', () => {
     expect(getMeaningfulChildren(container)).toEqual(<div>hello world</div>);
   });
 
-  it.skip('does not propagate abort reasons errors when aborting a prerender', async () => {
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -4341,7 +4338,7 @@ describe('ReactFlightResultDOM', () => {
     expect(await race).toBe('timeout');
   });
 
-  it.skip('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
+  it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
     const controller = new AbortController();
     function ComponentThatAborts() {
       controller.abort('boom');

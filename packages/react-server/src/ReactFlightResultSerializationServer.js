@@ -98,6 +98,7 @@ type Task = {
   returnedTupleReference: null | string,
 };
 export type InputThenableReader = {
+  halt: () => void,
   resolve: ReactClientValue => void,
   reject: (mixed, void | ErrorReference) => void,
 };
@@ -968,6 +969,15 @@ function subscribeToThenable(
   }
   subscribeInput(request, detach =>
     input.subscribeToThenable(thenable, {
+      halt() {
+        detach();
+        if (task.status === PENDING) {
+          haltTask(task, request);
+          request.abortableTasks.delete(task);
+          finishHaltedTask(task, request);
+          enqueueFlush(request);
+        }
+      },
       resolve(value) {
         detach();
         if (request.status <= OPEN && task.status === PENDING) {
@@ -1412,6 +1422,20 @@ function finishAbortedTask(
   const ref = serializeByValueID(errorId);
   const processedChunk = encodeReferenceChunk(request, task.id, ref);
   request.completedErrorChunks.push(processedChunk);
+}
+
+function haltTask(task: Task, request: Request): void {
+  if (task.status !== PENDING) {
+    return;
+  }
+  task.status = ABORTED;
+}
+
+function finishHaltedTask(task: Task, request: Request): void {
+  if (task.status !== ABORTED) {
+    return;
+  }
+  request.pendingChunks--;
 }
 
 function finishAbort(
