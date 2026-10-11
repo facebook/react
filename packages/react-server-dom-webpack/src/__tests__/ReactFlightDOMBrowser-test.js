@@ -3878,7 +3878,7 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
-  it('rejects a value that waits on a row that fails to parse', async () => {
+  it('keeps a selected field available when its containing model rejects', async () => {
     const foo = {};
     const x = {};
     // The server outlines a Set into its own row, and that row refers to foo by
@@ -3930,10 +3930,8 @@ describe('ReactFlightDOMBrowser', () => {
       }),
     );
 
-    // Reading foo first parses foo's row, and the nested Set row along with it.
-    // The Set row then waits on foo's row, and foo's row fails on the error
-    // row. The client must reject the reference the Set row queued on foo's
-    // row, so that the Set row errors as well and x errors with the Set row.
+    // Reading foo first initializes the nested Set as well. foo must reject,
+    // but its failure must not discard the Set carrier's unaffected fields.
     const fooError = await Promise.resolve(response.foo).then(
       () => null,
       error => error,
@@ -3944,12 +3942,8 @@ describe('ReactFlightDOMBrowser', () => {
         'Functions cannot be passed directly to Client Components',
       );
     }
-    // The error object travels by identity from the error row into every row it
-    // errors, so x rejects with the same object that rejected foo.
-    const xError = await Promise.resolve(response.x).then(
-      () => null,
-      error => error,
-    );
-    expect(xError).toBe(fooError);
+    // x is selected from the same carrier, but none of its contents depends
+    // on the unsupported function. It can still be delivered successfully.
+    expect(await response.x).toEqual({});
   });
 });

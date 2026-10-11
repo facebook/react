@@ -2543,7 +2543,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
 
   /* eslint-disable jest/no-disabled-tests */
   describe('fixed writer and reader regressions', () => {
-    it.skip.each(['early', 'late'])(
+    it.each(['early', 'late'])(
       'keeps a selected field usable after a sibling fails (%s demand)',
       async demand => {
         const load = deferred();
@@ -4457,9 +4457,6 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
     'writer-unnamed-array',
   ]);
 
-  // Rejecting-module graphs need the healthy-field repair.
-  const pendingConstructionRepairs = new Set(['construction-failure']);
-
   describe('generated construction cases', () => {
     cases.forEach(spec => {
       if (deferredFamilies.has(spec[0])) {
@@ -4471,7 +4468,7 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
         (spec[0] === 'writer-unnamed-array' && writerCases.has(key)) ||
         (__DEV__ && writerCases.has(key)) ||
         (__DEV__ && host === 'node' && key === 'iterator-field:75:late:2');
-      if (writerFailure || pendingConstructionRepairs.has(spec[0])) {
+      if (writerFailure) {
         // eslint-disable-next-line jest/valid-title
         it.skip(caseName(spec), () => runCase(spec));
       } else {

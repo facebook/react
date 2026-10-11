@@ -1196,20 +1196,11 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
     const value: T = parseModel(response, resolvedModel);
     const handler = initializingHandler;
     if (handler !== null) {
-      if (handler.errored) {
-        // The handler errored during the parse, so `cyclicChunk` errors with
-        // the same reason. `triggerErrorOnChunk` also rejects the references
-        // that nested parses queued on `cyclicChunk` during the parse. No value
-        // will arrive for them. `initializeDebugChunk` can have errored
-        // `cyclicChunk` before the parse. That error stays.
-        if ((cyclicChunk as any).status === BLOCKED) {
-          triggerErrorOnChunk(response, cyclicChunk, handler.reason);
-        }
-        return;
-      }
       // Attach the completed parse to its owner before installing references
       // that can make further progress from this model's identity.
-      handler.value = value;
+      if (!handler.errored) {
+        handler.value = value;
+      }
       handler.chunk = cyclicChunk;
     }
 
@@ -1279,6 +1270,16 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
           );
         }
       }
+    }
+
+    if (handler !== null && handler.errored) {
+      // Failure of the whole model does not invalidate its installed identity
+      // or every field inside it. Internal references above can still select
+      // an unaffected field; public observers receive the model's error.
+      if ((cyclicChunk as any).status === BLOCKED) {
+        triggerErrorOnChunk(response, cyclicChunk, handler.reason);
+      }
+      return;
     }
 
     if ((cyclicChunk as any).status !== BLOCKED) {
@@ -2455,15 +2456,8 @@ function resumeInitializationInputs(
   ) {
     return;
   }
-  if (reference.handler.errored) {
-    rejectInitializationReference(
-      response,
-      reference,
-      reference.handler.reason,
-    );
-    return;
-  }
-
+  // A sibling's failure rejects the enclosing model, but other references can
+  // still select this field. Finish it according to its own inputs.
   let mappedValue;
   try {
     const pending =
@@ -2683,7 +2677,7 @@ function rejectReference(
 }
 
 function waitForReference<T>(
-  referencedChunk: PendingChunk<T> | PendingWeakChunk<T> | BlockedChunk<T>,
+  referencedChunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
   response: Response,
@@ -2743,9 +2737,17 @@ function resolveInitializationConsumer<T>(
     case INITIALIZED:
       fulfillInitializationConsumer(response, reference, chunk.value, chunk);
       return;
-    case ERRORED:
+    case ERRORED: {
+      // A failed model can still contain the selected field. Its private head
+      // and field facts distinguish that field's result from the whole model.
+      const head = getPrivateReferenceModel(response, chunk);
+      if (head !== null) {
+        fulfillInitializationConsumer(response, reference, head.value, chunk);
+        return;
+      }
       rejectInitializationConsumer(response, reference, chunk.reason);
       return;
+    }
     case HALTED:
       return;
     case BLOCKED:
@@ -2989,10 +2991,7 @@ function resumeServerReferenceBinding(
   if (binding.done) {
     return;
   }
-  if (binding.handler.errored) {
-    rejectServerReferenceBinding(response, binding, binding.handler.reason);
-    return;
-  }
+  // An enclosing model's failure does not cancel this field's producer.
   if (binding.moduleStatus === CONSTRUCTION_FAILED) {
     rejectServerReferenceBinding(response, binding, binding.moduleError);
     return;
@@ -3539,6 +3538,17 @@ function getOutlinedModel<T>(
       return null as any;
     }
     default:
+      if (getPrivateReferenceModel(response, chunk) !== null) {
+        return waitForReference(
+          chunk,
+          parentObject,
+          key,
+          response,
+          map,
+          path,
+          isInitializingDebugInfo,
+        );
+      }
       recordFailedModelField(response, parentObject, key, chunk.reason);
       // This is an error. Instead of erroring directly, we're going to encode this on
       // an initialization handler so that we can catch it at the nearest Element.
