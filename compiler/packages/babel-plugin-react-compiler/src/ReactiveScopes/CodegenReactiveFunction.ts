@@ -24,6 +24,7 @@ import {
   BlockId,
   DeclarationId,
   GeneratedSource,
+  getSourceLocation,
   Identifier,
   IdentifierId,
   InstructionKind,
@@ -116,12 +117,6 @@ export function codegenFunction(
     fbtOperands: Set<IdentifierId>;
   },
 ): CodegenFunction {
-  const sourceNodes = new Map<t.SourceLocation, t.Node>();
-  t.traverseFast(fn.env.parentFunction.node, node => {
-    if (node.loc != null) {
-      sourceNodes.set(node.loc, node);
-    }
-  });
   const cx = new Context(
     fn.env,
     fn.id ?? '[[ anonymous ]]',
@@ -332,35 +327,6 @@ export function codegenFunction(
     outlined.push({fn: codegen, type});
   }
   compiled.outlined = outlined;
-
-  const applySourceOffsets = (node: t.Node): void => {
-    if (node.loc == null) {
-      return;
-    }
-    const source = sourceNodes.get(node.loc);
-    if (source != null) {
-      if (source.start === undefined) {
-        delete node.start;
-      } else {
-        node.start = source.start;
-      }
-      if (source.end === undefined) {
-        delete node.end;
-      } else {
-        node.end = source.end;
-      }
-    }
-  };
-  const applyFunctionOffsets = (fn: CodegenFunction): void => {
-    for (const param of fn.params) {
-      t.traverseFast(param, applySourceOffsets);
-    }
-    t.traverseFast(fn.body, applySourceOffsets);
-  };
-  applyFunctionOffsets(compiled);
-  for (const {fn} of outlined) {
-    applyFunctionOffsets(fn);
-  }
 
   return compiled;
 }
@@ -659,7 +625,7 @@ function codegenReactiveScope(
     if (!cx.hasDeclared(identifier)) {
       statements.push(
         t.variableDeclaration('let', [
-          createVariableDeclarator(name.loc, name, null),
+          createVariableDeclarator(identifier.loc, name, null),
         ]),
       );
     }
@@ -1316,6 +1282,26 @@ function codegenDependency(
   return object;
 }
 
+function setSourceLocation(
+  node: t.Node,
+  source: SourceLocation | null | undefined,
+): void {
+  if (source == null || source === GeneratedSource) {
+    return;
+  }
+  node.loc = source.loc;
+  if (source.start === undefined) {
+    delete node.start;
+  } else {
+    node.start = source.start;
+  }
+  if (source.end === undefined) {
+    delete node.end;
+  } else {
+    node.end = source.end;
+  }
+}
+
 function withLoc<T extends (...args: Array<any>) => t.Node>(
   fn: T,
 ): (
@@ -1327,9 +1313,7 @@ function withLoc<T extends (...args: Array<any>) => t.Node>(
     ...args: Parameters<T>
   ): ReturnType<T> => {
     const node = fn(...args);
-    if (loc != null && loc != GeneratedSource) {
-      node.loc = loc;
-    }
+    setSourceLocation(node, loc);
     return node as ReturnType<T>;
   };
 }
@@ -1418,9 +1402,7 @@ function createCallExpression(
   isHook: boolean,
 ): t.CallExpression {
   const callExpr = t.callExpression(callee, args);
-  if (loc != null && loc != GeneratedSource) {
-    callExpr.loc = loc;
-  }
+  setSourceLocation(callExpr, loc);
 
   const hookGuard = env.config.enableEmitHookGuards;
   if (hookGuard != null && isHook && env.outputMode === 'client') {
@@ -1491,7 +1473,7 @@ function convertValueToExpression(
   value: t.JSXText | t.Expression,
 ): t.Expression {
   if (value.type === 'JSXText') {
-    return createStringLiteral(value.loc, value.value);
+    return createStringLiteral(getSourceLocation(value), value.value);
   }
   return value;
 }
@@ -2126,9 +2108,7 @@ function codegenInstructionValue(
       );
     }
   }
-  if (instrValue.loc != null && instrValue.loc != GeneratedSource) {
-    value.loc = instrValue.loc;
-  }
+  setSourceLocation(value, instrValue.loc);
   return value;
 }
 
@@ -2174,7 +2154,10 @@ function codegenJsxAttribute(
             STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value) &&
             !cx.fbtOperands.has(attribute.place.identifier.id)
           ) {
-            value = createJsxExpressionContainer(value.loc, value);
+            value = createJsxExpressionContainer(
+              getSourceLocation(value),
+              value,
+            );
           }
           break;
         }
@@ -2445,12 +2428,13 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
     )}' was not set in the codegen context`,
     loc: place.loc,
   });
-  const identifier = convertIdentifier(place.identifier);
-  identifier.loc = place.loc as any;
-  return identifier;
+  return convertIdentifier(place.identifier, place.loc);
 }
 
-function convertIdentifier(identifier: Identifier): t.Identifier {
+function convertIdentifier(
+  identifier: Identifier,
+  loc: SourceLocation = identifier.loc,
+): t.Identifier {
   CompilerError.invariant(
     identifier.name !== null && identifier.name.kind === 'named',
     {
@@ -2459,7 +2443,7 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
       loc: GeneratedSource,
     },
   );
-  return createIdentifier(identifier.loc, identifier.name.value);
+  return createIdentifier(loc, identifier.name.value);
 }
 
 function compareScopeDependency(
