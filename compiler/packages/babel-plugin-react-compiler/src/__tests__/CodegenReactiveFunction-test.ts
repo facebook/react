@@ -13,60 +13,81 @@ import BabelPluginReactCompiler from '../Babel/BabelPlugin';
 import {runBabelPluginReactCompiler} from '../Babel/RunReactCompilerBabelPlugin';
 import type {LoggerEvent} from '../Entrypoint';
 
-it.each(['shifted', 'absent'])(
-  'preserves source offsets when they are %s',
-  offsets => {
-    const source = 'function Component(x) { return x + 1; }';
-    const original = BabelParser.parse(source, {sourceType: 'module'});
-    t.traverseFast(original, node => {
-      for (const field of ['start', 'end'] as const) {
-        const offset = node[field];
-        if (offsets === 'absent') {
-          delete node[field];
-        } else if (offset != null) {
-          node[field] = offset + 1;
-        }
-      }
-    });
-    const range = (
-      ast: t.Node,
-    ): {start: t.Node['start']; end: t.Node['end']; loc: t.Node['loc']} => {
-      const expressions: Array<t.BinaryExpression> = [];
-      t.traverseFast(ast, node => {
-        if (t.isBinaryExpression(node, {operator: '+'})) {
-          expressions.push(node);
+describe.each([
+  ['function declaration', 'function Component(x) { return x + 1; }'],
+  ['function expression', 'const Component = function(x) { return x + 1; };'],
+  ['arrow function', 'const Component = x => x + 1;'],
+])('source offsets for %s', (_kind, source) => {
+  it.each(['original', 'shifted', 'absent'])(
+    'preserves source offsets when they are %s',
+    offsets => {
+      const original = BabelParser.parse(source, {sourceType: 'module'});
+      t.traverseFast(original, node => {
+        for (const field of ['start', 'end'] as const) {
+          const offset = node[field];
+          if (offsets === 'absent') {
+            delete node[field];
+          } else if (offsets === 'shifted' && offset != null) {
+            node[field] = offset + 1;
+          }
         }
       });
-      expect(expressions).toHaveLength(1);
-      const {start, end, loc} = expressions[0];
-      return {start, end, loc};
-    };
-    const expected = range(original);
-    const events: Array<LoggerEvent> = [];
-    const result = transformFromAstSync(original, source, {
-      filename: 'test.js',
-      ast: true,
-      configFile: false,
-      babelrc: false,
-      plugins: [
-        [
-          BabelPluginReactCompiler,
-          {
-            compilationMode: 'all',
-            panicThreshold: 'all_errors',
-            logger: {
-              logEvent: (_filename: string | null, event: LoggerEvent) =>
-                events.push(event),
+      const range = (
+        ast: t.Node,
+      ): Array<{
+        type: t.Node['type'];
+        start: t.Node['start'];
+        end: t.Node['end'];
+        loc: t.Node['loc'];
+      }> => {
+        const nodes: Array<t.Node> = [];
+        t.traverseFast(ast, node => {
+          if (
+            t.isFunction(node) ||
+            t.isBinaryExpression(node, {operator: '+'})
+          ) {
+            nodes.push(node);
+          }
+        });
+        expect(nodes).toHaveLength(2);
+        return nodes.map(({type, start, end, loc}) => ({
+          type,
+          start,
+          end,
+          loc,
+        }));
+      };
+      const expected = range(original);
+      const events: Array<LoggerEvent> = [];
+      const result = transformFromAstSync(original, source, {
+        filename: 'test.js',
+        ast: true,
+        configFile: false,
+        babelrc: false,
+        plugins: [
+          [
+            BabelPluginReactCompiler,
+            {
+              compilationMode: 'all',
+              panicThreshold: 'all_errors',
+              logger: {
+                logEvent: (
+                  _filename: string | null,
+                  event: LoggerEvent,
+                ): void => {
+                  events.push(event);
+                },
+              },
             },
-          },
+          ],
         ],
-      ],
-    });
-    invariant(result?.ast != null, 'Expected the transformed AST');
-    expect(events.some(event => event.kind === 'CompileSuccess')).toBe(true);
-    expect(range(result.ast)).toEqual(expected);
-  },
-);
+      });
+      invariant(result?.ast != null, 'Expected the transformed AST');
+      expect(events.some(event => event.kind === 'CompileSuccess')).toBe(true);
+      expect(range(result.ast)).toEqual(expected);
+    },
+  );
+});
 
 it('only marks non-computed object properties as shorthand', () => {
   const result = runBabelPluginReactCompiler(
