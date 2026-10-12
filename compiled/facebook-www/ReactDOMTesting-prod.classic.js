@@ -18100,11 +18100,15 @@ function hideOrUnhideDehydratedBoundary(suspenseInstance, isHidden) {
           ? ((node._stashedText = node.nodeValue), (node.nodeValue = ""))
           : (node.nodeValue = node._stashedText || ""));
     if (nextNode && 8 === nextNode.nodeType)
-      if (((node = nextNode.data), "/$" === node))
+      if (((node = nextNode.data), "/$" === node || "/&" === node))
         if (0 === suspenseInstance) break;
         else suspenseInstance--;
       else
-        ("$" !== node && "$?" !== node && "$~" !== node && "$!" !== node) ||
+        ("$" !== node &&
+          "$?" !== node &&
+          "$~" !== node &&
+          "$!" !== node &&
+          "&" !== node) ||
           suspenseInstance++;
     node = nextNode;
   } while (node);
@@ -21071,14 +21075,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_2100 = React.version;
 if (
-  "19.3.0-www-classic-e8738f0c-20261012" !==
+  "19.3.0-www-classic-9f2e1f88-20261012" !==
   isomorphicReactPackageVersion$jscomp$inline_2100
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2100,
-      "19.3.0-www-classic-e8738f0c-20261012"
+      "19.3.0-www-classic-9f2e1f88-20261012"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -21096,10 +21100,10 @@ Internals.Events = [
 ];
 var internals$jscomp$inline_2647 = {
   bundleType: 0,
-  version: "19.3.0-www-classic-e8738f0c-20261012",
+  version: "19.3.0-www-classic-9f2e1f88-20261012",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-www-classic-e8738f0c-20261012"
+  reconcilerVersion: "19.3.0-www-classic-9f2e1f88-20261012"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2648 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -21691,4 +21695,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-www-classic-e8738f0c-20261012";
+exports.version = "19.3.0-www-classic-9f2e1f88-20261012";
