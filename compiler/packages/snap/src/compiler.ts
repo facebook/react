@@ -31,7 +31,9 @@ import prettier from 'prettier';
 import SproutTodoFilter from './SproutTodoFilter';
 import {isExpectError} from './fixture-utils';
 import {
+  assertSourceOffsetRanges,
   assertSourceLocations,
+  collectSourceOffsetRanges,
   collectSourceLocations,
 } from './source-locations';
 import {makeSharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
@@ -241,6 +243,7 @@ export async function transformFixtureInput(
   const filename =
     path.basename(fixturePath) + (language === 'typescript' ? '.ts' : '');
   const inputAst = parseInput(input, filename, language, sourceType);
+  const sourceOffsetRanges = collectSourceOffsetRanges(inputAst);
   const sourceLocations = fixturePath.startsWith('source-locations/')
     ? collectSourceLocations(inputAst)
     : null;
@@ -276,7 +279,7 @@ export async function transformFixtureInput(
       'babel-plugin-idx',
     ],
     sourceType: 'module',
-    ast: includeEvaluator || sourceLocations !== null,
+    ast: true,
     cloneInputAst: includeEvaluator || sourceLocations !== null,
     configFile: false,
     babelrc: false,
@@ -285,6 +288,8 @@ export async function transformFixtureInput(
     forgetResult?.code != null,
     'Expected BabelPluginReactForget to codegen successfully.',
   );
+  invariant(forgetResult.ast != null, 'Expected the compiled AST.');
+  assertSourceOffsetRanges(forgetResult.ast, sourceOffsetRanges);
   if (sourceLocations !== null) {
     invariant(
       logs.some(log => log.event.kind === 'CompileSuccess'),

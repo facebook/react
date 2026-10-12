@@ -10,6 +10,55 @@ import invariant from 'invariant';
 
 type SourceLocations = Map<string, Map<string, string>>;
 
+function offsetRange(node: t.Node): string {
+  return JSON.stringify([
+    node.loc?.start.index,
+    node.loc?.end.index,
+    node.start,
+    node.end,
+  ]);
+}
+
+/** Raw offsets can intentionally differ from location indices on supplied ASTs. */
+export function collectSourceOffsetRanges(ast: t.Node): ReadonlySet<string> {
+  const ranges = new Set<string>();
+  t.traverseFast(ast, node => {
+    if (
+      typeof node.start === 'number' &&
+      typeof node.end === 'number' &&
+      typeof node.loc?.start.index === 'number' &&
+      typeof node.loc.end.index === 'number' &&
+      (node.start !== node.loc.start.index || node.end !== node.loc.end.index)
+    ) {
+      ranges.add(offsetRange(node));
+    }
+  });
+  return ranges;
+}
+
+/** Check every output range without deriving missing raw offsets. */
+export function assertSourceOffsetRanges(
+  ast: t.Node,
+  originalRanges: ReadonlySet<string>,
+): void {
+  t.traverseFast(ast, node => {
+    if (typeof node.start !== 'number' || typeof node.end !== 'number') {
+      return;
+    }
+    const hasIndices =
+      typeof node.loc?.start.index === 'number' &&
+      typeof node.loc.end.index === 'number';
+    const matchesIndices =
+      node.start === node.loc?.start.index && node.end === node.loc?.end.index;
+    const preservesOriginal =
+      !hasIndices || matchesIndices || originalRanges.has(offsetRange(node));
+    invariant(
+      node.start <= node.end && preservesOriginal,
+      `Invalid source offsets for ${node.type}: start=${node.start}, end=${node.end}, loc.start.index=${node.loc?.start.index}, loc.end.index=${node.loc?.end.index}`,
+    );
+  });
+}
+
 function forEachDeclaration(
   ast: t.Node,
   visit: (key: string, binding: t.Identifier, node: t.Node) => void,
