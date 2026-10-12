@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<1db75498630fe203e03ef10d54d1d178>>
+ * @generated SignedSource<<855545add395d781af8c7ef92b501d78>>
  */
 
 'use strict';
@@ -17,7 +17,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Hint to Node’s cjs-module-lexer to make named imports work
-// https://github.com/facebook/react/issues/34801#issuecomment-3433478810
+// https://github.com/react/react/issues/34801#issuecomment-3433478810
 // eslint-disable-next-line ft-flow/no-unused-expressions
 0 &&
   (module.exports = {

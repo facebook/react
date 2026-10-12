@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<4aaf183737e409b481d5b321bf19c4a6>>
+ * @generated SignedSource<<cc5283e2d500bd70c3393e9c97f2a39b>>
  */
 
 'use strict';
@@ -46,7 +46,7 @@ const rule$1 = {
         docs: {
             description: 'verifies the list of dependencies for Hooks like useEffect and similar',
             recommended: true,
-            url: 'https://github.com/facebook/react/issues/14920',
+            url: 'https://github.com/react/react/issues/14920',
         },
         fixable: 'code',
         hasSuggestions: true,
@@ -45344,7 +45344,7 @@ function validateNoRefAccessInRenderImpl(fn, env, errors) {
                         }
                         else {
                             for (const operand of eachInstructionValueOperand(instr.value)) {
-                                validateNoRefValueAccess(errors, env, operand);
+                                validateNoDirectRefValueAccess(errors, operand, env);
                             }
                         }
                         break;

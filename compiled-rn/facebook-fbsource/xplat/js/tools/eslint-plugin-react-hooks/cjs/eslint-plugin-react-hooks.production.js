@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<c53a9a82d531ae86a9a0aa70e76d1227>>
+ * @generated SignedSource<<4f14c873f896df476c923052b9188a8d>>
  */
 
 'use strict';
@@ -36,7 +36,7 @@ const rule$1 = {
         docs: {
             description: 'verifies the list of dependencies for Hooks like useEffect and similar',
             recommended: true,
-            url: 'https://github.com/facebook/react/issues/14920',
+            url: 'https://github.com/react/react/issues/14920',
         },
         fixable: 'code',
         hasSuggestions: true,
@@ -45123,7 +45123,7 @@ function validateNoRefAccessInRenderImpl(fn, env, errors) {
                         }
                         else {
                             for (const operand of eachInstructionValueOperand(instr.value)) {
-                                validateNoRefValueAccess(errors, env, operand);
+                                validateNoDirectRefValueAccess(errors, operand, env);
                             }
                         }
                         break;
