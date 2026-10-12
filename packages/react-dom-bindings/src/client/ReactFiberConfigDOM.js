@@ -1372,7 +1372,7 @@ function hideOrUnhideDehydratedBoundary(
     }
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = (nextNode as any).data as string;
-      if (data === SUSPENSE_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         if (depth === 0) {
           return;
         } else {
@@ -1382,7 +1382,8 @@ function hideOrUnhideDehydratedBoundary(
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
         data === SUSPENSE_QUEUED_START_DATA ||
-        data === SUSPENSE_FALLBACK_START_DATA
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         depth++;
       }
