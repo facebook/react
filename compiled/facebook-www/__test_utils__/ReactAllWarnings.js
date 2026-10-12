@@ -309,7 +309,7 @@ export default [
   "The tag <%s> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letter.",
   "There are two <ViewTransition name=%s> components with the same name mounted at the same time. This is not supported and will cause View Transitions to error. Try to use a more unique name e.g. by using a namespace prefix and adding the id of an item to the name.",
   "There was still abortable task at the root when we closed. This is a bug in React.",
-  "This browser does not have a MessageChannel implementation, so enqueuing tasks via await act(async () => ...) will fail. Please file an issue at https://github.com/facebook/react/issues if you encounter this warning.",
+  "This browser does not have a MessageChannel implementation, so enqueuing tasks via await act(async () => ...) will fail. Please file an issue at https://github.com/react/react/issues if you encounter this warning.",
   "This synthetic event is reused for performance reasons. If you're seeing this, you're %s `%s` on a released/nullified synthetic event. %s. If you must keep the original synthetic event around, use event.persist(). See https://react.dev/link/event-pooling for more information.",
   "Touch identifier %s is greater than maximum supported %s which causes performance issues backfilling array locations for all of the indices.",
   "Touch with identifier %s already exists. Did not record touch start.",
