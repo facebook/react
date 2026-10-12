@@ -19,6 +19,7 @@ let ReactFeatureFlags;
 let Scheduler;
 let Suspense;
 let useSyncExternalStore;
+let use;
 let act;
 let IdleEventPriority;
 let waitForAll;
@@ -103,6 +104,7 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     Activity = React.Activity;
     Suspense = React.Suspense;
     useSyncExternalStore = React.useSyncExternalStore;
+    use = React.use;
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -3100,5 +3102,82 @@ describe('ReactDOMServerPartialHydrationActivity', () => {
     expect(second).not.toBe(null);
     expect(second.style.display).not.toBe('none');
     expect(first === null || first.style.display === 'none').toBe(true);
+  });
+
+  it('hides siblings after a dehydrated Activity when its parent hides', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Child() {
+      if (suspend) {
+        use(promise);
+      }
+      return 'Hello';
+    }
+
+    function App({mode}) {
+      return (
+        <div>
+          <Activity mode={mode}>
+            <Activity>
+              <span id="content">
+                <Child />
+              </span>
+              <Activity>
+                <span id="nested">Nested</span>
+              </Activity>
+              <span id="after-nested">After nested</span>
+            </Activity>
+          </Activity>
+          <span id="sibling">Sibling</span>
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(<App mode="visible" />);
+    const sibling = container.querySelector('#sibling');
+
+    function getVisibleIds() {
+      return Array.from(container.querySelectorAll('span'))
+        .filter(span => span.style.display !== 'none')
+        .map(span => span.id);
+    }
+
+    // The inner Activity stays dehydrated while Child is suspended.
+    suspend = true;
+    const root = ReactDOMClient.hydrateRoot(container, <App mode="visible" />);
+    await waitForAll([]);
+    expect(getVisibleIds()).toEqual([
+      'content',
+      'nested',
+      'after-nested',
+      'sibling',
+    ]);
+
+    await act(() => {
+      root.render(<App mode="hidden" />);
+    });
+    // TODO: The sibling is outside the hidden Activity and should stay
+    // visible. Currently hiding the dehydrated Activity walks its DOM nodes
+    // until a Suspense end marker, so it continues past the Activity's end
+    // and hides every following sibling in the parent.
+    expect(getVisibleIds()).toEqual([]);
+
+    // Revealing the content waits until it can hydrate.
+    await act(() => {
+      root.render(<App mode="visible" />);
+    });
+    expect(getVisibleIds()).toEqual([]);
+
+    await act(async () => {
+      resolve();
+      await promise;
+    });
+    // TODO: The sibling should be visible again. Currently nothing unhides
+    // it, because it is not part of the Activity that is shown again.
+    expect(getVisibleIds()).toEqual(['content', 'nested', 'after-nested']);
+    expect(container.querySelector('#sibling')).toBe(sibling);
   });
 });
