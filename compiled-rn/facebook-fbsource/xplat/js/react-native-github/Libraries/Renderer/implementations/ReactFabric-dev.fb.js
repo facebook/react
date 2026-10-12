@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<23496f92784d072eda81c1a524ee9d72>>
+ * @generated SignedSource<<402999131dc5334e0a8ec5855c1ad11d>>
  */
 
 "use strict";
@@ -4295,7 +4295,7 @@ __DEV__ &&
             )),
           thenable.then(noop, noop),
           (thenable = index));
-      if (void 0 === thenable._debugInfo) {
+      if (void 0 === thenable._debugInfo && Object.isExtensible(thenable)) {
         thenableState = performance.now();
         trackedThenables = thenable.displayName;
         var ioInfo = {
@@ -21379,10 +21379,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-b618bbb4-20261007",
+        version: "19.3.0-native-fb-259980d2-20261012",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-b618bbb4-20261007"
+        reconcilerVersion: "19.3.0-native-fb-259980d2-20261012"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

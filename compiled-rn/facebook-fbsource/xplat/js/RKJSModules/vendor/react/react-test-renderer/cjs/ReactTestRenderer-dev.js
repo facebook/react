@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6266b3d474c96a8ae860ec1cc6c411d8>>
+ * @generated SignedSource<<c80c342996044a83f37b2fac07a3a382>>
  */
 
 "use strict";
@@ -2700,7 +2700,7 @@ __DEV__ &&
             )),
           thenable.then(noop, noop),
           (thenable = index));
-      if (void 0 === thenable._debugInfo) {
+      if (void 0 === thenable._debugInfo && Object.isExtensible(thenable)) {
         thenableState = performance.now();
         trackedThenables = thenable.displayName;
         var ioInfo = {
@@ -17147,10 +17147,10 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.3.0-native-fb-b618bbb4-20261007",
+        version: "19.3.0-native-fb-259980d2-20261012",
         rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        reconcilerVersion: "19.3.0-native-fb-b618bbb4-20261007"
+        reconcilerVersion: "19.3.0-native-fb-259980d2-20261012"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -17296,5 +17296,5 @@ __DEV__ &&
             flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
-    exports.version = "19.3.0-native-fb-b618bbb4-20261007";
+    exports.version = "19.3.0-native-fb-259980d2-20261012";
   })();
