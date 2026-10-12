@@ -10,7 +10,6 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
-export const enableAsyncDebugInfo: boolean = true;
 export const enableSchedulingProfiler: boolean = false;
 export const enableProfilerTimer: boolean = __PROFILE__;
 export const enableProfilerCommitHooks: boolean = __PROFILE__;
@@ -27,9 +26,7 @@ export const disableCommentsAsDOMContainers: boolean = true;
 export const disableInputAttributeSyncing: boolean = false;
 export const enableScopeAPI: boolean = false;
 export const enableCreateEventHandleAPI: boolean = false;
-export const enableBrowserAPI: boolean = true;
 export const enableSuspenseCallback: boolean = false;
-export const enableTrustedTypesIntegration: boolean = true;
 export const disableTextareaChildren: boolean = false;
 export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableCPUSuspense: boolean = false;
@@ -57,8 +54,6 @@ export const disableClientCache: boolean = true;
 export const enableInfiniteRenderLoopDetection: boolean = false;
 export const enableInfiniteRenderLoopDetectionForceThrow: boolean = false;
 export const enableConditionalUseWarning: boolean = true;
-
-export const enableEffectEventMutationPhase: boolean = true;
 
 export const enableYieldingBeforePassive: boolean = true;
 
@@ -92,7 +87,6 @@ export const enableReactTestRendererWarning: boolean = true;
 export const enableObjectFiber: boolean = false;
 
 export const enableOptimisticKey: boolean = false;
-export const enableParallelTransitions: boolean = true;
 
 export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
 export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;

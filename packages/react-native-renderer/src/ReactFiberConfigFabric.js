@@ -474,7 +474,7 @@ export const noTimeout: -1 = -1;
 //     Persistence
 // -------------------
 
-export const supportsPersistence = true;
+export const supportsPersistence: boolean = true;
 
 export function cloneInstance(
   instance: Instance,
