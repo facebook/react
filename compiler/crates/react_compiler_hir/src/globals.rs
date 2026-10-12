@@ -2326,6 +2326,30 @@ fn build_typed_globals(
     typed_globals.push(("WeakSet".to_string(), weak_set_ctor.clone()));
     globals.insert("WeakSet".to_string(), weak_set_ctor);
 
+    let intersection_observer_ctor = add_function(
+        shapes,
+        Vec::new(),
+        FunctionSignatureBuilder {
+            // The callback is retained for later delivery, not invoked by construction.
+            positional_params: vec![Effect::Freeze, Effect::Read],
+            return_type: Type::Object {
+                shape_id: Some(BUILT_IN_OBJECT_ID.to_string()),
+            },
+            return_value_kind: ValueKind::Mutable,
+            ..Default::default()
+        },
+        None,
+        true,
+    );
+    typed_globals.push((
+        "IntersectionObserver".to_string(),
+        intersection_observer_ctor.clone(),
+    ));
+    globals.insert(
+        "IntersectionObserver".to_string(),
+        intersection_observer_ctor,
+    );
+
     // React global object — reuses the same REACT_APIS types (matching TS behavior
     // where the same type objects are used as both standalone globals and React.* properties)
     let react_create_element = add_function(
