@@ -406,6 +406,18 @@ fn lower_identifier(
                         suggestions: None,
                     })?;
                 }
+                if name == "arguments" {
+                    builder.record_error(CompilerErrorDetail {
+                        category: ErrorCategory::UnsupportedSyntax,
+                        reason: "Implicit 'arguments' is not supported".to_string(),
+                        description: Some(
+                            "React Compiler does not support compiling functions that reference the implicit arguments object"
+                                .to_string(),
+                        ),
+                        loc: loc.clone(),
+                        suggestions: None,
+                    })?;
+                }
             }
             let non_local_binding = match binding {
                 VariableBinding::Global { name } => NonLocalBinding::Global { name },
@@ -1031,21 +1043,6 @@ fn lower_expression(
                 }
                 Expression::Identifier(ident) => {
                     let start = ident.base.start.unwrap_or(0);
-                    if builder.is_context_identifier(&ident.name, start, ident.base.node_id) {
-                        builder.record_error(CompilerErrorDetail {
-                            category: ErrorCategory::Todo,
-                            reason: "(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.".to_string(),
-                            description: None,
-                            loc: loc.clone(),
-                            suggestions: None,
-                        })?;
-                        return Ok(InstructionValue::UnsupportedNode {
-                            node_type: Some("UpdateExpression".to_string()),
-                            original_node: serialize_expression(expr),
-                            loc,
-                        });
-                    }
-
                     let ident_loc = convert_opt_loc(&ident.base.loc);
                     let binding = builder.resolve_identifier(
                         &ident.name,
@@ -1104,21 +1101,43 @@ fn lower_expression(
                     )?;
 
                     let operation = convert_update_operator(&update.operator);
+                    let is_context =
+                        builder.is_context_identifier(&ident.name, start, ident.base.node_id);
 
                     if update.prefix {
-                        Ok(InstructionValue::PrefixUpdate {
-                            lvalue: lvalue_place,
-                            operation,
-                            value,
-                            loc,
-                        })
+                        let value = if is_context {
+                            InstructionValue::PrefixUpdateContext {
+                                lvalue: lvalue_place,
+                                operation,
+                                value,
+                                loc,
+                            }
+                        } else {
+                            InstructionValue::PrefixUpdateLocal {
+                                lvalue: lvalue_place,
+                                operation,
+                                value,
+                                loc,
+                            }
+                        };
+                        Ok(value)
                     } else {
-                        Ok(InstructionValue::PostfixUpdate {
-                            lvalue: lvalue_place,
-                            operation,
-                            value,
-                            loc,
-                        })
+                        let value = if is_context {
+                            InstructionValue::PostfixUpdateContext {
+                                lvalue: lvalue_place,
+                                operation,
+                                value,
+                                loc,
+                            }
+                        } else {
+                            InstructionValue::PostfixUpdateLocal {
+                                lvalue: lvalue_place,
+                                operation,
+                                value,
+                                loc,
+                            }
+                        };
+                        Ok(value)
                     }
                 }
                 _ => {

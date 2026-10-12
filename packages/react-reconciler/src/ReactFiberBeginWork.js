@@ -119,7 +119,6 @@ import {
   enableCPUSuspense,
   disableLegacyMode,
   enableViewTransition,
-  enableFragmentRefs,
 } from 'shared/ReactFeatureFlags';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1366,9 +1365,7 @@ function updateFragment(
   renderLanes: Lanes,
 ) {
   const nextChildren = workInProgress.pendingProps;
-  if (enableFragmentRefs) {
-    markRef(current, workInProgress);
-  }
+  markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
@@ -1868,7 +1865,6 @@ function updateHostRoot(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  // $FlowFixMe[constant-condition]
   if (supportsHydration && prevState.isDehydrated) {
     // This is a hydration root whose shell has not yet hydrated. We should
     // attempt to hydrate.
@@ -4357,13 +4353,11 @@ function beginWork(
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
     case HostHoistable:
-      // $FlowFixMe[constant-condition]
       if (supportsResources) {
         return updateHostHoistable(current, workInProgress, renderLanes);
       }
     // Fall through
     case HostSingleton:
-      // $FlowFixMe[constant-condition]
       if (supportsSingletons) {
         return updateHostSingleton(current, workInProgress, renderLanes);
       }

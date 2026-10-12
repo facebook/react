@@ -30,6 +30,7 @@ let Stream;
 let use;
 let assertConsoleErrorDev;
 let serverAct;
+let getDebugInfo;
 
 // We test pass-through without encoding strings but it should work without it too.
 const streamOptions = {
@@ -77,6 +78,10 @@ describe('ReactFlightDOMNode', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
+    getDebugInfo = InternalTestUtils.getDebugInfo.bind(null, {
+      ignoreProps: false,
+      useFixedTime: true,
+    });
   });
 
   function filterStackFrame(filename, functionName) {
@@ -202,6 +207,28 @@ describe('ReactFlightDOMNode', () => {
       },
     });
     return {delayedStream, resolveDelayedStream};
+  }
+
+  // Runs an action that makes a Node stream emit, and flushes the ticks inside
+  // the act scope so that act sees the work the delivery triggers. Node streams
+  // hand data over through `process.nextTick`, which the fake timers mock.
+  function actOnStream(action: () => mixed): Promise<void> {
+    return serverAct(() => {
+      action();
+      jest.runAllTicks();
+    });
+  }
+
+  // The Node client resolves client references through a server consumer
+  // manifest, which maps each client module id to the module the SSR bundle
+  // loads for it. These tests use the same module on both sides.
+  function createIdentityServerConsumerManifest(...clientReferences) {
+    const moduleMap = {};
+    for (let i = 0; i < clientReferences.length; i++) {
+      const metadata = webpackMap[clientReferences[i].$$id];
+      moduleMap[metadata.id] = {'*': metadata};
+    }
+    return {moduleMap, moduleLoading: webpackModuleLoading};
   }
 
   it('should support web streams in node', async () => {
@@ -802,8 +829,7 @@ describe('ReactFlightDOMNode', () => {
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
         '\n' +
-          '    in Component' +
-          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)\n' : '\n') +
+          '    in Component (at **)\n' +
           '    in Suspense\n' +
           '    in body\n' +
           '    in html\n' +
@@ -820,13 +846,9 @@ describe('ReactFlightDOMNode', () => {
     }
 
     if (__DEV__) {
-      if (gate(flags => flags.enableAsyncDebugInfo)) {
-        expect(normalizeCodeLocInfo(ownerStack)).toBe(
-          '\n    in Component (at **)\n    in App (at **)',
-        );
-      } else {
-        expect(normalizeCodeLocInfo(ownerStack)).toBe('\n    in App (at **)');
-      }
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '\n    in Component (at **)\n    in App (at **)',
+      );
     } else {
       expect(ownerStack).toBeNull();
     }
@@ -953,9 +975,7 @@ describe('ReactFlightDOMNode', () => {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
         '\n' +
           '    in SharedComponent (at **)\n' +
-          '    in ServerComponent' +
-          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)' : '') +
-          '\n' +
+          '    in ServerComponent (at **)\n' +
           '    in Suspense\n' +
           '    in body\n' +
           '    in html\n' +
@@ -975,15 +995,12 @@ describe('ReactFlightDOMNode', () => {
 
     if (__DEV__) {
       expect(ignoreListStack(ownerStack)).toBe(
-        // eslint-disable-next-line react-internal/safe-string-coercion
         '' +
           // The concrete location may change as this test is updated.
           // Just make sure they still point at React.use(p2)
-          (gate(flags => flags.enableAsyncDebugInfo)
-            ? '\n    at SharedComponent (./ReactFlightDOMNode-test.js:838:7)'
-            : '') +
-          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:860:26)' +
-          '\n    at App (file://./ReactFlightDOMNode-test.js:877:25)',
+          '\n    at SharedComponent (./ReactFlightDOMNode-test.js:860:7)' +
+          '\n    at ServerComponent (file://./ReactFlightDOMNode-test.js:882:26)' +
+          '\n    at App (file://./ReactFlightDOMNode-test.js:899:25)',
       );
     } else {
       expect(ownerStack).toBeNull();
@@ -1112,8 +1129,7 @@ describe('ReactFlightDOMNode', () => {
     if (__DEV__) {
       expect(normalizeCodeLocInfo(componentStack)).toBe(
         '\n' +
-          '    in Component' +
-          (gate(flags => flags.enableAsyncDebugInfo) ? ' (at **)\n' : '\n') +
+          '    in Component (at **)\n' +
           '    in Suspense\n' +
           '    in body\n' +
           '    in html\n' +
@@ -1130,18 +1146,12 @@ describe('ReactFlightDOMNode', () => {
     }
 
     if (__DEV__) {
-      if (gate(flags => flags.enableAsyncDebugInfo)) {
-        expect(normalizeCodeLocInfo(ownerStack)).toBe(
-          '' +
-            '\n    in getData (at **)' +
-            '\n    in Component (at **)' +
-            '\n    in App (at **)',
-        );
-      } else {
-        expect(normalizeCodeLocInfo(ownerStack)).toBe(
-          '' + '\n    in App (at **)',
-        );
-      }
+      expect(normalizeCodeLocInfo(ownerStack)).toBe(
+        '' +
+          '\n    in getData (at **)' +
+          '\n    in Component (at **)' +
+          '\n    in App (at **)',
+      );
     } else {
       expect(ownerStack).toBeNull();
     }
@@ -1565,14 +1575,11 @@ describe('ReactFlightDOMNode', () => {
           normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
         ).toBe(
           '\n' +
-            '    in Dynamic' +
-            (gate(flags => flags.enableAsyncDebugInfo)
-              ? ' (file://ReactFlightDOMNode-test.js:1441:27)\n'
-              : '\n') +
+            '    in Dynamic (file://ReactFlightDOMNode-test.js:1451:27)\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in App (file://ReactFlightDOMNode-test.js:1454:25)\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1529:16)',
+            '    in App (file://ReactFlightDOMNode-test.js:1464:25)\n' +
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1539:16)',
         );
       } else {
         expect(
@@ -1581,28 +1588,16 @@ describe('ReactFlightDOMNode', () => {
           '\n' +
             '    in body\n' +
             '    in html\n' +
-            '    in ClientRoot (ReactFlightDOMNode-test.js:1529:16)',
+            '    in ClientRoot (ReactFlightDOMNode-test.js:1539:16)',
         );
       }
 
       if (__DEV__) {
-        if (gate(flags => flags.enableAsyncDebugInfo)) {
-          expect(
-            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
-          ).toBe(
-            '\n' +
-              '    in Dynamic (file://ReactFlightDOMNode-test.js:1441:27)\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1454:25)',
-          );
-        } else {
-          expect(
-            normalizeCodeLocInfo(ownerStack, {preserveLocation: true}),
-          ).toBe(
-            '' +
-              '\n' +
-              '    in App (file://ReactFlightDOMNode-test.js:1454:25)',
-          );
-        }
+        expect(normalizeCodeLocInfo(ownerStack, {preserveLocation: true})).toBe(
+          '\n' +
+            '    in Dynamic (file://ReactFlightDOMNode-test.js:1451:27)\n' +
+            '    in App (file://ReactFlightDOMNode-test.js:1464:25)',
+        );
       } else {
         expect(ownerStack).toBeNull();
       }
@@ -1757,7 +1752,7 @@ describe('ReactFlightDOMNode', () => {
           normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
         ).toBe(
           '\n' +
-            '    in ClientDynamic (ReactFlightDOMNode-test.js:1704:9)\n' +
+            '    in ClientDynamic (ReactFlightDOMNode-test.js:1699:9)\n' +
             '    in Suspense\n' +
             '    in body\n' +
             '    in html\n' +
@@ -1768,7 +1763,7 @@ describe('ReactFlightDOMNode', () => {
           normalizeCodeLocInfo(componentStack, {preserveLocation: true}),
         ).toBe(
           '\n' +
-            '    in ClientDynamic (ReactFlightDOMNode-test.js:1704:9)\n' +
+            '    in ClientDynamic (ReactFlightDOMNode-test.js:1699:9)\n' +
             '    in Suspense\n' +
             '    in body\n' +
             '    in html\n' +
@@ -1779,12 +1774,8 @@ describe('ReactFlightDOMNode', () => {
       if (__DEV__) {
         expect(ignoreListStack(ownerStack)).toBe(
           '\n' +
-            gate(flags =>
-              flags.enableAsyncDebugInfo
-                ? '    at ClientDynamic (./ReactFlightDOMNode-test.js:1705:9)\n'
-                : '',
-            ) +
-            '    at ClientRoot (./ReactFlightDOMNode-test.js:1718:21)',
+            '    at ClientDynamic (./ReactFlightDOMNode-test.js:1700:9)\n' +
+            '    at ClientRoot (./ReactFlightDOMNode-test.js:1713:21)',
         );
       } else {
         expect(ownerStack).toBeNull();
@@ -2066,13 +2057,7 @@ describe('ReactFlightDOMNode', () => {
           '    in ClientRoot (at **)',
       );
       expect(normalizeCodeLocInfo(ownerStack)).toBe(
-        '\n' +
-          gate(flags =>
-            flags.enableAsyncDebugInfo
-              ? '    in Dynamic (at **)\n'
-              : '    in section\n',
-          ) +
-          '    in App (at **)',
+        '\n    in Dynamic (at **)\n    in App (at **)',
       );
 
       expect(result).toContain(
@@ -2221,11 +2206,8 @@ describe('ReactFlightDOMNode', () => {
       expect(caughtError).toBe(flightError);
       expect(normalizeCodeLocInfo(ownerStack)).toBe(
         '\n' +
-          gate(flags =>
-            flags.enableAsyncDebugInfo
-              ? '    in loadInitialData (at **)\n' + '    in Dynamic (at **)\n'
-              : '',
-          ) +
+          '    in loadInitialData (at **)\n' +
+          '    in Dynamic (at **)\n' +
           '    in App (at **)',
       );
     });
@@ -2484,5 +2466,261 @@ describe('ReactFlightDOMNode', () => {
     );
 
     expect(getEventListeners(composite, 'abort')).toHaveLength(0);
+  });
+
+  // @gate __DEV__
+  it('does not expose a debug-tree element whose props still hold an unresolved reference', async () => {
+    // Regression test for facebook/react#37361.
+    //
+    // A server component element sits in its parent's componentInfo. Its props
+    // object is shared with its own componentInfo, so the debug channel
+    // outlines the props into a separate row. The client parses the props row
+    // nested inside the parent's componentInfo row, and registers the element's
+    // reference to the props row while that parse is still running.
+    //
+    // The client must not hand the element the props object at that point. The
+    // props row still waits on a client module reference, and the element is
+    // not part of that wait, so the lazy that wraps the element has to stay
+    // pending until the props row completes. An element initialized early
+    // carries the null placeholder where `ClientModule` belongs, which is what
+    // DevTools reads. In DEV its props are also frozen, so the module write
+    // that lands later throws, and the response rejects.
+    //
+    // The Suspense boundary inside PassthroughServerComponent keeps
+    // PassthroughServerComponent's componentInfo on row 0 and moves
+    // AsyncServerComponent's to the outlined row. Row 0 then resolves before
+    // the module loads, and the element is observable through the root's debug
+    // info while its props row is still waiting.
+    const received = [];
+    let resolveClientModuleChunk;
+    const ClientModule = clientExports(
+      {label: 'module'},
+      '43',
+      '/client-module.js',
+      new Promise(resolve => (resolveClientModuleChunk = resolve)),
+    );
+    const ClientComponent = clientExports(function ClientComponent(props) {
+      received.push({
+        module:
+          props.module === null
+            ? 'null'
+            : props.module === undefined
+              ? 'undefined'
+              : 'object',
+        shared:
+          props.shared === null
+            ? 'null'
+            : props.shared === undefined
+              ? 'undefined'
+              : 'object',
+      });
+      return React.createElement('span', null, 'client');
+    });
+
+    const shared = {};
+    const longText = 'a'.repeat(4000);
+
+    let resolveIo;
+    async function AsyncServerComponent(props) {
+      await new Promise(resolve => {
+        resolveIo = resolve;
+      });
+      return ReactServer.createElement(
+        'div',
+        null,
+        longText,
+        ReactServer.createElement(ClientComponent, {
+          shared: props.shared,
+          module: props.ClientModule,
+        }),
+      );
+    }
+
+    function PassthroughServerComponent({children}) {
+      return ReactServer.createElement(
+        ReactServer.Suspense,
+        {fallback: 'loading'},
+        children,
+      );
+    }
+
+    function App() {
+      return ReactServer.createElement(PassthroughServerComponent, {
+        shared,
+        children: ReactServer.createElement(AsyncServerComponent, {
+          shared,
+          ClientModule,
+        }),
+      });
+    }
+
+    let debugText = '';
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        ReactServer.createElement(App, null),
+        webpackMap,
+        {
+          debugChannel: new Stream.Writable({
+            write(chunk, encoding, callback) {
+              debugText += Buffer.from(chunk).toString('utf8');
+              callback();
+            },
+          }),
+        },
+      ),
+    );
+
+    const rscChunks = [];
+    rscStream.pipe(
+      new Stream.Writable({
+        write(chunk, encoding, callback) {
+          rscChunks.push(Buffer.from(chunk));
+          callback();
+        },
+      }),
+    );
+    await actOnStream(() => resolveIo('io'));
+
+    const debugReadable = new Stream.PassThrough(streamOptions);
+    const rscReadable = new Stream.PassThrough(streamOptions);
+    const response = ReactServerDOMClient.createFromNodeStream(
+      rscReadable,
+      createIdentityServerConsumerManifest(ClientComponent, ClientModule),
+      {debugChannel: debugReadable},
+    );
+
+    function ClientRoot() {
+      return use(response);
+    }
+
+    // The SSR render runs ClientComponent, which records the props it receives.
+    const ssrErrors = [];
+    const ssrStream = ReactDOMServer.renderToPipeableStream(
+      React.createElement(ClientRoot),
+      {
+        onError(error) {
+          ssrErrors.push(String(error).slice(0, 80));
+        },
+      },
+    );
+    await actOnStream(() =>
+      ssrStream.pipe(new Stream.PassThrough(streamOptions)),
+    );
+
+    const debugRows = debugText.split('\n');
+    for (let i = 0; i < debugRows.length; i++) {
+      if (debugRows[i].length > 0) {
+        await actOnStream(() => debugReadable.write(debugRows[i] + '\n'));
+      }
+    }
+    await actOnStream(() => debugReadable.end());
+
+    for (let i = 0; i < rscChunks.length; i++) {
+      await actOnStream(() => rscReadable.write(rscChunks[i]));
+    }
+    await actOnStream(() => rscReadable.end());
+
+    // Row 0 resolves before the module loads, because the boundary keeps
+    // AsyncServerComponent's blocked debug chain off it.
+    await expect(response).resolves.toBeDefined();
+    const root = await response;
+
+    // DevTools reads the element from the componentInfo's `children`, through
+    // the payload of the lazy that wraps it. The status is recorded here and
+    // asserted after the module resolves, so that a regression fails on the
+    // frozen-props error first.
+    const passthroughInfo = getDebugInfo(root).find(
+      entry => entry.name === 'PassthroughServerComponent',
+    );
+    const asyncServerElementLazy = passthroughInfo.props.children;
+    const payloadStatusBeforeModule = asyncServerElementLazy._payload.status;
+
+    await actOnStream(() => resolveClientModuleChunk());
+
+    // Without the fix, the element was initialized before the module arrived,
+    // and writing the module into its frozen props throws. The SSR render
+    // reports the error.
+    expect(ssrErrors).toEqual([]);
+    expect(received).toEqual([{module: 'object', shared: 'object'}]);
+
+    // An element initialized before the module arrived carries the null
+    // placeholder that DevTools reads, whether or not the write throws. The
+    // lazy must not have resolved while its props row was waiting.
+    expect(payloadStatusBeforeModule).not.toBe('fulfilled');
+
+    // Resolve the lazy the way a renderer does. It holds the module now.
+    const asyncServerElement = asyncServerElementLazy._init(
+      asyncServerElementLazy._payload,
+    );
+    expect(asyncServerElement.props.ClientModule).toEqual({label: 'module'});
+  });
+
+  it.each([false, true])(
+    'preserves leading U+FEFF in outlined text rows (split chunks: %s)',
+    async splitChunks => {
+      const model = {
+        inline: '\uFEFFshort',
+        outlined: '\uFEFF' + 'x'.repeat(1024),
+        repeated: '\uFEFF\uFEFF' + 'y'.repeat(1024),
+      };
+      const stream = await serverAct(() =>
+        ReactServerDOMServer.renderToPipeableStream(model),
+      );
+      const readable = new Stream.Transform({
+        transform(chunk, encoding, callback) {
+          if (splitChunks) {
+            for (let i = 0; i < chunk.length; i++) {
+              this.push(chunk.subarray(i, i + 1));
+            }
+          } else {
+            this.push(chunk);
+          }
+          callback();
+        },
+      });
+      const response = ReactServerDOMClient.createFromNodeStream(readable, {
+        moduleMap: {},
+        moduleLoading: webpackModuleLoading,
+      });
+      stream.pipe(readable);
+
+      const result = await response;
+      expect(result).toEqual(model);
+    },
+  );
+
+  // @gate __DEV__
+  it('consumes a leading byte order mark on the debug channel', async () => {
+    let resolveModel;
+    const model = new Promise(resolve => {
+      resolveModel = resolve;
+    });
+    const onError = jest.fn();
+    const debugChannel = new ReadableStream({
+      start(controller) {
+        const bytes = new TextEncoder().encode('\uFEFFQ:0\n');
+        for (let i = 0; i < bytes.length; i++) {
+          controller.enqueue(bytes.subarray(i, i + 1));
+        }
+        controller.close();
+      },
+    });
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model, webpackMap, {
+        debugChannel: {readable: debugChannel},
+        onError,
+      }),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    await serverAct(() => resolveModel('hello'));
+    expect(await response).toBe('hello');
+    expect(onError).not.toHaveBeenCalled();
+    expect(debugChannel.locked).toBe(true);
   });
 });
