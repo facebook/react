@@ -1092,7 +1092,7 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // Regression test for https://github.com/facebook/react/issues/35821
+  // Regression test for https://github.com/react/react/issues/35821
   it('deferred value catches up when a suspension is resolved during the same render', async () => {
     let setValue;
     function App() {
