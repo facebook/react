@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9d829f39f233b2cce2a9a7139d889769>>
+ * @generated SignedSource<<21e412884ef4201968ddccb4b3ac3408>>
  */
 
 /*
@@ -18653,11 +18653,15 @@ function hideOrUnhideDehydratedBoundary(suspenseInstance, isHidden) {
           ? ((node._stashedText = node.nodeValue), (node.nodeValue = ""))
           : (node.nodeValue = node._stashedText || ""));
     if (nextNode && 8 === nextNode.nodeType)
-      if (((node = nextNode.data), "/$" === node))
+      if (((node = nextNode.data), "/$" === node || "/&" === node))
         if (0 === suspenseInstance) break;
         else suspenseInstance--;
       else
-        ("$" !== node && "$?" !== node && "$~" !== node && "$!" !== node) ||
+        ("$" !== node &&
+          "$?" !== node &&
+          "$~" !== node &&
+          "$!" !== node &&
+          "&" !== node) ||
           suspenseInstance++;
     node = nextNode;
   } while (node);
@@ -21652,14 +21656,14 @@ ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = function (target) {
 };
 var isomorphicReactPackageVersion$jscomp$inline_2484 = React.version;
 if (
-  "19.3.0-native-fb-e8738f0c-20261012" !==
+  "19.3.0-native-fb-9f2e1f88-20261012" !==
   isomorphicReactPackageVersion$jscomp$inline_2484
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_2484,
-      "19.3.0-native-fb-e8738f0c-20261012"
+      "19.3.0-native-fb-9f2e1f88-20261012"
     )
   );
 ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
@@ -21681,10 +21685,10 @@ ReactDOMSharedInternals.findDOMNode = function (componentOrElement) {
 };
 var internals$jscomp$inline_2491 = {
   bundleType: 0,
-  version: "19.3.0-native-fb-e8738f0c-20261012",
+  version: "19.3.0-native-fb-9f2e1f88-20261012",
   rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  reconcilerVersion: "19.3.0-native-fb-e8738f0c-20261012",
+  reconcilerVersion: "19.3.0-native-fb-9f2e1f88-20261012",
   getLaneLabelMap: function () {
     for (
       var map = new Map(), lane = 1, index$351 = 0;
@@ -21972,7 +21976,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.3.0-native-fb-e8738f0c-20261012";
+exports.version = "19.3.0-native-fb-9f2e1f88-20261012";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
