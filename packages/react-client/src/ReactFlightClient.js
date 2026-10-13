@@ -1102,6 +1102,49 @@ type ServerReferenceBinding = {
 type InitializationConsumer = InitializationReference | ServerReferenceBinding;
 type ConstructionListener = InitializationConsumer | ConstructionPublication;
 
+// Only reuse containers after their own reviver has returned, and only
+// when there are no unresolved field assignments in this response.
+let parsingChunk: null | SomeChunk<any> = null;
+let parsingModel: any = null;
+let revivedContainers: null | WeakSet<Object> = null;
+const UNAVAILABLE_REVIVED_MODEL = {};
+
+function readRevivedModel(
+  response: Response,
+  chunk: SomeChunk<any>,
+  path: Array<string>,
+): any {
+  const completed = revivedContainers;
+  if (
+    chunk !== parsingChunk ||
+    completed === null ||
+    (response._construction !== null && response._construction.unfinished !== 0)
+  ) {
+    return UNAVAILABLE_REVIVED_MODEL;
+  }
+  let value = parsingModel;
+  for (let i = 1; i < path.length; i++) {
+    if (
+      typeof value !== 'object' ||
+      value === null ||
+      path[i] === __PROTO__ ||
+      (isArray(value)
+        ? value[0] === '$' || value[0] === REACT_ELEMENT_TYPE
+        : getPrototypeOf(value) !== ObjectPrototype ||
+          (value as any).$$typeof === REACT_ELEMENT_TYPE ||
+          (value as any).$$typeof === REACT_LAZY_TYPE)
+    ) {
+      return UNAVAILABLE_REVIVED_MODEL;
+    }
+    const field = Object.getOwnPropertyDescriptor(value, path[i]);
+    if (field === undefined || !hasOwnProperty.call(field, 'value')) {
+      return UNAVAILABLE_REVIVED_MODEL;
+    }
+    value = field.value;
+  }
+  return completed.has(value) ? value : UNAVAILABLE_REVIVED_MODEL;
+}
+
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
 let isInitializingDebugInfo: boolean = false;
@@ -1193,7 +1236,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   }
 
   try {
-    const value: T = parseModel(response, resolvedModel);
+    const value: T = parseModel(response, resolvedModel, cyclicChunk);
     const handler = initializingHandler;
     if (handler !== null) {
       // Attach the completed parse to its owner before installing references
@@ -3513,6 +3556,15 @@ function getOutlinedModel<T>(
       }
       return chunkValue;
     case BLOCKED:
+      if (
+        (map as ModelMapping<any>) === createModel &&
+        !(__DEV__ && isInitializingDebugInfo)
+      ) {
+        const revivedValue = readRevivedModel(response, chunk, path);
+        if (revivedValue !== UNAVAILABLE_REVIVED_MODEL) {
+          return revivedValue;
+        }
+      }
     // Fallthrough
     case PENDING:
     case PENDING_WEAK:
@@ -6709,7 +6761,11 @@ export function processStringChunk(
   streamState._rowLength = rowLength;
 }
 
-function parseModel<T>(response: Response, json: UninitializedModel): T {
+function parseModel<T>(
+  response: Response,
+  json: UninitializedModel,
+  chunk?: SomeChunk<any>,
+): T {
   const rawModel = JSON.parse(json);
   // Without protocol strings or keys that revival deletes, JSON.parse has
   // already produced the final value. Escapes can hide either spelling.
@@ -6720,10 +6776,25 @@ function parseModel<T>(response: Response, json: UninitializedModel): T {
   ) {
     return rawModel;
   }
-  // Pass a wrapper object as parentObject to match the original JSON.parse
-  // reviver behavior, where the root value's reviver receives {"": rootValue}
-  // as `this`. This ensures parentObject is never null when accessed downstream.
-  return reviveModel(response, rawModel, {'': rawModel}, '');
+  const previousChunk = parsingChunk;
+  const previousModel = parsingModel;
+  const previousContainers = revivedContainers;
+  parsingChunk = chunk === undefined ? null : chunk;
+  parsingModel = rawModel;
+  revivedContainers = json.indexOf('"$') === -1 ? null : new WeakSet();
+  try {
+    return reviveModel(
+      response,
+      rawModel,
+      {'': rawModel},
+      '',
+      revivedContainers,
+    );
+  } finally {
+    parsingChunk = previousChunk;
+    parsingModel = previousModel;
+    revivedContainers = previousContainers;
+  }
 }
 
 function reviveModel(
@@ -6731,6 +6802,7 @@ function reviveModel(
   value: JSONValue,
   parentObject: Object,
   key: string,
+  completed?: null | WeakSet<Object>,
 ): any {
   if (typeof value === 'string') {
     if (value[0] === '$') {
@@ -6743,12 +6815,21 @@ function reviveModel(
   }
   if (isArray(value)) {
     for (let i = 0; i < value.length; i++) {
-      (value as any)[i] = reviveModel(response, value[i], value, '' + i);
+      (value as any)[i] = reviveModel(
+        response,
+        value[i],
+        value,
+        '' + i,
+        completed,
+      );
     }
     // $FlowFixMe[invalid-compare]
     if (value[0] === REACT_ELEMENT_TYPE) {
       // React element tuple
       return parseModelTuple(response, value);
+    }
+    if (completed != null) {
+      completed.add(value);
     }
     return value;
   }
@@ -6758,7 +6839,13 @@ function reviveModel(
       if (k === __PROTO__) {
         delete (value as any)[k];
       } else {
-        const walked = reviveModel(response, (value as any)[k], value, k);
+        const walked = reviveModel(
+          response,
+          (value as any)[k],
+          value,
+          k,
+          completed,
+        );
         if (walked !== undefined) {
           (value as any)[k] = walked;
         } else {
@@ -6766,6 +6853,9 @@ function reviveModel(
         }
       }
     }
+  }
+  if (completed != null) {
+    completed.add(value);
   }
   return value;
 }
