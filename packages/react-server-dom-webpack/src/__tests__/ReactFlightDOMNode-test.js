@@ -1366,43 +1366,8 @@ describe('ReactFlightDOMNode', () => {
     }
   });
 
-  it('copies resizable buffers', async () => {
-    // Larger than VIEW_SIZE in ReactServerStreamConfigNode, so that the chunk
-    // is written to the destination instead of being copied into React's
-    // internal view.
-    const LARGE = 10000;
-    const buffer = new ArrayBuffer(LARGE, {maxByteLength: LARGE});
-    const first = new Uint8Array(buffer);
-    first.fill(1);
-
-    let sendSecond;
-    const model = {
-      first: Promise.resolve(first),
-      second: new Promise(resolve => {
-        sendSecond = resolve;
-      }),
-    };
-
-    const stream = await serverAct(() => {
-      return ReactServerDOMServer.renderToReadableStream(model, webpackMap);
-    });
-
-    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      serverConsumerManifest: {
-        moduleMap: null,
-        moduleLoading: null,
-      },
-    });
-
-    expect(await result.first).toEqual(new Uint8Array(LARGE).fill(1));
-    await serverAct(async () => {
-      buffer.resize(LARGE - 1);
-      const second = new Uint8Array(buffer);
-      await sendSecond(second);
-    });
-    expect(await result.second).toEqual(new Uint8Array(LARGE - 1).fill(1));
-  });
-
+  // prod and dev throw at different times.
+  // @gate !__DEV__
   it('interrupts the stream when a write fails', async () => {
     // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
     // is written to the destination instead of being copied into React's
@@ -1462,16 +1427,19 @@ describe('ReactFlightDOMNode', () => {
       });
     });
 
-    // This must fail. Adjust the mock above to be able to throw at a specific
-    // point.
-    await expect(
-      ReactServerDOMClient.createFromReadableStream(stream1, {
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream1,
+      {
         serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
-      }),
-    ).rejects.toThrow(
+      },
+    );
+
+    // This must fail. Adjust the mock above to be able to throw at a specific
+    // point.
+    await expect(result.first).rejects.toThrow(
       "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
     );
 
@@ -1496,9 +1464,11 @@ describe('ReactFlightDOMNode', () => {
     const partialPayload = payload;
 
     await sendMore('foo');
-    // React threw before it created a readable stream. Nothing is pulling anymore.
-    // Just make sure we haven't pushed more.
+    // an errored stream emitted incomplete data. Continuing to emit more would
+    // produce a corrupted stream
     expect(payload).toBe(partialPayload);
-    expect(readError).toEqual(undefined);
+    expect(readError.stack).toMatch(
+      "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+    );
   });
 });

@@ -28,6 +28,7 @@ let ReactDOMFizzStatic;
 let Suspense;
 let container;
 let act;
+let assertConsoleErrorDev;
 let serverAct;
 
 describe('ReactDOMFizzStaticFloat', () => {
@@ -36,6 +37,8 @@ describe('ReactDOMFizzStaticFloat', () => {
     patchMessageChannel();
     act = require('internal-test-utils').act;
     serverAct = require('internal-test-utils').serverAct;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -177,6 +180,17 @@ describe('ReactDOMFizzStaticFloat', () => {
       />,
       <div>Loading...</div>,
     ]);
+
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
 
     prerendering = false;
     const content = await serverAct(() =>

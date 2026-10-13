@@ -2531,15 +2531,15 @@ describe('ReactFlightDOMEdge', () => {
         "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
       ]);
     } else {
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
             'This negatively impacts performance. ' +
             'Please upgrade to a modern Edge runtime.',
-          "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+      ]);
     }
 
     const partialPayload = payload;
