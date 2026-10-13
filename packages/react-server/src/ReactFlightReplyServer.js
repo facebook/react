@@ -1343,6 +1343,9 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
   // We should have this backingEntry in the store already because we emitted
   // it before referencing it. It should be a Blob.
   const backingEntry: Blob = getBackingEntry(response._formData, key) as any;
+  if (!(backingEntry instanceof Blob)) {
+    throw new Error('Referenced Blob is not a Blob.');
+  }
 
   const promise: Promise<ArrayBuffer> = backingEntry.arrayBuffer();
 
