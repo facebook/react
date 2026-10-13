@@ -1,22 +1,12 @@
 // @validateRefAccessDuringRender
-import {useCallback, useMemo, useRef} from 'react';
+import {useRef} from 'react';
 
-type IntersectionCallback = (isIntersecting: boolean) => void;
+function useObserver() {
+  const ref = useRef(null);
+  return new IntersectionObserver(() => ref.current);
+}
 
-function useIntersectionObserver(options: Partial<IntersectionObserverInit>) {
-  const callbacks = useRef(new Map<string, IntersectionCallback>());
-
-  const onIntersect = useCallback(
-    (entries: ReadonlyArray<IntersectionObserverEntry>) => {
-      entries.forEach(entry =>
-        callbacks.current.get(entry.target.id)?.(entry.isIntersecting),
-      );
-    },
-    [],
-  );
-
-  return useMemo(
-    () => new IntersectionObserver(onIntersect, options),
-    [onIntersect, options],
-  );
+function useObserverWithOptions(options: Partial<IntersectionObserverInit>) {
+  const ref = useRef(null);
+  return new IntersectionObserver(() => ref.current, options);
 }

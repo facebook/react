@@ -3,26 +3,16 @@
 
 ```javascript
 // @validateRefAccessDuringRender
-import {useCallback, useMemo, useRef} from 'react';
+import {useRef} from 'react';
 
-type IntersectionCallback = (isIntersecting: boolean) => void;
+function useObserver() {
+  const ref = useRef(null);
+  return new IntersectionObserver(() => ref.current);
+}
 
-function useIntersectionObserver(options: Partial<IntersectionObserverInit>) {
-  const callbacks = useRef(new Map<string, IntersectionCallback>());
-
-  const onIntersect = useCallback(
-    (entries: ReadonlyArray<IntersectionObserverEntry>) => {
-      entries.forEach(entry =>
-        callbacks.current.get(entry.target.id)?.(entry.isIntersecting),
-      );
-    },
-    [],
-  );
-
-  return useMemo(
-    () => new IntersectionObserver(onIntersect, options),
-    [onIntersect, options],
-  );
+function useObserverWithOptions(options: Partial<IntersectionObserverInit>) {
+  const ref = useRef(null);
+  return new IntersectionObserver(() => ref.current, options);
 }
 
 ```
@@ -31,41 +21,40 @@ function useIntersectionObserver(options: Partial<IntersectionObserverInit>) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender
-import { useCallback, useMemo, useRef } from "react";
+import { useRef } from "react";
 
-type IntersectionCallback = (isIntersecting: boolean) => void;
-
-function useIntersectionObserver(options) {
-  const $ = _c(4);
+function useObserver() {
+  const $ = _c(1);
+  const ref = useRef(null);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = new Map();
+    t0 = new IntersectionObserver(() => ref.current);
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const callbacks = useRef(t0);
+  return t0;
+}
+
+function useObserverWithOptions(options) {
+  const $ = _c(3);
+  const ref = useRef(null);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => ref.current;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (entries) => {
-      entries.forEach((entry) =>
-        callbacks.current.get(entry.target.id)?.(entry.isIntersecting),
-      );
-    };
-    $[1] = t1;
+  if ($[1] !== options) {
+    t1 = new IntersectionObserver(t0, options);
+    $[1] = options;
+    $[2] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[2];
   }
-  const onIntersect = t1;
-  let t2;
-  if ($[2] !== options) {
-    t2 = new IntersectionObserver(onIntersect, options);
-    $[2] = options;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  return t2;
+  return t1;
 }
 
 ```

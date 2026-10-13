@@ -2257,7 +2257,7 @@ fn build_typed_globals(
     typed_globals.push(("NaN".to_string(), Type::Primitive));
     globals.insert("NaN".to_string(), Type::Primitive);
 
-    // Map, Set, WeakMap, WeakSet constructors
+    // Map, Set, WeakMap, WeakSet, and IntersectionObserver constructors
     let map_ctor = add_function(
         shapes,
         Vec::new(),
@@ -2332,9 +2332,7 @@ fn build_typed_globals(
         FunctionSignatureBuilder {
             // The callback is retained for later delivery, not invoked by construction.
             positional_params: vec![Effect::Freeze, Effect::Read],
-            return_type: Type::Object {
-                shape_id: Some(BUILT_IN_OBJECT_ID.to_string()),
-            },
+            return_type: Type::Poly,
             return_value_kind: ValueKind::Mutable,
             ..Default::default()
         },

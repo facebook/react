@@ -198,6 +198,18 @@ const tests: CompilerTestCases = {
 const refsTests: CompilerTestCases = {
   valid: [
     {
+      name: 'Allows deferred ref access in IntersectionObserver callbacks without options',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import {useRef} from 'react';
+
+        function useObserver() {
+          const ref = useRef(null);
+          return new IntersectionObserver(() => ref.current);
+        }
+      `,
+    },
+    {
       name: 'Allows deferred ref access in IntersectionObserver callbacks',
       filename: 'test.tsx',
       code: normalizeIndent`
@@ -224,6 +236,19 @@ const refsTests: CompilerTestCases = {
     },
   ],
   invalid: [
+    {
+      name: 'Rejects refs passed directly to unknown constructors',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import {useRef} from 'react';
+
+        function useObserver(Observer) {
+          const ref = useRef(null);
+          return new Observer(ref);
+        }
+      `,
+      errors: [{message: /Cannot access refs during render/}],
+    },
     {
       name: 'Rejects ref access in callbacks passed to unknown constructors',
       filename: 'test.tsx',

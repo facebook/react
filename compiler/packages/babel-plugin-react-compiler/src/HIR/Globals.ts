@@ -647,7 +647,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
         // The callback is retained for later delivery, not invoked by construction.
         positionalParams: [Effect.Freeze, Effect.Read],
         restParam: null,
-        returnType: {kind: 'Object', shapeId: BuiltInObjectId},
+        returnType: {kind: 'Poly'},
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Mutable,
       },
