@@ -321,14 +321,16 @@ describe('ReactFlightDOMForm', () => {
 
     expect(returnValue).toBe('helloc');
     expect(foo).toBe('barc');
-    assertConsoleErrorDev(
-      [
-        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
-          'This could be a security issue if the buffer was not actually empty. ' +
-          'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
-      ],
-      {withoutStack: true},
-    );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('can bind an imported server action on the client without hydrating it', async () => {
@@ -565,14 +567,16 @@ describe('ReactFlightDOMForm', () => {
       });
       expect(container.textContent).toBe('121');
     }
-    assertConsoleErrorDev(
-      [
-        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
-          'This could be a security issue if the buffer was not actually empty. ' +
-          'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
-      ],
-      {withoutStack: true},
-    );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it(
