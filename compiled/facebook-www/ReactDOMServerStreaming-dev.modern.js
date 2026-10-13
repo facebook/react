@@ -10339,7 +10339,9 @@ __DEV__ &&
                   currentTaskInDEV = task$jscomp$0;
                   var childrenLength = segment$jscomp$0.children.length,
                     chunkLength = segment$jscomp$0.chunks.length,
-                    startNode$jscomp$0 = task$jscomp$0.node;
+                    startNode$jscomp$0 = task$jscomp$0.node,
+                    startKeyPath = task$jscomp$0.keyPath,
+                    startChildIndex = task$jscomp$0.childIndex;
                   try {
                     retryNode(request$jscomp$0, task$jscomp$0),
                       pushSegmentFinale(
@@ -10369,6 +10371,8 @@ __DEV__ &&
                         (task$jscomp$0.thenableState =
                           getThenableStateAfterSuspending()),
                         (request$jscomp$0.currentTask = prevTask$jscomp$0),
+                        (task$jscomp$0.keyPath = startKeyPath),
+                        (task$jscomp$0.childIndex = startChildIndex),
                         abortTaskDEV(task$jscomp$0, request$jscomp$0),
                         task$jscomp$0.abortSet.delete(task$jscomp$0),
                         finishAbortedTaskDEV(

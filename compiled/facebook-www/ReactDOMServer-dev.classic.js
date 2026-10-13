@@ -8121,7 +8121,9 @@ __DEV__ &&
                 currentTaskInDEV = task$jscomp$0;
                 var childrenLength = request$jscomp$0.children.length,
                   chunkLength = request$jscomp$0.chunks.length,
-                  startNode$jscomp$0 = task$jscomp$0.node;
+                  startNode$jscomp$0 = task$jscomp$0.node,
+                  startKeyPath = task$jscomp$0.keyPath,
+                  startChildIndex = task$jscomp$0.childIndex;
                 try {
                   retryNode(request, task$jscomp$0),
                     pushSegmentFinale(
@@ -8151,6 +8153,8 @@ __DEV__ &&
                       (task$jscomp$0.thenableState =
                         getThenableStateAfterSuspending()),
                       (request.currentTask = prevTask$jscomp$0),
+                      (task$jscomp$0.keyPath = startKeyPath),
+                      (task$jscomp$0.childIndex = startChildIndex),
                       (request$jscomp$0 = request),
                       abortTaskDEV(task$jscomp$0, request$jscomp$0),
                       task$jscomp$0.abortSet.delete(task$jscomp$0),
@@ -10765,5 +10769,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-classic-9f2e1f88-20261012";
+    exports.version = "19.3.0-www-classic-07dde64d-20261013";
   })();

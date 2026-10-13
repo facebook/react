@@ -6962,7 +6962,9 @@ exports.renderNextChunk = function (stream) {
               switchContext(task$jscomp$0.context);
               var childrenLength = segment$jscomp$0.children.length,
                 chunkLength = segment$jscomp$0.chunks.length,
-                startNode$jscomp$0 = task$jscomp$0.node;
+                startNode$jscomp$0 = task$jscomp$0.node,
+                startKeyPath = task$jscomp$0.keyPath,
+                startChildIndex = task$jscomp$0.childIndex;
               try {
                 retryNode(request, task$jscomp$0),
                   pushSegmentFinale(
@@ -6992,6 +6994,8 @@ exports.renderNextChunk = function (stream) {
                     (task$jscomp$0.thenableState =
                       getThenableStateAfterSuspending()),
                     (request.currentTask = prevTask$jscomp$0),
+                    (task$jscomp$0.keyPath = startKeyPath),
+                    (task$jscomp$0.childIndex = startChildIndex),
                     abortTask(task$jscomp$0, request),
                     task$jscomp$0.abortSet.delete(task$jscomp$0),
                     finishAbortedTask(
