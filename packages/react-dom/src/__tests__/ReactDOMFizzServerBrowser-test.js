@@ -21,6 +21,7 @@ let ReactDOMFizzServer;
 let Suspense;
 let Scheduler;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
@@ -29,6 +30,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -418,6 +421,16 @@ describe('ReactDOMFizzServerBrowser', () => {
       // eslint-disable-next-line jest/no-interpolation-in-snapshots
       `"<div><span></span></div><div>${str492}</div><div>${str492}</div>"`,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
 
     // this size 2049 was chosen to be a couple base 2 orders larger than the current view
     // size. if the size changes in the future hopefully this will still exercise
