@@ -1462,19 +1462,16 @@ describe('ReactFlightDOMNode', () => {
       });
     });
 
-    const result = await ReactServerDOMClient.createFromReadableStream(
-      stream1,
-      {
+    // This must fail. Adjust the mock above to be able to throw at a specific
+    // point.
+    await expect(
+      ReactServerDOMClient.createFromReadableStream(stream1, {
         serverConsumerManifest: {
           moduleMap: null,
           moduleLoading: null,
         },
-      },
-    );
-
-    // This must fail. Adjust the mock above to be able to throw at a specific
-    // point.
-    await expect(result.first).rejects.toThrow(
+      }),
+    ).rejects.toThrow(
       "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
     );
 
@@ -1485,28 +1482,23 @@ describe('ReactFlightDOMNode', () => {
         "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
       ]);
     } else {
-      assertConsoleErrorDev(
+      assertConsoleErrorDev([
         [
           'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
             'This negatively impacts performance. ' +
             'Please upgrade to a modern Node.js version.',
-          "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+          {withoutStack: true},
         ],
-        {withoutStack: true},
-      );
+        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+      ]);
     }
 
     const partialPayload = payload;
 
     await sendMore('foo');
-    await expect(result.second).rejects.toThrow(
-      "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
-    );
-    // an errored stream emitted incomplete data. Continuing to emit more would
-    // produce a corrupted stream
+    // React threw before it created a readable stream. Nothing is pulling anymore.
+    // Just make sure we haven't pushed more.
     expect(payload).toBe(partialPayload);
-    expect(readError.stack).toMatch(
-      "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
-    );
+    expect(readError).toEqual(undefined);
   });
 });

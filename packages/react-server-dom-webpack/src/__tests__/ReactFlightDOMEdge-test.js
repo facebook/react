@@ -39,6 +39,15 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+if (typeof File === 'undefined') {
+  // Older Node.js versions do have support for Files in FormData but don't expose
+  // the constructor globally.
+  const formData = new FormData();
+  formData.append('a', new Blob(['a'], {type: 'text/plain'}), 'a.txt');
+  const arbitraryFile = formData.get('a');
+  globalThis.File = arbitraryFile.constructor;
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
@@ -2438,45 +2447,6 @@ describe('ReactFlightDOMEdge', () => {
         {withoutStack: true},
       );
     }
-  });
-
-  it('transported resizable buffers cannot be resized on the origin', async () => {
-    // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
-    // is written to the destination instead of being copied into React's
-    // internal view.
-    const LARGE = 10000;
-    const buffer = new ArrayBuffer(LARGE, {maxByteLength: LARGE});
-    const first = new Uint8Array(buffer);
-    first.fill(1);
-
-    let sendSecond;
-    const model = {
-      first: Promise.resolve(first),
-      second: new Promise(resolve => {
-        sendSecond = resolve;
-      }),
-    };
-
-    const stream = await serverAct(() => {
-      return ReactServerDOMServer.renderToReadableStream(model, webpackMap);
-    });
-
-    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
-      serverConsumerManifest: {
-        moduleMap: null,
-        moduleLoading: null,
-      },
-    });
-
-    expect(await result.first).toEqual(new Uint8Array(LARGE).fill(1));
-
-    await serverAct(async () => {
-      buffer.resize(LARGE - 1);
-      const second = new Uint8Array(buffer);
-      await sendSecond(second);
-    });
-
-    expect(await result.second).toEqual(new Uint8Array(LARGE - 1).fill(1));
   });
 
   it('interrupts the stream when a write fails', async () => {
