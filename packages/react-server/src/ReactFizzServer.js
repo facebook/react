@@ -3373,7 +3373,7 @@ function validateIterable(
   if (__DEV__) {
     if (iterator === iterable) {
       // We don't support rendering Generators as props because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
+      // See https://github.com/react/react/issues/12995
       // We do support generators if they were created by a GeneratorFunction component
       // as its direct child since we can recreate those by rerendering the component
       // as needed.
@@ -3420,7 +3420,7 @@ function validateAsyncIterable(
   if (__DEV__) {
     if (iterator === iterable) {
       // We don't support rendering Generators as props because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
+      // See https://github.com/react/react/issues/12995
       // We do support generators if they were created by a GeneratorFunction component
       // as its direct child since we can recreate those by rerendering the component
       // as needed.
@@ -5368,6 +5368,8 @@ function retryRenderTask(
   const chunkLength = segment.chunks.length;
   // Used to detect forward progress if we hit a stack overflow below.
   const startNode = task.node;
+  const startKeyPath = task.keyPath;
+  const startChildIndex = task.childIndex;
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -5414,6 +5416,8 @@ function retryRenderTask(
       // Restore the parent instead of clearing this field because finishing
       // can reenter Fizz and abort an outer render that is still on the stack.
       request.currentTask = prevTask;
+      task.keyPath = startKeyPath;
+      task.childIndex = startChildIndex;
       abortUnwoundTask(task, request);
       return;
     }
