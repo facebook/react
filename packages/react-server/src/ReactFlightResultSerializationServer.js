@@ -619,6 +619,24 @@ function renderObjectReference(
   return null;
 }
 
+function getStructuralReferenceAddress(
+  request: Request,
+  task: Task,
+  reference: ModelReference,
+): string {
+  const root = reference.root;
+  if (root.status === 'fulfilled') {
+    const value: mixed = root.value;
+    if (value !== null && typeof value === 'object') {
+      const address = request.writtenObjects.get(value);
+      if (address !== undefined) {
+        return address;
+      }
+    }
+  }
+  return serializeByValueID(serializeThenable(request, task, root));
+}
+
 function renderModelDestructive(
   request: Request,
   task: Task,
@@ -687,7 +705,7 @@ function renderModelDestructive(
     const reference =
       input === null ? undefined : input.getValueReference(value);
     if (reference !== undefined) {
-      const id = serializeThenable(request, task, reference.root);
+      let name = getStructuralReferenceAddress(request, task, reference);
       const path = [];
       let location = reference;
       let ancestor = location.parent;
@@ -696,7 +714,6 @@ function renderModelDestructive(
         location = ancestor;
         ancestor = location.parent;
       }
-      let name = serializeByValueID(id);
       for (let i = path.length - 1; i >= 0; i--) {
         name += ':' + path[i];
       }
@@ -2365,51 +2382,61 @@ function subscribeToThenable(
   request: Request,
   task: Task,
   thenable: ResultModel<ReactClientValue>,
+  outlineNow?: boolean,
 ): void {
-  const input = request.input;
-  if (input === null) {
-    return;
-  }
-  subscribeInput(request, detach =>
-    input.subscribeToThenable(thenable, {
-      debug: __DEV__
-        ? info => forwardInputDebugInfo(request, task, info)
-        : undefined,
-      halt() {
-        if (__DEV__) {
-          flushInputDebugTime(request, task);
-        }
-        detach();
-        if (task.status === PENDING) {
-          haltTask(task, request);
-          request.abortableTasks.delete(task);
-          finishHaltedTask(task, request);
-          enqueueFlush(request);
-        }
-      },
-      resolve(value) {
-        detach();
-        if (request.status <= OPEN && task.status === PENDING) {
-          task.model = value;
-          pingTask(request, task);
-        }
-      },
-      reject(error, reference) {
-        if (__DEV__) {
-          flushInputDebugTime(request, task);
-        }
-        detach();
-        if (request.status <= OPEN && task.status === PENDING) {
-          try {
-            erroredInputTask(request, task, error, reference);
-            enqueueFlush(request);
-          } catch (fatal) {
-            fatalError(request, fatal);
+  let synchronous = outlineNow === true;
+  try {
+    const input = request.input;
+    if (input === null) {
+      return;
+    }
+    subscribeInput(request, detach =>
+      input.subscribeToThenable(thenable, {
+        debug: __DEV__
+          ? info => forwardInputDebugInfo(request, task, info)
+          : undefined,
+        halt() {
+          if (__DEV__) {
+            flushInputDebugTime(request, task);
           }
-        }
-      },
-    }),
-  );
+          detach();
+          if (task.status === PENDING) {
+            haltTask(task, request);
+            request.abortableTasks.delete(task);
+            finishHaltedTask(task, request);
+            enqueueFlush(request);
+          }
+        },
+        resolve(value) {
+          detach();
+          if (request.status <= OPEN && task.status === PENDING) {
+            task.model = value;
+            if (synchronous) {
+              outlineResolvedTask(request, task);
+            } else {
+              pingTask(request, task);
+            }
+          }
+        },
+        reject(error, reference) {
+          if (__DEV__) {
+            flushInputDebugTime(request, task);
+          }
+          detach();
+          if (request.status <= OPEN && task.status === PENDING) {
+            try {
+              erroredInputTask(request, task, error, reference);
+              enqueueFlush(request);
+            } catch (fatal) {
+              fatalError(request, fatal);
+            }
+          }
+        },
+      }),
+    );
+  } finally {
+    synchronous = false;
+  }
 }
 
 function serializeDebugThenable(
@@ -3706,6 +3733,42 @@ export function abort(request: Request, reason: mixed): void {
   }
 }
 
+function serializeCollectionEntries(
+  request: Request,
+  model: ResultModel<ReactClientValue>,
+): number {
+  if (request.input === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error('Cannot serialize a detached Result.');
+  }
+  const existingId = request.writtenModels.get(model);
+  if (existingId !== undefined) {
+    return existingId;
+  }
+  const task = createTask(
+    request,
+    null,
+    request.abortableTasks,
+    __DEV__ ? request.timeOrigin : 0,
+  );
+  request.writtenModels.set(model, task.id);
+  subscribeToThenable(request, task, model, true);
+  return task.id;
+}
+
+function outlineResolvedTask(request: Request, task: Task): void {
+  const value = task.model;
+  if (value !== null && typeof value === 'object') {
+    request.writtenObjects.set(value, serializeByValueID(task.id));
+  }
+  const previousModelRoot = modelRoot;
+  try {
+    retryTask(request, task);
+  } finally {
+    modelRoot = previousModelRoot;
+  }
+}
+
 function serializeMap(
   request: Request,
   map: Map<ReactClientValue, ReactClientValue>,
@@ -3713,7 +3776,7 @@ function serializeMap(
   const input = request.input;
   const model = input === null ? undefined : input.getCollectionEntries(map);
   if (model !== undefined) {
-    const id = serializeThenable(request, null, model as any);
+    const id = serializeCollectionEntries(request, model as any);
     return '$Q' + id.toString(16);
   }
   const entries = Array.from(map);
@@ -3752,7 +3815,7 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   const input = request.input;
   const model = input === null ? undefined : input.getCollectionEntries(set);
   if (model !== undefined) {
-    const id = serializeThenable(request, null, model as any);
+    const id = serializeCollectionEntries(request, model as any);
     return '$W' + id.toString(16);
   }
   const entries = Array.from(set);

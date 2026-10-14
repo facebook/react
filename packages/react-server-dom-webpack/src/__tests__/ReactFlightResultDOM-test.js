@@ -325,6 +325,106 @@ describe('ReactFlightResultDOM', () => {
     expect(model.large).toBe(large);
   });
 
+  const collectionTypes = ['Map', 'Set'];
+  const rootTypes = [false, true];
+  for (let c = 0; c < collectionTypes.length; c++) {
+    const collectionType = collectionTypes[c];
+    for (let r = 0; r < rootTypes.length; r++) {
+      const asyncRoot = rootTypes[r];
+      it(`eagerly decodes shared ${collectionType} entries from a ${asyncRoot ? 'pending' : 'synchronous'} root`, async () => {
+        const renderers = [
+          ReactServerDOMServer.renderToPipeableStream,
+          renderResultToPipeableStream,
+        ];
+        for (let i = 0; i < renderers.length; i++) {
+          const render = renderers[i];
+          const shared = {n: 1};
+          const model = {
+            a: shared,
+            collection:
+              collectionType === 'Map'
+                ? new Map([['shared', shared]])
+                : new Set([shared]),
+          };
+          let resolveRoot;
+          const pending = new Promise(resolve => {
+            resolveRoot = resolve;
+          });
+          const Root = async () => {
+            await pending;
+            return model;
+          };
+          const {writable, readable} = getTestStream();
+          const response =
+            ReactServerDOMClient.createFromReadableStream(readable);
+          let observed;
+          let error;
+          // Read the root before rows arrive, as an active Flight consumer does.
+          response.then(
+            value => {
+              observed = value;
+            },
+            reason => {
+              error = reason;
+            },
+          );
+          await serverAct(() => {
+            render(asyncRoot ? <Root /> : model, webpackMap).pipe(writable);
+          });
+          if (asyncRoot) {
+            expect(observed).toBe(undefined);
+            await serverAct(() => resolveRoot());
+          }
+          expect(error).toBe(undefined);
+          expect(observed.a).toEqual({n: 1});
+          expect(Array.from(observed.collection.values())).toEqual([
+            observed.a,
+          ]);
+          expect(Array.from(observed.collection.values())[0]).toBe(observed.a);
+        }
+      });
+    }
+  }
+
+  it('keeps distinct promises distinct when their resolved value is shared with a Map', async () => {
+    const renderers = [
+      ReactServerDOMServer.renderToPipeableStream,
+      renderResultToPipeableStream,
+    ];
+    for (let i = 0; i < renderers.length; i++) {
+      const render = renderers[i];
+      const shared = {n: 1};
+      const first = Promise.resolve(shared);
+      const second = Promise.resolve(shared);
+      const model = {
+        a: shared,
+        first,
+        firstAgain: first,
+        second,
+        map: new Map([
+          ['first', first],
+          ['second', second],
+          ['value', shared],
+        ]),
+      };
+      const {writable, readable} = getTestStream();
+      const response = ReactServerDOMClient.createFromReadableStream(readable);
+      response.then(
+        () => {},
+        () => {},
+      );
+      await serverAct(() => render(model, webpackMap).pipe(writable));
+      const value = await response;
+      expect(value.first).toBe(value.firstAgain);
+      expect(value.first).not.toBe(value.second);
+      expect(value.map.get('first')).toBe(value.first);
+      expect(value.map.get('second')).toBe(value.second);
+      expect(await value.first).toBe(value.a);
+      expect(await value.second).toBe(value.a);
+      expect(value.map.get('value')).toBe(value.a);
+    }
+  });
+
   function createUnclosingStream(
     stream: ReadableStream<Uint8Array>,
   ): ReadableStream<Uint8Array> {
