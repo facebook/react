@@ -31,6 +31,7 @@ let Suspense;
 let SuspenseList;
 let container;
 let serverAct;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
@@ -43,6 +44,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     patchMessageChannel();
     serverAct = require('internal-test-utils').serverAct;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -990,6 +993,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <body data-x="">Loading A</body>
       </html>,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
 
     await resolveA();
 
@@ -1093,6 +1103,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
 
     expect(errors).toEqual(['boom']);
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
   });
 
   it('will render fallback Document when erroring a boundary above the body', async () => {
@@ -1171,6 +1188,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
         </body>
       </html>,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
   });
 
   it('reveals a resumed boundary even when the shell outlined a completed boundary', async () => {
@@ -1349,6 +1373,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <body data-x="">Loading B</body>
       </html>,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
 
     await resolveB();
 
