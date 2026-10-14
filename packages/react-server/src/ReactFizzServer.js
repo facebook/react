@@ -4128,7 +4128,7 @@ function trackPostpone(
         }
       }
       // We postponed directly inside the Suspense boundary so we mark this for resuming.
-      boundaryNode[3] = segment.id;
+      setRootReplaySlot(boundaryNode, segment.id);
       return;
     }
     // Otherwise, fall through to add the child node.
@@ -4163,7 +4163,7 @@ function trackPostpone(
         ];
         addToReplayParent(resumableNode, keyPath[0], trackedPostpones);
       } else {
-        resumableNode[3] = segment.id;
+        setRootReplaySlot(resumableNode, segment.id);
       }
     }
   } else {
@@ -4204,6 +4204,13 @@ function trackPostpone(
     }
     slots[task.childIndex] = segment.id;
   }
+}
+
+function setRootReplaySlot(node: ReplayNode, segmentId: number): void {
+  // Resuming the whole node also renders its children, so their replay paths
+  // must not remain in the postponed state.
+  node[2].length = 0;
+  node[3] = segmentId;
 }
 
 // In case a boundary errors, we need to stop tracking it because we won't
@@ -6636,7 +6643,10 @@ function addToReplayParent(
       workingMap.set(parentKeyPath, parentNode);
       addToReplayParent(parentNode, parentKeyPath[0], trackedPostpones);
     }
-    parentNode[2].push(node);
+    // A root slot in this parent also renders the new child on resume.
+    if (typeof parentNode[3] !== 'number') {
+      parentNode[2].push(node);
+    }
   }
 }
 

@@ -988,6 +988,70 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
+  it('resumes an aborted prerender with children in a component', async () => {
+    const never = new Promise(() => {});
+    const controller = new AbortController();
+    let prerendering = true;
+
+    function Pending() {
+      if (prerendering) {
+        React.use(never);
+      }
+      return 'First';
+    }
+
+    function Abort() {
+      if (prerendering) {
+        controller.abort('prerender abort');
+      }
+      return 'Second';
+    }
+
+    function Content() {
+      return (
+        <>
+          <Pending />
+          <Abort />
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Content />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let pendingResult;
+    await serverAct(() => {
+      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError() {},
+      });
+    });
+    const prerendered = await pendingResult;
+
+    expect(prerendered.postponed).not.toBe(null);
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    prerendering = false;
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
+    );
+    await readIntoContainer(resumed);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['First', 'Second']}</div>,
+    );
+  });
+
   it('can prerender a preamble', async () => {
     const errors = [];
 
