@@ -4196,10 +4196,9 @@ function trackPostpone(
         if (slots === null) {
           slots = resumableNode[3] = {} as {[index: number]: number};
         } else if (typeof slots === 'number') {
-          throw new Error(
-            'It should not be possible to postpone both at the root of an element ' +
-              'as well as a slot below. This is a bug in React.',
-          );
+          // The parent task was aborted after it spawned this child task.
+          // Resuming the parent also renders this child, so its slot is redundant.
+          return;
         }
       }
     }
