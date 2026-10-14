@@ -4196,9 +4196,10 @@ function trackPostpone(
         if (slots === null) {
           slots = resumableNode[3] = {} as {[index: number]: number};
         } else if (typeof slots === 'number') {
-          // The parent task was aborted after it spawned this child task.
-          // Resuming the parent also renders this child, so its slot is redundant.
-          return;
+          throw new Error(
+            'It should not be possible to postpone both at the root of an element ' +
+              'as well as a slot below. This is a bug in React.',
+          );
         }
       }
     }
@@ -5367,8 +5368,6 @@ function retryRenderTask(
   const chunkLength = segment.chunks.length;
   // Used to detect forward progress if we hit a stack overflow below.
   const startNode = task.node;
-  const startKeyPath = task.keyPath;
-  const startChildIndex = task.childIndex;
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -5415,8 +5414,6 @@ function retryRenderTask(
       // Restore the parent instead of clearing this field because finishing
       // can reenter Fizz and abort an outer render that is still on the stack.
       request.currentTask = prevTask;
-      task.keyPath = startKeyPath;
-      task.childIndex = startChildIndex;
       abortUnwoundTask(task, request);
       return;
     }
