@@ -4297,7 +4297,6 @@ describe.each(['node', 'edge'])('Flight observable fuzz (%s)', host => {
       await input.until(watched.settled, 'Set array cycle');
       watched.recheck();
     });
-    // This simpler queued-stream fixture already works on the original reader.
     it('preserves two queued Set items', () =>
       runCase(['stream-queued', 1, 'early', 0]));
     // Representative source-writer omissions. Wider sweeps recognize only
