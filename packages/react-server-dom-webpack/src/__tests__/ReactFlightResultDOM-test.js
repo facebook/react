@@ -291,6 +291,40 @@ describe('ReactFlightResultDOM', () => {
     });
   }
 
+  it('keeps large text identical in direct and encoded readers', async () => {
+    const short = 'x'.repeat(1022) + '\ud800';
+    const large = 'x'.repeat(1023) + '\ud800';
+    const expected = 'x'.repeat(1023) + '\ufffd';
+    const model = {
+      short,
+      large,
+      nested: [large],
+      pending: Promise.resolve(large),
+    };
+    const result = await serverAct(() =>
+      ReactServerDOMServer.renderToResult(model),
+    );
+    const direct = await createResponse(result);
+    const {writable, readable} = getTestStream();
+    await serverAct(() => {
+      ReactServerDOMServer.renderResultToPipeableStream(
+        result,
+        webpackMap,
+      ).pipe(writable);
+    });
+    const encoded =
+      await ReactServerDOMClient.createFromReadableStream(readable);
+    const consumers = [direct, encoded];
+    for (let i = 0; i < consumers.length; i++) {
+      const value = consumers[i];
+      expect(value.short).toBe(short);
+      expect(value.large).toBe(expected);
+      expect(value.nested).toEqual([expected]);
+      expect(await value.pending).toBe(expected);
+    }
+    expect(model.large).toBe(large);
+  });
+
   function createUnclosingStream(
     stream: ReadableStream<Uint8Array>,
   ): ReadableStream<Uint8Array> {

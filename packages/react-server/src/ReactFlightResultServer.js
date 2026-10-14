@@ -1631,6 +1631,12 @@ function renderModelDestructive(
   if (value === null || typeof value !== 'object') {
     if (typeof value === 'string') {
       serializedSize += value.length;
+      // Flight's large text rows encode each string as UTF-8. Keep the shared
+      // model consistent with that boundary before consumers can reuse it.
+      if (value.length >= 1024) {
+        // $FlowFixMe[prop-missing] Flow's String definition lacks toWellFormed.
+        value = value.toWellFormed();
+      }
     }
     if (
       typeof value === 'string' &&
