@@ -985,110 +985,118 @@ function renderElement(
   type: any,
   element: ReactElement,
 ): ReactClientValue {
-  const key = element.key;
-  const props = element.props;
-  const ref = props.ref;
-  if (ref !== null && ref !== undefined) {
-    throw new Error(
-      'Refs cannot be used in Server Components, nor passed to Client Components.',
-    );
-  }
-  if (
-    typeof type === 'function' &&
-    !isClientReference(type) &&
-    !isOpaqueTemporaryReference(type)
-  ) {
-    return renderFunctionComponent(request, task, type, props, element);
-  }
-
-  if (type === REACT_FRAGMENT_TYPE && key === null) {
+  while (true) {
+    const key = element.key;
+    const props = element.props;
+    const ref = props.ref;
+    if (ref !== null && ref !== undefined) {
+      throw new Error(
+        'Refs cannot be used in Server Components, nor passed to Client Components.',
+      );
+    }
     if (
-      __DEV__ &&
-      (element._store.validated === 2 || request.unkeyedElements.has(element))
+      typeof type === 'function' &&
+      !isClientReference(type) &&
+      !isOpaqueTemporaryReference(type)
     ) {
-      const componentDebugInfo: ReactComponentInfo = {
-        name: 'Fragment',
-        env: (0, request.environmentName)(),
-        key,
-        owner: task.debugOwner,
-        stack:
-          task.debugStack === null
-            ? null
-            : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
-        props,
-        debugStack: task.debugStack,
-        debugTask: task.debugTask,
-      };
-      warnForMissingKey(request, key, componentDebugInfo, task.debugTask);
+      return renderFunctionComponent(request, task, type, props, element);
     }
-    const prevImplicitSlot = task.implicitSlot;
-    const renderedModels = getRenderedModels(
-      request,
-      element as any,
-      task.keyPath,
-      task.implicitSlot,
-    );
-    if (task.keyPath === null) {
-      task.implicitSlot = true;
-    }
-    const resolvedModel = renderModelDestructive(
-      request,
-      task,
-      emptyRoot,
-      '',
-      props.children,
-    );
-    setRenderedModel(
-      renderedModels,
-      element,
-      resolvedModel === undefined ? UNDEFINED_MODEL : resolvedModel,
-    );
-    task.implicitSlot = prevImplicitSlot;
-    return resolvedModel;
-  }
 
-  if (type != null && typeof type === 'object' && !isClientReference(type)) {
-    switch (type.$$typeof) {
-      case REACT_LAZY_TYPE: {
-        let wrappedType;
-        if (__DEV__) {
-          wrappedType = callLazyInitInDEV(type);
-        } else {
-          const payload = type._payload;
-          const init = type._init;
-          wrappedType = init(payload);
-        }
-        if (request.status === ABORTING || request.status === CLOSED) {
-          throw request.fatalError;
-        }
-        return renderElement(request, task, wrappedType, element);
-      }
-      case REACT_FORWARD_REF_TYPE: {
-        return renderFunctionComponent(
-          request,
-          task,
-          type.render,
+    if (type === REACT_FRAGMENT_TYPE && key === null) {
+      if (
+        __DEV__ &&
+        (element._store.validated === 2 || request.unkeyedElements.has(element))
+      ) {
+        const componentDebugInfo: ReactComponentInfo = {
+          name: 'Fragment',
+          env: (0, request.environmentName)(),
+          key,
+          owner: task.debugOwner,
+          stack:
+            task.debugStack === null
+              ? null
+              : filterStackTrace(request, parseStackTrace(task.debugStack, 1)),
           props,
-          element,
+          debugStack: task.debugStack,
+          debugTask: task.debugTask,
+        };
+        warnForMissingKey(request, key, componentDebugInfo, task.debugTask);
+      }
+      const prevImplicitSlot = task.implicitSlot;
+      const renderedModels = getRenderedModels(
+        request,
+        element as any,
+        task.keyPath,
+        task.implicitSlot,
+      );
+      if (task.keyPath === null) {
+        task.implicitSlot = true;
+      }
+      const resolvedModel = renderModelDestructive(
+        request,
+        task,
+        emptyRoot,
+        '',
+        props.children,
+      );
+      setRenderedModel(
+        renderedModels,
+        element,
+        resolvedModel === undefined ? UNDEFINED_MODEL : resolvedModel,
+      );
+      task.implicitSlot = prevImplicitSlot;
+      return resolvedModel;
+    }
+
+    if (type != null && typeof type === 'object' && !isClientReference(type)) {
+      switch (type.$$typeof) {
+        case REACT_LAZY_TYPE: {
+          let wrappedType;
+          if (__DEV__) {
+            wrappedType = callLazyInitInDEV(type);
+          } else {
+            const payload = type._payload;
+            const init = type._init;
+            wrappedType = init(payload);
+          }
+          if (request.status === ABORTING || request.status === CLOSED) {
+            throw request.fatalError;
+          }
+          type = wrappedType;
+          continue;
+        }
+        case REACT_FORWARD_REF_TYPE: {
+          return renderFunctionComponent(
+            request,
+            task,
+            type.render,
+            props,
+            element,
+          );
+        }
+        case REACT_MEMO_TYPE: {
+          type = type.type;
+          continue;
+        }
+      }
+    } else if (typeof type === 'string') {
+      const parentFormatContext = task.formatContext;
+      const newFormatContext = getChildFormatContext(
+        parentFormatContext,
+        type,
+        props,
+      );
+      if (parentFormatContext !== newFormatContext && props.children != null) {
+        outlineModelWithFormatContext(
+          request,
+          props.children,
+          newFormatContext,
         );
       }
-      case REACT_MEMO_TYPE: {
-        return renderElement(request, task, type.type, element);
-      }
     }
-  } else if (typeof type === 'string') {
-    const parentFormatContext = task.formatContext;
-    const newFormatContext = getChildFormatContext(
-      parentFormatContext,
-      type,
-      props,
-    );
-    if (parentFormatContext !== newFormatContext && props.children != null) {
-      outlineModelWithFormatContext(request, props.children, newFormatContext);
-    }
-  }
 
-  return renderClientElement(request, task, type, element);
+    return renderClientElement(request, task, type, element);
+  }
 }
 
 function validateSymbol(
