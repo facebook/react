@@ -2251,6 +2251,16 @@ function renderSuspenseList(
 ): void {
   const children: any = props.children;
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
+  if (
+    revealOrder !== undefined &&
+    revealOrder !== 'independent' &&
+    canPostponeAbortedRenderTask(request, task)
+  ) {
+    // Rows have separate completion bookkeeping. Replay the whole list instead
+    // of starting new rows in an already aborted task.
+    // eslint-disable-next-line no-throw-literal
+    throw null;
+  }
   // TODO: Support tail hidden/collapsed modes.
   // const tailMode: SuspenseListTailMode = props.tail;
   if (revealOrder !== 'independent' && revealOrder !== 'together') {
@@ -2262,6 +2272,10 @@ function renderSuspenseList(
     const iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
       const iterator = iteratorFn.call(children);
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateIterable(task, children, -1, iterator, iteratorFn);
@@ -2271,12 +2285,20 @@ function renderSuspenseList(
         // a full set to be loaded up front to support Async Iterable.
         // When we have that, we shouldn't buffer anymore.
         let step = iterator.next();
+        if (request.aborted) {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
+        }
         if (!step.done) {
           const rows = [];
           do {
             rows.push(step.value);
             step = iterator.next();
           } while (!step.done);
+          if (request.aborted) {
+            // eslint-disable-next-line no-throw-literal
+            throw null;
+          }
           renderSuspenseListRows(request, task, keyPath, children, revealOrder);
         }
         return;
@@ -2289,6 +2311,10 @@ function renderSuspenseList(
       const iterator: AsyncIterator<ReactNodeList> = (children as any)[
         ASYNC_ITERATOR
       ]();
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateAsyncIterable(task, children as any, -1, iterator);
@@ -2335,6 +2361,10 @@ function renderSuspenseList(
             rows.push(step.value);
             step = unwrapThenable(iterator.next());
           }
+        }
+        if (request.aborted) {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
         }
         renderSuspenseListRows(request, task, keyPath, rows, revealOrder);
         return;
@@ -2851,6 +2881,10 @@ function renderForwardRef(
     propsWithoutRef,
     ref,
   );
+  if (request.aborted) {
+    // eslint-disable-next-line no-throw-literal
+    throw null;
+  }
   const hasId = checkDidRenderIdHook();
   const actionStateCount = getActionStateCount();
   const actionStateMatchingIndex = getActionStateMatchingIndex();
@@ -2899,6 +2933,10 @@ function renderContextConsumer(
 
   const newValue = readContext(context);
   const newChildren = render(newValue);
+  if (request.aborted) {
+    // eslint-disable-next-line no-throw-literal
+    throw null;
+  }
 
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
@@ -3619,6 +3657,10 @@ function retryNode(request: Request, task: Task): void {
     const iteratorFn = getIteratorFn(node);
     if (iteratorFn) {
       const iterator = iteratorFn.call(node);
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateIterable(task, node, childIndex, iterator, iteratorFn);
@@ -3629,11 +3671,19 @@ function retryNode(request: Request, task: Task): void {
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
         let step = iterator.next();
+        if (request.aborted) {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
+        }
         if (!step.done) {
           const children = [];
           do {
             children.push(step.value);
             step = iterator.next();
+            if (request.aborted) {
+              // eslint-disable-next-line no-throw-literal
+              throw null;
+            }
           } while (!step.done);
           renderChildrenArray(request, task, children, childIndex);
         }
@@ -3648,6 +3698,10 @@ function retryNode(request: Request, task: Task): void {
       const iterator: AsyncIterator<ReactNodeList> = (node as any)[
         ASYNC_ITERATOR
       ]();
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateAsyncIterable(task, node as any, childIndex, iterator);
@@ -3689,9 +3743,17 @@ function retryNode(request: Request, task: Task): void {
 
         if (!done) {
           let step = unwrapThenable(iterator.next());
+          if (request.aborted) {
+            // eslint-disable-next-line no-throw-literal
+            throw null;
+          }
           while (!step.done) {
             children.push(step.value);
             step = unwrapThenable(iterator.next());
+            if (request.aborted) {
+              // eslint-disable-next-line no-throw-literal
+              throw null;
+            }
           }
         }
         renderChildrenArray(request, task, children, childIndex);
@@ -3713,10 +3775,15 @@ function retryNode(request: Request, task: Task): void {
       // Clear any previous thenable state that was created by the unwrapping.
       task.thenableState = null;
       const thenable: Thenable<ReactNodeList> = maybeUsable as any;
+      const resolvedNode = unwrapThenable(thenable);
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       const result = renderNodeDestructive(
         request,
         task,
-        unwrapThenable(thenable),
+        resolvedNode,
         childIndex,
       );
       return result;
@@ -4306,6 +4373,97 @@ function spawnNewSuspendedRenderTask(
   );
 }
 
+function spawnNewPostponedTask(
+  request: Request,
+  task: RenderTask,
+  thenableState: ThenableState | null,
+  node: ReactNodeList,
+  childIndex: number,
+): RenderTask {
+  const segment = task.blockedSegment;
+  const insertionIndex = segment.chunks.length;
+  const newSegment = createPendingSegment(
+    request,
+    insertionIndex,
+    null,
+    task.formatContext,
+    segment.lastPushedText,
+    true,
+  );
+  segment.children.push(newSegment);
+  segment.lastPushedText = false;
+  return createRenderTask(
+    request,
+    thenableState,
+    node,
+    childIndex,
+    task.blockedBoundary,
+    newSegment,
+    task.blockedPreamble,
+    task.hoistableState,
+    task.abortSet,
+    task.keyPath,
+    task.formatContext,
+    task.context,
+    task.treeContext,
+    task.row,
+    task.componentStack,
+    !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ ? task.debugTask : null,
+  );
+}
+
+function postponeAbortedRenderNode(
+  request: Request,
+  task: Task,
+  node: ReactNodeList,
+  childIndex: number,
+  thenableState: ThenableState | null,
+): void {
+  // Preserve the segment rendered so far and leave a hole at this node. The
+  // request has already been aborted, so this new task must be finished now
+  // rather than scheduled for another attempt.
+  // canPostponeAbortedRenderTask has checked that this task has a segment.
+  const renderTask: RenderTask = task as any;
+  const postponedTask = spawnNewPostponedTask(
+    request,
+    renderTask,
+    thenableState,
+    node,
+    childIndex,
+  );
+  if (__DEV__) {
+    abortTaskDEV(postponedTask, request);
+  } else {
+    abortTask(postponedTask, request);
+  }
+  postponedTask.abortSet.delete(postponedTask);
+  if (__DEV__) {
+    finishAbortedTaskDEV(postponedTask, request, request.fatalError);
+  } else {
+    finishAbortedTask(postponedTask, request, request.fatalError);
+  }
+}
+
+function canPostponeAbortedRenderTask(request: Request, task: Task): boolean {
+  const segment = task.blockedSegment;
+  // Replay tasks and SuspenseList rows have separate completion bookkeeping.
+  // An already assigned segment ID belongs to a resumed slot, which also has
+  // separate replay bookkeeping.
+  return (
+    request.aborted &&
+    request.trackedPostpones !== null &&
+    !isRecoverableError(request.fatalError) &&
+    task.blockedBoundary !== null &&
+    task.row === null &&
+    segment !== null &&
+    segment.id === -1 &&
+    // A fallback may still need to abort the surrounding boundary. Do not
+    // continue it into the creation of a new primary task after abort.
+    segment.boundary === null
+  );
+}
+
 // This is a non-destructive form of rendering a node. If it suspends it spawns
 // a new task and restores the context of this task to what it was before.
 function renderNode(
@@ -4326,6 +4484,7 @@ function renderNode(
   const previousComponentStack = task.componentStack;
   const previousDebugTask = __DEV__ ? task.debugTask : null;
   let x;
+  let postponed = false;
   // Store how much we've pushed at this point so we can reset it in case something
   // suspended partially through writing something.
   const segment = task.blockedSegment;
@@ -4451,9 +4610,25 @@ function renderNode(
           : thrownValue;
 
       if (request.aborted) {
-        // We are aborting so we can just bubble up to the task by falling through
+        if (canPostponeAbortedRenderTask(request, task)) {
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
+          postponeAbortedRenderNode(
+            request,
+            task,
+            node,
+            childIndex,
+            thenableState,
+          );
+          postponed = true;
+        }
+      } else if (
+        typeof x === 'object' &&
         // $FlowFixMe[invalid-compare]
-      } else if (typeof x === 'object' && x !== null) {
+        x !== null
+      ) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = x as any;
@@ -4542,6 +4717,14 @@ function renderNode(
 
   // Restore all active ReactContexts to what they were before.
   switchContext(previousContext);
+
+  if (postponed) {
+    task.componentStack = previousComponentStack;
+    if (__DEV__) {
+      task.debugTask = previousDebugTask;
+    }
+    return;
+  }
 
   throw x;
 }
