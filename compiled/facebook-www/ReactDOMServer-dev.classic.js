@@ -7330,10 +7330,7 @@ __DEV__ &&
               addToReplayParent(boundaryNode, keyPath[0], trackedPostpones);
           else if (((request = boundaryNode[3]), null === request))
             request = boundaryNode[3] = {};
-          else if ("number" === typeof request)
-            throw Error(
-              "It should not be possible to postpone both at the root of an element as well as a slot below. This is a bug in React."
-            );
+          else if ("number" === typeof request) return;
           request[task.childIndex] = segment.id;
         }
       }
@@ -10769,5 +10766,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-classic-07dde64d-20261013";
+    exports.version = "19.3.0-www-classic-e25b4a4c-20261014";
   })();

@@ -23,15 +23,8 @@ var decoderOptions = { stream: !0 },
     "undefined" === typeof window ||
     "undefined" === typeof window.document ||
     "undefined" === typeof window.document.createElement
-  );
-function resolveServerReference(config, id) {
-  return {
-    $$typeof: Symbol.for("react.client.reference"),
-    $$id: id,
-    $$hblp: null
-  };
-}
-var asyncModuleCache = new Map();
+  ),
+  asyncModuleCache = new Map();
 function preloadModule(metadata) {
   if (!canUseDOM) return null;
   var jsr = require("JSResource")(metadata.$$id);
@@ -153,11 +146,8 @@ function processReply(
       entry.done
         ? ((entry = nextPartId++),
           data.append(formFieldPrefix + entry, new Blob(buffer)),
-          data.append(
-            formFieldPrefix + streamId,
-            '"$o' + entry.toString(16) + '"'
-          ),
-          data.append(formFieldPrefix + streamId, "C"),
+          data.append(streamPrefix, '"$o' + entry.toString(16) + '"'),
+          data.append(streamPrefix, "C"),
           pendingParts--,
           0 === pendingParts && resolve(data))
         : (buffer.push(entry.value),
@@ -167,20 +157,21 @@ function processReply(
     var data = formData;
     pendingParts++;
     var streamId = nextPartId++,
-      buffer = [];
+      buffer = [],
+      streamPrefix = formFieldPrefix + "S" + streamId;
     reader.read(new Uint8Array(1024)).then(progress, reject);
     return "$r" + streamId.toString(16);
   }
   function serializeReader(reader) {
     function progress(entry) {
       if (entry.done)
-        data.append(formFieldPrefix + streamId, "C"),
+        data.append(streamPrefix, "C"),
           pendingParts--,
           0 === pendingParts && resolve(data);
       else
         try {
           var partJSON = JSON.stringify(entry.value, resolveToJSON);
-          data.append(formFieldPrefix + streamId, partJSON);
+          data.append(streamPrefix, partJSON);
           reader.read().then(progress, reject);
         } catch (x) {
           reject(x);
@@ -189,7 +180,8 @@ function processReply(
     null === formData && (formData = new FormData());
     var data = formData;
     pendingParts++;
-    var streamId = nextPartId++;
+    var streamId = nextPartId++,
+      streamPrefix = formFieldPrefix + "S" + streamId;
     reader.read().then(progress, reject);
     return "$R" + streamId.toString(16);
   }
@@ -204,12 +196,11 @@ function processReply(
   function serializeAsyncIterable(iterable, iterator) {
     function progress(entry) {
       if (entry.done) {
-        if (void 0 === entry.value)
-          data.append(formFieldPrefix + streamId, "C");
+        if (void 0 === entry.value) data.append(streamPrefix, "C");
         else
           try {
             var partJSON = JSON.stringify(entry.value, resolveToJSON);
-            data.append(formFieldPrefix + streamId, "C" + partJSON);
+            data.append(streamPrefix, "C" + partJSON);
           } catch (x) {
             reject(x);
             return;
@@ -218,11 +209,11 @@ function processReply(
         0 === pendingParts && resolve(data);
       } else
         try {
-          var partJSON$0 = JSON.stringify(entry.value, resolveToJSON);
-          data.append(formFieldPrefix + streamId, partJSON$0);
+          var partJSON$3 = JSON.stringify(entry.value, resolveToJSON);
+          data.append(streamPrefix, partJSON$3);
           iterator.next().then(progress, reject);
-        } catch (x$1) {
-          reject(x$1);
+        } catch (x$4) {
+          reject(x$4);
         }
     }
     null === formData && (formData = new FormData());
@@ -230,6 +221,7 @@ function processReply(
     pendingParts++;
     var streamId = nextPartId++;
     iterable = iterable === iterator;
+    var streamPrefix = formFieldPrefix + "S" + streamId;
     iterator.next().then(progress, reject);
     return "$" + (iterable ? "x" : "X") + streamId.toString(16);
   }
@@ -269,20 +261,20 @@ function processReply(
               "function" === typeof x.then
             ) {
               pendingParts++;
-              var lazyId$2 = nextPartId++;
+              var lazyId$5 = nextPartId++;
               parentReference = function () {
                 try {
-                  var partJSON$3 = serializeModel(value, lazyId$2),
-                    data$4 = formData;
-                  data$4.append(formFieldPrefix + lazyId$2, partJSON$3);
+                  var partJSON$6 = serializeModel(value, lazyId$5),
+                    data$7 = formData;
+                  data$7.append(formFieldPrefix + lazyId$5, partJSON$6);
                   pendingParts--;
-                  0 === pendingParts && resolve(data$4);
+                  0 === pendingParts && resolve(data$7);
                 } catch (reason) {
                   reject(reason);
                 }
               };
               x.then(parentReference, parentReference);
-              return "$" + lazyId$2.toString(16);
+              return "$" + lazyId$5.toString(16);
             }
             reject(x);
             return null;
@@ -303,12 +295,12 @@ function processReply(
         value.then(function (partValue) {
           try {
             var previousReference = writtenObjects.get(partValue);
-            var partJSON$6 =
+            var partJSON$9 =
               void 0 !== previousReference
                 ? JSON.stringify(previousReference)
                 : serializeModel(partValue, promiseId);
             partValue = formData;
-            partValue.append(formFieldPrefix + promiseId, partJSON$6);
+            partValue.append(formFieldPrefix + promiseId, partJSON$9);
             pendingParts--;
             0 === pendingParts && resolve(partValue);
           } catch (reason) {
@@ -331,11 +323,11 @@ function processReply(
       if (isArrayImpl(value)) return value;
       if (value instanceof FormData) {
         null === formData && (formData = new FormData());
-        var data$10 = formData;
+        var data$13 = formData;
         key = nextPartId++;
         var prefix = formFieldPrefix + "_" + key + "_";
         value.forEach(function (originalValue, originalKey) {
-          data$10.append(prefix + originalKey, originalValue);
+          data$13.append(prefix + originalKey, originalValue);
         });
         return "$K" + key.toString(16);
       }
@@ -534,7 +526,8 @@ function createBoundServerReference(metaData, callServer) {
 }
 var hasOwnProperty = Object.prototype.hasOwnProperty,
   ObjectPrototype = Object.prototype,
-  ArrayPrototype = Array.prototype;
+  ArrayPrototype = Array.prototype,
+  RESPONSE_SYMBOL = Symbol();
 function ReactPromise(status, value, reason) {
   this.status = status;
   this.value = value;
@@ -698,11 +691,20 @@ function triggerErrorOnChunk(response, chunk, error) {
     null !== listeners && rejectChunk(response, listeners, error);
   }
 }
+function createResolvedModelChunk(response, value) {
+  var $jscomp$compprop0 = {};
+  return new ReactPromise(
+    "resolved_model",
+    value,
+    (($jscomp$compprop0[RESPONSE_SYMBOL] = response), $jscomp$compprop0)
+  );
+}
 function createResolvedIteratorResultChunk(response, value, done) {
+  var $jscomp$compprop1 = {};
   return new ReactPromise(
     "resolved_model",
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + "}",
-    response
+    (($jscomp$compprop1[RESPONSE_SYMBOL] = response), $jscomp$compprop1)
   );
 }
 function resolveIteratorResultChunk(response, chunk, value, done) {
@@ -720,7 +722,8 @@ function resolveModelChunk(response, chunk, value) {
       rejectListeners = chunk.reason;
     chunk.status = "resolved_model";
     chunk.value = value;
-    chunk.reason = response;
+    value = {};
+    chunk.reason = ((value[RESPONSE_SYMBOL] = response), value);
     null !== resolveListeners &&
       (initializeModelChunk(chunk),
       wakeChunkIfInitialized(
@@ -757,7 +760,7 @@ function initializeModelChunk(chunk) {
   var prevHandler = initializingHandler;
   initializingHandler = null;
   var resolvedModel = chunk.value,
-    response = chunk.reason;
+    response = chunk.reason[RESPONSE_SYMBOL];
   chunk.status = "blocked";
   chunk.value = null;
   chunk.reason = null;
@@ -941,19 +944,19 @@ function fulfillReference(response, reference, value) {
       value.$$typeof === REACT_LAZY_TYPE;
 
     ) {
-      var referencedChunk$24 = value._payload;
-      if (referencedChunk$24 === handler.chunk) value = handler.value;
+      var referencedChunk$27 = value._payload;
+      if (referencedChunk$27 === handler.chunk) value = handler.value;
       else {
-        switch (referencedChunk$24.status) {
+        switch (referencedChunk$27.status) {
           case "resolved_model":
-            initializeModelChunk(referencedChunk$24);
+            initializeModelChunk(referencedChunk$27);
             break;
           case "resolved_module":
-            initializeModuleChunk(referencedChunk$24);
+            initializeModuleChunk(referencedChunk$27);
         }
-        switch (referencedChunk$24.status) {
+        switch (referencedChunk$27.status) {
           case "fulfilled":
-            value = referencedChunk$24.value;
+            value = referencedChunk$27.value;
             continue;
         }
         break;
@@ -1026,21 +1029,26 @@ function waitForReference(
   return null;
 }
 function loadServerReference(response, metaData, parentObject, key) {
+  if ("then" === key) return null;
+  var id = metaData.id;
+  if ("string" !== typeof id) return null;
   if (!response._serverReferenceConfig)
     return createBoundServerReference(metaData, response._callServer);
-  var serverReference = resolveServerReference(
-      response._serverReferenceConfig,
-      metaData.id
-    ),
-    promise = preloadModule(serverReference);
-  if (promise)
-    metaData.bound && (promise = Promise.all([promise, metaData.bound]));
-  else if (metaData.bound) promise = Promise.resolve(metaData.bound);
+  var serverReference = {
+      $$typeof: Symbol.for("react.client.reference"),
+      $$id: id,
+      $$hblp: null
+    },
+    bound = metaData.bound;
+  if ((metaData = preloadModule(serverReference)))
+    bound instanceof ReactPromise &&
+      (metaData = Promise.all([metaData, bound]));
+  else if (bound instanceof ReactPromise) metaData = Promise.resolve(bound);
   else
     return (
-      (promise = requireModule(serverReference)),
-      registerBoundServerReference(promise, metaData.id, metaData.bound),
-      promise
+      (metaData = requireModule(serverReference)),
+      registerBoundServerReference(metaData, id, bound),
+      metaData
     );
   if (initializingHandler) {
     var handler = initializingHandler;
@@ -1054,15 +1062,16 @@ function loadServerReference(response, metaData, parentObject, key) {
       deps: 1,
       errored: !1
     };
-  promise.then(
+  metaData.then(
     function () {
       var resolvedValue = requireModule(serverReference);
-      if (metaData.bound) {
-        var boundArgs = metaData.bound.value.slice(0);
-        boundArgs.unshift(null);
-        resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+      if (bound) {
+        var promiseValue = bound.value;
+        promiseValue = isArrayImpl(promiseValue) ? promiseValue.slice(0) : [];
+        promiseValue.unshift(null);
+        resolvedValue = resolvedValue.bind.apply(resolvedValue, promiseValue);
       }
-      registerBoundServerReference(resolvedValue, metaData.id, metaData.bound);
+      registerBoundServerReference(resolvedValue, id, bound);
       "__proto__" !== key && (parentObject[key] = resolvedValue);
       "" === key && null === handler.value && (handler.value = resolvedValue);
       if (
@@ -1071,9 +1080,9 @@ function loadServerReference(response, metaData, parentObject, key) {
         null !== handler.value &&
         handler.value.$$typeof === REACT_ELEMENT_TYPE
       )
-        switch (((boundArgs = handler.value), key)) {
+        switch (((promiseValue = handler.value), key)) {
           case "3":
-            boundArgs.props = resolvedValue;
+            promiseValue.props = resolvedValue;
         }
       handler.deps--;
       initializeChunkIfUnblocked(response, handler);
@@ -1262,8 +1271,8 @@ function createFormData(response, model) {
 function extractIterator(response, model) {
   return model[Symbol.iterator]();
 }
-function createModel(response, model) {
-  return model;
+function createModel(response, model, parentObject, key) {
+  return "then" === key && "function" === typeof model ? null : model;
 }
 function parseModelString(response, parentObject, key, value) {
   if ("$" === value[0]) {
@@ -1474,7 +1483,7 @@ function startReadableStream(response, id, type) {
     },
     enqueueModel: function (json) {
       if (null === previousBlockedChunk) {
-        var chunk = new ReactPromise("resolved_model", json, response);
+        var chunk = createResolvedModelChunk(response, json);
         initializeModelChunk(chunk);
         "fulfilled" === chunk.status
           ? controller.enqueue(chunk.value)
@@ -1489,8 +1498,8 @@ function startReadableStream(response, id, type) {
             (previousBlockedChunk = chunk));
       } else {
         chunk = previousBlockedChunk;
-        var chunk$36 = new ReactPromise("pending", null, null);
-        chunk$36.then(
+        var chunk$39 = new ReactPromise("pending", null, null);
+        chunk$39.then(
           function (v) {
             return controller.enqueue(v);
           },
@@ -1498,10 +1507,10 @@ function startReadableStream(response, id, type) {
             return controller.error(e);
           }
         );
-        previousBlockedChunk = chunk$36;
+        previousBlockedChunk = chunk$39;
         chunk.then(function () {
-          previousBlockedChunk === chunk$36 && (previousBlockedChunk = null);
-          resolveModelChunk(response, chunk$36, json);
+          previousBlockedChunk === chunk$39 && (previousBlockedChunk = null);
+          resolveModelChunk(response, chunk$39, json);
         });
       }
     },
@@ -1662,8 +1671,8 @@ function mergeBuffer(buffer, lastChunk) {
   for (var l = buffer.length, byteLength = lastChunk.length, i = 0; i < l; i++)
     byteLength += buffer[i].byteLength;
   byteLength = new Uint8Array(byteLength);
-  for (var i$37 = (i = 0); i$37 < l; i$37++) {
-    var chunk = buffer[i$37];
+  for (var i$40 = (i = 0); i$40 < l; i$40++) {
+    var chunk = buffer[i$40];
     byteLength.set(chunk, i);
     i += chunk.byteLength;
   }
@@ -1793,7 +1802,7 @@ function processFullBinaryRow(response, streamState, id, tag, buffer, chunk) {
       (tag = response._chunks),
         (chunk = tag.get(id))
           ? resolveModelChunk(response, chunk, buffer)
-          : ((response = new ReactPromise("resolved_model", buffer, response)),
+          : ((response = createResolvedModelChunk(response, buffer)),
             tag.set(id, response));
   }
 }

@@ -3870,6 +3870,39 @@ __DEV__ &&
         return metadata.value;
       throw metadata.reason;
     }
+    function appendBackingEntry(backingStore, value, key) {
+      var prefix = backingStore.prefix;
+      if (key.startsWith(prefix)) {
+        switch (key[prefix.length]) {
+          case "_":
+            prefix = backingStore.referencedEntries;
+            null === prefix && (prefix = backingStore.referencedEntries = []);
+            prefix.push([key, value]);
+            return;
+          case "S":
+            "string" === typeof value &&
+              ((prefix = backingStore.streamChunks),
+              null === prefix &&
+                (prefix = backingStore.streamChunks = new Map()),
+              (backingStore = prefix.get(key)),
+              void 0 === backingStore
+                ? prefix.set(key, [value])
+                : backingStore.push(value));
+            return;
+        }
+        "string" === typeof value
+          ? ((prefix = backingStore.stringChunks),
+            null === prefix && (prefix = backingStore.stringChunks = new Map()),
+            prefix.set(key, value))
+          : ((prefix = backingStore.blobs),
+            null === prefix && (prefix = backingStore.blobs = new Map()),
+            prefix.set(key, value));
+      }
+    }
+    function getBackingBlob(backingStore, key) {
+      backingStore = backingStore.blobs;
+      return null === backingStore ? void 0 : backingStore.get(key);
+    }
     function ReactPromise(status, value, reason) {
       this.status = status;
       this.value = value;
@@ -4205,15 +4238,18 @@ __DEV__ &&
     function getChunk(response, id) {
       var chunks = response._chunks,
         chunk = chunks.get(id);
-      chunk ||
-        ((chunk = response._formData.data.get(response._prefix + id)),
-        (chunk =
+      if (!chunk) {
+        chunk = response._prefix;
+        var stringChunks = response._formData.stringChunks;
+        chunk = null === stringChunks ? void 0 : stringChunks.get(chunk + id);
+        chunk =
           "string" === typeof chunk
             ? createResolvedModelChunk(response, chunk, id)
             : response._closed
               ? new ReactPromise("rejected", null, response._closedReason)
-              : new ReactPromise("pending", null, null)),
-        chunks.set(id, chunk));
+              : new ReactPromise("pending", null, null);
+        chunks.set(id, chunk);
+      }
       return chunk;
     }
     function fulfillReference(response, reference, value, arrayRoot) {
@@ -4481,7 +4517,7 @@ __DEV__ &&
           Error("Already initialized typed array.")
         )
       );
-      reference = response._formData.data.get(key).arrayBuffer();
+      reference = getBackingBlob(response._formData, key).arrayBuffer();
       if (initializingHandler) {
         var handler = initializingHandler;
         handler.deps++;
@@ -4525,15 +4561,17 @@ __DEV__ &&
       var chunks = response._chunks;
       stream = new ReactPromise("fulfilled", stream, controller);
       chunks.set(id, stream);
-      response = response._formData.data.getAll(response._prefix + id);
-      for (id = 0; id < response.length; id++)
-        (chunks = response[id]),
-          "string" === typeof chunks &&
-            ("C" === chunks[0]
+      chunks = response._prefix;
+      response = response._formData.streamChunks;
+      id = null === response ? void 0 : response.get(chunks + "S" + id);
+      if (void 0 !== id)
+        for (response = 0; response < id.length; response++)
+          (chunks = id[response]),
+            "C" === chunks[0]
               ? controller.close(
                   "C" === chunks ? '"$undefined"' : chunks.slice(1)
                 )
-              : controller.enqueueModel(chunks));
+              : controller.enqueueModel(chunks);
     }
     function parseReadableStream(response, reference, type) {
       function enqueue(value) {
@@ -4698,7 +4736,14 @@ __DEV__ &&
       });
       return iterator;
     }
-    function parseModelString(response, obj, key, value, reference, arrayRoot) {
+    function parseModelString(
+      response,
+      obj,
+      key$jscomp$0,
+      value,
+      reference,
+      arrayRoot
+    ) {
       if ("$" === value[0]) {
         switch (value[1]) {
           case "$":
@@ -4718,7 +4763,7 @@ __DEV__ &&
                 response,
                 arrayRoot,
                 obj,
-                key,
+                key$jscomp$0,
                 null,
                 loadServerReference$1
               )
@@ -4740,41 +4785,44 @@ __DEV__ &&
           case "Q":
             return (
               (arrayRoot = value.slice(2)),
-              getOutlinedModel(response, arrayRoot, obj, key, null, createMap)
+              getOutlinedModel(
+                response,
+                arrayRoot,
+                obj,
+                key$jscomp$0,
+                null,
+                createMap
+              )
             );
           case "W":
             return (
               (arrayRoot = value.slice(2)),
-              getOutlinedModel(response, arrayRoot, obj, key, null, createSet)
+              getOutlinedModel(
+                response,
+                arrayRoot,
+                obj,
+                key$jscomp$0,
+                null,
+                createSet
+              )
             );
           case "K":
-            key = value.slice(2);
-            obj = response._prefix + "_";
-            key = obj + key + "_";
-            arrayRoot = new FormData();
-            for (response = response._formData; ; ) {
-              value = response;
-              reference = value.keys;
-              null === reference &&
-                ((reference = value.keys = Array.from(value.data.keys())),
-                (value.keyPointer = 0));
-              value = reference[value.keyPointer];
-              if (void 0 === value) break;
-              if (value.startsWith(key)) {
-                reference = response.data.getAll(value);
-                for (
-                  var referencedFormDataKey = value.slice(key.length), i = 0;
-                  i < reference.length;
-                  i++
-                )
-                  arrayRoot.append(referencedFormDataKey, reference[i]);
-                reference = response;
-                reference.data.delete(value);
-                reference.keyPointer++;
-              } else if (value.startsWith(obj)) break;
-              else response.keyPointer++;
+            key$jscomp$0 = value.slice(2);
+            obj = response._formData;
+            response = response._prefix + "_" + key$jscomp$0 + "_";
+            key$jscomp$0 = new FormData();
+            arrayRoot = obj.referencedEntries;
+            if (null !== arrayRoot) {
+              for (value = obj.keyPointer; value < arrayRoot.length; ) {
+                reference = arrayRoot[value];
+                var key = reference[0];
+                if (!key.startsWith(response)) break;
+                key$jscomp$0.append(key.slice(response.length), reference[1]);
+                value++;
+              }
+              obj.keyPointer = value;
             }
-            return arrayRoot;
+            return key$jscomp$0;
           case "i":
             return (
               (arrayRoot = value.slice(2)),
@@ -4782,7 +4830,7 @@ __DEV__ &&
                 response,
                 arrayRoot,
                 obj,
-                key,
+                key$jscomp$0,
                 null,
                 extractIterator
               )
@@ -4817,7 +4865,7 @@ __DEV__ &&
               ArrayBuffer,
               1,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "O":
@@ -4827,7 +4875,7 @@ __DEV__ &&
               Int8Array,
               1,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "o":
@@ -4837,7 +4885,7 @@ __DEV__ &&
               Uint8Array,
               1,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "U":
@@ -4847,7 +4895,7 @@ __DEV__ &&
               Uint8ClampedArray,
               1,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "S":
@@ -4857,7 +4905,7 @@ __DEV__ &&
               Int16Array,
               2,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "s":
@@ -4867,7 +4915,7 @@ __DEV__ &&
               Uint16Array,
               2,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "L":
@@ -4877,7 +4925,7 @@ __DEV__ &&
               Int32Array,
               4,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "l":
@@ -4887,7 +4935,7 @@ __DEV__ &&
               Uint32Array,
               4,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "G":
@@ -4897,7 +4945,7 @@ __DEV__ &&
               Float32Array,
               4,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "g":
@@ -4907,7 +4955,7 @@ __DEV__ &&
               Float64Array,
               8,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "M":
@@ -4917,7 +4965,7 @@ __DEV__ &&
               BigInt64Array,
               8,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "m":
@@ -4927,7 +4975,7 @@ __DEV__ &&
               BigUint64Array,
               8,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "V":
@@ -4937,12 +4985,15 @@ __DEV__ &&
               DataView,
               1,
               obj,
-              key,
+              key$jscomp$0,
               arrayRoot
             );
           case "B":
             obj = parseInt(value.slice(2), 16);
-            response = response._formData.data.get(response._prefix + obj);
+            response = getBackingBlob(
+              response._formData,
+              response._prefix + obj
+            );
             if (!(response instanceof Blob))
               throw Error("Referenced Blob is not a Blob.");
             return response;
@@ -4960,7 +5011,7 @@ __DEV__ &&
           response,
           value,
           obj,
-          key,
+          key$jscomp$0,
           arrayRoot,
           createModel
         );
@@ -4979,11 +5030,20 @@ __DEV__ &&
             : new FormData(),
         arraySizeLimit =
           4 < arguments.length && void 0 !== arguments[4] ? arguments[4] : 1e6,
-        chunks = new Map();
+        chunks = new Map(),
+        backingStore = {
+          prefix: formFieldPrefix,
+          referencedEntries: null,
+          keyPointer: 0,
+          stringChunks: null,
+          streamChunks: null,
+          blobs: null
+        };
+      backingFormData.forEach(appendBackingEntry.bind(null, backingStore));
       return {
         _bundlerConfig: bundlerConfig,
         _prefix: formFieldPrefix,
-        _formData: { data: backingFormData, keyPointer: -1, keys: null },
+        _formData: backingStore,
         _chunks: chunks,
         _closed: !1,
         _closedReason: null,

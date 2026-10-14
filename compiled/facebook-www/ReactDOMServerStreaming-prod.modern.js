@@ -5576,10 +5576,7 @@ function trackPostpone(request, trackedPostpones, task, segment) {
           addToReplayParent(boundaryNode, keyPath[0], trackedPostpones);
       else if (((request = boundaryNode[3]), null === request))
         request = boundaryNode[3] = {};
-      else if ("number" === typeof request)
-        throw Error(
-          "It should not be possible to postpone both at the root of an element as well as a slot below. This is a bug in React."
-        );
+      else if ("number" === typeof request) return;
       request[task.childIndex] = segment.id;
     }
   }

@@ -342,11 +342,8 @@ __DEV__ &&
           entry.done
             ? ((entry = nextPartId++),
               data.append(formFieldPrefix + entry, new Blob(buffer)),
-              data.append(
-                formFieldPrefix + streamId,
-                '"$o' + entry.toString(16) + '"'
-              ),
-              data.append(formFieldPrefix + streamId, "C"),
+              data.append(streamPrefix, '"$o' + entry.toString(16) + '"'),
+              data.append(streamPrefix, "C"),
               pendingParts--,
               0 === pendingParts && resolve(data))
             : (buffer.push(entry.value),
@@ -356,20 +353,21 @@ __DEV__ &&
         var data = formData;
         pendingParts++;
         var streamId = nextPartId++,
-          buffer = [];
+          buffer = [],
+          streamPrefix = formFieldPrefix + "S" + streamId;
         reader.read(new Uint8Array(1024)).then(progress, reject);
         return "$r" + streamId.toString(16);
       }
       function serializeReader(reader) {
         function progress(entry) {
           if (entry.done)
-            data.append(formFieldPrefix + streamId, "C"),
+            data.append(streamPrefix, "C"),
               pendingParts--,
               0 === pendingParts && resolve(data);
           else
             try {
               var partJSON = JSON.stringify(entry.value, resolveToJSON);
-              data.append(formFieldPrefix + streamId, partJSON);
+              data.append(streamPrefix, partJSON);
               reader.read().then(progress, reject);
             } catch (x) {
               reject(x);
@@ -378,7 +376,8 @@ __DEV__ &&
         null === formData && (formData = new FormData());
         var data = formData;
         pendingParts++;
-        var streamId = nextPartId++;
+        var streamId = nextPartId++,
+          streamPrefix = formFieldPrefix + "S" + streamId;
         reader.read().then(progress, reject);
         return "$R" + streamId.toString(16);
       }
@@ -393,12 +392,11 @@ __DEV__ &&
       function serializeAsyncIterable(iterable, iterator) {
         function progress(entry) {
           if (entry.done) {
-            if (void 0 === entry.value)
-              data.append(formFieldPrefix + streamId, "C");
+            if (void 0 === entry.value) data.append(streamPrefix, "C");
             else
               try {
                 var partJSON = JSON.stringify(entry.value, resolveToJSON);
-                data.append(formFieldPrefix + streamId, "C" + partJSON);
+                data.append(streamPrefix, "C" + partJSON);
               } catch (x) {
                 reject(x);
                 return;
@@ -408,10 +406,10 @@ __DEV__ &&
           } else
             try {
               var _partJSON = JSON.stringify(entry.value, resolveToJSON);
-              data.append(formFieldPrefix + streamId, _partJSON);
+              data.append(streamPrefix, _partJSON);
               iterator.next().then(progress, reject);
-            } catch (x$0) {
-              reject(x$0);
+            } catch (x$3) {
+              reject(x$3);
             }
         }
         null === formData && (formData = new FormData());
@@ -419,6 +417,7 @@ __DEV__ &&
         pendingParts++;
         var streamId = nextPartId++;
         iterable = iterable === iterator;
+        var streamPrefix = formFieldPrefix + "S" + streamId;
         iterator.next().then(progress, reject);
         return "$" + (iterable ? "x" : "X") + streamId.toString(16);
       }
@@ -1706,15 +1705,21 @@ __DEV__ &&
       }
     }
     function createResolvedModelChunk(response, value) {
-      return new ReactPromise("resolved_model", value, response);
+      var $jscomp$compprop0 = {};
+      return new ReactPromise(
+        "resolved_model",
+        value,
+        (($jscomp$compprop0[RESPONSE_SYMBOL] = response), $jscomp$compprop0)
+      );
     }
     function createResolvedIteratorResultChunk(response, value, done) {
+      var $jscomp$compprop1 = {};
       return new ReactPromise(
         "resolved_model",
         (done ? '{"done":true,"value":' : '{"done":false,"value":') +
           value +
           "}",
-        response
+        (($jscomp$compprop1[RESPONSE_SYMBOL] = response), $jscomp$compprop1)
       );
     }
     function resolveIteratorResultChunk(response, chunk, value, done) {
@@ -1735,7 +1740,8 @@ __DEV__ &&
           rejectListeners = chunk.reason;
         chunk.status = "resolved_model";
         chunk.value = value;
-        chunk.reason = response;
+        value = {};
+        chunk.reason = ((value[RESPONSE_SYMBOL] = response), value);
         null !== resolveListeners &&
           (initializeModelChunk(chunk),
           wakeChunkIfInitialized(
@@ -1891,7 +1897,7 @@ __DEV__ &&
         prevChunk = initializingChunk;
       initializingHandler = null;
       var resolvedModel = chunk.value,
-        response = chunk.reason;
+        response = chunk.reason[RESPONSE_SYMBOL];
       chunk.status = "blocked";
       chunk.value = null;
       chunk.reason = null;
@@ -2312,6 +2318,9 @@ __DEV__ &&
       return null;
     }
     function loadServerReference(response, metaData, parentObject, key) {
+      if ("then" === key) return null;
+      var id = metaData.id;
+      if ("string" !== typeof id) return null;
       if (!response._serverReferenceConfig)
         return createBoundServerReference(
           metaData,
@@ -2321,17 +2330,18 @@ __DEV__ &&
         );
       var serverReference = resolveServerReference(
           response._serverReferenceConfig,
-          metaData.id
+          id
         ),
-        promise = preloadModule(serverReference);
-      if (promise)
-        metaData.bound && (promise = Promise.all([promise, metaData.bound]));
-      else if (metaData.bound) promise = Promise.resolve(metaData.bound);
+        bound = metaData.bound;
+      if ((metaData = preloadModule(serverReference)))
+        bound instanceof ReactPromise &&
+          (metaData = Promise.all([metaData, bound]));
+      else if (bound instanceof ReactPromise) metaData = Promise.resolve(bound);
       else
         return (
-          (promise = requireModule(serverReference)),
-          registerBoundServerReference(promise, metaData.id, metaData.bound),
-          promise
+          (metaData = requireModule(serverReference)),
+          registerBoundServerReference(metaData, id, bound),
+          metaData
         );
       if (initializingHandler) {
         var handler = initializingHandler;
@@ -2345,19 +2355,21 @@ __DEV__ &&
           deps: 1,
           errored: !1
         };
-      promise.then(
+      metaData.then(
         function () {
           var resolvedValue = requireModule(serverReference);
-          if (metaData.bound) {
-            var boundArgs = metaData.bound.value.slice(0);
-            boundArgs.unshift(null);
-            resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+          if (bound) {
+            var promiseValue = bound.value;
+            promiseValue = isArrayImpl(promiseValue)
+              ? promiseValue.slice(0)
+              : [];
+            promiseValue.unshift(null);
+            resolvedValue = resolvedValue.bind.apply(
+              resolvedValue,
+              promiseValue
+            );
           }
-          registerBoundServerReference(
-            resolvedValue,
-            metaData.id,
-            metaData.bound
-          );
+          registerBoundServerReference(resolvedValue, id, bound);
           "__proto__" !== key && (parentObject[key] = resolvedValue);
           "" === key &&
             null === handler.value &&
@@ -2368,12 +2380,12 @@ __DEV__ &&
             null !== handler.value &&
             handler.value.$$typeof === REACT_ELEMENT_TYPE
           )
-            switch (((boundArgs = handler.value), key)) {
+            switch (((promiseValue = handler.value), key)) {
               case "3":
-                boundArgs.props = resolvedValue;
+                promiseValue.props = resolvedValue;
                 break;
               case "4":
-                boundArgs._owner = resolvedValue;
+                promiseValue._owner = resolvedValue;
             }
           handler.deps--;
           initializeChunkIfUnblocked(response, handler);
@@ -2656,8 +2668,8 @@ __DEV__ &&
     function extractIterator(response, model) {
       return model[Symbol.iterator]();
     }
-    function createModel(response, model) {
-      return model;
+    function createModel(response, model, parentObject, key) {
+      return "then" === key && "function" === typeof model ? null : model;
     }
     function getInferredFunctionApproximate(code) {
       code = code.startsWith("Object.defineProperty(")
@@ -5065,7 +5077,8 @@ __DEV__ &&
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
         ReactSharedInteralsServer,
       ObjectPrototype = Object.prototype,
-      ArrayPrototype = Array.prototype;
+      ArrayPrototype = Array.prototype,
+      RESPONSE_SYMBOL = Symbol();
     ReactPromise.prototype = Object.create(Promise.prototype);
     Object.defineProperty(ReactPromise.prototype, "then", {
       writable: !0,
@@ -5233,10 +5246,10 @@ __DEV__ &&
       return hook.checkDCE ? !0 : !1;
     })({
       bundleType: 1,
-      version: "19.3.0-www-classic-07dde64d-20261013",
+      version: "19.3.0-www-classic-e25b4a4c-20261014",
       rendererPackageName: "react-flight-server-fb",
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-classic-07dde64d-20261013",
+      reconcilerVersion: "19.3.0-www-classic-e25b4a4c-20261014",
       getCurrentComponentInfo: function () {
         return currentOwnerInDEV;
       }
