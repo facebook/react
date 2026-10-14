@@ -10,18 +10,6 @@
 
 'use strict';
 
-// Polyfills for test environment
-global.ReadableStream =
-  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
-global.WritableStream =
-  require('web-streams-polyfill/ponyfill/es6').WritableStream;
-global.TextEncoder = require('util').TextEncoder;
-global.TextDecoder = require('util').TextDecoder;
-global.Blob = require('buffer').Blob;
-if (typeof File === 'undefined' || typeof FormData === 'undefined') {
-  global.File = require('buffer').File || require('undici').File;
-  global.FormData = require('undici').FormData;
-}
 // Patch for Edge environments for global scope
 global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
@@ -51,8 +39,18 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+if (typeof File === 'undefined') {
+  // Older Node.js versions do have support for Files in FormData but don't expose
+  // the constructor globally.
+  const formData = new FormData();
+  formData.append('a', new Blob(['a'], {type: 'text/plain'}), 'a.txt');
+  const arbitraryFile = formData.get('a');
+  globalThis.File = arbitraryFile.constructor;
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
+    jest.restoreAllMocks();
     // Mock performance.now for timing tests
     let time = 10;
     const now = jest.fn().mockImplementation(() => {
@@ -1118,24 +1116,38 @@ describe('ReactFlightDOMEdge', () => {
     expect(streamedBuffers).toEqual(buffers);
   });
 
-  it('should support BYOB binary ReadableStreams', async () => {
-    const buffer = new Uint8Array([
+  // TODO: Requires the native byte stream parsing fix from
+  // https://github.com/facebook/react/pull/35127 which is not backported to
+  // this branch. Under native Web Streams the client loses chunks of embedded
+  // byte streams.
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should support BYOB binary ReadableStreams', async () => {
+    const sourceBytes = [
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
-    ]).buffer;
-    const buffers = [
-      new Int8Array(buffer, 1),
-      new Uint8Array(buffer, 2),
-      new Uint8ClampedArray(buffer, 2),
-      new Int16Array(buffer, 2),
-      new Uint16Array(buffer, 2),
-      new Int32Array(buffer, 4),
-      new Uint32Array(buffer, 4),
-      new Float32Array(buffer, 4),
-      new Float64Array(buffer, 0),
-      new BigInt64Array(buffer, 0),
-      new BigUint64Array(buffer, 0),
-      new DataView(buffer, 3),
     ];
+
+    // Create separate buffers for each typed array to avoid ArrayBuffer
+    // transfer issues. Each view needs its own buffer because enqueue()
+    // transfers ownership.
+    const buffers = [
+      new Int8Array(sourceBytes.slice(1)),
+      new Uint8Array(sourceBytes.slice(2)),
+      new Uint8ClampedArray(sourceBytes.slice(2)),
+      new Int16Array(new Uint8Array(sourceBytes.slice(2)).buffer),
+      new Uint16Array(new Uint8Array(sourceBytes.slice(2)).buffer),
+      new Int32Array(new Uint8Array(sourceBytes.slice(4)).buffer),
+      new Uint32Array(new Uint8Array(sourceBytes.slice(4)).buffer),
+      new Float32Array(new Uint8Array(sourceBytes.slice(4)).buffer),
+      new Float64Array(new Uint8Array(sourceBytes.slice(0)).buffer),
+      new BigInt64Array(new Uint8Array(sourceBytes.slice(0)).buffer),
+      new BigUint64Array(new Uint8Array(sourceBytes.slice(0)).buffer),
+      new DataView(new Uint8Array(sourceBytes.slice(3)).buffer),
+    ];
+
+    // Save expected bytes before enqueueing (which will detach the buffers).
+    const expectedBytes = buffers.flatMap(c =>
+      Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
+    );
 
     // This a binary stream where each chunk ends up as Uint8Array.
     const s = new ReadableStream({
@@ -1176,11 +1188,7 @@ describe('ReactFlightDOMEdge', () => {
 
     // The streamed buffers might be in different chunks and in Uint8Array form but
     // the concatenated bytes should be the same.
-    expect(streamedBuffers.flatMap(t => Array.from(t))).toEqual(
-      buffers.flatMap(c =>
-        Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
-      ),
-    );
+    expect(streamedBuffers.flatMap(t => Array.from(t))).toEqual(expectedBytes);
   });
 
   // @gate !__DEV__ || enableComponentPerformanceTrack
@@ -2255,5 +2263,296 @@ describe('ReactFlightDOMEdge', () => {
         'anonymous-id',
       ).toString(),
     ).toBe('function () { [omitted code] }');
+  });
+  it('consumes a typed array that spans its whole buffer', async () => {
+    // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
+    // is written to the destination instead of being copied into React's
+    // internal view.
+    const LARGE = 10000;
+    const bytes = new Uint8Array(LARGE).fill(7);
+    const expected = bytes.slice();
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      await serverAct(() =>
+        ReactServerDOMServer.renderToReadableStream({bytes}, webpackMap),
+      ),
+      {serverConsumerManifest: {moduleMap: null, moduleLoading: null}},
+    );
+
+    expect(result.bytes).toEqual(expected);
+    if (ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      // The render transfers the buffer to the stream, in the same way that it
+      // consumes a one shot iterable, so the caller's view is now detached.
+      expect(bytes.byteLength).toBe(0);
+    } else {
+      // In environments where React can't detect detachment, we defensively copy the buffer.
+      expect(bytes).toEqual(new Uint8Array(LARGE).fill(7));
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Edge runtime.',
+        ],
+        {withoutStack: true},
+      );
+    }
+  });
+
+  it('does not transport large views on SharedArrayBuffer', async () => {
+    // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
+    // is written to the destination instead of being copied into React's
+    // internal view.
+    const LARGE = 10000;
+    const shared = new SharedArrayBuffer(LARGE);
+    const bytes = new Uint8Array(shared).fill(3);
+
+    const stream = await serverAct(() => {
+      return ReactServerDOMServer.renderToReadableStream({bytes}, webpackMap);
+    });
+
+    const result = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {moduleMap: null, moduleLoading: null},
+    });
+    if (ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      await expect(result).rejects.toThrow(
+        "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+      );
+      assertConsoleErrorDev([
+        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer." +
+          ' Received Uint8Array(10000) [',
+      ]);
+    } else {
+      const {bytes: transportedBytes} = await result;
+      expect(transportedBytes).toEqual(new Uint8Array(LARGE).fill(3));
+
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Edge runtime.',
+        ],
+        {withoutStack: true},
+      );
+    }
+  });
+
+  it('does not detach a buffer that the rendered view is only a part of', async () => {
+    // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
+    // is written to the destination instead of being copied into React's
+    // internal view.
+    const LARGE = 10000;
+    const buffer = new ArrayBuffer(LARGE * 2);
+    const renderedView = new Uint8Array(buffer, 0, LARGE).fill(1);
+    const siblingView = new Uint8Array(buffer, LARGE, LARGE).fill(2);
+    const expected = renderedView.slice();
+
+    const stream = await serverAct(() => {
+      return ReactServerDOMServer.renderToReadableStream(
+        {renderedView},
+        webpackMap,
+      );
+    });
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {moduleMap: null, moduleLoading: null},
+    });
+
+    expect(result.renderedView).toEqual(expected);
+    expect(siblingView.byteLength).toBe(LARGE);
+  });
+
+  it('should transport promised subarrays sharing an ArrayBuffer', async () => {
+    async function getResult() {
+      const backing = new ArrayBuffer(10_000);
+      const bytes = new Uint8Array(backing);
+      const first = bytes.subarray(0, 5_000);
+      const second = bytes.subarray(5_000);
+      first.fill(1);
+      second.fill(2);
+
+      return {
+        first: first,
+        second: second,
+      };
+    }
+
+    const stream = await serverAct(() => {
+      return ReactServerDOMServer.renderToReadableStream(
+        getResult(),
+        webpackMap,
+      );
+    });
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    expect(await result.first).toEqual(new Uint8Array(5_000).fill(1));
+    expect(await result.second).toEqual(new Uint8Array(5_000).fill(2));
+  });
+
+  it('cannot transport multiple buffer-spanning view on the same underlying buffer', async () => {
+    // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
+    // is written to the destination instead of being copied into React's
+    // internal view.
+    const LARGE = 10000;
+    async function getResult() {
+      const backing = new ArrayBuffer(LARGE);
+      const first = new Uint8Array(backing);
+      const second = new Uint8Array(backing);
+      first.fill(1);
+
+      return {
+        first: first,
+        second: second,
+      };
+    }
+
+    const stream = await serverAct(() => {
+      return ReactServerDOMServer.renderToReadableStream(
+        getResult(),
+        webpackMap,
+      );
+    });
+    const result = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    if (ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      await expect(result).rejects.toThrow(
+        'Cannot transport a detached buffer. ' +
+          'This usually happens when trying to transport multiple buffer-spanning views on the same underyling buffer. ' +
+          'Either reuse the exact same view by identity or copy the underlying buffer manually via `view.slice()`.',
+      );
+      assertConsoleErrorDev([
+        'Error: Cannot transport a detached buffer. ' +
+          'This usually happens when trying to transport multiple buffer-spanning views on the same underyling buffer. ' +
+          'Either reuse the exact same view by identity or copy the underlying buffer manually via `view.slice()`.',
+      ]);
+    } else {
+      const {first, second} = await result;
+      expect(first).toEqual(new Uint8Array(LARGE).fill(1));
+      expect(second).toEqual(new Uint8Array(LARGE).fill(1));
+
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Edge runtime.',
+        ],
+        {withoutStack: true},
+      );
+    }
+  });
+
+  it('interrupts the stream when a write fails', async () => {
+    // Larger than VIEW_SIZE in ReactServerStreamConfigEdge, so that the chunk
+    // is written to the destination instead of being copied into React's
+    // internal view.
+    const LARGE = 10000;
+    // We're simulating a bug where React attempts to write a detached buffer
+    // or a SharedArrayBuffer. In newer environments we'd just use SharedArrayBuffer.
+    // In older environments React will defensively copy the view which means
+    // the underlying buffer will be a ArrayBuffer that can be safely written.
+    // We just need to smuggle a chunk into the stream that we can identify to
+    // throw at a specific time.
+    const faultyBuffer = new ArrayBuffer(LARGE);
+    const view = new Uint8Array(faultyBuffer);
+    view.set([0xe, 0xa, 0xc, 0x7]);
+
+    const originalEnqueue = ReadableByteStreamController.prototype.enqueue;
+    jest
+      .spyOn(ReadableByteStreamController.prototype, 'enqueue')
+      .mockImplementation(function mockedEnqueue(chunk) {
+        // the original view may have been copied so we need to match the marker
+        if (
+          chunk[0] === 0xe &&
+          chunk[1] === 0xa &&
+          chunk[2] === 0xc &&
+          chunk[3] === 0x7
+        ) {
+          throw new TypeError(
+            "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+          );
+        }
+        return originalEnqueue.call(this, chunk);
+      });
+
+    let sendMore;
+    const model = {
+      first: Promise.resolve(view),
+      second: new Promise(resolve => {
+        sendMore = resolve;
+      }),
+    };
+
+    const stream = await serverAct(() => {
+      return ReactServerDOMServer.renderToReadableStream(model, webpackMap);
+    });
+
+    const [stream1, stream2] = stream.tee();
+
+    let payload = '';
+    const decoder = new TextDecoder();
+    const reader = stream2.getReader();
+    let readError;
+    reader.read().then(function process({done, value}) {
+      if (done) return;
+      payload += decoder.decode(value, {stream: true});
+      return reader.read().then(process, reason => {
+        readError = reason;
+      });
+    });
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream1,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    // This must fail. Adjust the mock above to be able to throw at a specific
+    // point.
+    await expect(result.first).rejects.toThrow(
+      "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+    );
+
+    if (ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        // React will not defensively copy when we can determine if the buffer is
+        // detached later.
+        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+      ]);
+    } else {
+      assertConsoleErrorDev([
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Edge runtime.',
+          {withoutStack: true},
+        ],
+        "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+      ]);
+    }
+
+    const partialPayload = payload;
+
+    await sendMore('foo');
+    await expect(result.second).rejects.toThrow(
+      "The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+    );
+    // an errored stream emitted incomplete data. Continuing to emit more would
+    // produce a corrupted stream
+    expect(payload).toBe(partialPayload);
+    expect(readError.stack).toMatch(
+      "TypeError: The argument 'chunk' must not be backed by a SharedArrayBuffer.",
+    );
   });
 });
