@@ -185,6 +185,16 @@ describe('ReactFlightDOMForm', () => {
 
     expect(returnValue).toBe('hello');
     expect(foo).toBe('bar');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('can submit an imported server action without hydrating it', async () => {
@@ -217,6 +227,16 @@ describe('ReactFlightDOMForm', () => {
     expect(returnValue).toBe('hi');
 
     expect(foo).toBe('bar');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('can submit a complex closure server action without hydrating it', async () => {
@@ -251,6 +271,16 @@ describe('ReactFlightDOMForm', () => {
 
     expect(returnValue).toBe('hello');
     expect(foo).toBe('barobject');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('can submit a multiple complex closure server action without hydrating it', async () => {
@@ -291,6 +321,16 @@ describe('ReactFlightDOMForm', () => {
 
     expect(returnValue).toBe('helloc');
     expect(foo).toBe('barc');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('can bind an imported server action on the client without hydrating it', async () => {
@@ -322,6 +362,16 @@ describe('ReactFlightDOMForm', () => {
 
     expect(returnValue).toBe('hello');
     expect(foo).toBe('barobject');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('can bind a server action on the client without hydrating it', async () => {
@@ -362,6 +412,16 @@ describe('ReactFlightDOMForm', () => {
 
     expect(returnValue).toBe('hello');
     expect(foo).toBe('barobject');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it("useActionState's dispatch binds the initial state to the provided action", async () => {
@@ -409,6 +469,16 @@ describe('ReactFlightDOMForm', () => {
 
     const {returnValue} = await submit(form);
     expect(await returnValue).toEqual({count: 6});
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('useActionState can reuse state during MPA form submission', async () => {
@@ -496,6 +566,16 @@ describe('ReactFlightDOMForm', () => {
         });
       });
       expect(container.textContent).toBe('121');
+    }
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
     }
   });
 
@@ -614,6 +694,16 @@ describe('ReactFlightDOMForm', () => {
       await readIntoContainer(postbackSsrStream2);
 
       expect(container.textContent).toBe('171');
+      if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+        assertConsoleErrorDev(
+          [
+            'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+              'This could be a security issue if the buffer was not actually empty. ' +
+              'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+          ],
+          {withoutStack: true},
+        );
+      }
     },
   );
 
@@ -701,6 +791,16 @@ describe('ReactFlightDOMForm', () => {
     // The state should not have been preserved because the action signatures
     // are not the same.
     expect(container.textContent).toBe('111');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('when permalink is provided, useActionState compares that instead of the keypath', async () => {
@@ -850,6 +950,16 @@ describe('ReactFlightDOMForm', () => {
     expect(stateSpan.textContent).toBe('Count: 1');
 
     expect(form.action).toBe('http://localhost/permalink');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('useActionState `permalink` is coerced to string', async () => {
@@ -902,6 +1012,16 @@ describe('ReactFlightDOMForm', () => {
     expect(stateSpan.textContent).toBe('Count: 1');
 
     expect(form.action).toBe('http://localhost/permalink');
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
   });
 
   it('useActionState can return JSX state during MPA form submission', async () => {
@@ -963,12 +1083,27 @@ describe('ReactFlightDOMForm', () => {
     }
 
     await submitTheForm();
-    assertConsoleErrorDev([
-      'Failed to serialize an action for progressive enhancement:\n' +
-        'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
-        '  [<div/>]\n' +
-        '   ^^^^^^',
-    ]);
+    if (ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'Failed to serialize an action for progressive enhancement:\n' +
+          'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
+          '  [<div/>]\n' +
+          '   ^^^^^^',
+      ]);
+    } else {
+      assertConsoleErrorDev([
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+          {withoutStack: true},
+        ],
+        'Failed to serialize an action for progressive enhancement:\n' +
+          'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
+          '  [<div/>]\n' +
+          '   ^^^^^^',
+      ]);
+    }
 
     // The error message was returned as JSX.
     const form2 = container.getElementsByTagName('form')[0];
@@ -1040,10 +1175,23 @@ describe('ReactFlightDOMForm', () => {
     }
 
     await submitTheForm();
-    assertConsoleErrorDev([
-      'Failed to serialize an action for progressive enhancement:\n' +
-        'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
-    ]);
+    if (ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'Failed to serialize an action for progressive enhancement:\n' +
+          'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
+      ]);
+    } else {
+      assertConsoleErrorDev([
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern Edge runtime that supports ArrayBuffer.prototype.detached.',
+          {withoutStack: true},
+        ],
+        'Failed to serialize an action for progressive enhancement:\n' +
+          'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
+      ]);
+    }
 
     expect(blob instanceof Blob).toBe(true);
     expect(blob.size).toBe(2);
