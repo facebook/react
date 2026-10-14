@@ -259,8 +259,8 @@ type ModelEntry =
 
 let modelRoot: null | ReactClientValue = null;
 let canEmitDebugInfo = false;
-let serializedSize = 0;
-const MAX_ROW_SIZE = 3200;
+let modelDepth = 0;
+const MAX_MODEL_DEPTH = 128;
 const emptyRoot = {};
 
 export type Request = {
@@ -1585,6 +1585,29 @@ function renderModelDestructive(
   value: ReactClientValue,
   parentReference?: null | ModelReference,
 ): ReactClientValue {
+  modelDepth++;
+  try {
+    return renderModelDestructiveImpl(
+      request,
+      task,
+      parent,
+      parentPropertyName,
+      value,
+      parentReference,
+    );
+  } finally {
+    modelDepth--;
+  }
+}
+
+function renderModelDestructiveImpl(
+  request: Request,
+  task: Task,
+  parent: ModelParent,
+  parentPropertyName: string,
+  value: ReactClientValue,
+  parentReference?: null | ModelReference,
+): ReactClientValue {
   task.model = value;
   if (
     value !== null &&
@@ -1638,7 +1661,6 @@ function renderModelDestructive(
 
   if (value === null || typeof value !== 'object') {
     if (typeof value === 'string') {
-      serializedSize += value.length;
       // Flight's large text rows encode each string as UTF-8. Keep the shared
       // model consistent with that boundary before consumers can reuse it.
       if (value.length >= 1024) {
@@ -1824,7 +1846,7 @@ function renderModelDestructive(
   }
   task.currentReference = reference === undefined ? null : reference;
   if (elementType === REACT_ELEMENT_TYPE) {
-    if (serializedSize > MAX_ROW_SIZE) {
+    if (modelDepth > MAX_MODEL_DEPTH) {
       return deferTask(request, task);
     }
     const element: ReactElement = value as any;
@@ -1883,7 +1905,7 @@ function renderModelDestructive(
     return rendered;
   }
   if (elementType === REACT_LAZY_TYPE) {
-    if (serializedSize > MAX_ROW_SIZE) {
+    if (modelDepth > MAX_MODEL_DEPTH) {
       return deferTask(request, task);
     }
     const lazy: LazyComponent<ReactClientValue, any> = value as any;
@@ -2067,6 +2089,7 @@ function resolveModel(
   parentReference?: null | ModelReference,
   renderedRoot?: ReactClientValue,
 ): ReactClientValue {
+  modelDepth++;
   const prevOwner = __DEV__ ? task.debugOwner : null;
   const prevStack = __DEV__ ? task.debugStack : null;
   const prevDebugTask = __DEV__ ? task.debugTask : null;
@@ -2197,6 +2220,7 @@ function resolveModel(
       }
     }
   } finally {
+    modelDepth--;
     if (__DEV__) {
       task.debugOwner = prevOwner;
       task.debugStack = prevStack;
@@ -2212,10 +2236,6 @@ function renderModel(
   value: ReactClientValue,
   parentReference?: null | ModelReference,
 ): ReactClientValue {
-  serializedSize +=
-    (parent as any).$$typeof === REACT_ELEMENT_TYPE
-      ? 1
-      : parentPropertyName.length;
   const prevKeyPath = task.keyPath;
   const prevImplicitSlot = task.implicitSlot;
   try {
@@ -2374,11 +2394,6 @@ function resolveModelFields(
     task.keyPath = null;
     task.implicitSlot = false;
     try {
-      // Flight visits the element tuple's marker and key as well as its fields.
-      serializedSize += 2;
-      if (element.key !== null && typeof element.key === 'string') {
-        serializedSize += element.key.length;
-      }
       element.type = resolveModel(
         request,
         task,
@@ -2576,7 +2591,6 @@ function retryTask(request: Request, task: Task): void {
   const originalModel = task.model;
   const originalKeyPath = task.keyPath;
   const originalImplicitSlot = task.implicitSlot;
-  const parentSerializedSize = serializedSize;
   const prevCanEmitDebugInfo = canEmitDebugInfo;
   task.currentReference = task.reference;
   try {
@@ -2698,7 +2712,6 @@ function retryTask(request: Request, task: Task): void {
       if (__DEV__) {
         canEmitDebugInfo = prevCanEmitDebugInfo;
       }
-      serializedSize = parentSerializedSize;
     }
   }
 }
@@ -5404,7 +5417,6 @@ function renderReadableStream(
 }
 
 function tryStreamTask(request: Request, task: Task): void {
-  const parentSerializedSize = serializedSize;
   const prevDispatcher = ReactSharedInternals.H;
   ReactSharedInternals.H = HooksDispatcher;
   const prevCache = setCurrentCache(request);
@@ -5461,7 +5473,6 @@ function tryStreamTask(request: Request, task: Task): void {
         request.onAllReady();
       }
     } finally {
-      serializedSize = parentSerializedSize;
       ReactSharedInternals.H = prevDispatcher;
       resetHooksForRequest();
       setCurrentCache(prevCache);

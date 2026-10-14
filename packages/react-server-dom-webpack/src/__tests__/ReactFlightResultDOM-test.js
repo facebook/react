@@ -291,6 +291,105 @@ describe('ReactFlightResultDOM', () => {
     });
   }
 
+  describe('continuations', () => {
+    async function readFlightModel(model, options) {
+      const {writable, readable} = getTestStream();
+      await serverAct(() => {
+        ReactServerDOMServer.renderToPipeableStream(
+          model,
+          webpackMap,
+          options,
+        ).pipe(writable);
+      });
+      return ReactServerDOMClient.createFromReadableStream(readable);
+    }
+
+    async function readResultModel(model, options) {
+      const result = await serverAct(() =>
+        ReactServerDOMServer.renderToResult(model, options),
+      );
+      return createResponse(result);
+    }
+
+    const readers = [readFlightModel, readResultModel];
+
+    it('expands Server Components inside a nested host tree once', async () => {
+      for (let i = 0; i < readers.length; i++) {
+        const componentDepth = 200;
+        const hostDepth = 100;
+        let calls = 0;
+        const Chain = ({depth}) => {
+          calls++;
+          return depth === 0 ? <span>done</span> : <Chain depth={depth - 1} />;
+        };
+        let model = <Chain depth={componentDepth} />;
+        for (let j = 0; j < hostDepth; j++) {
+          model = <div>{model}</div>;
+        }
+        const expanded = await readers[i](model);
+        expect(calls).toBe(componentDepth + 1);
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => root.render(expanded));
+        expect(container.innerHTML).toBe(
+          '<div>'.repeat(hostDepth) +
+            '<span>done</span>' +
+            '</div>'.repeat(hostDepth),
+        );
+        expect(calls).toBe(componentDepth + 1);
+        await act(() => root.unmount());
+      }
+    });
+
+    it('expands lazy, memo and unkeyed Fragments once', async () => {
+      for (let i = 0; i < readers.length; i++) {
+        const componentDepth = 100;
+        let calls = 0;
+        const Chain = ({depth}) => {
+          calls++;
+          return depth === 0 ? (
+            <span>done</span>
+          ) : (
+            <>
+              <Chain depth={depth - 1} />
+            </>
+          );
+        };
+        const load = jest.fn(() =>
+          Promise.resolve({default: React.memo(Chain)}),
+        );
+        const Lazy = React.lazy(load);
+        const expanded = await readers[i](<Lazy depth={componentDepth} />);
+        expect(calls).toBe(componentDepth + 1);
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => root.render(expanded));
+        expect(container.innerHTML).toBe('<span>done</span>');
+        expect(calls).toBe(componentDepth + 1);
+        expect(load).toHaveBeenCalledTimes(1);
+        await act(() => root.unmount());
+      }
+    });
+
+    it('reports a user-thrown RangeError once', async () => {
+      for (let i = 0; i < readers.length; i++) {
+        const error = new RangeError('Maximum call stack size exceeded');
+        let calls = 0;
+        const Throw = () => {
+          calls++;
+          throw error;
+        };
+        const onError = jest.fn(() => 'user-range-error');
+        await expect(readers[i](<Throw />, {onError})).rejects.toMatchObject({
+          digest: 'user-range-error',
+        });
+        expect(calls).toBe(1);
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0]).toBe(error);
+      }
+    });
+  });
+
   it('keeps large text identical in direct and encoded readers', async () => {
     const short = 'x'.repeat(1022) + '\ud800';
     const large = 'x'.repeat(1023) + '\ud800';
