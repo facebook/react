@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<4f14c873f896df476c923052b9188a8d>>
+ * @generated SignedSource<<d29a902d431c3f0fafbb398eecd8499b>>
  */
 
 'use strict';
@@ -30351,6 +30351,16 @@ const TYPED_GLOBALS = [
             returnValueKind: ValueKind.Mutable,
         }, null, true),
     ],
+    [
+        'IntersectionObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze, Effect.Read],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
 ];
 const REACT_APIS = [
     [
@@ -44899,10 +44909,11 @@ function validateNoRefAccessInRenderImpl(fn, env, errors) {
                         break;
                     }
                     case 'MethodCall':
+                    case 'NewExpression':
                     case 'CallExpression': {
-                        const callee = instr.value.kind === 'CallExpression'
-                            ? instr.value.callee
-                            : instr.value.property;
+                        const callee = instr.value.kind === 'MethodCall'
+                            ? instr.value.property
+                            : instr.value.callee;
                         const hookKind = getHookKindForType(fn.env, callee.identifier.type);
                         let returnType = { kind: 'None' };
                         const fnType = env.get(callee.identifier.id);
