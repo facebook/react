@@ -485,7 +485,7 @@ describe('ReactDOMFizzForm', () => {
     expect(foo).toBe('bar');
   });
 
-  it('drops a form action submitted before hydration when fields shadow form properties', async () => {
+  it('should replay a form action when fields shadow form properties', async () => {
     let intent;
     function action(formData) {
       intent = formData.get('action');
@@ -524,11 +524,8 @@ describe('ReactDOMFizzForm', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
-    // TODO: The submission should be replayed after hydration. Currently the
-    // replay listener compares form.action, which is the input here, to the
-    // placeholder URL. It doesn't match, so the browser runs the javascript:
-    // URL, which throws, and the submission is lost.
-    expect(intent).toBe(undefined);
+    // It should've now been replayed
+    expect(intent).toBe('delete');
   });
 
   it('should replay input/button formAction', async () => {
