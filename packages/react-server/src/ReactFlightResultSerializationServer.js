@@ -2169,7 +2169,11 @@ function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
-    scheduleMicrotask(() => performWorkWithContext(request));
+    if (request.status === OPENING) {
+      scheduleMicrotask(() => performWorkWithContext(request));
+    } else {
+      scheduleWork(() => performWorkWithContext(request));
+    }
   }
 }
 
