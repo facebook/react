@@ -5576,7 +5576,10 @@ function trackPostpone(request, trackedPostpones, task, segment) {
           addToReplayParent(boundaryNode, keyPath[0], trackedPostpones);
       else if (((request = boundaryNode[3]), null === request))
         request = boundaryNode[3] = {};
-      else if ("number" === typeof request) return;
+      else if ("number" === typeof request)
+        throw Error(
+          "It should not be possible to postpone both at the root of an element as well as a slot below. This is a bug in React."
+        );
       request[task.childIndex] = segment.id;
     }
   }
@@ -6959,9 +6962,7 @@ exports.renderNextChunk = function (stream) {
               switchContext(task$jscomp$0.context);
               var childrenLength = segment$jscomp$0.children.length,
                 chunkLength = segment$jscomp$0.chunks.length,
-                startNode$jscomp$0 = task$jscomp$0.node,
-                startKeyPath = task$jscomp$0.keyPath,
-                startChildIndex = task$jscomp$0.childIndex;
+                startNode$jscomp$0 = task$jscomp$0.node;
               try {
                 retryNode(request, task$jscomp$0),
                   pushSegmentFinale(
@@ -6991,8 +6992,6 @@ exports.renderNextChunk = function (stream) {
                     (task$jscomp$0.thenableState =
                       getThenableStateAfterSuspending()),
                     (request.currentTask = prevTask$jscomp$0),
-                    (task$jscomp$0.keyPath = startKeyPath),
-                    (task$jscomp$0.childIndex = startChildIndex),
                     abortTask(task$jscomp$0, request),
                     task$jscomp$0.abortSet.delete(task$jscomp$0),
                     finishAbortedTask(

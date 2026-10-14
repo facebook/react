@@ -7269,7 +7269,10 @@ __DEV__ &&
               addToReplayParent(boundaryNode, keyPath[0], trackedPostpones);
           else if (((request = boundaryNode[3]), null === request))
             request = boundaryNode[3] = {};
-          else if ("number" === typeof request) return;
+          else if ("number" === typeof request)
+            throw Error(
+              "It should not be possible to postpone both at the root of an element as well as a slot below. This is a bug in React."
+            );
           request[task.childIndex] = segment.id;
         }
       }
@@ -8051,9 +8054,7 @@ __DEV__ &&
                 currentTaskInDEV = task$jscomp$0;
                 var childrenLength = request$jscomp$0.children.length,
                   chunkLength = request$jscomp$0.chunks.length,
-                  startNode$jscomp$0 = task$jscomp$0.node,
-                  startKeyPath = task$jscomp$0.keyPath,
-                  startChildIndex = task$jscomp$0.childIndex;
+                  startNode$jscomp$0 = task$jscomp$0.node;
                 try {
                   retryNode(request, task$jscomp$0),
                     pushSegmentFinale(
@@ -8083,8 +8084,6 @@ __DEV__ &&
                       (task$jscomp$0.thenableState =
                         getThenableStateAfterSuspending()),
                       (request.currentTask = prevTask$jscomp$0),
-                      (task$jscomp$0.keyPath = startKeyPath),
-                      (task$jscomp$0.childIndex = startChildIndex),
                       (request$jscomp$0 = request),
                       abortTaskDEV(task$jscomp$0, request$jscomp$0),
                       task$jscomp$0.abortSet.delete(task$jscomp$0),
@@ -10695,5 +10694,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-e25b4a4c-20261014";
+    exports.version = "19.3.0-www-modern-99c106c4-20261014";
   })();

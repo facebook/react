@@ -2934,16 +2934,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     ));
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1898 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1896 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1912 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1913 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1914 = new Set(),
-    JSCompiler_object_inline_styles_1915 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1916 = new Set(),
-    JSCompiler_object_inline_scripts_1917 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1918 = new Set(),
-    JSCompiler_object_inline_preloads_1919 = {
+  var JSCompiler_object_inline_preconnects_1910 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1911 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1912 = new Set(),
+    JSCompiler_object_inline_styles_1913 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1914 = new Set(),
+    JSCompiler_object_inline_scripts_1915 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1916 = new Set(),
+    JSCompiler_object_inline_preloads_1917 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2980,7 +2980,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1916.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1914.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src), '"');
       "string" === typeof integrity &&
         bootstrapChunks.push(
@@ -3027,7 +3027,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1916.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1914.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i),
@@ -3049,7 +3049,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push(' async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1898,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1896,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script",
     startInlineStyle: "<style",
@@ -3069,14 +3069,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1912,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1913,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1914,
-    styles: JSCompiler_object_inline_styles_1915,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1916,
-    scripts: JSCompiler_object_inline_scripts_1917,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1918,
-    preloads: JSCompiler_object_inline_preloads_1919,
+    preconnects: JSCompiler_object_inline_preconnects_1910,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1911,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1912,
+    styles: JSCompiler_object_inline_styles_1913,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1914,
+    scripts: JSCompiler_object_inline_scripts_1915,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1916,
+    preloads: JSCompiler_object_inline_preloads_1917,
     nonce: { script: void 0, style: void 0 },
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -5606,7 +5606,8 @@ function trackPostpone(request, trackedPostpones, task, segment) {
           addToReplayParent(boundaryNode, keyPath[0], trackedPostpones);
       else if (((request = boundaryNode[3]), null === request))
         request = boundaryNode[3] = {};
-      else if ("number" === typeof request) return;
+      else if ("number" === typeof request)
+        throw Error(formatProdErrorMessage(491));
       request[task.childIndex] = segment.id;
     }
   }
@@ -6233,9 +6234,7 @@ function performWork(request$jscomp$1) {
             switchContext(task.context);
             var childrenLength = request$jscomp$0.children.length,
               chunkLength = request$jscomp$0.chunks.length,
-              startNode$jscomp$0 = task.node,
-              startKeyPath = task.keyPath,
-              startChildIndex = task.childIndex;
+              startNode$jscomp$0 = task.node;
             try {
               retryNode(request, task),
                 pushSegmentFinale(
@@ -6264,8 +6263,6 @@ function performWork(request$jscomp$1) {
                 thrownValue === SuspenseException &&
                   (task.thenableState = getThenableStateAfterSuspending()),
                   (request.currentTask = prevTask$jscomp$0),
-                  (task.keyPath = startKeyPath),
-                  (task.childIndex = startChildIndex),
                   (request$jscomp$0 = request),
                   abortTask(task, request$jscomp$0),
                   task.abortSet.delete(task),
@@ -7163,4 +7160,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.3.0-www-modern-e25b4a4c-20261014";
+exports.version = "19.3.0-www-modern-99c106c4-20261014";
