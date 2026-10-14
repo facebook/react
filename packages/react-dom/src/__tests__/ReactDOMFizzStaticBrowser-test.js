@@ -30,6 +30,7 @@ let Suspense;
 let container;
 let Scheduler;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
@@ -38,6 +39,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
     Scheduler = require('scheduler');
     patchMessageChannel(Scheduler);
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -916,6 +919,16 @@ describe('ReactDOMFizzStaticBrowser', () => {
       <title>Hello World</title>,
       <div>Loading...</div>,
     ]);
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev(
+        [
+          'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+            'This could be a security issue if the buffer was not actually empty. ' +
+            'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+        ],
+        {withoutStack: true},
+      );
+    }
 
     prerendering = false;
     const content = await serverAct(() =>
