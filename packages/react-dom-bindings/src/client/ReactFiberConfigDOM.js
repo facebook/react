@@ -598,7 +598,7 @@ export function createInstance(
             domElement = ownerDocument.createElement('select', {is: props.is});
           } else {
             // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-            // See discussion in https://github.com/facebook/react/pull/6896
+            // See discussion in https://github.com/react/react/pull/6896
             // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
             domElement = ownerDocument.createElement('select');
           }
@@ -618,7 +618,7 @@ export function createInstance(
             domElement = ownerDocument.createElement(type, {is: props.is});
           } else {
             // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-            // See discussion in https://github.com/facebook/react/pull/6896
+            // See discussion in https://github.com/react/react/pull/6896
             // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
             domElement = ownerDocument.createElement(type);
           }
@@ -1116,7 +1116,7 @@ export function appendChildToContainer(
   // event exists. So we wouldn't see it and dispatch it.
   // This is why we ensure that non React root containers have inline onclick
   // defined.
-  // https://github.com/facebook/react/issues/11918
+  // https://github.com/react/react/issues/11918
   const reactRootContainer = container._reactRootContainer;
   if (
     // $FlowFixMe[invalid-compare]
@@ -1372,7 +1372,7 @@ function hideOrUnhideDehydratedBoundary(
     }
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       const data = (nextNode as any).data as string;
-      if (data === SUSPENSE_END_DATA) {
+      if (data === SUSPENSE_END_DATA || data === ACTIVITY_END_DATA) {
         if (depth === 0) {
           return;
         } else {
@@ -1382,7 +1382,8 @@ function hideOrUnhideDehydratedBoundary(
         data === SUSPENSE_START_DATA ||
         data === SUSPENSE_PENDING_START_DATA ||
         data === SUSPENSE_QUEUED_START_DATA ||
-        data === SUSPENSE_FALLBACK_START_DATA
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === ACTIVITY_START_DATA
       ) {
         depth++;
       }
