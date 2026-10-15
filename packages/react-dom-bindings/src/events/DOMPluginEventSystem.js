@@ -479,7 +479,7 @@ function addTrappedEventListener(
     // to document anymore, but changing this now would undo
     // the performance wins from the change. So we emulate
     // the existing behavior manually on the roots now.
-    // https://github.com/facebook/react/issues/19651
+    // https://github.com/react/react/issues/19651
     if (
       domEventName === 'touchstart' ||
       domEventName === 'touchmove' ||
@@ -491,7 +491,11 @@ function addTrappedEventListener(
 
   targetContainer =
     enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport
-      ? (targetContainer as any).ownerDocument
+      ? // A Document container's ownerDocument is null, so it must be used
+        // as the deferral target itself.
+        (targetContainer as any).nodeType === DOCUMENT_NODE
+        ? targetContainer
+        : (targetContainer as any).ownerDocument
       : targetContainer;
 
   let unsubscribeListener;

@@ -31,6 +31,7 @@ let Suspense;
 let SuspenseList;
 let container;
 let serverAct;
+let assertConsoleErrorDev;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
@@ -43,6 +44,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     patchMessageChannel();
     serverAct = require('internal-test-utils').serverAct;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -922,6 +925,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <body data-x="">Loading A</body>
       </html>,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
 
     await resolveA();
 
@@ -1025,6 +1035,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
 
     expect(errors).toEqual(['boom']);
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
   });
 
   it('will render fallback Document when erroring a boundary above the body', async () => {
@@ -1103,6 +1120,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
         </body>
       </html>,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
   });
 
   it('reveals a resumed boundary even when the shell outlined a completed boundary', async () => {
@@ -1281,6 +1305,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
         <body data-x="">Loading B</body>
       </html>,
     );
+    if (!ArrayBuffer.prototype.hasOwnProperty('detached')) {
+      assertConsoleErrorDev([
+        'React encountered an empty buffer when writing in an environment that does not support ArrayBuffer.prototype.detached. ' +
+          'This could be a security issue if the buffer was not actually empty. ' +
+          'Please use a modern browser that supports ArrayBuffer.prototype.detached.',
+      ]);
+    }
 
     await resolveB();
 
@@ -1440,5 +1471,189 @@ describe('ReactDOMFizzStaticBrowser', () => {
     await readIntoContainer(dynamic);
 
     expect(getVisibleChildren(container)).toEqual(<div>Hi</div>);
+  });
+
+  describe('abort signal lifetime', () => {
+    // Collects the lifetime signal that React bounds each abort listener with.
+    // React passes that signal to addEventListener instead of calling
+    // removeEventListener, so the runtime performs the removal and nothing here
+    // observes it directly. An aborted lifetime is what shows the listener is
+    // gone.
+    function trackAbortListenerLifetimes(signal) {
+      const lifetimes = [];
+      const add = signal.addEventListener.bind(signal);
+      signal.addEventListener = (type, listener, options) => {
+        if (type === 'abort') {
+          lifetimes.push(options.signal);
+        }
+        return add(type, listener, options);
+      };
+      return lifetimes;
+    }
+
+    it('detaches the listener when a prerender completes', async () => {
+      const controller = new AbortController();
+      const lifetimes = trackAbortListenerLifetimes(controller.signal);
+
+      const result = await serverAct(() =>
+        ReactDOMFizzStatic.prerender(<div>hello world</div>, {
+          signal: controller.signal,
+        }),
+      );
+      expect(lifetimes).toHaveLength(1);
+      expect(lifetimes[0].aborted).toBe(false);
+
+      await readContent(result.prelude);
+      expect(lifetimes[0].aborted).toBe(true);
+    });
+
+    it('detaches the listener when a render completes', async () => {
+      const controller = new AbortController();
+      const lifetimes = trackAbortListenerLifetimes(controller.signal);
+
+      const stream = await serverAct(() =>
+        ReactDOMFizzServer.renderToReadableStream(<div>hello world</div>, {
+          signal: controller.signal,
+        }),
+      );
+      expect(lifetimes).toHaveLength(1);
+      expect(lifetimes[0].aborted).toBe(false);
+
+      await readContent(stream);
+      expect(lifetimes[0].aborted).toBe(true);
+    });
+
+    it('detaches the listener when the signal aborts mid-render', async () => {
+      let hasLoaded = false;
+      let resolve;
+      const promise = new Promise(r => (resolve = r));
+      function Wait() {
+        if (!hasLoaded) {
+          throw promise;
+        }
+        return 'Done';
+      }
+
+      const controller = new AbortController();
+      const lifetimes = trackAbortListenerLifetimes(controller.signal);
+
+      const resultPromise = ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback="Loading">
+            <Wait />
+          </Suspense>
+        </div>,
+        {signal: controller.signal, onError() {}},
+      );
+      await jest.runAllTimers();
+      expect(lifetimes).toHaveLength(1);
+      expect(lifetimes[0].aborted).toBe(false);
+
+      controller.abort();
+      hasLoaded = true;
+      resolve();
+      await serverAct(() => resultPromise);
+
+      expect(lifetimes[0].aborted).toBe(true);
+    });
+
+    it('detaches the listener when the stream is cancelled', async () => {
+      let hasLoaded = false;
+      let resolve;
+      const promise = new Promise(r => (resolve = r));
+      function Wait() {
+        if (!hasLoaded) {
+          throw promise;
+        }
+        return 'Done';
+      }
+
+      const controller = new AbortController();
+      const lifetimes = trackAbortListenerLifetimes(controller.signal);
+
+      const stream = await serverAct(() =>
+        ReactDOMFizzServer.renderToReadableStream(
+          <div>
+            <Suspense fallback="Loading">
+              <Wait />
+            </Suspense>
+          </div>,
+          {signal: controller.signal, onError() {}},
+        ),
+      );
+      expect(lifetimes).toHaveLength(1);
+      expect(lifetimes[0].aborted).toBe(false);
+
+      await serverAct(() => stream.cancel());
+      hasLoaded = true;
+      resolve();
+
+      expect(lifetimes[0].aborted).toBe(true);
+    });
+
+    it('detaches the listener when the shell errors', async () => {
+      // A shell error rejects before the caller ever receives a stream, so
+      // nothing consumes the request and it never closes. The listener has to
+      // come off at the fatal error itself.
+      function Boom() {
+        throw new Error('boom');
+      }
+
+      const controller = new AbortController();
+      const lifetimes = trackAbortListenerLifetimes(controller.signal);
+
+      await expect(
+        serverAct(() =>
+          ReactDOMFizzServer.renderToReadableStream(<Boom />, {
+            signal: controller.signal,
+            onError() {},
+          }),
+        ),
+      ).rejects.toThrow('boom');
+
+      expect(lifetimes).toHaveLength(1);
+      expect(lifetimes[0].aborted).toBe(true);
+    });
+
+    it('constructs no abort controller when no signal is passed', async () => {
+      // The render lifetime exists only to bound the caller's abort listener,
+      // so a render that is given no signal has nothing to bound and should not
+      // pay for a controller. It also means such a render never requires
+      // AbortController to exist or to work.
+      const RealAbortController = globalThis.AbortController;
+      let constructed = 0;
+      globalThis.AbortController = class extends RealAbortController {
+        constructor() {
+          super();
+          constructed++;
+        }
+      };
+
+      try {
+        const stream = await serverAct(() =>
+          ReactDOMFizzServer.renderToReadableStream(<div>hello world</div>),
+        );
+        await readContent(stream);
+      } finally {
+        globalThis.AbortController = RealAbortController;
+      }
+
+      expect(constructed).toBe(0);
+    });
+
+    it('attaches no listener when the signal is already aborted', async () => {
+      const controller = new AbortController();
+      controller.abort();
+      const lifetimes = trackAbortListenerLifetimes(controller.signal);
+
+      await serverAct(() =>
+        ReactDOMFizzStatic.prerender(<div>hello world</div>, {
+          signal: controller.signal,
+          onError() {},
+        }),
+      );
+
+      expect(lifetimes).toHaveLength(0);
+    });
   });
 });

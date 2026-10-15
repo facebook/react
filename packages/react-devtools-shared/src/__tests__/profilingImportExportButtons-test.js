@@ -26,7 +26,6 @@ describe('ProfilingImportExportButtons', () => {
   let ModalDialogContext;
   let ProfilerContext;
   let StoreContext;
-  let TimelineContext;
   let container;
   let root;
   let utils;
@@ -46,8 +45,6 @@ describe('ProfilingImportExportButtons', () => {
       require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext').ProfilerContext;
     StoreContext =
       require('react-devtools-shared/src/devtools/views/context').StoreContext;
-    TimelineContext =
-      require('react-devtools-timeline/src/TimelineContext').TimelineContext;
 
     originalFileReader = global.FileReader;
     container = document.createElement('div');
@@ -87,7 +84,6 @@ describe('ProfilingImportExportButtons', () => {
     global.FileReader = MockFileReader;
 
     const modalDialogDispatch = jest.fn();
-    const setFile = jest.fn();
 
     utils.act(() => {
       root.render(
@@ -96,12 +92,10 @@ describe('ProfilingImportExportButtons', () => {
             value={
               ({isProfiling: false, profilingData: null, rootID: null}: any)
             }>
-            <TimelineContext.Provider value={({setFile}: any)}>
-              <ModalDialogContext.Provider
-                value={({dialogs: [], dispatch: modalDialogDispatch}: any)}>
-                <ProfilingImportExportButtons />
-              </ModalDialogContext.Provider>
-            </TimelineContext.Provider>
+            <ModalDialogContext.Provider
+              value={({dialogs: [], dispatch: modalDialogDispatch}: any)}>
+              <ProfilingImportExportButtons />
+            </ModalDialogContext.Provider>
           </ProfilerContext.Provider>
         </StoreContext.Provider>,
       );
@@ -128,6 +122,13 @@ describe('ProfilingImportExportButtons', () => {
         type: 'SHOW',
         title: 'Import failed',
       }),
+    );
+
+    utils.act(() => {
+      root.render(modalDialogDispatch.mock.calls[0][0].content);
+    });
+    expect(container.textContent).toContain(
+      'The selected file could not be read.',
     );
   });
 });

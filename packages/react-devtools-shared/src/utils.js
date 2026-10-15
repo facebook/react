@@ -39,7 +39,6 @@ import {
   LOCAL_STORAGE_ALWAYS_OPEN_IN_EDITOR,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-  SESSION_STORAGE_RECORD_TIMELINE_KEY,
   SUSPENSE_TREE_OPERATION_ADD,
   SUSPENSE_TREE_OPERATION_REMOVE,
   SUSPENSE_TREE_OPERATION_REORDER_CHILDREN,
@@ -131,7 +130,7 @@ export function getAllEnumerableKeys(
   return keys;
 }
 
-// Mirror https://github.com/facebook/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
+// Mirror https://github.com/react/react/blob/7c21bf72ace77094fd1910cc350a548287ef8350/packages/shared/getComponentName.js#L27-L37
 export function getWrappedDisplayName(
   outerType: mixed,
   innerType: any,
@@ -157,7 +156,7 @@ export function getDisplayName(
 
   // The displayName property is not guaranteed to be a string.
   // It's only safe to use for our purposes if it's a string.
-  // github.com/facebook/react-devtools/issues/803
+  // github.com/react/react-devtools/issues/803
   if (typeof type.displayName === 'string') {
     displayName = type.displayName;
   } else if (typeof type.name === 'string' && type.name !== '') {
@@ -794,7 +793,7 @@ export function getDataType(data: Object): DataType {
         const iterator = data[Symbol.iterator]();
         if (!iterator) {
           // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
+          // See github.com/react/react/issues/21654
         } else {
           return iterator === data ? 'opaque_iterator' : 'iterator';
         }
@@ -837,7 +836,7 @@ export function getDataType(data: Object): DataType {
 }
 
 // Fork of packages/react-is/src/ReactIs.js:30, but with legacy element type
-// Which has been changed in https://github.com/facebook/react/pull/28813
+// Which has been changed in https://github.com/react/react/pull/28813
 function typeOfWithLegacyElementSymbol(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
@@ -1295,30 +1294,20 @@ export function getProfilingSettings(): ProfilingSettings {
     recordChangeDescriptions:
       sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
       'true',
-    recordTimeline:
-      sessionStorageGetItem(SESSION_STORAGE_RECORD_TIMELINE_KEY) === 'true',
   };
 }
 
-export function onReloadAndProfile(
-  recordChangeDescriptions: boolean,
-  recordTimeline: boolean,
-): void {
+export function onReloadAndProfile(recordChangeDescriptions: boolean): void {
   sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
   sessionStorageSetItem(
     SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
     recordChangeDescriptions ? 'true' : 'false',
-  );
-  sessionStorageSetItem(
-    SESSION_STORAGE_RECORD_TIMELINE_KEY,
-    recordTimeline ? 'true' : 'false',
   );
 }
 
 export function onReloadAndProfileFlagsReset(): void {
   sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
   sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
-  sessionStorageRemoveItem(SESSION_STORAGE_RECORD_TIMELINE_KEY);
 }
 
 export function unionOfTwoArrays<T>(a: Array<T>, b: Array<T>): Array<T> {

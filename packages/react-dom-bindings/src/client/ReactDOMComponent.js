@@ -71,8 +71,8 @@ import {
   enableHydrationChangeEvent,
   enableScrollEndPolyfill,
   enableSrcObject,
-  enableTrustedTypesIntegration,
   enableViewTransition,
+  enableViewTransitionParentEnterExit,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -240,7 +240,10 @@ function hasViewTransition(htmlElement: HTMLElement): boolean {
     htmlElement.getAttribute('vt-share') ||
     htmlElement.getAttribute('vt-exit') ||
     htmlElement.getAttribute('vt-enter') ||
-    htmlElement.getAttribute('vt-update')
+    htmlElement.getAttribute('vt-update') ||
+    (enableViewTransitionParentEnterExit &&
+      (htmlElement.getAttribute('vt-parent-enter') ||
+        htmlElement.getAttribute('vt-parent-exit')))
   );
 }
 
@@ -323,7 +326,7 @@ function normalizeHTML(parent: Element, html: string) {
     // We could have created a separate document here to avoid
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
-    // See the discussion in https://github.com/facebook/react/pull/11157.
+    // See the discussion in https://github.com/react/react/pull/11157.
     const testElement =
       parent.namespaceURI === MATH_NAMESPACE ||
       parent.namespaceURI === SVG_NAMESPACE
@@ -375,10 +378,16 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // listener on the target node.
   // https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
   // Just set it using the onclick property so that we don't have to manage any
-  // bookkeeping for it. Not sure if we need to clear it when the listener is
-  // removed.
+  // bookkeeping for it. HostSingleton release clears the property only if it
+  // still points to this noop.
   // TODO: Only do this for the relevant Safaris maybe?
   node.onclick = noop;
+}
+
+export function clearClickListener(node: HTMLElement) {
+  if (node.onclick === noop) {
+    node.onclick = null;
+  }
 }
 
 const xlinkNamespace = 'http://www.w3.org/1999/xlink';
@@ -401,7 +410,7 @@ function setProp(
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
-        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+        // https://github.com/react/react/issues/6731#issuecomment-254874553
         const canSetTextContent =
           tag !== 'body' && (tag !== 'textarea' || value !== '');
         if (canSetTextContent) {
@@ -523,14 +532,10 @@ function setProp(
         domElement.removeAttribute(key);
         break;
       }
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value as any),
-      ) as any;
+      const sanitizedValue = sanitizeURL(value) as any;
       domElement.setAttribute(key, sanitizedValue);
       break;
     }
@@ -594,14 +599,10 @@ function setProp(
         domElement.removeAttribute(key);
         break;
       }
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value as any),
-      ) as any;
+      const sanitizedValue = sanitizeURL(value) as any;
       domElement.setAttribute(key, sanitizedValue);
       break;
     }
@@ -701,14 +702,10 @@ function setProp(
         domElement.removeAttribute('xlink:href');
         break;
       }
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value as any),
-      ) as any;
+      const sanitizedValue = sanitizeURL(value) as any;
       domElement.setAttributeNS(xlinkNamespace, 'xlink:href', sanitizedValue);
       break;
     }
@@ -734,10 +731,7 @@ function setProp(
         if (__DEV__) {
           checkAttributeStringCoercion(value, key);
         }
-        domElement.setAttribute(
-          key,
-          enableTrustedTypesIntegration ? (value as any) : '' + (value as any),
-        );
+        domElement.setAttribute(key, value as any);
       } else {
         domElement.removeAttribute(key);
       }
@@ -1482,6 +1476,26 @@ export function setInitialProperties(
       continue;
     }
     setProp(domElement, tag, propKey, propValue, props, null);
+  }
+}
+
+export type SingletonType = 'html' | 'head' | 'body';
+
+const emptyProps = {};
+
+export function clearSingletonProperties(
+  domElement: Element,
+  tag: SingletonType,
+  props: Object,
+): void {
+  // This is equivalent to updating to empty props for tags without
+  // tag-specific update logic. Host singletons are limited to html, head, and
+  // body, so they always use this generic path.
+  for (const propKey in props) {
+    const propValue = props[propKey];
+    if (props.hasOwnProperty(propKey) && propValue != null) {
+      setProp(domElement, tag, propKey, null, emptyProps, propValue);
+    }
   }
 }
 
@@ -3307,6 +3321,8 @@ export function diffHydratedProperties(
         case 'vt-enter':
         case 'vt-exit':
         case 'vt-share':
+        case 'vt-parent-enter':
+        case 'vt-parent-exit':
           if (enableViewTransition) {
             // View Transition annotations are expected from the Server Runtime.
             // However, if they're also specified on the client and don't match
@@ -3316,7 +3332,7 @@ export function diffHydratedProperties(
         // Fallthrough
         default:
           // Intentionally use the original name.
-          // See discussion in https://github.com/facebook/react/pull/10676.
+          // See discussion in https://github.com/react/react/pull/10676.
           extraAttributes.add(attributes[i].name);
       }
     }
