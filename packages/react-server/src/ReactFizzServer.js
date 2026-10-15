@@ -4377,60 +4377,14 @@ function spawnNewPostponedTask(
   request: Request,
   task: RenderTask,
   thenableState: ThenableState | null,
-  node: ReactNodeList,
-  childIndex: number,
-): RenderTask {
-  const segment = task.blockedSegment;
-  const insertionIndex = segment.chunks.length;
-  const newSegment = createPendingSegment(
-    request,
-    insertionIndex,
-    null,
-    task.formatContext,
-    segment.lastPushedText,
-    true,
-  );
-  segment.children.push(newSegment);
-  segment.lastPushedText = false;
-  return createRenderTask(
-    request,
-    thenableState,
-    node,
-    childIndex,
-    task.blockedBoundary,
-    newSegment,
-    task.blockedPreamble,
-    task.hoistableState,
-    task.abortSet,
-    task.keyPath,
-    task.formatContext,
-    task.context,
-    task.treeContext,
-    task.row,
-    task.componentStack,
-    !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ ? task.debugTask : null,
-  );
-}
-
-function postponeAbortedRenderNode(
-  request: Request,
-  task: Task,
-  node: ReactNodeList,
-  childIndex: number,
-  thenableState: ThenableState | null,
 ): void {
   // Preserve the segment rendered so far and leave a hole at this node. The
   // request has already been aborted, so this new task must be finished now
   // rather than scheduled for another attempt.
-  // canPostponeAbortedRenderTask has checked that this task has a segment.
-  const renderTask: RenderTask = task as any;
-  const postponedTask = spawnNewPostponedTask(
+  const postponedTask = spawnNewSuspendedRenderTask(
     request,
-    renderTask,
+    task,
     thenableState,
-    node,
-    childIndex,
   );
   if (__DEV__) {
     abortTaskDEV(postponedTask, request);
@@ -4457,10 +4411,7 @@ function canPostponeAbortedRenderTask(request: Request, task: Task): boolean {
     task.blockedBoundary !== null &&
     task.row === null &&
     segment !== null &&
-    segment.id === -1 &&
-    // A fallback may still need to abort the surrounding boundary. Do not
-    // continue it into the creation of a new primary task after abort.
-    segment.boundary === null
+    segment.id === -1
   );
 }
 
@@ -4610,16 +4561,21 @@ function renderNode(
           : thrownValue;
 
       if (request.aborted) {
-        if (canPostponeAbortedRenderTask(request, task)) {
+        if (
+          request.trackedPostpones !== null &&
+          !isRecoverableError(request.fatalError) &&
+          task.blockedBoundary !== null &&
+          task.row === null &&
+          segment.id === -1
+        ) {
           const thenableState =
             thrownValue === SuspenseException
               ? getThenableStateAfterSuspending()
               : null;
-          postponeAbortedRenderNode(
+          spawnNewPostponedTask(
             request,
+            // $FlowFixMe[incompatible-type]: Refined.
             task,
-            node,
-            childIndex,
             thenableState,
           );
           postponed = true;

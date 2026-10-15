@@ -1165,7 +1165,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
-  it('postpones an iterable child when its iterator aborts', async () => {
+  it('resumes an aborting iterable returned by a component', async () => {
     const controller = new AbortController();
     let prerendering = true;
     const iterable = {
@@ -1193,10 +1193,20 @@ describe('ReactDOMFizzStaticBrowser', () => {
       },
     };
 
+    function Child() {
+      return iterable;
+    }
+
     function App() {
       return (
         <div>
-          <Suspense fallback="Loading...">{iterable}</Suspense>
+          <Suspense fallback="Loading...">
+            <section>
+              Before
+              <Child />
+              End
+            </section>
+          </Suspense>
         </div>
       );
     }
