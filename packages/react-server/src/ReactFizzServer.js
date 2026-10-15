@@ -2251,16 +2251,6 @@ function renderSuspenseList(
 ): void {
   const children: any = props.children;
   const revealOrder: SuspenseListRevealOrder = props.revealOrder;
-  if (
-    revealOrder !== undefined &&
-    revealOrder !== 'independent' &&
-    canPostponeAbortedRenderTask(request, task)
-  ) {
-    // Rows have separate completion bookkeeping. Replay the whole list instead
-    // of starting new rows in an already aborted task.
-    // eslint-disable-next-line no-throw-literal
-    throw null;
-  }
   // TODO: Support tail hidden/collapsed modes.
   // const tailMode: SuspenseListTailMode = props.tail;
   if (revealOrder !== 'independent' && revealOrder !== 'together') {
@@ -4373,7 +4363,7 @@ function spawnNewSuspendedRenderTask(
   );
 }
 
-function spawnNewPostponedTask(
+function postponeNewSuspendedRenderTask(
   request: Request,
   task: RenderTask,
   thenableState: ThenableState | null,
@@ -4399,22 +4389,6 @@ function spawnNewPostponedTask(
   }
 }
 
-function canPostponeAbortedRenderTask(request: Request, task: Task): boolean {
-  const segment = task.blockedSegment;
-  // Replay tasks and SuspenseList rows have separate completion bookkeeping.
-  // An already assigned segment ID belongs to a resumed slot, which also has
-  // separate replay bookkeeping.
-  return (
-    request.aborted &&
-    request.trackedPostpones !== null &&
-    !isRecoverableError(request.fatalError) &&
-    task.blockedBoundary !== null &&
-    task.row === null &&
-    segment !== null &&
-    segment.id === -1
-  );
-}
-
 // This is a non-destructive form of rendering a node. If it suspends it spawns
 // a new task and restores the context of this task to what it was before.
 function renderNode(
@@ -4435,7 +4409,6 @@ function renderNode(
   const previousComponentStack = task.componentStack;
   const previousDebugTask = __DEV__ ? task.debugTask : null;
   let x;
-  let postponed = false;
   // Store how much we've pushed at this point so we can reset it in case something
   // suspended partially through writing something.
   const segment = task.blockedSegment;
@@ -4565,20 +4538,35 @@ function renderNode(
           request.trackedPostpones !== null &&
           !isRecoverableError(request.fatalError) &&
           task.blockedBoundary !== null &&
-          task.row === null &&
           segment.id === -1
         ) {
           const thenableState =
             thrownValue === SuspenseException
               ? getThenableStateAfterSuspending()
               : null;
-          spawnNewPostponedTask(
+          postponeNewSuspendedRenderTask(
             request,
             // $FlowFixMe[incompatible-type]: Refined.
             task,
             thenableState,
           );
-          postponed = true;
+
+          // Restore the context. We assume that this will be restored by the inner
+          // functions in case nothing throws so we don't use "finally" here.
+          task.formatContext = previousFormatContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
+          task.context = previousContext;
+          task.keyPath = previousKeyPath;
+          task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
+          if (__DEV__) {
+            task.debugTask = previousDebugTask;
+          }
+          // Restore all active ReactContexts to what they were before.
+          switchContext(previousContext);
+          return;
         }
       } else if (
         typeof x === 'object' &&
@@ -4673,14 +4661,6 @@ function renderNode(
 
   // Restore all active ReactContexts to what they were before.
   switchContext(previousContext);
-
-  if (postponed) {
-    task.componentStack = previousComponentStack;
-    if (__DEV__) {
-      task.debugTask = previousDebugTask;
-    }
-    return;
-  }
 
   throw x;
 }

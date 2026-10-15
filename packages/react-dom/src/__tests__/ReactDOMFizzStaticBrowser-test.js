@@ -1561,65 +1561,172 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toContain('second abort');
   });
 
-  // @gate enableSuspenseList
-  it('settles an abort in a together SuspenseList row', async () => {
-    let resolveGate;
-    const gate = new Promise(resolve => (resolveGate = resolve));
-    const controller = new AbortController();
-    let prerendering = true;
+  ['forwards', 'backwards', 'together'].forEach(revealOrder => {
+    [true, false].forEach(abortBeforeList => {
+      // @gate enableSuspenseList
+      it(`preserves static ${revealOrder} SuspenseList rows when aborting ${
+        abortBeforeList ? 'before the list' : 'inside a row'
+      }`, async () => {
+        const controller = new AbortController();
+        let prerendering = true;
 
-    function Abort() {
-      if (prerendering) {
-        controller.abort('row abort');
-      }
-      return 'Fallback';
-    }
+        function Abort() {
+          if (prerendering) {
+            controller.abort('list abort');
+          }
+          return 'Aborted';
+        }
 
-    function Content() {
-      React.use(gate);
-      return (
-        <React.unstable_SuspenseList revealOrder="together">
-          <Suspense key="one" fallback={<Abort />}>
-            First
-          </Suspense>
-          <Suspense key="two" fallback="SecondFallback">
-            Second
-          </Suspense>
-        </React.unstable_SuspenseList>
-      );
-    }
+        function Dynamic({text}) {
+          return text;
+        }
 
-    function App() {
-      return (
-        <div>
-          <Suspense fallback="Loading...">
-            <Content />
-          </Suspense>
-        </div>
-      );
-    }
+        function Content() {
+          return (
+            <section>
+              {abortBeforeList ? <Abort /> : null}
+              <SuspenseList revealOrder={revealOrder}>
+                <span key="first" data-row="first">
+                  First
+                  <Dynamic text=" one" />
+                </span>
+                <span key="second" data-row="second">
+                  Second{abortBeforeList ? null : <Abort />}
+                </span>
+                <span key="third" data-row="third">
+                  Third
+                  <Dynamic text=" three" />
+                </span>
+              </SuspenseList>
+            </section>
+          );
+        }
 
-    let pendingResult;
-    await serverAct(() => {
-      pendingResult = ReactDOMFizzStatic.prerender(<App />, {
-        signal: controller.signal,
-        onError() {},
+        function App() {
+          return (
+            <div>
+              <Suspense fallback="Loading...">
+                <Content />
+              </Suspense>
+            </div>
+          );
+        }
+
+        let pendingResult;
+        await serverAct(() => {
+          pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+            signal: controller.signal,
+            onError() {},
+          });
+        });
+        const prerendered = await pendingResult;
+        expect(prerendered.postponed).not.toBe(null);
+        await readIntoContainer(prerendered.prelude);
+        expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+        expect(container.textContent).not.toContain('Aborted');
+        expect(container.querySelector('[data-row="first"]').textContent).toBe(
+          abortBeforeList ? 'First' : 'First one',
+        );
+        expect(container.querySelector('[data-row="second"]').textContent).toBe(
+          'Second',
+        );
+        expect(container.querySelector('[data-row="third"]').textContent).toBe(
+          'Third',
+        );
+
+        prerendering = false;
+        const resumed = await serverAct(() =>
+          ReactDOMFizzServer.resume(
+            <App />,
+            JSON.parse(JSON.stringify(prerendered.postponed)),
+          ),
+        );
+        await readIntoContainer(resumed);
+        const expectedRows = [
+          <span data-row="first">{['First', ' one']}</span>,
+          <span data-row="second">
+            {abortBeforeList ? 'Second' : ['Second', 'Aborted']}
+          </span>,
+          <span data-row="third">{['Third', ' three']}</span>,
+        ];
+        if (revealOrder === 'backwards') {
+          expectedRows.reverse();
+        }
+        if (abortBeforeList) {
+          expectedRows.unshift('Aborted');
+        }
+        expect(getVisibleChildren(container)).toEqual(
+          <div>
+            <section>{expectedRows}</section>
+          </div>,
+        );
       });
     });
-    await serverAct(() => resolveGate());
-    const prerendered = await pendingResult;
-    expect(prerendered.postponed).not.toBe(null);
+  });
 
-    prerendering = false;
-    const resumed = await serverAct(() =>
-      ReactDOMFizzServer.resume(
-        <App />,
-        JSON.parse(JSON.stringify(prerendered.postponed)),
-      ),
-    );
-    await readIntoContainer(prerendered.prelude);
-    await readIntoContainer(resumed);
-    expect(container.querySelector('div').textContent).toBe('FirstSecond');
+  ['forwards', 'backwards', 'together'].forEach(revealOrder => {
+    // @gate enableSuspenseList
+    it(`settles an abort in a ${revealOrder} SuspenseList row`, async () => {
+      let resolveGate;
+      const gate = new Promise(resolve => (resolveGate = resolve));
+      const controller = new AbortController();
+      let prerendering = true;
+
+      function Abort() {
+        if (prerendering) {
+          controller.abort('row abort');
+        }
+        return 'Fallback';
+      }
+
+      function Content() {
+        React.use(gate);
+        return (
+          <SuspenseList revealOrder={revealOrder}>
+            <Suspense key="one" fallback={<Abort />}>
+              First
+            </Suspense>
+            <Suspense key="two" fallback="SecondFallback">
+              Second
+            </Suspense>
+          </SuspenseList>
+        );
+      }
+
+      function App() {
+        return (
+          <div>
+            <Suspense fallback="Loading...">
+              <Content />
+            </Suspense>
+          </div>
+        );
+      }
+
+      let pendingResult;
+      await serverAct(() => {
+        pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+          signal: controller.signal,
+          onError() {},
+        });
+      });
+      await serverAct(() => resolveGate());
+      const prerendered = await pendingResult;
+      expect(prerendered.postponed).not.toBe(null);
+
+      prerendering = false;
+      const resumed = await serverAct(() =>
+        ReactDOMFizzServer.resume(
+          <App />,
+          JSON.parse(JSON.stringify(prerendered.postponed)),
+        ),
+      );
+      await readIntoContainer(prerendered.prelude);
+      await readIntoContainer(resumed);
+      expect(container.querySelector('div').textContent).toBe(
+        revealOrder === 'backwards' ? 'SecondFirst' : 'FirstSecond',
+      );
+    });
   });
 
   it('resumes a retried array child after its child suspends and another aborts', async () => {
