@@ -603,7 +603,7 @@ function updateSimpleMemoComponent(
         );
       } else if ((current.flags & ForceUpdateForLegacySuspense) !== NoFlags) {
         // This is a special case that only exists for legacy mode.
-        // See https://github.com/facebook/react/pull/19216.
+        // See https://github.com/react/react/pull/19216.
         didReceiveUpdate = true;
       }
     }
@@ -1866,7 +1866,6 @@ function updateHostRoot(
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  // $FlowFixMe[constant-condition]
   if (supportsHydration && prevState.isDehydrated) {
     // This is a hydration root whose shell has not yet hydrated. We should
     // attempt to hydrate.
@@ -4295,7 +4294,7 @@ function beginWork(
       }
       if ((current.flags & ForceUpdateForLegacySuspense) !== NoFlags) {
         // This is a special case that only exists for legacy mode.
-        // See https://github.com/facebook/react/pull/19216.
+        // See https://github.com/react/react/pull/19216.
         didReceiveUpdate = true;
       } else {
         // An update was scheduled on this fiber, but there are no new props
@@ -4369,13 +4368,11 @@ function beginWork(
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderLanes);
     case HostHoistable:
-      // $FlowFixMe[constant-condition]
       if (supportsResources) {
         return updateHostHoistable(current, workInProgress, renderLanes);
       }
     // Fall through
     case HostSingleton:
-      // $FlowFixMe[constant-condition]
       if (supportsSingletons) {
         return updateHostSingleton(current, workInProgress, renderLanes);
       }
