@@ -4537,8 +4537,7 @@ function renderNode(
         if (
           request.trackedPostpones !== null &&
           !isRecoverableError(request.fatalError) &&
-          task.blockedBoundary !== null &&
-          segment.id === -1
+          task.blockedBoundary !== null
         ) {
           const thenableState =
             thrownValue === SuspenseException

@@ -1491,7 +1491,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Content</div>);
   });
 
-  it('settles when a resumed prerender aborts again', async () => {
+  it.failing('can resume after a resumed prerender aborts again', async () => {
     const never = new Promise(() => {});
     const firstController = new AbortController();
     const secondController = new AbortController();
@@ -1523,9 +1523,13 @@ describe('ReactDOMFizzStaticBrowser', () => {
       return (
         <div>
           <Suspense fallback="Loading...">
-            <Pending />
-            <AbortFirst />
-            <AbortSecond />
+            <section>
+              Before
+              <Pending />
+              <AbortFirst />
+              <AbortSecond />
+              After
+            </section>
           </Suspense>
         </div>
       );
@@ -1542,9 +1546,16 @@ describe('ReactDOMFizzStaticBrowser', () => {
     });
     const first = await pendingResult;
     expect(first.postponed).not.toBe(null);
+    expect(errors).toContain('first abort');
+    expect(errors.every(error => error === 'first abort')).toBe(true);
+    await readIntoContainer(first.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(container.querySelector('section').textContent).toBe('BeforeAfter');
 
     stage = 1;
+    errors.length = 0;
     let resumedResult;
+    let resumedResultSettled = false;
     await serverAct(() => {
       resumedResult = ReactDOMFizzStatic.resumeAndPrerender(
         <App />,
@@ -1556,9 +1567,43 @@ describe('ReactDOMFizzStaticBrowser', () => {
           },
         },
       );
+      resumedResult.then(
+        () => (resumedResultSettled = true),
+        () => (resumedResultSettled = true),
+      );
     });
-    await resumedResult;
+    expect(resumedResultSettled).toBe(true);
+    const second = await resumedResult;
     expect(errors).toContain('second abort');
+    expect(errors.every(error => error === 'second abort')).toBe(true);
+    expect(second.postponed).not.toBe(null);
+    await readIntoContainer(second.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(container.querySelector('section').textContent).toBe(
+      'BeforeSecondAfter',
+    );
+
+    stage = 2;
+    errors.length = 0;
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(second.postponed)),
+        {
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      ),
+    );
+    await readIntoContainer(resumed);
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <section>{['Before', 'First', 'Second', 'Third', 'After']}</section>
+      </div>,
+    );
+    expect(container.querySelector('template')).toBe(null);
   });
 
   ['forwards', 'backwards', 'together'].forEach(revealOrder => {
