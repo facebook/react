@@ -864,7 +864,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['resume abort']);
   });
 
-  it('resumes a task that was aborted while rendering from where it started', async () => {
+  it('preserves parent markup when a retried task aborts synchronously', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
     let prerendering = true;
