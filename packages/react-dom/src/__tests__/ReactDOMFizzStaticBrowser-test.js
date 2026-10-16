@@ -1611,7 +1611,72 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Content</div>);
   });
 
-  it.failing('can resume after a resumed prerender aborts again', async () => {
+  it('can postpone the same boundary across repeated prerenders', async () => {
+    const never = new Promise(() => {});
+    const errors = [];
+    let ready = false;
+    let postponed;
+
+    function Wait() {
+      if (!ready) {
+        React.use(never);
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Wait />
+          </Suspense>
+        </div>
+      );
+    }
+
+    for (let pass = 0; pass < 2; pass++) {
+      const controller = new AbortController();
+      const options = {
+        signal: controller.signal,
+        onError(error) {
+          errors.push(error);
+        },
+      };
+      let pendingResult;
+      await serverAct(() => {
+        pendingResult =
+          pass === 0
+            ? ReactDOMFizzStatic.prerender(<App />, options)
+            : ReactDOMFizzStatic.resumeAndPrerender(
+                <App />,
+                postponed,
+                options,
+              );
+      });
+      await serverAct(() => controller.abort(`abort ${pass}`));
+      const result = await pendingResult;
+      expect(result.postponed).not.toBe(null);
+      await readIntoContainer(result.prelude);
+      expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+      postponed = JSON.parse(JSON.stringify(result.postponed));
+    }
+
+    expect(errors).toEqual(['abort 0', 'abort 1']);
+    ready = true;
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, postponed, {
+        onError(error) {
+          errors.push(error);
+        },
+      }),
+    );
+    await readIntoContainer(resumed);
+    expect(errors).toEqual(['abort 0', 'abort 1']);
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(container.querySelector('template')).toBe(null);
+  });
+
+  it('can resume after a resumed prerender aborts again', async () => {
     const never = new Promise(() => {});
     const firstController = new AbortController();
     const secondController = new AbortController();

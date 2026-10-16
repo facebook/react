@@ -1828,6 +1828,26 @@ function replaySuspenseBoundary(
   // We restore the same id of this boundary as was used during prerender.
   resumedBoundary.rootSegmentID = id;
 
+  const fallbackKeyPath: KeyNode = [
+    keyPath[0],
+    'Suspense Fallback',
+    keyPath[2],
+  ];
+  const trackedPostpones = request.trackedPostpones;
+  if (trackedPostpones !== null) {
+    const fallbackReplayNode: ReplayNode = [
+      fallbackKeyPath[1],
+      fallbackKeyPath[2],
+      [] as Array<ReplayNode>,
+      null,
+    ];
+    trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
+    resumedBoundary.tracked = {
+      contentKeyPath: keyPath,
+      fallbackNode: fallbackReplayNode,
+    };
+  }
+
   // We can reuse the current context and task to render the content immediately without
   // context switching. We just need to temporarily switch which boundary and replay node
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
@@ -1900,12 +1920,6 @@ function replaySuspenseBoundary(
     task.formatContext = prevContext;
     task.row = prevRow;
   }
-
-  const fallbackKeyPath: KeyNode = [
-    keyPath[0],
-    'Suspense Fallback',
-    keyPath[2],
-  ];
 
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
@@ -4097,9 +4111,11 @@ function trackPostponedBoundary(
   boundary: SuspenseBoundary,
 ): ReplaySuspenseBoundary {
   boundary.status = POSTPONED;
-  // We need to eagerly assign it an ID because we'll need to refer to
-  // it before flushing and we know that we can't inline it.
-  boundary.rootSegmentID = request.nextSegmentId++;
+  if (boundary.rootSegmentID === -1) {
+    // Assign an ID before flushing. Resumed boundaries keep the ID already
+    // referenced by the previous prerender's HTML.
+    boundary.rootSegmentID = request.nextSegmentId++;
+  }
 
   const tracked = boundary.tracked;
   if (tracked === null) {
@@ -5342,7 +5358,12 @@ function finishedTask(
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
-        request.completedBoundaries.push(boundary);
+        if (boundary.status === POSTPONED) {
+          // All tasks finished, but postponed holes still block revealing this boundary.
+          request.partialBoundaries.push(boundary);
+        } else {
+          request.completedBoundaries.push(boundary);
+        }
       }
 
       // We can now cancel any pending task on the fallback since we won't need to show it anymore.
