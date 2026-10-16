@@ -4534,10 +4534,7 @@ function renderNode(
           : thrownValue;
 
       if (request.aborted) {
-        if (
-          request.trackedPostpones !== null &&
-          task.blockedBoundary !== null
-        ) {
+        if (request.trackedPostpones !== null) {
           const thenableState =
             thrownValue === SuspenseException
               ? getThenableStateAfterSuspending()
@@ -5314,6 +5311,15 @@ function finishedTask(
         );
       }
 
+      const trackedPostpones = request.trackedPostpones;
+      if (
+        trackedPostpones !== null &&
+        typeof trackedPostpones.rootSlots === 'number'
+      ) {
+        // A child may have postponed the whole root while this segment was
+        // still rendering.
+        segment.status = POSTPONED;
+      }
       request.completedRootSegment = segment;
     }
     request.pendingRootTasks--;

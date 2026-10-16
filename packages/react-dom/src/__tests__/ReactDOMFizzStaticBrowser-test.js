@@ -864,6 +864,74 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['resume abort']);
   });
 
+  [false, true].forEach(retryRootChild => {
+    it(`retries the whole root after a synchronous abort ${
+      retryRootChild ? 'in a retried task' : 'during the initial render'
+    }`, async () => {
+      const controller = new AbortController();
+      let prerendering = true;
+      let resolve;
+      const promise = new Promise(r => (resolve = r));
+
+      function Abort() {
+        if (prerendering) {
+          controller.abort('root abort');
+        }
+        return 'Child';
+      }
+
+      function Content() {
+        if (retryRootChild) {
+          React.use(promise);
+        }
+        return (
+          <section>
+            Before
+            <Abort />
+            <span>After</span>
+          </section>
+        );
+      }
+
+      function App() {
+        return (
+          <main>
+            <Content />
+          </main>
+        );
+      }
+
+      let pendingResult;
+      await serverAct(() => {
+        pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+          signal: controller.signal,
+          onError() {},
+        });
+      });
+      if (retryRootChild) {
+        await serverAct(() => resolve());
+      }
+      const prerendered = await pendingResult;
+
+      expect(prerendered.postponed).not.toBe(null);
+      expect(await readContent(prerendered.prelude)).toBe('');
+
+      prerendering = false;
+      const resumed = await serverAct(() =>
+        ReactDOMFizzServer.resume(
+          <App />,
+          JSON.parse(JSON.stringify(prerendered.postponed)),
+        ),
+      );
+      await readIntoContainer(resumed);
+      expect(getVisibleChildren(container)).toEqual(
+        <main>
+          <section>{['Before', 'Child', <span>After</span>]}</section>
+        </main>,
+      );
+    });
+  });
+
   it('preserves parent markup when a retried task aborts synchronously', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
