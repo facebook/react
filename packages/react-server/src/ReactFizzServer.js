@@ -4536,7 +4536,6 @@ function renderNode(
       if (request.aborted) {
         if (
           request.trackedPostpones !== null &&
-          !isRecoverableError(request.fatalError) &&
           task.blockedBoundary !== null
         ) {
           const thenableState =
