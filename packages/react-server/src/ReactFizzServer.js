@@ -4534,7 +4534,12 @@ function renderNode(
           : thrownValue;
 
       if (request.aborted) {
-        if (request.trackedPostpones !== null) {
+        // A postponed root cannot flush any shell and must be rendered again in
+        // full, so let it unwind instead of preserving individual holes.
+        if (
+          request.trackedPostpones !== null &&
+          task.blockedBoundary !== null
+        ) {
           const thenableState =
             thrownValue === SuspenseException
               ? getThenableStateAfterSuspending()
@@ -5311,15 +5316,6 @@ function finishedTask(
         );
       }
 
-      const trackedPostpones = request.trackedPostpones;
-      if (
-        trackedPostpones !== null &&
-        typeof trackedPostpones.rootSlots === 'number'
-      ) {
-        // A child may have postponed the whole root while this segment was
-        // still rendering.
-        segment.status = POSTPONED;
-      }
       request.completedRootSegment = segment;
     }
     request.pendingRootTasks--;

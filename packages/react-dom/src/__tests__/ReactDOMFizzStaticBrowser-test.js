@@ -932,6 +932,58 @@ describe('ReactDOMFizzStaticBrowser', () => {
     });
   });
 
+  it('retries the whole root after a resumed prerender aborts synchronously', async () => {
+    const controllers = [new AbortController(), new AbortController()];
+    let stage = 0;
+    let postponed;
+
+    function Abort() {
+      if (stage < 2) {
+        controllers[stage].abort('root abort');
+      }
+      return 'Child';
+    }
+
+    function App() {
+      return (
+        <main>
+          <section>
+            Before
+            <Abort />
+            <span>After</span>
+          </section>
+        </main>
+      );
+    }
+
+    for (let pass = 0; pass < 2; pass++) {
+      stage = pass;
+      const options = {
+        signal: controllers[pass].signal,
+        onError() {},
+      };
+      const result = await serverAct(() =>
+        pass === 0
+          ? ReactDOMFizzStatic.prerender(<App />, options)
+          : ReactDOMFizzStatic.resumeAndPrerender(<App />, postponed, options),
+      );
+      expect(result.postponed).not.toBe(null);
+      expect(await readContent(result.prelude)).toBe('');
+      postponed = JSON.parse(JSON.stringify(result.postponed));
+    }
+
+    stage = 2;
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, postponed),
+    );
+    await readIntoContainer(resumed);
+    expect(getVisibleChildren(container)).toEqual(
+      <main>
+        <section>{['Before', 'Child', <span>After</span>]}</section>
+      </main>,
+    );
+  });
+
   it('preserves parent markup when a retried task aborts synchronously', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
