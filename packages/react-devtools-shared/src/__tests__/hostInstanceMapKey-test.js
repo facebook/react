@@ -17,16 +17,20 @@ describe('getHostInstanceKey', () => {
   });
 
   it('reproduces the Fabric acquire/release key mismatch (react/react#37752)', () => {
-    const {getPublicInstance} = DevToolsNativeHost;
+    const {getHostInstanceKey, getPublicInstance} = DevToolsNativeHost;
 
     // Fabric host instance wrapper before React Native lazily creates
     // canonical.publicInstance (ReactFabric-dev.js:getPublicInstance).
     const canonical = {nativeTag: 42, publicInstance: null};
     const wrapper = {node: {}, canonical};
 
-    // What aquireHostInstance does: key the map by getPublicInstance().
+    // getHostInstanceKey returns the canonical object even before the
+    // public instance exists, so aquireHostInstance can key by it.
+    const acquireKey = getHostInstanceKey(wrapper);
+    expect(acquireKey).toBe(canonical);
+
     const map = new Map();
-    map.set(getPublicInstance(wrapper), 'devtools-instance');
+    map.set(acquireKey, 'devtools-instance');
 
     // React Native lazily initializes canonical.publicInstance, e.g. when a
     // ref is read or measure() is called.
@@ -34,9 +38,19 @@ describe('getHostInstanceKey', () => {
       __internalInstanceHandle: {stateNode: wrapper},
     };
 
-    // What releaseHostInstance does: look the entry up with the current key.
-    // On current main this misses, leaking the unmounted instance.
-    expect(map.get(getPublicInstance(wrapper))).toBe('devtools-instance');
+    // The old keying misses: getPublicInstance, which this PR leaves
+    // unchanged, now returns canonical.publicInstance instead of the
+    // wrapper it returned before lazy creation, so a lookup through it
+    // returns undefined rather than 'devtools-instance'. Acquire/release
+    // keyed that way on main, leaking the unmounted instance.
+    expect(map.get(getPublicInstance(wrapper))).toBeUndefined();
+
+    // The new helper returns the same canonical key after the assignment,
+    // so releaseHostInstance finds and removes the acquire entry.
+    expect(getHostInstanceKey(wrapper)).toBe(acquireKey);
+    expect(map.get(getHostInstanceKey(wrapper))).toBe('devtools-instance');
+    map.delete(getHostInstanceKey(wrapper));
+    expect(map.has(acquireKey)).toBe(false);
   });
 
   it('keys Fabric host instances by the stable canonical object', () => {
