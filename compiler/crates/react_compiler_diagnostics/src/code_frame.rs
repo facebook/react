@@ -438,3 +438,42 @@ fn format_error_detail(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::code_frame_columns;
+
+    #[test]
+    fn marker_spacing_uses_utf16_columns() {
+        // Expected markers match Babel's codeFrameColumns without highlighting.
+        for (source, column, marker) in [
+            ("abc target", 4, "    |     ^^^^^^ test"),
+            ("é target", 2, "    |   ^^^^^^ test"),
+            ("文字 target", 3, "    |    ^^^^^^ test"),
+            ("🚀 target", 3, "    |    ^^^^^^ test"),
+            ("e\u{0301} target", 3, "    |    ^^^^^^ test"),
+            ("é\ttarget", 2, "    |  \t^^^^^^ test"),
+        ] {
+            assert_eq!(
+                code_frame_columns(source, 1, column, 1, column + 6, "test"),
+                format!("> 1 | {source}\n{marker}"),
+                "source: {source:?}",
+            );
+        }
+    }
+
+    #[test]
+    fn multiline_markers_use_utf16_lengths() {
+        assert_eq!(
+            code_frame_columns("é target\n文字🚀 middle\nend", 1, 2, 3, 3, "test"),
+            concat!(
+                "> 1 | é target\n",
+                "    |   ^^^^^^\n",
+                "> 2 | 文字🚀 middle\n",
+                "    | ^^^^^^^^^^^\n",
+                "> 3 | end\n",
+                "    | ^^^^ test",
+            ),
+        );
+    }
+}
