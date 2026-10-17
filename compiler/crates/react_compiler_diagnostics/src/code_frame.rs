@@ -170,7 +170,7 @@ pub fn code_frame_columns(
                     if i == 0 && *len == 0 {
                         // First line of multi-line: from start_column to end of line
                         let source_length = if line_number >= 1 && line_number <= lines.len() {
-                            lines[line_number - 1].len()
+                            lines[line_number - 1].encode_utf16().count()
                         } else {
                             0
                         };
@@ -181,7 +181,7 @@ pub fn code_frame_columns(
                         // This means all middle lines use the length of source[startLine],
                         // which is the line at 0-indexed position startLine in the source array.
                         let source_length = if (start_line as usize) < lines.len() {
-                            lines[start_line as usize].len()
+                            lines[start_line as usize].encode_utf16().count()
                         } else {
                             0
                         };
@@ -228,19 +228,12 @@ pub fn code_frame_columns(
 
             let marker_line_str = match marker_entry {
                 MarkerEntry::Range(col, len) => {
-                    // Build marker spacing: replace non-tab chars with spaces
+                    // Babel columns and marker spacing count UTF-16 code units.
                     let max_col = if *col > 0 { col - 1 } else { 0 };
-                    let byte_end = std::cmp::min(max_col, line.len());
-                    // Ensure we don't slice in the middle of a multi-byte UTF-8 character
-                    let safe_end = if byte_end < line.len() && !line.is_char_boundary(byte_end) {
-                        line.floor_char_boundary(byte_end)
-                    } else {
-                        byte_end
-                    };
-                    let prefix = &line[..safe_end];
-                    let marker_spacing: String = prefix
-                        .chars()
-                        .map(|c| if c == '\t' { '\t' } else { ' ' })
+                    let marker_spacing: String = line
+                        .encode_utf16()
+                        .take(max_col)
+                        .map(|unit| if unit == u16::from(b'\t') { '\t' } else { ' ' })
                         .collect();
                     let number_of_markers = if *len == 0 { 1 } else { *len };
                     let carets = "^".repeat(number_of_markers);
