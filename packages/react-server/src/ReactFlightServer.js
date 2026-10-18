@@ -5054,8 +5054,7 @@ function serializeIONode(
       if (name.startsWith('Window.')) {
         name = name.slice(7);
       } else if (name.startsWith('<anonymous>.')) {
-        // Note that this prefix is 12 characters long, not 7 like "Window.".
-        name = name.slice(12);
+        name = name.slice('<anonymous>.'.length);
       }
     }
   }
