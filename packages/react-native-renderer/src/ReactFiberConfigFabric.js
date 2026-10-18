@@ -24,8 +24,8 @@ import {
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 import {
-  getFragmentParentHostFiber,
-  traverseFragmentInstance,
+  getFragmentParentInstanceOrContainerFiber,
+  traverseFragmentInstancesAndTextInstances,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 
 // Modules provided by RN:
@@ -36,14 +36,11 @@ import {
   createPublicTextInstance,
   createAttributePayload,
   diffAttributePayloads,
+  fabricUIManager,
   type PublicInstance as ReactNativePublicInstance,
   type PublicTextInstance,
   type PublicRootInstance,
-} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {
-  enableFragmentRefsInstanceHandles,
-  enableFragmentRefsTextNodes,
-} from 'shared/ReactFeatureFlags';
+} from 'react-native/react-private-interface';
 
 const {
   createNode,
@@ -61,7 +58,7 @@ const {
   unstable_IdleEventPriority: FabricIdlePriority,
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
   suspendOnActiveViewTransition: fabricSuspendOnActiveViewTransition,
-} = nativeFabricUIManager;
+} = fabricUIManager;
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {compareDocumentPositionForEmptyFragment} from 'shared/ReactDOMFragmentRefShared';
@@ -375,7 +372,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   // But creates an additional child Fiber for raw text children.
   // No additional native views are created though.
   // It's not clear to me which is better so I'm deferring for now.
-  // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
+  // More context @ github.com/react/react/pull/8560#discussion_r92111303
   return false;
 }
 
@@ -477,7 +474,7 @@ export const noTimeout: -1 = -1;
 //     Persistence
 // -------------------
 
-export const supportsPersistence = true;
+export const supportsPersistence: boolean = true;
 
 export function cloneInstance(
   instance: Instance,
@@ -704,7 +701,11 @@ FragmentInstance.prototype.observeUsing = function (
     this._observers = new Set();
   }
   this._observers.add(observer);
-  traverseFragmentInstance(this._fragmentFiber, observeChild, observer);
+  traverseFragmentInstancesAndTextInstances(
+    this._fragmentFiber,
+    observeChild,
+    observer,
+  );
 };
 function observeChild(child: Fiber, observer: IntersectionObserver) {
   // $FlowFixMe[incompatible-type]
@@ -728,7 +729,11 @@ FragmentInstance.prototype.unobserveUsing = function (
     }
   } else {
     observers.delete(observer);
-    traverseFragmentInstance(this._fragmentFiber, unobserveChild, observer);
+    traverseFragmentInstancesAndTextInstances(
+      this._fragmentFiber,
+      unobserveChild,
+      observer,
+    );
   }
 };
 function unobserveChild(child: Fiber, observer: IntersectionObserver) {
@@ -744,12 +749,18 @@ FragmentInstance.prototype.compareDocumentPosition = function (
   this: FragmentInstanceType,
   otherNode: PublicInstance,
 ): number {
-  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  const parentHostFiber = getFragmentParentInstanceOrContainerFiber(
+    this._fragmentFiber,
+  );
   if (parentHostFiber === null) {
     return Node.DOCUMENT_POSITION_DISCONNECTED;
   }
   const children: Array<Fiber> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectChildren, children);
+  traverseFragmentInstancesAndTextInstances(
+    this._fragmentFiber,
+    collectChildren,
+    children,
+  );
   if (children.length === 0) {
     const parentHostInstance = getPublicInstanceFromHostFiber(parentHostFiber);
     return compareDocumentPositionForEmptyFragment<PublicInstance>(
@@ -804,7 +815,9 @@ FragmentInstance.prototype.getRootNode = function (
   this: FragmentInstanceType,
   getRootNodeOptions?: {composed: boolean},
 ): Node | FragmentInstanceType {
-  const parentHostFiber = getFragmentParentHostFiber(this._fragmentFiber);
+  const parentHostFiber = getFragmentParentInstanceOrContainerFiber(
+    this._fragmentFiber,
+  );
   if (parentHostFiber === null) {
     return this;
   }
@@ -819,7 +832,11 @@ FragmentInstance.prototype.getClientRects = function (
   this: FragmentInstanceType,
 ): Array<DOMRect> {
   const rects: Array<DOMRect> = [];
-  traverseFragmentInstance(this._fragmentFiber, collectClientRects, rects);
+  traverseFragmentInstancesAndTextInstances(
+    this._fragmentFiber,
+    collectClientRects,
+    rects,
+  );
   return rects;
 };
 function collectClientRects(child: Fiber, rects: Array<DOMRect>): boolean {
@@ -839,13 +856,11 @@ function addFragmentHandleToFiber(
   child: Fiber,
   fragmentInstance: FragmentInstanceType,
 ): boolean {
-  if (enableFragmentRefsInstanceHandles) {
-    const instance = getPublicInstanceFromHostFiber(
-      child,
-    ) as any as PublicInstanceWithFragmentHandles;
-    if (instance != null) {
-      addFragmentHandleToInstance(instance, fragmentInstance);
-    }
+  const instance = getPublicInstanceFromHostFiber(
+    child,
+  ) as any as PublicInstanceWithFragmentHandles;
+  if (instance != null) {
+    addFragmentHandleToInstance(instance, fragmentInstance);
   }
   return false;
 }
@@ -854,25 +869,21 @@ function addFragmentHandleToInstance(
   instance: PublicInstanceWithFragmentHandles,
   fragmentInstance: FragmentInstanceType,
 ): void {
-  if (enableFragmentRefsInstanceHandles) {
-    if (instance.reactFragments == null) {
-      instance.reactFragments = new Set();
-    }
-    instance.reactFragments.add(fragmentInstance);
+  if (instance.reactFragments == null) {
+    instance.reactFragments = new Set();
   }
+  instance.reactFragments.add(fragmentInstance);
 }
 
 export function createFragmentInstance(
   fragmentFiber: Fiber,
 ): FragmentInstanceType {
   const fragmentInstance = new (FragmentInstance as any)(fragmentFiber);
-  if (enableFragmentRefsInstanceHandles) {
-    traverseFragmentInstance(
-      fragmentFiber,
-      addFragmentHandleToFiber,
-      fragmentInstance,
-    );
-  }
+  traverseFragmentInstancesAndTextInstances(
+    fragmentFiber,
+    addFragmentHandleToFiber,
+    fragmentInstance,
+  );
   return fragmentInstance;
 }
 
@@ -888,7 +899,7 @@ export function commitNewChildToFragmentInstance(
   fragmentInstance: FragmentInstanceType,
 ): void {
   // Text nodes are not observable
-  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+  if (childInstance.canonical == null) {
     return;
   }
   const instance: Instance = childInstance as any;
@@ -903,12 +914,10 @@ export function commitNewChildToFragmentInstance(
       observer.observe(publicInstance);
     });
   }
-  if (enableFragmentRefsInstanceHandles) {
-    addFragmentHandleToInstance(
-      publicInstance as any as PublicInstanceWithFragmentHandles,
-      fragmentInstance,
-    );
-  }
+  addFragmentHandleToInstance(
+    publicInstance as any as PublicInstanceWithFragmentHandles,
+    fragmentInstance,
+  );
 }
 
 export function deleteChildFromFragmentInstance(
@@ -916,17 +925,15 @@ export function deleteChildFromFragmentInstance(
   fragmentInstance: FragmentInstanceType,
 ): void {
   // Text nodes are not observable
-  if (enableFragmentRefsTextNodes && childInstance.canonical == null) {
+  if (childInstance.canonical == null) {
     return;
   }
   const instance: Instance = childInstance as any;
   const publicInstance = getPublicInstance(
     instance,
   ) as any as PublicInstanceWithFragmentHandles;
-  if (enableFragmentRefsInstanceHandles) {
-    if (publicInstance.reactFragments != null) {
-      publicInstance.reactFragments.delete(fragmentInstance);
-    }
+  if (publicInstance.reactFragments != null) {
+    publicInstance.reactFragments.delete(fragmentInstance);
   }
 }
 

@@ -22,6 +22,8 @@
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
+// None
+
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -76,6 +78,18 @@ export const enableLegacyCache = __EXPERIMENTAL__;
 
 export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
+// Support thenables with status 'pending_weak' in Flight. A weak-pending
+// thenable doesn't keep the stream open; if it resolves before the stream
+// closes for other reasons, its value is emitted, otherwise its reference is
+// left unfulfilled.
+export const enableFlightWeakThenables = __EXPERIMENTAL__;
+
+// Support Server References that point to objects (including Promises), not
+// just functions. On the server the reference is the real object; on the
+// client it's an opaque handle that can only be passed back to the server,
+// where it resolves via the manifest.
+export const enableFlightObjectReferences = __EXPERIMENTAL__;
+
 export const enableTaint = __EXPERIMENTAL__;
 
 export const enableViewTransition: boolean = true;
@@ -125,10 +139,6 @@ export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries: boolean = true;
 
-// Gate whether useEffectEvent uses the mutation phase (true) or before-mutation
-// phase (false) for updating event function references.
-export const enableEffectEventMutationPhase: boolean = true;
-
 export const passChildrenWhenCloningPersistedNodes: boolean = false;
 
 /**
@@ -151,10 +161,7 @@ export const enableInfiniteRenderLoopDetection: boolean = false;
  */
 export const enableInfiniteRenderLoopDetectionForceThrow: boolean = false;
 
-export const enableFragmentRefs: boolean = true;
-export const enableFragmentRefsScrollIntoView: boolean = true;
-export const enableFragmentRefsInstanceHandles: boolean = true;
-export const enableFragmentRefsTextNodes: boolean = true;
+export const enableConditionalUseWarning: boolean = true;
 
 export const enableInternalInstanceMap: boolean = false;
 
@@ -211,17 +218,12 @@ export const disableLegacyMode: boolean = true;
 // in open source, but www codebase still relies on it. Need to remove.
 export const disableCommentsAsDOMContainers: boolean = true;
 
-export const enableTrustedTypesIntegration: boolean = true;
-
 // Prevent the value and checked attributes from syncing with their related
 // DOM properties
 export const disableInputAttributeSyncing: boolean = false;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren: boolean = false;
-
-// Disables children for <textarea> elements
-export const enableParallelTransitions: boolean = false;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
@@ -251,8 +253,6 @@ export const enableProfilerCommitHooks = __PROFILE__;
 
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-
-export const enableAsyncDebugInfo: boolean = true;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
