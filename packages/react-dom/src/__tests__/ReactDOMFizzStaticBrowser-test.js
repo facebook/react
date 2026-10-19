@@ -1611,7 +1611,176 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Content</div>);
   });
 
-  it.failing('can resume after a resumed prerender aborts again', async () => {
+  it('can postpone the same boundary across repeated prerenders', async () => {
+    const never = new Promise(() => {});
+    const errors = [];
+    let ready = false;
+    let postponed;
+
+    function Wait() {
+      if (!ready) {
+        React.use(never);
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Wait />
+          </Suspense>
+        </div>
+      );
+    }
+
+    for (let pass = 0; pass < 2; pass++) {
+      const controller = new AbortController();
+      const options = {
+        signal: controller.signal,
+        onError(error) {
+          errors.push(error);
+        },
+      };
+      let pendingResult;
+      await serverAct(() => {
+        pendingResult =
+          pass === 0
+            ? ReactDOMFizzStatic.prerender(<App />, options)
+            : ReactDOMFizzStatic.resumeAndPrerender(
+                <App />,
+                postponed,
+                options,
+              );
+      });
+      await serverAct(() => controller.abort(`abort ${pass}`));
+      const result = await pendingResult;
+      expect(result.postponed).not.toBe(null);
+      await readIntoContainer(result.prelude);
+      expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+      postponed = JSON.parse(JSON.stringify(result.postponed));
+    }
+
+    expect(errors).toEqual(['abort 0', 'abort 1']);
+    ready = true;
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, postponed, {
+        onError(error) {
+          errors.push(error);
+        },
+      }),
+    );
+    await readIntoContainer(resumed);
+    expect(errors).toEqual(['abort 0', 'abort 1']);
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(container.querySelector('template')).toBe(null);
+  });
+
+  [false, true].forEach(completedAncestor => {
+    it(`preserves an earlier resumed boundary when a sibling aborts ${
+      completedAncestor ? 'under a completed Suspense ancestor' : 'at the root'
+    }`, async () => {
+      const never = new Promise(() => {});
+      const firstController = new AbortController();
+      const secondController = new AbortController();
+      let stage = 0;
+
+      function First() {
+        if (stage === 0) {
+          React.use(never);
+        }
+        return <article>First</article>;
+      }
+
+      function Second() {
+        if (stage === 0) {
+          React.use(never);
+        }
+        if (stage === 1) {
+          secondController.abort('second abort');
+        }
+        return <section>Second</section>;
+      }
+
+      function App() {
+        const content = (
+          <>
+            <Suspense fallback={<p>First loading</p>}>
+              <First />
+            </Suspense>
+            <Suspense fallback={<p>Second loading</p>}>
+              <Second />
+            </Suspense>
+          </>
+        );
+        return (
+          <main>
+            {completedAncestor ? (
+              <Suspense fallback="Outer loading">{content}</Suspense>
+            ) : (
+              content
+            )}
+          </main>
+        );
+      }
+
+      let pendingResult;
+      await serverAct(() => {
+        pendingResult = ReactDOMFizzStatic.prerender(<App />, {
+          signal: firstController.signal,
+          onError() {},
+        });
+      });
+      await serverAct(() => firstController.abort('first abort'));
+      const initial = await pendingResult;
+      expect(initial.postponed).not.toBe(null);
+      await readIntoContainer(initial.prelude);
+      expect(getVisibleChildren(container)).toEqual(
+        <main>
+          <p>First loading</p>
+          <p>Second loading</p>
+        </main>,
+      );
+
+      stage = 1;
+      const second = await serverAct(() =>
+        ReactDOMFizzStatic.resumeAndPrerender(
+          <App />,
+          JSON.parse(JSON.stringify(initial.postponed)),
+          {
+            signal: secondController.signal,
+            onError() {},
+          },
+        ),
+      );
+      expect(second.postponed).not.toBe(null);
+      await readIntoContainer(second.prelude);
+      expect(getVisibleChildren(container)).toEqual(
+        <main>
+          <article>First</article>
+          <p>Second loading</p>
+        </main>,
+      );
+
+      stage = 2;
+      const resumed = await serverAct(() =>
+        ReactDOMFizzServer.resume(
+          <App />,
+          JSON.parse(JSON.stringify(second.postponed)),
+        ),
+      );
+      await readIntoContainer(resumed);
+      expect(getVisibleChildren(container)).toEqual(
+        <main>
+          <article>First</article>
+          <section>Second</section>
+        </main>,
+      );
+      expect(container.querySelector('template')).toBe(null);
+    });
+  });
+
+  it('can resume after a resumed prerender aborts again', async () => {
     const never = new Promise(() => {});
     const firstController = new AbortController();
     const secondController = new AbortController();
