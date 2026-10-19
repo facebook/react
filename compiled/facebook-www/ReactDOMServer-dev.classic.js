@@ -6208,6 +6208,7 @@ __DEV__ &&
                 var iteratorFn = getIteratorFn(children$jscomp$0);
                 if (iteratorFn) {
                   var iterator = iteratorFn.call(children$jscomp$0);
+                  if (request.aborted) throw null;
                   if (iterator) {
                     validateIterable(
                       task,
@@ -6217,10 +6218,12 @@ __DEV__ &&
                       iteratorFn
                     );
                     var step = iterator.next();
+                    if (request.aborted) throw null;
                     if (!step.done) {
                       var rows = [];
                       do rows.push(step.value), (step = iterator.next());
                       while (!step.done);
+                      if (request.aborted) throw null;
                       renderSuspenseListRows(
                         request,
                         task,
@@ -6552,6 +6555,7 @@ __DEV__ &&
                 propsWithoutRef,
                 ref
               );
+              if (request.aborted) throw null;
               finishFunctionComponent(
                 request,
                 task,
@@ -6625,8 +6629,9 @@ __DEV__ &&
                 console.error(
                   "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
                 );
-              var newChildren = render(context._currentValue2),
-                prevKeyPath$jscomp$7 = task.keyPath;
+              var newChildren = render(context._currentValue2);
+              if (request.aborted) throw null;
+              var prevKeyPath$jscomp$7 = task.keyPath;
               task.keyPath = keyPath;
               renderNodeDestructive(request, task, newChildren, -1);
               task.keyPath = prevKeyPath$jscomp$7;
@@ -6997,28 +7002,34 @@ __DEV__ &&
             renderChildrenArray(request, task, node, childIndex);
             return;
           }
-          if ((key = getIteratorFn(node)))
-            if ((type = key.call(node))) {
+          if ((key = getIteratorFn(node))) {
+            type = key.call(node);
+            if (request.aborted) throw null;
+            if (type) {
               validateIterable(task, node, childIndex, type, key);
               node = type.next();
+              if (request.aborted) throw null;
               if (!node.done) {
                 key = [];
-                do key.push(node.value), (node = type.next());
+                do
+                  if (
+                    (key.push(node.value),
+                    (node = type.next()),
+                    request.aborted)
+                  )
+                    throw null;
                 while (!node.done);
                 renderChildrenArray(request, task, key, childIndex);
               }
               return;
             }
-          if ("function" === typeof node.then)
-            return (
-              (task.thenableState = null),
-              renderNodeDestructive(
-                request,
-                task,
-                unwrapThenable(node),
-                childIndex
-              )
-            );
+          }
+          if ("function" === typeof node.then) {
+            task.thenableState = null;
+            type = unwrapThenable(node);
+            if (request.aborted) throw null;
+            return renderNodeDestructive(request, task, type, childIndex);
+          }
           if (node.$$typeof === REACT_CONTEXT_TYPE)
             return renderNodeDestructive(
               request,
@@ -7479,8 +7490,31 @@ __DEV__ &&
               thrownValue$3 === SuspenseException
                 ? getSuspendedThenable()
                 : thrownValue$3),
-            !request.aborted && "object" === typeof node && null !== node)
+            request.aborted)
           ) {
+            if (
+              null !== request.trackedPostpones &&
+              null !== task.blockedBoundary
+            ) {
+              segment =
+                thrownValue$3 === SuspenseException
+                  ? getThenableStateAfterSuspending()
+                  : null;
+              segment = spawnNewSuspendedRenderTask(request, task, segment);
+              abortTaskDEV(segment, request);
+              segment.abortSet.delete(segment);
+              finishAbortedTaskDEV(segment, request, request.fatalError);
+              task.formatContext = previousFormatContext;
+              task.legacyContext = previousLegacyContext;
+              task.context = previousContext;
+              task.keyPath = previousKeyPath;
+              task.treeContext = previousTreeContext;
+              task.componentStack = previousComponentStack;
+              task.debugTask = previousDebugTask;
+              switchContext(previousContext);
+              return;
+            }
+          } else if ("object" === typeof node && null !== node) {
             if ("function" === typeof node.then) {
               segment = node;
               node =
@@ -10765,5 +10799,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-classic-99c106c4-20261014";
+    exports.version = "19.3.0-www-classic-ba39b32a-20261019";
   })();
