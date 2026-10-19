@@ -6475,9 +6475,8 @@ function flushCompletedQueues(
     if (
       request.allPendingTasks === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
-      request.completedBoundaries.length === 0
-      // We don't need to check any partially completed segments because
-      // either they have pending task or they're complete.
+      request.completedBoundaries.length === 0 &&
+      request.partialBoundaries.length === 0
     ) {
       request.flushScheduled = false;
       // We write the trailing tags but only if don't have any data to resume.
