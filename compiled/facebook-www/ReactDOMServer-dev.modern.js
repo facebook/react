@@ -6682,18 +6682,18 @@ __DEV__ &&
                 );
               task.replay.pendingTasks--;
               keyPath = getThrownInfo(task.componentStack);
-              props = request;
-              currentNode = task.blockedBoundary;
+              currentNode = request;
+              props = task.blockedBoundary;
               request = request.aborted ? request.fatalError : x;
               type = logRecoverableError(
-                props,
+                currentNode,
                 request,
                 keyPath,
                 task.debugTask
               );
               abortRemainingReplayNodes(
-                props,
                 currentNode,
+                props,
                 childNodes,
                 childSlots,
                 request,
@@ -6713,14 +6713,14 @@ __DEV__ &&
             a: {
               replay = request;
               request = keyPath;
-              keyPath = node[5];
-              type = node[2];
-              ref = node[3];
-              name = null === node[4] ? [] : node[4][2];
+              var id = node[5];
+              keyPath = node[2];
+              type = node[3];
+              ref = null === node[4] ? [] : node[4][2];
               node = null === node[4] ? null : node[4][3];
-              keyOrIndex = task.keyPath;
-              var prevContext = task.formatContext,
-                prevRow = task.row,
+              name = task.keyPath;
+              keyOrIndex = task.formatContext;
+              var prevRow = task.row,
                 previousReplaySet = task.replay,
                 parentBoundary = task.blockedBoundary,
                 parentHoistableState = task.hoistableState,
@@ -6736,16 +6736,26 @@ __DEV__ &&
                 defer
               );
               defer.parentFlushed = !0;
-              defer.rootSegmentID = keyPath;
+              defer.rootSegmentID = id;
+              id = [request[0], "Suspense Fallback", request[2]];
+              var trackedPostpones = replay.trackedPostpones;
+              if (null !== trackedPostpones) {
+                var fallbackReplayNode = [id[1], id[2], [], null];
+                trackedPostpones.workingMap.set(id, fallbackReplayNode);
+                defer.tracked = {
+                  contentKeyPath: request,
+                  fallbackNode: fallbackReplayNode
+                };
+              }
               task.blockedBoundary = defer;
               task.hoistableState = defer.contentState;
               task.keyPath = request;
               task.formatContext = getSuspenseContentFormatContext(
                 replay.resumableState,
-                prevContext
+                keyOrIndex
               );
               task.row = null;
-              task.replay = { nodes: type, slots: ref, pendingTasks: 1 };
+              task.replay = { nodes: keyPath, slots: type, pendingTasks: 1 };
               try {
                 renderNode(replay, task, content, -1);
                 if (
@@ -6786,20 +6796,20 @@ __DEV__ &&
                 (task.blockedBoundary = parentBoundary),
                   (task.hoistableState = parentHoistableState),
                   (task.replay = previousReplaySet),
-                  (task.keyPath = keyOrIndex),
-                  (task.formatContext = prevContext),
+                  (task.keyPath = name),
+                  (task.formatContext = keyOrIndex),
                   (task.row = prevRow);
               }
-              props = createReplayTask(
+              childNodes = createReplayTask(
                 replay,
                 null,
-                { nodes: name, slots: node, pendingTasks: 0 },
+                { nodes: ref, slots: node, pendingTasks: 0 },
                 fallback,
                 -1,
                 parentBoundary,
                 defer.fallbackState,
                 props,
-                [request[0], "Suspense Fallback", request[2]],
+                id,
                 getSuspenseFallbackFormatContext(
                   replay.resumableState,
                   task.formatContext
@@ -6813,8 +6823,8 @@ __DEV__ &&
                 emptyContextObject,
                 task.debugTask
               );
-              pushComponentStack(props);
-              replay.pingedTasks.push(props);
+              pushComponentStack(childNodes);
+              replay.pingedTasks.push(childNodes);
             }
           }
           childIndex.splice(i, 1);
@@ -7185,7 +7195,8 @@ __DEV__ &&
     }
     function trackPostponedBoundary(request, trackedPostpones, boundary) {
       boundary.status = POSTPONED;
-      boundary.rootSegmentID = request.nextSegmentId++;
+      -1 === boundary.rootSegmentID &&
+        (boundary.rootSegmentID = request.nextSegmentId++);
       var tracked = boundary.tracked;
       if (null === tracked)
         throw Error(
@@ -7878,7 +7889,9 @@ __DEV__ &&
               (segment.status === COMPLETED || segment.status === ABORTED) &&
               queueCompletedSegment(boundary, segment),
             boundary.parentFlushed &&
-              request.completedBoundaries.push(boundary),
+              (boundary.status === POSTPONED
+                ? request.partialBoundaries.push(boundary)
+                : request.completedBoundaries.push(boundary)),
             boundary.status === COMPLETED)
           )
             (row = boundary.row),
@@ -10727,5 +10740,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-ba39b32a-20261019";
+    exports.version = "19.3.0-www-modern-e92156b1-20261019";
   })();

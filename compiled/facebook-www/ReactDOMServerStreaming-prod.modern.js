@@ -5202,18 +5202,18 @@ function retryNode(request, task) {
                           x)
                         );
                       task.replay.pendingTasks--;
-                      key = getThrownInfo(task.componentStack);
+                      props = getThrownInfo(task.componentStack);
                       currentNode = request;
-                      props = task.blockedBoundary;
+                      key = task.blockedBoundary;
                       request = request.aborted ? request.fatalError : x;
-                      key = logRecoverableError(currentNode, request, key);
+                      props = logRecoverableError(currentNode, request, props);
                       abortRemainingReplayNodes(
                         currentNode,
-                        props,
+                        key,
                         childNodes,
                         childSlots,
                         request,
-                        key
+                        props
                       );
                     }
                     task.replay = replay;
@@ -5225,16 +5225,16 @@ function retryNode(request, task) {
                           ">. The tree doesn't match so React will fallback to client rendering."
                       );
                     b: {
-                      replay = node$jscomp$0[5];
-                      type = node$jscomp$0[2];
-                      ref = node$jscomp$0[3];
-                      name =
+                      var id = node$jscomp$0[5];
+                      replay = node$jscomp$0[2];
+                      type = node$jscomp$0[3];
+                      ref =
                         null === node$jscomp$0[4] ? [] : node$jscomp$0[4][2];
                       node$jscomp$0 =
                         null === node$jscomp$0[4] ? null : node$jscomp$0[4][3];
-                      keyOrIndex = task.keyPath;
-                      var prevContext = task.formatContext,
-                        prevRow = task.row,
+                      name = task.keyPath;
+                      keyOrIndex = task.formatContext;
+                      var prevRow = task.row,
                         previousReplaySet = task.replay,
                         parentBoundary = task.blockedBoundary,
                         parentHoistableState = task.hoistableState,
@@ -5255,18 +5255,28 @@ function retryNode(request, task) {
                         defer
                       );
                       defer.parentFlushed = !0;
-                      defer.rootSegmentID = replay;
+                      defer.rootSegmentID = id;
+                      id = [key[0], "Suspense Fallback", key[2]];
+                      var trackedPostpones = request.trackedPostpones;
+                      if (null !== trackedPostpones) {
+                        var fallbackReplayNode = [id[1], id[2], [], null];
+                        trackedPostpones.workingMap.set(id, fallbackReplayNode);
+                        defer.tracked = {
+                          contentKeyPath: key,
+                          fallbackNode: fallbackReplayNode
+                        };
+                      }
                       task.blockedBoundary = defer;
                       task.hoistableState = defer.contentState;
                       task.keyPath = key;
                       task.formatContext = getSuspenseContentFormatContext(
                         request.resumableState,
-                        prevContext
+                        keyOrIndex
                       );
                       task.row = null;
                       task.replay = {
-                        nodes: type,
-                        slots: ref,
+                        nodes: replay,
+                        slots: type,
                         pendingTasks: 1
                       };
                       try {
@@ -5302,20 +5312,20 @@ function retryNode(request, task) {
                         (task.blockedBoundary = parentBoundary),
                           (task.hoistableState = parentHoistableState),
                           (task.replay = previousReplaySet),
-                          (task.keyPath = keyOrIndex),
-                          (task.formatContext = prevContext),
+                          (task.keyPath = name),
+                          (task.formatContext = keyOrIndex),
                           (task.row = prevRow);
                       }
                       childNodes = createReplayTask(
                         request,
                         null,
-                        { nodes: name, slots: node$jscomp$0, pendingTasks: 0 },
+                        { nodes: ref, slots: node$jscomp$0, pendingTasks: 0 },
                         fallback,
                         -1,
                         parentBoundary,
                         defer.fallbackState,
                         props,
-                        [key[0], "Suspense Fallback", key[2]],
+                        id,
                         getSuspenseFallbackFormatContext(
                           request.resumableState,
                           task.formatContext
@@ -5497,7 +5507,8 @@ function renderChildrenArray(request, task, children, childIndex) {
 }
 function trackPostponedBoundary(request, trackedPostpones, boundary) {
   boundary.status = 5;
-  boundary.rootSegmentID = request.nextSegmentId++;
+  -1 === boundary.rootSegmentID &&
+    (boundary.rootSegmentID = request.nextSegmentId++);
   var tracked = boundary.tracked;
   if (null === tracked)
     throw Error(
@@ -6067,7 +6078,10 @@ function finishedTask(request, boundary, row, segment) {
           segment.parentFlushed &&
           (1 === segment.status || 3 === segment.status) &&
           queueCompletedSegment(boundary, segment),
-        boundary.parentFlushed && request.completedBoundaries.push(boundary),
+        boundary.parentFlushed &&
+          (5 === boundary.status
+            ? request.partialBoundaries.push(boundary)
+            : request.completedBoundaries.push(boundary)),
         1 === boundary.status)
       )
         (row = boundary.row),
