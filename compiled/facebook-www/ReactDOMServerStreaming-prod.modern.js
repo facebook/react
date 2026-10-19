@@ -6787,6 +6787,7 @@ function flushCompletedQueues(request, destination) {
       0 === request.allPendingTasks &&
         0 === request.clientRenderedBoundaries.length &&
         0 === request.completedBoundaries.length &&
+        0 === request.partialBoundaries.length &&
         ((request.flushScheduled = !1),
         (i = request.resumableState),
         i.hasBody && writeChunk(destination, endChunkForTag("body")),

@@ -9066,6 +9066,7 @@ __DEV__ &&
           0 === request.allPendingTasks &&
             0 === request.clientRenderedBoundaries.length &&
             0 === request.completedBoundaries.length &&
+            0 === request.partialBoundaries.length &&
             ((request.flushScheduled = !1),
             (i = request.resumableState),
             i.hasBody &&
@@ -10740,5 +10741,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-e92156b1-20261019";
+    exports.version = "19.3.0-www-modern-a6792708-20261019";
   })();
