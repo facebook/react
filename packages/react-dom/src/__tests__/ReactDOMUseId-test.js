@@ -371,11 +371,7 @@ describe('useId', () => {
       div => div.id,
     );
     expect(ids.length).toBe(64);
-    // This assertion characterizes a bug: the ids should all be unique,
-    // but the dropped leading zero erases the boundary between the
-    // overflow digits and the remaining digits, so the nested Child of
-    // the first Child and the third Child both serialize to "_R_1qlala_".
-    expect(new Set(ids).size).toBe(63);
+    expect(new Set(ids).size).toBe(64);
   });
 
   it('multiple ids in a single component', async () => {
