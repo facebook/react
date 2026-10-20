@@ -243,6 +243,73 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(streamedBuffers.flatMap(t => Array.from(t))).toEqual(expectedBytes);
   });
 
+  it('waits for a queued stream item to initialize before closing', async () => {
+    let resolveModule;
+    const ServerModule = serverExports(
+      {
+        greet() {
+          return 'hi';
+        },
+      },
+      new Promise(resolve => (resolveModule = resolve)),
+    );
+    ReactServerDOMClient.registerServerReference(
+      ServerModule.greet,
+      ServerModule.greet.$$id,
+    );
+
+    // The first item travels as a Blob, which the decoder reads
+    // asynchronously; the second waits for its module to load.
+    const s = new ReadableStream({
+      start(c) {
+        c.enqueue({bytes: new Uint8Array([1])});
+        c.enqueue({greet: ServerModule.greet});
+        c.close();
+      },
+    });
+
+    const body = await ReactServerDOMClient.encodeReply(s);
+
+    // The first item's entry arrives right behind its Blob, so it is still
+    // reading when it is enqueued, and has resolved by the time the second
+    // item's entry arrives. Timers are faked in this suite, so the wait is a
+    // message task.
+    const nextTask = () =>
+      new Promise(resolve => {
+        const {port1, port2} = new MessageChannel();
+        port1.onmessage = () => {
+          port1.close();
+          resolve();
+        };
+        port2.postMessage(undefined);
+      });
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        let items = 0;
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const entry of body) {
+          yield entry;
+          if (entry[0].startsWith('S') && items++ === 0) {
+            await nextTask();
+          }
+        }
+      },
+    };
+
+    const result = await ReactServerDOMServer.decodeReplyFromAsyncIterable(
+      iterable,
+      webpackServerMap,
+    );
+
+    const reader = result.getReader();
+    expect(Array.from((await reader.read()).value.bytes)).toEqual([1]);
+    const secondRead = reader.read();
+    await nextTask();
+    resolveModule();
+    expect((await secondRead).value.greet()).toBe('hi');
+    expect((await reader.read()).done).toBe(true);
+  });
+
   it('should cancel the transported ReadableStream when we are cancelled', async () => {
     const s = new ReadableStream({
       start(controller) {
