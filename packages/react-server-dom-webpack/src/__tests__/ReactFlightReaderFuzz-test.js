@@ -995,10 +995,9 @@ function observer(plan, {render}) {
         );
         guardAsync(async () => {
           const reader = received.getReader();
-          const first = reader.read();
-          await reader.cancel('canceled by the test');
-          const item = await first;
+          const item = await reader.read();
           expect(item.done).toBe(false);
+          await reader.cancel('canceled by the test');
           deliver(entry, item.value, undefined);
         });
         return;
@@ -1876,8 +1875,6 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
   const knownGaps = {
-    'canceled stream':
-      'the reader keeps enqueueing into a stream the application canceled',
     'streamed array containing itself':
       'the writer emits a streamed array that contains itself without a ' +
       'name for the back-reference',
