@@ -399,7 +399,8 @@ type Response = {
   _pendingFields: WeakMap<Object, Map<string, InitializationReference>>,
   // Reserved Sets and Maps whose entries have not been copied in yet.
   _pendingCollections: WeakMap<Object, InitializationReference>,
-  // The array behind an iterator, which hides it from property traversal.
+  // Inputs retained by values that hide them from property traversal: the
+  // array behind an iterator and the arguments of a bound Server Function.
   _captures: WeakMap<Object, Array<any>>,
   _stringDecoder: StringDecoder,
   _closed: boolean,
@@ -1094,7 +1095,16 @@ type InitializationReference = {
   // A Set or Map is allocated before its entries arrive so that references
   // to it, including from its own entries, find the final identity.
   collection: null | Set<any> | Map<any, any>,
+  // A Server Function waits for its module and its bound arguments.
+  binding: null | ServerReferenceBinding,
   isDebug?: boolean, // DEV-only
+};
+type ServerReferenceBinding = {
+  serverReference: ClientReference<any>,
+  id: string,
+  bound: null | Thenable<Array<any>>,
+  moduleReady: boolean,
+  argumentsReady: boolean,
 };
 type PendingInitializationHandler = {
   parent: null | InitializationHandler,
@@ -2101,6 +2111,11 @@ function fulfillReference(
   if (reference.status !== FIELD_PENDING) {
     return;
   }
+  if (reference.binding !== null) {
+    // The bound arguments of a Server Function arrived.
+    resolveBoundArguments(response, reference, value, fulfilledChunk);
+    return;
+  }
   const {handler, parentObject, key, map, path} = reference;
   reference.source = fulfilledChunk;
 
@@ -2225,6 +2240,10 @@ function fulfillReference(
       break;
     }
 
+    if ((map as any) === loadServerReference) {
+      initializeServerReference(response, value, reference);
+      return;
+    }
     if ((map as any) !== createModel) {
       // A constructor runs once its input slots are installed. It completes
       // the reference itself.
@@ -2449,6 +2468,12 @@ function resumeInputs(
   }
   reference.pendingInputs--;
   if (reference.pendingInputs === 0) {
+    const binding = reference.binding;
+    if (binding !== null) {
+      binding.argumentsReady = true;
+      bindServerReference(response, reference);
+      return;
+    }
     try {
       runMapping(response, reference, inputs, reference.source);
     } catch (error) {
@@ -2664,6 +2689,7 @@ function createInitializationReference<T>(
     pendingInputs: 0,
     seen: null,
     collection: null,
+    binding: null,
   };
   if (__DEV__) {
     reference.isDebug = isAwaitingDebugInfo;
@@ -2719,15 +2745,20 @@ function addReferenceListener(
   }
 }
 
+type ServerReferenceMetadata = {
+  id: any,
+  bound: null | Thenable<Array<any>>,
+  name?: string, // DEV-only
+  env?: string, // DEV-only
+  location?: ReactFunctionLocation, // DEV-only
+};
+
+// Loads a Server Function whose module is already available. When the module
+// or the bound arguments are still loading, `initializeServerReference`
+// handles the reference asynchronously instead.
 function loadServerReference<A: Iterable<any>, T>(
   response: Response,
-  metaData: {
-    id: any,
-    bound: null | Thenable<Array<any>>,
-    name?: string, // DEV-only
-    env?: string, // DEV-only
-    location?: ReactFunctionLocation, // DEV-only
-  },
+  metaData: ServerReferenceMetadata,
   parentObject: Object,
   key: string,
 ): (...A) => Promise<T> {
@@ -2753,143 +2784,134 @@ function loadServerReference<A: Iterable<any>, T>(
   // If we have a module mapping we can load the real version of this Server Reference.
   const serverReference: ClientReference<T> =
     resolveServerReference<$FlowFixMe>(response._serverReferenceConfig, id);
+  const resolvedValue = requireModule(serverReference) as any;
+  registerBoundServerReference(
+    resolvedValue,
+    id,
+    metaData.bound,
+    response._encodeFormAction,
+  );
+  return resolvedValue;
+}
 
+function initializeServerReference(
+  response: Response,
+  metaData: ServerReferenceMetadata,
+  reference: InitializationReference,
+): void {
+  const key = reference.key;
+  const id = metaData.id;
+  if (
+    key === 'then' ||
+    typeof id !== 'string' ||
+    !response._serverReferenceConfig
+  ) {
+    runMapping(response, reference, metaData, reference.source);
+    return;
+  }
+  const serverReference: ClientReference<any> = resolveServerReference(
+    response._serverReferenceConfig,
+    id,
+  );
   const bound = metaData.bound;
-  let promise: null | Thenable<any> = preloadModule(serverReference);
-  if (!promise) {
-    if (bound instanceof ReactPromise) {
-      promise = Promise.resolve(bound);
-    } else {
-      // We only await the bound arguments when they are one of our own chunks.
-      // Anything else could be a foreign thenable whose `then` we must not call.
-      const resolvedValue = requireModule(serverReference) as any;
-      registerBoundServerReference(
-        resolvedValue,
-        id,
-        bound,
-        response._encodeFormAction,
-      );
-      return resolvedValue;
-    }
-  } else if (bound instanceof ReactPromise) {
-    promise = Promise.all([promise, bound]);
+  const promise = preloadModule(serverReference);
+  if (promise === null && !(bound instanceof ReactPromise)) {
+    runMapping(response, reference, metaData, reference.source);
+    return;
   }
-
-  let handler: InitializationHandler;
-  if (initializingHandler) {
-    handler = initializingHandler;
-    handler.deps++;
+  const binding: ServerReferenceBinding = {
+    serverReference,
+    id,
+    bound,
+    moduleReady: promise === null,
+    // We only await the bound arguments when they are one of our own chunks.
+    // Anything else could be a foreign thenable whose `then` we must not call.
+    argumentsReady: !(bound instanceof ReactPromise),
+  };
+  reference.binding = binding;
+  if (promise !== null) {
+    promise.then(
+      () => {
+        binding.moduleReady = true;
+        bindServerReference(response, reference);
+      },
+      error => rejectInitializationReference(response, reference, error),
+    );
+  }
+  if (bound instanceof ReactPromise) {
+    // The function is bound once every argument slot is installed. The
+    // arguments can include the object the function is being installed into,
+    // so they are not awaited as a whole.
+    resolveReferenceFromChunk(response, reference, bound);
   } else {
-    handler = initializingHandler = createInitializationHandler(null, 1);
+    bindServerReference(response, reference);
   }
+}
 
-  function fulfill(): void {
-    let resolvedValue = requireModule(serverReference) as any;
+function resolveBoundArguments(
+  response: Response,
+  reference: InitializationReference,
+  args: any,
+  fulfilledChunk: SomeChunk<any>,
+): void {
+  reference.source = fulfilledChunk;
+  reference.inputs = args;
+  reference.pendingInputs = 0;
+  try {
+    subscribeToInputSlots(response, reference, args);
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
+    return;
+  }
+  if (reference.pendingInputs === 0) {
+    const binding: ServerReferenceBinding = reference.binding as any;
+    binding.argumentsReady = true;
+    bindServerReference(response, reference);
+  }
+}
 
-    if (bound) {
-      // This promise is coming from us and should have initialized by now.
-      const promiseValue = (bound as any).value;
-      const boundArgs: Array<any> = isArray(promiseValue)
-        ? promiseValue.slice(0)
-        : [];
+function bindServerReference(
+  response: Response,
+  reference: InitializationReference,
+): void {
+  const binding: ServerReferenceBinding = reference.binding as any;
+  if (
+    !binding.moduleReady ||
+    !binding.argumentsReady ||
+    reference.status !== FIELD_PENDING
+  ) {
+    return;
+  }
+  try {
+    let resolvedValue = requireModule(binding.serverReference) as any;
+    const args = reference.inputs;
+    if (binding.bound !== null) {
+      const boundArgs: Array<any> = isArray(args) ? args.slice(0) : [];
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
+      if (args !== null) {
+        // The bound function retains the arguments without exposing them.
+        response._captures.set(resolvedValue, args);
+      }
     }
-
     registerBoundServerReference(
       resolvedValue,
-      id,
-      bound,
+      binding.id,
+      binding.bound,
       response._encodeFormAction,
     );
-
-    if (key !== __PROTO__) {
-      parentObject[key] = resolvedValue;
-    }
-
-    // If this is the root object for a model reference, where `handler.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && handler.value === null) {
-      handler.value = resolvedValue;
-    }
-
-    // If the parent object is an unparsed React element tuple, we also need to
-    // update the props and owner of the parsed element object (i.e.
-    // handler.value).
-    if (
-      parentObject[0] === REACT_ELEMENT_TYPE &&
-      typeof handler.value === 'object' &&
-      handler.value !== null &&
-      handler.value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      const element: any = handler.value;
-      switch (key) {
-        case '3':
-          element.props = resolvedValue;
-          break;
-        case '4':
-          if (__DEV__) {
-            element._owner = resolvedValue;
-          }
-          break;
-      }
-    }
-
-    handler.deps--;
-    initializeChunkIfUnblocked(response, handler);
+    installReference(
+      response,
+      reference,
+      resolvedValue,
+      reference.source,
+      args,
+    );
+    reference.handler.deps--;
+    initializeChunkIfUnblocked(response, reference.handler);
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
   }
-
-  function reject(error: mixed): void {
-    if (handler.errored) {
-      // We've already errored. We could instead build up an AggregateError
-      // but if there are multiple errors we just take the first one like
-      // Promise.all.
-      return;
-    }
-    const blockedValue = handler.value;
-    const erroredHandler: ErroredInitializationHandler = handler as any;
-    erroredHandler.errored = true;
-    erroredHandler.value = null;
-    erroredHandler.reason = error;
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-
-    if (__DEV__) {
-      if (
-        typeof blockedValue === 'object' &&
-        blockedValue !== null &&
-        blockedValue.$$typeof === REACT_ELEMENT_TYPE
-      ) {
-        const element = blockedValue;
-        // Conceptually the error happened inside this Element but right before
-        // it was rendered. We don't have a client side component to render but
-        // we can add some DebugInfo to explain that this was conceptually a
-        // Server side error that errored inside this element. That way any stack
-        // traces will point to the nearest JSX that errored - e.g. during
-        // serialization.
-        const erroredComponent: ReactComponentInfo = {
-          name: getComponentNameFromType(element.type) || '',
-          owner: element._owner,
-        };
-        // $FlowFixMe[cannot-write]
-        erroredComponent.debugStack = element._debugStack;
-        if (supportsCreateTask) {
-          // $FlowFixMe[cannot-write]
-          erroredComponent.debugTask = element._debugTask;
-        }
-        chunk._debugInfo.push(erroredComponent);
-      }
-    }
-
-    triggerErrorOnChunk(response, chunk, error);
-  }
-
-  promise.then(fulfill, reject);
-
-  // Return a place holder value for now.
-  return null as any;
 }
 
 function loadServerObjectReference(
@@ -3091,6 +3113,7 @@ function recordFailedField(
     pendingInputs: 0,
     seen: null,
     collection: null,
+    binding: null,
   };
   if (__DEV__) {
     reference.isDebug = isInitializingDebugInfo;
@@ -3338,7 +3361,25 @@ function getOutlinedModel<T>(
   }
 
   let chunkValue: T;
-  if (source.status === INITIALIZED) {
+  if ((map as any) === loadServerReference) {
+    // Loading a Server Function can wait for its module and its bound
+    // arguments even when its metadata is complete.
+    const fieldReference = createInitializationReference(
+      response,
+      parentObject,
+      key,
+      map,
+      EMPTY_REFERENCE_PATH,
+      source,
+      isInitializingDebugInfo,
+    );
+    try {
+      initializeServerReference(response, value, fieldReference);
+    } catch (error) {
+      rejectInitializationReference(response, fieldReference, error);
+    }
+    chunkValue = getReferencePlaceholder(fieldReference);
+  } else if (source.status === INITIALIZED) {
     chunkValue = map(response, value, parentObject, key);
   } else if ((map as any) === createModel) {
     chunkValue = map(response, value, parentObject, key);
