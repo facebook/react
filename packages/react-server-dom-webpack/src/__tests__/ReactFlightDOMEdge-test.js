@@ -908,6 +908,44 @@ describe('ReactFlightDOMEdge', () => {
     expect(result2.syncText).toEqual(result.syncText);
   });
 
+  it('delivers a Set containing itself with its entries already installed', async () => {
+    const set = new Set();
+    set.add(set);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(set),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {moduleMap: null, moduleLoading: null},
+    });
+    const observed = [];
+    await serverAct(() => {
+      response.then(value => {
+        const self = Array.from(value)[0];
+        observed.push([value.size, self instanceof Set && self.size]);
+      });
+    });
+    expect(observed).toEqual([[1, 1]]);
+  });
+
+  it('delivers a Map containing itself with its entries already installed', async () => {
+    const map = new Map();
+    map.set('self', map);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(map),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {moduleMap: null, moduleLoading: null},
+    });
+    const observed = [];
+    await serverAct(() => {
+      response.then(value => {
+        const self = value.get('self');
+        observed.push([value.size, self instanceof Map && self.size]);
+      });
+    });
+    expect(observed).toEqual([[1, 1]]);
+  });
+
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
       123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
