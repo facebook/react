@@ -1877,11 +1877,6 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     'streamed array containing itself':
       'the writer emits a streamed array that contains itself without a ' +
       'name for the back-reference',
-    'iterator field':
-      __DEV__ && host === 'node'
-        ? 'in DEV the Node writer consumes a sync iterator while inspecting ' +
-          'it for debug info'
-        : null,
   };
 
   describe('shapes', () => {
