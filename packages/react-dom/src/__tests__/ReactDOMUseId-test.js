@@ -328,6 +328,91 @@ describe('useId', () => {
     }
   });
 
+  it('large ids that overflow', async () => {
+    // When the binary id sequence gets longer than 30 bits, the bottom bits
+    // are split off into an "overflow" string, encoded in base 32 (5 bits
+    // per character), and the final id is the concatenation of the remaining
+    // digits followed by the overflow digits. Every 5-bit group in the
+    // overflow chunk must produce exactly one character, including all-zero
+    // groups, or the boundary between the two parts is erased and two
+    // structurally different positions can serialize to the same id.
+    //
+    // In this tree, each Card is one of 32 children (6 slot bits) nested
+    // inside 12 wrappers with 3 children each, where the child is always in
+    // the middle slot (2 bits per level, always '10'). So each Card's id is
+    // exactly 30 bits: 6 slot bits followed by 12 repetitions of '10'. The
+    // first Card's slot is 000001, so its top 5-bit group is all zeros.
+    // Rendering its children pushes past the 30-bit limit and splits those
+    // 30 bits into the overflow chunk. The leading zero character is
+    // dropped, so the chunk is 'qlala' instead of '0qlala', and the
+    // Preview's id becomes 'b' + 'qlala', the same 6 characters as the
+    // 30-bit id of the 23rd Card ('bqlala').
+
+    function Preview() {
+      const id = useId();
+      return <div id={id} />;
+    }
+
+    function Card() {
+      const headingId = useId();
+      return (
+        <article>
+          <div>
+            {null}
+            {null}
+            {null}
+            <div>
+              {null}
+              <h2 id={headingId}>Heading</h2>
+            </div>
+            <div>
+              <div>
+                <Preview />
+              </div>
+            </div>
+            <div>Footer</div>
+          </div>
+        </article>
+      );
+    }
+
+    function App() {
+      const cards = [];
+      for (let i = 0; i < 32; i++) {
+        cards.push(<Card key={i} />);
+      }
+      let tree = <main key="main">{cards}</main>;
+      for (let j = 0; j < 12; j++) {
+        tree = (
+          <section key={j}>
+            {null}
+            {tree}
+            {null}
+          </section>
+        );
+      }
+      return tree;
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    const elementsWithIds = container.querySelectorAll('[id]');
+    const ids = Array.from(elementsWithIds, element => element.id);
+    // These assertions characterize a bug: the ids in a single rendered
+    // tree should all be unique, but the dropped leading zero erases the
+    // boundary between the remaining digits and the overflow digits, so
+    // the Preview in the first Card and the heading in the 23rd Card both
+    // serialize to "_R_bqlala_".
+    expect(new Set(ids).size).toBe(63);
+    expect(ids.filter(id => id === '_R_bqlala_').length).toBe(2);
+  });
+
   it('multiple ids in a single component', async () => {
     function App() {
       const id1 = useId();
