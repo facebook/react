@@ -393,6 +393,10 @@ type Response = {
   // Fields of parsed values that still hold a placeholder, by the object and
   // key the placeholder occupies, with the reference that will fill them.
   _pendingFields: WeakMap<Object, Map<string, InitializationReference>>,
+  // Reserved Sets and Maps whose entries have not been copied in yet.
+  _pendingCollections: WeakMap<Object, InitializationReference>,
+  // The array behind an iterator, which hides it from property traversal.
+  _captures: WeakMap<Object, Array<any>>,
   _stringDecoder: StringDecoder,
   _closed: boolean,
   _closedReason: mixed,
@@ -1042,8 +1046,18 @@ type InitializationReference = {
   status: 0 | 1 | 2,
   // The installed value, or the failure.
   value: any,
-  // References selecting through this field.
+  // References selecting through this field, or waiting for it as an input.
   listeners: null | Array<InitializationReference>,
+  // Non-null while a constructor waits for its inputs. Constructors read
+  // their inputs when they run, so they wait for every input slot to be
+  // installed.
+  inputs: null | Object,
+  pendingInputs: number,
+  // Deep input waits (DEV debug info) track visited inputs.
+  seen: null | WeakSet<Object>,
+  // A Set or Map is allocated before its entries arrive so that references
+  // to it, including from its own entries, find the final identity.
+  collection: null | Set<any> | Map<any, any>,
   isDebug?: boolean, // DEV-only
 };
 type PendingInitializationHandler = {
@@ -1881,6 +1895,12 @@ function rejectInitializationReference(
   }
   reference.status = FIELD_FAILED;
   reference.value = error;
+  reference.inputs = null;
+  if (reference.collection !== null) {
+    // The identity is installed but its entries never arrive. The field stays
+    // registered as failed so that later selections through it reject.
+    response._pendingCollections.delete(reference.collection);
+  }
   const listeners = reference.listeners;
   reference.listeners = null;
   if (listeners !== null) {
@@ -2031,6 +2051,12 @@ function fulfillReference(
       break;
     }
 
+    if ((map as any) !== createModel) {
+      // A constructor runs once its input slots are installed. It completes
+      // the reference itself.
+      waitForInputs(response, reference, value);
+      return;
+    }
     const mappedValue = map(response, value, parentObject, key);
     installReference(response, reference, mappedValue, fulfilledChunk);
   } catch (error) {
@@ -2101,12 +2127,140 @@ function installReference(
 
   reference.status = FIELD_INSTALLED;
   reference.value = value;
+  reference.inputs = null;
   unregisterPendingField(response, reference);
+  if (reference.collection !== null) {
+    response._pendingCollections.delete(reference.collection);
+  }
   const listeners = reference.listeners;
   reference.listeners = null;
   if (listeners !== null) {
     for (let i = 0; i < listeners.length; i++) {
-      fulfillReference(response, listeners[i], value, reference.source);
+      const listener = listeners[i];
+      if (listener.inputs !== null) {
+        resumeInputs(response, listener, reference, value);
+      } else {
+        fulfillReference(response, listener, value, reference.source);
+      }
+    }
+  }
+}
+
+// Constructors read their inputs when they run. A selected input value can
+// still have placeholders in its slots, so the mapping waits for each slot to
+// be installed. Slot values can themselves be incomplete; the constructed
+// value is then incomplete too and is tracked through `_pendingCollections`
+// or `_captures`.
+function waitForInputs(
+  response: Response,
+  reference: InitializationReference,
+  inputs: any,
+): void {
+  reference.inputs = inputs;
+  reference.pendingInputs = 0;
+  if (typeof inputs === 'object' && inputs !== null) {
+    subscribeToInputSlots(response, reference, inputs);
+    if (reference.map === createMap || reference.map === createFormData) {
+      for (let i = 0; i < inputs.length; i++) {
+        const field = getPendingField(response, inputs, '' + i);
+        if (field === undefined || field.collection !== null) {
+          subscribeToInputSlots(response, reference, inputs[i]);
+        }
+      }
+    }
+  }
+  if (reference.pendingInputs === 0) {
+    runMapping(response, reference, inputs, reference.source);
+  }
+}
+
+function subscribeToInputSlots(
+  response: Response,
+  reference: InitializationReference,
+  slots: any,
+): void {
+  if (typeof slots !== 'object' || slots === null) {
+    return;
+  }
+  const fields = response._pendingFields.get(slots);
+  if (fields === undefined) {
+    return;
+  }
+  fields.forEach(field => {
+    if (field.status === FIELD_FAILED) {
+      throw field.value;
+    }
+    // A reserved collection's identity is installed; that is what the
+    // constructor copies. Its entries are tracked separately.
+    if (field.status === FIELD_PENDING && field.collection === null) {
+      subscribeToField(field, reference);
+      reference.pendingInputs++;
+    }
+  });
+}
+
+function resumeInputs(
+  response: Response,
+  reference: InitializationReference,
+  field: InitializationReference,
+  value: any,
+): void {
+  const inputs = reference.inputs;
+  try {
+    if (
+      (reference.map === createMap || reference.map === createFormData) &&
+      field.parentObject === inputs
+    ) {
+      // An entry pair arrived. Its own slots can be pending.
+      subscribeToInputSlots(response, reference, value);
+    }
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
+    return;
+  }
+  reference.pendingInputs--;
+  if (reference.pendingInputs === 0) {
+    try {
+      runMapping(response, reference, inputs, reference.source);
+    } catch (error) {
+      rejectInitializationReference(response, reference, error);
+    }
+  }
+}
+
+function runMapping(
+  response: Response,
+  reference: InitializationReference,
+  inputs: any,
+  fulfilledChunk: SomeChunk<any>,
+): void {
+  const {map, parentObject, key, collection} = reference;
+  let value;
+  if (collection !== null) {
+    fillCollection(collection, inputs);
+    value = collection;
+  } else {
+    value = map(response, inputs, parentObject, key);
+    if (map === extractIterator) {
+      response._captures.set(value, inputs);
+    }
+  }
+  installReference(response, reference, value, fulfilledChunk);
+  reference.handler.deps--;
+  initializeChunkIfUnblocked(response, reference.handler);
+}
+
+function fillCollection(
+  collection: Set<any> | Map<any, any>,
+  entries: Array<any>,
+): void {
+  if (collection instanceof Set) {
+    for (let i = 0; i < entries.length; i++) {
+      collection.add(entries[i]);
+    }
+  } else {
+    for (let i = 0; i < entries.length; i++) {
+      collection.set(entries[i][0], entries[i][1]);
     }
   }
 }
@@ -2201,9 +2355,7 @@ function waitForReference<T>(
     isAwaitingDebugInfo,
   );
   addReferenceListener(referencedChunk, reference);
-
-  // Return a place holder value for now.
-  return null as any;
+  return getReferencePlaceholder(reference);
 }
 
 // Creates a reference that fills `parentObject[key]` once it resolves, and
@@ -2235,12 +2387,44 @@ function createInitializationReference<T>(
     status: FIELD_PENDING,
     value: null,
     listeners: null,
+    inputs: null,
+    pendingInputs: 0,
+    seen: null,
+    collection: null,
   };
   if (__DEV__) {
     reference.isDebug = isAwaitingDebugInfo;
   }
   registerPendingField(response, reference);
+
+  if ((map as any) === createSet || (map as any) === createMap) {
+    // Allocate the collection now so that references to this field, including
+    // from the entries themselves, resolve to the final identity. The entries
+    // are copied in once they are installed.
+    const collection =
+      (map as any) === createSet ? new Set<any>() : new Map<any, any>();
+    reference.collection = collection;
+    response._pendingCollections.set(collection, reference);
+    if (key !== __PROTO__) {
+      parentObject[key] = collection;
+    }
+    if (key === '' && !handler.errored && handler.value === null) {
+      handler.value = collection;
+    }
+  }
   return reference;
+}
+
+// The value a reference leaves in its field while it waits. The field can
+// already be installed if the reference resolved synchronously.
+function getReferencePlaceholder<T>(reference: InitializationReference): T {
+  if (reference.collection !== null) {
+    return reference.collection as any;
+  }
+  if (reference.status === FIELD_INSTALLED) {
+    return reference.value;
+  }
+  return null as any;
 }
 
 // Queues the reference on a chunk that has not initialized yet. It is fulfilled
@@ -2628,6 +2812,10 @@ function recordFailedField(
     status: FIELD_FAILED,
     value: error,
     listeners: null,
+    inputs: null,
+    pendingInputs: 0,
+    seen: null,
+    collection: null,
   };
   if (__DEV__) {
     reference.isDebug = isInitializingDebugInfo;
@@ -2788,7 +2976,7 @@ function getOutlinedModel<T>(
           isInitializingDebugInfo,
         );
         subscribeToField(field, fieldReference);
-        return null as any;
+        return getReferencePlaceholder(fieldReference);
       }
       value = value[name];
     } else {
@@ -3351,6 +3539,8 @@ function ResponseInstance(
   this._nonce = nonce;
   this._chunks = chunks;
   this._pendingFields = new WeakMap();
+  this._pendingCollections = new WeakMap();
+  this._captures = new WeakMap();
   // Preserve a leading U+FEFF instead of consuming it as an encoding signature.
   this._stringDecoder = createStringDecoder(true);
   this._closed = false;
