@@ -4242,7 +4242,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild).not.toBe(serverSpan);
   });
 
-  // Regression for https://github.com/facebook/react/issues/35210 and other issues where lazy elements created in flight
+  // Regression for https://github.com/react/react/issues/35210 and other issues where lazy elements created in flight
   // caused hydration issues b/c the replay pathway did not correctly reset the hydration cursor
   it('Can hydrate even when lazy content resumes immediately inside a HostComponent', async () => {
     let resolve;
