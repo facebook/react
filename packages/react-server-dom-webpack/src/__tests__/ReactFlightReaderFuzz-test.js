@@ -1856,8 +1856,8 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   const caseName = (family, seed, demand, variant) =>
     family + ' seed=' + seed + ' demand=' + demand + ' variant=' + variant;
 
-  // Random graphs combine every gap above. They run once the reader completes
-  // values by their contents rather than by chunk.
+  // Random graphs include bound Server Functions. They run once those are
+  // bound from installed arguments.
   // eslint-disable-next-line jest/no-disabled-tests
   describe.skip('generated graphs', () => {
     seeds.forEach(seed => {
@@ -1877,30 +1877,13 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
 
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
-  const cycleGap =
-    'the reader resolves a reference cycle by handing one side the other ' +
-    'value while it is still being filled in, so a callback can see a ' +
-    'placeholder and a shared value can arrive twice';
+  const bindingGap =
+    'a Server Function bound to arguments that contain it waits for its ' +
+    'own result';
   const knownGaps = {
-    'shared props': cycleGap,
-    'shared props subtree': cycleGap,
-    'self element': cycleGap,
-    'joined regions': cycleGap,
-    'error with cyclic cause': cycleGap,
-    'collection containing itself':
-      'a Set or Map whose entries refer back to it waits for its own ' +
-      'construction',
-    'mutual collections':
-      'a Set or Map whose entries refer back to it waits for its own ' +
-      'construction',
-    'function bound to its container':
-      'a Server Function bound to arguments that contain it waits for its ' +
-      'own result',
-    'function exposes a region':
-      'a Server Function bound to arguments that contain it waits for its ' +
-      'own result',
-    'byte stream': cycleGap,
-    'canceled stream': cycleGap,
+    'function bound to its container': bindingGap,
+    'function exposes a region': bindingGap,
+    'joined regions': bindingGap,
     'streamed array containing itself':
       'the writer emits a streamed array that contains itself without a ' +
       'name for the back-reference',
