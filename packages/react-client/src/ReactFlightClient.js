@@ -1085,6 +1085,9 @@ type InitializationReference = {
   listeners: null | Array<InitializationReference>,
   // Handlers whose chunk reaches this field.
   waiters: null | Array<InitializationHandler>,
+  // Constructors whose inputs reach this field. They do not wait for it, but
+  // they fail with it.
+  failureListeners: null | Array<InitializationReference>,
   // Non-null while a constructor waits for its inputs. Constructors read
   // their inputs when they run, so they wait for every input slot to be
   // installed.
@@ -1902,9 +1905,16 @@ function subscribeToField(
   field: InitializationReference,
   reference: null | InitializationReference,
   handler: null | InitializationHandler,
+  failureOnly: boolean,
 ): void {
   if (reference !== null) {
-    if (field.listeners === null) {
+    if (failureOnly) {
+      if (field.failureListeners === null) {
+        field.failureListeners = [reference];
+      } else {
+        field.failureListeners.push(reference);
+      }
+    } else if (field.listeners === null) {
       field.listeners = [reference];
     } else {
       field.listeners.push(reference);
@@ -1942,6 +1952,7 @@ function subscribeToPendingContents(
   response: Response,
   value: any,
   waiter: InitializationReference | InitializationHandler,
+  failureOnly: boolean,
 ): number {
   const handler: null | InitializationHandler =
     (waiter as any).parentObject === undefined ? (waiter as any) : null;
@@ -1981,7 +1992,7 @@ function subscribeToPendingContents(
       const collection = pendingCollections.get(object);
       if (collection !== undefined) {
         // Its entries are not copied in yet. They are walked when they are.
-        subscribeToField(collection, reference, handler);
+        subscribeToField(collection, reference, handler, failureOnly);
         count++;
         continue;
       }
@@ -2006,7 +2017,7 @@ function subscribeToPendingContents(
           throw field.value;
         }
         if (field.status === FIELD_PENDING) {
-          subscribeToField(field, reference, handler);
+          subscribeToField(field, reference, handler, failureOnly);
           count++;
         }
       });
@@ -2085,8 +2096,10 @@ function rejectInitializationReference(
   }
   const listeners = reference.listeners;
   const waiters = reference.waiters;
+  const failureListeners = reference.failureListeners;
   reference.listeners = null;
   reference.waiters = null;
+  reference.failureListeners = null;
   if (waiters !== null) {
     for (let i = 0; i < waiters.length; i++) {
       rejectReference(response, waiters[i], error);
@@ -2095,6 +2108,11 @@ function rejectInitializationReference(
   if (listeners !== null) {
     for (let i = 0; i < listeners.length; i++) {
       rejectInitializationReference(response, listeners[i], error);
+    }
+  }
+  if (failureListeners !== null) {
+    for (let i = 0; i < failureListeners.length; i++) {
+      rejectInitializationReference(response, failureListeners[i], error);
     }
   }
   rejectReference(response, reference.handler, error);
@@ -2203,7 +2221,7 @@ function fulfillReference(
             // Continue from the field's value once it is installed. The
             // listener receives that value, so the path up to it is dropped.
             path.splice(0, i);
-            subscribeToField(field, reference, null);
+            subscribeToField(field, reference, null, false);
             return;
           }
           // A reserved collection: its identity is the field's value.
@@ -2342,7 +2360,12 @@ function installReference(
   const complete = reference.source.status === INITIALIZED;
   if (!complete) {
     try {
-      handler.deps += subscribeToPendingContents(response, contents, handler);
+      handler.deps += subscribeToPendingContents(
+        response,
+        contents,
+        handler,
+        false,
+      );
     } catch (error) {
       rejectReference(response, handler, error);
     }
@@ -2356,7 +2379,12 @@ function installReference(
       const waiter = waiters[i];
       if (!complete) {
         try {
-          waiter.deps += subscribeToPendingContents(response, contents, waiter);
+          waiter.deps += subscribeToPendingContents(
+            response,
+            contents,
+            waiter,
+            false,
+          );
         } catch (error) {
           rejectReference(response, waiter, error);
           continue;
@@ -2364,6 +2392,18 @@ function installReference(
       }
       waiter.deps--;
       initializeChunkIfUnblocked(response, waiter);
+    }
+  }
+  const failureListeners = reference.failureListeners;
+  reference.failureListeners = null;
+  if (failureListeners !== null && !complete) {
+    for (let i = 0; i < failureListeners.length; i++) {
+      const listener = failureListeners[i];
+      try {
+        subscribeToPendingContents(response, contents, listener, true);
+      } catch (error) {
+        rejectInitializationReference(response, listener, error);
+      }
     }
   }
   if (listeners !== null) {
@@ -2396,6 +2436,7 @@ function waitForInputs(
       response,
       inputs,
       reference,
+      false,
     );
   } else if (typeof inputs === 'object' && inputs !== null) {
     subscribeToInputSlots(response, reference, inputs);
@@ -2407,6 +2448,9 @@ function waitForInputs(
         }
       }
     }
+    // Deeper contents are not waited for, since a collection can contain
+    // itself, but a failure among them fails this value as soon as it happens.
+    subscribeToPendingContents(response, inputs, reference, true);
   }
   if (reference.pendingInputs === 0) {
     runMapping(response, reference, inputs, reference.source);
@@ -2432,7 +2476,7 @@ function subscribeToInputSlots(
     // A reserved collection's identity is installed; that is what the
     // constructor copies. Its entries are tracked separately.
     if (field.status === FIELD_PENDING && field.collection === null) {
-      subscribeToField(field, reference, null);
+      subscribeToField(field, reference, null, false);
       reference.pendingInputs++;
     }
   });
@@ -2453,6 +2497,7 @@ function resumeInputs(
           response,
           value,
           reference,
+          false,
         );
       }
     } else if (
@@ -2685,6 +2730,7 @@ function createInitializationReference<T>(
     value: null,
     listeners: null,
     waiters: null,
+    failureListeners: null,
     inputs: null,
     pendingInputs: 0,
     seen: null,
@@ -2859,6 +2905,7 @@ function resolveBoundArguments(
   reference.pendingInputs = 0;
   try {
     subscribeToInputSlots(response, reference, args);
+    subscribeToPendingContents(response, args, reference, true);
   } catch (error) {
     rejectInitializationReference(response, reference, error);
     return;
@@ -3109,6 +3156,7 @@ function recordFailedField(
     value: error,
     listeners: null,
     waiters: null,
+    failureListeners: null,
     inputs: null,
     pendingInputs: 0,
     seen: null,
@@ -3325,7 +3373,7 @@ function getOutlinedModel<T>(
             source,
             isInitializingDebugInfo,
           );
-          subscribeToField(field, fieldReference, null);
+          subscribeToField(field, fieldReference, null, false);
           return getReferencePlaceholder(fieldReference);
         }
         // A reserved collection: its identity is the field's value.
@@ -3392,7 +3440,12 @@ function getOutlinedModel<T>(
       handler = initializingHandler = createInitializationHandler(null, 0);
     }
     try {
-      handler.deps += subscribeToPendingContents(response, value, handler);
+      handler.deps += subscribeToPendingContents(
+        response,
+        value,
+        handler,
+        false,
+      );
     } catch (error) {
       recordFailedField(response, parentObject, key, error);
       markHandlerErrored(error);
