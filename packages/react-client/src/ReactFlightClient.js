@@ -2534,6 +2534,16 @@ function markHandlerErrored(error: mixed): void {
   }
 }
 
+function addHaltedDependency(): void {
+  // Add a dependency that will never resolve.
+  // TODO: Mark downstreams as halted too.
+  if (initializingHandler) {
+    initializingHandler.deps++;
+  } else {
+    initializingHandler = createInitializationHandler(null, 1);
+  }
+}
+
 function getOutlinedModel<T>(
   response: Response,
   reference: string,
@@ -2560,148 +2570,11 @@ function getOutlinedModel<T>(
       break;
   }
   // The status might have changed after initialization.
+  let value: any;
   switch (chunk.status) {
     case INITIALIZED:
-      let value = chunk.value;
-      for (let i = 1; i < path.length; i++) {
-        while (
-          typeof value === 'object' &&
-          value !== null &&
-          value.$$typeof === REACT_LAZY_TYPE
-        ) {
-          const referencedChunk: SomeChunk<any> = value._payload;
-          switch (referencedChunk.status) {
-            case RESOLVED_MODEL:
-              initializeModelChunk(referencedChunk);
-              break;
-            case RESOLVED_MODULE:
-              initializeModuleChunk(referencedChunk);
-              break;
-          }
-          switch (referencedChunk.status) {
-            case INITIALIZED: {
-              value = referencedChunk.value;
-              break;
-            }
-            case BLOCKED:
-            case PENDING:
-            case PENDING_WEAK: {
-              return waitForReference(
-                referencedChunk,
-                parentObject,
-                key,
-                response,
-                map,
-                path.slice(i - 1),
-                isInitializingDebugInfo,
-              );
-            }
-            case HALTED: {
-              // Add a dependency that will never resolve.
-              // TODO: Mark downstreams as halted too.
-              let handler: InitializationHandler;
-              if (initializingHandler) {
-                handler = initializingHandler;
-                handler.deps++;
-              } else {
-                handler = initializingHandler = createInitializationHandler(
-                  null,
-                  1,
-                );
-              }
-              return null as any;
-            }
-            default: {
-              recordFailedField(
-                response,
-                parentObject,
-                key,
-                referencedChunk.reason,
-              );
-              markHandlerErrored(referencedChunk.reason);
-              return null as any;
-            }
-          }
-        }
-        const name = path[i];
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          (getPrototypeOf(value) === ObjectPrototype ||
-            getPrototypeOf(value) === ArrayPrototype) &&
-          hasOwnProperty.call(value, name)
-        ) {
-          // An initialized chunk can hold an object that another model is
-          // still filling in. Wait for the field rather than reading its
-          // placeholder.
-          const field = getPendingField(response, value, name);
-          if (field !== undefined) {
-            if (field.status === FIELD_FAILED) {
-              recordFailedField(response, parentObject, key, field.value);
-              markHandlerErrored(field.value);
-              return null as any;
-            }
-            const fieldReference = createInitializationReference(
-              response,
-              parentObject,
-              key,
-              map,
-              path.slice(i),
-              chunk,
-              isInitializingDebugInfo,
-            );
-            subscribeToField(field, fieldReference);
-            return null as any;
-          }
-          value = value[name];
-        } else {
-          throw new Error('Invalid reference.');
-        }
-      }
-
-      while (
-        typeof value === 'object' &&
-        value !== null &&
-        value.$$typeof === REACT_LAZY_TYPE
-      ) {
-        // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
-        // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
-        const referencedChunk: SomeChunk<any> = value._payload;
-        switch (referencedChunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(referencedChunk);
-            break;
-          case RESOLVED_MODULE:
-            initializeModuleChunk(referencedChunk);
-            break;
-        }
-        switch (referencedChunk.status) {
-          case INITIALIZED: {
-            value = referencedChunk.value;
-            continue;
-          }
-        }
-        break;
-      }
-
-      const chunkValue = map(response, value, parentObject, key);
-      if (__DEV__) {
-        if (
-          parentObject[0] === REACT_ELEMENT_TYPE &&
-          (key === '4' || key === '5')
-        ) {
-          // If we're resolving the "owner" or "stack" slot of an Element array,
-          // we don't call transferReferencedDebugInfo because this reference is
-          // to a debug chunk.
-        } else if (isInitializingDebugInfo) {
-          // If we're resolving references as part of debug info resolution, we
-          // don't call transferReferencedDebugInfo because these references are
-          // to debug chunks.
-        } else {
-          transferReferencedDebugInfo(initializingChunk, chunk);
-        }
-      }
-      return chunkValue;
+      value = chunk.value;
+      break;
     case PENDING:
     case PENDING_WEAK:
     case BLOCKED:
@@ -2714,24 +2587,141 @@ function getOutlinedModel<T>(
         path,
         isInitializingDebugInfo,
       );
-    case HALTED: {
-      // Add a dependency that will never resolve.
-      // TODO: Mark downstreams as halted too.
-      let handler: InitializationHandler;
-      if (initializingHandler) {
-        handler = initializingHandler;
-        handler.deps++;
-      } else {
-        handler = initializingHandler = createInitializationHandler(null, 1);
-      }
+    case HALTED:
+      addHaltedDependency();
       return null as any;
-    }
     default:
       recordFailedField(response, parentObject, key, chunk.reason);
       markHandlerErrored(chunk.reason);
       // Placeholder
       return null as any;
   }
+
+  for (let i = 1; i < path.length; i++) {
+    while (
+      typeof value === 'object' &&
+      value !== null &&
+      value.$$typeof === REACT_LAZY_TYPE
+    ) {
+      const referencedChunk: SomeChunk<any> = value._payload;
+      switch (referencedChunk.status) {
+        case RESOLVED_MODEL:
+          initializeModelChunk(referencedChunk);
+          break;
+        case RESOLVED_MODULE:
+          initializeModuleChunk(referencedChunk);
+          break;
+      }
+      switch (referencedChunk.status) {
+        case INITIALIZED: {
+          value = referencedChunk.value;
+          break;
+        }
+        case BLOCKED:
+        case PENDING:
+        case PENDING_WEAK: {
+          return waitForReference(
+            referencedChunk,
+            parentObject,
+            key,
+            response,
+            map,
+            path.slice(i - 1),
+            isInitializingDebugInfo,
+          );
+        }
+        case HALTED: {
+          addHaltedDependency();
+          return null as any;
+        }
+        default: {
+          recordFailedField(
+            response,
+            parentObject,
+            key,
+            referencedChunk.reason,
+          );
+          markHandlerErrored(referencedChunk.reason);
+          return null as any;
+        }
+      }
+    }
+    const name = path[i];
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      (getPrototypeOf(value) === ObjectPrototype ||
+        getPrototypeOf(value) === ArrayPrototype) &&
+      hasOwnProperty.call(value, name)
+    ) {
+      // An initialized chunk can hold an object that another model is still
+      // filling in. Wait for the field rather than reading its placeholder.
+      const field = getPendingField(response, value, name);
+      if (field !== undefined) {
+        if (field.status === FIELD_FAILED) {
+          recordFailedField(response, parentObject, key, field.value);
+          markHandlerErrored(field.value);
+          return null as any;
+        }
+        const fieldReference = createInitializationReference(
+          response,
+          parentObject,
+          key,
+          map,
+          path.slice(i),
+          chunk,
+          isInitializingDebugInfo,
+        );
+        subscribeToField(field, fieldReference);
+        return null as any;
+      }
+      value = value[name];
+    } else {
+      throw new Error('Invalid reference.');
+    }
+  }
+
+  while (
+    typeof value === 'object' &&
+    value !== null &&
+    value.$$typeof === REACT_LAZY_TYPE
+  ) {
+    // If what we're referencing is a Lazy it must be because we inserted one as a virtual node
+    // while it was blocked by other data. If it's no longer blocked, we can unwrap it.
+    const referencedChunk: SomeChunk<any> = value._payload;
+    switch (referencedChunk.status) {
+      case RESOLVED_MODEL:
+        initializeModelChunk(referencedChunk);
+        break;
+      case RESOLVED_MODULE:
+        initializeModuleChunk(referencedChunk);
+        break;
+    }
+    if (referencedChunk.status === INITIALIZED) {
+      value = referencedChunk.value;
+      continue;
+    }
+    break;
+  }
+
+  const chunkValue = map(response, value, parentObject, key);
+  if (__DEV__) {
+    if (
+      parentObject[0] === REACT_ELEMENT_TYPE &&
+      (key === '4' || key === '5')
+    ) {
+      // If we're resolving the "owner" or "stack" slot of an Element array,
+      // we don't call transferReferencedDebugInfo because this reference is
+      // to a debug chunk.
+    } else if (isInitializingDebugInfo) {
+      // If we're resolving references as part of debug info resolution, we
+      // don't call transferReferencedDebugInfo because these references are
+      // to debug chunks.
+    } else {
+      transferReferencedDebugInfo(initializingChunk, chunk);
+    }
+  }
+  return chunkValue;
 }
 
 function createMap(
