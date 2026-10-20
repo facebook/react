@@ -2281,7 +2281,20 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
   }
   // This didn't complete synchronously so it wouldn't have even if we didn't
   // outline it, so this would reduce to a lazy reference even in prod.
-  return serializeLazyID(newTask.id);
+  const lazyReference = serializeLazyID(newTask.id);
+  const model = task.model;
+  const writtenObjects = request.writtenObjects;
+  if (
+    typeof model === 'object' &&
+    model !== null &&
+    writtenObjects.get(model) === serializeByValueID(newTask.id)
+  ) {
+    // createTask registered the element by the new task's ID. Later
+    // occurrences of the same element would then wait for the component to
+    // render before the model holding them can resolve. They are lazy too.
+    writtenObjects.set(model, lazyReference);
+  }
+  return lazyReference;
 }
 
 function outlineHaltedTask(
@@ -5540,7 +5553,12 @@ function renderDebugModel(
 
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
-      return Array.from(value as any);
+      const iterator = iteratorFn.call(value);
+      if (iterator !== value) {
+        return Array.from(iterator as any);
+      }
+      // An iterator can only be read once, and the model that holds it will
+      // read it. Describe it by its shape below instead of consuming it.
     }
 
     const proto = getPrototypeOf(value);

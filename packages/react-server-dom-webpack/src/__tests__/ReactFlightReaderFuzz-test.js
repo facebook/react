@@ -1484,13 +1484,12 @@ const shapes = {
     array.push(array);
     return plan.stream([array]);
   },
-  // Writer gap in DEV: a suspended server component element that occurs twice
-  // reuses its pending task without a lazy boundary.
+  // A suspended server component element that occurs twice.
   async 'shared server component'(plan) {
     const element = plan.serverElement('<b>shared</b>', () =>
       ReactServer.createElement('b', null, 'shared'),
     );
-    return [element, element];
+    return {first: element, second: element};
   },
   // A byte stream read with a BYOB reader.
   async 'byte stream'(plan) {
@@ -1878,10 +1877,6 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     'streamed array containing itself':
       'the writer emits a streamed array that contains itself without a ' +
       'name for the back-reference',
-    'shared server component': __DEV__
-      ? 'in DEV the writer reuses a pending server component task without ' +
-        'a lazy boundary'
-      : null,
     'iterator field':
       __DEV__ && host === 'node'
         ? 'in DEV the Node writer consumes a sync iterator while inspecting ' +
