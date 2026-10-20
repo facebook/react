@@ -1842,7 +1842,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         'Replay with FLIGHT_FUZZ_SEED=' +
           seed +
           ' FLIGHT_FUZZ_CASES=1 -t "' +
-          [family, seed, demand, variant].join(' ') +
+          caseName(family, seed, demand, variant) +
           '"\n' +
           plan.recipe.join('\n') +
           '\nServices: ' +
@@ -1885,13 +1885,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     'shared props': cycleGap,
     'shared props subtree': cycleGap,
     'self element': cycleGap,
-    'blob beside a cycle': cycleGap,
     'joined regions': cycleGap,
-    'iterator field': cycleGap,
-    'rejected promise': cycleGap,
-    'all value kinds': cycleGap,
-    'server component': cycleGap,
-    'failing server component': cycleGap,
     'error with cyclic cause': cycleGap,
     'collection containing itself':
       'a Set or Map whose entries refer back to it waits for its own ' +
@@ -1914,6 +1908,11 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
       ? 'in DEV the writer reuses a pending server component task without ' +
         'a lazy boundary'
       : null,
+    'iterator field':
+      __DEV__ && host === 'node'
+        ? 'in DEV the Node writer consumes a sync iterator while inspecting ' +
+          'it for debug info'
+        : null,
   };
 
   describe('shapes', () => {
