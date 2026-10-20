@@ -1906,9 +1906,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     'function exposes a region':
       'a Server Function bound to arguments that contain it waits for its ' +
       'own result',
-    'byte stream':
-      'the reader enqueues views of its transport buffer, which a BYOB ' +
-      'reader cannot take ownership of',
+    'byte stream': cycleGap,
     'canceled stream':
       'the reader keeps enqueueing into a stream the application canceled',
     'streamed array containing itself':
