@@ -3,9 +3,19 @@ import {useEffect} from 'react';
 export function Foo() {
   useEffect(() => {
     try {
-      // do something
+      doSomething();
     } catch ({status}) {
-      // do something
+      log(status);
+    }
+  }, []);
+}
+
+export function Bar() {
+  useEffect(() => {
+    try {
+      doSomething();
+    } catch ([error]) {
+      log(error);
     }
   }, []);
 }
