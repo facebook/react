@@ -2680,9 +2680,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'stream', other: 'stream'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('byte stream read with a BYOB reader', () =>
+    it('byte stream read with a BYOB reader', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
