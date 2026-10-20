@@ -329,6 +329,8 @@ describe('useId', () => {
   });
 
   it('large ids preserve leading zeros in the overflow', async () => {
+    // Each Wrapper level forks because of the null sibling, so the ids grow
+    // past 30 bits and some of the overflowed characters start with 0s.
     function Child({children}) {
       const id = useId();
       return <div id={id}>{children}</div>;
