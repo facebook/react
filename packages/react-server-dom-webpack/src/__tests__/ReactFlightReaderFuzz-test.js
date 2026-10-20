@@ -1857,10 +1857,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   const caseName = (family, seed, demand, variant) =>
     family + ' seed=' + seed + ' demand=' + demand + ' variant=' + variant;
 
-  // Random graphs include bound Server Functions. They run once those are
-  // bound from installed arguments.
-  // eslint-disable-next-line jest/no-disabled-tests
-  describe.skip('generated graphs', () => {
+  describe('generated graphs', () => {
     seeds.forEach(seed => {
       for (let variant = 0; variant < 2; variant++) {
         const demandCount = sweep ? demands.length : 1;
@@ -1878,13 +1875,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
 
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
-  const bindingGap =
-    'a Server Function bound to arguments that contain it waits for its ' +
-    'own result';
   const knownGaps = {
-    'function bound to its container': bindingGap,
-    'function exposes a region': bindingGap,
-    'joined regions': bindingGap,
     'byte stream':
       'the reader enqueues views of its transport buffer, which a BYOB ' +
       'reader cannot take ownership of',
