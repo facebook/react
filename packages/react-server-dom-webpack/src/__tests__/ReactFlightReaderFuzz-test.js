@@ -1876,9 +1876,6 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
   const knownGaps = {
-    'byte stream':
-      'the reader enqueues views of its transport buffer, which a BYOB ' +
-      'reader cannot take ownership of',
     'canceled stream':
       'the reader keeps enqueueing into a stream the application canceled',
     'streamed array containing itself':

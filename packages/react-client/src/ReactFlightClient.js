@@ -6306,6 +6306,13 @@ export function processBinaryChunk(
   let rowLength = streamState._rowLength;
   const buffer = streamState._buffer;
   const chunkLength = chunk.length;
+  // Enqueueing into a byte stream detaches the buffer behind the enqueued
+  // view, so a view is only enqueued without copying when the chunk is the
+  // whole buffer. A chunk cut from a larger buffer, like a Node Buffer from
+  // the pool, shares it with other chunks, and a pooled buffer cannot be
+  // detached at all.
+  const ownsBuffer =
+    chunk.byteOffset === 0 && chunkLength === chunk.buffer.byteLength;
   incrementChunkDebugInfo(streamState, chunkLength);
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -6397,7 +6404,7 @@ export function processBinaryChunk(
           // If we're at the end of the RSC chunk, no more parsing will access
           // this buffer and we don't need to copy the chunk to allow detaching
           // the buffer, otherwise we need to copy.
-          lastIdx === chunkLength ? lastChunk : lastChunk.slice(),
+          lastIdx === chunkLength && ownsBuffer ? lastChunk : lastChunk.slice(),
           streamState,
         );
       } else {
@@ -6436,7 +6443,12 @@ export function processBinaryChunk(
         // before enqueueing, as enqueue will detach the buffer and byteLength
         // will become 0.
         rowLength -= remainingSlice.byteLength;
-        resolveBuffer(response, rowID, remainingSlice, streamState);
+        resolveBuffer(
+          response,
+          rowID,
+          ownsBuffer ? remainingSlice : remainingSlice.slice(),
+          streamState,
+        );
       } else {
         // For other row types, stash the rest of the current chunk until we can
         // process the full row.

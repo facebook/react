@@ -1803,6 +1803,52 @@ describe('ReactFlightDOMEdge', () => {
     expect(streamedBuffers.flatMap(t => Array.from(t))).toEqual(expectedBytes);
   });
 
+  it('does not detach a transport buffer shared between chunks when streaming bytes', async () => {
+    const s = new ReadableStream({
+      type: 'bytes',
+      start(c) {
+        c.enqueue(new Uint8Array([1, 2, 3, 4, 5]));
+        c.enqueue(new Uint8Array([6, 7, 8]));
+        c.close();
+      },
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream({s, after: 'done'}, {}),
+    );
+
+    // Deliver the response as small chunks that are all views into one
+    // buffer, the way a Node transport hands out slices of a pooled Buffer.
+    const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    const transport = new ReadableStream({
+      start(c) {
+        for (let i = 0; i < bytes.length; i += 3) {
+          c.enqueue(bytes.subarray(i, i + 3));
+        }
+        c.close();
+      },
+    });
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      transport,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const received = [];
+    const reader = result.s.getReader({mode: 'byob'});
+    let entry;
+    while (!(entry = await reader.read(new Uint8Array(4))).done) {
+      received.push(...entry.value);
+    }
+    expect(received).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(result.after).toBe('done');
+  });
+
   // @gate !__DEV__ || enableComponentPerformanceTrack
   it('supports async server component debug info as the element owner in DEV', async () => {
     function Container({children}) {
