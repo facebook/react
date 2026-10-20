@@ -1049,6 +1049,10 @@ type PendingInitializationHandler = {
   // for every other model.
   reason: null | FlightStreamController,
   deps: number,
+  // Debug info received from referenced chunks that had not completed when
+  // they were referenced. Added to the chunk once it completes.
+  debugSources: null | Array<SomeChunk<any>>, // DEV-only
+  receivedDebugInfo: null | Array<ReactDebugInfoEntry>, // DEV-only
   errored: false,
 };
 type ErroredInitializationHandler = {
@@ -1058,6 +1062,8 @@ type ErroredInitializationHandler = {
   // The error the handler was rejected with.
   reason: mixed,
   deps: number,
+  debugSources: null | Array<SomeChunk<any>>, // DEV-only
+  receivedDebugInfo: null | Array<ReactDebugInfoEntry>, // DEV-only
   errored: true,
 };
 type InitializationHandler =
@@ -1068,27 +1074,43 @@ function createInitializationHandler(
   parent: null | InitializationHandler,
   deps: number,
 ): PendingInitializationHandler {
-  return {
+  const handler: PendingInitializationHandler = {
     parent,
     chunk: null,
     value: null,
     reason: null,
     deps,
     errored: false,
-  };
+  } as Omit<
+    PendingInitializationHandler,
+    'debugSources' | 'receivedDebugInfo',
+  > as any;
+  if (__DEV__) {
+    handler.debugSources = null;
+    handler.receivedDebugInfo = null;
+  }
+  return handler;
 }
 
 function createErroredInitializationHandler(
   reason: mixed,
 ): ErroredInitializationHandler {
-  return {
+  const handler: ErroredInitializationHandler = {
     parent: null,
     chunk: null,
     value: null,
     reason,
     deps: 0,
     errored: true,
-  };
+  } as Omit<
+    ErroredInitializationHandler,
+    'debugSources' | 'receivedDebugInfo',
+  > as any;
+  if (__DEV__) {
+    handler.debugSources = null;
+    handler.receivedDebugInfo = null;
+  }
+  return handler;
 }
 let initializingHandler: null | InitializationHandler = null;
 let initializingChunk: null | BlockedChunk<any> = null;
@@ -1296,11 +1318,14 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // `handler.chunk` is set.
       return;
     }
-    if (handler !== null && handler.deps > 0) {
-      // The model references chunks that have not resolved yet. `cyclicChunk`
-      // stays BLOCKED, with the deferred listeners queued on it, until the last
-      // of those resolves.
-      return;
+    if (handler !== null) {
+      if (handler.deps > 0) {
+        // The model references chunks that have not resolved yet. `cyclicChunk`
+        // stays BLOCKED, with the deferred listeners queued on it, until the
+        // last of those resolves.
+        return;
+      }
+      transferDeferredDebugInfo(cyclicChunk, handler);
     }
     initializeBlockedChunk(response, cyclicChunk, value, null);
   } catch (error) {
@@ -1809,6 +1834,7 @@ function initializeChunkIfUnblocked(
   // `handler.reason` is the controller of a stream whose chunk was blocked on
   // its debug info, and null otherwise. It becomes the initialized chunk's
   // `reason` either way.
+  transferDeferredDebugInfo(chunk, handler);
   initializeBlockedChunk(response, chunk, handler.value, handler.reason);
 }
 
@@ -1979,7 +2005,7 @@ function installReference(
     switch (key) {
       case '3':
         if (__DEV__ && !reference.isDebug) {
-          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          transferOrDeferReferencedDebugInfo(handler, fulfilledChunk);
         }
         element.props = value;
         break;
@@ -1997,12 +2023,12 @@ function installReference(
         break;
       default:
         if (__DEV__ && !reference.isDebug) {
-          transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+          transferOrDeferReferencedDebugInfo(handler, fulfilledChunk);
         }
         break;
     }
   } else if (__DEV__ && !reference.isDebug) {
-    transferReferencedDebugInfo(handler.chunk, fulfilledChunk);
+    transferOrDeferReferencedDebugInfo(handler, fulfilledChunk);
   }
 }
 
@@ -2391,45 +2417,134 @@ function resolveLazy(value: any): mixed {
   return value;
 }
 
+// Debug info moves from a referenced chunk into the referencing chunk. While
+// the referenced chunk is incomplete its debug info can still be arriving,
+// and pushing into the receiving chunk would collide with the entries it has
+// reserved for its own debug info. Record the source instead: its entries are
+// copied when it completes, before they move to its value, and added to the
+// receiving chunk once that chunk completes.
+function transferOrDeferReferencedDebugInfo(
+  handler: InitializationHandler,
+  referencedChunk: SomeChunk<any>,
+): void {
+  if (__DEV__) {
+    if (referencedChunk.status === INITIALIZED) {
+      transferReferencedDebugInfo(handler.chunk, referencedChunk);
+      return;
+    }
+    const sources = handler.debugSources;
+    if (sources === null) {
+      handler.debugSources = [referencedChunk];
+    } else if (sources.indexOf(referencedChunk) !== -1) {
+      return;
+    } else {
+      sources.push(referencedChunk);
+    }
+    if (referencedChunk.status === BLOCKED) {
+      // Runs when the referenced chunk completes, before its debug info moves
+      // to its value. Added directly to the listeners to run synchronously.
+      const copy = () => {
+        receiveDeferredDebugInfo(handler, referencedChunk._debugInfo);
+      };
+      if (referencedChunk.value === null) {
+        referencedChunk.value = [copy];
+      } else {
+        referencedChunk.value.push(copy);
+      }
+    }
+  }
+}
+
+function receiveDeferredDebugInfo(
+  handler: InitializationHandler,
+  entries: ReactDebugInfo,
+): void {
+  if (__DEV__) {
+    let received = handler.receivedDebugInfo;
+    if (received === null) {
+      received = handler.receivedDebugInfo = [];
+    }
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (entry !== undefined && received.indexOf(entry) === -1) {
+        received.push(entry);
+      }
+    }
+  }
+}
+
+function transferDeferredDebugInfo(
+  chunk: BlockedChunk<any>,
+  handler: InitializationHandler,
+): void {
+  if (__DEV__) {
+    const sources = handler.debugSources;
+    if (sources !== null) {
+      handler.debugSources = null;
+      for (let i = 0; i < sources.length; i++) {
+        const source = sources[i];
+        if (source.status !== INITIALIZED) {
+          // Its entries were not copied yet. Take what has arrived.
+          receiveDeferredDebugInfo(handler, source._debugInfo);
+        }
+      }
+    }
+    const received = handler.receivedDebugInfo;
+    if (received !== null) {
+      handler.receivedDebugInfo = null;
+      transferDebugInfoEntries(chunk, received);
+    }
+  }
+}
+
 function transferReferencedDebugInfo(
   receivingChunk: null | BlockedChunk<any>,
   referencedChunk: SomeChunk<any>,
+): void {
+  if (__DEV__) {
+    if (receivingChunk !== null) {
+      transferDebugInfoEntries(receivingChunk, referencedChunk._debugInfo);
+    }
+  }
+}
+
+function transferDebugInfoEntries(
+  receivingChunk: BlockedChunk<any>,
+  referencedDebugInfo: ReactDebugInfo,
 ): void {
   if (__DEV__) {
     // We add the debug info to the receiving chunk since the resolution of that
     // promise is also blocked by the referenced debug info. By adding it to
     // both we can track it even if the array/element/lazy is extracted, or if
     // the root is rendered as is.
-    if (receivingChunk !== null) {
-      const referencedDebugInfo = referencedChunk._debugInfo;
-      const receivingDebugInfo = receivingChunk._debugInfo;
-      // The receiving chunk takes each entry only once. A repeated entry
-      // carries no information. An entry repeats in two ways:
-      //
-      // - the receiving chunk references the same chunk more than once
-      // - two referenced chunks carry the same entry
-      //
-      // Without the set, the entries multiply along a chain of references.
-      let receivedDebugInfo = receivingChunk._receivedDebugInfo;
-      if (receivedDebugInfo === null) {
-        receivedDebugInfo = receivingChunk._receivedDebugInfo = new Set();
-      }
-      for (let i = 0; i < referencedDebugInfo.length; ++i) {
-        const debugInfoEntry = referencedDebugInfo[i];
-        if (debugInfoEntry.name != null) {
-          debugInfoEntry as ReactComponentInfo;
-          // We're not transferring Component info since we use Component info
-          // in Debug info to fill in gaps between Fibers for the parent stack.
-        } else if (!receivedDebugInfo.has(debugInfoEntry)) {
-          receivedDebugInfo.add(debugInfoEntry);
-          receivingDebugInfo.push(debugInfoEntry);
-        }
+    const receivingDebugInfo = receivingChunk._debugInfo;
+    // The receiving chunk takes each entry only once. A repeated entry
+    // carries no information. An entry repeats in two ways:
+    //
+    // - the receiving chunk references the same chunk more than once
+    // - two referenced chunks carry the same entry
+    //
+    // Without the set, the entries multiply along a chain of references.
+    let receivedDebugInfo = receivingChunk._receivedDebugInfo;
+    if (receivedDebugInfo === null) {
+      receivedDebugInfo = receivingChunk._receivedDebugInfo = new Set();
+    }
+    for (let i = 0; i < referencedDebugInfo.length; ++i) {
+      const debugInfoEntry = referencedDebugInfo[i];
+      if (debugInfoEntry === undefined) {
+        // A reserved entry that has not been initialized yet.
+      } else if (debugInfoEntry.name != null) {
+        debugInfoEntry as ReactComponentInfo;
+        // We're not transferring Component info since we use Component info
+        // in Debug info to fill in gaps between Fibers for the parent stack.
+      } else if (!receivedDebugInfo.has(debugInfoEntry)) {
+        receivedDebugInfo.add(debugInfoEntry);
+        receivingDebugInfo.push(debugInfoEntry);
       }
     }
   }
 }
 
-// Most references have no path, so they can all share the same empty array.
 // It's never mutated because only paths with entries get spliced in place.
 const EMPTY_REFERENCE_PATH: Array<string> = [];
 
