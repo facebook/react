@@ -1906,8 +1906,6 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     'function exposes a region':
       'a Server Function bound to arguments that contain it waits for its ' +
       'own result',
-    'stream items waiting on modules':
-      'a stream can close before a queued item whose import is still loading',
     'byte stream':
       'the reader enqueues views of its transport buffer, which a BYOB ' +
       'reader cannot take ownership of',
