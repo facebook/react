@@ -487,6 +487,50 @@ describe('ReactFlightDOMEdge', () => {
     expect(observed).toEqual([[2, 2, null]]);
   });
 
+  it('rejects a Set as soon as a nested input fails without waiting for its other inputs', async () => {
+    let resolveFirst;
+    let rejectSecond;
+    const {value: first} = clientExports(
+      {value: 'first'},
+      'first',
+      '/first.js',
+      new Promise(resolve => (resolveFirst = resolve)),
+    );
+    const {value: second} = clientExports(
+      {value: 'second'},
+      'second',
+      '/second.js',
+      new Promise((resolve, reject) => (rejectSecond = reject)),
+    );
+    const set = new Set([first, {nested: second}]);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream({set}, webpackMap),
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        serverModuleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const observed = [];
+    await serverAct(() => {
+      response.then(
+        () => observed.push('fulfilled'),
+        error => observed.push(error.message),
+      );
+    });
+    expect(observed).toEqual([]);
+
+    // The failure is inside an entry, not in one of the Set's own slots. It
+    // must still reject the Set while the first module is still loading.
+    await serverAct(() => rejectSecond(new Error('second failed to load')));
+    expect(observed).toEqual(['second failed to load']);
+
+    await serverAct(() => resolveFirst());
+    expect(observed).toEqual(['second failed to load']);
+  });
+
   it('should load a server reference on a consuming server and pass it back', async () => {
     function greet(name) {
       return 'hi, ' + name;
