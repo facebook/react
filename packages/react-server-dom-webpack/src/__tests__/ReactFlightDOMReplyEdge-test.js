@@ -420,6 +420,77 @@ describe('ReactFlightDOMReplyEdge', () => {
     expect(Array.from(await decoded.b)).toEqual(Array.from(buffer));
   });
 
+  it('drops stream entries that arrive after the consumer canceled the stream', async () => {
+    const stream = new ReadableStream({
+      start(c) {
+        c.enqueue('first');
+        c.enqueue('second');
+        c.close();
+      },
+    });
+    const formData = await ReactServerDOMClient.encodeReply({
+      stream,
+      later: 'later',
+    });
+    // The root entry comes first, then one entry per stream item and the
+    // close marker.
+    const entries = Array.from(formData);
+    expect(entries.length).toBe(4);
+
+    // Hand the decoder entries as the test releases them.
+    const arrived = [];
+    const waiting = [];
+    let ended = false;
+    function deliver() {
+      while (waiting.length > 0 && (arrived.length > 0 || ended)) {
+        const resolve = waiting.shift();
+        resolve(
+          arrived.length > 0
+            ? {done: false, value: arrived.shift()}
+            : {done: true, value: undefined},
+        );
+      }
+    }
+    const iterable = {
+      [Symbol.asyncIterator]() {
+        return {
+          next() {
+            return new Promise(resolve => {
+              waiting.push(resolve);
+              deliver();
+            });
+          },
+        };
+      },
+    };
+    const send = entry => {
+      arrived.push(entry);
+      deliver();
+    };
+
+    const pending = ReactServerDOMServer.decodeReplyFromAsyncIterable(
+      iterable,
+      webpackServerMap,
+    );
+    send(entries[0]);
+    send(entries[1]);
+    const decoded = await pending;
+    const reader = decoded.stream.getReader();
+    expect(await reader.read()).toEqual({value: 'first', done: false});
+    await reader.cancel('not interested');
+
+    // The stream's second item and its close marker still arrive. They must
+    // not throw into the decoder.
+    send(entries[2]);
+    send(entries[3]);
+    ended = true;
+    deliver();
+    for (let i = 0; i < 10; i++) {
+      await Promise.resolve();
+    }
+    expect(decoded.later).toBe('later');
+  });
+
   it('supports streamed values whose entries are not contiguous in the body', async () => {
     // The chunks of a streamed value are matched to their stream by field
     // name, not by position, so the client may interleave the entries of
