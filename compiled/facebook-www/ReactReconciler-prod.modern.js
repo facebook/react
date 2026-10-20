@@ -861,10 +861,9 @@ module.exports = function ($$$config) {
     var length = 32 - clz32(totalChildren) + baseLength;
     if (30 < length) {
       var numberOfOverflowBits = baseLength - (baseLength % 5);
-      length = (
-        baseIdWithLeadingBit &
-        ((1 << numberOfOverflowBits) - 1)
-      ).toString(32);
+      length = (baseIdWithLeadingBit & ((1 << numberOfOverflowBits) - 1))
+        .toString(32)
+        .padStart(numberOfOverflowBits / 5, "0");
       baseIdWithLeadingBit >>= numberOfOverflowBits;
       baseLength -= numberOfOverflowBits;
       treeContextId =
@@ -14438,7 +14437,7 @@ module.exports = function ($$$config) {
       version: rendererVersion,
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      reconcilerVersion: "19.3.0-www-modern-a6792708-20261019"
+      reconcilerVersion: "19.3.0-www-modern-ab0d927f-20261020"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);

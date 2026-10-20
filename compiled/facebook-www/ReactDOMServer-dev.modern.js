@@ -3963,10 +3963,9 @@ __DEV__ &&
       var length = 32 - clz32(totalChildren) + baseLength;
       if (30 < length) {
         var numberOfOverflowBits = baseLength - (baseLength % 5);
-        length = (
-          baseIdWithLeadingBit &
-          ((1 << numberOfOverflowBits) - 1)
-        ).toString(32);
+        length = (baseIdWithLeadingBit & ((1 << numberOfOverflowBits) - 1))
+          .toString(32)
+          .padStart(numberOfOverflowBits / 5, "0");
         baseIdWithLeadingBit >>= numberOfOverflowBits;
         baseLength -= numberOfOverflowBits;
         return {
@@ -10741,5 +10740,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.3.0-www-modern-a6792708-20261019";
+    exports.version = "19.3.0-www-modern-ab0d927f-20261020";
   })();
