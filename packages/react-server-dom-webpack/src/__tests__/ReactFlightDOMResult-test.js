@@ -802,6 +802,48 @@ describe('ReactFlightDOMResult', () => {
     expect(html).toContain('<section data-label="page">hi</section>');
   });
 
+  it('resolves a lazy node that settles after the in-process consumer read it', async () => {
+    const components = createClientComponents();
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    // A lazy in node position, as the Flight client hands out for a row
+    // that has not arrived, which is what a cached payload parsed in the
+    // server layer holds.
+    const lazy = ReactServer.lazy(() =>
+      later.then(() => ({
+        default: ReactServer.createElement('p', null, 'arrived'),
+      })),
+    );
+    const model = {
+      boundary: ReactServer.createElement(
+        ReactServer.Suspense,
+        {fallback: 'loading'},
+        lazy,
+      ),
+      // The same lazy read a second time, through the memo.
+      again: lazy,
+    };
+    const result = ReactServerDOMServer.renderToResult(model, {onError});
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const pending = root.boundary.props.children;
+    expect(pending.$$typeof).toBe(Symbol.for('react.lazy'));
+    expect(() => pending._init(pending._payload)).toThrow();
+    await serverAct(() => resolveLater());
+    await serverAct(() => {});
+    // Settles to the element, not to a lazy for itself.
+    const settled = pending._init(pending._payload);
+    expect(settled.type).toBe('p');
+    expect(settled.props.children).toBe('arrived');
+    expect(await renderHTML(Promise.resolve(root.boundary))).toEqual({
+      html: '<!--$--><p>arrived</p><!--/$-->',
+    });
+  });
+
   it('serializes a Result with errors the same as rendering the model directly', async () => {
     for (let seed = 1; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {allowErrors: true});

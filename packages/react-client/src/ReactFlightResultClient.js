@@ -776,10 +776,13 @@ function readLazy(
       thrown.then(
         () => {
           try {
+            // Read the lazy itself again, not through readNode: the memo
+            // holds the wrapper being returned below for it, which would
+            // make the chunk resolve to a lazy for itself.
             fulfillChunk(
               response,
               chunk,
-              readNode(response, lazy, context, descendContext, {}, ''),
+              readLazy(response, lazy, context, descendContext),
             );
           } catch (error) {
             rejectChunk(response, chunk, readError(response, error));
