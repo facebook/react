@@ -227,6 +227,10 @@ export type Response = {
   // Fields of parsed values that still hold a placeholder, by the object and
   // key the placeholder occupies, with the reference that will fill them.
   _pendingFields: WeakMap<Object, Map<string, InitializationReference>>,
+  // Reserved Sets and Maps whose entries have not been copied in yet.
+  _pendingCollections: WeakMap<Object, InitializationReference>,
+  // The array behind an iterator, which hides it from property traversal.
+  _captures: WeakMap<Object, Array<any>>,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -789,8 +793,16 @@ type InitializationReference = {
   status: 0 | 1 | 2,
   // The installed value, or the failure.
   value: any,
-  // References selecting through this field.
+  // References selecting through this field, or waiting for it as an input.
   listeners: null | Array<InitializationReference>,
+  // Non-null while a constructor waits for its inputs. Constructors read
+  // their inputs when they run, so they wait for every input slot to be
+  // installed.
+  inputs: null | Object,
+  pendingInputs: number,
+  // A Set or Map is allocated before its entries arrive so that references
+  // to it, including from its own entries, find the final identity.
+  collection: null | Set<any> | Map<any, any>,
 };
 type InitializationHandler = {
   chunk: null | BlockedChunk<any>,
@@ -1156,6 +1168,12 @@ function rejectInitializationReference(
   }
   reference.status = FIELD_FAILED;
   reference.value = error;
+  reference.inputs = null;
+  if (reference.collection !== null) {
+    // The identity is installed but its entries never arrive. The field stays
+    // registered as failed so that later selections through it reject.
+    response._pendingCollections.delete(reference.collection);
+  }
   const listeners = reference.listeners;
   reference.listeners = null;
   if (listeners !== null) {
@@ -1203,18 +1221,27 @@ function fulfillReference(
           if (field.status === FIELD_FAILED) {
             throw field.value;
           }
-          // The object exists but this field still holds a placeholder.
-          // Continue from the field's value once it is installed. The
-          // listener receives that value, so the path up to it is dropped.
-          path.splice(0, i);
-          subscribeToField(field, reference);
-          return;
+          if (field.collection === null) {
+            // The object exists but this field still holds a placeholder.
+            // Continue from the field's value once it is installed. The
+            // listener receives that value, so the path up to it is dropped.
+            path.splice(0, i);
+            subscribeToField(field, reference);
+            return;
+          }
+          // A reserved collection: its identity is the field's value.
         }
       }
       // The server doesn't have any lazy references so we don't expect to go through a Promise.
       stepIntoProperty(response, cursor, name);
     }
     countSelectedValue(response, reference.arrayRoot, cursor);
+    if (isConstructor(map)) {
+      // A constructor runs once its input slots are installed. It completes
+      // the reference itself.
+      waitForInputs(response, reference, cursor.value);
+      return;
+    }
     const mappedValue = map(response, cursor.value, parentObject, key);
     installReference(response, reference, mappedValue);
   } catch (error) {
@@ -1245,13 +1272,149 @@ function installReference(
 
   reference.status = FIELD_INSTALLED;
   reference.value = value;
+  reference.inputs = null;
   unregisterPendingField(response, reference);
+  if (reference.collection !== null) {
+    response._pendingCollections.delete(reference.collection);
+  }
   const listeners = reference.listeners;
   reference.listeners = null;
   if (listeners !== null) {
     const arrayRoot = arrayRootOfValue(response, value);
     for (let i = 0; i < listeners.length; i++) {
-      fulfillReference(response, listeners[i], value, arrayRoot);
+      const listener = listeners[i];
+      if (listener.inputs !== null) {
+        resumeInputs(response, listener, reference, value);
+      } else {
+        fulfillReference(response, listener, value, arrayRoot);
+      }
+    }
+  }
+}
+
+// Set, Map and iterator constructors read their inputs when they run. The
+// other maps pass the value through or, for Server References, resolve it on
+// their own.
+function isConstructor(map: any): boolean {
+  return map === createSet || map === createMap || map === extractIterator;
+}
+
+// Constructors read their inputs when they run. A selected input value can
+// still have placeholders in its slots, so the mapping waits for each slot to
+// be installed. Slot values can themselves be incomplete; the constructed
+// value is then incomplete too and is tracked through `_pendingCollections`
+// or `_captures`.
+function waitForInputs(
+  response: Response,
+  reference: InitializationReference,
+  inputs: any,
+): void {
+  reference.inputs = inputs;
+  reference.pendingInputs = 0;
+  if (typeof inputs === 'object' && inputs !== null) {
+    subscribeToInputSlots(response, reference, inputs);
+    if (reference.map === createMap) {
+      for (let i = 0; i < inputs.length; i++) {
+        const field = getPendingField(response, inputs, '' + i);
+        if (field === undefined || field.collection !== null) {
+          subscribeToInputSlots(response, reference, inputs[i]);
+        }
+      }
+    }
+  }
+  if (reference.pendingInputs === 0) {
+    runMapping(response, reference, inputs);
+  }
+}
+
+function subscribeToInputSlots(
+  response: Response,
+  reference: InitializationReference,
+  slots: any,
+): void {
+  if (typeof slots !== 'object' || slots === null) {
+    return;
+  }
+  const fields = response._pendingFields.get(slots);
+  if (fields === undefined) {
+    return;
+  }
+  fields.forEach(field => {
+    if (field.status === FIELD_FAILED) {
+      throw field.value;
+    }
+    // A reserved collection's identity is installed; that is what the
+    // constructor copies. Its entries are tracked separately.
+    if (field.status === FIELD_PENDING && field.collection === null) {
+      subscribeToField(field, reference);
+      reference.pendingInputs++;
+    }
+  });
+}
+
+function resumeInputs(
+  response: Response,
+  reference: InitializationReference,
+  field: InitializationReference,
+  value: any,
+): void {
+  const inputs = reference.inputs;
+  try {
+    if (reference.map === createMap && field.parentObject === inputs) {
+      // An entry pair arrived. Its own slots can be pending.
+      subscribeToInputSlots(response, reference, value);
+    }
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
+    return;
+  }
+  reference.pendingInputs--;
+  if (reference.pendingInputs === 0) {
+    try {
+      runMapping(response, reference, inputs);
+    } catch (error) {
+      rejectInitializationReference(response, reference, error);
+    }
+  }
+}
+
+function runMapping(
+  response: Response,
+  reference: InitializationReference,
+  inputs: any,
+): void {
+  const {map, parentObject, key, collection} = reference;
+  let value;
+  if (collection !== null) {
+    if (collection instanceof Set) {
+      consumeSetInitializer(response, inputs);
+    } else {
+      consumeMapInitializer(response, inputs);
+    }
+    fillCollection(collection, inputs);
+    value = collection;
+  } else {
+    value = map(response, inputs, parentObject, key);
+    if (map === extractIterator) {
+      response._captures.set(value, inputs);
+    }
+  }
+  installReference(response, reference, value);
+  reference.handler.deps--;
+  initializeChunkIfUnblocked(response, reference.handler);
+}
+
+function fillCollection(
+  collection: Set<any> | Map<any, any>,
+  entries: Array<any>,
+): void {
+  if (collection instanceof Set) {
+    for (let i = 0; i < entries.length; i++) {
+      collection.add(entries[i]);
+    }
+  } else {
+    for (let i = 0; i < entries.length; i++) {
+      collection.set(entries[i][0], entries[i][1]);
     }
   }
 }
@@ -1326,14 +1489,36 @@ function createInitializationReference<T>(
     status: FIELD_PENDING,
     value: null,
     listeners: null,
+    inputs: null,
+    pendingInputs: 0,
+    collection: null,
   };
   registerPendingField(response, reference);
+
+  if ((map as any) === createSet || (map as any) === createMap) {
+    // Allocate the collection now so that references to this field, including
+    // from the entries themselves, resolve to the final identity. The entries
+    // are copied in once they are installed.
+    const collection =
+      (map as any) === createSet ? new Set<any>() : new Map<any, any>();
+    reference.collection = collection;
+    response._pendingCollections.set(collection, reference);
+    if (key !== __PROTO__) {
+      parentObject[key] = collection;
+    }
+    if (key === '' && !handler.errored && handler.value === null) {
+      handler.value = collection;
+    }
+  }
   return reference;
 }
 
 // The value a reference leaves in its field while it waits. The field can
 // already be installed if the reference resolved synchronously.
 function getReferencePlaceholder<T>(reference: InitializationReference): T {
+  if (reference.collection !== null) {
+    return reference.collection as any;
+  }
   if (reference.status === FIELD_INSTALLED) {
     return reference.value;
   }
@@ -1364,6 +1549,9 @@ function recordFailedField(
     status: FIELD_FAILED,
     value: error,
     listeners: null,
+    inputs: null,
+    pendingInputs: 0,
+    collection: null,
   };
   registerPendingField(response, reference);
 }
@@ -1426,16 +1614,19 @@ function getOutlinedModel<T>(
               markHandlerErrored(field.value);
               return null as any;
             }
-            const fieldReference = createInitializationReference(
-              response,
-              parentObject,
-              key,
-              map,
-              path.slice(i),
-              referenceArrayRoot,
-            );
-            subscribeToField(field, fieldReference);
-            return getReferencePlaceholder(fieldReference);
+            if (field.collection === null) {
+              const fieldReference = createInitializationReference(
+                response,
+                parentObject,
+                key,
+                map,
+                path.slice(i),
+                referenceArrayRoot,
+              );
+              subscribeToField(field, fieldReference);
+              return getReferencePlaceholder(fieldReference);
+            }
+            // A reserved collection: its identity is the field's value.
           }
         }
         stepIntoProperty(response, cursor, name);
@@ -1483,10 +1674,9 @@ function isServerReferenceObject(response: Response, value: mixed): boolean {
   );
 }
 
-function createMap(
-  response: Response,
-  model: Array<[any, any]>,
-): Map<any, any> {
+// An initializer array is read once. A second reference to the same array,
+// or to an array the server owns, is rejected before anything is consumed.
+function consumeMapInitializer(response: Response, model: Array<any>): void {
   if (!isArray(model) || isServerReferenceObject(response, model)) {
     throw new Error('Invalid Map initializer.');
   }
@@ -1495,11 +1685,9 @@ function createMap(
   }
   // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
   (model as any).$$consumed = true;
-  const map = new Map(model);
-  return map;
 }
 
-function createSet(response: Response, model: Array<any>): Set<any> {
+function consumeSetInitializer(response: Response, model: Array<any>): void {
   if (!isArray(model) || isServerReferenceObject(response, model)) {
     throw new Error('Invalid Set initializer.');
   }
@@ -1508,8 +1696,19 @@ function createSet(response: Response, model: Array<any>): Set<any> {
   }
   // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
   (model as any).$$consumed = true;
-  const set = new Set(model);
-  return set;
+}
+
+function createMap(
+  response: Response,
+  model: Array<[any, any]>,
+): Map<any, any> {
+  consumeMapInitializer(response, model);
+  return new Map(model);
+}
+
+function createSet(response: Response, model: Array<any>): Set<any> {
+  consumeSetInitializer(response, model);
+  return new Set(model);
 }
 
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
@@ -1522,8 +1721,7 @@ function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
   (model as any).$$consumed = true;
   // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
-  const iterator = model[Symbol.iterator]();
-  return iterator;
+  return model[Symbol.iterator]();
 }
 
 function createModel(
@@ -2195,6 +2393,8 @@ export function createResponse(
     _rootArrayContexts: new WeakMap(),
     _arraySizeLimit: arraySizeLimit,
     _pendingFields: new WeakMap(),
+    _pendingCollections: new WeakMap(),
+    _captures: new WeakMap(),
   };
   return response;
 }
