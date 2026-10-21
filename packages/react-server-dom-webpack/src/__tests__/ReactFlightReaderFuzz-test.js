@@ -1747,13 +1747,13 @@ function generateGraph(seed, {without = []} = {}) {
   const names = [];
   const nodes = {};
   // Every node a move may point at. Streams, iterables and iterators are
-  // held once: the writer reads them once and does not record where it
-  // first wrote one. Stream items are left out: an item that reaches itself
-  // overflows the writer, which has no row of its own for an item to refer
-  // back to.
+  // held once, and never by a stream item, which may be written more than
+  // once: the writer reads them once and does not record where it first
+  // wrote one.
   const targets = [];
   const single = [];
   const containers = [];
+  const items = [];
   // Nodes are named by kind: set0, promise1, module2 …
   const counts = {};
   const add = (node, {target = true, kind = kindOf(node)} = {}) => {
@@ -1793,13 +1793,12 @@ function generateGraph(seed, {without = []} = {}) {
       node[kindOf(node)].push(item);
     }
   };
-  // A stream item is written inline, with no reference for a container inside
-  // it to break a cycle with, so items hold leaves and handles.
-  const item = () =>
-    add(
-      {array: [pickFrom(targets.filter(name => !containers.includes(name)))]},
-      {target: false, kind: 'item'},
-    );
+  const item = () => {
+    const name = add({array: [pickFrom(targets)]}, {kind: 'item'});
+    containers.push(name);
+    items.push(name);
+    return name;
+  };
 
   add({value: 'value'});
   add({value: 'other value'});
@@ -1988,8 +1987,13 @@ function generateGraph(seed, {without = []} = {}) {
     // Each node a move adds is put into a container that already existed,
     // so that the graph stays connected and the node is actually sent.
     for (let i = before; i < names.length; i++) {
-      if (targets.includes(names[i]) || single.includes(names[i])) {
+      if (targets.includes(names[i])) {
         insert(pickFrom(existing), names[i]);
+      } else if (single.includes(names[i])) {
+        insert(
+          pickFrom(existing.filter(name => !items.includes(name))),
+          names[i],
+        );
       }
     }
   }
@@ -2791,16 +2795,14 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
         afterEof: true,
       }));
 
-    // The reply encoder has no part of its own for a stream item either.
-    (host === 'reply' ? it.skip : it)('streamed array containing itself', () =>
+    it('streamed array containing itself', () =>
       runGraph({
         nodes: {
           item: {array: ['item']},
           stream: {stream: ['item']},
         },
         roots: {entry: 'stream', other: 'stream'},
-      }),
-    );
+      }));
 
     it('stream item with a failing module', () =>
       runGraph({
