@@ -15,6 +15,7 @@
 const REACT_ELEMENT_TYPE = Symbol.for('react.transitional.element');
 const REACT_LAZY_TYPE = Symbol.for('react.lazy');
 const REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
+const REACT_SUSPENSE_TYPE = Symbol.for('react.suspense');
 
 // mulberry32: deterministic across runs so a failing seed replays exactly.
 function createRng(seed) {
@@ -208,8 +209,15 @@ function generateModel(rng, env, options) {
     if (depth <= 0) {
       return rng.chance(0.5) ? genString() : null;
     }
-    const kind = rng.int(10);
+    const kind = rng.int(11);
     switch (kind) {
+      case 10:
+        // Errors below a boundary stay inside it in the HTML.
+        return React.createElement(
+          REACT_SUSPENSE_TYPE,
+          {key: genKey(), fallback: 'loading ' + rng.int(100)},
+          ...genChildren(depth),
+        );
       case 0:
       case 1: {
         const props = {};
@@ -290,9 +298,17 @@ function generateModel(rng, env, options) {
       case 3: {
         if (options.allowErrors) {
           const error = new Error('thrown ' + errorCount++);
-          Component = function Throwing() {
-            throw error;
-          };
+          if (rng.chance(0.3)) {
+            Component = function Throwing() {
+              throw error;
+            };
+          } else {
+            const promise = scheduler.defer(resolve => resolve(null));
+            Component = async function ThrowingLater() {
+              await promise;
+              throw error;
+            };
+          }
         } else {
           const output = genChildren(depth - 1);
           Component = function ReturningArray() {

@@ -123,6 +123,17 @@ import {
   subscribeToHints,
 } from 'shared/ReactFlightRenderContext';
 export {emitHint} from 'shared/ReactFlightRenderContext';
+import type {Result, Expansion} from 'shared/ReactFlightResult';
+import {
+  PENDING as EXPANSION_PENDING,
+  FULFILLED as EXPANSION_FULFILLED,
+  createExpansion,
+  fulfillExpansion,
+  rejectExpansion,
+  retainResult,
+  releaseResult,
+  createResultObject,
+} from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
@@ -604,6 +615,9 @@ export type Request = {
   destination: null | Destination,
   bundlerConfig: ClientManifest,
   context: RenderContext,
+  // The Result this request serializes, if any. Its ledger supplies Server
+  // Component output instead of rendering, and it owns the cache signal.
+  result: null | Result<any>,
   nextChunkId: number,
   pendingChunks: number,
   abortableTasks: Set<Task>,
@@ -701,6 +715,7 @@ function RequestInstance(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
+  result: null | Result<any>,
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -724,7 +739,13 @@ function RequestInstance(
   if (enableTaint) {
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
-  const context = createRenderContext(createHints(), identifierPrefix);
+  let context;
+  if (result === null) {
+    context = createRenderContext(createHints(), identifierPrefix);
+  } else {
+    context = result.context;
+    retainResult(result);
+  }
   this.type = type;
   this.status = OPENING;
   this.flushScheduled = false;
@@ -732,6 +753,7 @@ function RequestInstance(
   this.destination = null;
   this.bundlerConfig = bundlerConfig;
   this.context = context;
+  this.result = result;
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.abortableTasks = abortSet;
@@ -839,6 +861,7 @@ export function createRequest(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
+  result: null | Result<any> = null,
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -858,6 +881,7 @@ export function createRequest(
     environmentName,
     filterStackFrame,
     keepDebugAlive,
+    result,
   );
 }
 
@@ -873,6 +897,7 @@ export function createPrerenderRequest(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
+  result: null | Result<any> = null,
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -892,6 +917,7 @@ export function createPrerenderRequest(
     environmentName,
     filterStackFrame,
     keepDebugAlive,
+    result,
   );
 }
 
@@ -1861,8 +1887,10 @@ function renderFunctionComponent<Props>(
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-    // $FlowFixMe[constant-condition]
-    if (supportsComponentStorage) {
+    if (request.result !== null) {
+      result = readExpansion(request.result, task.model as any);
+      // $FlowFixMe[constant-condition]
+    } else if (supportsComponentStorage) {
       // Run the component in an Async Context that tracks the current owner.
       if (task.debugTask) {
         result = task.debugTask.run(
@@ -1885,21 +1913,24 @@ function renderFunctionComponent<Props>(
           componentDebugInfo,
         );
       }
+    } else if (task.debugTask) {
+      result = task.debugTask.run(
+        callComponentInDEV.bind(null, Component, props, componentDebugInfo),
+      );
     } else {
-      if (task.debugTask) {
-        result = task.debugTask.run(
-          callComponentInDEV.bind(null, Component, props, componentDebugInfo),
-        );
-      } else {
-        result = callComponentInDEV(Component, props, componentDebugInfo);
-      }
+      result = callComponentInDEV(Component, props, componentDebugInfo);
     }
   } else {
     componentDebugInfo = null as any;
     prepareToUseHooksForComponent(prevThenableState, null);
-    // The secondArg is always undefined in Server Components since refs error early.
-    const secondArg = undefined;
-    result = Component(props, secondArg);
+    if (request.result !== null) {
+      // task.model is the element being rendered; see outlineTask.
+      result = readExpansion(request.result, task.model as any);
+    } else {
+      // The secondArg is always undefined in Server Components since refs error early.
+      const secondArg = undefined;
+      result = Component(props, secondArg);
+    }
   }
 
   if (request.status === ABORTING) {
@@ -1977,6 +2008,241 @@ function renderFunctionComponent<Props>(
   task.keyPath = prevKeyPath;
   task.implicitSlot = prevImplicitSlot;
   return json;
+}
+
+// Returns the component's output for this element from the Result's ledger,
+// expanding it now if no consumer has yet. Suspends the caller on a pending
+// expansion by throwing it; it is a thenable.
+function readExpansion(result: Result<any>, element: ReactElement): any {
+  let expansion = result.expansions.get(element);
+  if (expansion === undefined) {
+    expansion = createExpansion(element);
+    result.expansions.set(element, expansion);
+    performExpansion(result, expansion);
+  }
+  switch (expansion.status) {
+    case EXPANSION_FULFILLED:
+      return expansion.value;
+    case EXPANSION_PENDING:
+      throw expansion;
+    default:
+      throw expansion.reason;
+  }
+}
+
+// Finds the Server Component an element renders, through memo, forwardRef
+// and lazy wrappers, the same way renderElement does. Returns null when the
+// element is not a Server Component. A pending lazy type throws its thenable.
+function resolveServerComponentType(
+  result: Result<any>,
+  type: mixed,
+): null | Function {
+  if (typeof type === 'function') {
+    if (result.isClientReference(type) || isOpaqueTemporaryReference(type)) {
+      return null;
+    }
+    return type;
+  }
+  if (
+    type === null ||
+    typeof type !== 'object' ||
+    result.isClientReference(type)
+  ) {
+    return null;
+  }
+  switch (type.$$typeof) {
+    case REACT_LAZY_TYPE: {
+      const lazy: LazyComponent<any, any> = type as any;
+      let wrappedType;
+      if (__DEV__) {
+        wrappedType = callLazyInitInDEV(lazy);
+      } else {
+        const payload = lazy._payload;
+        const init = lazy._init;
+        wrappedType = init(payload);
+      }
+      return resolveServerComponentType(result, wrappedType);
+    }
+    case REACT_FORWARD_REF_TYPE:
+      return resolveServerComponentType(result, (type as any).render);
+    case REACT_MEMO_TYPE:
+      return resolveServerComponentType(result, (type as any).type);
+    default:
+      return null;
+  }
+}
+
+function expandResultElement(
+  result: Result<any>,
+  element: ReactElement,
+): null | Expansion {
+  let expansion = result.expansions.get(element);
+  if (expansion !== undefined) {
+    return expansion;
+  }
+  if (resolveServerComponentType(result, element.type) === null) {
+    return null;
+  }
+  expansion = createExpansion(element);
+  result.expansions.set(element, expansion);
+  performExpansion(result, expansion);
+  return expansion;
+}
+
+function performExpansion(result: Result<any>, expansion: Expansion): void {
+  const element = expansion.element;
+  const prevDispatcher = ReactSharedInternals.H;
+  const prevContext = currentContext;
+  ReactSharedInternals.H = HooksDispatcher;
+  currentContext = result.context;
+  prepareToUseHooksForRequest(result.context);
+  prepareToUseHooksForComponent(expansion.thenableState as any, null);
+  try {
+    const Component = resolveServerComponentType(result, element.type);
+    if (Component === null) {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        'Expected the element to render a Server Component. This is a bug in React.',
+      );
+    }
+    const value = Component(element.props, undefined);
+    if (result.aborted) {
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        typeof value.then === 'function' &&
+        !result.isClientReference(value)
+      ) {
+        value.then(voidHandler, voidHandler);
+      }
+      // abortResult already rejected this expansion.
+      return;
+    }
+    fulfillExpansion(expansion, value);
+  } catch (thrownValue) {
+    if (result.aborted) {
+      return;
+    }
+    const x =
+      thrownValue === SuspenseException ? getSuspendedThenable() : thrownValue;
+    if (
+      typeof x === 'object' &&
+      // $FlowFixMe[invalid-compare]
+      x !== null &&
+      // $FlowFixMe[method-unbinding]
+      typeof x.then === 'function'
+    ) {
+      expansion.thenableState = getThenableStateAfterSuspending();
+      const retry = () => {
+        if (expansion.status === EXPANSION_PENDING && !result.aborted) {
+          performExpansion(result, expansion);
+        }
+      };
+      x.then(retry, retry);
+      return;
+    }
+    rejectExpansion(expansion, x, logResultError(result, x));
+  } finally {
+    ReactSharedInternals.H = prevDispatcher;
+    currentContext = prevContext;
+    if (prevContext === null) {
+      resetHooksForRequest();
+    } else {
+      prepareToUseHooksForRequest(prevContext);
+    }
+  }
+}
+
+// Assigns the digest for an error once, so the consumers that observe the
+// same error report it the same way without calling onError again.
+function logResultError(result: Result<any>, error: mixed): string {
+  if (typeof error === 'object' && error !== null) {
+    const existing = result.errorDigests.get(error);
+    if (existing !== undefined) {
+      return existing;
+    }
+  }
+  const prevContext = currentContext;
+  currentContext = null;
+  let errorDigest;
+  try {
+    const onError = result.onError;
+    // $FlowFixMe[constant-condition]
+    if (supportsRequestStorage) {
+      errorDigest = contextStorage.run(undefined, onError, error);
+    } else {
+      errorDigest = onError(error);
+    }
+  } finally {
+    currentContext = prevContext;
+  }
+  if (errorDigest != null && typeof errorDigest !== 'string') {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
+    );
+  }
+  const digest = errorDigest || '';
+  if (typeof error === 'object' && error !== null) {
+    result.errorDigests.set(error, digest);
+  }
+  return digest;
+}
+
+export function createResult<T>(
+  model: T,
+  onError: void | ((error: mixed) => ?string),
+  identifierPrefix: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  environmentName: void | string | (() => string), // DEV-only
+  filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
+): Result<T> {
+  if (
+    ReactSharedInternals.A !== null &&
+    ReactSharedInternals.A !== DefaultAsyncDispatcher
+  ) {
+    throw new Error(
+      'Currently React only supports one RSC renderer at a time.',
+    );
+  }
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  const result: Result<T> = createResultObject(
+    model,
+    createRenderContext(createHints(), identifierPrefix),
+    isClientReference,
+    onError === undefined ? defaultErrorHandler : onError,
+    temporaryReferences,
+  );
+  result.expand = expandResultElement.bind(null, result);
+  if (__DEV__) {
+    result.environmentName =
+      environmentName === undefined
+        ? () => 'Server'
+        : typeof environmentName !== 'function'
+          ? () => environmentName
+          : environmentName;
+    result.filterStackFrame =
+      filterStackFrame === undefined
+        ? defaultFilterStackFrame
+        : filterStackFrame;
+  }
+  return result;
+}
+
+export function abortResult(result: Result<any>, reason: mixed): void {
+  if (result.aborted) {
+    return;
+  }
+  result.aborted = true;
+  result.abortReason = reason;
+  result.context.cacheController.abort(reason);
+  const listeners = result.abortListeners;
+  if (listeners !== null) {
+    result.abortListeners = null;
+    for (let i = 0; i < listeners.length; i++) {
+      listeners[i](reason);
+    }
+  }
 }
 
 function warnForMissingKey(
@@ -4409,6 +4675,13 @@ function logRecoverableError(
   error: mixed,
   task: Task | null, // DEV-only
 ): string {
+  const result = request.result;
+  if (result !== null && typeof error === 'object' && error !== null) {
+    const knownDigest = result.errorDigests.get(error);
+    if (knownDigest !== undefined) {
+      return knownDigest;
+    }
+  }
   const prevRequest = currentRequest;
   // We clear the request context so that console.logs inside the callback doesn't
   // get forwarded to the client.
@@ -4476,7 +4749,18 @@ function fatalError(request: Request, error: mixed): void {
       cause: error,
     },
   );
-  request.context.cacheController.abort(abortReason);
+  abortCacheSignal(request, abortReason);
+}
+
+// A request that serializes a Result shares its cache signal with the other
+// consumers of that Result, so it only releases its hold on it.
+function abortCacheSignal(request: Request, reason: mixed): void {
+  const result = request.result;
+  if (result === null) {
+    request.context.cacheController.abort(reason);
+  } else {
+    releaseResult(result, reason);
+  }
 }
 
 function serializeErrorValue(request: Request, error: Error): string {
@@ -6706,7 +6990,7 @@ function flushCompletedChunks(request: Request): void {
       const abortReason = new Error(
         'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
       );
-      request.context.cacheController.abort(abortReason);
+      abortCacheSignal(request, abortReason);
     }
     if (__DEV__) {
       const debugDestination = request.debugDestination;
@@ -6913,7 +7197,7 @@ export function abort(request: Request, reason: mixed): void {
     if (enableProfilerTimer) {
       request.abortTime = performance.now();
     }
-    request.context.cacheController.abort(reason);
+    abortCacheSignal(request, reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (request.type === PRERENDER) {
