@@ -652,6 +652,9 @@ export type Request = {
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
   writtenObjects: WeakMap<Reference, string>,
+  // The containers emitted as pure-data rows, by the marker their inner
+  // objects are recorded under in writtenObjects (see outlinePureData).
+  pureDataRows: null | Map<string, Object>,
   writtenImportStrings: Map<string, string>,
   // The combined length of the keys in writtenImportStrings.
   writtenImportStringsSize: number,
@@ -786,6 +789,7 @@ function RequestInstance(
   this.writtenClientReferences = new Map();
   this.writtenServerReferences = new Map();
   this.writtenObjects = new WeakMap();
+  this.pureDataRows = null;
   this.writtenImportStrings = new Map();
   this.writtenImportStringsSize = 0;
   this.temporaryReferences = temporaryReferences;
@@ -2407,10 +2411,19 @@ function outlinePureData(request: Request, value: Object): number {
   const writtenObjects = request.writtenObjects;
   const id = request.nextChunkId;
   const reference = serializeByValueID(id);
-  if (!recordPureData(writtenObjects, value, reference, true)) {
-    recordPureData(writtenObjects, value, reference, false);
+  // The objects inside are recorded under one shared marker, a reference
+  // with a trailing colon, which no path has. Their own path is only worked
+  // out if something refers to one of them later; see resolveReference.
+  const marker = reference + ':';
+  if (!recordPureData(writtenObjects, value, marker, true)) {
+    recordPureData(writtenObjects, value, marker, false);
     return -1;
   }
+  let pureDataRows = request.pureDataRows;
+  if (pureDataRows === null) {
+    pureDataRows = request.pureDataRows = new Map();
+  }
+  pureDataRows.set(marker, value);
   request.nextChunkId++;
   request.pendingChunks++;
   writtenObjects.set(value, reference);
@@ -2420,25 +2433,23 @@ function outlinePureData(request: Request, value: Object): number {
   return id;
 }
 
-// Records (or on failure, removes) the references of the containers inside a
-// pure container. A property name with a colon is not addressable, as in
-// renderModelDestructive; what it holds is still checked for prior writes.
+// Records (or on failure, removes) the marker of the containers inside a
+// pure container. Fails if any of them was written before, or appears twice.
 function recordPureData(
   writtenObjects: WeakMap<Reference, string>,
   container: Object,
-  reference: null | string,
+  marker: string,
   record: boolean,
 ): boolean {
   if (isArray(container)) {
     for (let i = 0; i < container.length; i++) {
       const child = container[i];
-      if (typeof child === 'object' && child !== null) {
-        const childReference = reference === null ? null : reference + ':' + i;
-        if (
-          !recordPureDataChild(writtenObjects, child, childReference, record)
-        ) {
-          return false;
-        }
+      if (
+        typeof child === 'object' &&
+        child !== null &&
+        !recordPureDataChild(writtenObjects, child, marker, record)
+      ) {
+        return false;
       }
     }
     return true;
@@ -2446,16 +2457,13 @@ function recordPureData(
   const object: {[key: string]: any} = container;
   const keys = Object.keys(object);
   for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    const child = object[key];
-    if (typeof child === 'object' && child !== null) {
-      const childReference =
-        reference === null || key.indexOf(':') !== -1
-          ? null
-          : reference + ':' + key;
-      if (!recordPureDataChild(writtenObjects, child, childReference, record)) {
-        return false;
-      }
+    const child = object[keys[i]];
+    if (
+      typeof child === 'object' &&
+      child !== null &&
+      !recordPureDataChild(writtenObjects, child, marker, record)
+    ) {
+      return false;
     }
   }
   return true;
@@ -2464,20 +2472,85 @@ function recordPureData(
 function recordPureDataChild(
   writtenObjects: WeakMap<Reference, string>,
   child: Object,
-  reference: null | string,
+  marker: string,
   record: boolean,
 ): boolean {
   if (record) {
     if (writtenObjects.has(child)) {
       return false;
     }
-    if (reference !== null) {
-      writtenObjects.set(child, reference);
-    }
-  } else if (reference !== null && writtenObjects.get(child) === reference) {
+    writtenObjects.set(child, marker);
+  } else if (writtenObjects.get(child) === marker) {
     writtenObjects.delete(child);
   }
-  return recordPureData(writtenObjects, child, reference, record);
+  return recordPureData(writtenObjects, child, marker, record);
+}
+
+// The reference recorded for a value. An object inside a pure-data row only
+// has its marker until now: its path within the row is found and recorded,
+// unless a property name on the way holds a colon, which is not addressable.
+function resolveReference(request: Request, value: Object): void | string {
+  const writtenObjects = request.writtenObjects;
+  const reference = writtenObjects.get(value);
+  if (
+    reference === undefined ||
+    reference.charCodeAt(reference.length - 1) !== 58 // colon
+  ) {
+    return reference;
+  }
+  const pureDataRows = request.pureDataRows;
+  const container =
+    pureDataRows === null ? undefined : pureDataRows.get(reference);
+  const path =
+    container === undefined ? null : findPureDataPath(container, value, '');
+  if (path === null) {
+    writtenObjects.delete(value);
+    return undefined;
+  }
+  const resolved = reference + path;
+  writtenObjects.set(value, resolved);
+  return resolved;
+}
+
+function findPureDataPath(
+  container: Object,
+  target: Object,
+  path: string,
+): null | string {
+  if (isArray(container)) {
+    for (let i = 0; i < container.length; i++) {
+      const child = container[i];
+      if (typeof child === 'object' && child !== null) {
+        if (child === target) {
+          return path + i;
+        }
+        const found = findPureDataPath(child, target, path + i + ':');
+        if (found !== null) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+  const object: {[key: string]: any} = container;
+  const keys = Object.keys(object);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (key.indexOf(':') !== -1) {
+      continue;
+    }
+    const child = object[key];
+    if (typeof child === 'object' && child !== null) {
+      if (child === target) {
+        return path + key;
+      }
+      const found = findPureDataPath(child, target, path + key + ':');
+      if (found !== null) {
+        return found;
+      }
+    }
+  }
+  return null;
 }
 
 function renderFragment(
@@ -4486,8 +4559,11 @@ function renderModelDestructive(
     }
 
     const writtenObjects = request.writtenObjects;
-    const existingReference = writtenObjects.get(value);
     const serializedResult = request.result;
+    const existingReference =
+      serializedResult === null
+        ? writtenObjects.get(value)
+        : resolveReference(request, value);
     if (
       existingReference === undefined &&
       serializedResult !== null &&
@@ -5885,8 +5961,7 @@ function renderDebugModel(
       }
     }
 
-    const writtenObjects = request.writtenObjects;
-    const existingReference = writtenObjects.get(value);
+    const existingReference = resolveReference(request, value);
     if (existingReference !== undefined) {
       // We've already emitted this as a real object, so we can refer to that by its existing reference.
       // This might be slightly different serialization than what renderDebugModel would've produced.
