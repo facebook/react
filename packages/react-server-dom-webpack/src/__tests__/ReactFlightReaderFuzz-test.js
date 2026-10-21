@@ -1568,6 +1568,17 @@ const nodeKinds = [
   'component',
 ];
 
+const leafKinds = [
+  'value',
+  'date',
+  'binary',
+  'text',
+  'blob',
+  'special',
+  'host',
+  'module',
+];
+
 function kindOf(node) {
   const kind = nodeKinds.find(candidate => candidate in node);
   if (kind === undefined) {
@@ -1692,8 +1703,13 @@ function generateGraph(seed, {without = []} = {}) {
       node[kindOf(node)].push(item);
     }
   };
+  // A stream item is written inline, with no reference for a container inside
+  // it to break a cycle with, so items hold leaves and handles.
   const item = () =>
-    add({array: [pickFrom(targets)]}, {target: false, kind: 'item'});
+    add(
+      {array: [pickFrom(targets.filter(name => !containers.includes(name)))]},
+      {target: false, kind: 'item'},
+    );
 
   add({value: 'value'});
   add({value: 'other value'});
@@ -1836,7 +1852,12 @@ function generateGraph(seed, {without = []} = {}) {
         break;
       }
       case 'error': {
-        nodes[addError()].cause = pickFrom(targets);
+        // In DEV the writer outlines a cause every time the Error is written,
+        // so a cause that reaches the Error again recurses; causes are leaves.
+        const leaves = targets.filter(name =>
+          leafKinds.includes(kindOf(nodes[name])),
+        );
+        nodes[addError()].cause = pickFrom(leaves);
         break;
       }
       case 'aggregate error': {
@@ -2492,14 +2513,24 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     }
   }
 
-  // Most random graphs fail on the current reader, so they are skipped until
-  // the reader completes values by their contents rather than by chunk. A
-  // graph does not even need a cycle for that: once two branches share a
-  // value, the writer refers to it through the row that holds it, and the
-  // reader handles that like a cycle. Until then only the known cases below
-  // run.
-  // eslint-disable-next-line jest/no-disabled-tests
-  describe.skip('generated graphs', () => {
+  // Two writer bugs in DEV keep server components and sync iterators out of
+  // the random graphs: a suspended server component that occurs twice waits
+  // for its render, and debug info drains an iterator before the model is
+  // written.
+  // These leaves wait for fixes further up the stack: a large typed array held
+  // in two places arrives empty the second time, an object key whose value is
+  // undefined is dropped, and a cycle through a property name with a colon
+  // overflows the writer's stack.
+  const unsupportedMoves = [
+    'component',
+    'failing component',
+    'iterator',
+    'large binary',
+    'undefined',
+    'colon',
+  ];
+
+  describe('generated graphs', () => {
     seeds.forEach(seed => {
       for (let variant = 0; variant < 2; variant++) {
         const demandCount = sweep ? demands.length : 1;
@@ -2507,7 +2538,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
           // eslint-disable-next-line jest/valid-title
           it(caseName('graph', seed, demands[d], variant), () =>
             runGraph({
-              ...generateGraph(seed),
+              ...generateGraph(seed, {without: unsupportedMoves}),
               family: 'graph',
               seed,
               demand: demands[d],
