@@ -639,6 +639,9 @@ function readNode(
     return readFragment(response, value, context, descendContext);
   }
   if (
+    // A Client Reference proxy throws on reading a Symbol, so it is
+    // recognized before the iterator probe, as the serializer does.
+    !response._result.isClientReference(value) &&
     typeof value[ASYNC_ITERATOR] === 'function' &&
     !(typeof ReadableStream === 'function' && value instanceof ReadableStream)
   ) {

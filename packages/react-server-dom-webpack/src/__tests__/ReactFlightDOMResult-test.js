@@ -817,6 +817,28 @@ describe('ReactFlightDOMResult', () => {
     expect(html).toContain('<section data-label="page">hi</section>');
   });
 
+  it('reads a Client Reference module proxy wherever it appears', async () => {
+    const components = createClientComponents();
+    // Bundlers hand out a proxy whose get trap throws for Symbol keys, so a
+    // reference must be recognized before any probe for an iterator.
+    const model = {
+      inNode: [components.Show, components.Box],
+      inData: {component: components.Show},
+      element: ReactServer.createElement(components.Show, {
+        value: components.Box,
+      }),
+    };
+    const result = ReactServerDOMServer.renderToResult(model, {onError});
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    expect(components.nameOf(root.inNode[0])).toBe('Show');
+    expect(components.nameOf(root.inNode[1])).toBe('Box');
+    expect(components.nameOf(root.inData.component)).toBe('Show');
+    expect(components.nameOf(root.element.props.value)).toBe('Box');
+  });
+
   it('requires a client module when the renderer first reads the element, not before', async () => {
     const components = createClientComponents();
     const required = [];
