@@ -522,6 +522,31 @@ describe('ReactFlightDOMResult', () => {
     expect(errors).toEqual(['gone']);
   });
 
+  it('aborting a Result reaches a consumer subscribed after the hydration stream', async () => {
+    const components = createClientComponents();
+    const controller = new AbortController();
+    const result = ReactServerDOMServer.renderToResult(
+      {promise: new Promise(() => {})},
+      {onError: () => 'digest', signal: controller.signal},
+    );
+    // The stream subscribes to the abort first. Aborting it detaches it
+    // while the listeners run, which must not skip the next one.
+    const readable = new Stream.PassThrough();
+    await serverAct(() => {
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    expect(root.promise.status).toBe('pending');
+    await serverAct(() => controller.abort(new Error('gone')));
+    expect(root.promise.status).toBe('rejected');
+    expect(root.promise.reason.digest).toBe('digest');
+  });
+
   it('hands pure data to the in-process consumer by identity', async () => {
     const components = createClientComponents();
     const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};

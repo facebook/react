@@ -625,6 +625,9 @@ export type Request = {
   // The Result this request serializes, if any. Its ledger supplies Server
   // Component output instead of rendering, and it owns the cache signal.
   result: null | Result<any>,
+  // Detaches this request from the Result's hint and abort listeners once it
+  // is done, so the Result does not keep a finished request's state alive.
+  unsubscribe: null | (() => void),
   nextChunkId: number,
   pendingChunks: number,
   abortableTasks: Set<Task>,
@@ -761,6 +764,7 @@ function RequestInstance(
   this.bundlerConfig = bundlerConfig;
   this.context = context;
   this.result = result;
+  this.unsubscribe = null;
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.abortableTasks = abortSet;
@@ -852,13 +856,19 @@ function RequestInstance(
   pingedTasks.push(rootTask);
 
   const request = this;
-  subscribeToHints(context, hint => {
+  const unsubscribeHints = subscribeToHints(context, hint => {
     emitHintChunk(request, hint.code, hint.model);
     enqueueFlush(request);
   });
   if (result !== null) {
     // Aborting the Result aborts every consumer, this stream included.
-    subscribeToAbort(result, reason => abort(request, reason));
+    const unsubscribeAbort = subscribeToAbort(result, reason =>
+      abort(request, reason),
+    );
+    this.unsubscribe = () => {
+      unsubscribeHints();
+      unsubscribeAbort();
+    };
   }
 }
 
@@ -4884,6 +4894,11 @@ function abortCacheSignal(request: Request, reason: mixed): void {
   if (result === null) {
     request.context.cacheController.abort(reason);
   } else {
+    const unsubscribe = request.unsubscribe;
+    if (unsubscribe !== null) {
+      request.unsubscribe = null;
+      unsubscribe();
+    }
     releaseResult(result, reason);
   }
 }

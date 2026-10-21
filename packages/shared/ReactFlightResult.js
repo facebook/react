@@ -243,6 +243,10 @@ export function subscribeToAbort(
   listeners.push(listener);
   const subscribed = listeners;
   return () => {
+    // Once the Result has aborted, the listeners already ran.
+    if (result.abortListeners !== subscribed) {
+      return;
+    }
     const index = subscribed.indexOf(listener);
     if (index !== -1) {
       subscribed.splice(index, 1);
