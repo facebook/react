@@ -98,9 +98,14 @@ export type ResultResponse = {
   // resource hints reach the renderer consuming this Result even when another
   // consumer's expansion emitted them.
   _bindToConsumer: null | (<R>(callback: () => R) => R),
-  // Server object → what the consumer gets for it, so shared references stay
-  // shared and cycles terminate.
+  // Server object → what the consumer gets for it, when that is a different
+  // object. Pure data is returned as is and not recorded: a page can hold
+  // tens of thousands of plain objects.
   _models: Map<any, any>,
+  // Containers being read, outermost first, to close cycles.
+  _visiting: Array<Object>,
+  // Containers read so far, to recognize a large one worth recording.
+  _visits: number,
   // Client Reference id → the module it resolved to, or the chunk loading it.
   _modules: Map<string, any>,
   _onError: (error: mixed) => ?string,
@@ -329,6 +334,65 @@ function readChild(
     }
     return undefined;
   }
+}
+
+// Deeper than a cycle-free model is expected to nest. From here on each
+// container is checked against the ones being read.
+const CYCLE_CHECK_DEPTH = 64;
+// A container whose read visited this many containers is recorded even when
+// returned as is, so a second reference to it does not read it again.
+const LARGE_CONTAINER_VISITS = 32;
+
+// Starts reading a container. When it is already being read, returns what
+// the inner reference resolves to: the consumer's copy, as on the wire,
+// since a value that holds itself cannot be returned as is.
+function enterContainer(
+  response: ResultResponse,
+  container: Object,
+  createCopy: () => any,
+): any {
+  const visiting = response._visiting;
+  response._visits++;
+  if (
+    visiting.length >= CYCLE_CHECK_DEPTH &&
+    visiting.indexOf(container) !== -1
+  ) {
+    return copyOf(response, container, createCopy);
+  }
+  visiting.push(container);
+  return null;
+}
+
+// The copy the consumer gets for a container, created on first use so an
+// inner cycle and the outer read that finds a changed value share it.
+function copyOf(
+  response: ResultResponse,
+  container: Object,
+  createCopy: () => any,
+): any {
+  const models = response._models;
+  let copy = models.get(container);
+  if (copy === undefined) {
+    copy = createCopy();
+    models.set(container, copy);
+  }
+  return copy;
+}
+
+function exitContainer(
+  response: ResultResponse,
+  container: Object,
+  visitsBefore: number,
+  read: any,
+): any {
+  response._visiting.pop();
+  if (
+    read === container &&
+    response._visits - visitsBefore >= LARGE_CONTAINER_VISITS
+  ) {
+    response._models.set(container, container);
+  }
+  return read;
 }
 
 // Fails the element being read if any value inside it was invalid.
@@ -595,46 +659,62 @@ function readFragment(
   return readArray(response, children, descendContext);
 }
 
+function createArrayCopy(): Array<any> {
+  return [];
+}
+
 function readArray(
   response: ResultResponse,
   array: Array<any>,
   context: KeyContext,
 ): Array<any> {
-  const models = response._models;
-  const existing = models.get(array);
+  const existing = response._models.get(array);
   if (existing !== undefined) {
     return existing;
   }
+  const visitsBefore = response._visits;
+  const cycle = enterContainer(response, array, createArrayCopy);
+  if (cycle !== null) {
+    return cycle;
+  }
   let copy: null | Array<any> = null;
-  for (let i = 0; i < array.length; i++) {
-    const child = array[i];
-    let read;
-    try {
-      read = readNode(response, child, context, context, array, '' + i);
-    } catch (thrown) {
-      if (isThenable(thrown)) {
-        throw thrown;
+  try {
+    for (let i = 0; i < array.length; i++) {
+      const child = array[i];
+      let read;
+      try {
+        read = readNode(response, child, context, context, array, '' + i);
+      } catch (thrown) {
+        if (isThenable(thrown)) {
+          throw thrown;
+        }
+        const error = readError(response, thrown);
+        if (response._readError === null) {
+          response._readError = error;
+        }
+        read = undefined;
       }
-      const error = readError(response, thrown);
-      if (response._readError === null) {
-        response._readError = error;
+      if (copy === null) {
+        if (read === child) {
+          continue;
+        }
+        copy = copyOf(response, array, createArrayCopy);
+        for (let j = 0; j < i; j++) {
+          copy[j] = array[j];
+        }
       }
-      read = undefined;
+      copy[i] = read;
     }
-    if (copy === null) {
-      if (read === child) {
-        continue;
-      }
-      copy = array.slice(0, i);
-      models.set(array, copy);
-    }
-    copy.push(read);
+  } catch (thrown) {
+    response._visiting.pop();
+    throw thrown;
   }
-  if (copy === null) {
-    models.set(array, array);
-    return array;
-  }
-  return copy;
+  return exitContainer(
+    response,
+    array,
+    visitsBefore,
+    copy === null ? array : copy,
+  );
 }
 
 function readLazy(
@@ -1183,7 +1263,6 @@ function readData(
       (typeof FormData === 'function' && value instanceof FormData)
     ) {
       // The wire copies these; the copy is indistinguishable from the original.
-      models.set(value, value);
       return value;
     }
     const iteratorFn = getIteratorFn(value);
@@ -1304,42 +1383,59 @@ function readData(
   return value;
 }
 
+function createObjectCopy(): {[key: string]: any} {
+  return {};
+}
+
 function readObject(
   response: ResultResponse,
   object: {[key: string]: any},
   context: KeyContext,
 ): any {
-  const models = response._models;
+  const visitsBefore = response._visits;
+  const cycle = enterContainer(response, object, createObjectCopy);
+  if (cycle !== null) {
+    return cycle;
+  }
   let copy: null | {[key: string]: any} = null;
-  const keys = Object.keys(object);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    const child = object[key];
-    // The wire drops a property whose value is undefined, and the client
-    // never assigns __proto__.
-    const read =
-      child === undefined || key === '__proto__'
-        ? undefined
-        : readChild(response, child, context, object, key);
-    if (copy === null) {
-      if (read === child && child !== undefined) {
-        continue;
+  try {
+    const keys = Object.keys(object);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const child = object[key];
+      // The wire drops a property whose value is undefined, and the client
+      // never assigns __proto__.
+      const read =
+        child === undefined || key === '__proto__'
+          ? undefined
+          : readChild(response, child, context, object, key);
+      if (copy === null) {
+        if (read === child && child !== undefined) {
+          continue;
+        }
+        copy = copyOf(response, object, createObjectCopy);
+        for (let j = 0; j < i; j++) {
+          copy[keys[j]] = object[keys[j]];
+        }
       }
-      copy = {} as {[key: string]: any};
-      for (let j = 0; j < i; j++) {
-        copy[keys[j]] = object[keys[j]];
+      if (read !== undefined) {
+        copy[key] = read;
       }
-      models.set(object, copy);
     }
-    if (read !== undefined) {
-      copy[key] = read;
-    }
+  } catch (thrown) {
+    response._visiting.pop();
+    throw thrown;
   }
-  if (copy === null) {
-    models.set(object, object);
-    return object;
-  }
-  return copy;
+  return exitContainer(
+    response,
+    object,
+    visitsBefore,
+    copy === null ? object : copy,
+  );
+}
+
+function createMapCopy(): Map<any, any> {
+  return new Map();
 }
 
 function readMap(
@@ -1347,21 +1443,38 @@ function readMap(
   map: Map<any, any>,
   context: KeyContext,
 ): Map<any, any> {
-  const models = response._models;
-  const entries = Array.from(map);
-  let changed = false;
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-    const key = readChild(response, entry[0], context, entries, '' + i);
-    const value = readChild(response, entry[1], context, entries, '' + i);
-    if (key !== entry[0] || value !== entry[1]) {
-      changed = true;
-      entries[i] = [key, value];
-    }
+  const visitsBefore = response._visits;
+  const cycle = enterContainer(response, map, createMapCopy);
+  if (cycle !== null) {
+    return cycle;
   }
-  const read = changed ? new Map(entries) : map;
-  models.set(map, read);
-  return read;
+  let copy: null | Map<any, any> = null;
+  try {
+    const entries = Array.from(map);
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const key = readChild(response, entry[0], context, entries, '' + i);
+      const value = readChild(response, entry[1], context, entries, '' + i);
+      if (copy === null) {
+        if (key === entry[0] && value === entry[1]) {
+          continue;
+        }
+        copy = copyOf(response, map, createMapCopy);
+        for (let j = 0; j < i; j++) {
+          copy.set(entries[j][0], entries[j][1]);
+        }
+      }
+      copy.set(key, value);
+    }
+  } catch (thrown) {
+    response._visiting.pop();
+    throw thrown;
+  }
+  return exitContainer(response, map, visitsBefore, copy === null ? map : copy);
+}
+
+function createSetCopy(): Set<any> {
+  return new Set();
 }
 
 function readSet(
@@ -1369,19 +1482,33 @@ function readSet(
   set: Set<any>,
   context: KeyContext,
 ): Set<any> {
-  const models = response._models;
-  const items = Array.from(set);
-  let changed = false;
-  for (let i = 0; i < items.length; i++) {
-    const read = readChild(response, items[i], context, items, '' + i);
-    if (read !== items[i]) {
-      changed = true;
-      items[i] = read;
-    }
+  const visitsBefore = response._visits;
+  const cycle = enterContainer(response, set, createSetCopy);
+  if (cycle !== null) {
+    return cycle;
   }
-  const read = changed ? new Set(items) : set;
-  models.set(set, read);
-  return read;
+  let copy: null | Set<any> = null;
+  try {
+    const items = Array.from(set);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const read = readChild(response, item, context, items, '' + i);
+      if (copy === null) {
+        if (read === item) {
+          continue;
+        }
+        copy = copyOf(response, set, createSetCopy);
+        for (let j = 0; j < i; j++) {
+          copy.add(items[j]);
+        }
+      }
+      copy.add(read);
+    }
+  } catch (thrown) {
+    response._visiting.pop();
+    throw thrown;
+  }
+  return exitContainer(response, set, visitsBefore, copy === null ? set : copy);
 }
 
 // A promise in the model is handed out as a chunk, the way the wire path
@@ -1468,6 +1595,8 @@ export function createResponse(
     _serverReferences: new Map(),
     _bindToConsumer: bindToConsumer,
     _models: new Map(),
+    _visiting: [],
+    _visits: 0,
     _modules: new Map(),
     _onError: onError === undefined ? result.onError : onError,
     _readError: null,

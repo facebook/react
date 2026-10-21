@@ -559,6 +559,41 @@ describe('ReactFlightDOMResult', () => {
     expect(asyncElement.props.value).toBe(data);
   });
 
+  it('reads cyclic data the way the wire does', async () => {
+    const components = createClientComponents();
+    const pure = {name: 'pure', list: []};
+    pure.list.push(pure);
+    pure.self = pure;
+    const map = new Map();
+    map.set('me', map);
+    // Holds an element, so the consumer gets a copy; the cycle must point at
+    // that copy, not the server object.
+    const copied = {icon: ReactServer.createElement(components.Box, null)};
+    copied.ring = [copied, new Set([copied])];
+    const model = {
+      pure,
+      map,
+      copied,
+      element: ReactServer.createElement(components.Show, {value: copied}),
+    };
+    const result = ReactServerDOMServer.renderToResult(model);
+    const response = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const root = await response;
+    // A cycle closes on the consumer's value, which is a copy as on the wire.
+    expect(root.pure.name).toBe('pure');
+    expect(root.pure.self).toBe(root.pure);
+    expect(root.pure.list[0]).toBe(root.pure);
+    expect(root.map.get('me')).toBe(root.map);
+    expect(root.copied).not.toBe(copied);
+    expect(components.nameOf(root.copied.icon.type)).toBe('Box');
+    expect(root.copied.ring[0]).toBe(root.copied);
+    expect(Array.from(root.copied.ring[1])[0]).toBe(root.copied);
+    expect(root.element.props.value).toBe(root.copied);
+  });
+
   it('settles the root with the output of a pending root Server Component', async () => {
     let resolveLater;
     const later = new Promise(resolve => {
