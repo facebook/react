@@ -579,6 +579,12 @@ describe('ReactFlightDOMResult', () => {
     for (let i = 0; i < 40; i++) {
       special['k' + i] = {i};
     }
+    // A host element with plain props is handed to the consumer as is. A
+    // list of them must still not be written as JSON, which drops $$typeof.
+    const items = [];
+    for (let i = 0; i < 40; i++) {
+      items.push(ReactServer.createElement('li', {id: 'item-' + i}, 'x'));
+    }
     const model = {
       element: ReactServer.createElement(components.Show, {
         posts,
@@ -586,6 +592,7 @@ describe('ReactFlightDOMResult', () => {
         special,
       }),
       later: {category, post: posts[3], run: posts[5].content.runs[0]},
+      list: ReactServer.createElement('ul', null, items),
     };
     const result = ReactServerDOMServer.renderToResult(model);
     const inProcess = ReactServerDOMClient.createFromResult(result, {
@@ -633,6 +640,12 @@ describe('ReactFlightDOMResult', () => {
     expect(streamed.later.post).toBe(props.posts[3]);
     expect(streamed.later.run).toBe(props.posts[5].content.runs[0]);
     expect(props.shared[2].content).toBe(props.posts[2].content);
+    let item = streamed.list.props.children[7];
+    if (item.$$typeof === Symbol.for('react.lazy')) {
+      item = item._init(item._payload);
+    }
+    expect(item.$$typeof).toBe(Symbol.for('react.transitional.element'));
+    expect(item.props.id).toBe('item-7');
     const direct = await readDirect({
       model,
       components,

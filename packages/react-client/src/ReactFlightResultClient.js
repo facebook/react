@@ -108,7 +108,10 @@ export type ResultResponse = {
   _visiting: Array<Object>,
   // Containers read so far, to recognize a large one worth recording.
   _visits: number,
-  // Whether the container just read is pure data (see Result.pureData).
+  // Whether the object the last read returned is pure data (see
+  // Result.pureData). A read that returns an object as is after reading
+  // inside it must set this for that object, not leave what the inner read
+  // set.
   _childPure: boolean,
   // Client Reference id → the module it resolved to, or the chunk loading it.
   _modules: Map<string, any>,
@@ -1065,7 +1068,9 @@ function readTerminalElement(
   }
   let read;
   if (key === element.key && props === element.props && type === element.type) {
-    // Nothing about the element changes for this consumer.
+    // Nothing about the element changes for this consumer. Reading its props
+    // set the pure-data flag for them; an element is not data.
+    response._childPure = false;
     read = element;
   } else {
     read = createElement(type, key, props);
