@@ -812,6 +812,31 @@ describe('ReactFlightDOMResult', () => {
     );
   });
 
+  it('serializes pure data as one JSON row before any consumer read it', async () => {
+    const posts = [];
+    for (let i = 0; i < 20; i++) {
+      posts.push({id: i, tags: ['a', 'b'], meta: {views: i * 10}});
+    }
+    const result = ReactServerDOMServer.renderToResult({posts}, {onError});
+    // The hydration stream runs first here, as it does for a Suspense
+    // boundary that has not rendered yet when the stream starts.
+    const readable = new Stream.PassThrough();
+    readable.setEncoding('utf8');
+    let wire = '';
+    readable.on('data', chunk => (wire += chunk));
+    await serverAct(() => {
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    expect(wire).toContain(':' + JSON.stringify(posts) + '\n');
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: {moduleMap: {}, moduleLoading: null},
+    });
+    expect(root.posts).toBe(posts);
+  });
+
   it('hands pure data to the in-process consumer by identity', async () => {
     const components = createClientComponents();
     const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};

@@ -38,6 +38,7 @@ import {
   subscribeToAbort,
   markPureData,
   isPureData,
+  LARGE_CONTAINER_VISITS,
 } from 'shared/ReactFlightResult';
 import {subscribeToHints} from 'shared/ReactFlightRenderContext';
 import {createBoundServerReference} from './ReactFlightReplyClient';
@@ -402,7 +403,6 @@ function readChild(
 const CYCLE_CHECK_DEPTH = 64;
 // A container whose read visited this many containers is recorded even when
 // returned as is, so a second reference to it does not read it again.
-const LARGE_CONTAINER_VISITS = 32;
 
 // Starts reading a container. When it is already being read, returns what
 // the inner reference resolves to: the consumer's copy, as on the wire,

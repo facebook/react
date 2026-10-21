@@ -11,6 +11,9 @@ import type {ReactElement} from './ReactElementType';
 import type {RenderContext} from './ReactFlightRenderContext';
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import noop from './noop';
+import isArray from './isArray';
+import getPrototypeOf from './getPrototypeOf';
+import {ASYNC_ITERATOR, getIteratorFn} from './ReactSymbols';
 
 // A Result is a model whose Server Components get executed at most once, by
 // whichever consumer reaches them first. It keeps the caller's model as is
@@ -233,6 +236,88 @@ export function markPureData(result: Result<any>, container: Object): void {
 export function isPureData(result: Result<any>, container: Object): boolean {
   const pureData = result.pureData;
   return pureData !== null && pureData.has(container);
+}
+
+// A container is worth its own JSON row from this many containers inside.
+export const LARGE_CONTAINER_VISITS = 32;
+const PURE_DATA_MAX_DEPTH = 64;
+const ObjectPrototype = Object.prototype;
+
+// Checks a container no consumer has read yet, by the rules a reader applies
+// as it reads, and marks it when it is large pure data. A cycle, or data
+// nested deeper than any realistic page, is left to the regular path.
+export function certifyPureData(
+  result: Result<any>,
+  container: Object,
+): boolean {
+  const visits = countPureContainers(container, 0);
+  if (visits < LARGE_CONTAINER_VISITS) {
+    return false;
+  }
+  markPureData(result, container);
+  return true;
+}
+
+// The containers inside a pure container, itself included, or -1 if it is
+// not pure.
+function countPureContainers(container: Object, depth: number): number {
+  if (depth >= PURE_DATA_MAX_DEPTH) {
+    return -1;
+  }
+  let visits = 1;
+  if (isArray(container)) {
+    for (let i = 0; i < container.length; i++) {
+      if (!(i in container)) {
+        return -1;
+      }
+      const inner = countPureValue(container[i], depth);
+      if (inner === -1) {
+        return -1;
+      }
+      visits += inner;
+    }
+    return visits;
+  }
+  if (
+    getPrototypeOf(container) !== ObjectPrototype ||
+    getIteratorFn(container) ||
+    typeof (container as any)[ASYNC_ITERATOR] === 'function' ||
+    typeof (container as any).then === 'function'
+  ) {
+    return -1;
+  }
+  const object: {[key: string]: any} = container;
+  const keys = Object.keys(object);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (key === '__proto__') {
+      return -1;
+    }
+    const value = object[key];
+    if (value !== undefined) {
+      const inner = countPureValue(value, depth);
+      if (inner === -1) {
+        return -1;
+      }
+      visits += inner;
+    }
+  }
+  return visits;
+}
+
+function countPureValue(value: any, depth: number): number {
+  switch (typeof value) {
+    case 'string':
+      return value.charCodeAt(0) !== 36 ? 0 : -1; // '$'
+    case 'number':
+      return isFinite(value) && (value !== 0 || 1 / value > 0) ? 0 : -1;
+    case 'boolean':
+      return 0;
+    case 'object':
+      return value === null ? 0 : countPureContainers(value, depth + 1);
+    default:
+      return -1;
+  }
 }
 
 export function retainResult(result: Result<any>): void {

@@ -136,6 +136,7 @@ import {
   getIteratorEntries,
   subscribeToAbort,
   isPureData,
+  certifyPureData,
   getStreamReplay,
   getAsyncIterableReplay,
   createReplayReadableStream,
@@ -4568,10 +4569,12 @@ function renderModelDestructive(
       existingReference === undefined &&
       serializedResult !== null &&
       (task.keyPath === null || !isArray(value)) &&
-      isPureData(serializedResult, value)
+      (isPureData(serializedResult, value) ||
+        certifyPureData(serializedResult, value))
     ) {
       // A consumer of the Result read this container and found nothing in it
-      // that Flight encodes differently from JSON.
+      // that Flight encodes differently from JSON, or this is the first to
+      // reach it and finds the same.
       const pureId = outlinePureData(request, value);
       if (pureId !== -1) {
         return serializeByValueID(pureId);
