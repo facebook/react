@@ -224,6 +224,9 @@ export type Response = {
   _serverObjectReferenceCache: WeakMap<Object, SomeChunk<any>>,
   _rootArrayContexts: WeakMap<$ReadOnlyArray<mixed>, NestedArrayContext>,
   _arraySizeLimit: number,
+  // Fields of parsed values that still hold a placeholder, by the object and
+  // key the placeholder occupies, with the reference that will fill them.
+  _pendingFields: WeakMap<Object, Map<string, InitializationReference>>,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -247,7 +250,7 @@ function wakeChunk<T>(
     if (typeof listener === 'function') {
       listener(value);
     } else {
-      fulfillReference(response, listener, value, chunk.reason);
+      fulfillReference(response, listener, value, arrayRootOfChunk(chunk));
     }
   }
 }
@@ -262,7 +265,7 @@ function rejectChunk(
     if (typeof listener === 'function') {
       listener(error);
     } else {
-      rejectReference(response, listener.handler, error);
+      rejectInitializationReference(response, listener, error);
     }
   }
 }
@@ -783,6 +786,11 @@ type InitializationReference = {
   ) => any,
   path: Array<string>,
   arrayRoot: null | NestedArrayContext,
+  status: 0 | 1 | 2,
+  // The installed value, or the failure.
+  value: any,
+  // References selecting through this field.
+  listeners: null | Array<InitializationReference>,
 };
 type InitializationHandler = {
   chunk: null | BlockedChunk<any>,
@@ -793,6 +801,12 @@ type InitializationHandler = {
   deps: number,
   errored: boolean,
 };
+const FIELD_PENDING = 0;
+const FIELD_INSTALLED = 1;
+const FIELD_FAILED = 2;
+
+const EMPTY_REFERENCE_PATH: Array<string> = [];
+
 let initializingHandler: null | InitializationHandler = null;
 
 function createInitializationHandler(deps: number): InitializationHandler {
@@ -982,10 +996,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         return;
       }
     }
-    const initializedChunk: InitializedChunk<T> = chunk as any;
-    initializedChunk.status = INITIALIZED;
-    initializedChunk.value = value;
-    initializedChunk.reason = arrayRoot;
+    initializeBlockedChunk(response, cyclicChunk, value, arrayRoot);
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = chunk as any;
     erroredChunk.status = ERRORED;
@@ -993,6 +1004,50 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   } finally {
     initializingHandler = prevHandler;
   }
+}
+
+function initializeBlockedChunk<T>(
+  response: Response,
+  chunk: BlockedChunk<T>,
+  value: T,
+  reason: InitializedChunk<T>['reason'],
+): void {
+  const resolveListeners = chunk.value;
+  const initializedChunk: InitializedChunk<T> = chunk as any;
+  initializedChunk.status = INITIALIZED;
+  initializedChunk.value = value;
+  initializedChunk.reason = reason;
+  if (resolveListeners !== null) {
+    wakeChunk(response, resolveListeners, value, initializedChunk);
+  }
+}
+
+// Initializes the handler's chunk once the handler has no references left to
+// wait on. `handler.chunk` is null while the handler's model is still parsing.
+// `initializeModelChunk` handles that case when the parse ends.
+function initializeChunkIfUnblocked(
+  response: Response,
+  handler: InitializationHandler,
+): void {
+  if (handler.deps !== 0 || handler.errored) {
+    return;
+  }
+  const chunk = handler.chunk;
+  if (chunk === null) {
+    return;
+  }
+  // `BlockedChunk` is the chunk's type at the time the handler recorded it.
+  // The chunk can have errored since, so its status is read again here.
+  if ((chunk as SomeChunk<any>).status !== BLOCKED) {
+    return;
+  }
+  initializeBlockedChunk(
+    response,
+    chunk,
+    handler.value,
+    // $FlowFixMe[incompatible-type] The handler is not errored.
+    handler.reason,
+  );
 }
 
 // Report that any missing chunks in the model is now going to throw this
@@ -1044,68 +1099,159 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
+function getPendingField(
+  response: Response,
+  parentObject: Object,
+  key: string,
+): void | InitializationReference {
+  const fields = response._pendingFields.get(parentObject);
+  return fields === undefined ? undefined : fields.get(key);
+}
+
+function registerPendingField(
+  response: Response,
+  reference: InitializationReference,
+): void {
+  let fields = response._pendingFields.get(reference.parentObject);
+  if (fields === undefined) {
+    fields = new Map();
+    response._pendingFields.set(reference.parentObject, fields);
+  }
+  fields.set(reference.key, reference);
+}
+
+function unregisterPendingField(
+  response: Response,
+  reference: InitializationReference,
+): void {
+  const fields = response._pendingFields.get(reference.parentObject);
+  if (fields !== undefined) {
+    fields.delete(reference.key);
+    if (fields.size === 0) {
+      response._pendingFields.delete(reference.parentObject);
+    }
+  }
+}
+
+function subscribeToField(
+  field: InitializationReference,
+  reference: InitializationReference,
+): void {
+  if (field.listeners === null) {
+    field.listeners = [reference];
+  } else {
+    field.listeners.push(reference);
+  }
+}
+
+// The field stays registered as failed so that later selections through it
+// reject with the failure instead of reading the placeholder.
+function rejectInitializationReference(
+  response: Response,
+  reference: InitializationReference,
+  error: mixed,
+): void {
+  if (reference.status !== FIELD_PENDING) {
+    return;
+  }
+  reference.status = FIELD_FAILED;
+  reference.value = error;
+  const listeners = reference.listeners;
+  reference.listeners = null;
+  if (listeners !== null) {
+    for (let i = 0; i < listeners.length; i++) {
+      rejectInitializationReference(response, listeners[i], error);
+    }
+  }
+  rejectReference(response, reference.handler, error);
+}
+
+// The array context of a value selected on its own, for a reference that
+// continues from an installed field.
+function arrayRootOfValue(
+  response: Response,
+  value: any,
+): null | NestedArrayContext {
+  if (isArray(value)) {
+    const arrayRoot = response._rootArrayContexts.get(value);
+    return arrayRoot === undefined ? null : arrayRoot;
+  }
+  return null;
+}
+
+// Selects the value for `reference` starting from `value`, which was parsed
+// in `arrayRoot`, then installs it.
 function fulfillReference(
   response: Response,
   reference: InitializationReference,
   value: any,
   arrayRoot: null | NestedArrayContext,
 ): void {
+  if (reference.status !== FIELD_PENDING) {
+    return;
+  }
   const {handler, parentObject, key, map, path} = reference;
 
-  let resolvedValue;
   try {
     const cursor: PathCursor = {value, arrayRoot, localLength: 0};
     for (let i = 1; i < path.length; i++) {
+      const name = path[i];
+      const current = cursor.value;
+      if (typeof current === 'object' && current !== null) {
+        const field = getPendingField(response, current, name);
+        if (field !== undefined) {
+          if (field.status === FIELD_FAILED) {
+            throw field.value;
+          }
+          // The object exists but this field still holds a placeholder.
+          // Continue from the field's value once it is installed. The
+          // listener receives that value, so the path up to it is dropped.
+          path.splice(0, i);
+          subscribeToField(field, reference);
+          return;
+        }
+      }
       // The server doesn't have any lazy references so we don't expect to go through a Promise.
-      stepIntoProperty(response, cursor, path[i]);
+      stepIntoProperty(response, cursor, name);
     }
-
-    resolvedValue = map(response, cursor.value, parentObject, key);
-
     countSelectedValue(response, reference.arrayRoot, cursor);
+    const mappedValue = map(response, cursor.value, parentObject, key);
+    installReference(response, reference, mappedValue);
   } catch (error) {
-    rejectReference(response, handler, error);
+    rejectInitializationReference(response, reference, error);
     return;
   }
 
-  // There are no Elements or Debug Info to transfer here.
-
-  resolveReference(response, handler, parentObject, key, resolvedValue);
+  handler.deps--;
+  initializeChunkIfUnblocked(response, handler);
 }
 
-function resolveReference(
+// Writes the resolved value into the field the reference fills.
+function installReference(
   response: Response,
-  handler: InitializationHandler,
-  parentObject: Object,
-  key: string,
-  resolvedValue: mixed,
+  reference: InitializationReference,
+  value: any,
 ): void {
+  const {handler, parentObject, key} = reference;
   if (key !== __PROTO__) {
-    parentObject[key] = resolvedValue;
+    parentObject[key] = value;
   }
 
   // If this is the root object for a model reference, where `handler.value`
   // is a stale `null`, the resolved value can be used directly.
-  if (key === '' && handler.value === null) {
-    handler.value = resolvedValue;
+  if (key === '' && !handler.errored && handler.value === null) {
+    handler.value = value;
   }
 
-  handler.deps--;
-
-  if (handler.deps === 0) {
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-    const resolveListeners = chunk.value;
-    const initializedChunk: InitializedChunk<any> = chunk as any;
-    initializedChunk.status = INITIALIZED;
-    initializedChunk.value = handler.value;
-    initializedChunk.reason =
-      // $FlowFixMe[incompatible-type] Assuming handler.errored is false.
-      handler.reason;
-    if (resolveListeners !== null) {
-      wakeChunk(response, resolveListeners, handler.value, initializedChunk);
+  reference.status = FIELD_INSTALLED;
+  reference.value = value;
+  unregisterPendingField(response, reference);
+  const listeners = reference.listeners;
+  reference.listeners = null;
+  if (listeners !== null) {
+    const arrayRoot = arrayRootOfValue(response, value);
+    for (let i = 0; i < listeners.length; i++) {
+      fulfillReference(response, listeners[i], value, arrayRoot);
     }
   }
 }
@@ -1141,6 +1287,28 @@ function waitForReference<T>(
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
 ): T {
+  const reference = createInitializationReference(
+    response,
+    parentObject,
+    key,
+    map,
+    path,
+    arrayRoot,
+  );
+  addReferenceListener(referencedChunk, reference);
+  return getReferencePlaceholder(reference);
+}
+
+// Creates a reference that fills `parentObject[key]` once it resolves, and
+// counts it against the handler of the model being initialized.
+function createInitializationReference<T>(
+  response: Response,
+  parentObject: Object,
+  key: string,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  path: Array<string>,
+  arrayRoot: null | NestedArrayContext,
+): InitializationReference {
   let handler: InitializationHandler;
   if (initializingHandler) {
     handler = initializingHandler;
@@ -1148,7 +1316,6 @@ function waitForReference<T>(
   } else {
     handler = initializingHandler = createInitializationHandler(1);
   }
-
   const reference: InitializationReference = {
     handler,
     parentObject,
@@ -1156,11 +1323,49 @@ function waitForReference<T>(
     map,
     path,
     arrayRoot,
+    status: FIELD_PENDING,
+    value: null,
+    listeners: null,
   };
-  addReferenceListener(referencedChunk, reference);
+  registerPendingField(response, reference);
+  return reference;
+}
 
-  // Return a place holder value for now.
+// The value a reference leaves in its field while it waits. The field can
+// already be installed if the reference resolved synchronously.
+function getReferencePlaceholder<T>(reference: InitializationReference): T {
+  if (reference.status === FIELD_INSTALLED) {
+    return reference.value;
+  }
   return null as any;
+}
+
+// Records that `parentObject[key]` can never be filled because the reference
+// to it failed. A later selection through it rejects with the error.
+function recordFailedField(
+  response: Response,
+  parentObject: Object,
+  key: string,
+  error: mixed,
+): void {
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+  } else {
+    handler = initializingHandler = createInitializationHandler(0);
+  }
+  const reference: InitializationReference = {
+    handler,
+    parentObject,
+    key,
+    map: createModel,
+    path: EMPTY_REFERENCE_PATH,
+    arrayRoot: null,
+    status: FIELD_FAILED,
+    value: error,
+    listeners: null,
+  };
+  registerPendingField(response, reference);
 }
 
 // Queues the reference on a chunk that has not initialized yet. It is fulfilled
@@ -1208,7 +1413,32 @@ function getOutlinedModel<T>(
         localLength: 0,
       };
       for (let i = 1; i < path.length; i++) {
-        stepIntoProperty(response, cursor, path[i]);
+        const name = path[i];
+        const current = cursor.value;
+        if (typeof current === 'object' && current !== null) {
+          // An initialized chunk can hold an object that another model is
+          // still filling in. Wait for the field rather than reading its
+          // placeholder.
+          const field = getPendingField(response, current, name);
+          if (field !== undefined) {
+            if (field.status === FIELD_FAILED) {
+              recordFailedField(response, parentObject, key, field.value);
+              markHandlerErrored(field.value);
+              return null as any;
+            }
+            const fieldReference = createInitializationReference(
+              response,
+              parentObject,
+              key,
+              map,
+              path.slice(i),
+              referenceArrayRoot,
+            );
+            subscribeToField(field, fieldReference);
+            return getReferencePlaceholder(fieldReference);
+          }
+        }
+        stepIntoProperty(response, cursor, name);
       }
       const chunkValue = map(response, cursor.value, parentObject, key);
       countSelectedValue(response, referenceArrayRoot, cursor);
@@ -1230,6 +1460,7 @@ function getOutlinedModel<T>(
       // which is not allowed.
       throw new Error('Invalid forward reference.');
     default:
+      recordFailedField(response, parentObject, key, chunk.reason);
       markHandlerErrored(chunk.reason);
       // Placeholder
       return null as any;
@@ -1338,80 +1569,36 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
 
   const promise: Promise<ArrayBuffer> = backingEntry.arrayBuffer();
 
-  // Since loading the buffer is an async operation we'll be blocking the parent
-  // chunk.
+  // Reading the buffer is asynchronous, so the field is pending until then.
+  const fieldReference = createInitializationReference(
+    response,
+    parentObject,
+    parentKey,
+    createModel,
+    EMPTY_REFERENCE_PATH,
+    referenceArrayRoot,
+  );
 
-  let handler: InitializationHandler;
-  if (initializingHandler) {
-    handler = initializingHandler;
-    handler.deps++;
-  } else {
-    handler = initializingHandler = createInitializationHandler(1);
-  }
-
-  function fulfill(buffer: ArrayBuffer): void {
-    try {
-      if (referenceArrayRoot !== null) {
-        bumpArrayCount(referenceArrayRoot, buffer.byteLength, response);
-      }
-
-      const resolvedValue: T =
-        constructor === ArrayBuffer
-          ? (buffer as any)
-          : (new constructor(buffer) as any);
-
-      if (key !== __PROTO__) {
-        parentObject[parentKey] = resolvedValue;
-      }
-
-      // If this is the root object for a model reference, where `handler.value`
-      // is a stale `null`, the resolved value can be used directly.
-      if (parentKey === '' && handler.value === null) {
-        handler.value = resolvedValue;
-      }
-    } catch (x) {
-      reject(x);
-      return;
-    }
-
-    handler.deps--;
-
-    if (handler.deps === 0) {
-      const chunk = handler.chunk;
-      if (chunk === null || chunk.status !== BLOCKED) {
+  promise.then(
+    (buffer: ArrayBuffer) => {
+      try {
+        if (referenceArrayRoot !== null) {
+          bumpArrayCount(referenceArrayRoot, buffer.byteLength, response);
+        }
+        const resolvedValue: T =
+          constructor === ArrayBuffer
+            ? (buffer as any)
+            : (new constructor(buffer) as any);
+        installReference(response, fieldReference, resolvedValue);
+      } catch (error) {
+        rejectInitializationReference(response, fieldReference, error);
         return;
       }
-      const resolveListeners = chunk.value;
-      const initializedChunk: InitializedChunk<T> = chunk as any;
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = handler.value;
-      // We don't keep an array count for this since it won't be referenced again.
-      // In fact, we don't really need to store this chunk at all.
-      initializedChunk.reason = null;
-      if (resolveListeners !== null) {
-        wakeChunk(response, resolveListeners, handler.value, initializedChunk);
-      }
-    }
-  }
-
-  function reject(error: mixed): void {
-    if (handler.errored) {
-      // We've already errored. We could instead build up an AggregateError
-      // but if there are multiple errors we just take the first one like
-      // Promise.all.
-      return;
-    }
-    handler.errored = true;
-    handler.value = null;
-    handler.reason = error;
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-    triggerErrorOnChunk(response, chunk, error);
-  }
-
-  promise.then(fulfill, reject);
+      fieldReference.handler.deps--;
+      initializeChunkIfUnblocked(response, fieldReference.handler);
+    },
+    error => rejectInitializationReference(response, fieldReference, error),
+  );
 
   return null;
 }
@@ -2007,6 +2194,7 @@ export function createResponse(
     _serverObjectReferenceCache: new WeakMap(),
     _rootArrayContexts: new WeakMap(),
     _arraySizeLimit: arraySizeLimit,
+    _pendingFields: new WeakMap(),
   };
   return response;
 }

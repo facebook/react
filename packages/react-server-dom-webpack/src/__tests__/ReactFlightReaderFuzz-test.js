@@ -2020,10 +2020,6 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
 
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
-  const cycleGap =
-    'the reader resolves a reference cycle by handing one side the other ' +
-    'value while it is still being filled in, so a callback can see a ' +
-    'placeholder and a shared value can arrive twice';
   const collectionGap =
     'a Set or Map whose entries refer back to it waits for its own ' +
     'construction';
@@ -2033,11 +2029,6 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
   const knownGaps =
     host === 'reply'
       ? {
-          'blob beside a cycle': cycleGap,
-          'iterator field': cycleGap,
-          'module after eof': cycleGap,
-          'byte stream': cycleGap,
-          'canceled stream': cycleGap,
           'collection containing itself': collectionGap,
           'mutual collections': collectionGap,
           'function bound to its container': bindingGap,
