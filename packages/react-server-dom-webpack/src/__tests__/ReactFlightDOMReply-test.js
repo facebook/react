@@ -732,6 +732,23 @@ describe('ReactFlightDOMReply', () => {
     expect(root.prop[0]).toBe(root.obj);
   });
 
+  it('decodes a Set that contains itself', async () => {
+    const set = new Set();
+    set.add(set);
+    const body = await ReactServerDOMClient.encodeReply({set});
+    const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+    expect(root.set instanceof Set).toBe(true);
+    expect(Array.from(root.set)).toEqual([root.set]);
+  });
+
+  it('decodes a Map that contains itself', async () => {
+    const map = new Map();
+    map.set('self', map);
+    const body = await ReactServerDOMClient.encodeReply({map});
+    const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+    expect(root.map.get('self')).toBe(root.map);
+  });
+
   it('can abort an unresolved model and get the partial result', async () => {
     const promise = new Promise(r => {});
     const controller = new AbortController();

@@ -1999,8 +1999,9 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
   const caseName = (family, seed, demand, variant) =>
     family + ' seed=' + seed + ' demand=' + demand + ' variant=' + variant;
 
-  // The reply decoder still completes values by chunk, so its random graphs,
-  // which all include bound Server Functions, stay skipped.
+  // The reply decoder still binds a Server Function with Promise.all over its
+  // bound arguments, so its random graphs, which all include bound Server
+  // Functions, stay skipped.
   const graphs = host === 'reply' ? describe.skip : describe;
   graphs('generated graphs', () => {
     seeds.forEach(seed => {
@@ -2020,17 +2021,12 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
 
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
-  const collectionGap =
-    'a Set or Map whose entries refer back to it waits for its own ' +
-    'construction';
   const bindingGap =
     'a Server Function bound to arguments that contain it waits for its ' +
     'own result';
   const knownGaps =
     host === 'reply'
       ? {
-          'collection containing itself': collectionGap,
-          'mutual collections': collectionGap,
           'function bound to its container': bindingGap,
           'function exposes a region': bindingGap,
           'streamed array containing itself':
