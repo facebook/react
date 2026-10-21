@@ -1658,17 +1658,6 @@ const nodeKinds = [
   'component',
 ];
 
-const leafKinds = [
-  'value',
-  'date',
-  'binary',
-  'text',
-  'blob',
-  'special',
-  'host',
-  'module',
-];
-
 function kindOf(node) {
   const kind = nodeKinds.find(candidate => candidate in node);
   if (kind === undefined) {
@@ -1941,12 +1930,7 @@ function generateGraph(seed, {without = []} = {}) {
         break;
       }
       case 'error': {
-        // In DEV the writer outlines a cause every time the Error is written,
-        // so a cause that reaches the Error again recurses; causes are leaves.
-        const leaves = targets.filter(name =>
-          leafKinds.includes(kindOf(nodes[name])),
-        );
-        nodes[addError()].cause = pickFrom(leaves);
+        nodes[addError()].cause = pickFrom(targets);
         break;
       }
       case 'aggregate error': {
