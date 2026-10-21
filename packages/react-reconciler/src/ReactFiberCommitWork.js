@@ -2278,7 +2278,7 @@ function commitMutationEffectsOnFiber(
         }
       } else {
         if (supportsPersistence) {
-          if (enableViewTransitionForPersistenceMode && (flags & Cloned)) {
+          if (enableViewTransitionForPersistenceMode && flags & Cloned) {
             commitHostCloned();
           }
           if (finishedWork.alternate !== null) {
@@ -2317,7 +2317,11 @@ function commitMutationEffectsOnFiber(
           commitHostTextUpdate(finishedWork, newText, oldText);
         }
       }
-      if (supportsPersistence && enableViewTransitionForPersistenceMode && (flags & Cloned)) {
+      if (
+        supportsPersistence &&
+        enableViewTransitionForPersistenceMode &&
+        flags & Cloned
+      ) {
         commitHostCloned();
       }
       break;
