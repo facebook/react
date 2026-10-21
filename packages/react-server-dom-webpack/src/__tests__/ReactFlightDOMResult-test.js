@@ -367,6 +367,71 @@ describe('ReactFlightDOMResult', () => {
     }
   });
 
+  // Encoding a form action suspends while bound arguments are serialized.
+  async function encodeFormActionOf(fn) {
+    while (true) {
+      try {
+        const encoded = fn.$$FORM_ACTION('p');
+        return {
+          name: encoded.name,
+          method: encoded.method,
+          // Field order follows when each bound argument resolved.
+          data:
+            encoded.data === null
+              ? null
+              : Array.from(encoded.data.entries()).sort(),
+        };
+      } catch (thrown) {
+        if (thrown && typeof thrown.then === 'function') {
+          await thrown;
+          continue;
+        }
+        throw thrown;
+      }
+    }
+  }
+
+  it('reads Server References as the same callable proxies the wire gives', async () => {
+    const components = createClientComponents();
+    const save = ReactServerDOMServer.registerServerReference(
+      function save(a, b) {
+        return a + b;
+      },
+      'actions',
+      'save',
+    );
+    const bound = save.bind(null, {prefix: 'x', when: new Date(0)});
+    const model = {
+      element: ReactServer.createElement(components.Show, {
+        value: {save, bound},
+      }),
+    };
+
+    const scenario = {
+      model,
+      kind: 'data',
+      scheduler: FlightOracle.createScheduler(FlightOracle.createRng(1)),
+      components,
+    };
+    const direct = (await (await readDirect(scenario)).response).element.props
+      .value;
+    const inProcess = (await (await readResultDirect(scenario)).response)
+      .element.props.value;
+
+    const names = ['save', 'bound'];
+    for (let i = 0; i < names.length; i++) {
+      const name = names[i];
+      expect(typeof inProcess[name]).toBe('function');
+      expect(await encodeFormActionOf(inProcess[name])).toEqual(
+        await encodeFormActionOf(direct[name]),
+      );
+    }
+    // Calling a Server Function during the HTML render is an error there too.
+    expect(() => inProcess.save()).toThrow(
+      'Server Functions cannot be called during initial render.',
+    );
+  });
+
   it('hands pure data to the in-process consumer by identity', async () => {
     const components = createClientComponents();
     const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};

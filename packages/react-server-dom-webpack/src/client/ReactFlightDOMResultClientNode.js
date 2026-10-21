@@ -7,7 +7,9 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
+import type {TemporaryReferenceSet as ServerTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import type {Result} from 'shared/ReactFlightResult';
 import type {
   ServerConsumerModuleMap,
@@ -22,9 +24,20 @@ import {
   close,
 } from 'react-client/src/ReactFlightResultClient';
 
-import {resolveClientReferenceMetadata} from '../server/ReactFlightServerConfigWebpackBundler';
+import {
+  resolveClientReferenceMetadata,
+  getServerReferenceId,
+  getServerReferenceBoundArguments,
+} from '../server/ReactFlightServerConfigWebpackBundler';
+import {isServerReference} from '../ReactFlightWebpackReferences';
+import {resolveTemporaryReference} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
 import {AsyncLocalStorage} from 'async_hooks';
+
+type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
 
 type Options = {
   // The map the Server Components render used, to turn its Client References
@@ -36,9 +49,19 @@ type Options = {
     serverModuleMap: null | ServerManifest,
   },
   nonce?: string,
+  encodeFormAction?: EncodeFormActionCallback,
+  temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => ?string,
   signal?: AbortSignal,
 };
+
+function noServerCall() {
+  throw new Error(
+    'Server Functions cannot be called during initial render. ' +
+      'This would create a fetch waterfall. Try to use a Server Component ' +
+      'to pass data to Client Components instead.',
+  );
+}
 
 export function createFromResult<T>(
   result: Result<T>,
@@ -55,12 +78,28 @@ export function createFromResult<T>(
     AsyncLocalStorage as any
   ).snapshot;
   const bindToConsumer = typeof snapshot === 'function' ? snapshot() : null;
+  const serverTemporaryReferences: void | ServerTemporaryReferenceSet =
+    result.temporaryReferences;
   const response = createResponse(
     result,
     options.serverConsumerManifest.moduleMap,
     options.serverConsumerManifest.moduleLoading,
-    reference =>
-      resolveClientReferenceMetadata(clientManifest, reference) as any,
+    {
+      resolveClientReferenceMetadata: reference =>
+        resolveClientReferenceMetadata(clientManifest, reference) as any,
+      isServerReference,
+      getServerReferenceId: reference =>
+        getServerReferenceId(clientManifest, reference),
+      getServerReferenceBoundArguments: reference =>
+        getServerReferenceBoundArguments(clientManifest, reference),
+      resolveTemporaryReference: value =>
+        serverTemporaryReferences === undefined
+          ? undefined
+          : resolveTemporaryReference(serverTemporaryReferences, value),
+    },
+    noServerCall,
+    options.encodeFormAction,
+    options.temporaryReferences,
     bindToConsumer,
     typeof options.nonce === 'string' ? options.nonce : undefined,
     options.onError,

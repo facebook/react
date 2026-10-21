@@ -8,6 +8,11 @@
  */
 
 import type {Thenable, ReactKey} from 'shared/ReactTypes';
+import type {
+  CallServerCallback,
+  EncodeFormActionCallback,
+} from './ReactFlightReplyClient';
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Result, Expansion} from 'shared/ReactFlightResult';
 import type {
@@ -32,6 +37,8 @@ import {
   releaseResult,
 } from 'shared/ReactFlightResult';
 import {subscribeToHints} from 'shared/ReactFlightRenderContext';
+import {createBoundServerReference} from './ReactFlightReplyClient';
+import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -58,12 +65,27 @@ const ObjectPrototype = Object.prototype;
 // already in this process, so unlike the wire path nothing is copied unless
 // something inside it changed.
 
+// What the bundler's server config knows about the references in the model.
+// The server render that produced the Result used the same config.
+export type ReferenceBundler = {
+  resolveClientReferenceMetadata: (reference: any) => ClientReferenceMetadata,
+  isServerReference: (reference: any) => boolean,
+  getServerReferenceId: (reference: any) => string,
+  getServerReferenceBoundArguments: (reference: any) => null | Array<any>,
+  resolveTemporaryReference: (value: any) => void | string,
+};
+
 export type ResultResponse = {
   _result: Result<any>,
   _bundlerConfig: ServerConsumerModuleMap,
   _moduleLoading: ModuleLoading,
   _nonce: ?string,
-  _resolveClientReferenceMetadata: (reference: any) => ClientReferenceMetadata,
+  _bundler: ReferenceBundler,
+  _callServer: CallServerCallback,
+  _encodeFormAction: void | EncodeFormActionCallback,
+  _temporaryReferences: void | TemporaryReferenceSet,
+  // Server Reference → the proxy handed out for it, created once.
+  _serverReferences: Map<any, any>,
   // Runs a callback in the async context the consumer was created in, so
   // resource hints reach the renderer consuming this Result even when another
   // consumer's expansion emitted them.
@@ -813,6 +835,55 @@ function readClientReferenceElement(
   return element;
 }
 
+// A Server Reference becomes the same callable proxy the wire gives the
+// client: it calls the server through callServer and carries the form action
+// metadata. Bound arguments are read like any other value.
+function readServerReference(
+  response: ResultResponse,
+  reference: any,
+  context: KeyContext,
+): any {
+  const serverReferences = response._serverReferences;
+  const existing = serverReferences.get(reference);
+  if (existing !== undefined) {
+    return existing;
+  }
+  const bundler = response._bundler;
+  const id = bundler.getServerReferenceId(reference);
+  const boundArgs = bundler.getServerReferenceBoundArguments(reference);
+  const bound =
+    boundArgs === null
+      ? null
+      : Promise.resolve(readArray(response, boundArgs, context));
+  const proxy = createBoundServerReference<Array<any>, any>(
+    {id, bound},
+    response._callServer,
+    response._encodeFormAction,
+  );
+  serverReferences.set(reference, proxy);
+  return proxy;
+}
+
+// A value registered as a temporary reference on the server reads back as
+// the value the consumer registered under that id, as on the wire.
+function readTemporaryReferenceValue(
+  response: ResultResponse,
+  value: any,
+): void | any {
+  const id = response._bundler.resolveTemporaryReference(value);
+  if (id === undefined) {
+    return undefined;
+  }
+  const temporaryReferences = response._temporaryReferences;
+  if (temporaryReferences === undefined) {
+    throw new Error(
+      'Missing a temporary reference set but the RSC response returned a temporary reference. ' +
+        'Pass a temporaryReference option with the set that was used with the reply.',
+    );
+  }
+  return readTemporaryReference(temporaryReferences, id);
+}
+
 // A Client Reference in a data position is its module export. While the
 // module loads, the enclosing element waits, as the row would on the wire.
 function readClientReferenceValue(response: ResultResponse, reference: any) {
@@ -845,7 +916,7 @@ function readClientReference(response: ResultResponse, reference: any): any {
     }
     return existing;
   }
-  const metadata = response._resolveClientReferenceMetadata(reference);
+  const metadata = response._bundler.resolveClientReferenceMetadata(reference);
   const clientReference: ClientReference<any> = resolveClientReference(
     response._bundlerConfig,
     metadata,
@@ -924,6 +995,10 @@ function readData(
     }
     if (result.isClientReference(value)) {
       return readClientReferenceValue(response, value);
+    }
+    const temporaryReference = readTemporaryReferenceValue(response, value);
+    if (temporaryReference !== undefined) {
+      return temporaryReference;
     }
     result.checkTainted(value);
     if (typeof value.then === 'function') {
@@ -1006,6 +1081,13 @@ function readData(
   if (typeof value === 'function') {
     if (result.isClientReference(value)) {
       return readClientReferenceValue(response, value);
+    }
+    if (response._bundler.isServerReference(value)) {
+      return readServerReference(response, value, context);
+    }
+    const temporaryReference = readTemporaryReferenceValue(response, value);
+    if (temporaryReference !== undefined) {
+      return temporaryReference;
     }
     result.checkTainted(value);
     if (/^on[A-Z]/.test(parentPropertyName)) {
@@ -1184,7 +1266,10 @@ export function createResponse(
   result: Result<any>,
   bundlerConfig: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
-  resolveClientReferenceMetadata: (reference: any) => ClientReferenceMetadata,
+  bundler: ReferenceBundler,
+  callServer: CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
+  temporaryReferences: void | TemporaryReferenceSet,
   bindToConsumer: null | (<R>(callback: () => R) => R),
   nonce: ?string,
   onError: void | ((error: mixed) => ?string),
@@ -1194,7 +1279,11 @@ export function createResponse(
     _bundlerConfig: bundlerConfig,
     _moduleLoading: moduleLoading,
     _nonce: nonce,
-    _resolveClientReferenceMetadata: resolveClientReferenceMetadata,
+    _bundler: bundler,
+    _callServer: callServer,
+    _encodeFormAction: encodeFormAction,
+    _temporaryReferences: temporaryReferences,
+    _serverReferences: new Map(),
     _bindToConsumer: bindToConsumer,
     _models: new Map(),
     _modules: new Map(),
