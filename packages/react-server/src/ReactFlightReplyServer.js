@@ -795,6 +795,128 @@ type InitializationHandler = {
 };
 let initializingHandler: null | InitializationHandler = null;
 
+function createInitializationHandler(deps: number): InitializationHandler {
+  return {
+    chunk: null,
+    value: null,
+    reason: null,
+    deps,
+    errored: false,
+  };
+}
+
+// This is an error. Instead of erroring directly, we're going to encode this on
+// an initialization handler.
+function markHandlerErrored(error: mixed): void {
+  if (initializingHandler) {
+    initializingHandler.errored = true;
+    initializingHandler.value = null;
+    initializingHandler.reason = error;
+  } else {
+    initializingHandler = createInitializationHandler(0);
+    initializingHandler.errored = true;
+    initializingHandler.reason = error;
+  }
+}
+
+// The array context a chunk's value was parsed in, kept in `reason` of an
+// initialized chunk.
+function arrayRootOfChunk(
+  chunk: InitializedChunk<any>,
+): null | NestedArrayContext {
+  const arrayRootOrController:
+    | null
+    | NestedArrayContext
+    | FlightStreamController = chunk.reason;
+  if (arrayRootOrController !== null && 'error' in arrayRootOrController) {
+    throw new Error(
+      'Expected an initialized chunk but got an initialized stream chunk instead. ' +
+        'This payload may have been submitted by an older version of React.',
+    );
+  }
+  return arrayRootOrController;
+}
+
+// Steps `value` into its property `name` while keeping track of the array
+// context and the size of the value selected, for the array size limit.
+type PathCursor = {
+  value: any,
+  arrayRoot: null | NestedArrayContext,
+  localLength: number,
+};
+
+function stepIntoProperty(
+  response: Response,
+  cursor: PathCursor,
+  name: string,
+): void {
+  const value = cursor.value;
+  const serverReferenceObjects = response._serverReferenceObjects;
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    (serverReferenceObjects === null || !serverReferenceObjects.has(value)) &&
+    (getPrototypeOf(value) === ObjectPrototype ||
+      getPrototypeOf(value) === ArrayPrototype) &&
+    hasOwnProperty.call(value, name)
+  ) {
+    const next = value[name];
+    cursor.value = next;
+    if (isArray(next)) {
+      cursor.localLength = 0;
+      cursor.arrayRoot =
+        response._rootArrayContexts.get(
+          // $FlowFixMe[incompatible-type] Our `isArray` typing can't narrow `mixed`
+          next as $ReadOnlyArray<mixed>,
+        ) || cursor.arrayRoot;
+    } else {
+      cursor.arrayRoot = null;
+      if (typeof next === 'string') {
+        cursor.localLength = next.length;
+      } else if (typeof next === 'bigint') {
+        // Estimate the length to avoid expensive toString() calls on large
+        // BigInt values. If the value is too large, we get Infinity, which
+        // will trigger the array size limit error.
+        // eslint-disable-next-line react-internal/no-primitive-constructors
+        const n = Math.abs(Number(next));
+        if (n === 0) {
+          cursor.localLength = 1;
+        } else {
+          cursor.localLength = Math.floor(Math.log10(n)) + 1;
+        }
+      } else if (ArrayBuffer.isView(next)) {
+        cursor.localLength = next.byteLength;
+      } else {
+        cursor.localLength = 0;
+      }
+    }
+  } else {
+    throw new Error('Invalid reference.');
+  }
+}
+
+// Adds the arrays of the selected value to the array context of the model
+// that referenced it. The value that we're resolving might have deep nesting
+// that we need to resolve.
+function countSelectedValue(
+  response: Response,
+  referenceArrayRoot: null | NestedArrayContext,
+  cursor: PathCursor,
+): void {
+  if (referenceArrayRoot === null) {
+    return;
+  }
+  const arrayRoot = cursor.arrayRoot;
+  if (arrayRoot !== null) {
+    if (arrayRoot.fork) {
+      referenceArrayRoot.fork = true;
+    }
+    bumpArrayCount(referenceArrayRoot, arrayRoot.count, response);
+  } else if (cursor.localLength > 0) {
+    bumpArrayCount(referenceArrayRoot, cursor.localLength, response);
+  }
+}
+
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
   const prevHandler = initializingHandler;
   initializingHandler = null;
@@ -932,66 +1054,15 @@ function fulfillReference(
 
   let resolvedValue;
   try {
-    let localLength: number = 0;
-    const rootArrayContexts = response._rootArrayContexts;
-    const serverReferenceObjects = response._serverReferenceObjects;
+    const cursor: PathCursor = {value, arrayRoot, localLength: 0};
     for (let i = 1; i < path.length; i++) {
       // The server doesn't have any lazy references so we don't expect to go through a Promise.
-      const name = path[i];
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        (serverReferenceObjects === null ||
-          !serverReferenceObjects.has(value)) &&
-        (getPrototypeOf(value) === ObjectPrototype ||
-          getPrototypeOf(value) === ArrayPrototype) &&
-        hasOwnProperty.call(value, name)
-      ) {
-        value = value[name];
-        if (isArray(value)) {
-          localLength = 0;
-          arrayRoot = rootArrayContexts.get(value) || arrayRoot;
-        } else {
-          arrayRoot = null;
-          if (typeof value === 'string') {
-            localLength = value.length;
-          } else if (typeof value === 'bigint') {
-            // Estimate the length to avoid expensive toString() calls on large
-            // BigInt values. If the value is too large, we get Infinity, which
-            // will trigger the array size limit error.
-            // eslint-disable-next-line react-internal/no-primitive-constructors
-            const n = Math.abs(Number(value));
-            if (n === 0) {
-              localLength = 1;
-            } else {
-              localLength = Math.floor(Math.log10(n)) + 1;
-            }
-          } else if (ArrayBuffer.isView(value)) {
-            localLength = value.byteLength;
-          } else {
-            localLength = 0;
-          }
-        }
-      } else {
-        throw new Error('Invalid reference.');
-      }
+      stepIntoProperty(response, cursor, path[i]);
     }
 
-    resolvedValue = map(response, value, parentObject, key);
+    resolvedValue = map(response, cursor.value, parentObject, key);
 
-    // Add any array counts to the reference's array root. The value that we're
-    // resolving might have deep nesting that we need to resolve.
-    const referenceArrayRoot = reference.arrayRoot;
-    if (referenceArrayRoot !== null) {
-      if (arrayRoot !== null) {
-        if (arrayRoot.fork) {
-          referenceArrayRoot.fork = true;
-        }
-        bumpArrayCount(referenceArrayRoot, arrayRoot.count, response);
-      } else if (localLength > 0) {
-        bumpArrayCount(referenceArrayRoot, localLength, response);
-      }
-    }
+    countSelectedValue(response, reference.arrayRoot, cursor);
   } catch (error) {
     rejectReference(response, handler, error);
     return;
@@ -1075,13 +1146,7 @@ function waitForReference<T>(
     handler = initializingHandler;
     handler.deps++;
   } else {
-    handler = initializingHandler = {
-      chunk: null,
-      value: null,
-      reason: null,
-      deps: 1,
-      errored: false,
-    };
+    handler = initializingHandler = createInitializationHandler(1);
   }
 
   const reference: InitializationReference = {
@@ -1092,21 +1157,28 @@ function waitForReference<T>(
     path,
     arrayRoot,
   };
-
-  // Add "listener".
-  if (referencedChunk.value === null) {
-    referencedChunk.value = [reference];
-  } else {
-    referencedChunk.value.push(reference);
-  }
-  if (referencedChunk.reason === null) {
-    referencedChunk.reason = [reference];
-  } else {
-    referencedChunk.reason.push(reference);
-  }
+  addReferenceListener(referencedChunk, reference);
 
   // Return a place holder value for now.
   return null as any;
+}
+
+// Queues the reference on a chunk that has not initialized yet. It is fulfilled
+// or rejected with the chunk.
+function addReferenceListener(
+  chunk: PendingChunk<any> | BlockedChunk<any>,
+  reference: InitializationReference,
+): void {
+  if (chunk.value === null) {
+    chunk.value = [reference];
+  } else {
+    chunk.value.push(reference);
+  }
+  if (chunk.reason === null) {
+    chunk.reason = [reference];
+  } else {
+    chunk.reason.push(reference);
+  }
 }
 
 function getOutlinedModel<T>(
@@ -1129,84 +1201,20 @@ function getOutlinedModel<T>(
   }
   // The status might have changed after initialization.
   switch (chunk.status) {
-    case INITIALIZED:
-      let value = chunk.value;
-      const arrayRootOrController:
-        | null
-        | NestedArrayContext
-        | FlightStreamController = chunk.reason;
-      if (arrayRootOrController !== null && 'error' in arrayRootOrController) {
-        throw new Error(
-          'Expected an initialized chunk but got an initialized stream chunk instead. ' +
-            'This payload may have been submitted by an older version of React.',
-        );
-      }
-      let arrayRoot = arrayRootOrController;
-
-      let localLength: number = 0;
-      const rootArrayContexts = response._rootArrayContexts;
-      const serverReferenceObjects = response._serverReferenceObjects;
+    case INITIALIZED: {
+      const cursor: PathCursor = {
+        value: chunk.value,
+        arrayRoot: arrayRootOfChunk(chunk),
+        localLength: 0,
+      };
       for (let i = 1; i < path.length; i++) {
-        const name = path[i];
-        if (
-          typeof value === 'object' &&
-          // $FlowFixMe[invalid-compare] This check is still needed at runtime.
-          value !== null &&
-          (serverReferenceObjects === null ||
-            !serverReferenceObjects.has(value)) &&
-          (getPrototypeOf(value) === ObjectPrototype ||
-            getPrototypeOf(value) === ArrayPrototype) &&
-          hasOwnProperty.call(value, name)
-        ) {
-          value = value[name];
-          if (isArray(value)) {
-            localLength = 0;
-            arrayRoot =
-              rootArrayContexts.get(
-                // $FlowFixMe[incompatible-type] Our `isArray` typing can't narrow `mixed`
-                value as $ReadOnlyArray<mixed>,
-              ) || arrayRoot;
-          } else {
-            arrayRoot = null;
-            if (typeof value === 'string') {
-              localLength = value.length;
-            } else if (typeof value === 'bigint') {
-              // Estimate the length to avoid expensive toString() calls on large
-              // BigInt values. If the value is too large, we get Infinity, which
-              // will trigger the array size limit error.
-              // eslint-disable-next-line react-internal/no-primitive-constructors
-              const n = Math.abs(Number(value));
-              if (n === 0) {
-                localLength = 1;
-              } else {
-                localLength = Math.floor(Math.log10(n)) + 1;
-              }
-            } else if (ArrayBuffer.isView(value)) {
-              localLength = value.byteLength;
-            } else {
-              localLength = 0;
-            }
-          }
-        } else {
-          throw new Error('Invalid reference.');
-        }
+        stepIntoProperty(response, cursor, path[i]);
       }
-      const chunkValue = map(response, value, parentObject, key);
-
-      // Add any array counts to the reference's array root. The value that we're
-      // resolving might have deep nesting that we need to resolve.
-      if (referenceArrayRoot !== null) {
-        if (arrayRoot !== null) {
-          if (arrayRoot.fork) {
-            referenceArrayRoot.fork = true;
-          }
-          bumpArrayCount(referenceArrayRoot, arrayRoot.count, response);
-        } else if (localLength > 0) {
-          bumpArrayCount(referenceArrayRoot, localLength, response);
-        }
-      }
+      const chunkValue = map(response, cursor.value, parentObject, key);
+      countSelectedValue(response, referenceArrayRoot, cursor);
       // There's no Element nor Debug Info in the ReplyServer so we don't have to check those here.
       return chunkValue;
+    }
     case BLOCKED:
       return waitForReference(
         response,
@@ -1222,21 +1230,7 @@ function getOutlinedModel<T>(
       // which is not allowed.
       throw new Error('Invalid forward reference.');
     default:
-      // This is an error. Instead of erroring directly, we're going to encode this on
-      // an initialization handler.
-      if (initializingHandler) {
-        initializingHandler.errored = true;
-        initializingHandler.value = null;
-        initializingHandler.reason = chunk.reason;
-      } else {
-        initializingHandler = {
-          chunk: null,
-          value: null,
-          reason: chunk.reason,
-          deps: 0,
-          errored: true,
-        };
-      }
+      markHandlerErrored(chunk.reason);
       // Placeholder
       return null as any;
   }
@@ -1352,13 +1346,7 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
     handler = initializingHandler;
     handler.deps++;
   } else {
-    handler = initializingHandler = {
-      chunk: null,
-      value: null,
-      reason: null,
-      deps: 1,
-      errored: false,
-    };
+    handler = initializingHandler = createInitializationHandler(1);
   }
 
   function fulfill(buffer: ArrayBuffer): void {
