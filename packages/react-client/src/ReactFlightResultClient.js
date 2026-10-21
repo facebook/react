@@ -106,6 +106,9 @@ export type ResultResponse = {
   _models: Map<any, any>,
   // Containers being read, outermost first, to close cycles.
   _visiting: Array<Object>,
+  // Containers whose recorded copy a read left half filled when it threw to
+  // wait on something, to be filled in by the read that retries.
+  _incomplete: null | Set<Object>,
   // Containers read so far, to recognize a large one worth recording.
   _visits: number,
   // Whether the object the last read returned is pure data (see
@@ -437,6 +440,26 @@ function copyOf(
   return copy;
 }
 
+// Leaves a container whose read threw. Its copy, if one was started, is
+// recorded but not filled in yet, which a later read of the container must
+// finish rather than return.
+function abandonContainer(response: ResultResponse, container: Object): void {
+  response._visiting.pop();
+  if (response._models.has(container)) {
+    const incomplete = response._incomplete;
+    if (incomplete === null) {
+      response._incomplete = new Set([container]);
+    } else {
+      incomplete.add(container);
+    }
+  }
+}
+
+function isIncomplete(response: ResultResponse, container: Object): boolean {
+  const incomplete = response._incomplete;
+  return incomplete !== null && incomplete.has(container);
+}
+
 function exitContainer(
   response: ResultResponse,
   container: Object,
@@ -445,6 +468,10 @@ function exitContainer(
   pure: boolean,
 ): any {
   response._visiting.pop();
+  const incomplete = response._incomplete;
+  if (incomplete !== null) {
+    incomplete.delete(container);
+  }
   if (read === container) {
     if (response._visits - visitsBefore >= LARGE_CONTAINER_VISITS) {
       response._models.set(container, container);
@@ -615,7 +642,7 @@ function readNode(
   const reusable = context.keyPath === null && !context.implicitSlot;
   if (reusable) {
     const existing = models.get(value);
-    if (existing !== undefined) {
+    if (existing !== undefined && !isIncomplete(response, value)) {
       return existing;
     }
   }
@@ -757,7 +784,7 @@ function readArray(
   context: KeyContext,
 ): Array<any> {
   const existing = response._models.get(array);
-  if (existing !== undefined) {
+  if (existing !== undefined && !isIncomplete(response, array)) {
     response._childPure =
       existing === array && isPureData(response._result, array);
     return existing;
@@ -800,7 +827,7 @@ function readArray(
       copy[i] = read;
     }
   } catch (thrown) {
-    response._visiting.pop();
+    abandonContainer(response, array);
     throw thrown;
   }
   return exitContainer(
@@ -1259,7 +1286,7 @@ function readData(
     response._childPure = false;
     const models = response._models;
     const existing = models.get(value);
-    if (existing !== undefined) {
+    if (existing !== undefined && !isIncomplete(response, value)) {
       response._childPure =
         existing === value && isPureData(response._result, value);
       return existing;
@@ -1505,7 +1532,7 @@ function readObject(
       }
     }
   } catch (thrown) {
-    response._visiting.pop();
+    abandonContainer(response, object);
     throw thrown;
   }
   return exitContainer(
@@ -1550,7 +1577,7 @@ function readMap(
       copy.set(key, value);
     }
   } catch (thrown) {
-    response._visiting.pop();
+    abandonContainer(response, map);
     throw thrown;
   }
   return exitContainer(
@@ -1594,7 +1621,7 @@ function readSet(
       copy.add(read);
     }
   } catch (thrown) {
-    response._visiting.pop();
+    abandonContainer(response, set);
     throw thrown;
   }
   return exitContainer(
@@ -1691,6 +1718,7 @@ export function createResponse(
     _bindToConsumer: bindToConsumer,
     _models: new Map(),
     _visiting: [],
+    _incomplete: null,
     _visits: 0,
     _childPure: false,
     _modules: new Map(),

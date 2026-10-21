@@ -967,6 +967,40 @@ describe('ReactFlightDOMResult', () => {
     });
   });
 
+  it('finishes a half-read object after waiting on a module inside it', async () => {
+    const components = createClientComponents();
+    let loadChunk;
+    const chunk = new Promise(resolve => {
+      loadChunk = resolve;
+    });
+    function Slow() {
+      return 'slow';
+    }
+    const SlowReference = clientExports(Slow, 'slow-chunk', 'slow.js', chunk);
+    const metadata = webpackMap[SlowReference.$$id];
+    components.serverConsumerManifest.moduleMap[metadata.id] = {'*': metadata};
+    // The element before the reference changes for the consumer, so the
+    // object is being copied when the reference waits on its chunk.
+    const model = {
+      tree: ReactServer.createElement(components.Box, null, 'x'),
+      G: [SlowReference, null],
+      last: 'b',
+    };
+    const result = ReactServerDOMServer.renderToResult(model, {onError});
+    const rootPromise = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    await serverAct(() => loadChunk());
+    const root = await rootPromise;
+    expect(root.G[0]).toBe(Slow);
+    expect(root.G[1]).toBe(null);
+    expect(root.last).toBe('b');
+    expect(await renderHTML(Promise.resolve(root.tree))).toEqual({
+      html: '<section>x</section>',
+    });
+  });
+
   it('reads a Client Reference module proxy wherever it appears', async () => {
     const components = createClientComponents();
     // Bundlers hand out a proxy whose get trap throws for Symbol keys, so a
