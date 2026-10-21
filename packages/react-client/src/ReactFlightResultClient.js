@@ -1240,6 +1240,19 @@ function readData(
     if (typeof value.then === 'function') {
       return readThenable(response, value, context);
     }
+    const proto = getPrototypeOf(value);
+    if (proto === ObjectPrototype) {
+      // Nearly every value is a plain object; the built-ins are checked
+      // only for the rest.
+      const iteratorFn = getIteratorFn(value);
+      if (iteratorFn) {
+        return readIterable(response, value, iteratorFn, context);
+      }
+      if (typeof value[ASYNC_ITERATOR] === 'function') {
+        return readAsyncIterableValue(response, value, context);
+      }
+      return readObject(response, value, context);
+    }
     if (isArray(value)) {
       return readArray(response, value, context);
     }
@@ -1267,30 +1280,7 @@ function readData(
     }
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
-      const iterator = iteratorFn.call(value);
-      // $FlowFixMe[invalid-compare]
-      if (iterator === value) {
-        // A single-shot iterator is drained into the Result once and handed
-        // to every consumer as an iterator over the items.
-        const items = readArray(
-          response,
-          getIteratorEntries(result, iterator),
-          context,
-        );
-        // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
-        const read = items[Symbol.iterator]();
-        models.set(value, read);
-        return read;
-      }
-      // An iterable renders as its items. One that yields a self-iterator,
-      // such as a generator, is drained into the Result once.
-      return readArray(
-        response,
-        isSelfIterator(iterator)
-          ? getIteratorEntries(result, iterator)
-          : Array.from(iterator as any),
-        context,
-      );
+      return readIterable(response, value, iteratorFn, context);
     }
     if (
       typeof ReadableStream === 'function' &&
@@ -1307,21 +1297,9 @@ function readData(
       return replayed;
     }
     if (typeof value[ASYNC_ITERATOR] === 'function') {
-      return readAsyncIterable(
-        response,
-        value,
-        item =>
-          readStreamedValue(response, item, () =>
-            readData(response, item, context, {}, ''),
-          ),
-        false,
-      );
+      return readAsyncIterableValue(response, value, context);
     }
-    const proto = getPrototypeOf(value);
-    if (
-      proto !== ObjectPrototype &&
-      (proto === null || getPrototypeOf(proto) !== null)
-    ) {
+    if (proto === null || getPrototypeOf(proto) !== null) {
       throw new Error(
         'Only plain objects, and a few built-ins, can be passed to Client Components ' +
           'from Server Components. Classes or null prototypes are not supported.' +
@@ -1381,6 +1359,55 @@ function readData(
     return value;
   }
   return value;
+}
+
+function readIterable(
+  response: ResultResponse,
+  value: Object,
+  iteratorFn: () => ?Iterator<any>,
+  context: KeyContext,
+): any {
+  const result = response._result;
+  const iterator: any = iteratorFn.call(value);
+  // $FlowFixMe[invalid-compare]
+  if (iterator === value) {
+    // A single-shot iterator is drained into the Result once and handed
+    // to every consumer as an iterator over the items.
+    const items = readArray(
+      response,
+      getIteratorEntries(result, iterator),
+      context,
+    );
+    // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
+    const read = items[Symbol.iterator]();
+    response._models.set(value, read);
+    return read;
+  }
+  // An iterable renders as its items. One that yields a self-iterator,
+  // such as a generator, is drained into the Result once.
+  return readArray(
+    response,
+    isSelfIterator(iterator)
+      ? getIteratorEntries(result, iterator)
+      : Array.from(iterator as any),
+    context,
+  );
+}
+
+function readAsyncIterableValue(
+  response: ResultResponse,
+  value: Object,
+  context: KeyContext,
+): any {
+  return readAsyncIterable(
+    response,
+    value,
+    item =>
+      readStreamedValue(response, item, () =>
+        readData(response, item, context, {}, ''),
+      ),
+    false,
+  );
 }
 
 function createObjectCopy(): {[key: string]: any} {
