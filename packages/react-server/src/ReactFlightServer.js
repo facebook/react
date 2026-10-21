@@ -135,6 +135,7 @@ import {
   createResultObject,
   getIteratorEntries,
   subscribeToAbort,
+  isPureData,
   getStreamReplay,
   getAsyncIterableReplay,
   createReplayReadableStream,
@@ -2385,6 +2386,89 @@ function warnForMissingKey(
   }
 }
 
+// Emits a container the Result reader found to be pure data as one row,
+// encoded by JSON.stringify without the per-value walk. Every object inside
+// is still recorded by its path in that row, so a later reference to one of
+// them dedupes as it would have. Returns -1 when something inside was
+// already written elsewhere: emitting it again would give the client a
+// second copy, so the container takes the regular path instead.
+function outlinePureData(request: Request, value: Object): number {
+  const writtenObjects = request.writtenObjects;
+  const id = request.nextChunkId;
+  const reference = serializeByValueID(id);
+  if (!recordPureData(writtenObjects, value, reference, true)) {
+    recordPureData(writtenObjects, value, reference, false);
+    return -1;
+  }
+  request.nextChunkId++;
+  request.pendingChunks++;
+  writtenObjects.set(value, reference);
+  const json = stringify(value);
+  serializedSize += json.length;
+  emitModelChunk(request, id, json);
+  return id;
+}
+
+// Records (or on failure, removes) the references of the containers inside a
+// pure container. A property name with a colon is not addressable, as in
+// renderModelDestructive; what it holds is still checked for prior writes.
+function recordPureData(
+  writtenObjects: WeakMap<Reference, string>,
+  container: Object,
+  reference: null | string,
+  record: boolean,
+): boolean {
+  if (isArray(container)) {
+    for (let i = 0; i < container.length; i++) {
+      const child = container[i];
+      if (typeof child === 'object' && child !== null) {
+        const childReference = reference === null ? null : reference + ':' + i;
+        if (
+          !recordPureDataChild(writtenObjects, child, childReference, record)
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  const object: {[key: string]: any} = container;
+  const keys = Object.keys(object);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const child = object[key];
+    if (typeof child === 'object' && child !== null) {
+      const childReference =
+        reference === null || key.indexOf(':') !== -1
+          ? null
+          : reference + ':' + key;
+      if (!recordPureDataChild(writtenObjects, child, childReference, record)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function recordPureDataChild(
+  writtenObjects: WeakMap<Reference, string>,
+  child: Object,
+  reference: null | string,
+  record: boolean,
+): boolean {
+  if (record) {
+    if (writtenObjects.has(child)) {
+      return false;
+    }
+    if (reference !== null) {
+      writtenObjects.set(child, reference);
+    }
+  } else if (reference !== null && writtenObjects.get(child) === reference) {
+    writtenObjects.delete(child);
+  }
+  return recordPureData(writtenObjects, child, reference, record);
+}
+
 function renderFragment(
   request: Request,
   task: Task,
@@ -4391,6 +4475,20 @@ function renderModelDestructive(
 
     const writtenObjects = request.writtenObjects;
     const existingReference = writtenObjects.get(value);
+    const serializedResult = request.result;
+    if (
+      existingReference === undefined &&
+      serializedResult !== null &&
+      (task.keyPath === null || !isArray(value)) &&
+      isPureData(serializedResult, value)
+    ) {
+      // A consumer of the Result read this container and found nothing in it
+      // that Flight encodes differently from JSON.
+      const pureId = outlinePureData(request, value);
+      if (pureId !== -1) {
+        return serializeByValueID(pureId);
+      }
+    }
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
       // A weak-pending thenable may never emit, so its reference is marked

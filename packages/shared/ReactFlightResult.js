@@ -132,6 +132,11 @@ export type Result<T> = {
   iteratorEntries: null | WeakMap<Object, Array<mixed>>,
   // Streams and async iterables, pulled once and replayed to every consumer.
   replays: null | WeakMap<Object, Replay>,
+  // Large containers a consumer read and found to be data that JSON encodes
+  // exactly as Flight would: plain objects and arrays of strings that don't
+  // start with "$", finite numbers other than -0, booleans and null. The
+  // serializer can emit such a container with JSON.stringify.
+  pureData: null | WeakSet<Object>,
   aborted: boolean,
   abortReason: mixed,
   abortListeners: null | Array<(reason: mixed) => void>,
@@ -180,6 +185,7 @@ export function createResultObject<T>(
     checkTainted: null as any,
     iteratorEntries: null,
     replays: null,
+    pureData: null,
     aborted: false,
     abortReason: undefined,
     abortListeners: null,
@@ -214,6 +220,19 @@ export function getExpansion(
   element: ReactElement,
 ): void | Expansion {
   return result.expansions.get(element);
+}
+
+export function markPureData(result: Result<any>, container: Object): void {
+  let pureData = result.pureData;
+  if (pureData === null) {
+    result.pureData = pureData = new WeakSet();
+  }
+  pureData.add(container);
+}
+
+export function isPureData(result: Result<any>, container: Object): boolean {
+  const pureData = result.pureData;
+  return pureData !== null && pureData.has(container);
 }
 
 export function retainResult(result: Result<any>): void {

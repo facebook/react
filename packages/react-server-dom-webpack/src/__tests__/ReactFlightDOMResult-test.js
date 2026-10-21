@@ -547,6 +547,102 @@ describe('ReactFlightDOMResult', () => {
     expect(root.promise.reason.digest).toBe('digest');
   });
 
+  it('serializes pure data the in-process consumer read as one JSON row', async () => {
+    const components = createClientComponents();
+    const posts = [];
+    for (let i = 0; i < 20; i++) {
+      posts.push({
+        id: i,
+        title: 'Post ' + i,
+        tags: ['a', 'b'],
+        content: {nodeType: 'doc', data: {}, runs: [{value: 'x', marks: []}]},
+      });
+    }
+    // An object shared inside a container keeps that container on the
+    // regular path, since one JSON row would hold two copies of it.
+    const category = {name: 'engineering', slug: 'eng'};
+    const shared = [];
+    for (let i = 0; i < 20; i++) {
+      shared.push({id: i, category, content: posts[i].content});
+    }
+    // Values Flight encodes differently from JSON keep the regular path.
+    const special = {
+      dollar: '$money',
+      negativeZero: -0,
+      nan: NaN,
+      holes: [1, , 3], // eslint-disable-line no-sparse-arrays
+      undef: [undefined],
+      proto: {__proto__: 'own'},
+      big: 10n,
+      date: new Date(0),
+    };
+    for (let i = 0; i < 40; i++) {
+      special['k' + i] = {i};
+    }
+    const model = {
+      element: ReactServer.createElement(components.Show, {
+        posts,
+        shared,
+        special,
+      }),
+      later: {category, post: posts[3], run: posts[5].content.runs[0]},
+    };
+    const result = ReactServerDOMServer.renderToResult(model);
+    const inProcess = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    await inProcess;
+    const readable = new Stream.PassThrough();
+    let wire = '';
+    readable.on('data', chunk => (wire += chunk.toString()));
+    await serverAct(() => {
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    const streamed = await ReactServerDOMClient.createFromNodeStream(
+      Stream.Readable.from([Buffer.from(wire)]),
+      components.serverConsumerManifest,
+    );
+    expect(wire).toContain(':' + JSON.stringify(posts) + '\n');
+    expect(wire).not.toContain(JSON.stringify(shared));
+    expect(wire).toContain('"$$money"');
+    expect(wire).toContain('"$-0"');
+    expect(wire).toContain('"$NaN"');
+    expect(wire).toContain('"$undefined"');
+    expect(wire).toContain('"$n10"');
+    await serverAct(() => {});
+    const element =
+      streamed.element.$$typeof === Symbol.for('react.lazy')
+        ? streamed.element._init(streamed.element._payload)
+        : streamed.element;
+    const props = element.props;
+    expect(props.posts).toEqual(posts);
+    expect(props.shared).toEqual(shared);
+    expect(props.special.dollar).toBe('$money');
+    expect(Object.is(props.special.negativeZero, -0)).toBe(true);
+    expect(props.special.nan).toBe(NaN);
+    expect(props.special.holes[1]).toBe(undefined);
+    expect(props.special.undef[0]).toBe(undefined);
+    expect(props.special.big).toBe(10n);
+    // Sharing survives: inside a container that stayed on the regular path,
+    // and through references into the JSON row.
+    expect(props.shared[1].category).toBe(props.shared[0].category);
+    expect(streamed.later.category).toBe(props.shared[0].category);
+    expect(streamed.later.post).toBe(props.posts[3]);
+    expect(streamed.later.run).toBe(props.posts[5].content.runs[0]);
+    expect(props.shared[2].content).toBe(props.posts[2].content);
+    const direct = await readDirect({
+      model,
+      components,
+      scheduler: {hasPending: () => false},
+    });
+    expect(await FlightOracle.normalize(streamed, components)).toEqual(
+      await FlightOracle.normalize(await direct.response, components),
+    );
+  });
+
   it('hands pure data to the in-process consumer by identity', async () => {
     const components = createClientComponents();
     const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};
