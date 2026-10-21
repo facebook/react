@@ -629,6 +629,11 @@ export type Request = {
   // Detaches this request from the Result's hint and abort listeners once it
   // is done, so the Result does not keep a finished request's state alive.
   unsubscribe: null | (() => void),
+  // The rejected expansion this request last read, so that its error, which
+  // the Result already reported, is not reported a second time. Keyed by the
+  // thrown value itself because a component may throw a primitive, which
+  // errorDigests cannot hold.
+  lastRejectedExpansion: null | Expansion,
   nextChunkId: number,
   pendingChunks: number,
   abortableTasks: Set<Task>,
@@ -766,6 +771,7 @@ function RequestInstance(
   this.context = context;
   this.result = result;
   this.unsubscribe = null;
+  this.lastRejectedExpansion = null;
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.abortableTasks = abortSet;
@@ -1910,7 +1916,7 @@ function renderFunctionComponent<Props>(
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
     if (request.result !== null) {
-      result = readExpansion(request.result, task.model as any);
+      result = readExpansion(request, request.result, task.model as any);
       // $FlowFixMe[constant-condition]
     } else if (supportsComponentStorage) {
       // Run the component in an Async Context that tracks the current owner.
@@ -1947,7 +1953,7 @@ function renderFunctionComponent<Props>(
     prepareToUseHooksForComponent(prevThenableState, null);
     if (request.result !== null) {
       // task.model is the element being rendered; see outlineTask.
-      result = readExpansion(request.result, task.model as any);
+      result = readExpansion(request, request.result, task.model as any);
     } else {
       // The secondArg is always undefined in Server Components since refs error early.
       const secondArg = undefined;
@@ -2035,7 +2041,11 @@ function renderFunctionComponent<Props>(
 // Returns the component's output for this element from the Result's ledger,
 // expanding it now if no consumer has yet. Suspends the caller on a pending
 // expansion by throwing it; it is a thenable.
-function readExpansion(result: Result<any>, element: ReactElement): any {
+function readExpansion(
+  request: Request,
+  result: Result<any>,
+  element: ReactElement,
+): any {
   let expansion = result.expansions.get(element);
   if (expansion === undefined) {
     expansion = startExpansion(result, element);
@@ -2046,6 +2056,7 @@ function readExpansion(result: Result<any>, element: ReactElement): any {
     case EXPANSION_PENDING:
       throw expansion;
     default:
+      request.lastRejectedExpansion = expansion;
       throw expansion.reason;
   }
 }
@@ -4909,10 +4920,17 @@ function logRecoverableError(
   task: Task | null, // DEV-only
 ): string {
   const result = request.result;
-  if (result !== null && typeof error === 'object' && error !== null) {
-    const knownDigest = result.errorDigests.get(error);
-    if (knownDigest !== undefined) {
-      return knownDigest;
+  if (result !== null) {
+    const rejected = request.lastRejectedExpansion;
+    if (rejected !== null && rejected.reason === error) {
+      request.lastRejectedExpansion = null;
+      return rejected.digest == null ? '' : rejected.digest;
+    }
+    if (typeof error === 'object' && error !== null) {
+      const knownDigest = result.errorDigests.get(error);
+      if (knownDigest !== undefined) {
+        return knownDigest;
+      }
     }
   }
   const prevRequest = currentRequest;

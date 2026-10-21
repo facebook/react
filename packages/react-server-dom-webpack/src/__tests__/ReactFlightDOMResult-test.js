@@ -844,6 +844,56 @@ describe('ReactFlightDOMResult', () => {
     });
   });
 
+  it('reports a Server Component that throws a primitive once across consumers', async () => {
+    const components = createClientComponents();
+    const reported = [];
+    function ThrowsUndefined() {
+      throw undefined; // eslint-disable-line no-throw-literal
+    }
+    function ThrowsString() {
+      throw 'plain string'; // eslint-disable-line no-throw-literal
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      {
+        a: ReactServer.createElement(ThrowsUndefined, null),
+        b: ReactServer.createElement(ThrowsString, null),
+      },
+      {
+        onError(error) {
+          reported.push(error);
+          return 'digest:' + String(error);
+        },
+      },
+    );
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const readable = new Stream.PassThrough();
+    await serverAct(() => {
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    const streamed = await ReactServerDOMClient.createFromNodeStream(
+      readable,
+      components.serverConsumerManifest,
+    );
+    expect(reported).toEqual([undefined, 'plain string']);
+    function digestOf(lazy) {
+      try {
+        lazy._init(lazy._payload);
+      } catch (error) {
+        return error.digest;
+      }
+      return undefined;
+    }
+    expect(digestOf(root.a)).toBe('digest:undefined');
+    expect(digestOf(root.b)).toBe('digest:plain string');
+    expect(digestOf(streamed.a)).toBe('digest:undefined');
+    expect(digestOf(streamed.b)).toBe('digest:plain string');
+  });
+
   it('serializes a Result with errors the same as rendering the model directly', async () => {
     for (let seed = 1; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {allowErrors: true});
