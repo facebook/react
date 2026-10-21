@@ -20,14 +20,10 @@ const dynamicFlags: DynamicExportsType = dynamicFlagsUntyped as any;
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  enableEffectEventMutationPhase,
   enableObjectFiber,
   passChildrenWhenCloningPersistedNodes,
-  enableFragmentRefs,
-  enableFragmentRefsScrollIntoView,
-  enableFragmentRefsInstanceHandles,
-  enableFragmentRefsTextNodes,
   enableViewTransitionForPersistenceMode,
+  enableConditionalUseWarning,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -39,8 +35,9 @@ export const disableLegacyContextForFunctionComponents: boolean = false;
 export const disableLegacyMode: boolean = false;
 export const disableSchedulerTimeoutInWorkLoop: boolean = false;
 export const disableTextareaChildren: boolean = false;
-export const enableAsyncDebugInfo: boolean = true;
 export const enableAsyncIterableChildren: boolean = false;
+export const enableFlightWeakThenables: boolean = false;
+export const enableFlightObjectReferences: boolean = false;
 export const enableCPUSuspense: boolean = true;
 export const enableCreateEventHandleAPI: boolean = false;
 export const enableMoveBefore: boolean = true;
@@ -62,7 +59,6 @@ export const enableSuspenseAvoidThisFallback: boolean = false;
 export const enableSuspenseCallback: boolean = true;
 export const enableTaint: boolean = true;
 export const enableTransitionTracing: boolean = false;
-export const enableTrustedTypesIntegration: boolean = true;
 export const enableUpdaterTracking: boolean = __PROFILE__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
@@ -84,7 +80,6 @@ export const enablePerformanceIssueReporting: boolean =
   enableComponentPerformanceTrack;
 export const enableInternalInstanceMap: boolean = false;
 export const enableOptimisticKey: boolean = false;
-export const enableParallelTransitions: boolean = false;
 
 export const eprh_enableUseKeyedStateCompilerLint: boolean = false;
 export const eprh_enableVerboseNoSetStateInEffectCompilerLint: boolean = false;

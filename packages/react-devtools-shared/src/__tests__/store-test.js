@@ -129,11 +129,133 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(`[root]`);
   });
 
+  it('throws when a transition timeline is requested during initial paint', () => {
+    const errorListener = jest.fn();
+    store.addListener('error', errorListener);
+
+    expect(() =>
+      store.getSuspendableDocumentOrderSuspenseTransition(false, 1),
+    ).toThrow(
+      'Cannot get a transition timeline during the initial paint. This is a bug in React DevTools.',
+    );
+    expect(errorListener).toHaveBeenCalledTimes(1);
+
+    store.removeListener('error', errorListener);
+  });
+
+  // @reactVersion >= 18.0
+  it('throws before removing a node that is not a child of its parent', () => {
+    function FirstChild() {
+      return null;
+    }
+    function SecondChild() {
+      return null;
+    }
+    function Parent({showFirstChild}) {
+      return (
+        <>
+          {showFirstChild && <FirstChild />}
+          <SecondChild />
+        </>
+      );
+    }
+
+    act(() => render(<Parent showFirstChild={true} />));
+
+    const parent = store.getElementAtIndex(0);
+    expect(parent.displayName).toBe('Parent');
+    const firstChildIndex = parent.children.findIndex(id => {
+      const child = store.getElementByID(id);
+      return child !== null && child.displayName === 'FirstChild';
+    });
+    expect(firstChildIndex).not.toBe(-1);
+    const firstChildID = parent.children[firstChildIndex];
+
+    // Corrupt only the frontend relationship. The removal operation below is
+    // still produced canonically by rendering React.
+    parent.children.splice(firstChildIndex, 1);
+
+    const errorListener = jest.fn();
+    store.addListener('error', errorListener);
+    let caughtError = null;
+    try {
+      act(() => render(<Parent showFirstChild={false} />));
+    } catch (error) {
+      caughtError = error;
+    } finally {
+      // The test Bridge invokes listeners synchronously, so discard the batch
+      // whose Store listener intentionally threw.
+      bridge._messageQueue.length = 0;
+    }
+
+    const expectedMessage =
+      `Cannot remove node "${firstChildID}" from parent "${parent.id}" ` +
+      `because it is not a child of the parent.`;
+    expect(caughtError).toMatchObject({message: expectedMessage});
+    expect(errorListener).toHaveBeenCalledWith(caughtError);
+    expect(store.containsElement(firstChildID)).toBe(true);
+
+    parent.children.splice(firstChildIndex, 0, firstChildID);
+    store.removeListener('error', errorListener);
+  });
+
+  // @reactVersion >= 18.0
+  it('receives operations queued while the frontend transport reconnects', () => {
+    const App = ({children}) => children ?? null;
+    const Parent = ({children}) => children ?? null;
+    const Child = () => null;
+
+    act(() => render(<App />));
+
+    const bridgeWall = (bridge.wall: any);
+
+    bridgeWall.disconnect();
+    try {
+      act(() =>
+        render(
+          <App>
+            <Parent />
+          </App>,
+        ),
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <App>
+      `);
+    } finally {
+      bridgeWall.reconnect();
+    }
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <Parent>
+    `);
+
+    act(() =>
+      render(
+        <App>
+          <Parent>
+            <Child />
+          </Parent>
+        </App>,
+      ),
+    );
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <Parent>
+              <Child>
+    `);
+  });
+
   // This test is not the same cause as what's reported on GitHub,
   // but the resulting behavior (owner mounting after descendant) is the same.
   // Thec ase below is admittedly contrived and relies on side effects.
   // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
-  // See https://github.com/facebook/react/issues/21445
+  // See https://github.com/react/react/issues/21445
   // @reactVersion >= 18.0
   it('should handle when a component mounts before its owner', async () => {
     const promise = new Promise(resolve => {});
@@ -2516,7 +2638,7 @@ describe('Store', () => {
       });
     });
 
-    // In React 19, JSX warnings were moved into the renderer - https://github.com/facebook/react/pull/29088
+    // In React 19, JSX warnings were moved into the renderer - https://github.com/react/react/pull/29088
     // The warning is moved to the Child instead of the Parent.
     // @reactVersion >= 19.0.1
     it('from react get counted [React >= 19.0.1]', async () => {
@@ -2773,7 +2895,7 @@ describe('Store', () => {
       expect(store.componentWithWarningCount).toBe(0);
     });
 
-    // Regression test for https://github.com/facebook/react/issues/23202
+    // Regression test for https://github.com/react/react/issues/23202
     // @reactVersion >= 18.0
     it('suspense boundary children should not double unmount and error', async () => {
       async function fakeImport(result) {

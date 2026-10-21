@@ -134,6 +134,9 @@ import {
   readPreviousThenableFromState,
   getActionStateCount,
   getActionStateMatchingIndex,
+  createRecoverableError,
+  isRecoverableError,
+  cloneRecoverableErrorAsFatal,
 } from './ReactFizzHooks';
 import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
 import {
@@ -173,6 +176,7 @@ import {
   REACT_VIEW_TRANSITION_TYPE,
   REACT_ACTIVITY_TYPE,
   REACT_OPTIMISTIC_KEY,
+  REACT_RECOVERABLE_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -181,8 +185,8 @@ import {
   enableScopeAPI,
   enableAsyncIterableChildren,
   enableViewTransition,
+  enableViewTransitionParentEnterExit,
   enableFizzBlockingRender,
-  enableAsyncDebugInfo,
   enableCPUSuspense,
 } from 'shared/ReactFeatureFlags';
 
@@ -190,6 +194,7 @@ import assign from 'shared/assign';
 import noop from 'shared/noop';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
+import {REACT_RECOVERABLE_DIGEST} from 'shared/ReactRecoverable';
 import {
   SuspenseException,
   getSuspendedThenable,
@@ -370,6 +375,12 @@ const CLOSING = 12;
 const CLOSED = 13;
 const STALLED_DEV = 14;
 
+// Passed to renderLifetimeController.abort(). Nothing reads the reason, but a
+// call to abort() without one constructs an AbortError DOMException. Capturing
+// the stack trace dominates that cost, and the cost grows with the depth of the
+// stack.
+const RENDER_ENDED = 'The render ended.';
+
 export opaque type Request = {
   destination: null | Destination,
   flushScheduled: boolean,
@@ -407,6 +418,9 @@ export opaque type Request = {
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a default error message in production
   onError: (error: mixed, errorInfo: ThrownInfo) => ?string,
+  // onBrowserBailout is called when Fizz recovers by intentionally deferring
+  // rendering to the browser.
+  onBrowserBailout: (error: mixed, errorInfo: ThrownInfo) => void,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
   onAllReady: () => void,
@@ -418,6 +432,11 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
+  // Aborted once the render ends, whether it completed, failed fatally or was
+  // aborted. Bounds the lifetime of anything that must not outlive the render.
+  // Null until attachAbortSignal creates it, so a render that is given no
+  // signal constructs no controller.
+  renderLifetimeController: null | AbortController,
   // Form state that was the result of an MPA submission, if it was provided.
   formState: null | ReactFormState<any, any>,
   // DEV-only, warning dedupe
@@ -528,6 +547,7 @@ function RequestInstance(
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onBrowserBailout: void | ((error: mixed, errorInfo: ErrorInfo) => void),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
@@ -564,10 +584,13 @@ function RequestInstance(
   this.trackedPostpones = null;
   this.postponedState = null;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
+  this.onBrowserBailout =
+    onBrowserBailout === undefined ? noop : onBrowserBailout;
   this.onAllReady = onAllReady === undefined ? noop : onAllReady;
   this.onShellReady = onShellReady === undefined ? noop : onShellReady;
   this.onShellError = onShellError === undefined ? noop : onShellError;
   this.onFatalError = onFatalError === undefined ? noop : onFatalError;
+  this.renderLifetimeController = null;
   this.formState = formState === undefined ? null : formState;
   if (__DEV__) {
     this.didWarnForKey = null;
@@ -581,6 +604,7 @@ export function createRequest(
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onBrowserBailout: void | ((error: mixed, errorInfo: ErrorInfo) => void),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
@@ -598,6 +622,7 @@ export function createRequest(
     rootFormatContext,
     progressiveChunkSize,
     onError,
+    onBrowserBailout,
     onAllReady,
     onShellReady,
     onShellError,
@@ -648,6 +673,7 @@ export function createPrerenderRequest(
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onBrowserBailout: void | ((error: mixed, errorInfo: ErrorInfo) => void),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
@@ -660,6 +686,7 @@ export function createPrerenderRequest(
     rootFormatContext,
     progressiveChunkSize,
     onError,
+    onBrowserBailout,
     onAllReady,
     onShellReady,
     onShellError,
@@ -680,6 +707,7 @@ export function resumeRequest(
   postponedState: PostponedState,
   renderState: RenderState,
   onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onBrowserBailout: void | ((error: mixed, errorInfo: ErrorInfo) => void),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
@@ -696,6 +724,7 @@ export function resumeRequest(
     postponedState.rootFormatContext,
     postponedState.progressiveChunkSize,
     onError,
+    onBrowserBailout,
     onAllReady,
     onShellReady,
     onShellError,
@@ -774,6 +803,7 @@ export function resumeAndPrerenderRequest(
   postponedState: PostponedState,
   renderState: RenderState,
   onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onBrowserBailout: void | ((error: mixed, errorInfo: ErrorInfo) => void),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
@@ -784,6 +814,7 @@ export function resumeAndPrerenderRequest(
     postponedState,
     renderState,
     onError,
+    onBrowserBailout,
     onAllReady,
     onShellReady,
     onShellError,
@@ -1316,6 +1347,14 @@ function encodeErrorForBoundary(
 ) {
   boundary.errorDigest = digest;
   if (__DEV__) {
+    if (isRecoverableError(error)) {
+      boundary.errorMessage = wasAborted
+        ? 'Switched to client rendering because the server render was aborted ' +
+          'with a request to render on the client.'
+        : 'Switched to client rendering because a component requested it.';
+      boundary.errorComponentStack = thrownInfo.componentStack;
+      return;
+    }
     let message, stack;
     // In dev we additionally encode the error message and component stack on the boundary
     if (error instanceof Error) {
@@ -1346,6 +1385,11 @@ function logRecoverableError(
   errorInfo: ThrownInfo,
   debugTask: null | ConsoleTask,
 ): ?string {
+  if (isRecoverableError(error)) {
+    logBrowserBailout(request, error, errorInfo, debugTask);
+    return REACT_RECOVERABLE_DIGEST;
+  }
+
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
   const onError = request.onError;
@@ -1364,7 +1408,26 @@ function logRecoverableError(
     }
     return;
   }
-  return errorDigest;
+  // An empty digest is reserved for React's internal client-render signal.
+  // Historically an empty digest was omitted from the wire format, so
+  // normalizing it to undefined preserves the existing user-space semantics.
+  return errorDigest === '' ? undefined : errorDigest;
+}
+
+function logBrowserBailout(
+  request: Request,
+  error: mixed,
+  errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
+): void {
+  // If this callback errors, we intentionally let that error bubble up to
+  // become a fatal error, matching the behavior of onError.
+  const onBrowserBailout = request.onBrowserBailout;
+  if (__DEV__ && debugTask) {
+    debugTask.run(onBrowserBailout.bind(null, error, errorInfo));
+  } else {
+    onBrowserBailout(error, errorInfo);
+  }
 }
 
 function fatalError(
@@ -1393,12 +1456,17 @@ function fatalError(
     }
     onFatalError(error);
   }
+  endRenderLifetime(request);
   if (request.destination !== null) {
     request.status = CLOSED;
     closeWithError(request.destination, error);
   } else {
     request.status = CLOSING;
-    request.fatalError = error;
+    // abort() already stored the reason that every remaining task must
+    // observe. This error may only be a fatal diagnostic derived from it.
+    if (!request.aborted) {
+      request.fatalError = error;
+    }
   }
 }
 
@@ -1760,6 +1828,26 @@ function replaySuspenseBoundary(
   // We restore the same id of this boundary as was used during prerender.
   resumedBoundary.rootSegmentID = id;
 
+  const fallbackKeyPath: KeyNode = [
+    keyPath[0],
+    'Suspense Fallback',
+    keyPath[2],
+  ];
+  const trackedPostpones = request.trackedPostpones;
+  if (trackedPostpones !== null) {
+    const fallbackReplayNode: ReplayNode = [
+      fallbackKeyPath[1],
+      fallbackKeyPath[2],
+      [] as Array<ReplayNode>,
+      null,
+    ];
+    trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
+    resumedBoundary.tracked = {
+      contentKeyPath: keyPath,
+      fallbackNode: fallbackReplayNode,
+    };
+  }
+
   // We can reuse the current context and task to render the content immediately without
   // context switching. We just need to temporarily switch which boundary and replay node
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
@@ -1832,12 +1920,6 @@ function replaySuspenseBoundary(
     task.formatContext = prevContext;
     task.row = prevRow;
   }
-
-  const fallbackKeyPath: KeyNode = [
-    keyPath[0],
-    'Suspense Fallback',
-    keyPath[2],
-  ];
 
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
@@ -2194,6 +2276,10 @@ function renderSuspenseList(
     const iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
       const iterator = iteratorFn.call(children);
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateIterable(task, children, -1, iterator, iteratorFn);
@@ -2203,12 +2289,20 @@ function renderSuspenseList(
         // a full set to be loaded up front to support Async Iterable.
         // When we have that, we shouldn't buffer anymore.
         let step = iterator.next();
+        if (request.aborted) {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
+        }
         if (!step.done) {
           const rows = [];
           do {
             rows.push(step.value);
             step = iterator.next();
           } while (!step.done);
+          if (request.aborted) {
+            // eslint-disable-next-line no-throw-literal
+            throw null;
+          }
           renderSuspenseListRows(request, task, keyPath, children, revealOrder);
         }
         return;
@@ -2221,6 +2315,10 @@ function renderSuspenseList(
       const iterator: AsyncIterator<ReactNodeList> = (children as any)[
         ASYNC_ITERATOR
       ]();
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateAsyncIterable(task, children as any, -1, iterator);
@@ -2267,6 +2365,10 @@ function renderSuspenseList(
             rows.push(step.value);
             step = unwrapThenable(iterator.next());
           }
+        }
+        if (request.aborted) {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
         }
         renderSuspenseListRows(request, task, keyPath, rows, revealOrder);
         return;
@@ -2783,6 +2885,10 @@ function renderForwardRef(
     propsWithoutRef,
     ref,
   );
+  if (request.aborted) {
+    // eslint-disable-next-line no-throw-literal
+    throw null;
+  }
   const hasId = checkDidRenderIdHook();
   const actionStateCount = getActionStateCount();
   const actionStateMatchingIndex = getActionStateMatchingIndex();
@@ -2831,6 +2937,10 @@ function renderContextConsumer(
 
   const newValue = readContext(context);
   const newChildren = render(newValue);
+  if (request.aborted) {
+    // eslint-disable-next-line no-throw-literal
+    throw null;
+  }
 
   const prevKeyPath = task.keyPath;
   task.keyPath = keyPath;
@@ -2953,6 +3063,20 @@ function renderViewTransition(
     getViewTransitionClassName(props.default, props.enter),
     getViewTransitionClassName(props.default, props.exit),
     getViewTransitionClassName(props.default, props.share),
+    // Pass `undefined` (rather than the resolved class) when the prop is absent
+    // so the format context can distinguish "no parentEnter/parentExit" (which
+    // stops the relay) from an explicit "auto"/class (which continues it).
+    enableViewTransitionParentEnterExit && props.parentEnter !== undefined
+      ? getViewTransitionClassName(props.default, props.parentEnter)
+      : undefined,
+    enableViewTransitionParentEnterExit && props.parentExit !== undefined
+      ? getViewTransitionClassName(props.default, props.parentExit)
+      : undefined,
+    // A ViewTransition with an onParentEnter/onParentExit handler but no class
+    // still relays the activation to its descendants, so the relay must continue
+    // through it even though the handler itself emits no annotation.
+    enableViewTransitionParentEnterExit && props.onParentEnter != null,
+    enableViewTransitionParentEnterExit && props.onParentExit != null,
     props.name,
     autoName,
   );
@@ -3213,7 +3337,10 @@ function replayElement(
         if (
           typeof x === 'object' &&
           x !== null &&
-          (x === SuspenseException || typeof x.then === 'function')
+          (x === SuspenseException ||
+            typeof x.then === 'function' ||
+            // Rethrow so retryReplayTask can trampoline on stack overflow.
+            x.message === 'Maximum call stack size exceeded')
         ) {
           // Suspend
           if (task.node === currentNode) {
@@ -3288,7 +3415,7 @@ function validateIterable(
   if (__DEV__) {
     if (iterator === iterable) {
       // We don't support rendering Generators as props because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
+      // See https://github.com/react/react/issues/12995
       // We do support generators if they were created by a GeneratorFunction component
       // as its direct child since we can recreate those by rerendering the component
       // as needed.
@@ -3335,7 +3462,7 @@ function validateAsyncIterable(
   if (__DEV__) {
     if (iterator === iterable) {
       // We don't support rendering Generators as props because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
+      // See https://github.com/react/react/issues/12995
       // We do support generators if they were created by a GeneratorFunction component
       // as its direct child since we can recreate those by rerendering the component
       // as needed.
@@ -3534,6 +3661,10 @@ function retryNode(request: Request, task: Task): void {
     const iteratorFn = getIteratorFn(node);
     if (iteratorFn) {
       const iterator = iteratorFn.call(node);
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateIterable(task, node, childIndex, iterator, iteratorFn);
@@ -3544,11 +3675,19 @@ function retryNode(request: Request, task: Task): void {
         // TODO: This is not great but I think it's inherent to the id
         // generation algorithm.
         let step = iterator.next();
+        if (request.aborted) {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
+        }
         if (!step.done) {
           const children = [];
           do {
             children.push(step.value);
             step = iterator.next();
+            if (request.aborted) {
+              // eslint-disable-next-line no-throw-literal
+              throw null;
+            }
           } while (!step.done);
           renderChildrenArray(request, task, children, childIndex);
         }
@@ -3563,6 +3702,10 @@ function retryNode(request: Request, task: Task): void {
       const iterator: AsyncIterator<ReactNodeList> = (node as any)[
         ASYNC_ITERATOR
       ]();
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       if (iterator) {
         if (__DEV__) {
           validateAsyncIterable(task, node as any, childIndex, iterator);
@@ -3604,9 +3747,17 @@ function retryNode(request: Request, task: Task): void {
 
         if (!done) {
           let step = unwrapThenable(iterator.next());
+          if (request.aborted) {
+            // eslint-disable-next-line no-throw-literal
+            throw null;
+          }
           while (!step.done) {
             children.push(step.value);
             step = unwrapThenable(iterator.next());
+            if (request.aborted) {
+              // eslint-disable-next-line no-throw-literal
+              throw null;
+            }
           }
         }
         renderChildrenArray(request, task, children, childIndex);
@@ -3628,10 +3779,15 @@ function retryNode(request: Request, task: Task): void {
       // Clear any previous thenable state that was created by the unwrapping.
       task.thenableState = null;
       const thenable: Thenable<ReactNodeList> = maybeUsable as any;
+      const resolvedNode = unwrapThenable(thenable);
+      if (request.aborted) {
+        // eslint-disable-next-line no-throw-literal
+        throw null;
+      }
       const result = renderNodeDestructive(
         request,
         task,
-        unwrapThenable(thenable),
+        resolvedNode,
         childIndex,
       );
       return result;
@@ -3955,9 +4111,11 @@ function trackPostponedBoundary(
   boundary: SuspenseBoundary,
 ): ReplaySuspenseBoundary {
   boundary.status = POSTPONED;
-  // We need to eagerly assign it an ID because we'll need to refer to
-  // it before flushing and we know that we can't inline it.
-  boundary.rootSegmentID = request.nextSegmentId++;
+  if (boundary.rootSegmentID === -1) {
+    // Assign an ID before flushing. Resumed boundaries keep the ID already
+    // referenced by the previous prerender's HTML.
+    boundary.rootSegmentID = request.nextSegmentId++;
+  }
 
   const tracked = boundary.tracked;
   if (tracked === null) {
@@ -4221,6 +4379,32 @@ function spawnNewSuspendedRenderTask(
   );
 }
 
+function postponeNewSuspendedRenderTask(
+  request: Request,
+  task: RenderTask,
+  thenableState: ThenableState | null,
+): void {
+  // Preserve the segment rendered so far and leave a hole at this node. The
+  // request has already been aborted, so this new task must be finished now
+  // rather than scheduled for another attempt.
+  const postponedTask = spawnNewSuspendedRenderTask(
+    request,
+    task,
+    thenableState,
+  );
+  if (__DEV__) {
+    abortTaskDEV(postponedTask, request);
+  } else {
+    abortTask(postponedTask, request);
+  }
+  postponedTask.abortSet.delete(postponedTask);
+  if (__DEV__) {
+    finishAbortedTaskDEV(postponedTask, request, request.fatalError);
+  } else {
+    finishAbortedTask(postponedTask, request, request.fatalError);
+  }
+}
+
 // This is a non-destructive form of rendering a node. If it suspends it spawns
 // a new task and restores the context of this task to what it was before.
 function renderNode(
@@ -4366,9 +4550,45 @@ function renderNode(
           : thrownValue;
 
       if (request.aborted) {
-        // We are aborting so we can just bubble up to the task by falling through
+        // A postponed root cannot flush any shell and must be rendered again in
+        // full, so let it unwind instead of preserving individual holes.
+        if (
+          request.trackedPostpones !== null &&
+          task.blockedBoundary !== null
+        ) {
+          const thenableState =
+            thrownValue === SuspenseException
+              ? getThenableStateAfterSuspending()
+              : null;
+          postponeNewSuspendedRenderTask(
+            request,
+            // $FlowFixMe[incompatible-type]: Refined.
+            task,
+            thenableState,
+          );
+
+          // Restore the context. We assume that this will be restored by the inner
+          // functions in case nothing throws so we don't use "finally" here.
+          task.formatContext = previousFormatContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
+          task.context = previousContext;
+          task.keyPath = previousKeyPath;
+          task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
+          if (__DEV__) {
+            task.debugTask = previousDebugTask;
+          }
+          // Restore all active ReactContexts to what they were before.
+          switchContext(previousContext);
+          return;
+        }
+      } else if (
+        typeof x === 'object' &&
         // $FlowFixMe[invalid-compare]
-      } else if (typeof x === 'object' && x !== null) {
+        x !== null
+      ) {
         // $FlowFixMe[method-unbinding]
         if (typeof x.then === 'function') {
           const wakeable: Wakeable = x as any;
@@ -4506,19 +4726,36 @@ function erroredTask(
 
   request.allPendingTasks--;
 
-  // Report the error to a global handler.
   // We don't handle halts here because we only halt when prerendering and
   // when prerendering we should be finishing tasks not erroring them when
   // they halt or postpone
-  const errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   if (boundary === null) {
-    fatalError(request, error, errorInfo, debugTask);
+    // Recoverables can remain silent when a Suspense boundary lets us emit a
+    // shell and defer its content to a downstream renderer. At the root there
+    // is no shell to stream, so this is a fatal error and must be reported like
+    // any other root error.
+    if (isRecoverableError(error)) {
+      // This recoverable reached the root without a Suspense boundary, so
+      // report it using the fatal diagnostic while leaving the original intact.
+      const fatalRecoverableError = cloneRecoverableErrorAsFatal(error as any);
+      logRecoverableError(request, fatalRecoverableError, errorInfo, debugTask);
+      fatalError(request, fatalRecoverableError, errorInfo, debugTask);
+    } else {
+      logRecoverableError(request, error, errorInfo, debugTask);
+      fatalError(request, error, errorInfo, debugTask);
+    }
     // The shell fatally errored, so the render can never complete. Return before
     // the completeAll check below so we don't fire onAllReady for a render that
     // produced nothing. This mirrors finishAbortedTask, which also returns after
     // a fatalError on the root.
     return;
   } else {
+    const errorDigest = logRecoverableError(
+      request,
+      error,
+      errorInfo,
+      debugTask,
+    );
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
@@ -4690,7 +4927,7 @@ function abortTask(task: Task, request: Request): void {
     segment.status = ABORTED;
   }
 
-  if (__DEV__ && enableAsyncDebugInfo) {
+  if (__DEV__) {
     // Capture async debug information at the point abort begins. The task may
     // receive more data before finishAbort runs and no longer suspend at the
     // call site we need to report.
@@ -4751,19 +4988,41 @@ function finishAbortedTask(task: Task, request: Request, error: mixed): void {
   }
 
   const errorInfo = getThrownInfo(task.componentStack);
+  // Only errors materialized by use() or abort() carry this internal brand.
+  // Throwing the browser() token directly is still an application error.
+  const isRecoverableReason = isRecoverableError(error);
 
   if (boundary === null) {
     const replay: null | ReplaySet = task.replay;
     if (replay === null) {
       // We didn't complete the root so we have nothing to show. We can close
       // the request;
-      if (request.trackedPostpones !== null && segment !== null) {
+      if (
+        !isRecoverableReason &&
+        request.trackedPostpones !== null &&
+        segment !== null
+      ) {
         const trackedPostpones = request.trackedPostpones;
         // We are aborting a prerender and must treat the shell as halted
         // We log the error but we still resolve the prerender
         logRecoverableError(request, error, errorInfo, task.debugTask);
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, null, task.row, segment);
+      } else if (isRecoverableReason) {
+        // This root task cannot recover from the abort. Report a fatal clone,
+        // but keep the original branded reason on the request for other tasks.
+        const fatalRecoverableError = cloneRecoverableErrorAsFatal(
+          error as any,
+        );
+        logRecoverableError(
+          request,
+          fatalRecoverableError,
+          errorInfo,
+          task.debugTask,
+        );
+        if (request.status !== CLOSING && request.status !== CLOSED) {
+          fatalError(request, fatalRecoverableError, errorInfo, task.debugTask);
+        }
       } else {
         logRecoverableError(request, error, errorInfo, task.debugTask);
         if (request.status !== CLOSING && request.status !== CLOSED) {
@@ -4805,7 +5064,11 @@ function finishAbortedTask(task: Task, request: Request, error: mixed): void {
     // boundary the message is referring to
     const trackedPostpones = request.trackedPostpones;
     if (boundary.status !== CLIENT_RENDERED) {
-      if (trackedPostpones !== null && segment !== null) {
+      if (
+        !isRecoverableReason &&
+        trackedPostpones !== null &&
+        segment !== null
+      ) {
         // We are aborting a prerender and must halt this boundary.
         // We treat this like other postpones during prerendering
         logRecoverableError(request, error, errorInfo, task.debugTask);
@@ -4827,7 +5090,6 @@ function finishAbortedTask(task: Task, request: Request, error: mixed): void {
         errorInfo,
         task.debugTask,
       );
-      boundary.status = CLIENT_RENDERED;
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
       untrackBoundary(request, boundary);
@@ -5096,7 +5358,12 @@ function finishedTask(
       if (boundary.parentFlushed) {
         // The segment might be part of a segment that didn't flush yet, but if the boundary's
         // parent flushed, we need to schedule the boundary to be emitted.
-        request.completedBoundaries.push(boundary);
+        if (boundary.status === POSTPONED) {
+          // All tasks finished, but postponed holes still block revealing this boundary.
+          request.partialBoundaries.push(boundary);
+        } else {
+          request.completedBoundaries.push(boundary);
+        }
       }
 
       // We can now cancel any pending task on the fallback since we won't need to show it anymore.
@@ -5239,6 +5506,8 @@ function retryRenderTask(
 
   const childrenLength = segment.children.length;
   const chunkLength = segment.chunks.length;
+  // Used to detect forward progress if we hit a stack overflow below.
+  const startNode = task.node;
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -5303,6 +5572,16 @@ function retryRenderTask(
         (x as any).then(ping.resolve, ping.reject);
         return;
       }
+      if (
+        x.message === 'Maximum call stack size exceeded' &&
+        task.node !== startNode
+      ) {
+        segment.status = PENDING;
+        task.thenableState = null;
+        // Immediately schedule the task for retrying.
+        request.pingedTasks.push(task);
+        return;
+      }
     }
 
     const errorInfo = getThrownInfo(task.componentStack);
@@ -5345,6 +5624,8 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     setCurrentTaskInDEV(task);
   }
 
+  // Used to detect forward progress if we hit a stack overflow below.
+  const startNode = task.node;
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -5406,6 +5687,17 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
           thrownValue === SuspenseException
             ? getThenableStateAfterSuspending()
             : null;
+        return;
+      }
+      if (
+        x.message === 'Maximum call stack size exceeded' &&
+        task.node !== startNode
+      ) {
+        // Stack overflow after making forward progress. Retry from a fresh stack.
+        // No progress (e.g. overflow inside the component itself) falls through.
+        task.thenableState = null;
+        // Immediately schedule the task for retrying.
+        request.pingedTasks.push(task);
         return;
       }
     }
@@ -6183,9 +6475,8 @@ function flushCompletedQueues(
     if (
       request.allPendingTasks === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
-      request.completedBoundaries.length === 0
-      // We don't need to check any partially completed segments because
-      // either they have pending task or they're complete.
+      request.completedBoundaries.length === 0 &&
+      request.partialBoundaries.length === 0
     ) {
       request.flushScheduled = false;
       // We write the trailing tags but only if don't have any data to resume.
@@ -6201,6 +6492,7 @@ function flushCompletedQueues(
         }
       }
       // We're done.
+      endRenderLifetime(request);
       request.status = CLOSED;
       close(destination);
       // We need to stop flowing now because we do not want any async contexts which might call
@@ -6310,7 +6602,13 @@ export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
 export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
-    closeWithError(destination, request.fatalError);
+    let error = request.fatalError;
+    if (isRecoverableError(error)) {
+      // An aborted request keeps its original branded reason while tasks
+      // unwind. Convert it only now that the stream must receive a fatal.
+      error = cloneRecoverableErrorAsFatal(error as any);
+    }
+    closeWithError(destination, error);
     return;
   }
   if (request.status === CLOSED) {
@@ -6358,6 +6656,41 @@ function finishAbort(request: Request, abortableTasks: Set<Task>): void {
   }
 }
 
+function endRenderLifetime(request: Request): void {
+  const renderLifetimeController = request.renderLifetimeController;
+  if (renderLifetimeController !== null) {
+    renderLifetimeController.abort(RENDER_ENDED);
+  }
+}
+
+// Aborts the request when the caller's signal aborts. The render lifetime
+// bounds the listener, so the runtime removes the listener as soon as the
+// render ends. From that point on abort() returns early, so the listener has
+// nothing left to do.
+//
+// The listener has to be removed, because it would otherwise keep the whole
+// Request reachable for as long as the caller's signal lives. A composite
+// signal from AbortSignal.any() is itself retained by the runtime while it has
+// any abort listener attached.
+//
+// A request whose stream is neither consumed nor cancelled never ends, so its
+// listener stays attached for as long as the caller's signal lives.
+export function attachAbortSignal(request: Request, signal: AbortSignal): void {
+  if (signal.aborted) {
+    abort(request, signal.reason);
+    return;
+  }
+  const renderLifetimeController = new AbortController();
+  request.renderLifetimeController = renderLifetimeController;
+  signal.addEventListener(
+    'abort',
+    () => {
+      abort(request, signal.reason);
+    },
+    {signal: renderLifetimeController.signal},
+  );
+}
+
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
   if (
@@ -6368,9 +6701,18 @@ export function abort(request: Request, reason: mixed): void {
     // can be aborted. in practice this makes abort callable at most once per render.
     return;
   }
+  endRenderLifetime(request);
+  const isRecoverableReason =
+    typeof reason === 'object' &&
+    reason !== null &&
+    // $FlowFixMe[prop-missing]
+    reason.$$typeof === REACT_RECOVERABLE_TYPE;
+  // Mark the request before initializing a recoverable reason so an initializer
+  // cannot reenter abort().
   request.aborted = true;
-  const error =
-    reason === undefined
+  const error = isRecoverableReason
+    ? createRecoverableError(reason as any)
+    : reason === undefined
       ? new Error('The render was aborted by the server without a reason.')
       : typeof reason === 'object' &&
           reason !== null &&
