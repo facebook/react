@@ -1729,16 +1729,18 @@ const moves = [
   'root promise',
 ];
 
-function generateGraph(seed, {without = []} = {}) {
+function generateGraph(seed, {without = [], streamsHeldOnce = false} = {}) {
   const pick = random(seed + '/graph');
   const pickFrom = list => list[pick(list.length)];
   const allowed = moves.filter(move => !without.includes(move));
   const names = [];
   const nodes = {};
-  // Every node a move may point at. Streams, iterables and iterators are
-  // held once, and never by a stream item, which may be written more than
-  // once: the writer reads them once and does not record where it first
-  // wrote one.
+  // Every node a move may point at. A sync iterator is held once: its items
+  // are written where it is first met and a second reference would drain it
+  // again. The reply encoder reads a stream once without recording where it
+  // first wrote it, so on the reply host streams are held once too. Nothing
+  // held once is placed in a stream item, which may be written more than
+  // once.
   const targets = [];
   const single = [];
   const containers = [];
@@ -1787,6 +1789,14 @@ function generateGraph(seed, {without = []} = {}) {
     containers.push(name);
     items.push(name);
     return name;
+  };
+
+  const addStream = node => {
+    if (streamsHeldOnce) {
+      single.push(add(node, {target: false}));
+    } else {
+      add(node);
+    }
   };
 
   add({value: 'value'});
@@ -1871,21 +1881,19 @@ function generateGraph(seed, {without = []} = {}) {
         break;
       }
       case 'stream': {
-        single.push(add({stream: [item(), item()]}, {target: false}));
+        addStream({stream: [item(), item()]});
         break;
       }
       case 'canceled stream': {
-        single.push(add({stream: [item()], cancel: true}, {target: false}));
+        addStream({stream: [item()], cancel: true});
         break;
       }
       case 'byte stream': {
-        single.push(add({bytes: 1 + pick(3)}, {target: false}));
+        addStream({bytes: 1 + pick(3)});
         break;
       }
       case 'iterable': {
-        single.push(
-          add({iterable: [item(), item()], returns: item()}, {target: false}),
-        );
+        addStream({iterable: [item(), item()], returns: item()});
         break;
       }
       case 'iterator': {
@@ -2645,6 +2653,7 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
                 without: unsupportedMoves.concat(
                   host === 'reply' ? replyMoves : [],
                 ),
+                streamsHeldOnce: host === 'reply',
               }),
               family: 'graph',
               seed,
