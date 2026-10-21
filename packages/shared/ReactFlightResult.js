@@ -243,9 +243,41 @@ export const LARGE_CONTAINER_VISITS = 32;
 const PURE_DATA_MAX_DEPTH = 64;
 const ObjectPrototype = Object.prototype;
 
-// Checks a container no consumer has read yet, by the rules a reader applies
-// as it reads, and marks it when it is large pure data. A cycle, or data
-// nested deeper than any realistic page, is left to the regular path.
+// The rules of pure data, in one place for the reader, which applies them as
+// it reads, and the serializer, which checks a container nobody read yet.
+// A primitive JSON encodes as Flight would: a string not starting with "$",
+// a finite number other than -0, a boolean or null. Undefined is left out.
+export function isPurePrimitive(value: any): boolean {
+  switch (typeof value) {
+    case 'string':
+      return value.charCodeAt(0) !== 36; // '$'
+    case 'number':
+      return isFinite(value) && (value !== 0 || 1 / value > 0);
+    case 'boolean':
+      return true;
+    case 'object':
+      return value === null;
+    default:
+      return false;
+  }
+}
+
+// A container that can be pure: an array, or a plain object that is not
+// iterable or thenable. Whether it is depends on what it holds: no holes,
+// no __proto__ key, and pure values.
+export function isPureContainerShape(value: Object): boolean {
+  return (
+    isArray(value) ||
+    (getPrototypeOf(value) === ObjectPrototype &&
+      !getIteratorFn(value) &&
+      typeof (value as any)[ASYNC_ITERATOR] !== 'function' &&
+      typeof (value as any).then !== 'function')
+  );
+}
+
+// Checks a container no consumer has read yet and marks it when it is large
+// pure data. A cycle, or data nested deeper than any realistic page, is left
+// to the regular path.
 export function certifyPureData(
   result: Result<any>,
   container: Object,
@@ -261,7 +293,7 @@ export function certifyPureData(
 // The containers inside a pure container, itself included, or -1 if it is
 // not pure.
 function countPureContainers(container: Object, depth: number): number {
-  if (depth >= PURE_DATA_MAX_DEPTH) {
+  if (depth >= PURE_DATA_MAX_DEPTH || !isPureContainerShape(container)) {
     return -1;
   }
   let visits = 1;
@@ -277,14 +309,6 @@ function countPureContainers(container: Object, depth: number): number {
       visits += inner;
     }
     return visits;
-  }
-  if (
-    getPrototypeOf(container) !== ObjectPrototype ||
-    getIteratorFn(container) ||
-    typeof (container as any)[ASYNC_ITERATOR] === 'function' ||
-    typeof (container as any).then === 'function'
-  ) {
-    return -1;
   }
   const object: {[key: string]: any} = container;
   const keys = Object.keys(object);
@@ -306,18 +330,10 @@ function countPureContainers(container: Object, depth: number): number {
 }
 
 function countPureValue(value: any, depth: number): number {
-  switch (typeof value) {
-    case 'string':
-      return value.charCodeAt(0) !== 36 ? 0 : -1; // '$'
-    case 'number':
-      return isFinite(value) && (value !== 0 || 1 / value > 0) ? 0 : -1;
-    case 'boolean':
-      return 0;
-    case 'object':
-      return value === null ? 0 : countPureContainers(value, depth + 1);
-    default:
-      return -1;
+  if (typeof value === 'object' && value !== null) {
+    return countPureContainers(value, depth + 1);
   }
+  return isPurePrimitive(value) ? 0 : -1;
 }
 
 export function retainResult(result: Result<any>): void {

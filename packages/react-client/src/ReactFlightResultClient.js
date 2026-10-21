@@ -38,6 +38,7 @@ import {
   subscribeToAbort,
   markPureData,
   isPureData,
+  isPurePrimitive,
   LARGE_CONTAINER_VISITS,
 } from 'shared/ReactFlightResult';
 import {subscribeToHints} from 'shared/ReactFlightRenderContext';
@@ -492,18 +493,10 @@ function isPureLeaf(response: ResultResponse, child: any, read: any): boolean {
   if (read !== child) {
     return false;
   }
-  switch (typeof child) {
-    case 'string':
-      return child.charCodeAt(0) !== 36; // '$'
-    case 'number':
-      return isFinite(child) && (child !== 0 || 1 / child > 0);
-    case 'boolean':
-      return true;
-    case 'object':
-      return child === null || response._childPure;
-    default:
-      return false;
+  if (typeof child === 'object' && child !== null) {
+    return response._childPure;
   }
+  return isPurePrimitive(child);
 }
 
 // Fails the element being read if any value inside it was invalid.

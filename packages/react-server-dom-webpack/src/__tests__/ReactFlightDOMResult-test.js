@@ -714,8 +714,8 @@ describe('ReactFlightDOMResult', () => {
         content: {nodeType: 'doc', data: {}, runs: [{value: 'x', marks: []}]},
       });
     }
-    // An object shared inside a container keeps that container on the
-    // regular path, since one JSON row would hold two copies of it.
+    // Objects shared inside a container, or with one written before, are
+    // referred to from the JSON row as the regular path would.
     const category = {name: 'engineering', slug: 'eng'};
     const shared = [];
     for (let i = 0; i < 20; i++) {
@@ -769,7 +769,9 @@ describe('ReactFlightDOMResult', () => {
       components.serverConsumerManifest,
     );
     expect(wire).toContain(':' + JSON.stringify(posts) + '\n');
-    expect(wire).not.toContain(JSON.stringify(shared));
+    expect(wire).toMatch(
+      /"category":"\$[0-9a-f]+:0:category","content":"\$[0-9a-f]+:1:content"/,
+    );
     expect(wire).toContain('"$$money"');
     expect(wire).toContain('"$-0"');
     expect(wire).toContain('"$NaN"');
@@ -796,7 +798,11 @@ describe('ReactFlightDOMResult', () => {
     expect(streamed.later.post).toBe(props.posts[3]);
     expect(streamed.later.run).toBe(props.posts[5].content.runs[0]);
     expect(props.shared[2].content).toBe(props.posts[2].content);
-    let item = streamed.list.props.children[7];
+    const list =
+      streamed.list.$$typeof === Symbol.for('react.lazy')
+        ? streamed.list._init(streamed.list._payload)
+        : streamed.list;
+    let item = list.props.children[7];
     if (item.$$typeof === Symbol.for('react.lazy')) {
       item = item._init(item._payload);
     }

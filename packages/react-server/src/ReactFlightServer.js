@@ -653,9 +653,6 @@ export type Request = {
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
   writtenObjects: WeakMap<Reference, string>,
-  // The containers emitted as pure-data rows, by the marker their inner
-  // objects are recorded under in writtenObjects (see outlinePureData).
-  pureDataRows: null | Map<string, Object>,
   writtenImportStrings: Map<string, string>,
   // The combined length of the keys in writtenImportStrings.
   writtenImportStringsSize: number,
@@ -790,7 +787,6 @@ function RequestInstance(
   this.writtenClientReferences = new Map();
   this.writtenServerReferences = new Map();
   this.writtenObjects = new WeakMap();
-  this.pureDataRows = null;
   this.writtenImportStrings = new Map();
   this.writtenImportStringsSize = 0;
   this.temporaryReferences = temporaryReferences;
@@ -2408,150 +2404,35 @@ function warnForMissingKey(
 // them dedupes as it would have. Returns -1 when something inside was
 // already written elsewhere: emitting it again would give the client a
 // second copy, so the container takes the regular path instead.
+// Emits a pure container as one JSON row. The replacer does the one thing
+// the regular path would still have to do for the objects inside: refer to
+// one that was written before, and record the path of each new one, so a
+// later occurrence anywhere can refer into this row.
 function outlinePureData(request: Request, value: Object): number {
   const writtenObjects = request.writtenObjects;
-  const id = request.nextChunkId;
-  const reference = serializeByValueID(id);
-  // The objects inside are recorded under one shared marker, a reference
-  // with a trailing colon, which no path has. Their own path is only worked
-  // out if something refers to one of them later; see resolveReference.
-  const marker = reference + ':';
-  if (!recordPureData(writtenObjects, value, marker, true)) {
-    recordPureData(writtenObjects, value, marker, false);
-    return -1;
-  }
-  let pureDataRows = request.pureDataRows;
-  if (pureDataRows === null) {
-    pureDataRows = request.pureDataRows = new Map();
-  }
-  pureDataRows.set(marker, value);
-  request.nextChunkId++;
+  const id = request.nextChunkId++;
   request.pendingChunks++;
-  writtenObjects.set(value, reference);
-  const json = stringify(value);
+  writtenObjects.set(value, serializeByValueID(id));
+  function dedupe(this: any, key: string, child: any): any {
+    if (typeof child !== 'object' || child === null || child === value) {
+      return child;
+    }
+    const existingReference = writtenObjects.get(child);
+    if (existingReference !== undefined) {
+      return existingReference;
+    }
+    if (key.indexOf(':') === -1) {
+      const parentReference = writtenObjects.get(this);
+      if (parentReference !== undefined) {
+        writtenObjects.set(child, parentReference + ':' + key);
+      }
+    }
+    return child;
+  }
+  const json = stringify(value, dedupe);
   serializedSize += json.length;
   emitModelChunk(request, id, json);
   return id;
-}
-
-// Records (or on failure, removes) the marker of the containers inside a
-// pure container. Fails if any of them was written before, or appears twice.
-function recordPureData(
-  writtenObjects: WeakMap<Reference, string>,
-  container: Object,
-  marker: string,
-  record: boolean,
-): boolean {
-  if (isArray(container)) {
-    for (let i = 0; i < container.length; i++) {
-      const child = container[i];
-      if (
-        typeof child === 'object' &&
-        child !== null &&
-        !recordPureDataChild(writtenObjects, child, marker, record)
-      ) {
-        return false;
-      }
-    }
-    return true;
-  }
-  const object: {[key: string]: any} = container;
-  const keys = Object.keys(object);
-  for (let i = 0; i < keys.length; i++) {
-    const child = object[keys[i]];
-    if (
-      typeof child === 'object' &&
-      child !== null &&
-      !recordPureDataChild(writtenObjects, child, marker, record)
-    ) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function recordPureDataChild(
-  writtenObjects: WeakMap<Reference, string>,
-  child: Object,
-  marker: string,
-  record: boolean,
-): boolean {
-  if (record) {
-    if (writtenObjects.has(child)) {
-      return false;
-    }
-    writtenObjects.set(child, marker);
-  } else if (writtenObjects.get(child) === marker) {
-    writtenObjects.delete(child);
-  }
-  return recordPureData(writtenObjects, child, marker, record);
-}
-
-// The reference recorded for a value. An object inside a pure-data row only
-// has its marker until now: its path within the row is found and recorded,
-// unless a property name on the way holds a colon, which is not addressable.
-function resolveReference(request: Request, value: Object): void | string {
-  const writtenObjects = request.writtenObjects;
-  const reference = writtenObjects.get(value);
-  if (
-    reference === undefined ||
-    reference.charCodeAt(reference.length - 1) !== 58 // colon
-  ) {
-    return reference;
-  }
-  const pureDataRows = request.pureDataRows;
-  const container =
-    pureDataRows === null ? undefined : pureDataRows.get(reference);
-  const path =
-    container === undefined ? null : findPureDataPath(container, value, '');
-  if (path === null) {
-    writtenObjects.delete(value);
-    return undefined;
-  }
-  const resolved = reference + path;
-  writtenObjects.set(value, resolved);
-  return resolved;
-}
-
-function findPureDataPath(
-  container: Object,
-  target: Object,
-  path: string,
-): null | string {
-  if (isArray(container)) {
-    for (let i = 0; i < container.length; i++) {
-      const child = container[i];
-      if (typeof child === 'object' && child !== null) {
-        if (child === target) {
-          return path + i;
-        }
-        const found = findPureDataPath(child, target, path + i + ':');
-        if (found !== null) {
-          return found;
-        }
-      }
-    }
-    return null;
-  }
-  const object: {[key: string]: any} = container;
-  const keys = Object.keys(object);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    if (key.indexOf(':') !== -1) {
-      continue;
-    }
-    const child = object[key];
-    if (typeof child === 'object' && child !== null) {
-      if (child === target) {
-        return path + key;
-      }
-      const found = findPureDataPath(child, target, path + key + ':');
-      if (found !== null) {
-        return found;
-      }
-    }
-  }
-  return null;
 }
 
 function renderFragment(
@@ -4560,11 +4441,8 @@ function renderModelDestructive(
     }
 
     const writtenObjects = request.writtenObjects;
+    const existingReference = writtenObjects.get(value);
     const serializedResult = request.result;
-    const existingReference =
-      serializedResult === null
-        ? writtenObjects.get(value)
-        : resolveReference(request, value);
     if (
       existingReference === undefined &&
       serializedResult !== null &&
@@ -4575,10 +4453,7 @@ function renderModelDestructive(
       // A consumer of the Result read this container and found nothing in it
       // that Flight encodes differently from JSON, or this is the first to
       // reach it and finds the same.
-      const pureId = outlinePureData(request, value);
-      if (pureId !== -1) {
-        return serializeByValueID(pureId);
-      }
+      return serializeByValueID(outlinePureData(request, value));
     }
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
@@ -5964,7 +5839,8 @@ function renderDebugModel(
       }
     }
 
-    const existingReference = resolveReference(request, value);
+    const writtenObjects = request.writtenObjects;
+    const existingReference = writtenObjects.get(value);
     if (existingReference !== undefined) {
       // We've already emitted this as a real object, so we can refer to that by its existing reference.
       // This might be slightly different serialization than what renderDebugModel would've produced.
