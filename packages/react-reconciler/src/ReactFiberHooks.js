@@ -2524,6 +2524,7 @@ function updateActionStateImpl<S, P>(
   // Check if a new action was passed. If so, update it in an effect.
   const prevAction = actionQueueHook.memoizedState;
   if (action !== prevAction) {
+    actionQueueHook.memoizedState = action;
     currentlyRenderingFiber.flags |= PassiveEffect;
     pushSimpleEffect(
       HookHasEffect | HookPassive,
