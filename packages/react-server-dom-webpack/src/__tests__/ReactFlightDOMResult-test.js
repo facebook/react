@@ -218,6 +218,28 @@ describe('ReactFlightDOMResult', () => {
     return {response};
   }
 
+  // Expands the Result's Server Components into a model and serializes that
+  // through the regular path, which never sees a Server Component.
+  async function readExpandedStream(scenario) {
+    const readable = new Stream.PassThrough();
+    await serverAct(() => {
+      const result = ReactServerDOMServer.renderToResult(scenario.model, {
+        onError,
+      });
+      const expanded = ReactServerDOMClient.expandResult(result);
+      ReactServerDOMServer.renderToPipeableStream(expanded, webpackMap, {
+        onError,
+      }).pipe(readable);
+    });
+    const response = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      scenario.components.serverConsumerManifest,
+    );
+    await settleAll(scenario.scheduler);
+    await serverAct(() => {});
+    return {response};
+  }
+
   // Reads a Result in process, the way the HTML renderer consumes it.
   async function readResultDirect(scenario, reported) {
     let response;
@@ -477,6 +499,16 @@ describe('ReactFlightDOMResult', () => {
       html: '<section>hello</section>',
     });
     expect(await html).toEqual({shellError: true});
+  });
+
+  it('serializes an expanded Result the same as rendering the model directly', async () => {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
+      const a = createScenario(seed, {});
+      const direct = await observe(a, await readDirect(a));
+      const b = createScenario(seed, {});
+      const expanded = await observe(b, await readExpandedStream(b));
+      expect(expanded).toEqual(direct);
+    }
   });
 
   it('reads a Result in process the same as rendering the model directly', async () => {

@@ -63,6 +63,25 @@ function noServerCall() {
 
 export type {Options};
 
+// The model with its Server Components expanded and nothing else changed,
+// for the serializer: Client References stay the server's own. Prototype.
+export function expandResult<T>(result: Result<T>): T | Thenable<T> {
+  const response = createResponse(
+    result,
+    null,
+    null,
+    null,
+    noServerCall,
+    undefined,
+    undefined,
+    null,
+    undefined,
+    undefined,
+  );
+  const root: any = readRoot(response);
+  return root.status === 'fulfilled' ? root.value : root;
+}
+
 // The consumer is typically created while the renderer that uses it is
 // running, as a page's HTML render reads the Result from a component. Its
 // async context is what resolves that renderer's request for hints, so hints

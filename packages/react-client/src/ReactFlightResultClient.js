@@ -88,7 +88,10 @@ export type ResultResponse = {
   _bundlerConfig: ServerConsumerModuleMap,
   _moduleLoading: ModuleLoading,
   _nonce: ?string,
-  _bundler: ReferenceBundler,
+  // null reads the model for the serializer: Server Components are expanded
+  // and nothing else is translated, so Client and Server References stay the
+  // server's own and errors are the ones thrown.
+  _bundler: null | ReferenceBundler,
   _callServer: CallServerCallback,
   _encodeFormAction: void | EncodeFormActionCallback,
   _temporaryReferences: void | TemporaryReferenceSet,
@@ -318,6 +321,9 @@ function createLazyChunkWrapper<T>(
 // The error the wire path would have produced for a Server Component error:
 // the digest travels, the message only in development.
 function createConsumerError(response: ResultResponse, reason: mixed): Error {
+  if (response._bundler === null && reason instanceof Error) {
+    return reason;
+  }
   let error: Error;
   if (__DEV__) {
     if (reason instanceof Error) {
@@ -1120,7 +1126,9 @@ function readClientReferenceElement(
   // The type is a lazy that requires the module when the renderer first
   // reads it, as a client element's type is on the wire.
   const element = createElement(
-    readClientReference(response, reference),
+    response._bundler === null
+      ? reference
+      : readClientReference(response, reference),
     key,
     props,
   );
@@ -1144,6 +1152,9 @@ function readServerReference(
     return existing;
   }
   const bundler = response._bundler;
+  if (bundler === null) {
+    return reference;
+  }
   const id = bundler.getServerReferenceId(reference);
   const boundArgs = bundler.getServerReferenceBoundArguments(reference);
   const bound =
@@ -1165,7 +1176,9 @@ function readTemporaryReferenceValue(
   response: ResultResponse,
   value: any,
 ): void | any {
-  const id = response._bundler.resolveTemporaryReference(value);
+  const bundler = response._bundler;
+  const id =
+    bundler === null ? undefined : bundler.resolveTemporaryReference(value);
   if (id === undefined) {
     return undefined;
   }
@@ -1182,6 +1195,9 @@ function readTemporaryReferenceValue(
 // A Client Reference in a data position is its module export. While the
 // module loads, the enclosing element waits, as the row would on the wire.
 function readClientReferenceValue(response: ResultResponse, reference: any) {
+  if (response._bundler === null) {
+    return reference;
+  }
   // Throws the chunk while the module loads, which makes the enclosing
   // element wait on it.
   return readChunk(readClientReference(response, reference)._payload);
@@ -1201,7 +1217,11 @@ function readClientReference(
   if (existing !== undefined) {
     return existing;
   }
-  const metadata = response._bundler.resolveClientReferenceMetadata(reference);
+  const bundler = response._bundler;
+  if (bundler === null) {
+    throw new Error('A Client Reference is not resolved for the serializer.');
+  }
+  const metadata = bundler.resolveClientReferenceMetadata(reference);
   const clientReference: ClientReference<any> = resolveClientReference(
     response._bundlerConfig,
     metadata,
@@ -1360,7 +1380,10 @@ function readData(
     if (result.isClientReference(value)) {
       return readClientReferenceValue(response, value);
     }
-    if (response._bundler.isServerReference(value)) {
+    if (
+      response._bundler === null ||
+      response._bundler.isServerReference(value)
+    ) {
       return readServerReference(response, value, context);
     }
     const temporaryReference = readTemporaryReferenceValue(response, value);
@@ -1646,7 +1669,7 @@ export function createResponse(
   result: Result<any>,
   bundlerConfig: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
-  bundler: ReferenceBundler,
+  bundler: null | ReferenceBundler,
   callServer: CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,
   temporaryReferences: void | TemporaryReferenceSet,
@@ -1692,6 +1715,10 @@ export function createResponse(
       }
     }),
   );
+  if (bundler === null) {
+    // The serializer takes the hints from the Result itself.
+    return response;
+  }
   response._cleanup.push(
     subscribeToHints(result.context, hint => {
       if (bindToConsumer !== null) {
