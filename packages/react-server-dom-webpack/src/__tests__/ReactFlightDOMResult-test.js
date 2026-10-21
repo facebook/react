@@ -432,6 +432,89 @@ describe('ReactFlightDOMResult', () => {
     );
   });
 
+  it('aborting a Result errors what is still pending in every consumer', async () => {
+    const components = createClientComponents();
+    const errors = [];
+    const never = new Promise(() => {});
+    let cacheSignal;
+    function Done() {
+      cacheSignal = ReactServer.cacheSignal();
+      return 'done';
+    }
+    async function Pending() {
+      await never;
+      return 'never';
+    }
+    const controller = new AbortController();
+    const result = ReactServerDOMServer.renderToResult(
+      {
+        done: ReactServer.createElement(Done, null),
+        pending: ReactServer.createElement(Pending, null),
+        later: ReactServer.createElement(Pending, {key: 'later'}),
+      },
+      {
+        onError(error) {
+          errors.push(error.message);
+          return 'digest(' + error.message + ')';
+        },
+        signal: controller.signal,
+      },
+    );
+    // One consumer has started reading, the other is the hydration stream.
+    const inProcess = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const readable = new Stream.PassThrough({objectMode: true});
+    await serverAct(() => {
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    const stream = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      components.serverConsumerManifest,
+    );
+    const root = await inProcess;
+    expect(root.done).toBe('done');
+    expect(cacheSignal.aborted).toBe(false);
+
+    await serverAct(() => controller.abort(new Error('gone')));
+
+    expect(cacheSignal.aborted).toBe(true);
+    // The abort is reported once, and both consumers see it on the pending
+    // slot with the same digest while the finished one stays readable.
+    expect(errors).toEqual(['gone']);
+    let caught;
+    try {
+      root.pending._init(root.pending._payload);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught.digest).toBe('digest(gone)');
+    expect(caught.message).toBe(
+      __DEV__
+        ? 'gone'
+        : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
+    );
+    const streamed = await stream;
+    expect(streamed.done).toBe('done');
+    let streamedError;
+    try {
+      streamed.pending._init(streamed.pending._payload);
+    } catch (error) {
+      streamedError = error;
+    }
+    expect(streamedError.digest).toBe('digest(gone)');
+    // An element first read after the abort errors the same way.
+    const afterAbort = result.expand(
+      ReactServer.createElement(Pending, {key: 'new'}),
+    );
+    expect(afterAbort.status).toBe(2);
+    expect(afterAbort.digest).toBe('digest(gone)');
+    expect(errors).toEqual(['gone']);
+  });
+
   it('hands pure data to the in-process consumer by identity', async () => {
     const components = createClientComponents();
     const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};

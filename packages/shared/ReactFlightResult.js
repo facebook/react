@@ -132,6 +132,8 @@ export type Result<T> = {
   aborted: boolean,
   abortReason: mixed,
   abortListeners: null | Array<(reason: mixed) => void>,
+  // Expansions still running, to reject on abort.
+  pendingExpansions: Set<Expansion>,
   // Each consumer holds the cache signal open until it is done.
   consumers: number,
   onError: (error: mixed) => ?string,
@@ -177,6 +179,7 @@ export function createResultObject<T>(
     aborted: false,
     abortReason: undefined,
     abortListeners: null,
+    pendingExpansions: new Set(),
     consumers: 0,
     onError,
     errorDigests: new WeakMap(),

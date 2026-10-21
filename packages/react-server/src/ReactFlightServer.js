@@ -134,6 +134,7 @@ import {
   releaseResult,
   createResultObject,
   getIteratorEntries,
+  subscribeToAbort,
 } from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
@@ -850,6 +851,10 @@ function RequestInstance(
     emitHintChunk(request, hint.code, hint.model);
     enqueueFlush(request);
   });
+  if (result !== null) {
+    // Aborting the Result aborts every consumer, this stream included.
+    subscribeToAbort(result, reason => abort(request, reason));
+  }
 }
 
 export function createRequest(
@@ -2017,9 +2022,7 @@ function renderFunctionComponent<Props>(
 function readExpansion(result: Result<any>, element: ReactElement): any {
   let expansion = result.expansions.get(element);
   if (expansion === undefined) {
-    expansion = createExpansion(element);
-    result.expansions.set(element, expansion);
-    performExpansion(result, expansion);
+    expansion = startExpansion(result, element);
   }
   switch (expansion.status) {
     case EXPANSION_FULFILLED:
@@ -2077,15 +2080,29 @@ function expandResultElement(
   result: Result<any>,
   element: ReactElement,
 ): null | Expansion {
-  let expansion = result.expansions.get(element);
+  const expansion = result.expansions.get(element);
   if (expansion !== undefined) {
     return expansion;
   }
   if (resolveServerComponentType(result, element.type) === null) {
     return null;
   }
-  expansion = createExpansion(element);
+  return startExpansion(result, element);
+}
+
+function startExpansion(result: Result<any>, element: ReactElement): Expansion {
+  const expansion = createExpansion(element);
   result.expansions.set(element, expansion);
+  if (result.aborted) {
+    // Nothing renders after an abort; the slot errors with the abort reason.
+    rejectExpansion(
+      expansion,
+      result.abortReason,
+      logResultError(result, result.abortReason),
+    );
+    return expansion;
+  }
+  result.pendingExpansions.add(expansion);
   performExpansion(result, expansion);
   return expansion;
 }
@@ -2119,6 +2136,7 @@ function performExpansion(result: Result<any>, expansion: Expansion): void {
       // abortResult already rejected this expansion.
       return;
     }
+    result.pendingExpansions.delete(expansion);
     fulfillExpansion(expansion, value);
   } catch (thrownValue) {
     if (result.aborted) {
@@ -2142,6 +2160,7 @@ function performExpansion(result: Result<any>, expansion: Expansion): void {
       x.then(retry, retry);
       return;
     }
+    result.pendingExpansions.delete(expansion);
     rejectExpansion(expansion, x, logResultError(result, x));
   } finally {
     ReactSharedInternals.H = prevDispatcher;
@@ -2259,6 +2278,9 @@ function runInResultContext<T>(result: Result<any>, callback: () => T): T {
   return callback();
 }
 
+// Aborting rejects every expansion still running with the reason, under one
+// digest, as aborting a stream request errors its pending rows. Expansions
+// already complete stay readable, so a consumer can finish with what exists.
 export function abortResult(result: Result<any>, reason: mixed): void {
   if (result.aborted) {
     return;
@@ -2266,6 +2288,12 @@ export function abortResult(result: Result<any>, reason: mixed): void {
   result.aborted = true;
   result.abortReason = reason;
   result.context.cacheController.abort(reason);
+  const pending = result.pendingExpansions;
+  if (pending.size > 0) {
+    const digest = logResultError(result, reason);
+    pending.forEach(expansion => rejectExpansion(expansion, reason, digest));
+    pending.clear();
+  }
   const listeners = result.abortListeners;
   if (listeners !== null) {
     result.abortListeners = null;

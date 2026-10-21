@@ -35,6 +35,7 @@ import {
   FULFILLED as EXPANSION_FULFILLED,
   retainResult,
   releaseResult,
+  subscribeToAbort,
 } from 'shared/ReactFlightResult';
 import {subscribeToHints} from 'shared/ReactFlightRenderContext';
 import {createBoundServerReference} from './ReactFlightReplyClient';
@@ -102,6 +103,8 @@ export type ResultResponse = {
   _readError: null | Error,
   // Errors this reader already reported and shaped for the consumer.
   _consumerErrors: WeakSet<Error>,
+  // Chunks waiting on something, to reject when the Result is aborted.
+  _pendingChunks: Set<SomeChunk<any>>,
   _closed: boolean,
   _cleanup: Array<() => void>,
 };
@@ -162,9 +165,11 @@ type SomeChunk<T> = {
   then(resolve: (value: T) => mixed, reject: (reason: mixed) => mixed): void,
 };
 
-function createPendingChunk(): SomeChunk<any> {
+function createPendingChunk(response: ResultResponse): SomeChunk<any> {
   // $FlowFixMe[invalid-constructor]
-  return new ResultChunk(PENDING, undefined, undefined);
+  const chunk = new ResultChunk(PENDING, undefined, undefined);
+  response._pendingChunks.add(chunk);
+  return chunk;
 }
 
 function createRejectedChunk(reason: mixed): SomeChunk<any> {
@@ -172,10 +177,15 @@ function createRejectedChunk(reason: mixed): SomeChunk<any> {
   return new ResultChunk(REJECTED, undefined, reason);
 }
 
-function fulfillChunk<T>(chunk: SomeChunk<T>, value: T): void {
+function fulfillChunk<T>(
+  response: ResultResponse,
+  chunk: SomeChunk<T>,
+  value: T,
+): void {
   if (chunk.status !== PENDING) {
     return;
   }
+  response._pendingChunks.delete(chunk);
   chunk.status = FULFILLED;
   chunk.value = value;
   const listeners = chunk._listeners;
@@ -190,10 +200,15 @@ function fulfillChunk<T>(chunk: SomeChunk<T>, value: T): void {
   }
 }
 
-function rejectChunk<T>(chunk: SomeChunk<T>, reason: mixed): void {
+function rejectChunk<T>(
+  response: ResultResponse,
+  chunk: SomeChunk<T>,
+  reason: mixed,
+): void {
   if (chunk.status !== PENDING) {
     return;
   }
+  response._pendingChunks.delete(chunk);
   chunk.status = REJECTED;
   chunk.reason = reason;
   const listeners = chunk._listeners;
@@ -539,19 +554,21 @@ function readLazy(
       typeof thrown === 'object' &&
       typeof thrown.then === 'function'
     ) {
-      const chunk = createPendingChunk();
+      const chunk = createPendingChunk(response);
       thrown.then(
         () => {
           try {
             fulfillChunk(
+              response,
               chunk,
               readNode(response, lazy, context, descendContext, {}, ''),
             );
           } catch (error) {
-            rejectChunk(chunk, readError(response, error));
+            rejectChunk(response, chunk, readError(response, error));
           }
         },
-        (reason: mixed) => rejectChunk(chunk, readError(response, reason)),
+        (reason: mixed) =>
+          rejectChunk(response, chunk, readError(response, reason)),
       );
       return createLazyChunkWrapper(chunk);
     }
@@ -574,19 +591,21 @@ function readElement(
     return readElementImpl(response, element, context, descendContext);
   } catch (thrown) {
     if (isThenable(thrown)) {
-      const chunk = createPendingChunk();
+      const chunk = createPendingChunk(response);
       (thrown as any).then(
         () => {
           try {
             fulfillChunk(
+              response,
               chunk,
               readElement(response, element, context, descendContext),
             );
           } catch (error) {
-            rejectChunk(chunk, readError(response, error));
+            rejectChunk(response, chunk, readError(response, error));
           }
         },
-        (reason: mixed) => rejectChunk(chunk, readError(response, reason)),
+        (reason: mixed) =>
+          rejectChunk(response, chunk, readError(response, reason)),
       );
       return createLazyChunkWrapper(chunk);
     }
@@ -629,11 +648,12 @@ function readExpansion(
         descendContext,
       );
     case EXPANSION_PENDING: {
-      const chunk = createPendingChunk();
+      const chunk = createPendingChunk(response);
       expansion.then(
         (value: mixed) => {
           try {
             fulfillChunk(
+              response,
               chunk,
               readServerComponentOutput(
                 response,
@@ -643,11 +663,12 @@ function readExpansion(
               ),
             );
           } catch (error) {
-            rejectChunk(chunk, readError(response, error));
+            rejectChunk(response, chunk, readError(response, error));
           }
         },
         (reason: mixed) => {
           rejectChunk(
+            response,
             chunk,
             errorWithDigest(
               createConsumerError(response, reason),
@@ -694,20 +715,22 @@ function readServerComponentOutput(
         descendContext,
       );
     }
-    const chunk = createPendingChunk();
+    const chunk = createPendingChunk(response);
     thenable.then(
       (value: mixed) => {
         try {
           fulfillChunk(
+            response,
             chunk,
             readServerComponentOutput(response, value, context, descendContext),
           );
         } catch (error) {
-          rejectChunk(chunk, readError(response, error));
+          rejectChunk(response, chunk, readError(response, error));
         }
       },
       (reason: mixed) => {
         rejectChunk(
+          response,
           chunk,
           errorWithDigest(
             createConsumerError(response, reason),
@@ -815,16 +838,17 @@ function readClientReferenceElement(
   ) {
     // The module is still loading.
     const moduleChunk: SomeChunk<any> = resolvedType._payload;
-    const chunk = createPendingChunk();
+    const chunk = createPendingChunk(response);
     moduleChunk.then(
       (type: mixed) => {
         const element = createElement(type, key, props);
         fulfillChunk(
+          response,
           chunk,
           context.implicitSlot && key !== null ? [element] : element,
         );
       },
-      (reason: mixed) => rejectChunk(chunk, reason),
+      (reason: mixed) => rejectChunk(response, chunk, reason),
     );
     return createLazyChunkWrapper(chunk);
   }
@@ -939,18 +963,18 @@ function readClientReference(response: ResultResponse, reference: any): any {
   }
   const promise = preloadModule(clientReference);
   if (promise) {
-    const chunk = createPendingChunk();
+    const chunk = createPendingChunk(response);
     const lazy = createLazyChunkWrapper(chunk);
     modules.set(id, lazy);
     promise.then(
       () => {
         try {
-          fulfillChunk(chunk, requireModule(clientReference));
+          fulfillChunk(response, chunk, requireModule(clientReference));
         } catch (error) {
-          rejectChunk(chunk, error);
+          rejectChunk(response, chunk, error);
         }
       },
-      (reason: mixed) => rejectChunk(chunk, reason),
+      (reason: mixed) => rejectChunk(response, chunk, reason),
     );
     return lazy;
   }
@@ -1215,18 +1239,23 @@ function readThenable(
   context: KeyContext,
 ): any {
   const models = response._models;
-  const chunk = createPendingChunk();
+  const chunk = createPendingChunk(response);
   models.set(thenable, chunk);
   thenable.then(
     (value: mixed) => {
       try {
-        fulfillChunk(chunk, readData(response, value, context, {}, ''));
+        fulfillChunk(
+          response,
+          chunk,
+          readData(response, value, context, {}, ''),
+        );
       } catch (error) {
-        rejectChunk(chunk, readError(response, error));
+        rejectChunk(response, chunk, readError(response, error));
       }
     },
     (reason: mixed) => {
       rejectChunk(
+        response,
         chunk,
         errorWithDigest(
           createConsumerError(response, reason),
@@ -1290,10 +1319,25 @@ export function createResponse(
     _onError: onError === undefined ? result.onError : onError,
     _readError: null,
     _consumerErrors: new WeakSet(),
+    _pendingChunks: new Set(),
     _closed: false,
     _cleanup: [],
   };
   retainResult(result);
+  // Aborting the Result rejects everything this consumer still waits for,
+  // as aborting a stream request errors its pending rows.
+  response._cleanup.push(
+    subscribeToAbort(result, reason => {
+      const pending = Array.from(response._pendingChunks);
+      response._pendingChunks.clear();
+      if (pending.length > 0) {
+        const error = readError(response, reason);
+        for (let i = 0; i < pending.length; i++) {
+          rejectChunk(response, pending[i], error);
+        }
+      }
+    }),
+  );
   response._cleanup.push(
     subscribeToHints(result.context, hint => {
       if (bindToConsumer !== null) {
@@ -1309,7 +1353,11 @@ export function createResponse(
 // The wire path's root row waits for the root model to resolve rather than
 // referring to it lazily, so pending output at the root settles the root
 // chunk itself.
-function settleRoot(chunk: SomeChunk<any>, value: any): void {
+function settleRoot(
+  response: ResultResponse,
+  chunk: SomeChunk<any>,
+  value: any,
+): void {
   if (
     value !== null &&
     typeof value === 'object' &&
@@ -1318,17 +1366,17 @@ function settleRoot(chunk: SomeChunk<any>, value: any): void {
   ) {
     const payload: SomeChunk<any> = value._payload;
     payload.then(
-      (resolved: mixed) => settleRoot(chunk, resolved),
-      (reason: mixed) => rejectChunk(chunk, reason),
+      (resolved: mixed) => settleRoot(response, chunk, resolved),
+      (reason: mixed) => rejectChunk(response, chunk, reason),
     );
     return;
   }
-  fulfillChunk(chunk, value);
+  fulfillChunk(response, chunk, value);
 }
 
 export function readRoot<T>(response: ResultResponse): Thenable<T> {
   const result = response._result;
-  const chunk = createPendingChunk();
+  const chunk = createPendingChunk(response);
   // Expansions this walk starts, and their continuations after an await,
   // run with the Result's render context.
   const attempt = () => {
@@ -1343,16 +1391,16 @@ export function readRoot<T>(response: ResultResponse): Thenable<T> {
           '',
         );
         throwReadError(response, null);
-        settleRoot(chunk, root);
+        settleRoot(response, chunk, root);
       } catch (thrown) {
         if (isThenable(thrown)) {
           // The root waits on a loading module, as the root row would.
           (thrown as any).then(attempt, (reason: mixed) =>
-            rejectChunk(chunk, readError(response, reason)),
+            rejectChunk(response, chunk, readError(response, reason)),
           );
           return;
         }
-        rejectChunk(chunk, readError(response, thrown));
+        rejectChunk(response, chunk, readError(response, thrown));
       }
     });
   };
