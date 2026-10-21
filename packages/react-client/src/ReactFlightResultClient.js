@@ -40,9 +40,15 @@ import {
   REACT_MEMO_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_OPTIMISTIC_KEY,
+  ASYNC_ITERATOR,
   getIteratorFn,
 } from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
+import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
+import {getIteratorEntries} from 'shared/ReactFlightResult';
+
+const ObjectPrototype = Object.prototype;
 
 // Reads a Result in process, for the renderer that consumes the Server
 // Component output on the same server, e.g. Fizz for the HTML of a page.
@@ -68,6 +74,12 @@ export type ResultResponse = {
   // Client Reference id → the module it resolved to, or the chunk loading it.
   _modules: Map<string, any>,
   _onError: (error: mixed) => ?string,
+  // The first invalid value met while reading the current element's props.
+  // The wire reports every invalid value in a row and fails the row once;
+  // siblings keep being read and the element fails after.
+  _readError: null | Error,
+  // Errors this reader already reported and shaped for the consumer.
+  _consumerErrors: WeakSet<Error>,
   _closed: boolean,
   _cleanup: Array<() => void>,
 };
@@ -87,8 +99,7 @@ function ResultChunk(this: any, status: string, value: any, reason: any) {
 }
 // $FlowFixMe[prop-missing]
 ResultChunk.prototype = Object.create(Promise.prototype) as any;
-// $FlowFixMe[prop-missing]
-ResultChunk.prototype.then = function (
+function resultChunkThen(
   this: any,
   resolve: (value: any) => mixed,
   reject: (reason: mixed) => mixed,
@@ -112,7 +123,14 @@ ResultChunk.prototype.then = function (
       listeners.push([resolve, reject]);
     }
   }
-};
+}
+// Promise.prototype.then may be non-writable, so define rather than assign.
+Object.defineProperty(ResultChunk.prototype, 'then', {
+  writable: true,
+  enumerable: true,
+  configurable: true,
+  value: resultChunkThen,
+});
 
 type SomeChunk<T> = {
   status: 'pending' | 'fulfilled' | 'rejected',
@@ -217,6 +235,60 @@ function createConsumerError(response: ResultResponse, reason: mixed): Error {
 function errorWithDigest(error: Error, digest: ?string): Error {
   (error as any).digest = digest;
   return error;
+}
+
+function isThenable(value: mixed): boolean {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as any).then === 'function'
+  );
+}
+
+// An error raised while reading, such as an invalid value. The wire would
+// have reported it through onError and sent its digest.
+function readError(response: ResultResponse, error: mixed): Error {
+  if (error instanceof Error && response._consumerErrors.has(error)) {
+    return error;
+  }
+  const consumerError = errorWithDigest(
+    createConsumerError(response, error),
+    logConsumerError(response, error),
+  );
+  response._consumerErrors.add(consumerError);
+  return consumerError;
+}
+
+// Reads one value inside a container. An invalid value is recorded for the
+// enclosing element and reading continues with its siblings.
+function readChild(
+  response: ResultResponse,
+  value: any,
+  context: KeyContext,
+  parent: Object,
+  parentPropertyName: string,
+): any {
+  try {
+    return readData(response, value, context, parent, parentPropertyName);
+  } catch (thrown) {
+    if (isThenable(thrown)) {
+      throw thrown;
+    }
+    const error = readError(response, thrown);
+    if (response._readError === null) {
+      response._readError = error;
+    }
+    return undefined;
+  }
+}
+
+// Fails the element being read if any value inside it was invalid.
+function throwReadError(response: ResultResponse, prevError: null | Error) {
+  const error = response._readError;
+  response._readError = prevError;
+  if (error !== null) {
+    throw error;
+  }
 }
 
 // Key context, mirroring the serializer: the keys of enclosing Server
@@ -327,9 +399,17 @@ function readNode(
   value: any,
   context: KeyContext,
   descendContext: KeyContext,
+  parent: Object,
+  parentPropertyName: string,
 ): any {
   if (value === null || typeof value !== 'object') {
-    return value;
+    return readData(
+      response,
+      value,
+      descendContext,
+      parent,
+      parentPropertyName,
+    );
   }
   const models = response._models;
   // Like the serializer, an element is only reused by identity outside any
@@ -360,7 +440,7 @@ function readNode(
   if (isArray(value)) {
     return readFragment(response, value, context, descendContext);
   }
-  return readData(response, value, descendContext);
+  return readData(response, value, descendContext, parent, parentPropertyName);
 }
 
 function readFragment(
@@ -391,7 +471,19 @@ function readArray(
   let copy: null | Array<any> = null;
   for (let i = 0; i < array.length; i++) {
     const child = array[i];
-    const read = readNode(response, child, context, context);
+    let read;
+    try {
+      read = readNode(response, child, context, context, array, '' + i);
+    } catch (thrown) {
+      if (isThenable(thrown)) {
+        throw thrown;
+      }
+      const error = readError(response, thrown);
+      if (response._readError === null) {
+        response._readError = error;
+      }
+      read = undefined;
+    }
     if (copy === null) {
       if (read === child) {
         continue;
@@ -431,40 +523,37 @@ function readLazy(
           try {
             fulfillChunk(
               chunk,
-              readNode(response, lazy, context, descendContext),
+              readNode(response, lazy, context, descendContext, {}, ''),
             );
           } catch (error) {
-            rejectChunk(chunk, error);
+            rejectChunk(chunk, readError(response, error));
           }
         },
-        (reason: mixed) => rejectChunk(chunk, reason),
+        (reason: mixed) => rejectChunk(chunk, readError(response, reason)),
       );
       return createLazyChunkWrapper(chunk);
     }
     throw thrown;
   }
-  return readNode(response, resolved, context, descendContext);
+  return readNode(response, resolved, context, descendContext, lazy, '');
 }
 
+// Like the wire, where a row that fails to decode makes its innermost element
+// a lazy that throws, an element whose own props cannot be read becomes a
+// lazy error, and one that waits on something, a pending lazy type or a
+// loading module, becomes a lazy that reads again once it settles.
 function readElement(
   response: ResultResponse,
   element: any,
   context: KeyContext,
   descendContext: KeyContext,
 ): any {
-  const result = response._result;
-  let expansion: null | Expansion;
   try {
-    expansion = result.expand(element);
+    return readElementImpl(response, element, context, descendContext);
   } catch (thrown) {
-    // A pending lazy type; read the element again once it resolves.
-    if (
-      thrown !== null &&
-      typeof thrown === 'object' &&
-      typeof thrown.then === 'function'
-    ) {
+    if (isThenable(thrown)) {
       const chunk = createPendingChunk();
-      thrown.then(
+      (thrown as any).then(
         () => {
           try {
             fulfillChunk(
@@ -472,15 +561,26 @@ function readElement(
               readElement(response, element, context, descendContext),
             );
           } catch (error) {
-            rejectChunk(chunk, error);
+            rejectChunk(chunk, readError(response, error));
           }
         },
-        (reason: mixed) => rejectChunk(chunk, reason),
+        (reason: mixed) => rejectChunk(chunk, readError(response, reason)),
       );
       return createLazyChunkWrapper(chunk);
     }
-    throw thrown;
+    return createLazyChunkWrapper(
+      createRejectedChunk(readError(response, thrown)),
+    );
   }
+}
+
+function readElementImpl(
+  response: ResultResponse,
+  element: any,
+  context: KeyContext,
+  descendContext: KeyContext,
+): any {
+  const expansion = response._result.expand(element);
   if (expansion !== null) {
     return readExpansion(
       response,
@@ -521,7 +621,7 @@ function readExpansion(
               ),
             );
           } catch (error) {
-            rejectChunk(chunk, error);
+            rejectChunk(chunk, readError(response, error));
           }
         },
         (reason: mixed) => {
@@ -581,7 +681,7 @@ function readServerComponentOutput(
             readServerComponentOutput(response, value, context, descendContext),
           );
         } catch (error) {
-          rejectChunk(chunk, error);
+          rejectChunk(chunk, readError(response, error));
         }
       },
       (reason: mixed) => {
@@ -606,7 +706,7 @@ function readServerComponentOutput(
       descendContext,
     );
   }
-  return readNode(response, output, context, descendContext);
+  return readNode(response, output, context, descendContext, {}, '');
 }
 
 function readTerminalElement(
@@ -628,6 +728,8 @@ function readTerminalElement(
       element.props.children,
       childContext,
       descendContext,
+      element.props,
+      'children',
     );
   }
   if (
@@ -645,7 +747,21 @@ function readTerminalElement(
     }
   }
   const key = terminalKey(context, element.key);
-  const props = readData(response, element.props, descendContext);
+  if (element.props.ref !== undefined && element.props.ref !== null) {
+    throw new Error(
+      'Refs cannot be used in Server Components, nor passed to Client Components.',
+    );
+  }
+  const prevReadError = response._readError;
+  response._readError = null;
+  const props = readData(
+    response,
+    element.props,
+    descendContext,
+    element,
+    'props',
+  );
+  throwReadError(response, prevReadError);
   if (result.isClientReference(type)) {
     return readClientReferenceElement(response, type, key, props, context);
   }
@@ -695,6 +811,21 @@ function readClientReferenceElement(
     return [element];
   }
   return element;
+}
+
+// A Client Reference in a data position is its module export. While the
+// module loads, the enclosing element waits, as the row would on the wire.
+function readClientReferenceValue(response: ResultResponse, reference: any) {
+  const resolved = readClientReference(response, reference);
+  if (
+    resolved !== null &&
+    typeof resolved === 'object' &&
+    resolved.$$typeof === REACT_LAZY_TYPE &&
+    resolved._init === readChunk
+  ) {
+    throw resolved._payload;
+  }
+  return resolved;
 }
 
 // Resolves a server-side Client Reference to the consumer's module export,
@@ -758,52 +889,160 @@ function readClientReference(response: ResultResponse, reference: any): any {
 }
 
 // Reads a value in a data position: props and anything inside them. Nodes
-// inside data see the enclosing key context.
+// inside data see the enclosing key context. The checks are the
+// serializer's: what it rejects is rejected here, with the same message, so
+// an invalid value fails this consumer as it fails the wire. `parent` and
+// `parentPropertyName` only describe the location in that message.
 function readData(
   response: ResultResponse,
   value: any,
   context: KeyContext,
+  parent: Object,
+  parentPropertyName: string,
 ): any {
-  if (value === null || typeof value !== 'object') {
-    return value;
+  const result = response._result;
+  if (value === null) {
+    return null;
   }
-  const models = response._models;
-  const existing = models.get(value);
-  if (existing !== undefined) {
-    return existing;
-  }
-  switch (value.$$typeof) {
-    case REACT_ELEMENT_TYPE: {
-      const read = readElement(response, value, context, context);
+  if (typeof value === 'object') {
+    const models = response._models;
+    const existing = models.get(value);
+    if (existing !== undefined) {
+      return existing;
+    }
+    switch (value.$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        const read = readElement(response, value, context, context);
+        models.set(value, read);
+        return read;
+      }
+      case REACT_LAZY_TYPE: {
+        const read = readLazy(response, value, context, context);
+        models.set(value, read);
+        return read;
+      }
+    }
+    if (result.isClientReference(value)) {
+      return readClientReferenceValue(response, value);
+    }
+    result.checkTainted(value);
+    if (typeof value.then === 'function') {
+      return readThenable(response, value, context);
+    }
+    if (isArray(value)) {
+      return readArray(response, value, context);
+    }
+    if (value instanceof Map) {
+      return readMap(response, value, context);
+    }
+    if (value instanceof Set) {
+      return readSet(response, value, context);
+    }
+    if (value instanceof Error) {
+      // The wire carries no details about an Error value in production.
+      const read = createConsumerError(response, value);
       models.set(value, read);
       return read;
     }
-    case REACT_LAZY_TYPE: {
-      const read = readLazy(response, value, context, context);
-      models.set(value, read);
-      return read;
-    }
-  }
-  if (isArray(value)) {
-    return readArray(response, value, context);
-  }
-  if (typeof value.then === 'function') {
-    if (response._result.isClientReference(value)) {
+    if (
+      value instanceof Date ||
+      value instanceof ArrayBuffer ||
+      ArrayBuffer.isView(value) ||
+      (typeof Blob === 'function' && value instanceof Blob) ||
+      (typeof FormData === 'function' && value instanceof FormData)
+    ) {
+      // The wire copies these; the copy is indistinguishable from the original.
+      models.set(value, value);
       return value;
     }
-    return readThenable(response, value, context);
+    const iteratorFn = getIteratorFn(value);
+    if (iteratorFn) {
+      const iterator = iteratorFn.call(value);
+      // $FlowFixMe[invalid-compare]
+      if (iterator === value) {
+        // A single-shot iterator is drained into the Result once and handed
+        // to every consumer as an iterator over the items.
+        const items = readArray(
+          response,
+          getIteratorEntries(result, iterator),
+          context,
+        );
+        // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
+        const read = items[Symbol.iterator]();
+        models.set(value, read);
+        return read;
+      }
+      // An iterable renders as its items.
+      return readArray(response, Array.from(iterator as any), context);
+    }
+    if (
+      (typeof ReadableStream === 'function' &&
+        value instanceof ReadableStream) ||
+      typeof value[ASYNC_ITERATOR] === 'function'
+    ) {
+      // TODO: Replay streams and async iterables to every consumer.
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        'Streams and async iterables are not supported in a Result yet.',
+      );
+    }
+    const proto = getPrototypeOf(value);
+    if (
+      proto !== ObjectPrototype &&
+      (proto === null || getPrototypeOf(proto) !== null)
+    ) {
+      throw new Error(
+        'Only plain objects, and a few built-ins, can be passed to Client Components ' +
+          'from Server Components. Classes or null prototypes are not supported.' +
+          describeObjectForErrorMessage(parent, parentPropertyName),
+      );
+    }
+    return readObject(response, value, context);
   }
-  if (value instanceof Map) {
-    return readMap(response, value, context);
-  }
-  if (value instanceof Set) {
-    return readSet(response, value, context);
-  }
-  if (value instanceof Date || ArrayBuffer.isView(value)) {
-    models.set(value, value);
+  if (typeof value === 'string') {
+    result.checkTainted(value);
     return value;
   }
-  return readObject(response, value, context);
+  if (typeof value === 'function') {
+    if (result.isClientReference(value)) {
+      return readClientReferenceValue(response, value);
+    }
+    result.checkTainted(value);
+    if (/^on[A-Z]/.test(parentPropertyName)) {
+      throw new Error(
+        'Event handlers cannot be passed to Client Component props.' +
+          describeObjectForErrorMessage(parent, parentPropertyName) +
+          '\nIf you need interactivity, consider converting part of this to a Client Component.',
+      );
+    }
+    throw new Error(
+      'Functions cannot be passed directly to Client Components ' +
+        'unless you explicitly expose it by marking it with "use server". ' +
+        'Or maybe you meant to call this function rather than return it.' +
+        describeObjectForErrorMessage(parent, parentPropertyName),
+    );
+  }
+  if (typeof value === 'symbol') {
+    // $FlowFixMe[incompatible-type] `description` might be undefined
+    const name: string = value.description;
+    // $FlowFixMe[invalid-compare]
+    if (Symbol.for(name) !== value) {
+      throw new Error(
+        'Only global symbols received from Symbol.for(...) can be passed to Client Components. ' +
+          `The symbol Symbol.for(${
+            // $FlowFixMe[incompatible-type] `description` might be undefined
+            value.description
+          }) cannot be found among global symbols.` +
+          describeObjectForErrorMessage(parent, parentPropertyName),
+      );
+    }
+    return value;
+  }
+  if (typeof value === 'bigint') {
+    result.checkTainted(value);
+    return value;
+  }
+  return value;
 }
 
 function readObject(
@@ -817,9 +1056,12 @@ function readObject(
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const child = object[key];
-    // The wire path drops a property whose value is undefined.
+    // The wire drops a property whose value is undefined, and the client
+    // never assigns __proto__.
     const read =
-      child === undefined ? undefined : readData(response, child, context);
+      child === undefined || key === '__proto__'
+        ? undefined
+        : readChild(response, child, context, object, key);
     if (copy === null) {
       if (read === child && child !== undefined) {
         continue;
@@ -851,8 +1093,8 @@ function readMap(
   let changed = false;
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    const key = readData(response, entry[0], context);
-    const value = readData(response, entry[1], context);
+    const key = readChild(response, entry[0], context, entries, '' + i);
+    const value = readChild(response, entry[1], context, entries, '' + i);
     if (key !== entry[0] || value !== entry[1]) {
       changed = true;
       entries[i] = [key, value];
@@ -872,7 +1114,7 @@ function readSet(
   const items = Array.from(set);
   let changed = false;
   for (let i = 0; i < items.length; i++) {
-    const read = readData(response, items[i], context);
+    const read = readChild(response, items[i], context, items, '' + i);
     if (read !== items[i]) {
       changed = true;
       items[i] = read;
@@ -896,9 +1138,9 @@ function readThenable(
   thenable.then(
     (value: mixed) => {
       try {
-        fulfillChunk(chunk, readData(response, value, context));
+        fulfillChunk(chunk, readData(response, value, context, {}, ''));
       } catch (error) {
-        rejectChunk(chunk, error);
+        rejectChunk(chunk, readError(response, error));
       }
     },
     (reason: mixed) => {
@@ -957,6 +1199,8 @@ export function createResponse(
     _models: new Map(),
     _modules: new Map(),
     _onError: onError === undefined ? result.onError : onError,
+    _readError: null,
+    _consumerErrors: new WeakSet(),
     _closed: false,
     _cleanup: [],
   };
@@ -998,16 +1242,32 @@ export function readRoot<T>(response: ResultResponse): Thenable<T> {
   const chunk = createPendingChunk();
   // Expansions this walk starts, and their continuations after an await,
   // run with the Result's render context.
-  result.run(() => {
-    try {
-      settleRoot(
-        chunk,
-        readNode(response, result.model, rootKeyContext, rootKeyContext),
-      );
-    } catch (error) {
-      rejectChunk(chunk, error);
-    }
-  });
+  const attempt = () => {
+    result.run(() => {
+      try {
+        const root = readNode(
+          response,
+          result.model,
+          rootKeyContext,
+          rootKeyContext,
+          {},
+          '',
+        );
+        throwReadError(response, null);
+        settleRoot(chunk, root);
+      } catch (thrown) {
+        if (isThenable(thrown)) {
+          // The root waits on a loading module, as the root row would.
+          (thrown as any).then(attempt, (reason: mixed) =>
+            rejectChunk(chunk, readError(response, reason)),
+          );
+          return;
+        }
+        rejectChunk(chunk, readError(response, thrown));
+      }
+    });
+  };
+  attempt();
   return chunk as any;
 }
 

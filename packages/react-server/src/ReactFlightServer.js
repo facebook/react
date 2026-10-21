@@ -133,6 +133,7 @@ import {
   retainResult,
   releaseResult,
   createResultObject,
+  getIteratorEntries,
 } from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
@@ -2215,6 +2216,7 @@ export function createResult<T>(
   );
   result.expand = expandResultElement.bind(null, result);
   result.run = callback => runInResultContext(result, callback);
+  result.checkTainted = checkTainted;
   if (__DEV__) {
     result.environmentName =
       environmentName === undefined
@@ -2228,6 +2230,25 @@ export function createResult<T>(
         : filterStackFrame;
   }
   return result;
+}
+
+function checkTainted(value: mixed): void {
+  if (enableTaint) {
+    if (typeof value === 'string' || typeof value === 'bigint') {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    } else if (
+      (typeof value === 'object' && value !== null) ||
+      typeof value === 'function'
+    ) {
+      const tainted = TaintRegistryObjects.get(value as any);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted);
+      }
+    }
+  }
 }
 
 function runInResultContext<T>(result: Result<any>, callback: () => T): T {
@@ -3741,7 +3762,14 @@ function serializeIterator(
   request: Request,
   iterator: Iterator<ReactClientValue>,
 ): string {
-  const id = outlineModel(request, Array.from(iterator));
+  return serializeIteratorEntries(request, Array.from(iterator));
+}
+
+function serializeIteratorEntries(
+  request: Request,
+  entries: Array<ReactClientValue>,
+): string {
+  const id = outlineModel(request, entries);
   return '$i' + id.toString(16);
 }
 
@@ -4453,6 +4481,13 @@ function renderModelDestructive(
       const iterator = iteratorFn.call(value);
       if (iterator === value) {
         // Iterator, not Iterable
+        if (request.result !== null) {
+          // Another consumer of the Result may have drained it already.
+          return serializeIteratorEntries(
+            request,
+            getIteratorEntries(request.result, iterator as any) as any,
+          );
+        }
         return serializeIterator(request, iterator as any);
       }
       return renderFragment(request, task, Array.from(iterator as any));

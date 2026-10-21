@@ -129,11 +129,21 @@ describe('ReactFlightDOMResult', () => {
     return 'digest(' + (error && error.message) + ')';
   }
 
-  async function readDirect(scenario) {
+  // The serializer's messages describe where the value sat, with detail a
+  // consumer that never serialized cannot reproduce; the first line is the
+  // error itself.
+  function firstLines(errors) {
+    return errors.map(error => String(error.message).split('\n')[0]).sort();
+  }
+
+  async function readDirect(scenario, reported) {
     const readable = new Stream.PassThrough({objectMode: true});
     await serverAct(() => {
       ReactServerDOMServer.renderToPipeableStream(scenario.model, webpackMap, {
-        onError,
+        onError(error) {
+          if (reported) reported.push(error);
+          return onError(error);
+        },
       }).pipe(readable);
     });
     const response = ReactServerDOMClient.createFromNodeStream(
@@ -167,11 +177,14 @@ describe('ReactFlightDOMResult', () => {
   }
 
   // Reads a Result in process, the way the HTML renderer consumes it.
-  async function readResultDirect(scenario) {
+  async function readResultDirect(scenario, reported) {
     let response;
     await serverAct(() => {
       const result = ReactServerDOMServer.renderToResult(scenario.model, {
-        onError,
+        onError(error) {
+          if (reported) reported.push(error);
+          return onError(error);
+        },
       });
       response = ReactServerDOMClient.createFromResult(result, {
         clientManifest: webpackMap,
@@ -339,6 +352,18 @@ describe('ReactFlightDOMResult', () => {
       // use() replays a component after its promise settles, so the count is
       // not the number of components; it is the same as with one consumer.
       expect(c.counts.renders).toBe(b.counts.renders);
+    }
+  });
+
+  it('rejects the values the wire rejects, reporting the same errors', async () => {
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      const a = createScenario(seed, {allowInvalid: true});
+      const directErrors = [];
+      await observe(a, await readDirect(a, directErrors));
+      const b = createScenario(seed, {allowInvalid: true});
+      const inProcessErrors = [];
+      await observe(b, await readResultDirect(b, inProcessErrors));
+      expect(firstLines(inProcessErrors)).toEqual(firstLines(directErrors));
     }
   });
 

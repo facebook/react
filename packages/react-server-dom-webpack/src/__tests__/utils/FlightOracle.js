@@ -138,8 +138,28 @@ function generateModel(rng, env, options) {
     if (shared.length > 0 && rng.chance(0.15)) {
       return rng.pick(shared);
     }
-    const kind = rng.int(8);
+    if (options.allowInvalid && rng.chance(0.2)) {
+      return genInvalid();
+    }
+    const kind = rng.int(12);
     switch (kind) {
+      case 8:
+        return Symbol.for('sym' + rng.int(3));
+      case 9:
+        return 'str' + rng.int(1000);
+      case 10: {
+        // A multi-shot iterable that is not an array.
+        const items = [genData(depth - 1), genData(depth - 1)];
+        return {
+          [Symbol.iterator]() {
+            return items[Symbol.iterator]();
+          },
+        };
+      }
+      case 11:
+        return rng.chance(0.5)
+          ? new Uint8Array([rng.int(256), rng.int(256)])
+          : new Error('value ' + rng.int(100));
       case 0: {
         const length = 1 + rng.int(4);
         const array = [];
@@ -176,6 +196,30 @@ function generateModel(rng, env, options) {
         }
         return maybeShare(object);
       }
+    }
+  }
+
+  // Values the serializer rejects. Each arm must report the same error.
+  function genInvalid() {
+    const kind = rng.int(5);
+    switch (kind) {
+      case 0:
+        return function notAnAction() {};
+      case 1:
+        return Symbol('local' + rng.int(10));
+      case 2:
+        return new (class Model {
+          constructor() {
+            this.field = rng.int(10);
+          }
+        })();
+      case 3: {
+        const object = Object.create(null);
+        object.field = rng.int(10);
+        return object;
+      }
+      default:
+        return {onClick: function handler() {}};
     }
   }
 
@@ -258,11 +302,17 @@ function generateModel(rng, env, options) {
       case 3:
         return genChildren(depth);
       case 4: {
-        // Client Component receiving data props.
-        return React.createElement(Show, {
-          key: genKey(),
-          value: genData(depth - 1),
-        });
+        // Client Component receiving data props. A single-shot iterator only
+        // appears here, never inside a container that could be shared: a
+        // shared iterator is exhausted by whichever read comes second.
+        let value;
+        if (rng.chance(0.15)) {
+          const items = [genData(depth - 1), genData(depth - 1)];
+          value = items[Symbol.iterator]();
+        } else {
+          value = genData(depth - 1);
+        }
+        return React.createElement(Show, {key: genKey(), value});
       }
       case 5: {
         return React.createElement(
@@ -391,6 +441,18 @@ async function normalize(root, env) {
         return {$$: 'symbol', description: value.description};
       }
       return value;
+    }
+    if (
+      typeof value.next === 'function' &&
+      typeof value[Symbol.iterator] === 'function'
+    ) {
+      // Reading an iterator consumes it; both arms are read once.
+      const items = [];
+      const iterated = Array.from(value);
+      for (let i = 0; i < iterated.length; i++) {
+        items.push(await visit(iterated[i]));
+      }
+      return {$$: 'iterator', items};
     }
     if (value.$$typeof === REACT_LAZY_TYPE) {
       // Whether a value arrives inline or behind a lazy depends on timing,
@@ -536,7 +598,16 @@ function describeProps(root, use) {
       if (typeof value === 'function') {
         return {$$: 'function', name: value.name};
       }
+      if (typeof value === 'symbol') {
+        return {$$: 'symbol', description: value.description};
+      }
       return value;
+    }
+    if (
+      typeof value.next === 'function' &&
+      typeof value[Symbol.iterator] === 'function'
+    ) {
+      return {$$: 'iterator', items: Array.from(value).map(visit)};
     }
     if (value.$$typeof === REACT_LAZY_TYPE) {
       return visit(value._init(value._payload));
@@ -546,6 +617,9 @@ function describeProps(root, use) {
     }
     if (value instanceof Date) {
       return {$$: 'date', value: value.toISOString()};
+    }
+    if (value instanceof Error) {
+      return {$$: 'error', message: value.message};
     }
     if (visiting.has(value)) {
       return {$$: 'cycle'};

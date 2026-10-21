@@ -125,6 +125,10 @@ export type Result<T> = {
   // so that cache(), useId() and resource hints inside Server Components it
   // expands resolve to it, including after an await.
   run: <R>(callback: () => R) => R,
+  // Server-owned: throws if a value was tainted, as the serializer would.
+  checkTainted: (value: mixed) => void,
+  // A single-shot iterator is drained once; every consumer reads the items.
+  iteratorEntries: null | WeakMap<Object, Array<mixed>>,
   aborted: boolean,
   abortReason: mixed,
   abortListeners: null | Array<(reason: mixed) => void>,
@@ -168,6 +172,8 @@ export function createResultObject<T>(
     expand: null as any,
     isClientReference,
     run: null as any,
+    checkTainted: null as any,
+    iteratorEntries: null,
     aborted: false,
     abortReason: undefined,
     abortListeners: null,
@@ -178,6 +184,22 @@ export function createResultObject<T>(
     environmentName: null as any,
     filterStackFrame: null as any,
   };
+}
+
+export function getIteratorEntries(
+  result: Result<any>,
+  iterator: Object,
+): Array<mixed> {
+  let entries = result.iteratorEntries;
+  if (entries === null) {
+    result.iteratorEntries = entries = new WeakMap();
+  }
+  let items = entries.get(iterator);
+  if (items === undefined) {
+    items = Array.from(iterator as any);
+    entries.set(iterator, items);
+  }
+  return items;
 }
 
 export function getExpansion(
