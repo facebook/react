@@ -36,10 +36,6 @@ import {
   retainResult,
   releaseResult,
   subscribeToAbort,
-  markPureData,
-  isPureData,
-  isPurePrimitive,
-  LARGE_CONTAINER_VISITS,
 } from 'shared/ReactFlightResult';
 import {subscribeToHints} from 'shared/ReactFlightRenderContext';
 import {createBoundServerReference} from './ReactFlightReplyClient';
@@ -103,7 +99,7 @@ export type ResultResponse = {
   // consumer's expansion emitted them.
   _bindToConsumer: null | (<R>(callback: () => R) => R),
   // Server object → what the consumer gets for it, when that is a different
-  // object. Pure data is returned as is and not recorded: a page can hold
+  // object. Plain data is returned as is and not recorded: a page can hold
   // tens of thousands of plain objects.
   _models: Map<any, any>,
   // Containers being read, outermost first, to close cycles.
@@ -113,11 +109,6 @@ export type ResultResponse = {
   _incomplete: null | Set<Object>,
   // Containers read so far, to recognize a large one worth recording.
   _visits: number,
-  // Whether the object the last read returned is pure data (see
-  // Result.pureData). A read that returns an object as is after reading
-  // inside it must set this for that object, not leave what the inner read
-  // set.
-  _childPure: boolean,
   // Client Reference id → the module it resolved to, or the chunk loading it.
   _modules: Map<string, any>,
   _onError: (error: mixed) => ?string,
@@ -404,6 +395,7 @@ function readChild(
 const CYCLE_CHECK_DEPTH = 64;
 // A container whose read visited this many containers is recorded even when
 // returned as is, so a second reference to it does not read it again.
+const LARGE_CONTAINER_VISITS = 32;
 
 // Starts reading a container. When it is already being read, returns what
 // the inner reference resolves to: the consumer's copy, as on the wire,
@@ -466,37 +458,19 @@ function exitContainer(
   container: Object,
   visitsBefore: number,
   read: any,
-  pure: boolean,
 ): any {
   response._visiting.pop();
   const incomplete = response._incomplete;
   if (incomplete !== null) {
     incomplete.delete(container);
   }
-  if (read === container) {
-    if (response._visits - visitsBefore >= LARGE_CONTAINER_VISITS) {
-      response._models.set(container, container);
-      if (pure) {
-        markPureData(response._result, container);
-      }
-    }
-    response._childPure = pure;
-  } else {
-    response._childPure = false;
+  if (
+    read === container &&
+    response._visits - visitsBefore >= LARGE_CONTAINER_VISITS
+  ) {
+    response._models.set(container, container);
   }
   return read;
-}
-
-// Whether a value JSON-encodes exactly as Flight would encode it. Containers
-// report through response._childPure after they are read.
-function isPureLeaf(response: ResultResponse, child: any, read: any): boolean {
-  if (read !== child) {
-    return false;
-  }
-  if (typeof child === 'object' && child !== null) {
-    return response._childPure;
-  }
-  return isPurePrimitive(child);
 }
 
 // Fails the element being read if any value inside it was invalid.
@@ -628,7 +602,6 @@ function readNode(
       parentPropertyName,
     );
   }
-  response._childPure = false;
   const models = response._models;
   // Like the serializer, an element is only reused by identity outside any
   // Server Component key context, since the context changes what it reads as.
@@ -789,8 +762,6 @@ function readArray(
 ): Array<any> {
   const existing = response._models.get(array);
   if (existing !== undefined && !isIncomplete(response, array)) {
-    response._childPure =
-      existing === array && isPureData(response._result, array);
     return existing;
   }
   const visitsBefore = response._visits;
@@ -799,7 +770,6 @@ function readArray(
     return cycle;
   }
   let copy: null | Array<any> = null;
-  let pure = true;
   try {
     for (let i = 0; i < array.length; i++) {
       const child = array[i];
@@ -815,9 +785,6 @@ function readArray(
           response._readError = error;
         }
         read = undefined;
-      }
-      if (pure && (!(i in array) || !isPureLeaf(response, child, read))) {
-        pure = false;
       }
       if (copy === null) {
         if (read === child) {
@@ -839,7 +806,6 @@ function readArray(
     array,
     visitsBefore,
     copy === null ? array : copy,
-    pure,
   );
 }
 
@@ -1133,9 +1099,7 @@ function readTerminalElement(
   }
   let read;
   if (key === element.key && props === element.props && type === element.type) {
-    // Nothing about the element changes for this consumer. Reading its props
-    // set the pure-data flag for them; an element is not data.
-    response._childPure = false;
+    // Nothing about the element changes for this consumer.
     read = element;
   } else {
     read = createElement(type, key, props);
@@ -1291,12 +1255,9 @@ function readData(
     return null;
   }
   if (typeof value === 'object') {
-    response._childPure = false;
     const models = response._models;
     const existing = models.get(value);
     if (existing !== undefined && !isIncomplete(response, value)) {
-      response._childPure =
-        existing === value && isPureData(response._result, value);
       return existing;
     }
     switch (value.$$typeof) {
@@ -1508,7 +1469,6 @@ function readObject(
     return cycle;
   }
   let copy: null | {[key: string]: any} = null;
-  let pure = true;
   try {
     const keys = Object.keys(object);
     for (let i = 0; i < keys.length; i++) {
@@ -1520,13 +1480,6 @@ function readObject(
         child === undefined || key === '__proto__'
           ? undefined
           : readChild(response, child, context, object, key);
-      if (
-        pure &&
-        (key === '__proto__' ||
-          (child !== undefined && !isPureLeaf(response, child, read)))
-      ) {
-        pure = false;
-      }
       if (copy === null) {
         if (read === child && child !== undefined) {
           continue;
@@ -1549,7 +1502,6 @@ function readObject(
     object,
     visitsBefore,
     copy === null ? object : copy,
-    pure,
   );
 }
 
@@ -1589,13 +1541,7 @@ function readMap(
     abandonContainer(response, map);
     throw thrown;
   }
-  return exitContainer(
-    response,
-    map,
-    visitsBefore,
-    copy === null ? map : copy,
-    false,
-  );
+  return exitContainer(response, map, visitsBefore, copy === null ? map : copy);
 }
 
 function createSetCopy(): Set<any> {
@@ -1633,13 +1579,7 @@ function readSet(
     abandonContainer(response, set);
     throw thrown;
   }
-  return exitContainer(
-    response,
-    set,
-    visitsBefore,
-    copy === null ? set : copy,
-    false,
-  );
+  return exitContainer(response, set, visitsBefore, copy === null ? set : copy);
 }
 
 // A promise in the model is handed out as a chunk, the way the wire path
@@ -1729,7 +1669,6 @@ export function createResponse(
     _visiting: [],
     _incomplete: null,
     _visits: 0,
-    _childPure: false,
     _modules: new Map(),
     _onError: onError === undefined ? result.onError : onError,
     _readError: null,

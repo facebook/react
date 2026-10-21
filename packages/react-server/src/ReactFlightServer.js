@@ -135,8 +135,6 @@ import {
   createResultObject,
   getIteratorEntries,
   subscribeToAbort,
-  isPureData,
-  certifyPureData,
   getStreamReplay,
   getAsyncIterableReplay,
   createReplayReadableStream,
@@ -2398,43 +2396,6 @@ function warnForMissingKey(
   }
 }
 
-// Emits a container the Result reader found to be pure data as one row,
-// encoded by JSON.stringify without the per-value walk. Every object inside
-// is still recorded by its path in that row, so a later reference to one of
-// them dedupes as it would have. Returns -1 when something inside was
-// already written elsewhere: emitting it again would give the client a
-// second copy, so the container takes the regular path instead.
-// Emits a pure container as one JSON row. The replacer does the one thing
-// the regular path would still have to do for the objects inside: refer to
-// one that was written before, and record the path of each new one, so a
-// later occurrence anywhere can refer into this row.
-function outlinePureData(request: Request, value: Object): number {
-  const writtenObjects = request.writtenObjects;
-  const id = request.nextChunkId++;
-  request.pendingChunks++;
-  writtenObjects.set(value, serializeByValueID(id));
-  function dedupe(this: any, key: string, child: any): any {
-    if (typeof child !== 'object' || child === null || child === value) {
-      return child;
-    }
-    const existingReference = writtenObjects.get(child);
-    if (existingReference !== undefined) {
-      return existingReference;
-    }
-    if (key.indexOf(':') === -1) {
-      const parentReference = writtenObjects.get(this);
-      if (parentReference !== undefined) {
-        writtenObjects.set(child, parentReference + ':' + key);
-      }
-    }
-    return child;
-  }
-  const json = stringify(value, dedupe);
-  serializedSize += json.length;
-  emitModelChunk(request, id, json);
-  return id;
-}
-
 function renderFragment(
   request: Request,
   task: Task,
@@ -4442,19 +4403,6 @@ function renderModelDestructive(
 
     const writtenObjects = request.writtenObjects;
     const existingReference = writtenObjects.get(value);
-    const serializedResult = request.result;
-    if (
-      existingReference === undefined &&
-      serializedResult !== null &&
-      (task.keyPath === null || !isArray(value)) &&
-      (isPureData(serializedResult, value) ||
-        certifyPureData(serializedResult, value))
-    ) {
-      // A consumer of the Result read this container and found nothing in it
-      // that Flight encodes differently from JSON, or this is the first to
-      // reach it and finds the same.
-      return serializeByValueID(outlinePureData(request, value));
-    }
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
       // A weak-pending thenable may never emit, so its reference is marked

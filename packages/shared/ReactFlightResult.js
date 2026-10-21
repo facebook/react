@@ -11,9 +11,6 @@ import type {ReactElement} from './ReactElementType';
 import type {RenderContext} from './ReactFlightRenderContext';
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import noop from './noop';
-import isArray from './isArray';
-import getPrototypeOf from './getPrototypeOf';
-import {ASYNC_ITERATOR, getIteratorFn} from './ReactSymbols';
 
 // A Result is a model whose Server Components get executed at most once, by
 // whichever consumer reaches them first. It keeps the caller's model as is
@@ -135,11 +132,6 @@ export type Result<T> = {
   iteratorEntries: null | WeakMap<Object, Array<mixed>>,
   // Streams and async iterables, pulled once and replayed to every consumer.
   replays: null | WeakMap<Object, Replay>,
-  // Large containers a consumer read and found to be data that JSON encodes
-  // exactly as Flight would: plain objects and arrays of strings that don't
-  // start with "$", finite numbers other than -0, booleans and null. The
-  // serializer can emit such a container with JSON.stringify.
-  pureData: null | WeakSet<Object>,
   aborted: boolean,
   abortReason: mixed,
   abortListeners: null | Array<(reason: mixed) => void>,
@@ -188,7 +180,6 @@ export function createResultObject<T>(
     checkTainted: null as any,
     iteratorEntries: null,
     replays: null,
-    pureData: null,
     aborted: false,
     abortReason: undefined,
     abortListeners: null,
@@ -223,117 +214,6 @@ export function getExpansion(
   element: ReactElement,
 ): void | Expansion {
   return result.expansions.get(element);
-}
-
-export function markPureData(result: Result<any>, container: Object): void {
-  let pureData = result.pureData;
-  if (pureData === null) {
-    result.pureData = pureData = new WeakSet();
-  }
-  pureData.add(container);
-}
-
-export function isPureData(result: Result<any>, container: Object): boolean {
-  const pureData = result.pureData;
-  return pureData !== null && pureData.has(container);
-}
-
-// A container is worth its own JSON row from this many containers inside.
-export const LARGE_CONTAINER_VISITS = 32;
-const PURE_DATA_MAX_DEPTH = 64;
-const ObjectPrototype = Object.prototype;
-
-// The rules of pure data, in one place for the reader, which applies them as
-// it reads, and the serializer, which checks a container nobody read yet.
-// A primitive JSON encodes as Flight would: a string not starting with "$",
-// a finite number other than -0, a boolean or null. Undefined is left out.
-export function isPurePrimitive(value: any): boolean {
-  switch (typeof value) {
-    case 'string':
-      return value.charCodeAt(0) !== 36; // '$'
-    case 'number':
-      return isFinite(value) && (value !== 0 || 1 / value > 0);
-    case 'boolean':
-      return true;
-    case 'object':
-      return value === null;
-    default:
-      return false;
-  }
-}
-
-// A container that can be pure: an array, or a plain object that is not
-// iterable or thenable. Whether it is depends on what it holds: no holes,
-// no __proto__ key, and pure values.
-export function isPureContainerShape(value: Object): boolean {
-  return (
-    isArray(value) ||
-    (getPrototypeOf(value) === ObjectPrototype &&
-      !getIteratorFn(value) &&
-      typeof (value as any)[ASYNC_ITERATOR] !== 'function' &&
-      typeof (value as any).then !== 'function')
-  );
-}
-
-// Checks a container no consumer has read yet and marks it when it is large
-// pure data. A cycle, or data nested deeper than any realistic page, is left
-// to the regular path.
-export function certifyPureData(
-  result: Result<any>,
-  container: Object,
-): boolean {
-  const visits = countPureContainers(container, 0);
-  if (visits < LARGE_CONTAINER_VISITS) {
-    return false;
-  }
-  markPureData(result, container);
-  return true;
-}
-
-// The containers inside a pure container, itself included, or -1 if it is
-// not pure.
-function countPureContainers(container: Object, depth: number): number {
-  if (depth >= PURE_DATA_MAX_DEPTH || !isPureContainerShape(container)) {
-    return -1;
-  }
-  let visits = 1;
-  if (isArray(container)) {
-    for (let i = 0; i < container.length; i++) {
-      if (!(i in container)) {
-        return -1;
-      }
-      const inner = countPureValue(container[i], depth);
-      if (inner === -1) {
-        return -1;
-      }
-      visits += inner;
-    }
-    return visits;
-  }
-  const object: {[key: string]: any} = container;
-  const keys = Object.keys(object);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    if (key === '__proto__') {
-      return -1;
-    }
-    const value = object[key];
-    if (value !== undefined) {
-      const inner = countPureValue(value, depth);
-      if (inner === -1) {
-        return -1;
-      }
-      visits += inner;
-    }
-  }
-  return visits;
-}
-
-function countPureValue(value: any, depth: number): number {
-  if (typeof value === 'object' && value !== null) {
-    return countPureContainers(value, depth + 1);
-  }
-  return isPurePrimitive(value) ? 0 : -1;
 }
 
 export function retainResult(result: Result<any>): void {
