@@ -1054,19 +1054,28 @@ function readTerminalElement(
       'children',
     );
   }
-  if (
+  // The serializer resolves a lazy type and unwraps memo and forwardRef
+  // before it emits the element, so neither reaches a consumer.
+  while (
     type !== null &&
     typeof type === 'object' &&
     !result.isClientReference(type)
   ) {
     switch (type.$$typeof) {
+      case REACT_LAZY_TYPE: {
+        const payload = type._payload;
+        const init = type._init;
+        type = init(payload);
+        continue;
+      }
       case REACT_MEMO_TYPE:
         type = type.type;
-        break;
+        continue;
       case REACT_FORWARD_REF_TYPE:
         type = type.render;
-        break;
+        continue;
     }
+    break;
   }
   const key = terminalKey(context, element.key);
   if (element.props.ref !== undefined && element.props.ref !== null) {

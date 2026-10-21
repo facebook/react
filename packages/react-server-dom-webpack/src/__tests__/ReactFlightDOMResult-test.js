@@ -817,6 +817,59 @@ describe('ReactFlightDOMResult', () => {
     expect(html).toContain('<section data-label="page">hi</section>');
   });
 
+  it('resolves a lazy element type the way the serializer does', async () => {
+    const components = createClientComponents();
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    // A Flight client in the server layer hands out lazies for module
+    // references; the serializer resolves such a type before emitting.
+    const LazyClient = ReactServer.lazy(() =>
+      Promise.resolve({default: components.Box}),
+    );
+    const LateClient = ReactServer.lazy(() =>
+      later.then(() => ({default: components.Box})),
+    );
+    const LazyServer = ReactServer.lazy(() =>
+      Promise.resolve({
+        default: function Server({children}) {
+          return ReactServer.createElement('section', null, children);
+        },
+      }),
+    );
+    // Initialize the first lazy up front so it is already resolved when read.
+    try {
+      LazyClient._init(LazyClient._payload);
+    } catch (x) {
+      await x;
+    }
+    const model = {
+      client: ReactServer.createElement(LazyClient, null, 'a'),
+      late: ReactServer.createElement(LateClient, null, 'b'),
+      server: ReactServer.createElement(LazyServer, null, 'c'),
+    };
+    const result = ReactServerDOMServer.renderToResult(model, {onError});
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const clientType = root.client.type;
+    expect(components.nameOf(clientType._init(clientType._payload))).toBe(
+      'Box',
+    );
+    expect(root.late.$$typeof).toBe(Symbol.for('react.lazy'));
+    await serverAct(() => resolveLater());
+    await serverAct(() => {});
+    const late = root.late._init(root.late._payload);
+    expect(components.nameOf(late.type._init(late.type._payload))).toBe('Box');
+    const server = root.server._init(root.server._payload);
+    expect(server.type).toBe('section');
+    expect(await renderHTML(Promise.resolve(root.server))).toEqual({
+      html: '<section>c</section>',
+    });
+  });
+
   it('reads a Client Reference module proxy wherever it appears', async () => {
     const components = createClientComponents();
     // Bundlers hand out a proxy whose get trap throws for Symbol keys, so a
