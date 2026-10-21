@@ -739,30 +739,26 @@ function readStreamedNode(
   );
 }
 
+// The wire serializes an async iterable again wherever it appears, with the
+// key context of that position, so each read gets its own replay over the
+// one iteration the Result records.
 function readAsyncIterable(
   response: ResultResponse,
   iterable: Object,
   read: (value: mixed) => mixed,
   asIterable: boolean,
 ): any {
-  const models = response._models;
-  const existing = models.get(iterable);
-  if (existing !== undefined) {
-    return existing;
-  }
   const replay = getAsyncIterableReplay(
     response._result,
     iterable,
     iterable[ASYNC_ITERATOR],
   );
-  const replayed = createReplayAsyncIterable(
+  return createReplayAsyncIterable(
     replay,
     read,
     reason => readReplayError(response, reason),
     asIterable,
   );
-  models.set(iterable, replayed);
-  return replayed;
 }
 
 // The reason a stream or async iterable failed with, reported through
