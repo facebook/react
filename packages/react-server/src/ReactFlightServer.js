@@ -87,6 +87,7 @@ import {
   isServerReference,
   supportsRequestStorage,
   requestStorage,
+  contextStorage,
   createHints,
   createRootFormatContext,
   getChildFormatContext,
@@ -115,6 +116,13 @@ import {
   resetHooksForRequest,
 } from './ReactFlightHooks';
 import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
+
+import type {RenderContext} from 'shared/ReactFlightRenderContext';
+import {
+  createRenderContext,
+  subscribeToHints,
+} from 'shared/ReactFlightRenderContext';
+export {emitHint} from 'shared/ReactFlightRenderContext';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
@@ -595,11 +603,9 @@ export type Request = {
   fatalError: mixed,
   destination: null | Destination,
   bundlerConfig: ClientManifest,
-  cache: Map<Function, mixed>,
-  cacheController: AbortController,
+  context: RenderContext,
   nextChunkId: number,
   pendingChunks: number,
-  hints: Hints,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
@@ -620,8 +626,6 @@ export type Request = {
   // The combined length of the keys in writtenImportStrings.
   writtenImportStringsSize: number,
   temporaryReferences: void | TemporaryReferenceSet,
-  identifierPrefix: string,
-  identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onAllReady: () => void,
@@ -720,18 +724,16 @@ function RequestInstance(
   if (enableTaint) {
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
-  const hints = createHints();
+  const context = createRenderContext(createHints(), identifierPrefix);
   this.type = type;
   this.status = OPENING;
   this.flushScheduled = false;
   this.fatalError = null;
   this.destination = null;
   this.bundlerConfig = bundlerConfig;
-  this.cache = new Map();
-  this.cacheController = new AbortController();
+  this.context = context;
   this.nextChunkId = 0;
   this.pendingChunks = 0;
-  this.hints = hints;
   this.abortableTasks = abortSet;
   this.pingedTasks = pingedTasks;
   this.completedImportChunks = [] as Array<Chunk>;
@@ -747,8 +749,6 @@ function RequestInstance(
   this.writtenImportStrings = new Map();
   this.writtenImportStringsSize = 0;
   this.temporaryReferences = temporaryReferences;
-  this.identifierPrefix = identifierPrefix || '';
-  this.identifierCount = 1;
   this.taintCleanupQueue = cleanupQueue;
   this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.onAllReady = onAllReady;
@@ -821,6 +821,12 @@ function RequestInstance(
     null,
   );
   pingedTasks.push(rootTask);
+
+  const request = this;
+  subscribeToHints(context, hint => {
+    emitHintChunk(request, hint.code, hint.model);
+    enqueueFlush(request);
+  });
 }
 
 export function createRequest(
@@ -890,12 +896,23 @@ export function createPrerenderRequest(
 }
 
 let currentRequest: null | Request = null;
+let currentContext: null | RenderContext = null;
 
 export function resolveRequest(): null | Request {
   if (currentRequest) return currentRequest;
   // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     const store = requestStorage.getStore();
+    if (store) return store;
+  }
+  return null;
+}
+
+export function resolveContext(): null | RenderContext {
+  if (currentContext) return currentContext;
+  // $FlowFixMe[constant-condition]
+  if (supportsRequestStorage) {
+    const store = contextStorage.getStore();
     if (store) return store;
   }
   return null;
@@ -1321,7 +1338,10 @@ function serializeReadableStream(
       const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       request.abortableTasks.delete(streamTask);
-      request.cacheController.signal.removeEventListener('abort', abortStream);
+      request.context.cacheController.signal.removeEventListener(
+        'abort',
+        abortStream,
+      );
       enqueueFlush(request);
       callOnAllReadyIfReady(request);
     } else {
@@ -1346,7 +1366,10 @@ function serializeReadableStream(
     if (streamTask.status !== PENDING) {
       return;
     }
-    request.cacheController.signal.removeEventListener('abort', abortStream);
+    request.context.cacheController.signal.removeEventListener(
+      'abort',
+      abortStream,
+    );
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
 
@@ -1358,7 +1381,7 @@ function serializeReadableStream(
     if (streamTask.status !== PENDING) {
       return;
     }
-    const signal = request.cacheController.signal;
+    const signal = request.context.cacheController.signal;
     signal.removeEventListener('abort', abortStream);
     const reason = signal.reason;
     if (request.type === PRERENDER) {
@@ -1374,7 +1397,7 @@ function serializeReadableStream(
     reader.cancel(reason).then(error, error);
   }
 
-  request.cacheController.signal.addEventListener('abort', abortStream);
+  request.context.cacheController.signal.addEventListener('abort', abortStream);
   reader.read().then(progress, error);
   return serializeByValueID(streamTask.id);
 }
@@ -1449,7 +1472,7 @@ function serializeAsyncIterable(
       }
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       request.abortableTasks.delete(streamTask);
-      request.cacheController.signal.removeEventListener(
+      request.context.cacheController.signal.removeEventListener(
         'abort',
         abortIterable,
       );
@@ -1476,7 +1499,10 @@ function serializeAsyncIterable(
     if (streamTask.status !== PENDING) {
       return;
     }
-    request.cacheController.signal.removeEventListener('abort', abortIterable);
+    request.context.cacheController.signal.removeEventListener(
+      'abort',
+      abortIterable,
+    );
     erroredTask(request, streamTask, reason);
     enqueueFlush(request);
     if (typeof (iterator as any).throw === 'function') {
@@ -1489,7 +1515,7 @@ function serializeAsyncIterable(
     if (streamTask.status !== PENDING) {
       return;
     }
-    const signal = request.cacheController.signal;
+    const signal = request.context.cacheController.signal;
     signal.removeEventListener('abort', abortIterable);
     const reason = signal.reason;
     if (request.type === PRERENDER) {
@@ -1509,7 +1535,10 @@ function serializeAsyncIterable(
       iterator.throw(reason).then(noop, noop);
     }
   }
-  request.cacheController.signal.addEventListener('abort', abortIterable);
+  request.context.cacheController.signal.addEventListener(
+    'abort',
+    abortIterable,
+  );
   if (__DEV__) {
     callIteratorInDEV(iterator, progress, error);
   } else {
@@ -1518,21 +1547,8 @@ function serializeAsyncIterable(
   return serializeByValueID(streamTask.id);
 }
 
-export function emitHint<Code: HintCode>(
-  request: Request,
-  code: Code,
-  model: HintModel<Code>,
-): void {
-  emitHintChunk(request, code, model);
-  enqueueFlush(request);
-}
-
-export function getHints(request: Request): Hints {
-  return request.hints;
-}
-
-export function getCache(request: Request): Map<Function, mixed> {
-  return request.cache;
+export function getHints(context: RenderContext): Hints {
+  return context.hints;
 }
 
 function readThenable<T>(thenable: Thenable<T>): T {
@@ -3541,7 +3557,10 @@ function serializeBlob(request: Request, blob: Blob): string {
       return;
     }
     if (entry.done) {
-      request.cacheController.signal.removeEventListener('abort', abortBlob);
+      request.context.cacheController.signal.removeEventListener(
+        'abort',
+        abortBlob,
+      );
       pingTask(request, newTask);
       return;
     }
@@ -3554,7 +3573,10 @@ function serializeBlob(request: Request, blob: Blob): string {
     if (newTask.status !== PENDING) {
       return;
     }
-    request.cacheController.signal.removeEventListener('abort', abortBlob);
+    request.context.cacheController.signal.removeEventListener(
+      'abort',
+      abortBlob,
+    );
     erroredTask(request, newTask, reason);
     enqueueFlush(request);
     // $FlowFixMe[incompatible-type] should be able to pass mixed
@@ -3565,7 +3587,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     if (newTask.status !== PENDING) {
       return;
     }
-    const signal = request.cacheController.signal;
+    const signal = request.context.cacheController.signal;
     signal.removeEventListener('abort', abortBlob);
     const reason = signal.reason;
     if (request.type === PRERENDER) {
@@ -3581,7 +3603,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     reader.cancel(reason).then(error, error);
   }
 
-  request.cacheController.signal.addEventListener('abort', abortBlob);
+  request.context.cacheController.signal.addEventListener('abort', abortBlob);
 
   // $FlowFixMe[incompatible-type]
   reader.read().then(progress).catch(error);
@@ -4391,19 +4413,23 @@ function logRecoverableError(
   // We clear the request context so that console.logs inside the callback doesn't
   // get forwarded to the client.
   currentRequest = null;
+  const prevContext = currentContext;
+  currentContext = null;
   let errorDigest;
   try {
     const onError = request.onError;
     if (__DEV__ && task !== null) {
       // $FlowFixMe[constant-condition]
       if (supportsRequestStorage) {
-        errorDigest = requestStorage.run(
-          undefined,
-          callWithDebugContextInDEV,
-          request,
-          task,
-          onError,
-          error,
+        errorDigest = contextStorage.run(undefined, () =>
+          requestStorage.run(
+            undefined,
+            callWithDebugContextInDEV,
+            request,
+            task,
+            onError,
+            error,
+          ),
         );
       } else {
         errorDigest = callWithDebugContextInDEV(request, task, onError, error);
@@ -4411,12 +4437,15 @@ function logRecoverableError(
       // $FlowFixMe[constant-condition]
     } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
-      errorDigest = requestStorage.run(undefined, onError, error);
+      errorDigest = contextStorage.run(undefined, () =>
+        requestStorage.run(undefined, onError, error),
+      );
     } else {
       errorDigest = onError(error);
     }
   } finally {
     currentRequest = prevRequest;
+    currentContext = prevContext;
   }
   if (errorDigest != null && typeof errorDigest !== 'string') {
     // eslint-disable-next-line react-internal/prod-error-codes
@@ -4447,7 +4476,7 @@ function fatalError(request: Request, error: mixed): void {
       cause: error,
     },
   );
-  request.cacheController.abort(abortReason);
+  request.context.cacheController.abort(abortReason);
 }
 
 function serializeErrorValue(request: Request, error: Error): string {
@@ -6411,7 +6440,9 @@ function performWork(request: Request): void {
   ReactSharedInternals.H = HooksDispatcher;
   const prevRequest = currentRequest;
   currentRequest = request;
-  prepareToUseHooksForRequest(request);
+  const prevContext = currentContext;
+  currentContext = request.context;
+  prepareToUseHooksForRequest(request.context);
 
   try {
     const pingedTasks = request.pingedTasks;
@@ -6428,6 +6459,7 @@ function performWork(request: Request): void {
     ReactSharedInternals.H = prevDispatcher;
     resetHooksForRequest();
     currentRequest = prevRequest;
+    currentContext = prevContext;
   }
 }
 
@@ -6674,7 +6706,7 @@ function flushCompletedChunks(request: Request): void {
       const abortReason = new Error(
         'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
       );
-      request.cacheController.abort(abortReason);
+      request.context.cacheController.abort(abortReason);
     }
     if (__DEV__) {
       const debugDestination = request.debugDestination;
@@ -6723,7 +6755,9 @@ export function startWork(request: Request): void {
   // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     scheduleMicrotask(() => {
-      requestStorage.run(request, performWork, request);
+      contextStorage.run(request.context, () =>
+        requestStorage.run(request, performWork, request),
+      );
     });
   } else {
     scheduleMicrotask(() => performWork(request));
@@ -6865,7 +6899,7 @@ export function attachAbortSignal(request: Request, signal: AbortSignal): void {
     () => {
       abort(request, signal.reason);
     },
-    {signal: request.cacheController.signal},
+    {signal: request.context.cacheController.signal},
   );
 }
 
@@ -6879,7 +6913,7 @@ export function abort(request: Request, reason: mixed): void {
     if (enableProfilerTimer) {
       request.abortTime = performance.now();
     }
-    request.cacheController.abort(reason);
+    request.context.cacheController.abort(reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (request.type === PRERENDER) {
