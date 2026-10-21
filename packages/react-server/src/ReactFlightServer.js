@@ -135,6 +135,11 @@ import {
   createResultObject,
   getIteratorEntries,
   subscribeToAbort,
+  getStreamReplay,
+  getAsyncIterableReplay,
+  createReplayReadableStream,
+  createReplayAsyncIterable,
+  isSelfIterator,
 } from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
@@ -2492,8 +2497,35 @@ function renderAsyncFragment(
   // way up. Which is what we want since we've consumed it. If this changes to
   // be recursive serialization, we need to reset the keyPath and implicitSlot,
   // before recursing here.
+  if (request.result !== null) {
+    // Other consumers of the Result read the same values, so the original is
+    // iterated once and replayed.
+    const replay = getAsyncIterableReplay(
+      request.result,
+      children,
+      getAsyncIterator,
+    );
+    // The multi-shot wrapper around an async iterator returned from a Server
+    // Component yields that iterator; it replays as an iterable either way.
+    const replayed = createReplayAsyncIterable(
+      replay,
+      identity,
+      replay.isIterator &&
+        getAsyncIterator !== (children as any)[ASYNC_ITERATOR],
+    );
+    return serializeAsyncIterable(
+      request,
+      task,
+      replayed,
+      (replayed as any)[ASYNC_ITERATOR](),
+    );
+  }
   const asyncIterator = getAsyncIterator.call(children);
   return serializeAsyncIterable(request, task, children, asyncIterator);
+}
+
+function identity(value: mixed): mixed {
+  return value;
 }
 
 function renderClientElement(
@@ -4518,6 +4550,17 @@ function renderModelDestructive(
         }
         return serializeIterator(request, iterator as any);
       }
+      const result = request.result;
+      if (result !== null && isSelfIterator(iterator)) {
+        // The multi-shot wrapper around an iterator returned from a Server
+        // Component yields that single-shot iterator; another consumer of the
+        // Result may have drained it already.
+        return renderFragment(
+          request,
+          task,
+          getIteratorEntries(result, iterator as any) as any,
+        );
+      }
       return renderFragment(request, task, Array.from(iterator as any));
     }
 
@@ -4526,6 +4569,16 @@ function renderModelDestructive(
       typeof ReadableStream === 'function' &&
       value instanceof ReadableStream
     ) {
+      if (request.result !== null) {
+        return serializeReadableStream(
+          request,
+          task,
+          createReplayReadableStream(
+            getStreamReplay(request.result, value),
+            identity,
+          ),
+        );
+      }
       return serializeReadableStream(request, task, value);
     }
     const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) = (

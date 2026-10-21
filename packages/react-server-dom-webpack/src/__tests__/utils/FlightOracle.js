@@ -102,8 +102,12 @@ function generateModel(rng, env, options) {
         // Leading '$' is the escape prefix on the wire.
         return '$' + rng.int(1000);
       case 2:
-        // Large strings are written as separate text rows.
-        return 'x'.repeat(1024 + rng.int(512));
+        // Large strings are written as separate text rows. Not with invalid
+        // values: the error message that describes the parent repeats the
+        // string, and the test environment caps loop iterations.
+        return options.allowInvalid
+          ? 'x'.repeat(16)
+          : 'x'.repeat(1024 + rng.int(512));
       case 3:
         return 'héllo wörld ' + rng.int(100);
       default:
@@ -141,8 +145,15 @@ function generateModel(rng, env, options) {
     if (options.allowInvalid && rng.chance(0.2)) {
       return genInvalid();
     }
-    const kind = rng.int(12);
+    // With invalid values, no streams: the wire keeps serializing and
+    // reporting the items after one fails, while an errored stream is not
+    // read further in process, so the reported errors would differ.
+    const kind = rng.int(options.allowInvalid ? 12 : 14);
     switch (kind) {
+      case 12:
+        return genStream(depth - 1);
+      case 13:
+        return genAsyncIterable(depth - 1, genData, false);
       case 8:
         return Symbol.for('sym' + rng.int(3));
       case 9:
@@ -199,6 +210,68 @@ function generateModel(rng, env, options) {
     }
   }
 
+  // Streams and async iterables settle through the scheduler so that their
+  // timing relative to the consumers is seeded too.
+  function genStream(depth) {
+    if (rng.chance(0.4)) {
+      const chunks = [
+        new Uint8Array([rng.int(256), rng.int(256)]),
+        new Uint8Array([rng.int(256)]),
+      ];
+      return new ReadableStream({
+        type: 'bytes',
+        async start(controller) {
+          for (let i = 0; i < chunks.length; i++) {
+            await scheduler.defer(resolve => resolve());
+            controller.enqueue(chunks[i]);
+          }
+          controller.close();
+        },
+      });
+    }
+    const chunks = [genStreamed(depth, genData), genStreamed(depth, genData)];
+    return new ReadableStream({
+      async start(controller) {
+        for (let i = 0; i < chunks.length; i++) {
+          await scheduler.defer(resolve => resolve());
+          controller.enqueue(chunks[i]);
+        }
+        controller.close();
+      },
+    });
+  }
+
+  // Flight renders the items of a stream or async iterable outside its work
+  // loop, where use() has no dispatcher, so no item holds a component that
+  // suspends through use().
+  let insideStream = 0;
+  function genStreamed(depth, gen) {
+    insideStream++;
+    try {
+      return gen(depth);
+    } finally {
+      insideStream--;
+    }
+  }
+
+  function genAsyncIterable(depth, gen, multiShot) {
+    const items = [genStreamed(depth, gen), genStreamed(depth, gen)];
+    const gates = items.map(() => scheduler.defer(resolve => resolve()));
+    async function* generate() {
+      for (let i = 0; i < items.length; i++) {
+        await gates[i];
+        yield items[i];
+      }
+    }
+    if (!multiShot && rng.chance(0.5)) {
+      // An async generator object is its own iterator: single-shot.
+      return generate();
+    }
+    return {
+      [Symbol.asyncIterator]: generate,
+    };
+  }
+
   // Values the serializer rejects. Each arm must report the same error.
   function genInvalid() {
     const kind = rng.int(5);
@@ -236,47 +309,77 @@ function generateModel(rng, env, options) {
     return scheduler.defer(resolve => resolve(value));
   }
 
-  function genKey() {
+  // Elements in an array need keys or React warns, so those get unique ones;
+  // elsewhere a key is optional.
+  let keyCount = 0;
+  function genKey(inArray) {
+    if (inArray) {
+      return 'i' + keyCount++;
+    }
     return rng.chance(0.3) ? 'key' + rng.int(5) : null;
   }
 
-  function genChildren(depth) {
+  // createElement reads any present key, so a null key must be absent.
+  function keyProps(key) {
+    return key === null ? {} : {key};
+  }
+
+  // Children passed as an array. Spread into createElement instead, the same
+  // list needs no keys.
+  function genChildren(depth, inArray) {
     const length = 1 + rng.int(3);
     const children = [];
     for (let i = 0; i < length; i++) {
-      children.push(genNode(depth - 1));
+      children.push(genNode(depth - 1, inArray));
     }
     return children;
   }
 
   const sharedNodes = [];
+  // An element whose component throws is never shared: the wire refers to
+  // the second occurrence by value, and a reference to an errored slot fails
+  // the element holding it, which is coarser than rendering it again.
+  const unshareable = new WeakSet();
   function maybeShareNode(node) {
-    if (node !== null && typeof node === 'object' && rng.chance(0.3)) {
+    if (
+      node !== null &&
+      typeof node === 'object' &&
+      !unshareable.has(node) &&
+      rng.chance(0.3)
+    ) {
       sharedNodes.push(node);
     }
     return node;
   }
 
-  function genNode(depth) {
+  function genNode(depth, inArray) {
     if (depth <= 0) {
       return rng.chance(0.5) ? genString() : null;
     }
-    if (sharedNodes.length > 0 && rng.chance(0.1)) {
-      // The same element object in two places, including Server Components.
+    // The same element object in two places, including Server Components.
+    // Not inside an array, where the repeated key would warn.
+    if (!inArray && sharedNodes.length > 0 && rng.chance(0.1)) {
       return rng.pick(sharedNodes);
     }
-    return maybeShareNode(genNodeImpl(depth));
+    return maybeShareNode(genNodeImpl(depth, inArray));
   }
 
-  function genNodeImpl(depth) {
-    const kind = rng.int(11);
+  function genNodeImpl(depth, inArray) {
+    const kind = rng.int(options.allowInvalid ? 11 : 12);
+    const key = genKey(inArray);
     switch (kind) {
+      case 11:
+        // Async iterable children render as a fragment. React rejects an
+        // iterator here since rendering may enumerate it more than once.
+        return genAsyncIterable(depth - 1, d => genNode(d, true), true);
       case 10:
         // Errors below a boundary stay inside it in the HTML.
         return React.createElement(
           REACT_SUSPENSE_TYPE,
-          {key: genKey(), fallback: 'loading ' + rng.int(100)},
-          ...genChildren(depth),
+          Object.assign(keyProps(key), {
+            fallback: 'loading ' + rng.int(100),
+          }),
+          ...genChildren(depth, false),
         );
       case 0:
       case 1: {
@@ -287,20 +390,20 @@ function generateModel(rng, env, options) {
         if (rng.chance(0.5)) {
           props['data-x'] = String(genPrimitive());
         }
-        props.children = genChildren(depth);
+        props.children = genChildren(depth, true);
         return React.createElement(
           rng.pick(['div', 'span', 'p']),
-          Object.assign({key: genKey()}, props),
+          Object.assign(keyProps(key), props),
         );
       }
       case 2:
         return React.createElement(
           REACT_FRAGMENT_TYPE,
-          {key: genKey()},
-          ...genChildren(depth),
+          keyProps(key),
+          ...genChildren(depth, false),
         );
       case 3:
-        return genChildren(depth);
+        return genChildren(depth, true);
       case 4: {
         // Client Component receiving data props. A single-shot iterator only
         // appears here, never inside a container that could be shared: a
@@ -312,41 +415,43 @@ function generateModel(rng, env, options) {
         } else {
           value = genData(depth - 1);
         }
-        return React.createElement(Show, {key: genKey(), value});
+        return React.createElement(Show, Object.assign(keyProps(key), {value}));
       }
       case 5: {
         return React.createElement(
           Box,
-          {key: genKey(), label: genString()},
-          ...genChildren(depth),
+          Object.assign(keyProps(key), {label: genString()}),
+          ...genChildren(depth, false),
         );
       }
       case 6:
       case 7:
       case 8: {
-        return genServerComponentElement(depth);
+        return genServerComponentElement(depth, key);
       }
       default:
         return genString();
     }
   }
 
-  function genServerComponentElement(depth) {
+  function genServerComponentElement(depth, key) {
     const id = componentCount++;
-    const kind = rng.int(5);
-    const key = genKey();
+    let kind = rng.int(5);
+    if (kind === 2 && insideStream > 0) {
+      kind = 0;
+    }
     const props = {label: 'c' + id};
     let Component;
     switch (kind) {
       case 0: {
-        const output = genNode(depth - 1);
+        const output = genNode(depth - 1, false);
         Component = function Sync() {
           return output;
         };
         break;
       }
       case 1: {
-        const output = genNode(depth - 1);
+        const output = genNode(depth - 1, false);
         const promise = scheduler.defer(resolve => resolve(output));
         Component = async function Async() {
           return await promise;
@@ -354,7 +459,7 @@ function generateModel(rng, env, options) {
         break;
       }
       case 2: {
-        const output = genNode(depth - 1);
+        const output = genNode(depth - 1, false);
         const promise = scheduler.defer(resolve => resolve(output));
         Component = function Using() {
           return React.use(promise);
@@ -376,7 +481,7 @@ function generateModel(rng, env, options) {
             };
           }
         } else {
-          const output = genChildren(depth - 1);
+          const output = genChildren(depth - 1, true);
           Component = function ReturningArray() {
             return output;
           };
@@ -384,7 +489,7 @@ function generateModel(rng, env, options) {
         break;
       }
       default: {
-        const output = genNode(depth - 1);
+        const output = genNode(depth - 1, false);
         Component = function Nested(nestedProps) {
           return React.createElement(
             'div',
@@ -400,13 +505,20 @@ function generateModel(rng, env, options) {
       return Component(componentProps);
     };
     Object.defineProperty(Counted, 'name', {value: 'SC' + id});
-    return React.createElement(Counted, Object.assign({key}, props));
+    const element = React.createElement(
+      Counted,
+      key === null ? props : Object.assign({key}, props),
+    );
+    if (kind === 3 && options.allowErrors) {
+      unshareable.add(element);
+    }
+    return element;
   }
 
   const kind = options.kind || (rng.chance(0.7) ? 'tree' : 'data');
   const model =
     kind === 'tree'
-      ? React.createElement('main', null, genChildren(maxDepth))
+      ? React.createElement('main', null, genChildren(maxDepth, true))
       : genData(maxDepth);
   return {model, kind};
 }
@@ -441,6 +553,46 @@ async function normalize(root, env) {
         return {$$: 'symbol', description: value.description};
       }
       return value;
+    }
+    if (
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
+    ) {
+      const reader = value.getReader();
+      const chunks = [];
+      try {
+        while (true) {
+          const {done, value: chunk} = await reader.read();
+          if (done) {
+            break;
+          }
+          chunks.push(await visit(chunk));
+        }
+      } catch (error) {
+        return {$$: 'stream', chunks, error: await visitError(error)};
+      }
+      return {$$: 'stream', chunks};
+    }
+    if (typeof value[Symbol.asyncIterator] === 'function') {
+      const items = [];
+      const iterator = value[Symbol.asyncIterator]();
+      try {
+        while (true) {
+          const {done, value: item} = await iterator.next();
+          if (done) {
+            break;
+          }
+          items.push(await visit(item));
+        }
+      } catch (error) {
+        return {
+          $$: 'asyncIterable',
+          isIterator: iterator === value,
+          items,
+          error: await visitError(error),
+        };
+      }
+      return {$$: 'asyncIterable', isIterator: iterator === value, items};
     }
     if (
       typeof value.next === 'function' &&
@@ -602,6 +754,15 @@ function describeProps(root, use) {
         return {$$: 'symbol', description: value.description};
       }
       return value;
+    }
+    if (
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
+    ) {
+      return {$$: 'stream'};
+    }
+    if (typeof value[Symbol.asyncIterator] === 'function') {
+      return {$$: 'asyncIterable'};
     }
     if (
       typeof value.next === 'function' &&

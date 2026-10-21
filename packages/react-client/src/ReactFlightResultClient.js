@@ -54,7 +54,14 @@ import {
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
-import {getIteratorEntries} from 'shared/ReactFlightResult';
+import {
+  getIteratorEntries,
+  getStreamReplay,
+  getAsyncIterableReplay,
+  createReplayReadableStream,
+  createReplayAsyncIterable,
+  isSelfIterator,
+} from 'shared/ReactFlightResult';
 
 const ObjectPrototype = Object.prototype;
 
@@ -237,11 +244,16 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
 function createLazyChunkWrapper<T>(
   chunk: SomeChunk<T>,
 ): LazyComponent<T, SomeChunk<T>> {
-  return {
+  const lazyType: LazyComponent<T, SomeChunk<T>> = {
     $$typeof: REACT_LAZY_TYPE,
     _payload: chunk,
     _init: readChunk,
   };
+  if (__DEV__) {
+    // Key validation already happened where the element was created.
+    lazyType._store = {validated: 1};
+  }
+  return lazyType;
 }
 
 // The error the wire path would have produced for a Server Component error:
@@ -477,7 +489,95 @@ function readNode(
   if (isArray(value)) {
     return readFragment(response, value, context, descendContext);
   }
+  if (
+    typeof value[ASYNC_ITERATOR] === 'function' &&
+    !(typeof ReadableStream === 'function' && value instanceof ReadableStream)
+  ) {
+    return readAsyncFragment(response, value, context, descendContext);
+  }
   return readData(response, value, descendContext, parent, parentPropertyName);
+}
+
+// An async iterable in a node position is a fragment, keyed like an array.
+function readAsyncFragment(
+  response: ResultResponse,
+  iterable: Object,
+  context: KeyContext,
+  descendContext: KeyContext,
+): any {
+  const replayed = readAsyncIterable(
+    response,
+    iterable,
+    value => readStreamedNode(response, value, descendContext),
+    false,
+  );
+  if (context.keyPath !== null) {
+    const fragment = createElement(REACT_FRAGMENT_TYPE, context.keyPath, {
+      children: replayed,
+    });
+    return context.implicitSlot ? [fragment] : fragment;
+  }
+  return replayed;
+}
+
+// Each value a stream or async iterable yields is its own row on the wire,
+// so it is read like one: an element at its root that fails synchronously
+// or an invalid value inside it fails the value itself, and with it the
+// stream, rather than becoming a lazy error.
+function readStreamedValue(
+  response: ResultResponse,
+  value: any,
+  read: () => mixed,
+): mixed {
+  const prevReadError = response._readError;
+  response._readError = null;
+  let result;
+  try {
+    result = read();
+    throwReadError(response, prevReadError);
+  } catch (thrown) {
+    response._readError = prevReadError;
+    if (isThenable(thrown)) {
+      throw thrown;
+    }
+    throw readError(response, thrown);
+  }
+  return result;
+}
+
+function readStreamedNode(
+  response: ResultResponse,
+  value: any,
+  context: KeyContext,
+): mixed {
+  return readStreamedValue(response, value, () =>
+    value !== null &&
+    typeof value === 'object' &&
+    value.$$typeof === REACT_ELEMENT_TYPE
+      ? readElementImpl(response, value, context, context)
+      : readNode(response, value, context, context, {}, ''),
+  );
+}
+
+function readAsyncIterable(
+  response: ResultResponse,
+  iterable: Object,
+  read: (value: mixed) => mixed,
+  asIterable: boolean,
+): any {
+  const models = response._models;
+  const existing = models.get(iterable);
+  if (existing !== undefined) {
+    return existing;
+  }
+  const replay = getAsyncIterableReplay(
+    response._result,
+    iterable,
+    iterable[ASYNC_ITERATOR],
+  );
+  const replayed = createReplayAsyncIterable(replay, read, asIterable);
+  models.set(iterable, replayed);
+  return replayed;
 }
 
 function readFragment(
@@ -702,6 +802,14 @@ function readServerComponentOutput(
   if (output === null || typeof output !== 'object') {
     return output;
   }
+  if (__DEV__) {
+    if (output.$$typeof === REACT_ELEMENT_TYPE && output._store) {
+      // The return position of a component is a static position, so the
+      // element needs no key even if a consumer ends up placing it in a
+      // list. The serializer marks it the same way.
+      output._store.validated = 1;
+    }
+  }
   if (
     typeof output.then === 'function' &&
     !response._result.isClientReference(output)
@@ -743,13 +851,37 @@ function readServerComponentOutput(
   }
   const iteratorFn = getIteratorFn(output);
   if (iteratorFn && !isArray(output)) {
-    // An iterator in return position renders as its items.
+    // An iterator in return position renders as its items, drained into the
+    // Result once since the serializer reads them too.
+    const iterator = iteratorFn.call(output);
     return readFragment(
       response,
-      Array.from(output as any),
+      // $FlowFixMe[invalid-compare]
+      iterator === output
+        ? getIteratorEntries(response._result, iterator)
+        : Array.from(iterator as any),
       context,
       descendContext,
     );
+  }
+  if (
+    typeof output[ASYNC_ITERATOR] === 'function' &&
+    !(typeof ReadableStream === 'function' && output instanceof ReadableStream)
+  ) {
+    // An async iterator in return position is treated as multi-shot.
+    const replayed = readAsyncIterable(
+      response,
+      output,
+      value => readStreamedNode(response, value, descendContext),
+      true,
+    );
+    if (context.keyPath !== null) {
+      const fragment = createElement(REACT_FRAGMENT_TYPE, context.keyPath, {
+        children: replayed,
+      });
+      return context.implicitSlot ? [fragment] : fragment;
+    }
+    return replayed;
   }
   return readNode(response, output, context, descendContext, {}, '');
 }
@@ -1071,18 +1203,39 @@ function readData(
         models.set(value, read);
         return read;
       }
-      // An iterable renders as its items.
-      return readArray(response, Array.from(iterator as any), context);
+      // An iterable renders as its items. One that yields a self-iterator,
+      // such as a generator, is drained into the Result once.
+      return readArray(
+        response,
+        isSelfIterator(iterator)
+          ? getIteratorEntries(result, iterator)
+          : Array.from(iterator as any),
+        context,
+      );
     }
     if (
-      (typeof ReadableStream === 'function' &&
-        value instanceof ReadableStream) ||
-      typeof value[ASYNC_ITERATOR] === 'function'
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
     ) {
-      // TODO: Replay streams and async iterables to every consumer.
-      // eslint-disable-next-line react-internal/prod-error-codes
-      throw new Error(
-        'Streams and async iterables are not supported in a Result yet.',
+      const replayed = createReplayReadableStream(
+        getStreamReplay(result, value),
+        chunk =>
+          readStreamedValue(response, chunk, () =>
+            readData(response, chunk, context, {}, ''),
+          ),
+      );
+      models.set(value, replayed);
+      return replayed;
+    }
+    if (typeof value[ASYNC_ITERATOR] === 'function') {
+      return readAsyncIterable(
+        response,
+        value,
+        item =>
+          readStreamedValue(response, item, () =>
+            readData(response, item, context, {}, ''),
+          ),
+        false,
       );
     }
     const proto = getPrototypeOf(value);
