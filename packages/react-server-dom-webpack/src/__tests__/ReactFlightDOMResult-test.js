@@ -722,7 +722,9 @@ describe('ReactFlightDOMResult', () => {
     expect(root.pure.list[0]).toBe(root.pure);
     expect(root.map.get('me')).toBe(root.map);
     expect(root.copied).not.toBe(copied);
-    expect(components.nameOf(root.copied.icon.type)).toBe('Box');
+    // A client element's type is a lazy that requires the module on read.
+    const iconType = root.copied.icon.type;
+    expect(components.nameOf(iconType._init(iconType._payload))).toBe('Box');
     expect(root.copied.ring[0]).toBe(root.copied);
     expect(Array.from(root.copied.ring[1])[0]).toBe(root.copied);
     expect(root.element.props.value).toBe(root.copied);
@@ -813,6 +815,50 @@ describe('ReactFlightDOMResult', () => {
     expect(html).toContain('<link rel="preload" href="/before.css" as="style"');
     expect(html).toContain('<link rel="preload" href="/after.css" as="style"');
     expect(html).toContain('<section data-label="page">hi</section>');
+  });
+
+  it('requires a client module when the renderer first reads the element, not before', async () => {
+    const components = createClientComponents();
+    const required = [];
+    const originalRequire = global.__webpack_require__;
+    global.__webpack_require__ = id => {
+      required.push(id);
+      return originalRequire(id);
+    };
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    async function Late() {
+      await later;
+      return ReactServer.createElement(components.Box, null, 'late');
+    }
+    try {
+      const model = {
+        now: ReactServer.createElement(components.Show, {value: 1}),
+        late: ReactServer.createElement(Late, null),
+      };
+      const result = ReactServerDOMServer.renderToResult(model, {onError});
+      const root = await ReactServerDOMClient.createFromResult(result, {
+        clientManifest: webpackMap,
+        serverConsumerManifest: components.serverConsumerManifest,
+      });
+      // Reading the tree resolves no module.
+      expect(required).toEqual([]);
+      const nowType = root.now.type;
+      expect(components.nameOf(nowType._init(nowType._payload))).toBe('Show');
+      expect(required.length).toBe(1);
+      // A subtree that settles while nothing renders it loads nothing.
+      await serverAct(() => resolveLater());
+      await serverAct(() => {});
+      expect(required.length).toBe(1);
+      const late = root.late._init(root.late._payload);
+      const lateType = late.type;
+      expect(components.nameOf(lateType._init(lateType._payload))).toBe('Box');
+      expect(required.length).toBe(2);
+    } finally {
+      global.__webpack_require__ = originalRequire;
+    }
   });
 
   it('resolves a lazy node that settles after the in-process consumer read it', async () => {

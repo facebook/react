@@ -140,6 +140,7 @@ function ResultChunk(this: any, status: string, value: any, reason: any) {
   this.value = value;
   this.reason = reason;
   this._listeners = null;
+  this._deferred = null;
 }
 // $FlowFixMe[prop-missing]
 ResultChunk.prototype = Object.create(Promise.prototype) as any;
@@ -160,6 +161,11 @@ function resultChunkThen(
       }
       break;
     default: {
+      if (this._deferred !== null) {
+        initializeDeferredChunk(this);
+        resultChunkThen.call(this, resolve, reject);
+        return;
+      }
       let listeners = this._listeners;
       if (listeners === null) {
         this._listeners = listeners = [];
@@ -181,6 +187,10 @@ type SomeChunk<T> = {
   value: T,
   reason: mixed,
   _listeners: null | Array<[(value: T) => mixed, (reason: mixed) => mixed]>,
+  // Settles the chunk, run on first read. A value that arrives when no one
+  // is waiting is read then, as the wire client parses a row when it is
+  // first read, so a subtree the consumer never renders loads nothing.
+  _deferred: null | (() => void),
   then(resolve: (value: T) => mixed, reject: (reason: mixed) => mixed): void,
 };
 
@@ -249,8 +259,49 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
     case REJECTED:
       throw chunk.reason;
     default:
+      if (chunk._deferred !== null) {
+        initializeDeferredChunk(chunk);
+        return readChunk(chunk);
+      }
       throw chunk;
   }
+}
+
+function initializeDeferredChunk<T>(chunk: SomeChunk<T>): void {
+  const deferred = chunk._deferred;
+  if (deferred !== null) {
+    chunk._deferred = null;
+    deferred();
+  }
+}
+
+// Settles a pending chunk with what `read` produces. Read now if something
+// waits on the chunk, otherwise when it is first read.
+function settleChunk<T>(
+  response: ResultResponse,
+  chunk: SomeChunk<T>,
+  read: () => T,
+): void {
+  if (chunk.status !== PENDING || chunk._deferred !== null) {
+    return;
+  }
+  const settle = () => {
+    let value;
+    try {
+      value = read();
+    } catch (error) {
+      rejectChunk(response, chunk, readError(response, error));
+      return;
+    }
+    fulfillChunk(response, chunk, value);
+  };
+  if (chunk._listeners !== null) {
+    settle();
+    return;
+  }
+  // No longer rejected by an abort: its value is here.
+  response._pendingChunks.delete(chunk);
+  chunk._deferred = settle;
 }
 
 function createLazyChunkWrapper<T>(
@@ -777,20 +828,13 @@ function readLazy(
     ) {
       const chunk = createPendingChunk(response);
       thrown.then(
-        () => {
-          try {
-            // Read the lazy itself again, not through readNode: the memo
-            // holds the wrapper being returned below for it, which would
-            // make the chunk resolve to a lazy for itself.
-            fulfillChunk(
-              response,
-              chunk,
-              readLazy(response, lazy, context, descendContext),
-            );
-          } catch (error) {
-            rejectChunk(response, chunk, readError(response, error));
-          }
-        },
+        () =>
+          // Read the lazy itself again, not through readNode: the memo holds
+          // the wrapper being returned below for it, which would make the
+          // chunk resolve to a lazy for itself.
+          settleChunk(response, chunk, () =>
+            readLazy(response, lazy, context, descendContext),
+          ),
         (reason: mixed) =>
           rejectChunk(response, chunk, readError(response, reason)),
       );
@@ -817,17 +861,10 @@ function readElement(
     if (isThenable(thrown)) {
       const chunk = createPendingChunk(response);
       (thrown as any).then(
-        () => {
-          try {
-            fulfillChunk(
-              response,
-              chunk,
-              readElement(response, element, context, descendContext),
-            );
-          } catch (error) {
-            rejectChunk(response, chunk, readError(response, error));
-          }
-        },
+        () =>
+          settleChunk(response, chunk, () =>
+            readElement(response, element, context, descendContext),
+          ),
         (reason: mixed) =>
           rejectChunk(response, chunk, readError(response, reason)),
       );
@@ -874,22 +911,10 @@ function readExpansion(
     case EXPANSION_PENDING: {
       const chunk = createPendingChunk(response);
       expansion.then(
-        (value: mixed) => {
-          try {
-            fulfillChunk(
-              response,
-              chunk,
-              readServerComponentOutput(
-                response,
-                value,
-                context,
-                descendContext,
-              ),
-            );
-          } catch (error) {
-            rejectChunk(response, chunk, readError(response, error));
-          }
-        },
+        (value: mixed) =>
+          settleChunk(response, chunk, () =>
+            readServerComponentOutput(response, value, context, descendContext),
+          ),
         (reason: mixed) => {
           rejectChunk(
             response,
@@ -949,17 +974,10 @@ function readServerComponentOutput(
     }
     const chunk = createPendingChunk(response);
     thenable.then(
-      (value: mixed) => {
-        try {
-          fulfillChunk(
-            response,
-            chunk,
-            readServerComponentOutput(response, value, context, descendContext),
-          );
-        } catch (error) {
-          rejectChunk(response, chunk, readError(response, error));
-        }
-      },
+      (value: mixed) =>
+        settleChunk(response, chunk, () =>
+          readServerComponentOutput(response, value, context, descendContext),
+        ),
       (reason: mixed) => {
         rejectChunk(
           response,
@@ -1088,29 +1106,13 @@ function readClientReferenceElement(
   props: any,
   context: KeyContext,
 ): any {
-  const resolvedType = readClientReference(response, reference);
-  if (
-    resolvedType !== null &&
-    typeof resolvedType === 'object' &&
-    resolvedType.$$typeof === REACT_LAZY_TYPE
-  ) {
-    // The module is still loading.
-    const moduleChunk: SomeChunk<any> = resolvedType._payload;
-    const chunk = createPendingChunk(response);
-    moduleChunk.then(
-      (type: mixed) => {
-        const element = createElement(type, key, props);
-        fulfillChunk(
-          response,
-          chunk,
-          context.implicitSlot && key !== null ? [element] : element,
-        );
-      },
-      (reason: mixed) => rejectChunk(response, chunk, reason),
-    );
-    return createLazyChunkWrapper(chunk);
-  }
-  const element = createElement(resolvedType, key, props);
+  // The type is a lazy that requires the module when the renderer first
+  // reads it, as a client element's type is on the wire.
+  const element = createElement(
+    readClientReference(response, reference),
+    key,
+    props,
+  );
   if (context.implicitSlot && key !== null) {
     return [element];
   }
@@ -1169,33 +1171,23 @@ function readTemporaryReferenceValue(
 // A Client Reference in a data position is its module export. While the
 // module loads, the enclosing element waits, as the row would on the wire.
 function readClientReferenceValue(response: ResultResponse, reference: any) {
-  const resolved = readClientReference(response, reference);
-  if (
-    resolved !== null &&
-    typeof resolved === 'object' &&
-    resolved.$$typeof === REACT_LAZY_TYPE &&
-    resolved._init === readChunk
-  ) {
-    throw resolved._payload;
-  }
-  return resolved;
+  // Throws the chunk while the module loads, which makes the enclosing
+  // element wait on it.
+  return readChunk(readClientReference(response, reference)._payload);
 }
 
-// Resolves a server-side Client Reference to the consumer's module export,
-// or to a lazy wrapper while its chunks load.
-function readClientReference(response: ResultResponse, reference: any): any {
+// Resolves a server-side Client Reference to a lazy over the consumer's
+// module export, required when first read, as the wire client requires a
+// module when the first row that needs it is read. The same reference gives
+// the same lazy, so an element type is stable across reads.
+function readClientReference(
+  response: ResultResponse,
+  reference: any,
+): LazyComponent<any, SomeChunk<any>> {
   const id: string = reference.$$id;
   const modules = response._modules;
   const existing = modules.get(id);
   if (existing !== undefined) {
-    if (
-      existing !== null &&
-      typeof existing === 'object' &&
-      existing.$$typeof === REACT_LAZY_TYPE &&
-      existing._payload.status === FULFILLED
-    ) {
-      return existing._payload.value;
-    }
     return existing;
   }
   const metadata = response._bundler.resolveClientReferenceMetadata(reference);
@@ -1219,26 +1211,20 @@ function readClientReference(response: ResultResponse, reference: any): any {
       metadata,
     );
   }
+  const chunk = createPendingChunk(response);
+  const lazy = createLazyChunkWrapper(chunk);
+  modules.set(id, lazy);
   const promise = preloadModule(clientReference);
+  const require = () => requireModule(clientReference);
   if (promise) {
-    const chunk = createPendingChunk(response);
-    const lazy = createLazyChunkWrapper(chunk);
-    modules.set(id, lazy);
     promise.then(
-      () => {
-        try {
-          fulfillChunk(response, chunk, requireModule(clientReference));
-        } catch (error) {
-          rejectChunk(response, chunk, error);
-        }
-      },
+      () => settleChunk(response, chunk, require),
       (reason: mixed) => rejectChunk(response, chunk, reason),
     );
-    return lazy;
+  } else {
+    settleChunk(response, chunk, require);
   }
-  const moduleExport = requireModule(clientReference);
-  modules.set(id, moduleExport);
-  return moduleExport;
+  return lazy;
 }
 
 // Reads a value in a data position: props and anything inside them. Nodes
