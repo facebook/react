@@ -11,14 +11,18 @@
 'use strict';
 
 // Renders generated value graphs with the real writer, reads them with the
-// public client on both hosts, and releases the external events the client is
-// waiting on (packets, module loads, Promise resolutions, stream items) one at
-// a time in random orders. After each event it checks that every value whose
-// inputs have all arrived has been delivered, that nothing was delivered before
-// its inputs arrived, that delivered values equal the server's values, and that
-// they still do once everything has settled. The expectations come only from
-// the source graph and the record of released events, never from rows or
-// client chunk state.
+// public reader, and releases the external events the reader is waiting on
+// (packets, module loads, Promise resolutions, stream items) one at a time in
+// random orders. After each event it checks that every value whose inputs have
+// all arrived has been delivered, that nothing was delivered before its inputs
+// arrived, that delivered values equal the source values, and that they still
+// do once everything has settled. The expectations come only from the source
+// graph and the record of released events, never from rows or chunk state.
+//
+// The `node` and `edge` hosts render with the server and read with the client.
+// The `reply` host goes the other way: the client encodes the graph as a reply
+// and the server decodes it, with the entries of the reply arriving in packets
+// and Server Function modules loading one at a time.
 //
 // The default run is a small sample from seed 1. FUZZ_TEST_SEED=n starts at
 // seed n, which the hourly fuzz workflow sets at random, and
@@ -68,7 +72,14 @@ function shuffle(array, pick) {
 // a timer or I/O turn, so each turn also yields to a timer.
 const PATIENCE = 30;
 
-function roundTrip({host, model, packetSizes, yieldBetweenPackets, onError}) {
+function roundTrip({
+  host,
+  model,
+  body,
+  packetSizes,
+  yieldBetweenPackets,
+  onError,
+}) {
   const manifest = {
     moduleMap: null,
     serverModuleMap: WebpackMock.webpackServerMap,
@@ -97,7 +108,51 @@ function roundTrip({host, model, packetSizes, yieldBetweenPackets, onError}) {
       }
     },
   };
-  if (host === 'node') {
+  if (host === 'reply') {
+    // The whole reply exists before decoding starts. Its entries are handed
+    // to the decoder a packet at a time, so packet sizes count entries.
+    queued =
+      typeof body === 'string' ? [['0', body]] : Array.from(body.entries());
+    serverDone = true;
+    const waiting = [];
+    const arrived = [];
+    let ended = false;
+    const deliver = () => {
+      while (waiting.length && (arrived.length || ended)) {
+        const resolve = waiting.shift();
+        resolve(
+          arrived.length
+            ? {done: false, value: arrived.shift()}
+            : {done: true, value: undefined},
+        );
+      }
+    };
+    const entries = {
+      [Symbol.asyncIterator]() {
+        return {
+          next() {
+            return new Promise(resolve => {
+              waiting.push(resolve);
+              deliver();
+            });
+          },
+        };
+      },
+    };
+    root = Server.decodeReplyFromAsyncIterable(
+      entries,
+      WebpackMock.webpackServerMap,
+    );
+    send = entry => {
+      arrived.push(entry);
+      deliver();
+    };
+    end = () => {
+      ended = true;
+      deliver();
+    };
+    abort = () => {};
+  } else if (host === 'node') {
     const {PassThrough, Writable} = require('stream');
     const input = new PassThrough();
     root = Client.createFromNodeStream(input, manifest);
@@ -164,14 +219,24 @@ function roundTrip({host, model, packetSizes, yieldBetweenPackets, onError}) {
   // varying sizes so that rows straddle packet boundaries.
   async function flush() {
     await tick();
-    const bytes = Buffer.concat(queued);
-    queued = [];
-    for (let offset = 0; offset < bytes.length; ) {
-      const size = packetSizes[packet++ % packetSizes.length];
-      send(bytes.subarray(offset, offset + size));
-      offset += size;
-      if (yieldBetweenPackets) {
-        await tick();
+    if (host === 'reply') {
+      while (queued.length) {
+        const count = packetSizes[packet++ % packetSizes.length];
+        queued.splice(0, count).forEach(send);
+        if (yieldBetweenPackets) {
+          await tick();
+        }
+      }
+    } else {
+      const bytes = Buffer.concat(queued);
+      queued = [];
+      for (let offset = 0; offset < bytes.length; ) {
+        const size = packetSizes[packet++ % packetSizes.length];
+        send(bytes.subarray(offset, offset + size));
+        offset += size;
+        if (yieldBetweenPackets) {
+          await tick();
+        }
       }
     }
     await tick();
@@ -223,13 +288,14 @@ function roundTrip({host, model, packetSizes, yieldBetweenPackets, onError}) {
   };
 }
 
-// A plan is a server-side value graph together with the external events the
-// client has to wait for. Values that mean more than their own properties are
+// A plan is a source value graph together with the external events the reader
+// has to wait for. Values that mean more than their own properties are
 // recorded in `kinds`; the events are `events`, released by the test in some
 // order. The oracle below reads only `event.released` and `event.error`.
-function createPlan(seed) {
+function createPlan(seed, host) {
   const plan = {
     seed,
+    host,
     pick: random(seed),
     model: null,
     events: [],
@@ -241,11 +307,11 @@ function createPlan(seed) {
     rootModel: null,
     observeProps: () => {},
 
-    // `client` events happen on the client (module loads); the rest are
-    // server-side events the writer waits for. An event with `error` fails
-    // whatever needs it when it is released.
-    event(label, run, {error, client = false} = {}) {
-      const event = {label, run, released: false, error, client};
+    // `reader` events happen on the reading side (module loads); the rest are
+    // events the writer waits for. An event with `error` fails whatever needs
+    // it when it is released.
+    event(label, run, {error, reader = false} = {}) {
+      const event = {label, run, released: false, error, reader};
       plan.events.push(event);
       return event;
     },
@@ -280,11 +346,21 @@ function createPlan(seed) {
       );
       return gate;
     },
+    // A leaf whose module has to load before the value holding it is whole.
+    // In a reply that is a Server Function with no bound arguments, since a
+    // reply cannot carry client references.
     async clientReference(
       value,
       {asynchronous = false, name, evaluationError} = {},
     ) {
       const id = name || 'module-' + plan.kinds.size;
+      if (host === 'reply') {
+        const {fn, event} = plan.serverFunction(() => value, {
+          label: id,
+          loadError: evaluationError,
+        });
+        return {reference: fn, loadEvent: event, evaluateEvent: null};
+      }
       const load = deferred();
       const evaluate = asynchronous ? deferred() : null;
       let exports = WebpackMock.clientExports(
@@ -304,7 +380,7 @@ function createPlan(seed) {
             evaluationError !== undefined
               ? evaluate.reject(evaluationError)
               : evaluate.resolve({value}),
-          {error: evaluationError, client: true},
+          {error: evaluationError, reader: true},
         );
       }
       const reference = exports.value;
@@ -312,7 +388,7 @@ function createPlan(seed) {
       const loadEvent = plan.event(
         'load ' + id,
         error => (error !== undefined ? load.reject(error) : load.resolve()),
-        {client: true},
+        {reader: true},
       );
       if (evaluateEvent !== null) {
         evaluateEvent.after = loadEvent;
@@ -320,20 +396,36 @@ function createPlan(seed) {
       plan.need(reference, loadEvent, evaluateEvent);
       return {reference, load, loadEvent, evaluateEvent};
     },
-    serverFunction(implementation, {bound = [], args = [], label} = {}) {
+    // A Server Function whose module loads when its event is released. The
+    // server holds the implementation; in a reply the client holds a
+    // reference to it, bound through the reference's own `bind`.
+    serverFunction(
+      implementation,
+      {bound = [], args = [], label, loadError} = {},
+    ) {
       const ready = deferred();
       const exported = WebpackMock.serverExports(
         {fn: implementation},
         ready.promise,
       );
-      const fn = bound.length ? exported.fn.bind(null, ...bound) : exported.fn;
+      const source =
+        host === 'reply'
+          ? Client.createServerReference(exported.fn.$$id, () => {
+              throw new Error('The fuzz does not call back into the server.');
+            })
+          : exported.fn;
+      const fn = bound.length ? source.bind(null, ...bound) : source;
       const result = implementation(...bound, ...args);
       plan.kinds.set(fn, {type: 'function', bound, args, result});
       const event = plan.event(
         'load ' + (label || 'server function'),
-        () => ready.resolve(),
-        {client: true},
+        error => (error !== undefined ? ready.reject(error) : ready.resolve()),
+        {reader: true, error: loadError},
       );
+      if (loadError !== undefined) {
+        const run = event.run;
+        event.run = () => run(loadError);
+      }
       plan.need(fn, event);
       return {fn, event};
     },
@@ -357,7 +449,7 @@ function createPlan(seed) {
       });
       plan.need(
         element,
-        plan.event('load ' + id, () => load.resolve(), {client: true}),
+        plan.event('load ' + id, () => load.resolve(), {reader: true}),
       );
       return element;
     },
@@ -1112,10 +1204,12 @@ const demands = ['early', 'late', 'after-events', 'after-eof'];
 // A random graph of containers that refer to each other and to client
 // references, bound Server Functions, elements and Promises, with every edge
 // free to point forward, backward or at its own node. With `rejectModule`, one
-// client module fails to load, so the values that contain it must reject and
-// the values that do not must still arrive.
+// module fails to load, so the values that contain it must reject and the
+// values that do not must still arrive. A reply has no client references or
+// elements; its loading leaves are the Server Functions.
 async function generateGraph(plan, {rejectModule}) {
   const {pick} = plan;
+  const reply = plan.host === 'reply';
   const kinds = ['array', 'object', 'set', 'map'];
   const nodes = [];
   const containers = 4 + pick(9);
@@ -1126,15 +1220,15 @@ async function generateGraph(plan, {rejectModule}) {
   for (let i = 0; i < promises; i++) {
     nodes.push({kind: 'promise', value: 0});
   }
-  const modules = 2 + pick(3);
+  const modules = reply ? 0 : 2 + pick(3);
   for (let i = 0; i < modules; i++) {
     nodes.push({kind: 'module', value: 'export-' + i, async: pick(3) === 0});
   }
-  const bindings = pick(3);
+  const bindings = reply ? 2 + pick(3) : pick(3);
   for (let i = 0; i < bindings; i++) {
     nodes.push({kind: 'bound', items: [pick(containers), pick(containers)]});
   }
-  const elements = pick(3);
+  const elements = reply ? 0 : pick(3);
   for (let i = 0; i < elements; i++) {
     const element = nodes.length;
     nodes.push({kind: 'element', value: pick(containers)});
@@ -1165,7 +1259,10 @@ async function generateGraph(plan, {rejectModule}) {
     : {nodes, roots: [pick(containers), pick(containers)]};
   if (rejectModule && !process.env.FLIGHT_FUZZ_GRAPH) {
     const choose = random(plan.seed ^ 0x85ebca6b);
-    graph.nodes[containers + promises + choose(modules)].reject = true;
+    const loading = graph.nodes.filter(
+      node => node.kind === (reply ? 'bound' : 'module'),
+    );
+    loading[choose(loading.length)].reject = true;
   }
 
   const values = [];
@@ -1222,7 +1319,7 @@ async function generateGraph(plan, {rejectModule}) {
             values[i],
             plan.event('reject v' + i, () => load.reject(error), {
               error,
-              client: true,
+              reader: true,
             }),
           );
         } else {
@@ -1243,7 +1340,13 @@ async function generateGraph(plan, {rejectModule}) {
     const node = graph.nodes[i];
     if (node.kind === 'bound') {
       const bound = node.items.map(index => values[index]);
-      values[i] = plan.serverFunction(read, {bound, label: 'v' + i}).fn;
+      values[i] = plan.serverFunction(read, {
+        bound,
+        label: 'v' + i,
+        loadError: node.reject
+          ? new Error('module v' + i + ' failed to load')
+          : undefined,
+      }).fn;
     } else if (node.kind === 'element') {
       values[i] = plan.clientElement(
         {value: values[node.value]},
@@ -1676,23 +1779,43 @@ async function generateShape(plan, name, depth) {
   plan.model = model;
 }
 
-describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
+// Shapes that need elements, client references with their own evaluation, or
+// Error values, none of which a reply can carry.
+const rscOnly = new Set([
+  'shared props',
+  'shared props subtree',
+  'self element',
+  'all value kinds',
+  'server component',
+  'failing server component',
+  'shared server component',
+  'joined regions',
+  'rejected promise',
+  'error with cyclic cause',
+]);
+
+describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
   let input;
 
   beforeEach(() => {
     jest.resetModules();
     jest.useRealTimers();
     jest.mock('react', () => require('react/react.react-server'));
+    const serverBuild = host === 'reply' ? 'node' : host;
     jest.doMock('react-server-dom-webpack/server', () =>
-      require('react-server-dom-webpack/server.' + host),
+      require('react-server-dom-webpack/server.' + serverBuild),
     );
     WebpackMock = require('./utils/WebpackMock');
-    Server = require('react-server-dom-webpack/server.' + host);
+    Server = require('react-server-dom-webpack/server.' + serverBuild);
     ReactServer = require('react');
     jest.resetModules();
     __unmockReact();
     React = require('react');
-    Client = require('react-server-dom-webpack/client.' + host);
+    // A reply is encoded with the Edge client, whose Server Function
+    // references keep their identity through `bind`.
+    Client = require(
+      'react-server-dom-webpack/client.' + (host === 'reply' ? 'edge' : host),
+    );
     ReactDOMServer = require('react-dom/server.edge');
   });
 
@@ -1716,9 +1839,25 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     const watched = observer(plan, {render});
     plan.observeProps = watched.observeProps;
     const reported = [];
+    let events = plan.events.slice();
+    let body;
+    if (host === 'reply') {
+      // The encoder waits for every Promise and stream before it produces
+      // the reply, so the writer-side events have all happened by the time
+      // the decoder sees anything. Only reader-side events remain.
+      for (let i = 0; i < events.length; i++) {
+        if (!events[i].reader) {
+          events[i].released = true;
+          events[i].run();
+        }
+      }
+      events = events.filter(event => event.reader);
+      body = await Client.encodeReply(plan.model);
+    }
     input = roundTrip({
       host,
       model: plan.model,
+      body,
       packetSizes: plan.packetSizes,
       yieldBetweenPackets: plan.yieldBetweenPackets,
       onError(error) {
@@ -1764,13 +1903,12 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
       event.run();
       await progress('after ' + event.label);
     };
-    let events = plan.events.slice();
     if (plan.afterEof) {
-      // The writer finishes, and the client sees EOF, before any client-side
+      // The writer finishes, and the reader sees EOF, before any reader-side
       // event is released. EOF must not cancel work on values whose rows
       // have all arrived.
       for (let i = 0; i < events.length; i++) {
-        if (!events[i].client) {
+        if (!events[i].reader) {
           await release(events[i]);
         }
       }
@@ -1778,7 +1916,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
       input.close();
       await input.flush();
       await progress('after EOF');
-      events = events.filter(s => s.client);
+      events = events.filter(event => event.reader);
     }
     for (let i = 0; i < events.length; i++) {
       await release(events[i]);
@@ -1808,7 +1946,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   }
 
   async function runCase(family, seed, demand, variant) {
-    const plan = createPlan(seed);
+    const plan = createPlan(seed, host);
     const {pick} = plan;
     if (family === 'graph' || family === 'graph with a failing module') {
       await generateGraph(plan, {
@@ -1818,12 +1956,18 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
       // variant leaves the graph itself unchanged.
       const order = random((seed ^ Math.imul(variant + 1, 0x9e3779b9)) >>> 0);
       shuffle(plan.events, order);
-      plan.packetSizes = [1 + order(8), 17 + order(100), 1024 + order(4096)];
+      plan.packetSizes =
+        host === 'reply'
+          ? [1, 1 + order(3), 2 + order(6)]
+          : [1 + order(8), 17 + order(100), 1024 + order(4096)];
       plan.yieldBetweenPackets = order(2) === 0;
     } else {
       await generateShape(plan, family, variant);
       shuffle(plan.events, pick);
-      plan.packetSizes = [1 + pick(9), 17 + pick(100), 1024];
+      plan.packetSizes =
+        host === 'reply'
+          ? [1, 1 + pick(3), 2 + pick(6)]
+          : [1 + pick(9), 17 + pick(100), 1024];
       plan.yieldBetweenPackets = seed % 2 === 0;
     }
     if (plan.rootPromise === null) {
@@ -1855,7 +1999,10 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   const caseName = (family, seed, demand, variant) =>
     family + ' seed=' + seed + ' demand=' + demand + ' variant=' + variant;
 
-  describe('generated graphs', () => {
+  // The reply decoder still completes values by chunk, so its random graphs,
+  // which all include bound Server Functions, stay skipped.
+  const graphs = host === 'reply' ? describe.skip : describe;
+  graphs('generated graphs', () => {
     seeds.forEach(seed => {
       for (let variant = 0; variant < 2; variant++) {
         const demandCount = sweep ? demands.length : 1;
@@ -1873,32 +2020,60 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
 
   // Shapes the writer or the reader does not handle yet. Each entry says what
   // has to change. A failure in any other shape is a regression.
-  const knownGaps = {
-    'streamed array containing itself':
-      'the writer emits a streamed array that contains itself without a ' +
-      'name for the back-reference',
-  };
+  const cycleGap =
+    'the reader resolves a reference cycle by handing one side the other ' +
+    'value while it is still being filled in, so a callback can see a ' +
+    'placeholder and a shared value can arrive twice';
+  const collectionGap =
+    'a Set or Map whose entries refer back to it waits for its own ' +
+    'construction';
+  const bindingGap =
+    'a Server Function bound to arguments that contain it waits for its ' +
+    'own result';
+  const knownGaps =
+    host === 'reply'
+      ? {
+          'blob beside a cycle': cycleGap,
+          'iterator field': cycleGap,
+          'module after eof': cycleGap,
+          'byte stream': cycleGap,
+          'canceled stream': cycleGap,
+          'collection containing itself': collectionGap,
+          'mutual collections': collectionGap,
+          'function bound to its container': bindingGap,
+          'function exposes a region': bindingGap,
+          'streamed array containing itself':
+            'the reply encoder writes a streamed array that contains itself ' +
+            'with JSON.stringify, which has no name for the back-reference',
+        }
+      : {
+          'streamed array containing itself':
+            'the writer emits a streamed array that contains itself without ' +
+            'a name for the back-reference',
+        };
 
   describe('shapes', () => {
-    Object.keys(shapes).forEach(name => {
-      const test = knownGaps[name] ? it.skip : it;
-      const demandCount = sweep ? demands.length : 1;
-      for (let d = 0; d < demandCount; d++) {
-        test(caseName(name, firstSeed, demands[d], 0), () =>
-          runCase(name, firstSeed, demands[d], 0),
-        );
-      }
-      // Random graphs carry the breadth of a sweep; shapes sample it.
-      seeds
-        .filter((seed, i) => !sweep || i % 4 === 0)
-        .forEach(seed => {
-          const pick = random(seed);
-          const demand = demands[pick(demands.length)];
-          const depth = 1 + pick(3);
-          test(caseName(name, seed, demand, depth), () =>
-            runCase(name, seed, demand, depth),
+    Object.keys(shapes)
+      .filter(name => host !== 'reply' || !rscOnly.has(name))
+      .forEach(name => {
+        const test = knownGaps[name] ? it.skip : it;
+        const demandCount = sweep ? demands.length : 1;
+        for (let d = 0; d < demandCount; d++) {
+          test(caseName(name, firstSeed, demands[d], 0), () =>
+            runCase(name, firstSeed, demands[d], 0),
           );
-        });
-    });
+        }
+        // Random graphs carry the breadth of a sweep; shapes sample it.
+        seeds
+          .filter((seed, i) => !sweep || i % 4 === 0)
+          .forEach(seed => {
+            const pick = random(seed);
+            const demand = demands[pick(demands.length)];
+            const depth = 1 + pick(3);
+            test(caseName(name, seed, demand, depth), () =>
+              runCase(name, seed, demand, depth),
+            );
+          });
+      });
   });
 });
