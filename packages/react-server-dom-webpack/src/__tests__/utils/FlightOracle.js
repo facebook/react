@@ -205,10 +205,26 @@ function generateModel(rng, env, options) {
     return children;
   }
 
+  const sharedNodes = [];
+  function maybeShareNode(node) {
+    if (node !== null && typeof node === 'object' && rng.chance(0.3)) {
+      sharedNodes.push(node);
+    }
+    return node;
+  }
+
   function genNode(depth) {
     if (depth <= 0) {
       return rng.chance(0.5) ? genString() : null;
     }
+    if (sharedNodes.length > 0 && rng.chance(0.1)) {
+      // The same element object in two places, including Server Components.
+      return rng.pick(sharedNodes);
+    }
+    return maybeShareNode(genNodeImpl(depth));
+  }
+
+  function genNodeImpl(depth) {
     const kind = rng.int(11);
     switch (kind) {
       case 10:
@@ -329,7 +345,12 @@ function generateModel(rng, env, options) {
       }
     }
     Object.defineProperty(Component, 'name', {value: 'SC' + id});
-    return React.createElement(Component, Object.assign({key}, props));
+    const Counted = function (componentProps) {
+      env.onRender();
+      return Component(componentProps);
+    };
+    Object.defineProperty(Counted, 'name', {value: 'SC' + id});
+    return React.createElement(Counted, Object.assign({key}, props));
   }
 
   const kind = options.kind || (rng.chance(0.7) ? 'tree' : 'data');
@@ -343,12 +364,12 @@ function generateModel(rng, env, options) {
 exports.generateModel = generateModel;
 
 // Resolves lazies and thenables and replaces objects with a comparable
-// structure. Identity is recorded for container objects since Flight dedupes
-// shared references; Dates are serialized inline on the wire so each
-// occurrence is a distinct object and they are compared by value only.
+// structure. Values are compared structurally: the wire path copies a shared
+// object again when it meets it inside a keyed Server Component, while an
+// in-process consumer may hand out the same object, and React treats both the
+// same. Whether sharing survives is checked separately.
 async function normalize(root, env) {
-  const seen = new Map();
-  let nextId = 0;
+  const visiting = new Set();
 
   async function visit(value) {
     if (value === null || typeof value !== 'object') {
@@ -372,17 +393,15 @@ async function normalize(root, env) {
       return value;
     }
     if (value.$$typeof === REACT_LAZY_TYPE) {
+      // Whether a value arrives inline or behind a lazy depends on timing,
+      // and React renders both the same, so lazies are transparent here.
       let resolved;
       try {
         resolved = await readLazy(value);
       } catch (reason) {
-        return {
-          $$: 'lazy',
-          status: 'rejected',
-          value: await visitError(reason),
-        };
+        return {$$: 'lazy-error', value: await visitError(reason)};
       }
-      return {$$: 'lazy', status: 'fulfilled', value: await visit(resolved)};
+      return visit(resolved);
     }
     if (typeof value.then === 'function') {
       let settled;
@@ -403,16 +422,14 @@ async function normalize(root, env) {
     if (value instanceof Date) {
       return {$$: 'date', value: value.toISOString()};
     }
-    if (seen.has(value)) {
-      return {$$: 'ref', id: seen.get(value)};
+    if (visiting.has(value)) {
+      return {$$: 'cycle'};
     }
-    const id = nextId++;
-    seen.set(value, id);
+    visiting.add(value);
     let result;
     if (value.$$typeof === REACT_ELEMENT_TYPE) {
       result = {
         $$: 'element',
-        id,
         type:
           typeof value.type === 'string'
             ? value.type
@@ -423,12 +440,12 @@ async function normalize(root, env) {
         props: await visit(value.props),
       };
     } else if (Array.isArray(value)) {
-      result = {$$: 'array', id, items: []};
+      result = {$$: 'array', items: []};
       for (let i = 0; i < value.length; i++) {
         result.items.push(await visit(value[i]));
       }
     } else if (value instanceof Map) {
-      result = {$$: 'map', id, entries: []};
+      result = {$$: 'map', entries: []};
       const entries = Array.from(value);
       for (let i = 0; i < entries.length; i++) {
         result.entries.push([
@@ -437,7 +454,7 @@ async function normalize(root, env) {
         ]);
       }
     } else if (value instanceof Set) {
-      result = {$$: 'set', id, items: []};
+      result = {$$: 'set', items: []};
       const items = Array.from(value);
       for (let i = 0; i < items.length; i++) {
         result.items.push(await visit(items[i]));
@@ -445,7 +462,6 @@ async function normalize(root, env) {
     } else if (ArrayBuffer.isView(value)) {
       result = {
         $$: 'view',
-        id,
         type: value.constructor.name,
         bytes: Array.from(
           new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
@@ -454,12 +470,13 @@ async function normalize(root, env) {
     } else if (value instanceof Error) {
       result = await visitError(value);
     } else {
-      result = {$$: 'object', id, props: {}};
+      result = {$$: 'object', props: {}};
       const keys = Object.keys(value);
       for (let i = 0; i < keys.length; i++) {
         result.props[keys[i]] = await visit(value[keys[i]]);
       }
     }
+    visiting.delete(value);
     return result;
   }
 
@@ -501,8 +518,7 @@ exports.normalize = normalize;
 // under Fizz: thenables go through `use`, so a pending value suspends the
 // component rather than being awaited here.
 function describeProps(root, use) {
-  const seen = new Map();
-  let nextId = 0;
+  const visiting = new Set();
 
   function visit(value) {
     if (value === null || typeof value !== 'object') {
@@ -523,7 +539,7 @@ function describeProps(root, use) {
       return value;
     }
     if (value.$$typeof === REACT_LAZY_TYPE) {
-      return {$$: 'lazy', value: visit(value._init(value._payload))};
+      return visit(value._init(value._payload));
     }
     if (typeof value.then === 'function') {
       return {$$: 'promise', value: visit(use(value))};
@@ -531,36 +547,35 @@ function describeProps(root, use) {
     if (value instanceof Date) {
       return {$$: 'date', value: value.toISOString()};
     }
-    if (seen.has(value)) {
-      return {$$: 'ref', id: seen.get(value)};
+    if (visiting.has(value)) {
+      return {$$: 'cycle'};
     }
-    const id = nextId++;
-    seen.set(value, id);
+    visiting.add(value);
+    let result;
     if (value.$$typeof === REACT_ELEMENT_TYPE) {
-      return {
+      result = {
         $$: 'element',
-        id,
         type: typeof value.type === 'string' ? value.type : '<component>',
         key: value.key,
         props: visit(value.props),
       };
-    }
-    if (Array.isArray(value)) {
-      return {$$: 'array', id, items: value.map(visit)};
-    }
-    if (value instanceof Map) {
+    } else if (Array.isArray(value)) {
+      result = {$$: 'array', items: value.map(visit)};
+    } else if (value instanceof Map) {
       const entries = Array.from(value).map(([k, v]) => [visit(k), visit(v)]);
-      return {$$: 'map', id, entries};
+      result = {$$: 'map', entries};
+    } else if (value instanceof Set) {
+      result = {$$: 'set', items: Array.from(value).map(visit)};
+    } else {
+      const props = {};
+      const keys = Object.keys(value);
+      for (let i = 0; i < keys.length; i++) {
+        props[keys[i]] = visit(value[keys[i]]);
+      }
+      result = {$$: 'object', props};
     }
-    if (value instanceof Set) {
-      return {$$: 'set', id, items: Array.from(value).map(visit)};
-    }
-    const props = {};
-    const keys = Object.keys(value);
-    for (let i = 0; i < keys.length; i++) {
-      props[keys[i]] = visit(value[keys[i]]);
-    }
-    return {$$: 'object', id, props};
+    visiting.delete(value);
+    return result;
   }
 
   return JSON.stringify(visit(root), (key, value) =>

@@ -96,6 +96,7 @@ describe('ReactFlightDOMResult', () => {
     const rng = FlightOracle.createRng(seed);
     const scheduler = FlightOracle.createScheduler(rng);
     const components = createClientComponents();
+    const counts = {renders: 0};
     const {model, kind} = FlightOracle.generateModel(
       rng,
       {
@@ -103,10 +104,13 @@ describe('ReactFlightDOMResult', () => {
         Show: components.Show,
         Box: components.Box,
         scheduler,
+        onRender() {
+          counts.renders++;
+        },
       },
       options,
     );
-    return {model, kind, scheduler, components};
+    return {model, kind, scheduler, components, counts};
   }
 
   async function settleAll(scheduler) {
@@ -156,6 +160,49 @@ describe('ReactFlightDOMResult', () => {
     await settleAll(scenario.scheduler);
     await serverAct(() => {});
     return {response};
+  }
+
+  // Reads a Result in process, the way the HTML renderer consumes it.
+  async function readResultDirect(scenario) {
+    let response;
+    await serverAct(() => {
+      const result = ReactServerDOMServer.renderToResult(scenario.model, {
+        onError,
+      });
+      response = ReactServerDOMClient.createFromResult(result, {
+        clientManifest: webpackMap,
+        serverConsumerManifest: scenario.components.serverConsumerManifest,
+      });
+    });
+    await settleAll(scenario.scheduler);
+    await serverAct(() => {});
+    return {response};
+  }
+
+  // Both consumers on one Result, the way a page render uses it: the HTML
+  // renderer reads it in process while the hydration data is serialized.
+  async function readResultBoth(scenario) {
+    let inProcess;
+    const readable = new Stream.PassThrough({objectMode: true});
+    await serverAct(() => {
+      const result = ReactServerDOMServer.renderToResult(scenario.model, {
+        onError,
+      });
+      inProcess = ReactServerDOMClient.createFromResult(result, {
+        clientManifest: webpackMap,
+        serverConsumerManifest: scenario.components.serverConsumerManifest,
+      });
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    const stream = ReactServerDOMClient.createFromNodeStream(
+      readable,
+      scenario.components.serverConsumerManifest,
+    );
+    await settleAll(scenario.scheduler);
+    await serverAct(() => {});
+    return {inProcess, stream};
   }
 
   async function renderHTML(response) {
@@ -252,6 +299,107 @@ describe('ReactFlightDOMResult', () => {
       const viaResult = await observe(b, await readResultStream(b));
       expect(viaResult).toEqual(direct);
     }
+  });
+
+  it('reads a Result in process the same as rendering the model directly', async () => {
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      const a = createScenario(seed, {});
+      const direct = await observe(a, await readDirect(a));
+      const b = createScenario(seed, {});
+      const inProcess = await observe(b, await readResultDirect(b));
+      expect(inProcess).toEqual(direct);
+    }
+  });
+
+  it('reads a Result with errors in process the same as rendering the model directly', async () => {
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      const a = createScenario(seed, {allowErrors: true});
+      const direct = await observe(a, await readDirect(a));
+      const b = createScenario(seed, {allowErrors: true});
+      const inProcess = await observe(b, await readResultDirect(b));
+      expect(inProcess).toEqual(direct);
+    }
+  });
+
+  it('serves both consumers of one Result without rendering a component twice', async () => {
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      const a = createScenario(seed, {allowErrors: seed % 2 === 0});
+      const direct = await observe(a, await readDirect(a));
+      const b = createScenario(seed, {allowErrors: seed % 2 === 0});
+      const alone = await observe(b, await readResultDirect(b));
+      expect(alone).toEqual(direct);
+      const c = createScenario(seed, {allowErrors: seed % 2 === 0});
+      const {inProcess, stream} = await readResultBoth(c);
+      expect(await observe(c, {response: inProcess})).toEqual(direct);
+      expect(await observe(c, {response: stream})).toEqual(direct);
+      // use() replays a component after its promise settles, so the count is
+      // not the number of components; it is the same as with one consumer.
+      expect(c.counts.renders).toBe(b.counts.renders);
+    }
+  });
+
+  it('hands pure data to the in-process consumer by identity', async () => {
+    const components = createClientComponents();
+    const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    function Keyed() {
+      return ReactServer.createElement(components.Show, {value: data});
+    }
+    async function Async() {
+      await later;
+      return ReactServer.createElement(components.Show, {value: data});
+    }
+    const model = {
+      data,
+      direct: ReactServer.createElement(components.Show, {value: data}),
+      keyed: ReactServer.createElement(Keyed, {key: 'k'}),
+      async: ReactServer.createElement(Async, null),
+    };
+    const result = ReactServerDOMServer.renderToResult(model);
+    const response = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const root = await response;
+    expect(root.data).toBe(data);
+    expect(root.direct.props.value).toBe(data);
+    // Under a keyed Server Component the wire path would copy; in process the
+    // same object is shared.
+    expect(root.keyed.props.value).toBe(data);
+    expect(root.keyed.key).toBe('k');
+    await serverAct(() => resolveLater());
+    const asyncElement = root.async._init(root.async._payload);
+    expect(asyncElement.props.value).toBe(data);
+  });
+
+  it('settles the root with the output of a pending root Server Component', async () => {
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    async function Outer() {
+      await later;
+      return ReactServer.createElement(Inner, null);
+    }
+    async function Inner() {
+      await later;
+      return ReactServer.createElement('p', null, 'done');
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(Outer, null),
+    );
+    const response = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: {moduleMap: {}, moduleLoading: null},
+    });
+    expect(response.status).toBe('pending');
+    await serverAct(() => resolveLater());
+    const root = await response;
+    expect(root.type).toBe('p');
+    expect(root.props.children).toBe('done');
   });
 
   it('serializes a Result with errors the same as rendering the model directly', async () => {
