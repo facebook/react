@@ -519,111 +519,43 @@ function resolveIteratorResultChunk<T>(
   resolveModelChunk(response, chunk, iteratorResultJSON, -1);
 }
 
-function loadServerReference<A: Iterable<any>, T>(
+type ServerReferenceMetadata = {
+  id: any,
+  bound: null | Thenable<Array<any>>,
+};
+
+type ServerReferenceBinding = {
+  serverReference: ServerReference<any>,
+  // A Server Reference to an object resolves to the module export itself and
+  // has no bound arguments.
+  isObject: boolean,
+  bound: null | Thenable<Array<any>>,
+  moduleReady: boolean,
+  argumentsReady: boolean,
+};
+
+// Markers for parseModelString. A reference with one of these maps is
+// resolved through serverReferenceChunk instead of running the map.
+function loadServerReference(
   response: Response,
-  metaData: {
-    id: any,
-    bound: null | Thenable<Array<any>>,
-  },
+  metaData: ServerReferenceMetadata,
   parentObject: Object,
   key: string,
-): (...A) => Promise<T> {
-  const id: ServerReferenceId = metaData.id;
-  if (typeof id !== 'string') {
-    return null as any;
-  }
-  if (key === 'then') {
-    // This should never happen because we always serialize objects with then-functions
-    // as "thenable" which reduces to ReactPromise with no other fields.
-    return null as any;
-  }
+): any {
+  throw new Error(
+    'Server References are resolved through their chunk. This is a bug in React.',
+  );
+}
 
-  // Check for a cached promise from a previous call with the same metadata.
-  // This handles deduplication when the same server reference appears multiple
-  // times in the payload. The cache is a response-scoped map keyed by the
-  // metadata object rather than a field on it, so a client-supplied metadata
-  // field can't inject a resolved value and bypass the manifest lookup below.
-  const cachedPromise: SomeChunk<T> | void =
-    response._serverReferenceCache.get(metaData);
-  if (cachedPromise !== undefined) {
-    return readServerReference(
-      response,
-      cachedPromise,
-      parentObject,
-      key,
-    ) as any;
-  }
-
-  // This is the first call for this server reference metadata. Create a cached
-  // promise to be used for subsequent calls.
-  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  const blockedPromise: BlockedChunk<T> = new ReactPromise(BLOCKED, null, null);
-  response._serverReferenceCache.set(metaData, blockedPromise);
-
-  const serverReference: ServerReference<T> =
-    resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
-  // We expect most servers to not really need this because you'd just have all
-  // the relevant modules already loaded but it allows for lazy loading of code
-  // if needed.
-  const bound = metaData.bound;
-  let serverReferencePromise: null | Thenable<any> =
-    preloadModule(serverReference);
-  if (!serverReferencePromise) {
-    if (bound instanceof ReactPromise) {
-      serverReferencePromise = Promise.resolve(bound);
-    } else {
-      // Nothing to preload and no bound arguments to wait for, so we can
-      // resolve the reference synchronously.
-      const value = requireServerReference(response, serverReference) as any;
-      resolveServerReferenceChunk(response, blockedPromise, value);
-      return readServerReference(
-        response,
-        blockedPromise,
-        parentObject,
-        key,
-      ) as any;
-    }
-  } else if (bound instanceof ReactPromise) {
-    serverReferencePromise = Promise.all([serverReferencePromise, bound]);
-  }
-
-  function fulfill(): void {
-    let value;
-    try {
-      value = requireServerReference(response, serverReference) as any;
-      if (metaData.bound) {
-        // This promise is coming from us and should have initialized by now.
-        const promiseValue = (metaData.bound as any).value;
-        const boundArgs: Array<any> = isArray(promiseValue)
-          ? promiseValue.slice(0)
-          : [];
-        if (boundArgs.length > MAX_BOUND_ARGS) {
-          throw new Error(
-            'Server Function has too many bound arguments. Received ' +
-              boundArgs.length +
-              ' but the limit is ' +
-              MAX_BOUND_ARGS +
-              '.',
-          );
-        }
-        boundArgs.unshift(null); // this
-        value = value.bind.apply(value, boundArgs);
-      }
-    } catch (error) {
-      triggerErrorOnChunk(response, blockedPromise, error);
-      return;
-    }
-    resolveServerReferenceChunk(response, blockedPromise, value);
-  }
-  serverReferencePromise.then(fulfill, error => {
-    triggerErrorOnChunk(response, blockedPromise, error);
-  });
-  return readServerReference(
-    response,
-    blockedPromise,
-    parentObject,
-    key,
-  ) as any;
+function loadServerObjectReference(
+  response: Response,
+  metaData: {id: any},
+  parentObject: Object,
+  key: string,
+): any {
+  throw new Error(
+    'Server References are resolved through their chunk. This is a bug in React.',
+  );
 }
 
 function requireServerReference<T>(
@@ -647,6 +579,80 @@ function requireServerReference<T>(
   return value;
 }
 
+// The chunk that resolves to the Server Reference described by `metaData`.
+// The same metadata object can be referenced from several places and must
+// produce one value, so the chunk is cached per metadata object. Function and
+// object references keep separate caches: the same metadata can be referenced
+// both ways, and each way applies its own validation.
+function serverReferenceChunk(
+  response: Response,
+  metaData: ServerReferenceMetadata,
+  isObject: boolean,
+): SomeChunk<any> {
+  const cache = isObject
+    ? response._serverObjectReferenceCache
+    : response._serverReferenceCache;
+  const cached = cache.get(metaData);
+  if (cached !== undefined) {
+    return cached;
+  }
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  const chunk: BlockedChunk<any> = new ReactPromise(BLOCKED, null, null);
+  cache.set(metaData, chunk);
+  const id: ServerReferenceId = metaData.id;
+  if (typeof id !== 'string') {
+    resolveServerReferenceChunk(response, chunk, null);
+    return chunk;
+  }
+  const serverReference: ServerReference<any> =
+    resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
+  // The module may still be loading and the bound arguments may still be
+  // arriving. A reference on a handler of its own waits for both and
+  // completes the chunk with the bound function.
+  const handler = createInitializationHandler(1);
+  handler.chunk = chunk;
+  const reference = createReference(
+    response,
+    handler,
+    {},
+    '',
+    createModel,
+    EMPTY_REFERENCE_PATH,
+    null,
+    null,
+  );
+  const bound = isObject ? null : metaData.bound;
+  const promise = preloadModule(serverReference);
+  const binding: ServerReferenceBinding = {
+    serverReference,
+    isObject,
+    bound,
+    moduleReady: promise === null,
+    // We only await the bound arguments when they are one of our own chunks.
+    // Anything else could be a foreign thenable whose `then` we must not call.
+    argumentsReady: !(bound instanceof ReactPromise),
+  };
+  reference.binding = binding;
+  if (promise !== null) {
+    promise.then(
+      () => {
+        binding.moduleReady = true;
+        bindServerReference(response, reference);
+      },
+      error => rejectInitializationReference(response, reference, error),
+    );
+  }
+  if (bound instanceof ReactPromise) {
+    // The function is bound once every argument slot is installed. The
+    // arguments can include the object the function is being installed into,
+    // so they are not awaited as a whole.
+    resolveReferenceFromChunk(response, reference, bound);
+  } else {
+    bindServerReference(response, reference);
+  }
+  return chunk;
+}
+
 function resolveServerReferenceChunk<T>(
   response: Response,
   chunk: BlockedChunk<T>,
@@ -662,69 +668,48 @@ function resolveServerReferenceChunk<T>(
   }
 }
 
-function readServerReference<T>(
+function resolveBoundArguments(
   response: Response,
-  chunk: SomeChunk<T>,
-  parentObject: Object,
-  key: string,
-): T {
-  switch (chunk.status) {
-    case INITIALIZED:
-      return chunk.value;
-    case BLOCKED:
-      return waitForReference(
-        response,
-        chunk,
-        parentObject,
-        key,
-        null,
-        createModel,
-        [],
-      );
-    default:
-      throw chunk.reason;
+  reference: InitializationReference,
+  args: any,
+  fulfilledChunk: null | SomeChunk<any>,
+): void {
+  reference.source = fulfilledChunk;
+  reference.inputs = args;
+  reference.pendingInputs = 0;
+  try {
+    subscribeToInputSlots(response, reference, args);
+    subscribeToPendingContents(response, args, reference, true);
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
+    return;
+  }
+  if (reference.pendingInputs === 0) {
+    const binding: ServerReferenceBinding = reference.binding as any;
+    binding.argumentsReady = true;
+    bindServerReference(response, reference);
   }
 }
 
-function loadServerObjectReference(
+function bindServerReference(
   response: Response,
-  metaData: {id: any},
-  parentObject: Object,
-  key: string,
-): mixed {
-  const id: ServerReferenceId = metaData.id;
-  if (typeof id !== 'string') {
-    return null;
+  reference: InitializationReference,
+): void {
+  const binding: ServerReferenceBinding = reference.binding as any;
+  if (
+    !binding.moduleReady ||
+    !binding.argumentsReady ||
+    reference.status !== FIELD_PENDING
+  ) {
+    return;
   }
-
-  // Object references are cached in a separate response-scoped map from
-  // function references. The same metadata object can be referenced both ways,
-  // and each path must read only its own cache so it always applies its own
-  // validation instead of the other's cached value.
-  const cachedPromise: SomeChunk<Object> | void =
-    response._serverObjectReferenceCache.get(metaData);
-  if (cachedPromise !== undefined) {
-    return readServerReference(response, cachedPromise, parentObject, key);
-  }
-
-  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  const blockedPromise: BlockedChunk<Object> = new ReactPromise(
-    BLOCKED,
-    null,
-    null,
-  );
-  response._serverObjectReferenceCache.set(metaData, blockedPromise);
-
-  const serverReference = resolveServerReference<$FlowFixMe>(
-    response._bundlerConfig,
-    id,
-  );
-  const serverReferencePromise = preloadModule(serverReference);
-
-  function fulfill(): void {
-    let value;
-    try {
-      value = requireServerReference(response, serverReference);
+  try {
+    let value = requireServerReference(
+      response,
+      binding.serverReference,
+    ) as any;
+    const args = reference.inputs;
+    if (binding.isObject) {
       // Objects can appear under "then", but a function here would turn
       // the containing object into a thenable during reply decoding.
       if (typeof value !== 'object' || value === null) {
@@ -732,20 +717,52 @@ function loadServerObjectReference(
           'Expected a Server Reference to an object to resolve to an object.',
         );
       }
-    } catch (error) {
-      triggerErrorOnChunk(response, blockedPromise, error);
-      return;
+    } else if (binding.bound !== null) {
+      const boundArgs: Array<any> = isArray(args) ? args.slice(0) : [];
+      if (boundArgs.length > MAX_BOUND_ARGS) {
+        throw new Error(
+          'Server Function has too many bound arguments. Received ' +
+            boundArgs.length +
+            ' but the limit is ' +
+            MAX_BOUND_ARGS +
+            '.',
+        );
+      }
+      boundArgs.unshift(null); // this
+      value = value.bind.apply(value, boundArgs);
+      if (args !== null) {
+        // The bound function retains the arguments without exposing them.
+        response._captures.set(value, args);
+      }
     }
-    resolveServerReferenceChunk(response, blockedPromise, value);
+    installReference(response, reference, value, args);
+    const handler = reference.handler;
+    handler.deps--;
+    const chunk = handler.chunk;
+    if (
+      handler.deps > 0 &&
+      !handler.errored &&
+      chunk !== null &&
+      (chunk as SomeChunk<any>).status === BLOCKED
+    ) {
+      // The function is bound, but its arguments still have placeholders in
+      // them. Like a model, it has an identity before it is complete:
+      // references to it continue from the function and wait on what its
+      // arguments are missing, while the chunk completes once they arrive.
+      response._identities.set(chunk, {value, arrayRoot: null});
+      const listeners = chunk.value;
+      const rejectListeners = chunk.reason;
+      chunk.value = null;
+      chunk.reason = null;
+      if (listeners !== null) {
+        wakeChunkReferences(response, chunk, value, listeners, rejectListeners);
+      }
+    } else {
+      initializeChunkIfUnblocked(response, handler);
+    }
+  } catch (error) {
+    rejectInitializationReference(response, reference, error);
   }
-  if (serverReferencePromise === null) {
-    fulfill();
-  } else {
-    serverReferencePromise.then(fulfill, error => {
-      triggerErrorOnChunk(response, blockedPromise, error);
-    });
-  }
-  return readServerReference(response, blockedPromise, parentObject, key);
 }
 
 function reviveModel(
@@ -904,6 +921,8 @@ type InitializationReference = {
   // A Set or Map is allocated before its entries arrive so that references
   // to it, including from its own entries, find the final identity.
   collection: null | Set<any> | Map<any, any>,
+  // A Server Reference waits for its module and its bound arguments.
+  binding: null | ServerReferenceBinding,
 };
 type InitializationHandler = {
   chunk: null | BlockedChunk<any>,
@@ -1511,6 +1530,11 @@ function fulfillReference(
   if (reference.status !== FIELD_PENDING) {
     return;
   }
+  if (reference.binding !== null) {
+    // The bound arguments of a Server Function arrived.
+    resolveBoundArguments(response, reference, value, fulfilledChunk);
+    return;
+  }
   const {handler, parentObject, key, map, path} = reference;
   reference.source = fulfilledChunk;
 
@@ -1545,6 +1569,10 @@ function fulfillReference(
     countSelectedValue(response, reference.arrayRoot, cursor);
     value = cursor.value;
 
+    if (isServerReferenceMap(map)) {
+      resolveServerReferenceField(response, reference, value);
+      return;
+    }
     if (isConstructor(map)) {
       // A constructor runs once its input slots are installed. It completes
       // the reference itself.
@@ -1560,6 +1588,28 @@ function fulfillReference(
 
   handler.deps--;
   initializeChunkIfUnblocked(response, handler);
+}
+
+// A Server Reference resolves through the chunk of its metadata. The
+// reference waits on that chunk like on any other.
+function resolveServerReferenceField(
+  response: Response,
+  reference: InitializationReference,
+  metaData: any,
+): void {
+  const isObject = (reference.map as any) === loadServerObjectReference;
+  if (!isObject && reference.key === 'then') {
+    // This should never happen because we always serialize objects with then-functions
+    // as "thenable" which reduces to ReactPromise with no other fields.
+    installReference(response, reference, null, null);
+    reference.handler.deps--;
+    initializeChunkIfUnblocked(response, reference.handler);
+    return;
+  }
+  const chunk = serverReferenceChunk(response, metaData, isObject);
+  reference.map = createModel;
+  reference.path = EMPTY_REFERENCE_PATH;
+  resolveReferenceFromChunk(response, reference, chunk);
 }
 
 // Writes the resolved value into the field the reference fills. `contents`
@@ -1663,6 +1713,10 @@ function isConstructor(map: any): boolean {
   return map === createSet || map === createMap || map === extractIterator;
 }
 
+function isServerReferenceMap(map: any): boolean {
+  return map === loadServerReference || map === loadServerObjectReference;
+}
+
 // Constructors read their inputs when they run. A selected input value can
 // still have placeholders in its slots, so the mapping waits for each slot to
 // be installed. Slot values can themselves be incomplete; the constructed
@@ -1738,6 +1792,12 @@ function resumeInputs(
   }
   reference.pendingInputs--;
   if (reference.pendingInputs === 0) {
+    const binding = reference.binding;
+    if (binding !== null) {
+      binding.argumentsReady = true;
+      bindServerReference(response, reference);
+      return;
+    }
     try {
       runMapping(response, reference, inputs);
     } catch (error) {
@@ -1882,6 +1942,28 @@ function createInitializationReference<T>(
   } else {
     handler = initializingHandler = createInitializationHandler(1);
   }
+  return createReference(
+    response,
+    handler,
+    parentObject,
+    key,
+    map,
+    path,
+    arrayRoot,
+    source,
+  );
+}
+
+function createReference<T>(
+  response: Response,
+  handler: InitializationHandler,
+  parentObject: Object,
+  key: string,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  path: Array<string>,
+  arrayRoot: null | NestedArrayContext,
+  source: null | SomeChunk<any>,
+): InitializationReference {
   const reference: InitializationReference = {
     handler,
     parentObject,
@@ -1899,6 +1981,7 @@ function createInitializationReference<T>(
     pendingInputs: 0,
     seen: null,
     collection: null,
+    binding: null,
   };
   registerPendingField(response, reference);
 
@@ -1963,6 +2046,7 @@ function recordFailedField(
     pendingInputs: 0,
     seen: null,
     collection: null,
+    binding: null,
   };
   registerPendingField(response, reference);
 }
@@ -2081,6 +2165,25 @@ function getOutlinedModel<T>(
   countSelectedValue(response, referenceArrayRoot, cursor);
   const value = cursor.value;
 
+  if (isServerReferenceMap(map)) {
+    // Loading a Server Reference can wait for its module and its bound
+    // arguments even when its metadata is complete.
+    const fieldReference = createInitializationReference(
+      response,
+      parentObject,
+      key,
+      map,
+      EMPTY_REFERENCE_PATH,
+      referenceArrayRoot,
+      source,
+    );
+    try {
+      resolveServerReferenceField(response, fieldReference, value);
+    } catch (error) {
+      rejectInitializationReference(response, fieldReference, error);
+    }
+    return getReferencePlaceholder(fieldReference);
+  }
   if (source.status === INITIALIZED) {
     return map(response, value, parentObject, key);
   }
