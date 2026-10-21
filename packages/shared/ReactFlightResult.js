@@ -121,6 +121,10 @@ export type Result<T> = {
   expand: (element: ReactElement) => null | Expansion,
   // Server-owned: distinguishes Client References from Server Components.
   isClientReference: (type: mixed) => boolean,
+  // Server-owned: runs a callback with this Result's render context active,
+  // so that cache(), useId() and resource hints inside Server Components it
+  // expands resolve to it, including after an await.
+  run: <R>(callback: () => R) => R,
   aborted: boolean,
   abortReason: mixed,
   abortListeners: null | Array<(reason: mixed) => void>,
@@ -163,6 +167,7 @@ export function createResultObject<T>(
     expansions: new WeakMap(),
     expand: null as any,
     isClientReference,
+    run: null as any,
     aborted: false,
     abortReason: undefined,
     abortListeners: null,

@@ -2214,6 +2214,7 @@ export function createResult<T>(
     temporaryReferences,
   );
   result.expand = expandResultElement.bind(null, result);
+  result.run = callback => runInResultContext(result, callback);
   if (__DEV__) {
     result.environmentName =
       environmentName === undefined
@@ -2227,6 +2228,14 @@ export function createResult<T>(
         : filterStackFrame;
   }
   return result;
+}
+
+function runInResultContext<T>(result: Result<any>, callback: () => T): T {
+  // $FlowFixMe[constant-condition]
+  if (supportsRequestStorage) {
+    return contextStorage.run(result.context, callback);
+  }
+  return callback();
 }
 
 export function abortResult(result: Result<any>, reason: mixed): void {

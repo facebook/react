@@ -24,6 +24,8 @@ import {
 
 import {resolveClientReferenceMetadata} from '../server/ReactFlightServerConfigWebpackBundler';
 
+import {AsyncLocalStorage} from 'async_hooks';
+
 type Options = {
   // The map the Server Components render used, to turn its Client References
   // into the module ids the server consumer manifest is keyed by.
@@ -43,12 +45,23 @@ export function createFromResult<T>(
   options: Options,
 ): Thenable<T> {
   const clientManifest = options.clientManifest;
+  // The consumer is typically created while the renderer that uses it is
+  // running, as a page's HTML render reads the Result from a component. Its
+  // async context is what resolves that renderer's request for hints, so
+  // hints emitted later, by whichever consumer expanded a component, are
+  // dispatched from here.
+  // snapshot is missing from Flow's definition of AsyncLocalStorage.
+  const snapshot: void | (() => <R>(callback: () => R) => R) = (
+    AsyncLocalStorage as any
+  ).snapshot;
+  const bindToConsumer = typeof snapshot === 'function' ? snapshot() : null;
   const response = createResponse(
     result,
     options.serverConsumerManifest.moduleMap,
     options.serverConsumerManifest.moduleLoading,
     reference =>
       resolveClientReferenceMetadata(clientManifest, reference) as any,
+    bindToConsumer,
     typeof options.nonce === 'string' ? options.nonce : undefined,
     options.onError,
   );

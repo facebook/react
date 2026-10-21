@@ -16,7 +16,9 @@ let clientExports;
 let webpackMap;
 let webpackModuleLoading;
 let React;
+let ReactDOMServer;
 let ReactDOMFizzStatic;
+let FlightReactDOM;
 let ReactServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
@@ -39,6 +41,7 @@ describe('ReactFlightDOMResult', () => {
       jest.requireActual('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
+    FlightReactDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     const WebpackMock = require('./utils/WebpackMock');
@@ -54,6 +57,7 @@ describe('ReactFlightDOMResult', () => {
     );
 
     React = require('react');
+    ReactDOMServer = require('react-dom/server.node');
     ReactDOMFizzStatic = require('react-dom/static');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
@@ -400,6 +404,66 @@ describe('ReactFlightDOMResult', () => {
     const root = await response;
     expect(root.type).toBe('p');
     expect(root.props.children).toBe('done');
+  });
+
+  // Renders HTML the way a framework does: the consumer is created from
+  // inside a component during the Fizz render.
+  async function renderHTMLFromWithinFizz(getResponse) {
+    let response = null;
+    function Root() {
+      if (response === null) {
+        response = getResponse();
+      }
+      return React.use(response);
+    }
+    const output = new Stream.PassThrough();
+    let html = '';
+    output.setEncoding('utf8');
+    output.on('data', chunk => {
+      html += chunk;
+    });
+    const done = new Promise(resolve => output.on('end', resolve));
+    await serverAct(() => {
+      const {pipe} = ReactDOMServer.renderToPipeableStream(
+        React.createElement(Root),
+        {
+          onAllReady() {
+            pipe(output);
+          },
+        },
+      );
+    });
+    await done;
+    return html;
+  }
+
+  it('dispatches hints into the renderer consuming the Result', async () => {
+    const components = createClientComponents();
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    async function Page() {
+      FlightReactDOM.preload('/before.css', {as: 'style'});
+      await later;
+      FlightReactDOM.preload('/after.css', {as: 'style'});
+      return ReactServer.createElement(components.Box, {label: 'page'}, 'hi');
+    }
+
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(Page, null),
+    );
+    const htmlPromise = renderHTMLFromWithinFizz(() =>
+      ReactServerDOMClient.createFromResult(result, {
+        clientManifest: webpackMap,
+        serverConsumerManifest: components.serverConsumerManifest,
+      }),
+    );
+    await serverAct(() => resolveLater());
+    const html = await htmlPromise;
+    expect(html).toContain('<link rel="preload" href="/before.css" as="style"');
+    expect(html).toContain('<link rel="preload" href="/after.css" as="style"');
+    expect(html).toContain('<section data-label="page">hi</section>');
   });
 
   it('serializes a Result with errors the same as rendering the model directly', async () => {

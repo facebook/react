@@ -58,6 +58,10 @@ export type ResultResponse = {
   _moduleLoading: ModuleLoading,
   _nonce: ?string,
   _resolveClientReferenceMetadata: (reference: any) => ClientReferenceMetadata,
+  // Runs a callback in the async context the consumer was created in, so
+  // resource hints reach the renderer consuming this Result even when another
+  // consumer's expansion emitted them.
+  _bindToConsumer: null | (<R>(callback: () => R) => R),
   // Server object → what the consumer gets for it, so shared references stay
   // shared and cycles terminate.
   _models: Map<any, any>,
@@ -715,11 +719,22 @@ function readClientReference(response: ResultResponse, reference: any): any {
     response._bundlerConfig,
     metadata,
   );
-  prepareDestinationForModule(
-    response._moduleLoading,
-    response._nonce,
-    metadata,
-  );
+  const bind = response._bindToConsumer;
+  if (bind !== null) {
+    bind(() =>
+      prepareDestinationForModule(
+        response._moduleLoading,
+        response._nonce,
+        metadata,
+      ),
+    );
+  } else {
+    prepareDestinationForModule(
+      response._moduleLoading,
+      response._nonce,
+      metadata,
+    );
+  }
   const promise = preloadModule(clientReference);
   if (promise) {
     const chunk = createPendingChunk();
@@ -928,6 +943,7 @@ export function createResponse(
   bundlerConfig: ServerConsumerModuleMap,
   moduleLoading: ModuleLoading,
   resolveClientReferenceMetadata: (reference: any) => ClientReferenceMetadata,
+  bindToConsumer: null | (<R>(callback: () => R) => R),
   nonce: ?string,
   onError: void | ((error: mixed) => ?string),
 ): ResultResponse {
@@ -937,6 +953,7 @@ export function createResponse(
     _moduleLoading: moduleLoading,
     _nonce: nonce,
     _resolveClientReferenceMetadata: resolveClientReferenceMetadata,
+    _bindToConsumer: bindToConsumer,
     _models: new Map(),
     _modules: new Map(),
     _onError: onError === undefined ? result.onError : onError,
@@ -945,9 +962,13 @@ export function createResponse(
   };
   retainResult(result);
   response._cleanup.push(
-    subscribeToHints(result.context, hint =>
-      dispatchHint(hint.code, hint.model),
-    ),
+    subscribeToHints(result.context, hint => {
+      if (bindToConsumer !== null) {
+        bindToConsumer(() => dispatchHint(hint.code, hint.model));
+      } else {
+        dispatchHint(hint.code, hint.model);
+      }
+    }),
   );
   return response;
 }
@@ -973,16 +994,20 @@ function settleRoot(chunk: SomeChunk<any>, value: any): void {
 }
 
 export function readRoot<T>(response: ResultResponse): Thenable<T> {
-  const model = response._result.model;
+  const result = response._result;
   const chunk = createPendingChunk();
-  try {
-    settleRoot(
-      chunk,
-      readNode(response, model, rootKeyContext, rootKeyContext),
-    );
-  } catch (error) {
-    rejectChunk(chunk, error);
-  }
+  // Expansions this walk starts, and their continuations after an await,
+  // run with the Result's render context.
+  result.run(() => {
+    try {
+      settleRoot(
+        chunk,
+        readNode(response, result.model, rootKeyContext, rootKeyContext),
+      );
+    } catch (error) {
+      rejectChunk(chunk, error);
+    }
+  });
   return chunk as any;
 }
 
