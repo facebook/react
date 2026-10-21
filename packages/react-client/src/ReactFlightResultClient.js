@@ -684,10 +684,11 @@ function readAsyncFragment(
   context: KeyContext,
   descendContext: KeyContext,
 ): any {
+  const itemContext = context.keyPath !== null ? descendContext : context;
   const replayed = readAsyncIterable(
     response,
     iterable,
-    value => readStreamedNode(response, value, descendContext),
+    value => readStreamedNode(response, value, itemContext),
     false,
   );
   if (context.keyPath !== null) {
@@ -1054,11 +1055,15 @@ function readServerComponentOutput(
     typeof output[ASYNC_ITERATOR] === 'function' &&
     !(typeof ReadableStream === 'function' && output instanceof ReadableStream)
   ) {
-    // An async iterator in return position is treated as multi-shot.
+    // An async iterator in return position is treated as multi-shot. Each
+    // value is its own row, keyed like the stream: with the context of this
+    // position, unless a key wraps the stream in a fragment, whose children
+    // are read after the context is restored.
+    const itemContext = context.keyPath !== null ? descendContext : context;
     const replayed = readAsyncIterable(
       response,
       output,
-      value => readStreamedNode(response, value, descendContext),
+      value => readStreamedNode(response, value, itemContext),
       true,
     );
     if (context.keyPath !== null) {
