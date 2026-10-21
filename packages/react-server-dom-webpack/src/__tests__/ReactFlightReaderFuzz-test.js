@@ -2513,13 +2513,11 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     }
   }
 
-  // In DEV, debug info drains a sync iterator before the model is written,
-  // so iterators stay out of the random graphs.
   // These leaves wait for fixes further up the stack: a large typed array held
   // in two places arrives empty the second time, an object key whose value is
   // undefined is dropped, and a cycle through a property name with a colon
   // overflows the writer's stack.
-  const unsupportedMoves = ['iterator', 'large binary', 'undefined', 'colon'];
+  const unsupportedMoves = ['large binary', 'undefined', 'colon'];
 
   describe('generated graphs', () => {
     seeds.forEach(seed => {
@@ -2529,7 +2527,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
           // eslint-disable-next-line jest/valid-title
           it(caseName('graph', seed, demands[d], variant), () =>
             runGraph({
-              ...generateGraph(seed),
+              ...generateGraph(seed, {without: unsupportedMoves}),
               family: 'graph',
               seed,
               demand: demands[d],
@@ -2736,9 +2734,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'stream', other: 'stream'},
       }));
 
-    // Writer bug, DEV only.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('iterator resolved by a Promise', () =>
+    it('iterator resolved by a Promise', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
