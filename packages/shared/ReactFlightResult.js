@@ -462,12 +462,14 @@ export function getAsyncIterableReplay(
 }
 
 // A fresh ReadableStream over the replay. `read` maps each chunk for the
-// consumer; the serializer passes values through, a reader reads them. A
-// chunk that fails to read errors the stream, as a row that fails to
-// serialize errors it on the wire.
+// consumer, and `readReason` the reason the original failed with; the
+// serializer passes both through, a reader reads them. A chunk that fails to
+// read errors the stream, as a row that fails to serialize errors it on the
+// wire.
 export function createReplayReadableStream(
   replay: Replay,
   read: (value: mixed) => mixed,
+  readReason: (reason: mixed) => mixed,
 ): ReadableStream {
   let index = 0;
   function pull(controller: any): Promise<void> {
@@ -506,7 +508,7 @@ export function createReplayReadableStream(
             controller.enqueue(chunk);
           }
         } else if (replay.status === REPLAY_ERRORED) {
-          controller.error(replay.error);
+          controller.error(readReason(replay.error));
         } else {
           controller.close();
         }
@@ -553,6 +555,7 @@ export function isSelfIterator(iterator: any): boolean {
 export function createReplayAsyncIterable(
   replay: Replay,
   read: (value: mixed) => mixed,
+  readReason: (reason: mixed) => mixed,
   asIterable: boolean = false,
 ): $AsyncIterable<any, any, void> {
   const iterable: any = {};
@@ -592,7 +595,7 @@ export function createReplayAsyncIterable(
               }
               resolve({done: entry.done, value} as any);
             } else if (replay.status === REPLAY_ERRORED) {
-              reject(replay.error);
+              reject(readReason(replay.error));
             } else {
               resolve({done: true, value: undefined});
             }

@@ -754,9 +754,23 @@ function readAsyncIterable(
     iterable,
     iterable[ASYNC_ITERATOR],
   );
-  const replayed = createReplayAsyncIterable(replay, read, asIterable);
+  const replayed = createReplayAsyncIterable(
+    replay,
+    read,
+    reason => readReplayError(response, reason),
+    asIterable,
+  );
   models.set(iterable, replayed);
   return replayed;
+}
+
+// The reason a stream or async iterable failed with, reported through
+// onError once across consumers and given its digest, as the wire does.
+function readReplayError(response: ResultResponse, reason: mixed): Error {
+  return errorWithDigest(
+    createConsumerError(response, reason),
+    logConsumerError(response, reason),
+  );
 }
 
 function readFragment(
@@ -1366,6 +1380,7 @@ function readData(
           readStreamedValue(response, chunk, () =>
             readData(response, chunk, context, {}, ''),
           ),
+        reason => readReplayError(response, reason),
       );
       models.set(value, replayed);
       return replayed;

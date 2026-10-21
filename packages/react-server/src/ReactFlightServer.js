@@ -2615,6 +2615,7 @@ function renderAsyncFragment(
     const replayed = createReplayAsyncIterable(
       replay,
       identity,
+      identity,
       replay.isIterator &&
         getAsyncIterator !== (children as any)[ASYNC_ITERATOR],
     );
@@ -4694,6 +4695,7 @@ function renderModelDestructive(
           task,
           createReplayReadableStream(
             getStreamReplay(request.result, value),
+            identity,
             identity,
           ),
         );

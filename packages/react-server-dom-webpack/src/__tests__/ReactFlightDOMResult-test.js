@@ -1001,6 +1001,58 @@ describe('ReactFlightDOMResult', () => {
     });
   });
 
+  it('reports the error of a stream read in process once, with its digest', async () => {
+    const errors = [];
+    async function* items() {
+      yield 'first';
+      throw new Error('broken');
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      {items: items()},
+      {
+        onError(error) {
+          errors.push(error.message);
+          return 'digest(' + error.message + ')';
+        },
+      },
+    );
+    const root = await ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: {moduleMap: {}, moduleLoading: null},
+    });
+    const iterator = root.items[Symbol.asyncIterator]();
+    expect((await iterator.next()).value).toBe('first');
+    let caught;
+    try {
+      await iterator.next();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught.digest).toBe('digest(broken)');
+    expect(caught.message).toBe(
+      __DEV__
+        ? 'broken'
+        : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
+    );
+    // The hydration stream reports the same error through the same digest.
+    const readable = new Stream.PassThrough();
+    await serverAct(() => {
+      ReactServerDOMServer.renderToPipeableStream(result, webpackMap).pipe(
+        readable,
+      );
+    });
+    const streamed = await ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: null,
+    });
+    const streamedIterator = streamed.items[Symbol.asyncIterator]();
+    await streamedIterator.next();
+    await expect(streamedIterator.next()).rejects.toMatchObject({
+      digest: 'digest(broken)',
+    });
+    expect(errors).toEqual(['broken']);
+  });
+
   it('reads a Client Reference module proxy wherever it appears', async () => {
     const components = createClientComponents();
     // Bundlers hand out a proxy whose get trap throws for Symbol keys, so a
