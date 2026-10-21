@@ -173,8 +173,13 @@ function startReadingFromStream(
     if (done) {
       return onDone();
     }
-    const buffer: Uint8Array = value as any;
-    processBinaryChunk(response, streamState, buffer);
+    if (typeof value === 'string') {
+      // A string chunk has to be a whole row, or rows, as the server wrote it.
+      processStringChunk(response, streamState, value);
+    } else {
+      const buffer: Uint8Array = value as any;
+      processBinaryChunk(response, streamState, buffer);
+    }
     return reader.read().then(progress).catch(error);
   }
   function error(e: any) {
