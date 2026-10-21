@@ -244,7 +244,7 @@ type StaticResult = {
 };
 
 function prerender(
-  model: ReactClientValue,
+  model: ReactClientValue | Result<ReactClientValue>,
   webpackMap: ClientManifest,
   options?: Options,
 ): Promise<StaticResult> {
@@ -268,18 +268,32 @@ function prerender(
       );
       resolve({prelude: stream});
     }
+    // A Result serializes through the same request, reading Server Component
+    // output from its map of expansions.
+    const result: null | Result<ReactClientValue> = isResult(model)
+      ? (model as any)
+      : null;
     const request = createPrerenderRequest(
-      model,
+      result !== null ? result.model : (model as any),
       webpackMap,
       onAllReady,
       onFatalError,
-      options ? options.onError : undefined,
+      options && options.onError !== undefined
+        ? options.onError
+        : result !== null
+          ? result.onError
+          : undefined,
       options ? options.identifierPrefix : undefined,
-      options ? options.temporaryReferences : undefined,
+      options && options.temporaryReferences !== undefined
+        ? options.temporaryReferences
+        : result !== null
+          ? result.temporaryReferences
+          : undefined,
       options ? options.startTime : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
+      result,
     );
     if (options && options.signal) {
       attachAbortSignal(request, options.signal);

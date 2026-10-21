@@ -21,6 +21,7 @@ let ReactDOMFizzStatic;
 let FlightReactDOM;
 let ReactServer;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let serverAct;
@@ -40,9 +41,13 @@ describe('ReactFlightDOMResult', () => {
     jest.mock('react-server-dom-webpack/server', () =>
       jest.requireActual('react-server-dom-webpack/server.node'),
     );
+    jest.mock('react-server-dom-webpack/static', () =>
+      jest.requireActual('react-server-dom-webpack/static.node'),
+    );
     ReactServer = require('react');
     FlightReactDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -52,6 +57,7 @@ describe('ReactFlightDOMResult', () => {
     jest.resetModules();
     __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
+    jest.unmock('react-server-dom-webpack/static');
     jest.mock('react-server-dom-webpack/client', () =>
       jest.requireActual('react-server-dom-webpack/client.node'),
     );
@@ -321,6 +327,97 @@ describe('ReactFlightDOMResult', () => {
       const viaResult = await observe(b, await readResultStream(b));
       expect(viaResult).toEqual(direct);
     }
+  });
+
+  async function prerenderToResponse(model, components, reported) {
+    let prelude;
+    await serverAct(async () => {
+      const prerendered =
+        await ReactServerDOMStaticServer.prerenderToNodeStream(
+          model,
+          webpackMap,
+          {
+            onError(error) {
+              if (reported) reported.push(error);
+              return onError(error);
+            },
+          },
+        );
+      prelude = prerendered.prelude;
+    });
+    const response = ReactServerDOMClient.createFromNodeStream(
+      prelude,
+      components.serverConsumerManifest,
+    );
+    await serverAct(() => {});
+    return {response};
+  }
+
+  it('prerenders a Result the same as prerendering the model directly', async () => {
+    for (let seed = 1; seed <= SEEDS; seed++) {
+      const a = createScenario(seed, {});
+      await settleAll(a.scheduler);
+      const direct = await observe(
+        a,
+        await prerenderToResponse(a.model, a.components),
+      );
+      const b = createScenario(seed, {});
+      await settleAll(b.scheduler);
+      const result = ReactServerDOMServer.renderToResult(b.model, {onError});
+      const viaResult = await observe(
+        b,
+        await prerenderToResponse(result, b.components),
+      );
+      expect(viaResult).toEqual(direct);
+    }
+  });
+
+  it('aborting a prerender of a Result halts its stream and nothing else', async () => {
+    const components = createClientComponents();
+    let resolveGreeting;
+    const greeting = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+    async function Greeting() {
+      return ReactServer.createElement(components.Box, null, await greeting);
+    }
+    const errors = [];
+    const controller = new AbortController();
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(Greeting, null),
+      {
+        onError(error) {
+          errors.push(error.message);
+        },
+      },
+    );
+    const inProcess = ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: components.serverConsumerManifest,
+    });
+    const {pending} = await serverAct(() => ({
+      pending: ReactServerDOMStaticServer.prerenderToNodeStream(
+        result,
+        webpackMap,
+        {signal: controller.signal},
+      ),
+    }));
+    await serverAct(() => controller.abort('boom'));
+    const {prelude} = await pending;
+    expect(errors).toEqual([]);
+
+    // The prelude leaves the pending component unresolved; the Result and
+    // its in-process consumer go on and get it when it settles.
+    const stream = ReactServerDOMClient.createFromNodeStream(
+      prelude,
+      components.serverConsumerManifest,
+    );
+    const html = renderHTML(stream);
+    await serverAct(() => resolveGreeting('hello'));
+    expect(await renderHTML(inProcess)).toEqual({
+      html: '<section>hello</section>',
+    });
+    expect(await html).toEqual({shellError: true});
   });
 
   it('reads a Result in process the same as rendering the model directly', async () => {
