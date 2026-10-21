@@ -2791,16 +2791,16 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
         afterEof: true,
       }));
 
-    // Writer bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('streamed array containing itself', () =>
+    // The reply encoder has no part of its own for a stream item either.
+    (host === 'reply' ? it.skip : it)('streamed array containing itself', () =>
       runGraph({
         nodes: {
           item: {array: ['item']},
           stream: {stream: ['item']},
         },
         roots: {entry: 'stream', other: 'stream'},
-      }));
+      }),
+    );
 
     it('stream item with a failing module', () =>
       runGraph({
