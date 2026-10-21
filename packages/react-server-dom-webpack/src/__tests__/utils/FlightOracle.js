@@ -85,9 +85,16 @@ function generateModel(rng, env, options) {
   const shared = [];
   let componentCount = 0;
   let errorCount = 0;
+  // Values the wire would serialize differently at a second occurrence.
+  const unshareable = new WeakSet();
 
   function maybeShare(value) {
-    if (value !== null && typeof value === 'object' && rng.chance(0.3)) {
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      !unshareable.has(value) &&
+      rng.chance(0.3)
+    ) {
       shared.push(value);
     }
     return value;
@@ -263,13 +270,21 @@ function generateModel(rng, env, options) {
         yield items[i];
       }
     }
+    let iterable;
     if (!multiShot && rng.chance(0.5)) {
       // An async generator object is its own iterator: single-shot.
-      return generate();
+      iterable = generate();
+    } else {
+      iterable = {
+        [Symbol.asyncIterator]: generate,
+      };
     }
-    return {
-      [Symbol.asyncIterator]: generate,
-    };
+    iterable.debugItems = items;
+    // Whether the wire refers to a stream it already wrote or writes it
+    // again, with the key context of the new position, depends on where the
+    // first one sat; a Result replays it in every position. Not shared.
+    unshareable.add(iterable);
+    return iterable;
   }
 
   // Values the serializer rejects. Each arm must report the same error.
@@ -336,10 +351,43 @@ function generateModel(rng, env, options) {
   }
 
   const sharedNodes = [];
+  let iteratorCount = 0;
+  // Nodes with a Server Component that calls use() below them. The wire
+  // renders a streamed value outside of its work loop, with no hooks
+  // dispatcher, so such a node cannot be shared into a stream either.
+  const usesHooks = new WeakSet();
+  let hookCount = 0;
+  // Whether a keyed Server Component's output encloses this position with no
+  // client element in between. The wire wraps an array or async iterable
+  // here in a keyed fragment, unless it already serialized that object
+  // elsewhere, in which case it refers to it as is; such an object is not
+  // shared into this position.
+  let underKey = false;
+  // An array, an async iterable, or a keyless fragment, whose children take
+  // its slot: the wire wraps these in a keyed fragment under a key.
+  function isContainer(node) {
+    return (
+      node !== null &&
+      typeof node === 'object' &&
+      (Array.isArray(node) ||
+        typeof node[Symbol.asyncIterator] === 'function' ||
+        (node.$$typeof === REACT_ELEMENT_TYPE &&
+          node.type === REACT_FRAGMENT_TYPE &&
+          node.key === null))
+    );
+  }
+  function outsideKey(gen) {
+    const prevUnderKey = underKey;
+    underKey = false;
+    try {
+      return gen();
+    } finally {
+      underKey = prevUnderKey;
+    }
+  }
   // An element whose component throws is never shared: the wire refers to
   // the second occurrence by value, and a reference to an errored slot fails
   // the element holding it, which is coarser than rendering it again.
-  const unshareable = new WeakSet();
   function maybeShareNode(node) {
     if (
       node !== null &&
@@ -359,9 +407,36 @@ function generateModel(rng, env, options) {
     // The same element object in two places, including Server Components.
     // Not inside an array, where the repeated key would warn.
     if (!inArray && sharedNodes.length > 0 && rng.chance(0.1)) {
-      return rng.pick(sharedNodes);
+      let candidates = sharedNodes;
+      if (insideStream > 0) {
+        candidates = candidates.filter(node => !usesHooks.has(node));
+      }
+      if (underKey) {
+        candidates = candidates.filter(node => !isContainer(node));
+      }
+      if (candidates.length > 0) {
+        return rng.pick(candidates);
+      }
     }
-    return maybeShareNode(genNodeImpl(depth, inArray));
+    const iteratorsBefore = iteratorCount;
+    const errorsBefore = errorCount;
+    const hooksBefore = hookCount;
+    const node = genNodeImpl(depth, inArray);
+    if (node !== null) {
+      if (iteratorCount !== iteratorsBefore || errorCount !== errorsBefore) {
+        // A single-shot iterator anywhere below: shared under a key, the
+        // wire serializes the subtree again and finds it exhausted. A
+        // throwing component below: see maybeShareNode.
+        unshareable.add(node);
+      }
+      if (hookCount !== hooksBefore) {
+        usesHooks.add(node);
+      }
+      if (underKey && isContainer(node)) {
+        unshareable.add(node);
+      }
+    }
+    return maybeShareNode(node);
   }
 
   function genNodeImpl(depth, inArray) {
@@ -379,7 +454,7 @@ function generateModel(rng, env, options) {
           Object.assign(keyProps(key), {
             fallback: 'loading ' + rng.int(100),
           }),
-          ...genChildren(depth, false),
+          ...outsideKey(() => genChildren(depth, false)),
         );
       case 0:
       case 1: {
@@ -390,7 +465,7 @@ function generateModel(rng, env, options) {
         if (rng.chance(0.5)) {
           props['data-x'] = String(genPrimitive());
         }
-        props.children = genChildren(depth, true);
+        props.children = outsideKey(() => genChildren(depth, true));
         return React.createElement(
           rng.pick(['div', 'span', 'p']),
           Object.assign(keyProps(key), props),
@@ -400,18 +475,20 @@ function generateModel(rng, env, options) {
         return React.createElement(
           REACT_FRAGMENT_TYPE,
           keyProps(key),
-          ...genChildren(depth, false),
+          ...outsideKey(() => genChildren(depth, false)),
         );
       case 3:
         return genChildren(depth, true);
       case 4: {
         // Client Component receiving data props. A single-shot iterator only
-        // appears here, never inside a container that could be shared: a
-        // shared iterator is exhausted by whichever read comes second.
+        // appears here, never inside a container that could be shared or a
+        // stream the wire may iterate again: a shared iterator is exhausted
+        // by whichever read comes second.
         let value;
-        if (rng.chance(0.15)) {
+        if (insideStream === 0 && insideAwait === 0 && rng.chance(0.15)) {
           const items = [genData(depth - 1), genData(depth - 1)];
           value = items[Symbol.iterator]();
+          iteratorCount++;
         } else {
           value = genData(depth - 1);
         }
@@ -421,7 +498,7 @@ function generateModel(rng, env, options) {
         return React.createElement(
           Box,
           Object.assign(keyProps(key), {label: genString()}),
-          ...genChildren(depth, false),
+          ...outsideKey(() => genChildren(depth, false)),
         );
       }
       case 6:
@@ -434,6 +511,16 @@ function generateModel(rng, env, options) {
     }
   }
 
+  let insideAwait = 0;
+  function genAwaited(depth) {
+    insideAwait++;
+    try {
+      return genNode(depth, false);
+    } finally {
+      insideAwait--;
+    }
+  }
+
   function genServerComponentElement(depth, key) {
     const id = componentCount++;
     let kind = rng.int(5);
@@ -442,16 +529,35 @@ function generateModel(rng, env, options) {
     }
     const props = {label: 'c' + id};
     let Component;
+    const prevUnderKey = underKey;
+    if (key !== null) {
+      underKey = true;
+    }
+    // A container returned under a key is wrapped in a keyed fragment on the
+    // wire, unless the wire already wrote it elsewhere; so neither it nor
+    // the element returning it is shared.
+    let keyedContainer = false;
+    let debugOutput;
+    function genOutput(gen) {
+      const output = gen();
+      debugOutput = output;
+      if (underKey && isContainer(output)) {
+        keyedContainer = true;
+      }
+      return output;
+    }
     switch (kind) {
       case 0: {
-        const output = genNode(depth - 1, false);
+        const output = genOutput(() => genNode(depth - 1, false));
         Component = function Sync() {
           return output;
         };
         break;
       }
       case 1: {
-        const output = genNode(depth - 1, false);
+        // In DEV, the serializer describes an awaited value for debugging,
+        // which drains a single-shot iterator inside it before it renders.
+        const output = genOutput(() => genAwaited(depth - 1));
         const promise = scheduler.defer(resolve => resolve(output));
         Component = async function Async() {
           return await promise;
@@ -459,7 +565,8 @@ function generateModel(rng, env, options) {
         break;
       }
       case 2: {
-        const output = genNode(depth - 1, false);
+        hookCount++;
+        const output = genOutput(() => genAwaited(depth - 1));
         const promise = scheduler.defer(resolve => resolve(output));
         Component = function Using() {
           return React.use(promise);
@@ -481,7 +588,7 @@ function generateModel(rng, env, options) {
             };
           }
         } else {
-          const output = genChildren(depth - 1, true);
+          const output = genOutput(() => genChildren(depth - 1, true));
           Component = function ReturningArray() {
             return output;
           };
@@ -489,7 +596,9 @@ function generateModel(rng, env, options) {
         break;
       }
       default: {
-        const output = genNode(depth - 1, false);
+        // The output renders inside a host element, outside the key context.
+        const output = outsideKey(() => genNode(depth - 1, false));
+        debugOutput = output;
         Component = function Nested(nestedProps) {
           return React.createElement(
             'div',
@@ -499,17 +608,21 @@ function generateModel(rng, env, options) {
         };
       }
     }
+    underKey = prevUnderKey;
     Object.defineProperty(Component, 'name', {value: 'SC' + id});
+
     const Counted = function (componentProps) {
       env.onRender();
       return Component(componentProps);
     };
     Object.defineProperty(Counted, 'name', {value: 'SC' + id});
+    // For debugging dumps only.
+    Counted.debugOutput = debugOutput;
     const element = React.createElement(
       Counted,
       key === null ? props : Object.assign({key}, props),
     );
-    if (kind === 3 && options.allowErrors) {
+    if ((kind === 3 && options.allowErrors) || keyedContainer) {
       unshareable.add(element);
     }
     return element;
@@ -532,8 +645,18 @@ exports.generateModel = generateModel;
 // same. Whether sharing survives is checked separately.
 async function normalize(root, env) {
   const visiting = new Set();
+  // Streams and iterators can only be read once; a second reference to one
+  // gets what the first read saw.
+  const consumed = new Map();
 
   async function visit(value) {
+    if (value !== null && typeof value === 'object' && consumed.has(value)) {
+      return consumed.get(value);
+    }
+    return visitOnce(value);
+  }
+
+  async function visitOnce(value) {
     if (value === null || typeof value !== 'object') {
       if (typeof value === 'function') {
         return {$$: 'function', name: env.nameOf(value)};
@@ -560,6 +683,8 @@ async function normalize(root, env) {
     ) {
       const reader = value.getReader();
       const chunks = [];
+      const read = {$$: 'stream', chunks};
+      consumed.set(value, read);
       try {
         while (true) {
           const {done, value: chunk} = await reader.read();
@@ -569,13 +694,15 @@ async function normalize(root, env) {
           chunks.push(await visit(chunk));
         }
       } catch (error) {
-        return {$$: 'stream', chunks, error: await visitError(error)};
+        read.error = await visitError(error);
       }
-      return {$$: 'stream', chunks};
+      return read;
     }
     if (typeof value[Symbol.asyncIterator] === 'function') {
       const items = [];
       const iterator = value[Symbol.asyncIterator]();
+      const read = {$$: 'asyncIterable', isIterator: iterator === value, items};
+      consumed.set(value, read);
       try {
         while (true) {
           const {done, value: item} = await iterator.next();
@@ -585,26 +712,22 @@ async function normalize(root, env) {
           items.push(await visit(item));
         }
       } catch (error) {
-        return {
-          $$: 'asyncIterable',
-          isIterator: iterator === value,
-          items,
-          error: await visitError(error),
-        };
+        read.error = await visitError(error);
       }
-      return {$$: 'asyncIterable', isIterator: iterator === value, items};
+      return read;
     }
     if (
       typeof value.next === 'function' &&
       typeof value[Symbol.iterator] === 'function'
     ) {
-      // Reading an iterator consumes it; both arms are read once.
       const items = [];
+      const read = {$$: 'iterator', items};
+      consumed.set(value, read);
       const iterated = Array.from(value);
       for (let i = 0; i < iterated.length; i++) {
         items.push(await visit(iterated[i]));
       }
-      return {$$: 'iterator', items};
+      return read;
     }
     if (value.$$typeof === REACT_LAZY_TYPE) {
       // Whether a value arrives inline or behind a lazy depends on timing,
@@ -819,3 +942,63 @@ function describeProps(root, use) {
 }
 
 exports.describeProps = describeProps;
+
+// A readable outline of a generated model: elements, the output a generated
+// Server Component returns, the items a generated stream yields, and shared
+// objects by number.
+function describeModel(model) {
+  const seen = new Map();
+  function describe(value, depth) {
+    if (value === null || typeof value !== 'object') {
+      return typeof value === 'function'
+        ? 'fn:' + (value.name || '?')
+        : typeof value === 'string'
+          ? JSON.stringify(value.slice(0, 20))
+          : String(value);
+    }
+    if (seen.has(value)) {
+      return '#' + seen.get(value);
+    }
+    const id = seen.size;
+    seen.set(value, id);
+    const pad = ' '.repeat(depth + 1);
+    const list = items =>
+      items.map(item => '\n' + pad + describe(item, depth + 1)).join('');
+    if (value.$$typeof === REACT_ELEMENT_TYPE) {
+      const type =
+        typeof value.type === 'string'
+          ? value.type
+          : typeof value.type === 'symbol'
+            ? value.type.description
+            : value.type.$$id
+              ? 'client:' + value.type.$$id.slice(-10)
+              : value.type.name;
+      const props = Object.keys(value.props)
+        .map(k => '\n' + pad + k + ': ' + describe(value.props[k], depth + 1))
+        .join('');
+      const output =
+        typeof value.type === 'function' && 'debugOutput' in value.type
+          ? '\n' + pad + '=> ' + describe(value.type.debugOutput, depth + 1)
+          : '';
+      return (
+        `#${id} <${type} key=${JSON.stringify(value.key)}>` + props + output
+      );
+    }
+    if (Array.isArray(value)) {
+      return `#${id} [` + list(value) + ']';
+    }
+    if (typeof value[Symbol.asyncIterator] === 'function') {
+      return (
+        `#${id} asyncIterable` +
+        (value.debugItems ? list(value.debugItems) : '')
+      );
+    }
+    if (typeof value.then === 'function') {
+      return `#${id} promise`;
+    }
+    return `#${id} {` + Object.keys(value).join(',') + '}';
+  }
+  return describe(model, 0);
+}
+
+exports.describeModel = describeModel;

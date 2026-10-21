@@ -27,10 +27,20 @@ let Stream;
 let serverAct;
 let FlightOracle;
 
-const SEEDS = 40;
+// RESULT_SEEDS=first-last runs a different range, e.g. to hunt or replay.
+const SEED_RANGE = (process.env.RESULT_SEEDS || '1-40').split('-').map(Number);
+const FIRST_SEED = SEED_RANGE[0];
+const SEEDS = SEED_RANGE[1];
+// Each scenario test renders every seed a few times over.
+jest.setTimeout(process.env.RESULT_SEEDS ? 30 * 60 * 1000 : 60 * 1000);
 
 describe('ReactFlightDOMResult', () => {
+  let stackTraceLimit;
   beforeEach(() => {
+    // Fizz escapes an error's stack into the HTML in DEV; a deep generated
+    // tree produces one long enough to trip the test loop guard.
+    stackTraceLimit = Error.stackTraceLimit;
+    Error.stackTraceLimit = 20;
     jest.resetModules();
 
     patchSetImmediate();
@@ -70,19 +80,44 @@ describe('ReactFlightDOMResult', () => {
     FlightOracle = require('./utils/FlightOracle');
   });
 
+  afterEach(() => {
+    Error.stackTraceLimit = stackTraceLimit;
+  });
+
+  let moduleCount = 0;
+
   // Client Components shared by every generated scenario. `Show` renders a
   // description of its props so the HTML reflects the data it received;
-  // `Box` renders children passed through a Client Component.
-  function createClientComponents() {
+  // `Box` renders children passed through a Client Component. A module
+  // listed in `late` loads its chunk when the scheduler settles it, so the
+  // consumers have to wait for it, as they do on a server's first request.
+  function createClientComponents(scheduler, late) {
     const {describeProps} = FlightOracle;
     function Show({value}) {
-      return React.createElement('pre', null, describeProps(value, React.use));
+      // Capped: the test loop guard trips on escaping a longer text.
+      return React.createElement(
+        'pre',
+        null,
+        describeProps(value, React.use).slice(0, 3000),
+      );
     }
     function Box({label, children}) {
       return React.createElement('section', {'data-label': label}, children);
     }
-    const ShowReference = clientExports(Show);
-    const BoxReference = clientExports(Box);
+    function exportModule(Component, name) {
+      if (late === undefined || late.indexOf(name) === -1) {
+        return clientExports(Component);
+      }
+      const chunkId = name + '-' + moduleCount++;
+      return clientExports(
+        Component,
+        chunkId,
+        chunkId + '.js',
+        scheduler.defer(resolve => resolve()),
+      );
+    }
+    const ShowReference = exportModule(Show, 'Show');
+    const BoxReference = exportModule(Box, 'Box');
     // The SSR bundle loads the same module the server referenced.
     const moduleMap = {};
     const references = [ShowReference, BoxReference];
@@ -105,7 +140,8 @@ describe('ReactFlightDOMResult', () => {
   function createScenario(seed, options) {
     const rng = FlightOracle.createRng(seed);
     const scheduler = FlightOracle.createScheduler(rng);
-    const components = createClientComponents();
+    const late = ['Show', 'Box'].filter(() => rng.int(2) === 1);
+    const components = createClientComponents(scheduler, late);
     const counts = {renders: 0};
     const {model, kind} = FlightOracle.generateModel(
       rng,
@@ -234,7 +270,8 @@ describe('ReactFlightDOMResult', () => {
     }
     // Fizz reports one error per boundary, the first it meets; with two
     // erroring children, which one that is follows render order, and so
-    // whether a child was lazy. Only the HTML is compared.
+    // whether a child was lazy. Only the HTML is compared, without the
+    // message and stack it carries in DEV.
     let result;
     try {
       result = await serverAct(() =>
@@ -259,7 +296,7 @@ describe('ReactFlightDOMResult', () => {
         // depends on timing, as it does between two wire renders.
         return {
           html: html
-            .replace(/ data-c?stck="[^"]*"/g, '')
+            .replace(/ data-(msg|c?stck)="[^"]*"/g, '')
             .replace(/<!-- -->/g, ''),
         };
       }
@@ -273,8 +310,30 @@ describe('ReactFlightDOMResult', () => {
     return {value, html};
   }
 
+  // RESULT_DUMP=seed prints a generated model and its wire, to debug a seed.
+  if (process.env.RESULT_DUMP) {
+    it('dumps a scenario', async () => {
+      const a = createScenario(+process.env.RESULT_DUMP, {
+        allowErrors: process.env.RESULT_DUMP_ERRORS === '1',
+      });
+      const readable = new Stream.PassThrough();
+      let wire = '';
+      readable.on('data', c => (wire += c.toString('utf8')));
+      await serverAct(() => {
+        ReactServerDOMServer.renderToPipeableStream(a.model, webpackMap, {
+          onError,
+        }).pipe(readable);
+      });
+      await settleAll(a.scheduler);
+      await serverAct(() => {});
+      process.stdout.write(
+        'MODEL\n' + FlightOracle.describeModel(a.model) + '\nWIRE\n' + wire,
+      );
+    });
+  }
+
   it('normalizes generated scenarios the same way across independent renders', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {});
       const first = await observe(a, await readDirect(a));
       const b = createScenario(seed, {});
@@ -320,7 +379,7 @@ describe('ReactFlightDOMResult', () => {
   });
 
   it('serializes a Result the same as rendering the model directly', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {});
       const direct = await observe(a, await readDirect(a));
       const b = createScenario(seed, {});
@@ -354,7 +413,7 @@ describe('ReactFlightDOMResult', () => {
   }
 
   it('prerenders a Result the same as prerendering the model directly', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {});
       await settleAll(a.scheduler);
       const direct = await observe(
@@ -421,7 +480,7 @@ describe('ReactFlightDOMResult', () => {
   });
 
   it('reads a Result in process the same as rendering the model directly', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {});
       const direct = await observe(a, await readDirect(a));
       const b = createScenario(seed, {});
@@ -431,7 +490,7 @@ describe('ReactFlightDOMResult', () => {
   });
 
   it('reads a Result with errors in process the same as rendering the model directly', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {allowErrors: true});
       const direct = await observe(a, await readDirect(a));
       const b = createScenario(seed, {allowErrors: true});
@@ -441,7 +500,7 @@ describe('ReactFlightDOMResult', () => {
   });
 
   it('serves both consumers of one Result without rendering a component twice', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {allowErrors: seed % 2 === 0});
       const direct = await observe(a, await readDirect(a));
       const b = createScenario(seed, {allowErrors: seed % 2 === 0});
@@ -458,7 +517,7 @@ describe('ReactFlightDOMResult', () => {
   });
 
   it('rejects the values the wire rejects, reporting the same errors', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       // Shallow, so the message describing an invalid value's parent stays
       // under the test environment's loop iteration cap when Fizz escapes it.
       const a = createScenario(seed, {allowInvalid: true, maxDepth: 3});
@@ -1280,7 +1339,7 @@ describe('ReactFlightDOMResult', () => {
   });
 
   it('serializes a Result with errors the same as rendering the model directly', async () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
+    for (let seed = FIRST_SEED; seed <= SEEDS; seed++) {
       const a = createScenario(seed, {allowErrors: true});
       const direct = await observe(a, await readDirect(a));
       const b = createScenario(seed, {allowErrors: true});
