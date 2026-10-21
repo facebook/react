@@ -2417,22 +2417,41 @@ function parseReadableStream<T>(
 
   let controller: ReadableStreamController = null as any;
   let closed = false;
+  let canceled = false;
   const stream = new ReadableStream({
     type: type,
     start(c) {
       controller = c;
     },
+    cancel() {
+      // The consumer is done with the stream. Entries that are still arriving
+      // for it are dropped.
+      canceled = true;
+      closed = true;
+    },
   });
   let previousBlockedChunk: SomeChunk<T> | null = null;
   function enqueue(value: T): void {
+    if (canceled) {
+      return;
+    }
     if (type === 'bytes' && !ArrayBuffer.isView(value)) {
       flightController.error(new Error('Invalid data for bytes stream.'));
       return;
     }
     controller.enqueue(value);
   }
+  function fail(error: mixed): void {
+    if (!canceled) {
+      // $FlowFixMe[incompatible-type]
+      controller.error(error);
+    }
+  }
   const flightController = {
     enqueueModel(json: string): void {
+      if (canceled) {
+        return;
+      }
       if (previousBlockedChunk === null) {
         // If we're not blocked on any other chunks, we can try to eagerly initialize
         // this as a fast-path to avoid awaiting them.
@@ -2446,14 +2465,14 @@ function parseReadableStream<T>(
         if (initializedChunk.status === INITIALIZED) {
           enqueue(initializedChunk.value);
         } else {
-          chunk.then(enqueue, flightController.error);
+          chunk.then(enqueue, fail);
           previousBlockedChunk = chunk;
         }
       } else {
         // We're still waiting on a previous chunk so we can't enqueue quite yet.
         const blockedChunk = previousBlockedChunk;
         const chunk: SomeChunk<T> = createPendingChunk(response);
-        chunk.then(enqueue, flightController.error);
+        chunk.then(enqueue, fail);
         previousBlockedChunk = chunk;
         blockedChunk.then(function () {
           if (previousBlockedChunk === chunk) {
@@ -2476,7 +2495,11 @@ function parseReadableStream<T>(
         const blockedChunk = previousBlockedChunk;
         // We shouldn't get any more enqueues after this so we can set it back to null.
         previousBlockedChunk = null;
-        blockedChunk.then(() => controller.close());
+        blockedChunk.then(() => {
+          if (!canceled) {
+            controller.close();
+          }
+        });
       }
     },
     error(error: mixed): void {
@@ -2491,7 +2514,7 @@ function parseReadableStream<T>(
         const blockedChunk = previousBlockedChunk;
         // We shouldn't get any more enqueues after this so we can set it back to null.
         previousBlockedChunk = null;
-        blockedChunk.then(() => controller.error(error as any));
+        blockedChunk.then(() => fail(error));
       }
     },
   };
