@@ -1773,6 +1773,51 @@ describe('ReactFlightDOMEdge', () => {
     expect(result.after).toBe('done');
   });
 
+  it('ends a BYOB read that is waiting when the byte stream closes', async () => {
+    const s = new ReadableStream({
+      type: 'bytes',
+      start(c) {
+        c.enqueue(new Uint8Array([1, 2, 3]));
+        c.close();
+      },
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(s, {}),
+    );
+
+    const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    const closeRow = bytes.length - 4;
+    expect(new TextDecoder().decode(bytes.subarray(closeRow))).toBe('1:C\n');
+
+    let transportController;
+    const transport = new ReadableStream({
+      start(c) {
+        transportController = c;
+      },
+    });
+    transportController.enqueue(bytes.subarray(0, closeRow));
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      transport,
+      {
+        serverConsumerManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const reader = result.getReader({mode: 'byob'});
+    const first = await reader.read(new Uint8Array(3));
+    expect(Array.from(first.value)).toEqual([1, 2, 3]);
+
+    const waiting = reader.read(new Uint8Array(3));
+    transportController.enqueue(bytes.subarray(closeRow));
+    transportController.close();
+    expect((await waiting).done).toBe(true);
+  });
+
   // @gate !__DEV__ || enableComponentPerformanceTrack
   it('supports async server component debug info as the element owner in DEV', async () => {
     function Container({children}) {
