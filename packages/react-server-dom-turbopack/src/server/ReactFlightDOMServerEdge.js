@@ -18,6 +18,8 @@ import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import noop from 'shared/noop';
 import {ASYNC_ITERATOR} from 'shared/ReactSymbols';
 
+import type {Result} from 'shared/ReactFlightResult';
+
 import {
   createRequest,
   createPrerenderRequest,
@@ -29,7 +31,10 @@ import {
   attachAbortSignal,
   resolveDebugMessage,
   closeDebugChannel,
+  createResult,
+  abortResult,
 } from 'react-server/src/ReactFlightServer';
+import {isResult} from 'shared/ReactFlightResult';
 
 import {
   createResponse,
@@ -116,11 +121,56 @@ function startReadingFromDebugChannelReadableStream(
   reader.read().then(progress).catch(error);
 }
 
+type ResultOptions = {
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
+  onError?: (error: mixed) => void,
+  identifierPrefix?: string,
+  temporaryReferences?: TemporaryReferenceSet,
+  signal?: AbortSignal,
+};
+
+// Renders the model's Server Components into a Result that can be consumed
+// in process and serialized to a stream, with each component run once.
+function renderToResult<T: ReactClientValue>(
+  model: T,
+  options?: ResultOptions,
+): Result<T> {
+  const result = createResult(
+    model,
+    options ? options.onError : undefined,
+    options ? options.identifierPrefix : undefined,
+    options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
+  );
+  const signal = options ? options.signal : undefined;
+  if (signal) {
+    if (signal.aborted) {
+      abortResult(result, signal.reason);
+    } else {
+      const listener = () => {
+        abortResult(result, signal.reason);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+  }
+  return result;
+}
+
 function renderToReadableStream(
-  model: ReactClientValue,
+  model: ReactClientValue | Result<ReactClientValue>,
   turbopackMap: ClientManifest,
   options?: Options,
 ): ReadableStream {
+  // A Result serializes through the same request, reading Server Component
+  // output from its map of expansions.
+  const result: null | Result<ReactClientValue> = isResult(model)
+    ? (model as any)
+    : null;
+  const rootModel: ReactClientValue =
+    result !== null ? result.model : (model as any);
   const debugChannelReadable =
     __DEV__ && options && options.debugChannel
       ? options.debugChannel.readable
@@ -130,15 +180,24 @@ function renderToReadableStream(
       ? options.debugChannel.writable
       : undefined;
   const request = createRequest(
-    model,
+    rootModel,
     turbopackMap,
-    options ? options.onError : undefined,
+    options && options.onError !== undefined
+      ? options.onError
+      : result !== null
+        ? result.onError
+        : undefined,
     options ? options.identifierPrefix : undefined,
-    options ? options.temporaryReferences : undefined,
+    options && options.temporaryReferences !== undefined
+      ? options.temporaryReferences
+      : result !== null
+        ? result.temporaryReferences
+        : undefined,
     options ? options.startTime : undefined,
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
+    result,
   );
   if (options && options.signal) {
     attachAbortSignal(request, options.signal);
@@ -306,6 +365,7 @@ function decodeReplyFromAsyncIterable<T>(
 }
 
 export {
+  renderToResult,
   renderToReadableStream,
   prerender,
   decodeReply,

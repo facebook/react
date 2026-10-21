@@ -7,114 +7,25 @@
  * @flow
  */
 
-import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
-import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
-import type {TemporaryReferenceSet as ServerTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+import type {Thenable} from 'shared/ReactTypes';
 import type {Result} from 'shared/ReactFlightResult';
-import type {
-  ServerConsumerModuleMap,
-  ModuleLoading,
-  ServerManifest,
-} from 'react-client/src/ReactFlightClientConfig';
-import type {ClientManifest} from '../server/ReactFlightServerConfigTurbopackBundler';
+import type {Options} from './ReactFlightDOMResultClient';
 
-import {
-  createResponse,
-  readRoot,
-  close,
-} from 'react-client/src/ReactFlightResultClient';
-
-import {
-  resolveClientReferenceMetadata,
-  getServerReferenceId,
-  getServerReferenceBoundArguments,
-} from '../server/ReactFlightServerConfigTurbopackBundler';
-import {isServerReference} from '../ReactFlightTurbopackReferences';
-import {resolveTemporaryReference} from 'react-server/src/ReactFlightServerTemporaryReferences';
+import {createFromResult as createFromResultImpl} from './ReactFlightDOMResultClient';
 
 import {AsyncLocalStorage} from 'async_hooks';
-
-type EncodeFormActionCallback = <A>(
-  id: any,
-  args: Promise<A>,
-) => ReactCustomFormAction;
-
-type Options = {
-  // The map the Server Components render used, to turn its Client References
-  // into the module ids the server consumer manifest is keyed by.
-  clientManifest: ClientManifest,
-  serverConsumerManifest: {
-    moduleMap: ServerConsumerModuleMap,
-    moduleLoading: ModuleLoading,
-    serverModuleMap: null | ServerManifest,
-  },
-  nonce?: string,
-  encodeFormAction?: EncodeFormActionCallback,
-  temporaryReferences?: TemporaryReferenceSet,
-  onError?: (error: mixed) => ?string,
-  signal?: AbortSignal,
-};
-
-function noServerCall() {
-  throw new Error(
-    'Server Functions cannot be called during initial render. ' +
-      'This would create a fetch waterfall. Try to use a Server Component ' +
-      'to pass data to Client Components instead.',
-  );
-}
 
 export function createFromResult<T>(
   result: Result<T>,
   options: Options,
 ): Thenable<T> {
-  const clientManifest = options.clientManifest;
-  // The consumer is typically created while the renderer that uses it is
-  // running, as a page's HTML render reads the Result from a component. Its
-  // async context is what resolves that renderer's request for hints, so
-  // hints emitted later, by whichever consumer expanded a component, are
-  // dispatched from here.
   // snapshot is missing from Flow's definition of AsyncLocalStorage.
   const snapshot: void | (() => <R>(callback: () => R) => R) = (
     AsyncLocalStorage as any
   ).snapshot;
-  const bindToConsumer = typeof snapshot === 'function' ? snapshot() : null;
-  const serverTemporaryReferences: void | ServerTemporaryReferenceSet =
-    result.temporaryReferences;
-  const response = createResponse(
+  return createFromResultImpl(
     result,
-    options.serverConsumerManifest.moduleMap,
-    options.serverConsumerManifest.moduleLoading,
-    {
-      resolveClientReferenceMetadata: reference =>
-        resolveClientReferenceMetadata(clientManifest, reference) as any,
-      isServerReference,
-      getServerReferenceId: reference =>
-        getServerReferenceId(clientManifest, reference),
-      getServerReferenceBoundArguments: reference =>
-        getServerReferenceBoundArguments(clientManifest, reference),
-      resolveTemporaryReference: value =>
-        serverTemporaryReferences === undefined
-          ? undefined
-          : resolveTemporaryReference(serverTemporaryReferences, value),
-    },
-    noServerCall,
-    options.encodeFormAction,
-    options.temporaryReferences,
-    bindToConsumer,
-    typeof options.nonce === 'string' ? options.nonce : undefined,
-    options.onError,
+    options,
+    typeof snapshot === 'function' ? snapshot() : null,
   );
-  const signal = options.signal;
-  if (signal) {
-    if (signal.aborted) {
-      close(response, signal.reason);
-    } else {
-      const listener = () => {
-        close(response, signal.reason);
-        signal.removeEventListener('abort', listener);
-      };
-      signal.addEventListener('abort', listener);
-    }
-  }
-  return readRoot(response);
 }
