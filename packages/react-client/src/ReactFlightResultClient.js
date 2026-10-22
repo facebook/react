@@ -44,6 +44,12 @@ import {
   FULFILLED as TASK_FULFILLED,
   getResultTask,
   retainResult,
+  getIteratorEntries,
+  getStreamReplay,
+  getAsyncIterableReplay,
+  createReplayReadableStream,
+  createReplayAsyncIterable,
+  isSingleShotIterator,
 } from 'shared/ReactFlightResult';
 
 import {
@@ -54,6 +60,8 @@ import {
   REACT_MEMO_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_OPTIMISTIC_KEY,
+  ASYNC_ITERATOR,
+  getIteratorFn,
 } from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
@@ -124,6 +132,8 @@ export type ResultResponse = {
   // Like the serializer we report every invalid value in an element and
   // keep reading its siblings, then fail the element once.
   _readError: null | Error,
+  // enableTaint. Blob -> the chunk that has checked its bytes.
+  _blobs: null | Map<Blob, SomeChunk<Blob>>,
 };
 
 // The key context a value is read in, which is the keyPath and implicitSlot
@@ -1065,6 +1075,40 @@ function processServerComponentReturnValue(
       output._store.validated = 1;
     }
   }
+  if (
+    typeof output !== 'object' ||
+    output === null ||
+    typeof output.then === 'function' ||
+    response._bundler.isClientReference(output)
+  ) {
+    return output;
+  }
+  // Normally we'd serialize an Iterator/AsyncIterator as a single-shot which is not compatible
+  // to be rendered as a React Child. However, because we have the function to recreate
+  // an iterable from rendering the element again, we can effectively treat it as multi-
+  // shot. Therefore we treat this as an Iterable/AsyncIterable, whether it was one or not, by
+  // adding a wrapper so that this component effectively renders down to an AsyncIterable.
+  const iteratorFn = getIteratorFn(output);
+  if (iteratorFn) {
+    const iterableChild = output;
+    return {
+      [Symbol.iterator]: function () {
+        return iteratorFn.call(iterableChild);
+      },
+    };
+  }
+  if (
+    typeof output[ASYNC_ITERATOR] === 'function' &&
+    (typeof ReadableStream !== 'function' ||
+      !(output instanceof ReadableStream))
+  ) {
+    const iterableChild = output;
+    return {
+      [ASYNC_ITERATOR]: function () {
+        return iterableChild[ASYNC_ITERATOR]();
+      },
+    };
+  }
   return output;
 }
 
@@ -1194,6 +1238,155 @@ function isThenable(value: any): boolean {
     value !== null &&
     typeof value.then === 'function'
   );
+}
+
+// Each value a stream or async iterable yields is a row of its own on the
+// wire, read in the context of the stream's position, so it's read like a
+// row here: an invalid value inside it fails that value.
+function readStreamedValue(
+  response: ResultResponse,
+  value: any,
+  context: KeyContext,
+): any {
+  const prevReadError = response._readError;
+  response._readError = null;
+  let read;
+  try {
+    read = readModel(response, value, context, emptyRoot, '');
+  } catch (thrown) {
+    response._readError = prevReadError;
+    if (isThenable(thrown)) {
+      throw thrown;
+    }
+    throw reportReadError(response, thrown);
+  }
+  const error = response._readError;
+  response._readError = prevReadError;
+  if (error !== null) {
+    throw error;
+  }
+  return read;
+}
+
+// Reads one entry of a stream, retrying if it has to wait for something
+// like a loading module. The entries after it can be read meanwhile, as the
+// rows after it can on the wire. Resolves to an iterator result, so that a
+// value that is itself a promise isn't unwrapped.
+function readStreamedEntry(
+  response: ResultResponse,
+  entry: {+done: boolean, +value: any, ...},
+  context: KeyContext,
+): Promise<IteratorResult<any, any>> {
+  return new Promise((resolve, reject) => {
+    function attempt() {
+      let value;
+      try {
+        value = readStreamedValue(response, entry.value, context);
+      } catch (thrown) {
+        if (isThenable(thrown)) {
+          thrown.then(attempt, attempt);
+          return;
+        }
+        reject(thrown);
+        return;
+      }
+      resolve(entry.done ? {done: true, value} : {done: false, value});
+    }
+    attempt();
+  });
+}
+
+// A ReadableStream reads as a fresh stream fed from the Result's replay of
+// it, with each chunk read like a row.
+function readStream(
+  response: ResultResponse,
+  stream: ReadableStream,
+  context: KeyContext,
+): ReadableStream {
+  const replay = getStreamReplay(response._result, stream);
+  const replayed = createReplayReadableStream(replay);
+  if (replay.isByteStream) {
+    // Bytes read as themselves.
+    return replayed;
+  }
+  const reader = replayed.getReader();
+  return new ReadableStream({
+    pull(controller: any): Promise<void> {
+      return reader.read().then(
+        entry => {
+          if (entry.done) {
+            controller.close();
+            return;
+          }
+          return readStreamedEntry(response, entry, context).then(
+            read => {
+              controller.enqueue(read.value);
+            },
+            error => {
+              controller.error(error);
+            },
+          );
+        },
+        reason => {
+          controller.error(reportReadError(response, reason));
+        },
+      );
+    },
+  });
+}
+
+// An async iterable reads as a fresh iterable fed from the Result's replay
+// of it, or an async iterator if the original was single-shot, with each
+// value read like a row.
+function readAsyncIterable(
+  response: ResultResponse,
+  iterable: Object,
+  context: KeyContext,
+): any {
+  const replay = getAsyncIterableReplay(
+    response._result,
+    iterable,
+    iterable[ASYNC_ITERATOR],
+  );
+  const replayed: any = createReplayAsyncIterable(replay);
+  const read: any = {};
+  read[ASYNC_ITERATOR] = () => {
+    const source = replayed[ASYNC_ITERATOR]();
+    const iterator: any = {
+      next(arg: void): Promise<IteratorResult<any, any>> {
+        return source.next(arg).then(
+          entry =>
+            entry.done && entry.value === undefined
+              ? entry
+              : readStreamedEntry(response, entry, context),
+          reason => {
+            throw reportReadError(response, reason);
+          },
+        );
+      },
+    };
+    iterator[ASYNC_ITERATOR] = () => iterator;
+    return iterator;
+  };
+  return replay.isIterator ? read[ASYNC_ITERATOR]() : read;
+}
+
+// An async iterable in a node position is a fragment, keyed like an array
+// in renderAsyncFragment. Its values are read in the stream's context: the
+// enclosing one if a keyed fragment wraps the stream, since the serializer
+// recurses into that fragment's children with its task's context restored.
+function readAsyncFragment(
+  response: ResultResponse,
+  iterable: Object,
+  context: KeyContext,
+): any {
+  if (context.keyPath !== null) {
+    const fragment = createElement(REACT_FRAGMENT_TYPE, context.keyPath, {
+      children: readAsyncIterable(response, iterable, context.enclosing),
+    });
+    return context.implicitSlot ? [fragment] : fragment;
+  }
+  return readAsyncIterable(response, iterable, context);
 }
 
 // An element that can't be read becomes a lazy that throws when the
@@ -1546,8 +1739,46 @@ function checkTaintedBytes(
   }
 }
 
-// On the wire a FormData is its entries, so its names and strings are
-// checked like them.
+// On the wire a Blob's bytes are checked as they're streamed, so they're
+// read here before the Blob is handed over. The row waits for the read.
+function readBlobBytes(response: ResultResponse, blob: Blob): SomeChunk<Blob> {
+  let blobs = response._blobs;
+  if (blobs === null) {
+    blobs = response._blobs = new Map();
+  }
+  let chunk = blobs.get(blob);
+  if (chunk === undefined) {
+    const pendingChunk: SomeChunk<Blob> = createPendingModuleChunk(response);
+    const reader = blob.stream().getReader();
+    const error = (reason: mixed) => {
+      triggerErrorOnChunk(pendingChunk, reportReadError(response, reason));
+    };
+    const progress = (
+      entry: {done: false, value: Uint8Array} | {done: true, value: void},
+    ): Promise<void> | void => {
+      if (entry.done) {
+        fulfillChunk(pendingChunk, blob);
+        return;
+      }
+      try {
+        checkTaintedBytes(response, entry.value);
+      } catch (x) {
+        error(x);
+        return;
+      }
+      // $FlowFixMe[incompatible-type]
+      return reader.read().then(progress, error);
+    };
+    // $FlowFixMe[incompatible-type]
+    reader.read().then(progress, error);
+    chunk = pendingChunk;
+    blobs.set(blob, chunk);
+  }
+  return chunk;
+}
+
+// On the wire a FormData is its entries, so its names, strings and files
+// are checked like them.
 function checkTaintedFormData(
   response: ResultResponse,
   formData: FormData,
@@ -1559,6 +1790,8 @@ function checkTaintedFormData(
     checkTaintedValue(response, name);
     if (typeof entry === 'string') {
       checkTaintedValue(response, entry);
+    } else {
+      readReferenceChunk(response, readBlobBytes(response, entry));
     }
   }
 }
@@ -1568,6 +1801,39 @@ function checkTaintedFormData(
 // is rejected here with the same message, so an invalid value fails this
 // consumer like it fails the wire. `parent` and `parentPropertyName` only
 // describe the location in that message.
+// An iterable reads as a fragment of its values, like on the wire. An
+// iterator is single-shot: another consumer of the Result may have drained
+// it already, so it reads from the entries the Result keeps.
+function readIterable(
+  response: ResultResponse,
+  value: any,
+  iteratorFn: () => ?Iterator<any>,
+  context: KeyContext,
+): any {
+  if (isSingleShotIterator(value)) {
+    // Iterator, not Iterable. On the wire it reads as an iterator over its
+    // entries.
+    const entries = readArray(
+      response,
+      getIteratorEntries(response._result, value),
+      context,
+    );
+    // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
+    return entries[Symbol.iterator]();
+  }
+  const iterator = iteratorFn.call(value);
+  if (isSingleShotIterator(iterator)) {
+    // An iterator returned from a Server Component is wrapped to be iterated
+    // like an iterable, but the iterator it yields is still single-shot.
+    return readFragment(
+      response,
+      getIteratorEntries(response._result, iterator as any),
+      context,
+    );
+  }
+  return readFragment(response, Array.from(iterator as any), context);
+}
+
 function readModel(
   response: ResultResponse,
   value: any,
@@ -1631,8 +1897,16 @@ function readModel(
     }
     const proto = getPrototypeOf(value);
     if (proto === ObjectPrototype) {
-      // Nearly every value is a plain object, and none of the cases below
-      // can apply to one, so the built-ins are checked for the rest.
+      // Nearly every value is a plain object, and of the cases below only
+      // the iterator ones can apply to one, so the built-ins are checked
+      // for the rest.
+      const iteratorFn = getIteratorFn(value);
+      if (iteratorFn) {
+        return readIterable(response, value, iteratorFn, context);
+      }
+      if (typeof value[ASYNC_ITERATOR] === 'function') {
+        return readAsyncFragment(response, value, context);
+      }
       return readObject(response, value, context);
     }
     if (isArray(value)) {
@@ -1672,8 +1946,27 @@ function readModel(
     }
     // TODO: Blob is not available in old Node. Remove the typeof check later.
     if (typeof Blob === 'function' && value instanceof Blob) {
+      if (enableTaint) {
+        return readReferenceChunk(response, readBlobBytes(response, value));
+      }
       return value;
     }
+    const iteratorFn = getIteratorFn(value);
+    if (iteratorFn) {
+      return readIterable(response, value, iteratorFn, context);
+    }
+    // TODO: Blob is not available in old Node. Remove the typeof check later.
+    if (
+      typeof ReadableStream === 'function' &&
+      value instanceof ReadableStream
+    ) {
+      return readStream(response, value, context);
+    }
+    if (typeof value[ASYNC_ITERATOR] === 'function') {
+      // We treat AsyncIterables as a Fragment and as such we might need to key them.
+      return readAsyncFragment(response, value, context);
+    }
+
     if (value instanceof Date) {
       return value;
     }
@@ -1810,6 +2103,7 @@ export function createResponse(
     _recorded: [],
     _visiting: [],
     _readError: null,
+    _blobs: null,
   };
   // The renderer may read the Result for as long as it likes, so this
   // consumer holds the cache signal open from here on.

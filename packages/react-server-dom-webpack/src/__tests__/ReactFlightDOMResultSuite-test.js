@@ -969,7 +969,7 @@ describe('ReactFlightDOMResultSuite', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span>ABC</span>);
     });
 
-    it.skip('can render an iterator as a single shot iterator', async () => {
+    it('can render an iterator as a single shot iterator', async () => {
       const iterator = (function* () {
         yield 'A';
         yield 'B';
@@ -990,7 +990,7 @@ describe('ReactFlightDOMResultSuite', () => {
       expect(Array.from(result)).toEqual([]);
     });
 
-    it.skip('can render a Generator Server Component as a fragment', async () => {
+    it('can render a Generator Server Component as a fragment', async () => {
       function ItemListClient(props) {
         return <span>{props.children}</span>;
       }
@@ -1345,7 +1345,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(result.get('value')).toBe('hello');
   });
 
-  it.skip('can pass an async import to a ReadableStream while enqueuing in order', async () => {
+  it('can pass an async import to a ReadableStream while enqueuing in order', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
 
@@ -1381,7 +1381,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(await reader.read()).toEqual({value: undefined, done: true});
   });
 
-  it.skip('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
+  it('can pass an async import a AsyncIterable while allowing peaking at future values', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
 

@@ -137,6 +137,7 @@ import {
   getAsyncIterableReplay,
   createReplayReadableStream,
   createReplayAsyncIterable,
+  isSingleShotIterator,
 } from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
@@ -3771,18 +3772,6 @@ function serializeDebugSet(
   }
   const id = outlineDebugModel(request, counter, entries);
   return '$W' + id.toString(16);
-}
-
-// Whether an iterator is its own iterable, like a generator object, and so
-// can only be iterated once.
-function isSingleShotIterator(iterator: any): boolean {
-  if (typeof iterator.next !== 'function') {
-    return false;
-  }
-  const iteratorFn = getIteratorFn(iterator);
-  return (
-    typeof iteratorFn === 'function' && iteratorFn.call(iterator) === iterator
-  );
 }
 
 function serializeIterator(

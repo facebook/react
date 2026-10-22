@@ -737,6 +737,32 @@ describe('ReactFlightDOMResult', () => {
     ]);
   });
 
+  // @gate enableTaint
+  it('rejects a Blob of a tainted binary value like the wire', async () => {
+    const currentUser = {
+      token: new Uint32Array([0x3e971ecc, 0x1485fe78, 0x625598bf, 0x9b6f85de]),
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      currentUser,
+      currentUser.token,
+    );
+    const blob = new Blob([currentUser.token], {
+      type: 'application/octet-stream',
+    });
+    const errors = await readErrors(ReactServer.createElement('div', {blob}));
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+  });
+
+  it('hands a Blob to the renderer by identity', async () => {
+    const blob = new Blob([new Uint8Array([1, 2, 3])], {type: 'text/plain'});
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement('div', {blob}),
+    );
+    const element = await readFromResult(result);
+    expect(element.props.blob).toBe(blob);
+  });
+
   it('serializes a Result to a stream started after the last consumer finished', async () => {
     let cacheSignal;
     function App() {

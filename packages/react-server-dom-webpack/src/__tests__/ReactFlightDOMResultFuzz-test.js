@@ -119,6 +119,8 @@ describe(`ReactFlightDOMResultFuzz (random seed: ${SEED})`, () => {
     it('dumps a scenario', async () => {
       const a = harness.createScenario(+process.env.RESULT_DUMP, {
         allowErrors: process.env.RESULT_DUMP_ERRORS === '1',
+        allowInvalid: process.env.RESULT_DUMP_INVALID === '1',
+        maxDepth: process.env.RESULT_DUMP_INVALID === '1' ? 3 : undefined,
       });
       const readable = new env.Stream.PassThrough();
       let wire = '';
@@ -173,6 +175,68 @@ describe(`ReactFlightDOMResultFuzz (random seed: ${SEED})`, () => {
         await harness.readResultStream(b),
       );
       expect(viaResult).toEqual(direct);
+    });
+  });
+
+  it('reads a Result in process the same as rendering the model directly', async () => {
+    await forEachSeed(async seed => {
+      const a = harness.createScenario(seed, {});
+      const direct = await harness.observe(a, await harness.readDirect(a));
+      const b = harness.createScenario(seed, {});
+      const inProcess = await harness.observe(
+        b,
+        await harness.readResultDirect(b),
+      );
+      expect(inProcess).toEqual(direct);
+    });
+  });
+
+  it('reads a Result with errors in process the same as rendering the model directly', async () => {
+    await forEachSeed(async seed => {
+      const a = harness.createScenario(seed, {allowErrors: true});
+      const direct = await harness.observe(a, await harness.readDirect(a));
+      const b = harness.createScenario(seed, {allowErrors: true});
+      const inProcess = await harness.observe(
+        b,
+        await harness.readResultDirect(b),
+      );
+      expect(inProcess).toEqual(direct);
+    });
+  });
+
+  it('serves both consumers of one Result without rendering a component twice', async () => {
+    await forEachSeed(async seed => {
+      const a = harness.createScenario(seed, {allowErrors: seed % 2 === 0});
+      const direct = await harness.observe(a, await harness.readDirect(a));
+      const b = harness.createScenario(seed, {allowErrors: seed % 2 === 0});
+      const alone = await harness.observe(b, await harness.readResultDirect(b));
+      expect(alone).toEqual(direct);
+      const c = harness.createScenario(seed, {allowErrors: seed % 2 === 0});
+      const {inProcess, stream} = await harness.readResultBoth(c);
+      expect(await harness.observe(c, {response: inProcess})).toEqual(direct);
+      expect(await harness.observe(c, {response: stream})).toEqual(direct);
+      // use() replays a component after its promise settles, so the count is
+      // not the number of components; it is the same as with one consumer.
+      expect(c.counts.renders).toBe(b.counts.renders);
+    });
+  });
+
+  it('rejects the values the wire rejects, reporting the same errors', async () => {
+    await forEachSeed(async seed => {
+      // Shallow, so the message describing an invalid value's parent stays
+      // under the test environment's loop iteration cap when Fizz escapes it.
+      const a = harness.createScenario(seed, {allowInvalid: true, maxDepth: 3});
+      const directErrors = [];
+      await harness.observe(a, await harness.readDirect(a, directErrors));
+      const b = harness.createScenario(seed, {allowInvalid: true, maxDepth: 3});
+      const inProcessErrors = [];
+      await harness.observe(
+        b,
+        await harness.readResultDirect(b, inProcessErrors),
+      );
+      expect(harness.firstLines(inProcessErrors)).toEqual(
+        harness.firstLines(directErrors),
+      );
     });
   });
 });

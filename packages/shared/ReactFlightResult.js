@@ -15,6 +15,7 @@ import type {
   RequestCleanupQueue,
 } from 'react/src/ReactTaintRegistry';
 import noop from './noop';
+import {getIteratorFn} from './ReactSymbols';
 
 // A Result is a model whose Server Components run at most once, no matter
 // how many consumers read it. The model itself is left alone. For every
@@ -542,6 +543,18 @@ export function createReplayAsyncIterable(
     return iterator;
   };
   return replay.isIterator ? iterable[Symbol.asyncIterator]() : iterable;
+}
+
+// Whether an iterator is its own iterable, like a generator object, and so
+// can only be iterated once.
+export function isSingleShotIterator(iterator: any): boolean {
+  if (typeof iterator.next !== 'function') {
+    return false;
+  }
+  const iteratorFn = getIteratorFn(iterator);
+  return (
+    typeof iteratorFn === 'function' && iteratorFn.call(iterator) === iterator
+  );
 }
 
 // A single-shot iterator in the model is drained by the first consumer to
