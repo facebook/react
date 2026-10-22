@@ -19,19 +19,21 @@ import {
   isSetStateType,
   isStartTransitionType,
   LoadLocal,
+  Place,
   StoreLocal,
 } from '../HIR';
 import {
   eachInstructionValueOperand,
+  eachPatternOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
 import {retainWhere} from '../Utils/utils';
 import {findReferencedIdentifiers} from './DeadCodeElimination';
 
 /**
- * Optimizes the code for running specifically in an SSR environment. This optimization
- * asssumes that event handlers (functions that call setState or startTransition) are not
- * called during render, which allows removing them.
+ * Optimizes the code for running specifically in an SSR environment. Functions that call
+ * setState or startTransition are treated as event handlers and removed, unless code that
+ * runs during render calls or otherwise uses them (see findRemovableFunctions).
  *
  * Optimizations:
  * - Inline useState/useReducer whose setter or dispatch function is not read once the
@@ -179,12 +181,13 @@ export function optimizeForSSR(fn: HIRFunction): void {
    * Second pass removes code that does not run during SSR: event handlers, effects, and the
    * event handler and ref props of builtin elements.
    */
+  const removableFunctions = findRemovableFunctions(fn);
   for (const block of fn.body.blocks.values()) {
     for (const instr of block.instructions) {
       const {value} = instr;
       switch (value.kind) {
         case 'FunctionExpression': {
-          if (hasKnownNonRenderCall(value.loweredFunc.func)) {
+          if (removableFunctions.has(value.loweredFunc.func)) {
             instr.value = {
               kind: 'Primitive',
               value: undefined,
@@ -385,6 +388,280 @@ function hasKnownNonRenderCall(fn: HIRFunction): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Returns the functions to remove as event handlers: those that call setState or
+ * startTransition and that nothing running during render can observe.
+ *
+ * Calling a setter does not make a function an event handler. React supports a component
+ * updating its own state while it renders, and code often does so through a helper
+ * (`onRenderItem(item)`) or an array callback (`items.forEach(item => setMax(item))`), which
+ * would call `undefined` if removed.
+ *
+ * The compiled function runs during render, and so does every function that code running during
+ * render calls, tests, or passes along. Three places are still assumed to receive event handlers,
+ * since what happens to a function there is not visible here: JSX attributes, the arguments of
+ * hooks other than useState, useReducer, and useMemo, and the compiled function's return value.
+ * Functions are followed through locals, context variables, objects, and arrays.
+ */
+function findRemovableFunctions(fn: HIRFunction): Set<HIRFunction> {
+  const functions: Array<HIRFunction> = [];
+  collectFunctions(fn, functions);
+  const held = new Map<IdentifierId, Set<HIRFunction>>();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const f of functions) {
+      changed = propagateHeldFunctions(f, held) || changed;
+    }
+  }
+
+  const runsDuringRender = new Set<HIRFunction>([fn]);
+  const queue: Array<HIRFunction> = [fn];
+  while (queue.length !== 0) {
+    const current = queue.pop()!;
+    for (const place of eachRenderUse(current, current === fn)) {
+      for (const used of held.get(place.identifier.id) ?? []) {
+        if (!runsDuringRender.has(used)) {
+          runsDuringRender.add(used);
+          queue.push(used);
+        }
+      }
+    }
+  }
+
+  const removable = new Set<HIRFunction>();
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === 'FunctionExpression') {
+        const inner = instr.value.loweredFunc.func;
+        if (!runsDuringRender.has(inner) && hasKnownNonRenderCall(inner)) {
+          removable.add(inner);
+        }
+      }
+    }
+  }
+  return removable;
+}
+
+function collectFunctions(
+  fn: HIRFunction,
+  functions: Array<HIRFunction>,
+): void {
+  functions.push(fn);
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      if (
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
+      ) {
+        collectFunctions(instr.value.loweredFunc.func, functions);
+      }
+    }
+  }
+}
+
+/**
+ * Records the functions each value may hold, following moves through locals, context variables,
+ * objects, arrays, iterators, and hooks that return what they are given. Objects and arrays hold
+ * every function stored in them. Returns whether anything was added.
+ */
+function propagateHeldFunctions(
+  fn: HIRFunction,
+  held: Map<IdentifierId, Set<HIRFunction>>,
+): boolean {
+  let changed = false;
+  const add = (into: Place, functions: Iterable<HIRFunction>): void => {
+    for (const f of functions) {
+      let target = held.get(into.identifier.id);
+      if (target == null) {
+        target = new Set();
+        held.set(into.identifier.id, target);
+      }
+      if (!target.has(f)) {
+        target.add(f);
+        changed = true;
+      }
+    }
+  };
+  const flow = (from: Place, into: Place): void => {
+    const functions = held.get(from.identifier.id);
+    if (functions != null && from.identifier.id !== into.identifier.id) {
+      add(into, [...functions]);
+    }
+  };
+  for (const block of fn.body.blocks.values()) {
+    for (const phi of block.phis) {
+      for (const operand of phi.operands.values()) {
+        flow(operand, phi.place);
+      }
+    }
+    for (const instr of block.instructions) {
+      const {lvalue, value} = instr;
+      switch (value.kind) {
+        case 'FunctionExpression':
+        case 'ObjectMethod': {
+          add(lvalue, [value.loweredFunc.func]);
+          break;
+        }
+        case 'LoadLocal':
+        case 'LoadContext': {
+          flow(value.place, lvalue);
+          break;
+        }
+        case 'StoreLocal':
+        case 'StoreContext': {
+          flow(value.value, value.lvalue.place);
+          flow(value.value, lvalue);
+          break;
+        }
+        case 'Destructure': {
+          for (const place of eachPatternOperand(value.lvalue.pattern)) {
+            flow(value.value, place);
+          }
+          flow(value.value, lvalue);
+          break;
+        }
+        case 'PropertyLoad':
+        case 'ComputedLoad': {
+          flow(value.object, lvalue);
+          break;
+        }
+        case 'PropertyStore':
+        case 'ComputedStore': {
+          flow(value.value, value.object);
+          flow(value.value, lvalue);
+          break;
+        }
+        case 'ObjectExpression': {
+          for (const property of value.properties) {
+            flow(property.place, lvalue);
+          }
+          break;
+        }
+        case 'ArrayExpression': {
+          for (const element of value.elements) {
+            if (element.kind === 'Identifier') {
+              flow(element, lvalue);
+            } else if (element.kind === 'Spread') {
+              flow(element.place, lvalue);
+            }
+          }
+          break;
+        }
+        case 'TypeCastExpression': {
+          flow(value.value, lvalue);
+          break;
+        }
+        case 'GetIterator': {
+          flow(value.collection, lvalue);
+          break;
+        }
+        case 'IteratorNext': {
+          flow(value.iterator, lvalue);
+          flow(value.collection, lvalue);
+          break;
+        }
+        case 'CallExpression':
+        case 'MethodCall': {
+          const callee =
+            value.kind === 'CallExpression' ? value.callee : value.property;
+          const hookKind = getHookKind(fn.env, callee.identifier);
+          const [arg] = value.args;
+          if (
+            (hookKind === 'useCallback' ||
+              hookKind === 'useEffectEvent' ||
+              hookKind === 'useRef') &&
+            arg != null &&
+            arg.kind === 'Identifier'
+          ) {
+            flow(arg, lvalue);
+          }
+          break;
+        }
+      }
+    }
+  }
+  return changed;
+}
+
+/**
+ * Yields the places whose value render may call or otherwise observe when `fn` runs during
+ * render. Moves between values are left to propagateHeldFunctions, and a nested function's body
+ * is visited only if that function itself runs during render.
+ */
+function* eachRenderUse(
+  fn: HIRFunction,
+  isOutermost: boolean,
+): Iterable<Place> {
+  for (const block of fn.body.blocks.values()) {
+    for (const instr of block.instructions) {
+      const {value} = instr;
+      switch (value.kind) {
+        case 'FunctionExpression':
+        case 'ObjectMethod':
+        case 'LoadLocal':
+        case 'LoadContext':
+        case 'StoreLocal':
+        case 'StoreContext':
+        case 'Destructure':
+        case 'PropertyLoad':
+        case 'ComputedLoad':
+        case 'PropertyStore':
+        case 'ComputedStore':
+        case 'ObjectExpression':
+        case 'ArrayExpression':
+        case 'TypeCastExpression':
+        case 'GetIterator':
+        case 'IteratorNext':
+        // Markers for manual memoization, which does not run
+        case 'StartMemoize':
+        case 'FinishMemoize': {
+          break;
+        }
+        case 'JsxExpression': {
+          // Attributes are assumed to be event handlers; children may be render props
+          if (value.tag.kind === 'Identifier') {
+            yield value.tag;
+          }
+          if (value.children != null) {
+            yield* value.children;
+          }
+          break;
+        }
+        case 'CallExpression':
+        case 'MethodCall': {
+          const callee =
+            value.kind === 'CallExpression' ? value.callee : value.property;
+          yield callee;
+          if (value.kind === 'MethodCall') {
+            yield value.receiver;
+          }
+          // Hooks are assumed not to call their arguments during render, except these
+          const hookKind = getHookKind(fn.env, callee.identifier);
+          if (
+            hookKind == null ||
+            hookKind === 'useState' ||
+            hookKind === 'useReducer' ||
+            hookKind === 'useMemo'
+          ) {
+            for (const arg of value.args) {
+              yield arg.kind === 'Identifier' ? arg : arg.place;
+            }
+          }
+          break;
+        }
+        default: {
+          yield* eachInstructionValueOperand(value);
+        }
+      }
+    }
+    // Functions in the compiled function's return value are assumed to be event handlers
+    if (!(isOutermost && block.terminal.kind === 'return')) {
+      yield* eachTerminalOperand(block.terminal);
+    }
+  }
 }
 
 const EVENT_HANDLER_PATTERN = /^on[A-Z]/;

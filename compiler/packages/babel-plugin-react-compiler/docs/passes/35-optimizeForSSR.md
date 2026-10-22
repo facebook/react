@@ -19,7 +19,7 @@ The pass removes code that only matters on the client, and inlines initial state
 
 ## Output Guarantees
 - `useEffect`, `useLayoutEffect`, and `useInsertionEffect` calls become `undefined`
-- Function expressions that call setState or startTransition (event handlers) become `undefined`
+- Function expressions that call setState or startTransition (event handlers) become `undefined`, unless code that runs during render calls them or passes them along
 - `useEffectEvent(fn)` becomes `fn`
 - Event handler props (`on[A-Z]...`) and `ref` props are removed from builtin elements; custom elements (tags containing `-`) keep them
 - `const [state, setState] = useState(value)` becomes `const state = value`, `useReducer(reducer, arg)` becomes `arg`, and `useReducer(reducer, arg, init)` becomes `init(arg)`, but only if the setter (or dispatch function) is no longer read once the code above is removed. While any setter in the function is still read, or the function calls a custom hook, state that is read is also only inlined if it starts at a primitive literal, and `useReducer(reducer, arg, init)` is not inlined. Otherwise the hook is left in place.
@@ -31,6 +31,8 @@ A candidate is a `useState(value)` call where `value` is a primitive, plain obje
 
 ### Phase 2: Remove Client-Only Code
 Replace effects and event handlers with `undefined`, replace `useEffectEvent(fn)` with `fn`, and remove event handler and `ref` props from builtin elements.
+
+An event handler is a function expression that calls setState or startTransition and that nothing running during render uses (`findRemovableFunctions`). The compiled function runs during render, and so does every function that code running during render calls, tests, or passes along, such as a callback given to `items.map` or `items.forEach`. Functions are followed through locals, context variables, objects, and arrays. Three places are still assumed to receive event handlers, because the pass cannot see what happens to a function there: JSX attributes, the arguments of hooks other than `useState`, `useReducer`, and `useMemo`, and the compiled function's return value.
 
 ### Phase 3: Inline State Whose Setter Is Unread
 Find which identifiers are still read once the code removed in phase 2 is gone, the way `deadCodeElimination` would see them (`findReferencedIdentifiers`), without removing anything yet. Then a candidate is inlined if:
@@ -87,10 +89,22 @@ return <div data-measured={node !== null} />;
 ```
 
 ### Event Handler Detection
-A function counts as an event handler only if its own body calls setState or startTransition. A function whose only setState call is inside a nested function is kept as is.
+A function counts as an event handler only if its own body calls setState or startTransition, and nothing that runs during render uses it. A function whose only setState call is inside a nested function is kept as is.
 
-### Event Handlers Called During Render
-The pass assumes event handlers are not called during render. A component that calls one during render (for example a local `reset()` helper that calls setState) gets `undefined` in its place and throws.
+### Functions That Update State During Render
+React supports a component updating its own state during render, including through a helper or a callback:
+```javascript
+const [groups, setGroups] = useState(new Map());
+const next = new Map(groups);
+function onRenderGroup(id, title) {
+  if (!next.has(id)) {
+    next.set(id, title);
+    setGroups(next);
+  }
+}
+sections.forEach(section => onRenderGroup(section.id, section.title)); // both functions are kept
+```
+Both functions are kept, so `setGroups` is still read and the `useState` is kept too. A function that only reaches a JSX attribute, a hook argument, or the return value is still removed. If code the pass cannot see calls it during render (for example a child component that calls a callback prop while rendering), that code gets `undefined` and throws.
 
 ## TODOs
 None in the source file.
