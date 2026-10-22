@@ -2621,10 +2621,6 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
     }
   }
 
-  // One leaf waits for a fix further up the stack: a cycle through a property
-  // name with a colon overflows the writer's stack.
-  const unsupportedMoves = ['colon'];
-
   // A reply cannot carry client references, elements, server components,
   // Errors or symbols; its loading leaves are Server Functions.
   const replyMoves = [
@@ -2649,9 +2645,7 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
           it(caseName('graph', seed, demands[d], variant), () =>
             runGraph({
               ...generateGraph(seed, {
-                without: unsupportedMoves.concat(
-                  host === 'reply' ? replyMoves : [],
-                ),
+                without: host === 'reply' ? replyMoves : [],
                 streamsHeldOnce: host === 'reply',
               }),
               family: 'graph',
