@@ -5186,8 +5186,10 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
       retryCache = boundaryFiber.stateNode;
       break;
     case OffscreenComponent: {
-      const instance: OffscreenInstance = boundaryFiber.stateNode;
-      retryCache = instance._retryCache;
+      // The instance is null if the boundary was deleted before the wakeable
+      // resolved, since deletion detaches the fiber's stateNode.
+      const instance: OffscreenInstance | null = boundaryFiber.stateNode;
+      retryCache = instance !== null ? instance._retryCache : null;
       break;
     }
     default:
