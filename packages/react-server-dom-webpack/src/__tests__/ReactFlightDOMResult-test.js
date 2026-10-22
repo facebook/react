@@ -12,6 +12,31 @@
 
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
+// The taint registry forgets a value once its lifetime object is collected.
+// A mock stands in for the real registry so a test can collect on demand.
+const finalizationRegistries = [];
+function FinalizationRegistryMock(callback) {
+  this._heldValues = [];
+  this._callback = callback;
+  finalizationRegistries.push(this);
+}
+FinalizationRegistryMock.prototype.register = function (target, heldValue) {
+  this._heldValues.push(heldValue);
+};
+global.FinalizationRegistry = FinalizationRegistryMock;
+
+function gc() {
+  for (let i = 0; i < finalizationRegistries.length; i++) {
+    const registry = finalizationRegistries[i];
+    const callback = registry._callback;
+    const heldValues = registry._heldValues;
+    for (let j = 0; j < heldValues.length; j++) {
+      callback(heldValues[j]);
+    }
+    heldValues.length = 0;
+  }
+}
+
 let clientExports;
 let clientModuleError;
 let webpackMap;
@@ -761,6 +786,184 @@ describe('ReactFlightDOMResult', () => {
     );
     const element = await readFromResult(result);
     expect(element.props.blob).toBe(blob);
+  });
+
+  it('aborting a Result errors what every consumer still waits for', async () => {
+    const errors = [];
+    const never = new Promise(() => {});
+    let cacheSignal;
+    function Done() {
+      cacheSignal = ReactServer.cacheSignal();
+      return 'done';
+    }
+    async function Pending() {
+      await never;
+      return 'never';
+    }
+    const controller = new AbortController();
+    const result = ReactServerDOMServer.renderToResult(
+      {
+        done: ReactServer.createElement(Done, null),
+        pending: ReactServer.createElement(Pending, null),
+        promise: never,
+      },
+      {
+        onError(error) {
+          errors.push(error.message);
+          return 'digest(' + error.message + ')';
+        },
+        signal: controller.signal,
+      },
+    );
+    // The stream subscribes to the abort first. Aborting it detaches it
+    // while the listeners run, which must not skip the next one.
+    let fromStream;
+    await serverAct(() => {
+      fromStream = readFromStream(result);
+    });
+    const root = await readFromResult(result);
+    expect(root.done).toBe('done');
+    expect(root.promise.status).toBe('pending');
+    expect(cacheSignal.aborted).toBe(false);
+
+    await serverAct(() => controller.abort(new Error('gone')));
+
+    expect(cacheSignal.aborted).toBe(true);
+    // Reported once, and both consumers see it with the same digest on what
+    // was still pending, while what had finished stays readable.
+    expect(errors).toEqual(['gone']);
+    expect(root.promise.status).toBe('rejected');
+    expect(root.promise.reason.digest).toBe('digest(gone)');
+    function digestOf(lazy) {
+      try {
+        lazy._init(lazy._payload);
+      } catch (error) {
+        return error.digest;
+      }
+      throw new Error('Expected the lazy to throw.');
+    }
+    expect(digestOf(root.pending)).toBe('digest(gone)');
+    const streamed = await fromStream;
+    expect(streamed.done).toBe('done');
+    expect(digestOf(streamed.pending)).toBe('digest(gone)');
+    // A Server Component first reached after the abort errors the same way.
+    await expect(
+      readFromResult(
+        ReactServerDOMServer.renderToResult(
+          ReactServer.createElement(Pending, {key: 'late'}),
+        ),
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it('releases the cache signal once the last consumer is done', async () => {
+    let cacheSignal;
+    function App() {
+      cacheSignal = ReactServer.cacheSignal();
+      return 'hi';
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App, null),
+    );
+    const controller = new AbortController();
+    const inProcess = readFromResult(result, {signal: controller.signal});
+    let fromStream;
+    await serverAct(() => {
+      fromStream = readFromStream(result);
+    });
+    expect(await inProcess).toBe('hi');
+    expect(await fromStream).toBe('hi');
+    // The stream is done, but the renderer may still be reading.
+    expect(cacheSignal.aborted).toBe(false);
+    controller.abort();
+    expect(cacheSignal.aborted).toBe(true);
+  });
+
+  it('keeps reading a stream for a consumer that starts after the last one finished', async () => {
+    let enqueue;
+    let close;
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue('a');
+        enqueue = chunk => controller.enqueue(chunk);
+        close = () => controller.close();
+      },
+    });
+    let cacheSignal;
+    function App() {
+      cacheSignal = ReactServer.cacheSignal();
+      return {stream};
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App, null),
+    );
+    const controller = new AbortController();
+    const inProcess = await readFromResult(result, {signal: controller.signal});
+    const reader = inProcess.stream.getReader();
+    expect(await reader.read()).toEqual({done: false, value: 'a'});
+    // The HTML is done before the stream is, and the hydration stream starts
+    // after that.
+    controller.abort();
+    expect(cacheSignal.aborted).toBe(true);
+    let fromStream;
+    await serverAct(() => {
+      fromStream = readFromStream(result);
+    });
+    await serverAct(() => {
+      enqueue('b');
+      close();
+    });
+    expect(await readStream((await fromStream).stream)).toEqual(['a', 'b']);
+  });
+
+  // @gate enableTaint
+  it('keeps a tainted value tainted until the consumer is done', async () => {
+    function getUser() {
+      const user = {token: '3e971ecc1485fe78625598bf9b6f85db'};
+      ReactServer.experimental_taintUniqueValue(
+        'Cannot pass a secret token to the client',
+        user,
+        user.token,
+      );
+      return user;
+    }
+    function App() {
+      const derivedValue = {...getUser()};
+      // A garbage collection can happen at any time, even before this
+      // consumer is done. This would clean up the user object.
+      gc();
+      return ReactServer.createElement('div', {user: derivedValue});
+    }
+    let errors = [];
+    const controller = new AbortController();
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App),
+      {
+        onError(error) {
+          errors.push(error.message);
+        },
+      },
+    );
+    await expect(
+      readFromResult(result, {signal: controller.signal}),
+    ).rejects.toThrow();
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+
+    // Once the consumer is done, the token can be read again.
+    controller.abort();
+    errors = [];
+    const again = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement('div', {
+        user: {token: '3e971ecc1485fe78625598bf9b6f85db'},
+      }),
+      {
+        onError(error) {
+          errors.push(error.message);
+        },
+      },
+    );
+    await readFromResult(again);
+    expect(errors).toEqual([]);
   });
 
   it('serializes a Result to a stream started after the last consumer finished', async () => {

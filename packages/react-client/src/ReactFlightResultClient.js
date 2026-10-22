@@ -10,6 +10,7 @@
 import type {Thenable, ReactKey} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Result} from 'shared/ReactFlightResult';
+import type {RequestCleanupQueue} from 'react/src/ReactTaintRegistry';
 import type {
   ClientReference,
   ClientReferenceMetadata,
@@ -44,6 +45,7 @@ import {
   FULFILLED as TASK_FULFILLED,
   getResultTask,
   retainResult,
+  releaseResult,
   getIteratorEntries,
   getStreamReplay,
   getAsyncIterableReplay,
@@ -128,10 +130,18 @@ export type ResultResponse = {
   _recorded: Array<any>,
   // The containers being read, outermost first.
   _visiting: Array<any>,
+  // Chunks waiting for something in the model, to reject if the Result is
+  // aborted. A chunk waiting for a module isn't among them: modules load on
+  // this side, like on the client.
+  _pendingChunks: Set<SomeChunk<any>>,
+  _abortListener: null | (() => void),
   // The first error met while reading the values inside the current element.
   // Like the serializer we report every invalid value in an element and
   // keep reading its siblings, then fail the element once.
   _readError: null | Error,
+  // enableTaint. Tainted values whose lifetime ended while this consumer
+  // was reading, which stay tainted until it's done, like for a request.
+  _taintCleanupQueue: null | RequestCleanupQueue,
   // enableTaint. Blob -> the chunk that has checked its bytes.
   _blobs: null | Map<Blob, SomeChunk<Blob>>,
 };
@@ -347,7 +357,9 @@ function createPendingChunk<T>(
   context: KeyContext,
 ): PendingChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(PENDING, null, null, response, context);
+  const chunk = new ReactPromise(PENDING, null, null, response, context);
+  response._pendingChunks.add(chunk);
+  return chunk;
 }
 
 function createPendingModuleChunk<T>(
@@ -437,6 +449,7 @@ function fulfillChunk<T>(chunk: SomeChunk<T>, value: T): void {
   if (chunk.status !== PENDING) {
     return;
   }
+  chunk._response._pendingChunks.delete(chunk);
   const listeners = chunk.value;
   const initializedChunk: InitializedChunk<T> = chunk as any;
   initializedChunk.status = INITIALIZED;
@@ -451,6 +464,7 @@ function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING) {
     return;
   }
+  chunk._response._pendingChunks.delete(chunk);
   const listeners = chunk.reason;
   const erroredChunk: ErroredChunk<T> = chunk as any;
   erroredChunk.status = ERRORED;
@@ -533,6 +547,7 @@ function resolveModuleChunk<T>(
     // We already resolved. We didn't expect to see this.
     return;
   }
+  chunk._response._pendingChunks.delete(chunk);
   const resolveListeners = chunk.value;
   const rejectListeners = chunk.reason;
   const resolvedChunk: ResolvedModuleChunk<T> = chunk as any;
@@ -710,6 +725,19 @@ function logRecoverableError(response: ResultResponse, error: mixed): string {
 function reportReadError(response: ResultResponse, error: mixed): Error {
   const digest = logRecoverableError(response, error);
   return resolveError(response, error, digest);
+}
+
+// Errors a chunk with a rejection from the server, reporting it, unless the
+// chunk already errored, like when the Result was aborted.
+function reportErrorOnChunk(
+  response: ResultResponse,
+  chunk: SomeChunk<any>,
+  reason: mixed,
+): void {
+  if (chunk.status !== PENDING) {
+    return;
+  }
+  triggerErrorOnChunk(chunk, reportReadError(response, reason));
 }
 
 function createElement(type: any, key: ReactKey, props: any): any {
@@ -1152,7 +1180,7 @@ function resolveServerComponentOutput(
     const thenable: Thenable<any> = output;
     thenable.then(
       value => resolveServerComponentOutput(response, chunk, value),
-      reason => triggerErrorOnChunk(chunk, reportReadError(response, reason)),
+      reason => reportErrorOnChunk(response, chunk, reason),
     );
     return;
   }
@@ -1174,7 +1202,7 @@ function readServerComponent(
       const chunk: SomeChunk<any> = createPendingChunk(response, context);
       task.then(
         value => resolveServerComponentOutput(response, chunk, value),
-        reason => triggerErrorOnChunk(chunk, reportReadError(response, reason)),
+        reason => reportErrorOnChunk(response, chunk, reason),
       );
       return createLazyChunkWrapper(chunk);
     }
@@ -1220,8 +1248,7 @@ function readThenable(
       );
       thenable.then(
         value => resolveModelChunk(response, pendingChunk, value),
-        reason =>
-          triggerErrorOnChunk(pendingChunk, reportReadError(response, reason)),
+        reason => reportErrorOnChunk(response, pendingChunk, reason),
       );
       chunk = pendingChunk;
     }
@@ -2102,13 +2129,73 @@ export function createResponse(
     _models: new Map(),
     _recorded: [],
     _visiting: [],
+    _pendingChunks: new Set(),
+    _abortListener: null,
     _readError: null,
+    _taintCleanupQueue: null,
     _blobs: null,
   };
   // The renderer may read the Result for as long as it likes, so this
-  // consumer holds the cache signal open from here on.
+  // consumer holds the cache signal open until it's closed.
   retainResult(result);
+  if (enableTaint) {
+    const cleanupQueue: RequestCleanupQueue = [];
+    response._taintCleanupQueue = cleanupQueue;
+    result.taintRegistries.pendingRequests.add(cleanupQueue);
+  }
+  // Aborting the Result errors everything this consumer is still waiting
+  // for, the way aborting a request errors its pending rows.
+  const signal = result.abortController.signal;
+  const abortListener = () => {
+    const pendingChunks = response._pendingChunks;
+    if (pendingChunks.size > 0) {
+      const error = reportReadError(response, signal.reason);
+      pendingChunks.forEach(chunk => triggerErrorOnChunk(chunk, error));
+    }
+  };
+  signal.addEventListener('abort', abortListener);
+  response._abortListener = abortListener;
   return response;
+}
+
+// This consumer is done with the Result. Once every consumer is, the cache
+// signal aborts.
+export function close(response: ResultResponse, reason: mixed): void {
+  const abortListener = response._abortListener;
+  if (abortListener === null) {
+    return;
+  }
+  response._abortListener = null;
+  response._result.context.cacheController.signal.removeEventListener(
+    'abort',
+    abortListener,
+  );
+  if (enableTaint) {
+    cleanupTaintQueue(response);
+  }
+  releaseResult(response._result, reason);
+}
+
+function cleanupTaintQueue(response: ResultResponse): void {
+  const registries = response._result.taintRegistries;
+  const cleanupQueue = response._taintCleanupQueue;
+  if (cleanupQueue === null) {
+    return;
+  }
+  response._taintCleanupQueue = null;
+  registries.pendingRequests.delete(cleanupQueue);
+  for (let i = 0; i < cleanupQueue.length; i++) {
+    const entryValue = cleanupQueue[i];
+    const entry = registries.values.get(entryValue);
+    if (entry !== undefined) {
+      if (entry.count === 1) {
+        registries.values.delete(entryValue);
+      } else {
+        entry.count--;
+      }
+    }
+  }
+  cleanupQueue.length = 0;
 }
 
 export function getRoot<T>(response: ResultResponse): Thenable<T> {

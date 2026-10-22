@@ -21,6 +21,7 @@ import type {ClientManifest} from '../server/ReactFlightServerConfigWebpackBundl
 import {
   createResponse,
   getRoot,
+  close,
 } from 'react-client/src/ReactFlightResultClient';
 
 import {
@@ -61,6 +62,8 @@ export type Options = {
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => ?string,
+  // Marks this consumer as done with the Result, like the end of a request.
+  signal?: AbortSignal,
 };
 
 export function createFromResult<T>(
@@ -95,5 +98,17 @@ export function createFromResult<T>(
     typeof options.nonce === 'string' ? options.nonce : undefined,
     options.onError,
   );
+  const signal = options.signal;
+  if (signal) {
+    if (signal.aborted) {
+      close(response, signal.reason);
+    } else {
+      const listener = () => {
+        close(response, signal.reason);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+  }
   return getRoot(response);
 }
