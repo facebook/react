@@ -224,6 +224,11 @@ export type Response = {
   _serverObjectReferenceCache: WeakMap<Object, SomeChunk<any>>,
   _rootArrayContexts: WeakMap<$ReadOnlyArray<mixed>, NestedArrayContext>,
   _arraySizeLimit: number,
+  // A Set or Map that was referenced before its entries chunk had initialized,
+  // by that chunk. Every reference to the chunk receives the same collection,
+  // including a reference from inside its own entries. The entries are copied
+  // in when the chunk initializes.
+  _reservedCollections: WeakMap<SomeChunk<any>, Set<any> | Map<any, any>>,
 };
 
 export function getRoot<T>(response: Response): Thenable<T> {
@@ -783,6 +788,10 @@ type InitializationReference = {
   ) => any,
   path: Array<string>,
   arrayRoot: null | NestedArrayContext,
+  // The collection reserved for the chunk this reference waits for, when it
+  // constructs a Set or Map. It already sits in the slot; it is the mapped
+  // value once the chunk initializes.
+  collection: null | Set<any> | Map<any, any>,
 };
 type InitializationHandler = {
   chunk: null | BlockedChunk<any>,
@@ -999,7 +1008,10 @@ function fulfillReference(
       }
     }
 
-    resolvedValue = map(response, value, parentObject, key);
+    resolvedValue =
+      reference.collection !== null
+        ? fillReservedCollection(response, reference.collection, value as any)
+        : map(response, value, parentObject, key);
 
     // Add any array counts to the reference's array root. The value that we're
     // resolving might have deep nesting that we need to resolve.
@@ -1107,6 +1119,23 @@ function waitForReference<T>(
   );
   addReferenceListener(referencedChunk, reference);
 
+  if ((map as any) === createSet || (map as any) === createMap) {
+    // The collection exists before its entries do, so that a reference to it
+    // from inside the entries, or from anywhere else before they arrive, is
+    // to the final object.
+    let collection = response._reservedCollections.get(referencedChunk);
+    if (collection === undefined) {
+      collection = (map as any) === createSet ? new Set() : new Map();
+      response._reservedCollections.set(referencedChunk, collection);
+    } else if ((map as any) === createSet && !(collection instanceof Set)) {
+      throw new Error('Invalid Set initializer.');
+    } else if ((map as any) === createMap && !(collection instanceof Map)) {
+      throw new Error('Invalid Map initializer.');
+    }
+    reference.collection = collection;
+    return collection as any;
+  }
+
   // Return a place holder value for now.
   return null as any;
 }
@@ -1135,6 +1164,7 @@ function createInitializationReference<T>(
     map,
     path,
     arrayRoot,
+    collection: null,
   };
 }
 
@@ -1238,7 +1268,21 @@ function getOutlinedModel<T>(
           throw new Error('Invalid reference.');
         }
       }
-      const chunkValue = map(response, value, parentObject, key);
+      let chunkValue;
+      const reservedCollection =
+        path.length === 1 &&
+        ((map as any) === createSet || (map as any) === createMap)
+          ? response._reservedCollections.get(chunk)
+          : undefined;
+      if (reservedCollection !== undefined) {
+        chunkValue = fillReservedCollection(
+          response,
+          reservedCollection,
+          value as any,
+        ) as any;
+      } else {
+        chunkValue = map(response, value, parentObject, key);
+      }
 
       // Add any array counts to the reference's array root. The value that we're
       // resolving might have deep nesting that we need to resolve.
@@ -1303,36 +1347,56 @@ function createMap(
   response: Response,
   model: Array<[any, any]>,
 ): Map<any, any> {
-  if (!isArray(model) || isServerReferenceObject(response, model)) {
-    throw new Error('Invalid Map initializer.');
-  }
-  if ((model as any).$$consumed === true) {
-    throw new Error('Already initialized Map.');
-  }
-  // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
-  (model as any).$$consumed = true;
-  const map = new Map(model);
-  return map;
+  return fillReservedCollection(response, new Map(), model) as any;
 }
 
 function createSet(response: Response, model: Array<any>): Set<any> {
+  return fillReservedCollection(response, new Set(), model) as any;
+}
+
+// Copies the entries into the collection built from them. An initializer is
+// read by one collection only; every reference to the collection copies the
+// entries in, and after the first the copies find them there already.
+function fillReservedCollection(
+  response: Response,
+  collection: Set<any> | Map<any, any>,
+  model: Array<any>,
+): Set<any> | Map<any, any> {
   if (!isArray(model) || isServerReferenceObject(response, model)) {
-    throw new Error('Invalid Set initializer.');
+    if (collection instanceof Set) {
+      throw new Error('Invalid Set initializer.');
+    }
+    throw new Error('Invalid Map initializer.');
   }
-  if ((model as any).$$consumed === true) {
-    throw new Error('Already initialized Set.');
+  const consumedBy = (model as any).$$consumed;
+  if (consumedBy !== undefined) {
+    if (consumedBy === collection) {
+      return collection;
+    }
+    if (collection instanceof Set) {
+      throw new Error('Already initialized Set.');
+    }
+    throw new Error('Already initialized Map.');
   }
   // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
-  (model as any).$$consumed = true;
-  const set = new Set(model);
-  return set;
+  (model as any).$$consumed = collection;
+  if (collection instanceof Set) {
+    for (let i = 0; i < model.length; i++) {
+      collection.add(model[i]);
+    }
+  } else {
+    for (let i = 0; i < model.length; i++) {
+      collection.set(model[i][0], model[i][1]);
+    }
+  }
+  return collection;
 }
 
 function extractIterator(response: Response, model: Array<any>): Iterator<any> {
   if (!isArray(model) || isServerReferenceObject(response, model)) {
     throw new Error('Invalid Iterator initializer.');
   }
-  if ((model as any).$$consumed === true) {
+  if ((model as any).$$consumed !== undefined) {
     throw new Error('Already initialized Iterator.');
   }
   // This needs to come first to prevent the model from being consumed again in case of a cyclic reference.
@@ -2088,6 +2152,7 @@ export function createResponse(
     _serverObjectReferenceCache: new WeakMap(),
     _rootArrayContexts: new WeakMap(),
     _arraySizeLimit: arraySizeLimit,
+    _reservedCollections: new WeakMap(),
   };
   return response;
 }
