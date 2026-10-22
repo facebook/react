@@ -125,6 +125,7 @@ import {
 export {emitHint} from 'shared/ReactFlightRenderContext';
 import type {Result, ResultTask} from 'shared/ReactFlightResult';
 import {
+  PENDING as RESULT_TASK_PENDING,
   createResultObject,
   getResultTask,
   fulfillResultTask,
@@ -2099,6 +2100,10 @@ function resolveServerComponentType(type: any): null | Function {
 // request, under the Result's render context, since the consumer that
 // reached the element first may be anything that reads the Result.
 function retryResultTask(result: Result<any>, task: ResultTask): void {
+  if (task.status !== RESULT_TASK_PENDING) {
+    // We completed this by other means before we had a chance to retry it.
+    return;
+  }
   // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     // The component's continuations after an await find the context here,
@@ -2116,7 +2121,10 @@ function performResultTask(result: Result<any>, task: ResultTask): void {
   ReactSharedInternals.H = HooksDispatcher;
   currentContext = result.context;
   prepareToUseHooksForRequest(result.context);
-  prepareToUseHooksForComponent(null, null);
+  // If the component suspended before, the thenable state is restored so
+  // that use() picks up where it left off.
+  prepareToUseHooksForComponent(task.thenableState as any, null);
+  task.thenableState = null;
   try {
     const Component = resolveServerComponentType(element.type);
     if (Component === null) {
@@ -2130,7 +2138,27 @@ function performResultTask(result: Result<any>, task: ResultTask): void {
     const value = Component(element.props, secondArg);
     fulfillResultTask(task, value);
   } catch (thrownValue) {
-    rejectResultTask(task, thrownValue);
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+    // $FlowFixMe[invalid-compare]
+    if (typeof x === 'object' && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === 'function') {
+        // Something suspended, let's pick it back up later.
+        task.thenableState = getThenableStateAfterSuspending();
+        const ping = task.ping;
+        x.then(ping, ping);
+        return;
+      }
+    }
+    rejectResultTask(task, x);
   } finally {
     ReactSharedInternals.H = prevDispatcher;
     currentContext = prevContext;

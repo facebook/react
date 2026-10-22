@@ -149,4 +149,30 @@ describe(`ReactFlightDOMResultFuzz (random seed: ${SEED})`, () => {
       expect(second).toEqual(first);
     });
   });
+
+  it('serializes a Result the same as rendering the model directly', async () => {
+    await forEachSeed(async seed => {
+      const a = harness.createScenario(seed, {});
+      const direct = await harness.observe(a, await harness.readDirect(a));
+      const b = harness.createScenario(seed, {});
+      const viaResult = await harness.observe(
+        b,
+        await harness.readResultStream(b),
+      );
+      expect(viaResult).toEqual(direct);
+    });
+  });
+
+  it('serializes a Result with errors the same as rendering the model directly', async () => {
+    await forEachSeed(async seed => {
+      const a = harness.createScenario(seed, {allowErrors: true});
+      const direct = await harness.observe(a, await harness.readDirect(a));
+      const b = harness.createScenario(seed, {allowErrors: true});
+      const viaResult = await harness.observe(
+        b,
+        await harness.readResultStream(b),
+      );
+      expect(viaResult).toEqual(direct);
+    });
+  });
 });

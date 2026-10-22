@@ -36,16 +36,20 @@ export type ResultTask = {
   reason: mixed,
   // The element this task renders.
   model: ReactElement,
+  ping: () => void,
+  thenableState: mixed,
   _listeners: null | Array<[(value: any) => mixed, (reason: mixed) => mixed]>,
   then(resolve: (value: any) => mixed, reject: (reason: mixed) => mixed): void,
 };
 
 // $FlowFixMe[missing-this-annot]
-function ResultTask(model: ReactElement) {
+function ResultTask(model: ReactElement, ping: () => void) {
   this.status = PENDING;
   this.value = undefined;
   this.reason = undefined;
   this.model = model;
+  this.ping = ping;
+  this.thenableState = null;
   this._listeners = null;
 }
 // We subclass Promise.prototype so that we get other methods like .catch
@@ -80,9 +84,15 @@ Object.defineProperty(ResultTask.prototype, 'then', {
   value: resultTaskThen,
 });
 
-export function createResultTask(model: ReactElement): ResultTask {
+export function createResultTask(
+  result: Result<any>,
+  model: ReactElement,
+): ResultTask {
   // $FlowFixMe[invalid-constructor]
-  return new ResultTask(model);
+  const task: ResultTask = new ResultTask(model, () =>
+    result.retryTask(result, task),
+  );
+  return task;
 }
 
 export function fulfillResultTask(task: ResultTask, value: mixed): void {
@@ -194,7 +204,7 @@ export function getResultTask(
   const tasks = result.tasks;
   let task = tasks.get(element);
   if (task === undefined) {
-    task = createResultTask(element);
+    task = createResultTask(result, element);
     tasks.set(element, task);
     result.retryTask(result, task);
   }
