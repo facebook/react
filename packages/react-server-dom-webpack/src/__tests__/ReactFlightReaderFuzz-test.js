@@ -2525,9 +2525,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   // fails today; the comment above it says whether the reader or the writer
   // is at fault.
   describe('known cases', () => {
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('Set containing itself', () =>
+    it('Set containing itself', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2536,9 +2534,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'set', other: 'set'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('Map containing itself', () =>
+    it('Map containing itself', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2553,9 +2549,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'map', other: 'map'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('two collections containing each other', () =>
+    it('two collections containing each other', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
