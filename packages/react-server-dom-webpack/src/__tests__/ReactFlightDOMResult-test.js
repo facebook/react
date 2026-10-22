@@ -554,6 +554,99 @@ describe('ReactFlightDOMResult', () => {
     );
   });
 
+  it('hands plain data to the renderer by identity', async () => {
+    const Show = clientExports(function Show() {
+      return null;
+    });
+    const data = {items: [1, 2, {deep: new Map([['k', new Date(0)]])}]};
+    function Keyed() {
+      return ReactServer.createElement(Show, {value: data});
+    }
+    async function Async() {
+      await 1;
+      return ReactServer.createElement(Show, {value: data});
+    }
+    const model = {
+      data,
+      direct: ReactServer.createElement(Show, {value: data}),
+      keyed: ReactServer.createElement(Keyed, {key: 'k'}),
+      async: ReactServer.createElement(Async, null),
+    };
+    const result = ReactServerDOMServer.renderToResult(model);
+    const root = await readFromResult(result);
+    expect(root.data).toBe(data);
+    expect(root.direct.props.value).toBe(data);
+    // The wire would copy this one under the keyed Server Component. Here
+    // there's nothing to copy, so the same object is shared.
+    expect(root.keyed.props.value).toBe(data);
+    expect(root.keyed.key).toBe('k');
+    await serverAct(() => root.async._payload);
+    expect(root.async._init(root.async._payload).props.value).toBe(data);
+  });
+
+  it('reads cyclic and shared data the way the wire does', async () => {
+    const Box = clientExports(function Box() {
+      return null;
+    });
+    const plain = {name: 'plain', list: []};
+    plain.list.push(plain);
+    plain.self = plain;
+    const map = new Map();
+    map.set('me', map);
+    // Holds an element, so this consumer gets a copy. The cycle and the
+    // other reference to it must point at that copy, not the server object.
+    const copied = {icon: ReactServer.createElement(Box, null)};
+    copied.ring = [copied, new Set([copied])];
+    const model = {
+      plain,
+      map,
+      copied,
+      element: ReactServer.createElement(Box, {value: copied}),
+    };
+    const result = ReactServerDOMServer.renderToResult(model);
+    const root = await readFromResult(result);
+    expect(root.plain.name).toBe('plain');
+    expect(root.plain.self).toBe(root.plain);
+    expect(root.plain.list[0]).toBe(root.plain);
+    expect(root.map.get('me')).toBe(root.map);
+    expect(root.copied).not.toBe(copied);
+    expect(root.copied.icon.type.$$typeof).toBe(Symbol.for('react.lazy'));
+    expect(root.copied.ring[0]).toBe(root.copied);
+    expect(Array.from(root.copied.ring[1])[0]).toBe(root.copied);
+    expect(root.element.props.value).toBe(root.copied);
+  });
+
+  it('reads an object again from the start after waiting on a module inside it', async () => {
+    let loadChunk;
+    const chunk = new Promise(resolve => {
+      loadChunk = resolve;
+    });
+    const Box = clientExports(function Box() {
+      return null;
+    });
+    function Slow() {
+      return 'slow';
+    }
+    const SlowReference = clientExports(Slow, 'slow-chunk', 'slow.js', chunk);
+    // The element before the reference changes for this consumer, so the
+    // object is being copied when the reference waits for its module, and
+    // the copy refers back to the object.
+    const model = {
+      tree: ReactServer.createElement(Box, null, 'x'),
+      G: [SlowReference, null],
+      last: 'b',
+    };
+    model.G.push(model);
+    const result = ReactServerDOMServer.renderToResult(model);
+    const rootPromise = readFromResult(result);
+    await serverAct(() => loadChunk());
+    const root = await rootPromise;
+    expect(root.G[0]).toBe(Slow);
+    expect(root.G[1]).toBe(null);
+    expect(root.G[2]).toBe(root);
+    expect(root.last).toBe('b');
+  });
+
   it('serializes a Result to a stream started after the last consumer finished', async () => {
     let cacheSignal;
     function App() {

@@ -2001,7 +2001,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<div><span>from-server</span></div>');
   });
 
-  it.skip('should resolve cyclic references in client component props after two rounds of serialization and deserialization', async () => {
+  it('should resolve cyclic references in client component props after two rounds of serialization and deserialization', async () => {
     const ClientComponent = clientExports(function ClientComponent({data}) {
       return (
         <div>{data.self === data ? 'Cycle resolved' : 'Cycle broken'}</div>

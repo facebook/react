@@ -81,6 +81,17 @@ export type ResultResponse = {
   // module is its own row, referenced from every place it's used.
   _modules: Map<string, SomeChunk<any>>,
   _onError: (error: mixed) => ?string,
+  // Server object -> what this consumer got for it, when that is a different
+  // object: a container that was copied because something inside it
+  // changed, or an element. A plain object that was returned as is isn't
+  // recorded, since it's its own record and a page can hold tens of
+  // thousands of them.
+  _models: Map<any, any>,
+  // The models recorded by the row being read, in order, so that a row that
+  // has to wait for something can forget them and start over.
+  _recorded: Array<any>,
+  // The containers being read, outermost first.
+  _visiting: Array<any>,
   // The first error met while reading the values inside the current element.
   // Like the serializer we report every invalid value in an element and
   // keep reading its siblings, then fail the element once.
@@ -418,6 +429,7 @@ function resolveModelChunk<T>(
   }
   const prevReadError = response._readError;
   response._readError = null;
+  const recorded = response._recorded.length;
   let value;
   try {
     value = readModel(response, model, chunk._context, emptyRoot, '');
@@ -428,6 +440,7 @@ function resolveModelChunk<T>(
       // Component's module. The chunk waits for it and reads the model again
       // then, the way a row waits for a reference inside it before it
       // initializes.
+      forgetModels(response, recorded);
       const retry = () => resolveModelChunk(response, chunk, model);
       thrown.then(retry, retry);
       return;
@@ -674,6 +687,78 @@ function readValue(
   }
 }
 
+function recordModel(response: ResultResponse, model: any, read: any): void {
+  response._models.set(model, read);
+  response._recorded.push(model);
+}
+
+// Forgets what a row recorded before it had to wait for something. The row
+// is read again from the start when it retries, and anything it created
+// before, like a copy it left half filled, must not be found by that read.
+function forgetModels(response: ResultResponse, recorded: number): void {
+  const models = response._models;
+  const list = response._recorded;
+  for (let i = recorded; i < list.length; i++) {
+    models.delete(list[i]);
+  }
+  list.length = recorded;
+}
+
+// Starts reading a container. Returns null, or if the container is already
+// being read higher up the stack, the copy that read will fill in: a cycle
+// can't be returned as is, since the reference inside it has to point at
+// what this consumer gets for the container, the way a reference to an
+// outer row by path resolves to the object that row creates. The stack is
+// short for any realistic model, so checking it is cheap.
+function enterContainer(
+  response: ResultResponse,
+  container: any,
+  createCopy: () => any,
+): null | any {
+  const visiting = response._visiting;
+  if (visiting.indexOf(container) !== -1) {
+    return copyOf(response, container, createCopy);
+  }
+  visiting.push(container);
+  return null;
+}
+
+function exitContainer(response: ResultResponse): void {
+  response._visiting.pop();
+}
+
+// The copy this consumer gets for a container, created on first use so that
+// a reference inside a cycle and the read that finds a changed value share
+// it.
+function copyOf(
+  response: ResultResponse,
+  container: any,
+  createCopy: () => any,
+): any {
+  let copy = response._models.get(container);
+  if (copy === undefined) {
+    copy = createCopy();
+    recordModel(response, container, copy);
+  }
+  return copy;
+}
+
+function createArrayCopy(): Array<any> {
+  return [];
+}
+
+function createObjectCopy(): {[key: string]: any} {
+  return {};
+}
+
+function createMapCopy(): Map<any, any> {
+  return new Map();
+}
+
+function createSetCopy(): Set<any> {
+  return new Set();
+}
+
 // An array is a fragment. Like renderFragment on the server, one rendered
 // through a keyed Server Component is wrapped in a keyed Fragment element
 // so that the whole set can move together.
@@ -711,17 +796,28 @@ function readArray(
   array: Array<any>,
   context: KeyContext,
 ): Array<any> {
+  const cycle = enterContainer(response, array, createArrayCopy);
+  if (cycle !== null) {
+    return cycle;
+  }
   let copy: null | Array<any> = null;
-  for (let i = 0; i < array.length; i++) {
-    const child = array[i];
-    const read = readValue(response, child, context, array, '' + i);
-    if (copy === null) {
-      if (read === child) {
-        continue;
+  try {
+    for (let i = 0; i < array.length; i++) {
+      const child = array[i];
+      const read = readValue(response, child, context, array, '' + i);
+      if (copy === null) {
+        if (read === child) {
+          continue;
+        }
+        copy = copyOf(response, array, createArrayCopy);
+        for (let j = 0; j < i; j++) {
+          copy[j] = array[j];
+        }
       }
-      copy = array.slice(0, i);
+      copy[i] = read;
     }
-    copy.push(read);
+  } finally {
+    exitContainer(response);
   }
   return copy === null ? array : copy;
 }
@@ -731,29 +827,37 @@ function readObject(
   object: {[key: string]: any},
   context: KeyContext,
 ): {[key: string]: any} {
+  const cycle = enterContainer(response, object, createObjectCopy);
+  if (cycle !== null) {
+    return cycle;
+  }
   let copy: null | {[key: string]: any} = null;
-  const keys = Object.keys(object);
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-    const child = object[key];
-    // JSON drops a property whose value is undefined, and the client never
-    // assigns __proto__.
-    const read =
-      child === undefined || key === '__proto__'
-        ? undefined
-        : readValue(response, child, context, object, key);
-    if (copy === null) {
-      if (read === child && child !== undefined) {
-        continue;
+  try {
+    const keys = Object.keys(object);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const child = object[key];
+      // JSON drops a property whose value is undefined, and the client never
+      // assigns __proto__.
+      const read =
+        child === undefined || key === '__proto__'
+          ? undefined
+          : readValue(response, child, context, object, key);
+      if (copy === null) {
+        if (read === child && child !== undefined) {
+          continue;
+        }
+        copy = copyOf(response, object, createObjectCopy);
+        for (let j = 0; j < i; j++) {
+          copy[keys[j]] = object[keys[j]];
+        }
       }
-      copy = {} as {[key: string]: any};
-      for (let j = 0; j < i; j++) {
-        copy[keys[j]] = object[keys[j]];
+      if (read !== undefined) {
+        copy[key] = read;
       }
     }
-    if (read !== undefined) {
-      copy[key] = read;
-    }
+  } finally {
+    exitContainer(response);
   }
   return copy === null ? object : copy;
 }
@@ -763,9 +867,25 @@ function readMap(
   map: Map<any, any>,
   context: KeyContext,
 ): Map<any, any> {
-  const entries = Array.from(map);
-  const read = readArray(response, entries, context);
-  return read === entries ? map : new Map(read);
+  const cycle = enterContainer(response, map, createMapCopy);
+  if (cycle !== null) {
+    return cycle;
+  }
+  let read;
+  try {
+    const entries = Array.from(map);
+    read = readArray(response, entries, context);
+    if (read === entries) {
+      return map;
+    }
+  } finally {
+    exitContainer(response);
+  }
+  const copy = copyOf(response, map, createMapCopy);
+  for (let i = 0; i < read.length; i++) {
+    copy.set(read[i][0], read[i][1]);
+  }
+  return copy;
 }
 
 function readSet(
@@ -773,9 +893,25 @@ function readSet(
   set: Set<any>,
   context: KeyContext,
 ): Set<any> {
-  const values = Array.from(set);
-  const read = readArray(response, values, context);
-  return read === values ? set : new Set(read);
+  const cycle = enterContainer(response, set, createSetCopy);
+  if (cycle !== null) {
+    return cycle;
+  }
+  let read;
+  try {
+    const values = Array.from(set);
+    read = readArray(response, values, context);
+    if (read === values) {
+      return set;
+    }
+  } finally {
+    exitContainer(response);
+  }
+  const copy = copyOf(response, set, createSetCopy);
+  for (let i = 0; i < read.length; i++) {
+    copy.add(read[i]);
+  }
+  return copy;
 }
 
 // Finds the Server Component an element renders, through memo, forwardRef
@@ -912,20 +1048,43 @@ function readThenable(
   thenable: Thenable<any>,
   context: KeyContext,
 ): SomeChunk<any> {
+  // If we're in some kind of context we can't reuse the result of this render or
+  // previous renders of this element. We only reuse Promises if they're not wrapped
+  // by another Server Component.
+  const reusable = context.keyPath === null && !context.implicitSlot;
+  if (reusable) {
+    const existing = response._models.get(thenable);
+    if (existing !== undefined) {
+      return existing;
+    }
+  }
+  let chunk: SomeChunk<any>;
   switch (thenable.status) {
     case 'fulfilled':
-      return createModelChunk(response, thenable.value, context);
+      chunk = createModelChunk(response, thenable.value, context);
+      break;
     case 'rejected':
-      return createErrorChunk(
+      chunk = createErrorChunk(
         response,
         reportReadError(response, thenable.reason),
       );
+      break;
+    default: {
+      const pendingChunk: SomeChunk<any> = createPendingChunk(
+        response,
+        context,
+      );
+      thenable.then(
+        value => resolveModelChunk(response, pendingChunk, value),
+        reason =>
+          triggerErrorOnChunk(pendingChunk, reportReadError(response, reason)),
+      );
+      chunk = pendingChunk;
+    }
   }
-  const chunk: SomeChunk<any> = createPendingChunk(response, context);
-  thenable.then(
-    value => resolveModelChunk(response, chunk, value),
-    reason => triggerErrorOnChunk(chunk, reportReadError(response, reason)),
-  );
+  if (reusable) {
+    recordModel(response, thenable, chunk);
+  }
   return chunk;
 }
 
@@ -948,25 +1107,50 @@ function readElement(
   element: any,
   context: KeyContext,
 ): any {
+  // If we're in some kind of context we can't reuse the result of this render or
+  // previous renders of this element. We only reuse elements if they're not wrapped
+  // by another Server Component.
+  const reusable = context.keyPath === null && !context.implicitSlot;
+  if (reusable) {
+    const existing = response._models.get(element);
+    if (existing !== undefined) {
+      return existing;
+    }
+  }
+  const recorded = response._recorded.length;
+  let read;
   try {
     if (resolveServerComponentType(response, element.type) !== null) {
-      return readServerComponent(response, element, context);
+      read = readServerComponent(response, element, context);
+    } else {
+      read = readClientElement(response, element, context);
     }
-    return readClientElement(response, element, context);
   } catch (thrown) {
     if (isThenable(thrown)) {
       // Something inside the element is still loading. It becomes a lazy
       // that reads the element again once that's done, like an element
       // whose row waits for a reference.
+      forgetModels(response, recorded);
       const chunk: SomeChunk<any> = createPendingChunk(response, context);
-      const retry = () => resolveModelChunk(response, chunk, element);
+      const retry = () => {
+        // What's recorded for the element is the lazy itself.
+        response._models.delete(element);
+        resolveModelChunk(response, chunk, element);
+      };
       thrown.then(retry, retry);
-      return createLazyChunkWrapper(chunk);
+      read = createLazyChunkWrapper(chunk);
+    } else {
+      const chunk: SomeChunk<any> = createErrorChunk(
+        response,
+        reportReadError(response, thrown),
+      );
+      read = createLazyChunkWrapper(chunk);
     }
-    return createLazyChunkWrapper(
-      createErrorChunk(response, reportReadError(response, thrown)),
-    );
   }
+  if (reusable) {
+    recordModel(response, element, read);
+  }
+  return read;
 }
 
 // A host or Client Component element. The serializer outlines each of these
@@ -1232,6 +1416,11 @@ function readModel(
       // or a Promise type. Either of which can be represented by a Promise.
       return readThenable(response, value, context);
     }
+    const existing = response._models.get(value);
+    if (existing !== undefined) {
+      // We've read this before, so we can just return what we got for it.
+      return existing;
+    }
     const proto = getPrototypeOf(value);
     if (proto === ObjectPrototype) {
       // Nearly every value is a plain object, and none of the cases below
@@ -1374,6 +1563,9 @@ export function createResponse(
     _bundler: bundler,
     _modules: new Map(),
     _onError: onError === undefined ? result.onError : onError,
+    _models: new Map(),
+    _recorded: [],
+    _visiting: [],
     _readError: null,
   };
   // The renderer may read the Result for as long as it likes, so this
