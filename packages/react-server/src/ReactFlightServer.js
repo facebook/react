@@ -132,6 +132,11 @@ import {
   rejectResultTask,
   retainResult,
   releaseResult,
+  getIteratorEntries,
+  getStreamReplay,
+  getAsyncIterableReplay,
+  createReplayReadableStream,
+  createReplayAsyncIterable,
 } from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
@@ -2450,6 +2455,22 @@ function renderAsyncFragment(
   // way up. Which is what we want since we've consumed it. If this changes to
   // be recursive serialization, we need to reset the keyPath and implicitSlot,
   // before recursing here.
+  if (request.result !== null) {
+    // Other consumers of the Result need the same values, so the original is
+    // iterated once and replayed to each of them.
+    const replay = getAsyncIterableReplay(
+      request.result,
+      children,
+      getAsyncIterator,
+    );
+    const replayed = createReplayAsyncIterable(replay);
+    return serializeAsyncIterable(
+      request,
+      task,
+      replayed,
+      (replayed as any)[ASYNC_ITERATOR](),
+    );
+  }
   const asyncIterator = getAsyncIterator.call(children);
   return serializeAsyncIterable(request, task, children, asyncIterator);
 }
@@ -3744,11 +3765,28 @@ function serializeDebugSet(
   return '$W' + id.toString(16);
 }
 
+// Whether an iterator is its own iterable, like a generator object, and so
+// can only be iterated once.
+function isSingleShotIterator(iterator: any): boolean {
+  if (typeof iterator.next !== 'function') {
+    return false;
+  }
+  const iteratorFn = getIteratorFn(iterator);
+  return (
+    typeof iteratorFn === 'function' && iteratorFn.call(iterator) === iterator
+  );
+}
+
 function serializeIterator(
   request: Request,
   iterator: Iterator<ReactClientValue>,
 ): string {
-  const id = outlineModel(request, Array.from(iterator));
+  const entries =
+    request.result !== null
+      ? // Another consumer of the Result may have drained the iterator already.
+        getIteratorEntries(request.result, iterator)
+      : Array.from(iterator);
+  const id = outlineModel(request, entries as any);
   return '$i' + id.toString(16);
 }
 
@@ -4462,6 +4500,17 @@ function renderModelDestructive(
         // Iterator, not Iterable
         return serializeIterator(request, iterator as any);
       }
+      const result = request.result;
+      if (result !== null && isSingleShotIterator(iterator)) {
+        // An iterator returned from a Server Component is wrapped to be
+        // iterated like an iterable, but the iterator it yields is still
+        // single-shot and another consumer of the Result may have drained it.
+        return renderFragment(
+          request,
+          task,
+          getIteratorEntries(result, iterator as any) as any,
+        );
+      }
       return renderFragment(request, task, Array.from(iterator as any));
     }
 
@@ -4470,6 +4519,15 @@ function renderModelDestructive(
       typeof ReadableStream === 'function' &&
       value instanceof ReadableStream
     ) {
+      if (request.result !== null) {
+        // Other consumers of the Result need the same chunks, so the original
+        // is read once and replayed to each of them.
+        return serializeReadableStream(
+          request,
+          task,
+          createReplayReadableStream(getStreamReplay(request.result, value)),
+        );
+      }
       return serializeReadableStream(request, task, value);
     }
     const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) = (
