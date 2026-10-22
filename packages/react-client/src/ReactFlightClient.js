@@ -393,6 +393,9 @@ type Response = {
   _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
+  // The handler of each chunk that has parsed but is still waiting for
+  // references, by chunk.
+  _handlers: WeakMap<SomeChunk<any>, InitializationHandler>,
   // A Set or Map that was referenced before its entries chunk had initialized,
   // by that chunk. Every reference to the chunk receives the same collection,
   // including a reference from inside its own entries. The entries are copied
@@ -1035,10 +1038,14 @@ type InitializationReference = {
     key: string,
   ) => any,
   path: Array<string>,
+  // The chunk the reference is queued on. A path that runs into a Lazy node
+  // moves the reference on to that node's chunk.
+  chunk: SomeChunk<any>,
   // The collection reserved for the chunk this reference waits for, when it
   // constructs a Set or Map. It already sits in the slot; it is the mapped
   // value once the chunk initializes.
   collection: null | Set<any> | Map<any, any>,
+  done: boolean,
   isDebug?: boolean, // DEV-only
 };
 type PendingInitializationHandler = {
@@ -1048,7 +1055,11 @@ type PendingInitializationHandler = {
   // The controller of a stream whose chunk is blocked on its debug info. Null
   // for every other model.
   reason: null | FlightStreamController,
+  // Work outstanding before the chunk can initialize: the references that are
+  // not done, and other waits like a module loading.
   deps: number,
+  references: null | Array<InitializationReference>,
+  outstanding: number,
   // Debug info received from referenced chunks that had not completed when
   // they were referenced. Added to the chunk once it completes.
   debugSources: null | Array<SomeChunk<any>>, // DEV-only
@@ -1062,6 +1073,8 @@ type ErroredInitializationHandler = {
   // The error the handler was rejected with.
   reason: mixed,
   deps: number,
+  references: null | Array<InitializationReference>,
+  outstanding: number,
   debugSources: null | Array<SomeChunk<any>>, // DEV-only
   receivedDebugInfo: null | Array<ReactDebugInfoEntry>, // DEV-only
   errored: true,
@@ -1080,6 +1093,8 @@ function createInitializationHandler(
     value: null,
     reason: null,
     deps,
+    references: null,
+    outstanding: 0,
     errored: false,
   } as Omit<
     PendingInitializationHandler,
@@ -1101,6 +1116,8 @@ function createErroredInitializationHandler(
     value: null,
     reason,
     deps: 0,
+    references: null,
+    outstanding: 0,
     errored: true,
   } as Omit<
     ErroredInitializationHandler,
@@ -1246,7 +1263,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // that closes through `cyclicChunk` is only found once `handler.chunk` is
       // `cyclicChunk`.
       handler.value = value;
-      handler.chunk = cyclicChunk;
+      blockedOn(response, handler, cyclicChunk);
     }
 
     const listeners = cyclicChunk.value;
@@ -1659,7 +1676,7 @@ function createElement(
       const blockedChunk: BlockedChunk<React$Element<any>> =
         createBlockedChunk(response);
       handler.value = element;
-      handler.chunk = blockedChunk;
+      blockedOn(response, handler, blockedChunk);
       const lazyNode = createLazyChunkWrapper(blockedChunk, validated);
       if (__DEV__) {
         // After we have initialized any blocked references, initialize stack etc.
@@ -1835,6 +1852,7 @@ function initializeChunkIfUnblocked(
   // its debug info, and null otherwise. It becomes the initialized chunk's
   // `reason` either way.
   transferDeferredDebugInfo(chunk, handler);
+  releaseHandler(response, handler);
   initializeBlockedChunk(response, chunk, handler.value, handler.reason);
 }
 
@@ -1982,6 +2000,8 @@ function installReference(
   fulfilledChunk: SomeChunk<any>,
 ): void {
   const {handler, parentObject, key} = reference;
+  reference.done = true;
+  handler.outstanding--;
   if (key !== __PROTO__) {
     parentObject[key] = value;
   }
@@ -2052,6 +2072,7 @@ function rejectReference(
   if (chunk === null || chunk.status !== BLOCKED) {
     return;
   }
+  releaseHandler(response, handler);
 
   if (__DEV__) {
     if (
@@ -2114,6 +2135,7 @@ function waitForReference<T>(
 
   const reference = createInitializationReference(
     addDependency(),
+    referencedChunk,
     parentObject,
     key,
     map,
@@ -2139,6 +2161,29 @@ function waitForReference<T>(
   return null as any;
 }
 
+// Records which chunk the handler initializes once its work is done, where
+// anything that walks what the chunks wait for can find it.
+function blockedOn(
+  response: Response,
+  handler: InitializationHandler,
+  chunk: BlockedChunk<any>,
+): void {
+  handler.chunk = chunk;
+  response._handlers.set(chunk, handler);
+}
+
+// The chunk no longer waits for references.
+function releaseHandler(
+  response: Response,
+  handler: InitializationHandler,
+): void {
+  const chunk = handler.chunk;
+  if (chunk !== null) {
+    response._handlers.delete(chunk);
+  }
+  handler.references = null;
+}
+
 // Counts one more outstanding dependency against the handler of the model
 // being initialized, creating the handler if the model has none yet.
 function addDependency(): InitializationHandler {
@@ -2156,6 +2201,7 @@ function addDependency(): InitializationHandler {
 // one of the handler's dependencies.
 function createInitializationReference<T>(
   handler: InitializationHandler,
+  chunk: SomeChunk<any>,
   parentObject: Object,
   key: string,
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
@@ -2168,11 +2214,19 @@ function createInitializationReference<T>(
     key,
     map,
     path,
+    chunk,
     collection: null,
+    done: false,
   };
   if (__DEV__) {
     reference.isDebug = isAwaitingDebugInfo;
   }
+  if (handler.references === null) {
+    handler.references = [reference];
+  } else {
+    handler.references.push(reference);
+  }
+  handler.outstanding++;
   return reference;
 }
 
@@ -2182,6 +2236,7 @@ function addReferenceListener(
   chunk: PendingChunk<any> | PendingWeakChunk<any> | BlockedChunk<any>,
   reference: InitializationReference,
 ): void {
+  reference.chunk = chunk;
   if (chunk.value === null) {
     chunk.value = [reference];
   } else {
@@ -2298,6 +2353,7 @@ function loadServerReference<A: Iterable<any>, T>(
     }
     const reference = createInitializationReference(
       handler,
+      chunk,
       parentObject,
       key,
       bindBoundServerReference,
@@ -3260,6 +3316,7 @@ function ResponseInstance(
   this._encodeFormAction = encodeFormAction;
   this._nonce = nonce;
   this._chunks = chunks;
+  this._handlers = new WeakMap();
   this._reservedCollections = new WeakMap();
   // Preserve a leading U+FEFF instead of consuming it as an encoding signature.
   this._stringDecoder = createStringDecoder(true);
@@ -3754,7 +3811,7 @@ function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
             // Leave blocked until we can resolve all the debug info.
             initializingHandler.value = stream;
             initializingHandler.reason = controller;
-            initializingHandler.chunk = cyclicChunk;
+            blockedOn(response, initializingHandler, cyclicChunk);
             return;
           }
         }
