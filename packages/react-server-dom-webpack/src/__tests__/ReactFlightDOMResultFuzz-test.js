@@ -221,6 +221,27 @@ describe(`ReactFlightDOMResultFuzz (random seed: ${SEED})`, () => {
     });
   });
 
+  it('prerenders a Result the same as prerendering the model directly', async () => {
+    await forEachSeed(async seed => {
+      const a = harness.createScenario(seed, {});
+      await harness.settleAll(a.scheduler);
+      const direct = await harness.observe(
+        a,
+        await harness.prerenderToResponse(a.model, a.components),
+      );
+      const b = harness.createScenario(seed, {});
+      await harness.settleAll(b.scheduler);
+      const result = env.ReactServerDOMServer.renderToResult(b.model, {
+        onError: harness.onError,
+      });
+      const viaResult = await harness.observe(
+        b,
+        await harness.prerenderToResponse(result, b.components),
+      );
+      expect(viaResult).toEqual(direct);
+    });
+  });
+
   it('rejects the values the wire rejects, reporting the same errors', async () => {
     await forEachSeed(async seed => {
       // Shallow, so the message describing an invalid value's parent stays

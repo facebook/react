@@ -927,6 +927,7 @@ export function createPrerenderRequest(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
+  result: null | Result<any> = null,
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -946,7 +947,7 @@ export function createPrerenderRequest(
     environmentName,
     filterStackFrame,
     keepDebugAlive,
-    null,
+    result,
   );
 }
 

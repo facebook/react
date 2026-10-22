@@ -47,6 +47,7 @@ let ReactDOMServer;
 let ReactServer;
 let FlightReactDOM;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
@@ -67,6 +68,10 @@ describe('ReactFlightDOMResult', () => {
     ReactServer = require('react');
     FlightReactDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
+    jest.mock('react-server-dom-webpack/static', () =>
+      jest.requireActual('react-server-dom-webpack/static.node'),
+    );
+    ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -78,6 +83,7 @@ describe('ReactFlightDOMResult', () => {
     jest.resetModules();
     __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
+    jest.unmock('react-server-dom-webpack/static');
     jest.mock('react-server-dom-webpack/client', () =>
       jest.requireActual('react-server-dom-webpack/client.node'),
     );
@@ -1041,6 +1047,47 @@ describe('ReactFlightDOMResult', () => {
     expect(html).toBe(
       '<script src="/path/to/chunk.js" async=""></script><span>Client Component</span>',
     );
+  });
+
+  it('aborting a prerender of a Result halts its stream and nothing else', async () => {
+    let resolveGreeting;
+    const greeting = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+    async function Greeting() {
+      return ReactServer.createElement('p', null, await greeting);
+    }
+    const errors = [];
+    const controller = new AbortController();
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(Greeting, null),
+      {
+        onError(error) {
+          errors.push(error.message);
+        },
+      },
+    );
+    const inProcess = readFromResult(result);
+    const {pending} = await serverAct(() => ({
+      pending: ReactServerDOMStaticServer.prerenderToNodeStream(
+        result,
+        webpackMap,
+        {signal: controller.signal},
+      ),
+    }));
+    await serverAct(() => controller.abort('boom'));
+    const {prelude} = await pending;
+    expect(errors).toEqual([]);
+
+    // The prelude leaves the pending component unresolved; the Result and
+    // the reader go on and get it when it settles.
+    const streamed = ReactServerDOMClient.createFromNodeStream(prelude, {
+      moduleMap: null,
+      moduleLoading: null,
+    });
+    await serverAct(() => resolveGreeting('hello'));
+    expect((await inProcess).props.children).toBe('hello');
+    await expect(streamed).rejects.toThrow('Connection closed.');
   });
 
   it('serializes a Result to a stream started after the last consumer finished', async () => {

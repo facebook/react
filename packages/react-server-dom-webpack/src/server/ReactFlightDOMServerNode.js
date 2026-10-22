@@ -476,7 +476,7 @@ type StaticResult = {
 };
 
 function prerenderToNodeStream(
-  model: ReactClientValue,
+  model: ReactClientValue | Result<ReactClientValue>,
   webpackMap: ClientManifest,
   options?: PrerenderOptions,
 ): Promise<StaticResult> {
@@ -492,8 +492,11 @@ function prerenderToNodeStream(
       resolve({prelude: readable});
     }
 
+    const result: null | Result<ReactClientValue> = isResult(model)
+      ? (model as any)
+      : null;
     const request = createPrerenderRequest(
-      model,
+      result !== null ? result.model : (model as any),
       webpackMap,
       onAllReady,
       onFatalError,
@@ -504,6 +507,7 @@ function prerenderToNodeStream(
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
+      result,
     );
     if (options && options.signal) {
       attachAbortSignal(request, options.signal);
@@ -513,7 +517,7 @@ function prerenderToNodeStream(
 }
 
 function prerender(
-  model: ReactClientValue,
+  model: ReactClientValue | Result<ReactClientValue>,
   webpackMap: ClientManifest,
   options?: Options & {
     signal?: AbortSignal,
@@ -546,8 +550,11 @@ function prerender(
       );
       resolve({prelude: stream});
     }
+    const result: null | Result<ReactClientValue> = isResult(model)
+      ? (model as any)
+      : null;
     const request = createPrerenderRequest(
-      model,
+      result !== null ? result.model : (model as any),
       webpackMap,
       onAllReady,
       onFatalError,
@@ -558,6 +565,7 @@ function prerender(
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
       false,
+      result,
     );
     if (options && options.signal) {
       attachAbortSignal(request, options.signal);
