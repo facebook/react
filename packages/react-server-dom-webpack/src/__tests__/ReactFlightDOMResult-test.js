@@ -192,11 +192,11 @@ describe('ReactFlightDOMResult', () => {
         },
       },
     );
-    const root = await readFromResult(result);
-    // The element holding the invalid value fails when it's rendered.
+    // The element holding the invalid value is at the top of the root row,
+    // so the root fails, as it would on the wire.
     let caught;
     try {
-      root._init(root._payload);
+      await readFromResult(result);
     } catch (error) {
       caught = error;
     }
@@ -215,7 +215,7 @@ describe('ReactFlightDOMResult', () => {
     );
   });
 
-  // Reads a Result whose root element errors, and returns what was reported.
+  // Reads a Result whose root errors, and returns what was reported.
   async function readErrors(element) {
     const errors = [];
     const result = ReactServerDOMServer.renderToResult(element, {
@@ -223,8 +223,7 @@ describe('ReactFlightDOMResult', () => {
         errors.push(error.message);
       },
     });
-    const root = await readFromResult(result);
-    expect(() => root._init(root._payload)).toThrow();
+    await expect(readFromResult(result)).rejects.toThrow();
     return errors;
   }
 
@@ -418,10 +417,9 @@ describe('ReactFlightDOMResult', () => {
         },
       },
     );
-    const root = await readFromResult(result);
     let caught;
     try {
-      root._init(root._payload);
+      await readFromResult(result);
     } catch (error) {
       caught = error;
     }
@@ -523,6 +521,37 @@ describe('ReactFlightDOMResult', () => {
         [{type: 'li', key: 'f', children: 'three'}],
       ],
     });
+  });
+
+  it('settles the root with the output of a pending root Server Component', async () => {
+    let resolveData;
+    const data = new Promise(resolve => {
+      resolveData = resolve;
+    });
+    async function Inner() {
+      return ReactServer.createElement('b', null, await data);
+    }
+    async function App() {
+      await 1;
+      // The root row waits for the whole chain at its top, like the wire.
+      return ReactServer.createElement(Inner, null);
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App),
+    );
+    const response = readFromResult(result);
+    let settled = null;
+    response.then(value => {
+      settled = value;
+    });
+    await serverAct(() => {});
+    expect(settled).toBe(null);
+    await serverAct(() => resolveData('hi'));
+    expect(settled.type).toBe('b');
+    expect(settled.props.children).toBe('hi');
+    expect(await shapeOf(await readFromStream(result))).toEqual(
+      await shapeOf(settled),
+    );
   });
 
   it('serializes a Result to a stream started after the last consumer finished', async () => {

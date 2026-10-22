@@ -443,6 +443,24 @@ function resolveModelChunk<T>(
     triggerErrorOnChunk(chunk, error);
     return;
   }
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    value.$$typeof === REACT_LAZY_TYPE &&
+    value._init === readChunk
+  ) {
+    // The model itself is still pending, like a Server Component at the top
+    // of this row that hasn't returned yet. The row waits for it instead of
+    // referring to it lazily, the way the serializer's task retries until
+    // the model at its root renders. Only a nested position can refer to a
+    // pending value lazily.
+    const inner: SomeChunk<T> = value._payload;
+    inner.then(
+      resolvedValue => fulfillChunk(chunk, resolvedValue),
+      reason => triggerErrorOnChunk(chunk, reason),
+    );
+    return;
+  }
   fulfillChunk(chunk, value);
 }
 
