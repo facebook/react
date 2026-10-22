@@ -2875,6 +2875,22 @@ describe.each(['node', 'edge', 'reply'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'later', other: 'shared'},
       }));
 
+    // Enough parts for the FormData's reference to be written in hex.
+    it('FormData bound to a function among many parts', () =>
+      runGraph({
+        nodes: {
+          form: {special: 'form data'},
+          set: {set: ['bytes', 'map', 'fn']},
+          holder: {map: [['set', 'iterable']]},
+          bytes: {bytes: 3},
+          map: {map: []},
+          fn: {bound: ['form']},
+          iterable: {iterable: []},
+        },
+        roots: {entry: 'map', other: 'holder'},
+        rootPromise: true,
+      }));
+
     it('iterator over values still loading', () =>
       runGraph({
         nodes: {
