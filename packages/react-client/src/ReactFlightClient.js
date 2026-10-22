@@ -2087,6 +2087,7 @@ function waitForReference<T>(
   }
 
   const reference = createInitializationReference(
+    addDependency(),
     parentObject,
     key,
     map,
@@ -2112,15 +2113,9 @@ function waitForReference<T>(
   return null as any;
 }
 
-// Creates a reference that fills `parentObject[key]` once it resolves, and
-// counts it against the handler of the model being initialized.
-function createInitializationReference<T>(
-  parentObject: Object,
-  key: string,
-  map: (response: Response, model: any, parentObject: Object, key: string) => T,
-  path: Array<string>,
-  isAwaitingDebugInfo: boolean, // DEV-only
-): InitializationReference {
+// Counts one more outstanding dependency against the handler of the model
+// being initialized, creating the handler if the model has none yet.
+function addDependency(): InitializationHandler {
   let handler: InitializationHandler;
   if (initializingHandler) {
     handler = initializingHandler;
@@ -2128,7 +2123,19 @@ function createInitializationReference<T>(
   } else {
     handler = initializingHandler = createInitializationHandler(null, 1);
   }
+  return handler;
+}
 
+// Creates a reference that fills `parentObject[key]` once it resolves. It is
+// one of the handler's dependencies.
+function createInitializationReference<T>(
+  handler: InitializationHandler,
+  parentObject: Object,
+  key: string,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  path: Array<string>,
+  isAwaitingDebugInfo: boolean, // DEV-only
+): InitializationReference {
   const reference: InitializationReference = {
     handler,
     parentObject,
@@ -2197,53 +2204,107 @@ function loadServerReference<A: Iterable<any>, T>(
     resolveServerReference<$FlowFixMe>(response._serverReferenceConfig, id);
 
   const bound = metaData.bound;
-  let promise: null | Thenable<any> = preloadModule(serverReference);
-  if (!promise) {
-    if (bound instanceof ReactPromise) {
-      promise = Promise.resolve(bound);
-    } else {
-      // We only await the bound arguments when they are one of our own chunks.
-      // Anything else could be a foreign thenable whose `then` we must not call.
-      const resolvedValue = requireModule(serverReference) as any;
-      registerBoundServerReference(
-        resolvedValue,
-        id,
-        bound,
-        response._encodeFormAction,
-      );
-      return resolvedValue;
-    }
-  } else if (bound instanceof ReactPromise) {
-    promise = Promise.all([promise, bound]);
-  }
+  // Bound arguments that are one of our own chunks are read when that chunk
+  // has initialized. Anything else could be a foreign thenable whose `then`
+  // we must not call.
+  const boundChunk: null | SomeChunk<any> =
+    bound instanceof ReactPromise ? (bound as any) : null;
 
-  let handler: InitializationHandler;
-  if (initializingHandler) {
-    handler = initializingHandler;
-    handler.deps++;
-  } else {
-    handler = initializingHandler = createInitializationHandler(null, 1);
-  }
-
-  function fulfill(): void {
+  function bindServerReference(args: any): any {
     let resolvedValue = requireModule(serverReference) as any;
-
     if (bound) {
-      // This promise is coming from us and should have initialized by now.
-      const promiseValue = (bound as any).value;
-      const boundArgs: Array<any> = isArray(promiseValue)
-        ? promiseValue.slice(0)
-        : [];
+      const boundArgs: Array<any> = isArray(args) ? args.slice(0) : [];
       boundArgs.unshift(null); // this
       resolvedValue = resolvedValue.bind.apply(resolvedValue, boundArgs);
     }
-
     registerBoundServerReference(
       resolvedValue,
       id,
       bound,
       response._encodeFormAction,
     );
+    return resolvedValue;
+  }
+
+  const preloading: null | Thenable<any> = preloadModule(serverReference);
+  if (!preloading) {
+    if (boundChunk === null) {
+      return bindServerReference(null);
+    }
+    if (boundChunk.status === RESOLVED_MODEL) {
+      initializeModelChunk(boundChunk);
+    }
+    if (boundChunk.status === INITIALIZED) {
+      return bindServerReference(boundChunk.value);
+    }
+    if (boundChunk.status === ERRORED) {
+      // This is an error. Instead of erroring directly, we're going to encode
+      // this on an initialization handler so that we can catch it at the
+      // nearest Element.
+      if (initializingHandler) {
+        const erroredHandler: ErroredInitializationHandler =
+          initializingHandler as any;
+        erroredHandler.errored = true;
+        erroredHandler.value = null;
+        erroredHandler.reason = boundChunk.reason;
+      } else {
+        initializingHandler = createErroredInitializationHandler(
+          boundChunk.reason,
+        );
+      }
+      return null as any;
+    }
+  }
+
+  const handler = addDependency();
+
+  // The bound arguments are waited for like any reference into their chunk,
+  // so that the arguments chunk and the model holding the function wait for
+  // each other the way two models do, rather than through a Promise that no
+  // model can see.
+  function bindBoundServerReference(_response: Response, args: any): any {
+    return bindServerReference(args);
+  }
+  function waitForBoundArguments(): void {
+    const chunk: SomeChunk<any> = boundChunk as any;
+    if (chunk.status === RESOLVED_MODEL) {
+      initializeModelChunk(chunk);
+    }
+    const reference = createInitializationReference(
+      handler,
+      parentObject,
+      key,
+      bindBoundServerReference,
+      EMPTY_REFERENCE_PATH,
+      false,
+    );
+    switch (chunk.status) {
+      case INITIALIZED:
+        fulfillReference(response, reference, chunk.value, chunk);
+        break;
+      case ERRORED:
+        rejectReference(response, handler, chunk.reason);
+        break;
+      case BLOCKED:
+      case PENDING:
+      case PENDING_WEAK:
+        addReferenceListener(chunk, reference);
+        break;
+      // A halted chunk never arrives, and neither does the function.
+    }
+  }
+
+  if (!preloading) {
+    waitForBoundArguments();
+    return null as any;
+  }
+
+  function fulfill(): void {
+    if (boundChunk !== null) {
+      waitForBoundArguments();
+      return;
+    }
+    const resolvedValue = bindServerReference(null);
 
     if (key !== __PROTO__) {
       parentObject[key] = resolvedValue;
@@ -2282,53 +2343,10 @@ function loadServerReference<A: Iterable<any>, T>(
   }
 
   function reject(error: mixed): void {
-    if (handler.errored) {
-      // We've already errored. We could instead build up an AggregateError
-      // but if there are multiple errors we just take the first one like
-      // Promise.all.
-      return;
-    }
-    const blockedValue = handler.value;
-    const erroredHandler: ErroredInitializationHandler = handler as any;
-    erroredHandler.errored = true;
-    erroredHandler.value = null;
-    erroredHandler.reason = error;
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-
-    if (__DEV__) {
-      if (
-        typeof blockedValue === 'object' &&
-        blockedValue !== null &&
-        blockedValue.$$typeof === REACT_ELEMENT_TYPE
-      ) {
-        const element = blockedValue;
-        // Conceptually the error happened inside this Element but right before
-        // it was rendered. We don't have a client side component to render but
-        // we can add some DebugInfo to explain that this was conceptually a
-        // Server side error that errored inside this element. That way any stack
-        // traces will point to the nearest JSX that errored - e.g. during
-        // serialization.
-        const erroredComponent: ReactComponentInfo = {
-          name: getComponentNameFromType(element.type) || '',
-          owner: element._owner,
-        };
-        // $FlowFixMe[cannot-write]
-        erroredComponent.debugStack = element._debugStack;
-        if (supportsCreateTask) {
-          // $FlowFixMe[cannot-write]
-          erroredComponent.debugTask = element._debugTask;
-        }
-        chunk._debugInfo.push(erroredComponent);
-      }
-    }
-
-    triggerErrorOnChunk(response, chunk, error);
+    rejectReference(response, handler, error);
   }
 
-  promise.then(fulfill, reject);
+  preloading.then(fulfill, reject);
 
   // Return a place holder value for now.
   return null as any;
