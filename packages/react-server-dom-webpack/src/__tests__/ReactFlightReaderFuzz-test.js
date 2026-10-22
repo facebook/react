@@ -2907,9 +2907,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'failing', other: 'fine'},
       }));
 
-    // Reader bug, DEV only.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('Error whose cause is still loading', () =>
+    it('Error whose cause is still loading', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2919,9 +2917,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'holder', other: 'holder'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('Error with cyclic cause', () =>
+    it('Error with cyclic cause', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
