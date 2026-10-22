@@ -66,9 +66,15 @@ export type Options = {
   signal?: AbortSignal,
 };
 
+// The reader is typically created while the renderer that uses it is
+// running, as a page's HTML render reads the Result from a component. The
+// entry point passes in a snapshot of that async context, so that hints
+// emitted later, by whichever consumer runs a component, are dispatched
+// into that renderer.
 export function createFromResult<T>(
   result: Result<T>,
   options: Options,
+  bindToConsumer: null | (<R>(callback: () => R) => R),
 ): Thenable<T> {
   const clientManifest = options.clientManifest;
   const serverTemporaryReferences: void | ServerTemporaryReferenceSet =
@@ -95,6 +101,7 @@ export function createFromResult<T>(
     noServerCall,
     options.encodeFormAction,
     options.temporaryReferences,
+    bindToConsumer,
     typeof options.nonce === 'string' ? options.nonce : undefined,
     options.onError,
   );

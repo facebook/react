@@ -31,7 +31,9 @@ import {
   preloadModule,
   requireModule,
   prepareDestinationForModule,
+  dispatchHint,
 } from './ReactFlightClientConfig';
+import {subscribeToHints} from 'shared/ReactFlightRenderContext';
 import {
   createBoundServerReference,
   registerBoundServerReference,
@@ -112,6 +114,12 @@ export type ResultResponse = {
   _callServer: CallServerCallback,
   _encodeFormAction: void | EncodeFormActionCallback,
   _temporaryReferences: void | TemporaryReferenceSet,
+  // Runs a callback in the async context this consumer was created in,
+  // which is the render consuming the Result. Resource hints are dispatched
+  // through it, since the DOM dispatcher finds the renderer through that
+  // context, and a Server Component may emit a hint after an await, or
+  // while another consumer runs it.
+  _bindToConsumer: null | (<R>(callback: () => R) => R),
   // Client Reference id -> the chunk that loads its module. On the wire each
   // module is its own row, referenced from every place it's used.
   _modules: Map<string, SomeChunk<any>>,
@@ -134,7 +142,9 @@ export type ResultResponse = {
   // aborted. A chunk waiting for a module isn't among them: modules load on
   // this side, like on the client.
   _pendingChunks: Set<SomeChunk<any>>,
-  _abortListener: null | (() => void),
+  // Detaches this consumer from the Result's hints and abort once it is
+  // closed.
+  _unsubscribe: null | (() => void),
   // The first error met while reading the values inside the current element.
   // Like the serializer we report every invalid value in an element and
   // keep reading its siblings, then fail the element once.
@@ -1591,11 +1601,22 @@ function getModuleChunk(
     response._bundlerConfig,
     clientReferenceMetadata,
   );
-  prepareDestinationForModule(
-    response._moduleLoading,
-    response._nonce,
-    clientReferenceMetadata,
-  );
+  const bindToConsumer = response._bindToConsumer;
+  if (bindToConsumer !== null) {
+    bindToConsumer(() =>
+      prepareDestinationForModule(
+        response._moduleLoading,
+        response._nonce,
+        clientReferenceMetadata,
+      ),
+    );
+  } else {
+    prepareDestinationForModule(
+      response._moduleLoading,
+      response._nonce,
+      clientReferenceMetadata,
+    );
+  }
   const promise = preloadModule(clientReference);
   let chunk;
   if (promise) {
@@ -2110,6 +2131,7 @@ export function createResponse(
   callServer: CallServerCallback,
   encodeFormAction: void | EncodeFormActionCallback,
   temporaryReferences: void | TemporaryReferenceSet,
+  bindToConsumer: null | (<R>(callback: () => R) => R),
   nonce: ?string,
   onError: void | ((error: mixed) => ?string),
 ): ResultResponse {
@@ -2123,6 +2145,7 @@ export function createResponse(
     _callServer: callServer,
     _encodeFormAction: encodeFormAction,
     _temporaryReferences: temporaryReferences,
+    _bindToConsumer: bindToConsumer,
     _modules: new Map(),
     _serverReferences: new Map(),
     _onError: onError === undefined ? result.onError : onError,
@@ -2130,7 +2153,7 @@ export function createResponse(
     _recorded: [],
     _visiting: [],
     _pendingChunks: new Set(),
-    _abortListener: null,
+    _unsubscribe: null,
     _readError: null,
     _taintCleanupQueue: null,
     _blobs: null,
@@ -2154,22 +2177,31 @@ export function createResponse(
     }
   };
   signal.addEventListener('abort', abortListener);
-  response._abortListener = abortListener;
+  // Hints emitted so far and from now on, by whichever consumer runs the
+  // component, reach the renderer consuming this Result.
+  const unsubscribeHints = subscribeToHints(result.context, hint => {
+    if (bindToConsumer !== null) {
+      bindToConsumer(() => dispatchHint(hint.code, hint.model));
+    } else {
+      dispatchHint(hint.code, hint.model);
+    }
+  });
+  response._unsubscribe = () => {
+    signal.removeEventListener('abort', abortListener);
+    unsubscribeHints();
+  };
   return response;
 }
 
 // This consumer is done with the Result. Once every consumer is, the cache
 // signal aborts.
 export function close(response: ResultResponse, reason: mixed): void {
-  const abortListener = response._abortListener;
-  if (abortListener === null) {
+  const unsubscribe = response._unsubscribe;
+  if (unsubscribe === null) {
     return;
   }
-  response._abortListener = null;
-  response._result.context.cacheController.signal.removeEventListener(
-    'abort',
-    abortListener,
-  );
+  response._unsubscribe = null;
+  unsubscribe();
   if (enableTaint) {
     cleanupTaintQueue(response);
   }

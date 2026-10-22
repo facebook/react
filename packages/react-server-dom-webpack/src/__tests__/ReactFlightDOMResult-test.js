@@ -40,10 +40,12 @@ function gc() {
 let clientExports;
 let clientModuleError;
 let webpackMap;
+let webpackModules;
 let webpackModuleLoading;
 let React;
 let ReactDOMServer;
 let ReactServer;
+let FlightReactDOM;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
@@ -63,12 +65,14 @@ describe('ReactFlightDOMResult', () => {
       jest.requireActual('react-server-dom-webpack/server.node'),
     );
     ReactServer = require('react');
+    FlightReactDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
+    webpackModules = WebpackMock.webpackModules;
     webpackModuleLoading = WebpackMock.moduleLoading;
 
     jest.resetModules();
@@ -964,6 +968,79 @@ describe('ReactFlightDOMResult', () => {
     );
     await readFromResult(again);
     expect(errors).toEqual([]);
+  });
+
+  // Renders HTML the way a framework does: the reader is created from inside
+  // a component during the Fizz render.
+  async function readHTMLFromWithinFizz(getResponse) {
+    let response = null;
+    function Root() {
+      if (response === null) {
+        response = getResponse();
+      }
+      return use(response);
+    }
+    return readHTML(React.createElement(Root));
+  }
+
+  it('dispatches hints into the renderer consuming the Result', async () => {
+    let resolveLater;
+    const later = new Promise(resolve => {
+      resolveLater = resolve;
+    });
+    async function Page() {
+      FlightReactDOM.preload('/before.css', {as: 'style'});
+      await later;
+      FlightReactDOM.preload('/after.css', {as: 'style'});
+      return ReactServer.createElement('p', null, 'hi');
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(Page, null),
+    );
+    const htmlPromise = readHTMLFromWithinFizz(() => readFromResult(result));
+    await serverAct(() => resolveLater());
+    const html = await htmlPromise;
+    expect(html).toContain('<link rel="preload" href="/before.css" as="style"');
+    expect(html).toContain('<link rel="preload" href="/after.css" as="style"');
+    expect(html).toContain('<p>hi</p>');
+  });
+
+  it('preloads the chunks of a Client Component resolved through an SSR module map', async () => {
+    function ClientComponent() {
+      return React.createElement('span', null, 'Client Component');
+    }
+    // The client build has its own module id and chunk for the component.
+    const ClientComponentOnTheClient = clientExports(
+      ClientComponent,
+      123,
+      'path/to/chunk.js',
+    );
+    const ClientComponentOnTheServer = clientExports(ClientComponent);
+    // The SSR bundle does not have the client module; it maps the client
+    // metadata to its own.
+    const clientId = webpackMap[ClientComponentOnTheClient.$$id].id;
+    delete webpackModules[clientId];
+    const translationMap = {
+      [clientId]: {
+        '*': webpackMap[ClientComponentOnTheServer.$$id],
+      },
+    };
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(ClientComponentOnTheClient, null),
+    );
+    const html = await readHTMLFromWithinFizz(() =>
+      ReactServerDOMClient.createFromResult(result, {
+        clientManifest: webpackMap,
+        serverConsumerManifest: {
+          moduleMap: translationMap,
+          moduleLoading: webpackModuleLoading,
+          serverModuleMap: null,
+        },
+      }),
+    );
+    expect(html).toBe(
+      '<script src="/path/to/chunk.js" async=""></script><span>Client Component</span>',
+    );
   });
 
   it('serializes a Result to a stream started after the last consumer finished', async () => {

@@ -8,4 +8,4 @@
  */
 
 export * from './ReactFlightDOMClientNode';
-export {createFromResult} from './ReactFlightDOMResultClient';
+export {createFromResult} from './ReactFlightDOMResultClientNode';
