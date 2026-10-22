@@ -470,62 +470,109 @@ function loadServerReference<A: Iterable<any>, T>(
 
   const serverReference: ServerReference<T> =
     resolveServerReference<$FlowFixMe>(response._bundlerConfig, id);
+  const bound = metaData.bound;
+  // Bound arguments that are one of our own chunks are read when that chunk
+  // has initialized. Anything else could be a foreign thenable whose `then`
+  // we must not call.
+  const boundChunk: null | SomeChunk<any> =
+    bound instanceof ReactPromise ? (bound as any) : null;
+
+  function bindServerReference(args: any): any {
+    let value = requireServerReference(response, serverReference) as any;
+    if (bound) {
+      const boundArgs: Array<any> = isArray(args) ? args.slice(0) : [];
+      if (boundArgs.length > MAX_BOUND_ARGS) {
+        throw new Error(
+          'Server Function has too many bound arguments. Received ' +
+            boundArgs.length +
+            ' but the limit is ' +
+            MAX_BOUND_ARGS +
+            '.',
+        );
+      }
+      boundArgs.unshift(null); // this
+      value = value.bind.apply(value, boundArgs);
+    }
+    return value;
+  }
+
+  // The bound arguments are waited for like any reference into their chunk,
+  // so that the arguments chunk and the model holding the function wait for
+  // each other the way two models do, rather than through a Promise that no
+  // model can see. The function's chunk is the model the reference fills.
+  function bindBoundServerReference(_response: Response, args: any): any {
+    return bindServerReference(args);
+  }
+  function waitForBoundArguments(): void {
+    const chunk: SomeChunk<any> = boundChunk as any;
+    if (chunk.status === RESOLVED_MODEL) {
+      initializeModelChunk(chunk);
+    }
+    const handler = createInitializationHandler(1);
+    handler.chunk = blockedPromise;
+    const reference = createInitializationReference(
+      handler,
+      {'': null},
+      '',
+      null,
+      bindBoundServerReference,
+      [],
+    );
+    switch (chunk.status) {
+      case INITIALIZED:
+        fulfillReference(response, reference, chunk.value, chunk.reason);
+        break;
+      case ERRORED:
+        rejectReference(response, handler, chunk.reason);
+        break;
+      case BLOCKED:
+      case PENDING:
+        addReferenceListener(chunk, reference);
+        break;
+    }
+  }
+
   // We expect most servers to not really need this because you'd just have all
   // the relevant modules already loaded but it allows for lazy loading of code
   // if needed.
-  const bound = metaData.bound;
-  let serverReferencePromise: null | Thenable<any> =
-    preloadModule(serverReference);
-  if (!serverReferencePromise) {
-    if (bound instanceof ReactPromise) {
-      serverReferencePromise = Promise.resolve(bound);
-    } else {
+  const preloading: null | Thenable<any> = preloadModule(serverReference);
+  if (!preloading) {
+    if (boundChunk === null) {
       // Nothing to preload and no bound arguments to wait for, so we can
       // resolve the reference synchronously.
-      const value = requireServerReference(response, serverReference) as any;
-      resolveServerReferenceChunk(response, blockedPromise, value);
-      return readServerReference(
-        response,
-        blockedPromise,
-        parentObject,
-        key,
-      ) as any;
-    }
-  } else if (bound instanceof ReactPromise) {
-    serverReferencePromise = Promise.all([serverReferencePromise, bound]);
-  }
-
-  function fulfill(): void {
-    let value;
-    try {
-      value = requireServerReference(response, serverReference) as any;
-      if (metaData.bound) {
-        // This promise is coming from us and should have initialized by now.
-        const promiseValue = (metaData.bound as any).value;
-        const boundArgs: Array<any> = isArray(promiseValue)
-          ? promiseValue.slice(0)
-          : [];
-        if (boundArgs.length > MAX_BOUND_ARGS) {
-          throw new Error(
-            'Server Function has too many bound arguments. Received ' +
-              boundArgs.length +
-              ' but the limit is ' +
-              MAX_BOUND_ARGS +
-              '.',
-          );
-        }
-        boundArgs.unshift(null); // this
-        value = value.bind.apply(value, boundArgs);
+      try {
+        resolveServerReferenceChunk(
+          response,
+          blockedPromise,
+          bindServerReference(null),
+        );
+      } catch (error) {
+        triggerErrorOnChunk(response, blockedPromise, error);
       }
-    } catch (error) {
-      triggerErrorOnChunk(response, blockedPromise, error);
-      return;
+    } else {
+      waitForBoundArguments();
     }
-    resolveServerReferenceChunk(response, blockedPromise, value);
+  } else {
+    preloading.then(
+      () => {
+        if (boundChunk !== null) {
+          waitForBoundArguments();
+          return;
+        }
+        let value;
+        try {
+          value = bindServerReference(null);
+        } catch (error) {
+          triggerErrorOnChunk(response, blockedPromise, error);
+          return;
+        }
+        resolveServerReferenceChunk(response, blockedPromise, value);
+      },
+      error => {
+        triggerErrorOnChunk(response, blockedPromise, error);
+      },
+    );
   }
-  serverReferencePromise.then(fulfill, error => {
-    triggerErrorOnChunk(response, blockedPromise, error);
-  });
   return readServerReference(
     response,
     blockedPromise,
@@ -1111,6 +1158,7 @@ function waitForReference<T>(
   path: Array<string>,
 ): T {
   const reference = createInitializationReference(
+    addDependency(),
     parentObject,
     key,
     arrayRoot,
@@ -1140,15 +1188,9 @@ function waitForReference<T>(
   return null as any;
 }
 
-// Creates a reference that fills `parentObject[key]` once it resolves, and
-// counts it against the handler of the model being initialized.
-function createInitializationReference<T>(
-  parentObject: Object,
-  key: string,
-  arrayRoot: null | NestedArrayContext,
-  map: (response: Response, model: any, parentObject: Object, key: string) => T,
-  path: Array<string>,
-): InitializationReference {
+// Counts one more outstanding dependency against the handler of the model
+// being initialized, creating the handler if the model has none yet.
+function addDependency(): InitializationHandler {
   let handler: InitializationHandler;
   if (initializingHandler) {
     handler = initializingHandler;
@@ -1156,7 +1198,19 @@ function createInitializationReference<T>(
   } else {
     handler = initializingHandler = createInitializationHandler(1);
   }
+  return handler;
+}
 
+// Creates a reference that fills `parentObject[key]` once it resolves. It is
+// one of the handler's dependencies.
+function createInitializationReference<T>(
+  handler: InitializationHandler,
+  parentObject: Object,
+  key: string,
+  arrayRoot: null | NestedArrayContext,
+  map: (response: Response, model: any, parentObject: Object, key: string) => T,
+  path: Array<string>,
+): InitializationReference {
   return {
     handler,
     parentObject,
@@ -1171,7 +1225,7 @@ function createInitializationReference<T>(
 // Queues the reference on a chunk that has not initialized yet. It is fulfilled
 // or rejected with the chunk.
 function addReferenceListener(
-  chunk: BlockedChunk<any>,
+  chunk: PendingChunk<any> | BlockedChunk<any>,
   reference: InitializationReference,
 ): void {
   if (chunk.value === null) {
