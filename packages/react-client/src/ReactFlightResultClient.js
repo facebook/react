@@ -10,6 +10,20 @@
 import type {Thenable, ReactKey} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Result} from 'shared/ReactFlightResult';
+import type {
+  ClientReference,
+  ClientReferenceMetadata,
+  ServerConsumerModuleMap,
+  ModuleLoading,
+} from './ReactFlightClientConfig';
+import type {ClientReferenceMetadata as ServerClientReferenceMetadata} from 'react-server/src/ReactFlightServerConfig';
+
+import {
+  resolveClientReference,
+  preloadModule,
+  requireModule,
+  prepareDestinationForModule,
+} from './ReactFlightClientConfig';
 
 import {enableTaint} from 'shared/ReactFeatureFlags';
 
@@ -50,11 +64,20 @@ const emptyRoot = {};
 // because the reader runs in the server consumer's module graph.
 export type ReferenceBundler = {
   isClientReference: (reference: any) => boolean,
+  resolveClientReferenceMetadata: (
+    reference: any,
+  ) => ServerClientReferenceMetadata,
 };
 
 export type ResultResponse = {
   _result: Result<any>,
+  _bundlerConfig: ServerConsumerModuleMap,
+  _moduleLoading: ModuleLoading,
+  _nonce: ?string,
   _bundler: ReferenceBundler,
+  // Client Reference id -> the chunk that loads its module. On the wire each
+  // module is its own row, referenced from every place it's used.
+  _modules: Map<string, SomeChunk<any>>,
   _onError: (error: mixed) => ?string,
   // The first error met while reading the values inside the current element.
   // Like the serializer we report every invalid value in an element and
@@ -62,8 +85,10 @@ export type ResultResponse = {
   _readError: null | Error,
 };
 
-// Chunk status. These are the statuses use() understands.
+// Chunk status. These are the statuses use() understands, plus one for a
+// module that has loaded but hasn't been required yet.
 const PENDING = 'pending';
+const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
@@ -71,6 +96,12 @@ type PendingChunk<T> = {
   status: 'pending',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
+};
+type ResolvedModuleChunk<T> = {
+  status: 'resolved_module',
+  value: ClientReference<T>,
+  reason: null,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
@@ -85,7 +116,11 @@ type ErroredChunk<T> = {
   reason: mixed,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
-type SomeChunk<T> = PendingChunk<T> | InitializedChunk<T> | ErroredChunk<T>;
+type SomeChunk<T> =
+  | PendingChunk<T>
+  | ResolvedModuleChunk<T>
+  | InitializedChunk<T>
+  | ErroredChunk<T>;
 
 // $FlowFixMe[missing-this-annot]
 function ReactPromise(status: any, value: any, reason: any) {
@@ -102,6 +137,14 @@ function reactPromiseThen<T>(
   reject?: (reason: mixed) => mixed,
 ) {
   const chunk: SomeChunk<T> = this;
+  // If we have resolved content, we try to initialize it first which
+  // might put us back into one of the other states.
+  switch (chunk.status) {
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
+  }
+  // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
       if (typeof resolve === 'function') {
@@ -141,6 +184,14 @@ Object.defineProperty(ReactPromise.prototype, 'then', {
 });
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
+  // If we have resolved content, we try to initialize it first which
+  // might put us back into one of the other states.
+  switch (chunk.status) {
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
+  }
+  // The status might have changed after initialization.
   switch (chunk.status) {
     case INITIALIZED:
       return chunk.value;
@@ -175,9 +226,52 @@ function createModelChunk<T>(
   return chunk;
 }
 
+function createResolvedModuleChunk<T>(
+  response: ResultResponse,
+  value: ClientReference<T>,
+): ResolvedModuleChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new ReactPromise(RESOLVED_MODULE, value, null);
+}
+
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
   for (let i = 0; i < listeners.length; i++) {
     listeners[i](value);
+  }
+}
+
+function wakeChunkIfInitialized<T>(
+  chunk: SomeChunk<T>,
+  resolveListeners: Array<(T) => mixed>,
+  rejectListeners: null | Array<(mixed) => mixed>,
+): void {
+  switch (chunk.status) {
+    case INITIALIZED:
+      wakeChunk(resolveListeners, chunk.value);
+      break;
+    case PENDING:
+      if (chunk.value) {
+        for (let i = 0; i < resolveListeners.length; i++) {
+          chunk.value.push(resolveListeners[i]);
+        }
+      } else {
+        chunk.value = resolveListeners;
+      }
+      if (chunk.reason) {
+        if (rejectListeners) {
+          for (let i = 0; i < rejectListeners.length; i++) {
+            chunk.reason.push(rejectListeners[i]);
+          }
+        }
+      } else {
+        chunk.reason = rejectListeners;
+      }
+      break;
+    case ERRORED:
+      if (rejectListeners) {
+        wakeChunk(rejectListeners, chunk.reason);
+      }
+      break;
   }
 }
 
@@ -228,9 +322,18 @@ function resolveModelChunk<T>(
   try {
     value = readModel(response, model, emptyRoot, '');
   } catch (thrown) {
+    response._readError = prevReadError;
+    if (isThenable(thrown)) {
+      // Something inside the model is still loading, like a Client
+      // Component's module. The chunk waits for it and reads the model again
+      // then, the way a row waits for a reference inside it before it
+      // initializes.
+      const retry = () => resolveModelChunk(response, chunk, model);
+      thrown.then(retry, retry);
+      return;
+    }
     // The value at the top of the row can't be read, so the row fails with
     // it, the way a task errors when its model does.
-    response._readError = prevReadError;
     triggerErrorOnChunk(chunk, reportReadError(response, thrown));
     return;
   }
@@ -241,6 +344,41 @@ function resolveModelChunk<T>(
     return;
   }
   fulfillChunk(chunk, value);
+}
+
+function resolveModuleChunk<T>(
+  response: ResultResponse,
+  chunk: SomeChunk<T>,
+  value: ClientReference<T>,
+): void {
+  if (chunk.status !== PENDING) {
+    // We already resolved. We didn't expect to see this.
+    return;
+  }
+  const resolveListeners = chunk.value;
+  const rejectListeners = chunk.reason;
+  const resolvedChunk: ResolvedModuleChunk<T> = chunk as any;
+  resolvedChunk.status = RESOLVED_MODULE;
+  resolvedChunk.value = value;
+  resolvedChunk.reason = null;
+  if (resolveListeners !== null) {
+    initializeModuleChunk(resolvedChunk);
+    wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+  }
+}
+
+function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): void {
+  try {
+    const value: T = requireModule(chunk.value);
+    const initializedChunk: InitializedChunk<T> = chunk as any;
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
+    initializedChunk.reason = null;
+  } catch (error) {
+    const erroredChunk: ErroredChunk<T> = chunk as any;
+    erroredChunk.status = ERRORED;
+    erroredChunk.reason = error;
+  }
 }
 
 function createLazyChunkWrapper<T>(
@@ -405,6 +543,10 @@ function readValue(
   try {
     return readModel(response, value, parent, parentPropertyName);
   } catch (thrown) {
+    if (isThenable(thrown)) {
+      // A reference inside is still loading. Let the row wait for it.
+      throw thrown;
+    }
     const error = reportReadError(response, thrown);
     if (response._readError === null) {
       response._readError = error;
@@ -633,6 +775,15 @@ function readElement(response: ResultResponse, element: any): any {
     }
     return readClientElement(response, element);
   } catch (thrown) {
+    if (isThenable(thrown)) {
+      // Something inside the element is still loading. It becomes a lazy
+      // that reads the element again once that's done, like an element
+      // whose row waits for a reference.
+      const chunk: SomeChunk<any> = createPendingChunk(response);
+      const retry = () => resolveModelChunk(response, chunk, element);
+      thrown.then(retry, retry);
+      return createLazyChunkWrapper(chunk);
+    }
     return createLazyChunkWrapper(
       createErrorChunk(response, reportReadError(response, thrown)),
     );
@@ -657,10 +808,88 @@ function readClientElement(response: ResultResponse, element: any): any {
   if (error !== null) {
     return createLazyChunkWrapper(createErrorChunk(response, error));
   }
+  const type = element.type;
+  if (response._bundler.isClientReference(type)) {
+    // Like on the wire, the type is a lazy over the module, so that the
+    // renderer suspends on this component rather than its parent until the
+    // code has loaded.
+    return createElement(
+      createLazyChunkWrapper(getModuleChunk(response, type)),
+      element.key,
+      readProps,
+    );
+  }
   if (readProps === props) {
     return element;
   }
-  return createElement(element.type, element.key, readProps);
+  return createElement(type, element.key, readProps);
+}
+
+// The chunk loading a Client Reference's module in this consumer's module
+// graph. The module is preloaded as early as possible, like on the wire,
+// but only required when something first reads the chunk.
+function getModuleChunk(
+  response: ResultResponse,
+  reference: any,
+): SomeChunk<any> {
+  const id: string = reference.$$id;
+  const modules = response._modules;
+  const existing = modules.get(id);
+  if (existing !== undefined) {
+    return existing;
+  }
+  // The metadata the server would have serialized is what the consumer's
+  // module map is keyed by, as it is on the wire.
+  const clientReferenceMetadata: ClientReferenceMetadata =
+    response._bundler.resolveClientReferenceMetadata(reference) as any;
+  const clientReference = resolveClientReference<$FlowFixMe>(
+    response._bundlerConfig,
+    clientReferenceMetadata,
+  );
+  prepareDestinationForModule(
+    response._moduleLoading,
+    response._nonce,
+    clientReferenceMetadata,
+  );
+  const promise = preloadModule(clientReference);
+  let chunk;
+  if (promise) {
+    const pendingChunk: SomeChunk<any> = createPendingChunk(response);
+    promise.then(
+      () => resolveModuleChunk(response, pendingChunk, clientReference),
+      error => triggerErrorOnChunk(pendingChunk, error),
+    );
+    chunk = pendingChunk;
+  } else {
+    chunk = createResolvedModuleChunk(response, clientReference);
+  }
+  modules.set(id, chunk);
+  return chunk;
+}
+
+// A Client Reference anywhere else is its module's export. If the module
+// is still loading, the row holding the reference waits for it. If the
+// module failed to load, the row fails with the module's own error, which
+// is this consumer's error and not reported to onError.
+function readClientReferenceValue(response: ResultResponse, reference: any) {
+  const chunk = getModuleChunk(response, reference);
+  switch (chunk.status) {
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
+  }
+  switch (chunk.status) {
+    case INITIALIZED:
+      return chunk.value;
+    case PENDING:
+      // eslint-disable-next-line no-throw-literal
+      throw chunk as any as Thenable<any>;
+    default:
+      if (response._readError === null) {
+        response._readError = chunk.reason as any;
+      }
+      return undefined;
+  }
 }
 
 function throwTaintViolation(message: string) {
@@ -750,6 +979,9 @@ function readModel(
             '- A compiler tries to "inline" JSX instead of using the runtime.',
         );
     }
+    if (response._bundler.isClientReference(value)) {
+      return readClientReferenceValue(response, value);
+    }
     if (enableTaint) {
       checkTaintedObject(response, value);
     }
@@ -835,6 +1067,9 @@ function readModel(
   }
 
   if (typeof value === 'function') {
+    if (response._bundler.isClientReference(value)) {
+      return readClientReferenceValue(response, value);
+    }
     if (enableTaint) {
       checkTaintedObject(response, value);
     }
@@ -883,12 +1118,19 @@ function readModel(
 
 export function createResponse(
   result: Result<any>,
+  bundlerConfig: ServerConsumerModuleMap,
+  moduleLoading: ModuleLoading,
   bundler: ReferenceBundler,
+  nonce: ?string,
   onError: void | ((error: mixed) => ?string),
 ): ResultResponse {
   const response: ResultResponse = {
     _result: result,
+    _bundlerConfig: bundlerConfig,
+    _moduleLoading: moduleLoading,
+    _nonce: nonce,
     _bundler: bundler,
+    _modules: new Map(),
     _onError: onError === undefined ? result.onError : onError,
     _readError: null,
   };

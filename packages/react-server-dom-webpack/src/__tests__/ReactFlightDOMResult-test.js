@@ -12,6 +12,8 @@
 
 import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
+let clientExports;
+let clientModuleError;
 let webpackMap;
 let webpackModuleLoading;
 let React;
@@ -39,6 +41,8 @@ describe('ReactFlightDOMResult', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     const WebpackMock = require('./utils/WebpackMock');
+    clientExports = WebpackMock.clientExports;
+    clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
     webpackModuleLoading = WebpackMock.moduleLoading;
 
@@ -55,6 +59,19 @@ describe('ReactFlightDOMResult', () => {
     Stream = require('stream');
     use = React.use;
   });
+
+  function readFromResult(result, options) {
+    return ReactServerDOMClient.createFromResult(result, {
+      clientManifest: webpackMap,
+      serverConsumerManifest: {
+        // The SSR module graph is the same as the server's in these tests.
+        moduleMap: null,
+        moduleLoading: webpackModuleLoading,
+        serverModuleMap: null,
+      },
+      ...options,
+    });
+  }
 
   function readFromStream(result) {
     const readable = new Stream.PassThrough();
@@ -124,7 +141,7 @@ describe('ReactFlightDOMResult', () => {
       greeting: ReactServer.createElement(Greeting, {name: 'Seb'}),
     };
     const result = ReactServerDOMServer.renderToResult(model);
-    const root = await ReactServerDOMClient.createFromResult(result);
+    const root = await readFromResult(result);
     // Nothing about these needs to change for this consumer.
     expect(root.header).toBe(model.header);
     expect(root.data).toBe(data);
@@ -151,7 +168,7 @@ describe('ReactFlightDOMResult', () => {
     const result = ReactServerDOMServer.renderToResult(
       ReactServer.createElement(App),
     );
-    const response = ReactServerDOMClient.createFromResult(result);
+    const response = readFromResult(result);
     function Root() {
       return use(response);
     }
@@ -175,7 +192,7 @@ describe('ReactFlightDOMResult', () => {
         },
       },
     );
-    const root = await ReactServerDOMClient.createFromResult(result);
+    const root = await readFromResult(result);
     // The element holding the invalid value fails when it's rendered.
     let caught;
     try {
@@ -206,7 +223,7 @@ describe('ReactFlightDOMResult', () => {
         errors.push(error.message);
       },
     });
-    const root = await ReactServerDOMClient.createFromResult(result);
+    const root = await readFromResult(result);
     expect(() => root._init(root._payload)).toThrow();
     return errors;
   }
@@ -298,6 +315,120 @@ describe('ReactFlightDOMResult', () => {
     );
     expect(errors).toEqual(['Cannot pass a secret token to the client']);
     expect(process.env.SECRET).toBe('3e971ecc1485fe78625598bf9b6f85db');
+  });
+
+  it('loads the module of a Client Component when it is rendered', async () => {
+    const Client = clientExports(function Client({label}) {
+      return ReactServer.createElement('span', null, label);
+    });
+    function App() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Client, {label: 'hi'}),
+      );
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App),
+    );
+    const div = await readFromResult(result);
+    // The type is a lazy over the module, like on the wire.
+    expect(div.props.children.type.$$typeof).toBe(Symbol.for('react.lazy'));
+    const response = readFromResult(result);
+    function Root() {
+      return use(response);
+    }
+    expect(await readHTML(React.createElement(Root))).toBe(
+      '<div><span>hi</span></div>',
+    );
+  });
+
+  it('waits for a module that loads asynchronously', async () => {
+    let resolveChunk;
+    const chunkPromise = new Promise(resolve => {
+      resolveChunk = resolve;
+    });
+    const Client = clientExports(
+      function Client({label}) {
+        return ReactServer.createElement('span', null, label);
+      },
+      '42',
+      '/chunk.js',
+      chunkPromise,
+    );
+    const config = clientExports({theme: 'dark'});
+    function App() {
+      // One reference as an element type, one as a value.
+      return ReactServer.createElement(
+        'div',
+        {'data-theme': config.theme},
+        ReactServer.createElement(Client, {label: 'hi'}),
+      );
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App),
+    );
+    const response = readFromResult(result);
+    let html = '';
+    const output = new Stream.Writable({
+      write(chunk, encoding, next) {
+        html += chunk.toString('utf8');
+        next();
+      },
+    });
+    function Root() {
+      return use(response);
+    }
+    await serverAct(() => {
+      const {pipe} = ReactDOMServer.renderToPipeableStream(
+        React.createElement(
+          'section',
+          null,
+          React.createElement(
+            React.Suspense,
+            {fallback: 'loading'},
+            React.createElement(Root),
+          ),
+        ),
+        {
+          onShellReady() {
+            pipe(output);
+          },
+        },
+      );
+    });
+    expect(html).toContain('loading');
+    expect(html).not.toContain('<span>hi</span>');
+    await serverAct(() => resolveChunk());
+    expect(html).toContain('<span>hi</span>');
+  });
+
+  it('fails an element whose module failed to load with the module error', async () => {
+    const errors = [];
+    const Broken = clientModuleError(new Error('module init error'));
+    function App() {
+      return ReactServer.createElement('div', {broken: Broken});
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App),
+      {
+        onError(error) {
+          errors.push(error);
+          return 'digest';
+        },
+      },
+    );
+    const root = await readFromResult(result);
+    let caught;
+    try {
+      root._init(root._payload);
+    } catch (error) {
+      caught = error;
+    }
+    // The module error is this consumer's own and keeps its message in
+    // production; the server's onError never sees it.
+    expect(caught.message).toBe('module init error');
+    expect(errors).toEqual([]);
   });
 
   it('serializes a Result to a stream started after the last consumer finished', async () => {

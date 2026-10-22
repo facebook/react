@@ -938,7 +938,7 @@ describe('ReactFlightDOMResultSuite', () => {
       act = require('internal-test-utils').act;
     });
 
-    it.skip('can render an iterable as an array', async () => {
+    it('can render an iterable as an array', async () => {
       function ItemListClient(props) {
         return <span>{props.items}</span>;
       }
@@ -1318,7 +1318,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  it.skip('can pass an async import that resolves later to an outline object like a Map', async () => {
+  it('can pass an async import that resolves later to an outline object like a Map', async () => {
     let resolve;
     const promise = new Promise(r => (resolve = r));
 
@@ -1563,7 +1563,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  it.skip('should be able to esm compat test module references', async () => {
+  it('should be able to esm compat test module references', async () => {
     const ESMCompatModule = {
       __esModule: true,
       default: function ({greeting}) {
@@ -1609,7 +1609,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  it.skip('should be able to render a named component export', async () => {
+  it('should be able to render a named component export', async () => {
     const Module = {
       Component: function ({greeting}) {
         return greeting + ' World';
@@ -1643,7 +1643,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  it.skip('should be able to render a module split named component export', async () => {
+  it('should be able to render a module split named component export', async () => {
     const Module = {
       // This gets split into a separate module from the original one.
       split: function ({greeting}) {
@@ -1678,7 +1678,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  it.skip('should unwrap async module references', async () => {
+  it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
     });
@@ -1717,7 +1717,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
-  it.skip('should unwrap async module references using use', async () => {
+  it('should unwrap async module references using use', async () => {
     const AsyncModule = Promise.resolve('Async Text');
 
     function Print({response}) {
@@ -1752,7 +1752,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>Async Text</p>');
   });
 
-  it.skip('should unwrap async ESM module references', async () => {
+  it('should unwrap async ESM module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
     });
@@ -1791,7 +1791,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
-  it.skip('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
+  it('should error when a bundler uses async ESM modules with createClientModuleProxy', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule() {
       return 'This should not be rendered';
     });
@@ -1844,7 +1844,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('should be able to import a name called "then"', async () => {
+  it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
         return 'and then';
@@ -1950,7 +1950,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(dotting).not.toThrow();
   });
 
-  it.skip('can render a client Context.Provider from a server component', async () => {
+  it('can render a client Context.Provider from a server component', async () => {
     // Create a context in a client module
     const TestContext = React.createContext('default');
     const ClientModule = clientExports({
@@ -2071,7 +2071,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(result).toBe('<div>Cycle resolved</div>');
   });
 
-  it.skip('should progressively reveal server components', async () => {
+  it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
     // Client Components
@@ -2377,7 +2377,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should preserve state of client components on refetch', async () => {
+  it('should preserve state of client components on refetch', async () => {
     // Client
 
     function Page({response}) {
@@ -2509,7 +2509,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
-  it.skip('should be able to recover from a direct reference erroring client-side', async () => {
+  it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -2553,7 +2553,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should be able to recover from a direct reference erroring client-side async', async () => {
+  it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -2695,7 +2695,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toContain('hello from client component');
   });
 
-  it.skip('should be able to recover from a direct reference erroring server-side', async () => {
+  it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
     const ClientComponent = clientExports(function ({prop}) {
@@ -2758,7 +2758,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(reportedErrors).toEqual(['bug in the bundler']);
   });
 
-  it.skip('should pass a Promise through props and be able use() it on the client', async () => {
+  it('should pass a Promise through props and be able use() it on the client', async () => {
     async function getData() {
       return 'async hello';
     }
@@ -2800,7 +2800,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>async hello</p>');
   });
 
-  it.skip('should throw on the client if a passed promise eventually rejects', async () => {
+  it('should throw on the client if a passed promise eventually rejects', async () => {
     const reportedErrors = [];
     const theError = new Error('Server throw');
 
@@ -3442,7 +3442,7 @@ describe('ReactFlightDOMResultSuite', () => {
     }
   });
 
-  it.skip('should be able to render a client reference as return value', async () => {
+  it('should be able to render a client reference as return value', async () => {
     const ClientModule = clientExports({
       text: 'Hello World',
     });
@@ -5513,7 +5513,7 @@ describe('ReactFlightDOMResultSuite', () => {
       act = require('internal-test-utils').act;
     });
 
-    it.skip('can transport BigInt', async () => {
+    it('can transport BigInt', async () => {
       function ComponentClient({prop}) {
         return `prop: ${prop} (${typeof prop})`;
       }
@@ -5535,7 +5535,7 @@ describe('ReactFlightDOMResultSuite', () => {
       );
     });
 
-    it.skip('can transport Date', async () => {
+    it('can transport Date', async () => {
       function ComponentClient({prop}) {
         return `prop: ${prop.toISOString()}`;
       }
