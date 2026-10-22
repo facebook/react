@@ -38,6 +38,7 @@ import {
   resolveDebugMessage,
   closeDebugChannel,
   createResult,
+  attachAbortSignalToResult,
 } from 'react-server/src/ReactFlightServer';
 
 import {isResult} from 'shared/ReactFlightResult';
@@ -173,13 +174,14 @@ type ResultOptions = {
   onError?: (error: mixed) => void,
   identifierPrefix?: string,
   temporaryReferences?: TemporaryReferenceSet,
+  signal?: AbortSignal,
 };
 
 function renderToResult<T: ReactClientValue>(
   model: T,
   options?: ResultOptions,
 ): Result<T> {
-  return createResult(
+  const result = createResult(
     model,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
@@ -187,6 +189,10 @@ function renderToResult<T: ReactClientValue>(
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
   );
+  if (options && options.signal) {
+    attachAbortSignalToResult(result, options.signal);
+  }
+  return result;
 }
 
 function renderToPipeableStream(

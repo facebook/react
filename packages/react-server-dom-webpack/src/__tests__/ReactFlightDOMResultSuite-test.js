@@ -3465,7 +3465,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('Hello World');
   });
 
-  it.skip('can abort synchronously during render', async () => {
+  it('can abort synchronously during render', async () => {
     function Sibling() {
       return <p>sibling</p>;
     }
@@ -3554,7 +3554,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('can abort during render in an async tick', async () => {
+  it('can abort during render in an async tick', async () => {
     async function Sibling() {
       return <p>sibling</p>;
     }
@@ -3646,7 +3646,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('can abort during render in a lazy initializer for a component', async () => {
+  it('can abort during render in a lazy initializer for a component', async () => {
     function Sibling() {
       return <p>sibling</p>;
     }
@@ -3738,7 +3738,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('can abort during render in a lazy initializer for an element', async () => {
+  it('can abort during render in a lazy initializer for an element', async () => {
     function Sibling() {
       return <p>sibling</p>;
     }
@@ -3828,7 +3828,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('can abort during a synchronous thenable resolution', async () => {
+  it('can abort during a synchronous thenable resolution', async () => {
     function Sibling() {
       return <p>sibling</p>;
     }
@@ -3917,7 +3917,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('wont serialize thenables that were not already settled by the time an abort happens', async () => {
+  it('wont serialize thenables that were not already settled by the time an abort happens', async () => {
     function App() {
       return (
         <div>
@@ -4006,7 +4006,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('can error synchronously after aborting without an unhandled rejection error', async () => {
+  it('can error synchronously after aborting without an unhandled rejection error', async () => {
     function App() {
       return (
         <div>
@@ -4074,7 +4074,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('can error synchronously after aborting in a synchronous Component', async () => {
+  it('can error synchronously after aborting in a synchronous Component', async () => {
     const rejectError = new Error('bam!');
     const rejectedPromise = Promise.reject(rejectError);
     rejectedPromise.catch(() => {});
@@ -4465,7 +4465,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('rejecting a thenable after an abort before flush should not lead to a frozen readable', async () => {
+  it('rejecting a thenable after an abort before flush should not lead to a frozen readable', async () => {
     const ClientComponent = clientExports(function (props: {
       promise: Promise<void>,
     }) {

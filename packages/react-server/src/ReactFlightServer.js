@@ -130,6 +130,8 @@ import {
   getResultTask,
   fulfillResultTask,
   rejectResultTask,
+  retainResult,
+  releaseResult,
 } from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
@@ -615,6 +617,9 @@ export type Request = {
   // The Result this request serializes, if any. Server Components are read
   // from its tasks instead of rendered, and it owns the render context.
   result: null | Result<any>,
+  // Detaches this request from the Result's hints and abort once it is
+  // done, so the Result doesn't keep a finished request alive.
+  unsubscribe: null | (() => void),
   nextChunkId: number,
   pendingChunks: number,
   abortableTasks: Set<Task>,
@@ -736,10 +741,13 @@ function RequestInstance(
   if (enableTaint) {
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
-  const context =
-    result === null
-      ? createRenderContext(createHints(), identifierPrefix)
-      : result.context;
+  let context;
+  if (result === null) {
+    context = createRenderContext(createHints(), identifierPrefix);
+  } else {
+    context = result.context;
+    retainResult(result);
+  }
   this.type = type;
   this.status = OPENING;
   this.flushScheduled = false;
@@ -748,6 +756,7 @@ function RequestInstance(
   this.bundlerConfig = bundlerConfig;
   this.context = context;
   this.result = result;
+  this.unsubscribe = null;
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.abortableTasks = abortSet;
@@ -847,10 +856,23 @@ function RequestInstance(
   pingedTasks.push(rootTask);
 
   const request = this;
-  subscribeToHints(context, hint => {
+  const unsubscribeHints = subscribeToHints(context, hint => {
     emitHintChunk(request, hint.code, hint.model);
     enqueueFlush(request);
   });
+  if (result !== null) {
+    // Aborting the Result aborts every consumer, this request included.
+    const signal = result.abortController.signal;
+    const abortListener = () => abort(request, signal.reason);
+    signal.addEventListener('abort', abortListener);
+    this.unsubscribe = () => {
+      unsubscribeHints();
+      signal.removeEventListener('abort', abortListener);
+    };
+    if (signal.aborted) {
+      abort(request, signal.reason);
+    }
+  }
 }
 
 export function createRequest(
@@ -2104,6 +2126,14 @@ function retryResultTask(result: Result<any>, task: ResultTask): void {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
+  const signal = result.context.cacheController.signal;
+  if (signal.aborted) {
+    // Nothing renders after an abort. The task errors with the abort reason
+    // like a request task would.
+    rejectResultTask(task, signal.reason);
+    return;
+  }
+  result.abortableTasks.add(task);
   // $FlowFixMe[constant-condition]
   if (supportsRequestStorage) {
     // The component's continuations after an await find the context here,
@@ -2115,6 +2145,7 @@ function retryResultTask(result: Result<any>, task: ResultTask): void {
 }
 
 function performResultTask(result: Result<any>, task: ResultTask): void {
+  const signal = result.context.cacheController.signal;
   const element = task.model;
   const prevDispatcher = ReactSharedInternals.H;
   const prevContext = currentContext;
@@ -2136,8 +2167,26 @@ function performResultTask(result: Result<any>, task: ResultTask): void {
     // The secondArg is always undefined in Server Components since refs error early.
     const secondArg = undefined;
     const value = Component(element.props, secondArg);
+    if (signal.aborted) {
+      // The component aborted the Result while rendering. abortResult already
+      // rejected this task, so we just make sure a returned promise doesn't
+      // end up as an unhandled rejection.
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        typeof value.then === 'function' &&
+        !isClientReference(value)
+      ) {
+        value.then(voidHandler, voidHandler);
+      }
+      return;
+    }
+    result.abortableTasks.delete(task);
     fulfillResultTask(task, value);
   } catch (thrownValue) {
+    if (signal.aborted) {
+      return;
+    }
     const x =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
@@ -2158,6 +2207,7 @@ function performResultTask(result: Result<any>, task: ResultTask): void {
         return;
       }
     }
+    result.abortableTasks.delete(task);
     rejectResultTask(task, x);
   } finally {
     ReactSharedInternals.H = prevDispatcher;
@@ -2168,6 +2218,47 @@ function performResultTask(result: Result<any>, task: ResultTask): void {
       prepareToUseHooksForRequest(prevContext);
     }
   }
+}
+
+// Aborts every consumer of the Result and its cache signal, and errors
+// every task whose component hasn't returned with the reason. Tasks that
+// completed stay readable, so a consumer can finish with what it has. The
+// reason is left for the consumers to report: a request reports it when it
+// aborts, a prerender halts without reporting.
+export function abortResult(result: Result<any>, reason: mixed): void {
+  const controller = result.abortController;
+  if (controller.signal.aborted) {
+    return;
+  }
+  // The consumers are aborted first so that a request is already aborting,
+  // and doesn't report the reason as an error, by the time the rejected
+  // tasks ping it.
+  controller.abort(reason);
+  result.context.cacheController.abort(reason);
+  const abortableTasks = result.abortableTasks;
+  if (abortableTasks.size > 0) {
+    abortableTasks.forEach(task => rejectResultTask(task, reason));
+    abortableTasks.clear();
+  }
+}
+
+// Aborts the Result when the caller's signal aborts, the way
+// attachAbortSignal does for a request.
+export function attachAbortSignalToResult(
+  result: Result<any>,
+  signal: AbortSignal,
+): void {
+  if (signal.aborted) {
+    abortResult(result, signal.reason);
+    return;
+  }
+  signal.addEventListener(
+    'abort',
+    () => {
+      abortResult(result, signal.reason);
+    },
+    {signal: result.abortController.signal},
+  );
 }
 
 function warnForMissingKey(
@@ -4667,7 +4758,25 @@ function fatalError(request: Request, error: mixed): void {
       cause: error,
     },
   );
-  request.context.cacheController.abort(abortReason);
+  abortCacheSignal(request, abortReason);
+}
+
+// A request that serializes a Result shares its cache signal with the other
+// consumers of that Result, so it only releases its hold on it. It also
+// stops listening to the Result, which would otherwise keep this request
+// alive for as long as the Result is read by someone else.
+function abortCacheSignal(request: Request, reason: mixed): void {
+  const result = request.result;
+  if (result === null) {
+    request.context.cacheController.abort(reason);
+  } else {
+    const unsubscribe = request.unsubscribe;
+    if (unsubscribe !== null) {
+      request.unsubscribe = null;
+      unsubscribe();
+    }
+    releaseResult(result, reason);
+  }
 }
 
 function serializeErrorValue(request: Request, error: Error): string {
@@ -6897,7 +7006,7 @@ function flushCompletedChunks(request: Request): void {
       const abortReason = new Error(
         'This render completed successfully. All cacheSignals are now aborted to allow clean up of any unused resources.',
       );
-      request.context.cacheController.abort(abortReason);
+      abortCacheSignal(request, abortReason);
     }
     if (__DEV__) {
       const debugDestination = request.debugDestination;
@@ -7104,7 +7213,7 @@ export function abort(request: Request, reason: mixed): void {
     if (enableProfilerTimer) {
       request.abortTime = performance.now();
     }
-    request.context.cacheController.abort(reason);
+    abortCacheSignal(request, reason);
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       if (request.type === PRERENDER) {

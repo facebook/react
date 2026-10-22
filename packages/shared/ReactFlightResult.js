@@ -135,6 +135,16 @@ export type Result<T> = {
   // Server-owned. Runs a task's Server Component, under the Result's render
   // context and hooks dispatcher.
   retryTask: (result: Result<any>, task: ResultTask) => void,
+  // Tasks whose component hasn't returned yet, to reject if the Result is
+  // aborted.
+  abortableTasks: Set<ResultTask>,
+  // Aborted when the Result is. Every consumer listens to it. The cache
+  // signal is a different one, since it also ends once the last consumer is
+  // done, and a consumer may start after that.
+  abortController: AbortController,
+  // How many consumers are reading the Result. The cache signal stays open
+  // until the last one is done.
+  consumers: number,
   onError: (error: mixed) => ?string,
   temporaryReferences: void | TemporaryReferenceSet,
   // DEV-only
@@ -172,6 +182,9 @@ function ResultInstance(
   this.context = context;
   this.tasks = new WeakMap();
   this.retryTask = retryTask;
+  this.abortableTasks = new Set();
+  this.abortController = new AbortController();
+  this.consumers = 0;
   this.onError = onError;
   this.temporaryReferences = temporaryReferences;
   this.environmentName = null;
@@ -209,4 +222,16 @@ export function getResultTask(
     result.retryTask(result, task);
   }
   return task;
+}
+
+export function retainResult(result: Result<any>): void {
+  result.consumers++;
+}
+
+// Once the last consumer is done, the cache signal aborts so that any
+// pending work tied to it can clean up, like at the end of a request.
+export function releaseResult(result: Result<any>, reason: mixed): void {
+  if (--result.consumers === 0) {
+    result.context.cacheController.abort(reason);
+  }
 }
