@@ -1144,13 +1144,14 @@ function initializeDebugChunk(
     isInitializingDebugInfo = true;
     try {
       if (debugChunk.status === RESOLVED_MODEL) {
-        // Find the index of this debug info by walking the linked list.
-        let idx = debugInfo.length;
+        // The entry's index is its position in the chain: the older chunks
+        // come first, whether they have initialized yet or not. Debug info
+        // referenced by this chunk is added only once it completes, after
+        // these.
+        let idx = 0;
         let c = debugChunk._debugChunk;
         while (c !== null) {
-          if (c.status !== INITIALIZED) {
-            idx++;
-          }
+          idx++;
           c = c._debugChunk;
         }
         // Initializing the model for the first time.
@@ -1182,34 +1183,67 @@ function initializeDebugChunk(
             throw initializedChunk.reason;
         }
       } else {
-        switch (debugChunk.status) {
-          case INITIALIZED: {
-            // Already done.
-            break;
+        // The debug chunks were initialized as they arrived, before this
+        // chunk had parsed, so the references that fill their entries belong
+        // to no handler. This chunk's handler takes them over: the chunk is
+        // complete only once every entry is filled.
+        let c: null | SomeChunk<any> = debugChunk;
+        while (c !== null) {
+          switch (c.status) {
+            case BLOCKED:
+            case PENDING:
+            case PENDING_WEAK:
+              adoptDebugReferences(c, debugInfo);
+              break;
+            case ERRORED:
+              throw c.reason;
           }
-          case BLOCKED:
-          case PENDING:
-          case PENDING_WEAK: {
-            // Signal to the caller that we need to wait.
-            waitForReference(
-              debugChunk,
-              {}, // noop, since we'll have already added an entry to debug info
-              'debug', // noop, but we need it to not be empty string since that indicates the root object
-              response,
-              initializeDebugInfo,
-              [''], // path
-              true,
-            );
-            break;
-          }
-          default:
-            throw debugChunk.reason;
+          c = c._debugChunk;
         }
       }
     } catch (error) {
       triggerErrorOnChunk(response, chunk, error);
     } finally {
       isInitializingDebugInfo = prevIsInitializingDebugInfo;
+    }
+  }
+}
+
+function adoptDebugReferences(
+  debugChunk: SomeChunk<any>,
+  debugInfo: Array<ReactDebugInfoEntry>,
+): void {
+  if (__DEV__) {
+    const listeners: null | Array<InitializationReference | (any => mixed)> =
+      debugChunk.value as any;
+    if (listeners === null) {
+      return;
+    }
+    for (let i = 0; i < listeners.length; i++) {
+      const listener = listeners[i];
+      if (
+        typeof listener === 'function' ||
+        listener.done ||
+        listener.parentObject !== debugInfo ||
+        listener.map !== initializeDebugInfo
+      ) {
+        continue;
+      }
+      const orphan = listener.handler;
+      if (orphan.chunk !== null) {
+        // Already some chunk's reference.
+        continue;
+      }
+      orphan.deps--;
+      orphan.outstanding--;
+      const handler = addDependency();
+      listener.handler = handler;
+      handler.outstanding++;
+      if (handler.references === null) {
+        handler.references = [listener];
+      } else {
+        handler.references.push(listener);
+      }
     }
   }
 }
