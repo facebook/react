@@ -419,7 +419,7 @@ describe('ReactFlightDOMResultSuite', () => {
     });
   }
 
-  it.skip('should be able to load a server reference on a consuming server if a mapping exists', async () => {
+  it('should be able to load a server reference on a consuming server if a mapping exists', async () => {
     function greet(name) {
       return 'hi, ' + name;
     }
@@ -448,7 +448,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(result.boundMethod()).toBe('hi, there');
   });
 
-  it.skip('should be able to load a server reference on a consuming server if a mapping exists (async)', async () => {
+  it('should be able to load a server reference on a consuming server if a mapping exists (async)', async () => {
     let resolve;
     const chunkPromise = new Promise(r => (resolve = r));
 
@@ -485,7 +485,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(result.boundMethod()).toBe('hi, there');
   });
 
-  it.skip('should load a server reference on a consuming server and pass it back', async () => {
+  it('should load a server reference on a consuming server and pass it back', async () => {
     function greet(name) {
       return 'hi, ' + name;
     }
@@ -532,7 +532,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(replyResult.boundMethod()).toBe('hi, there');
   });
 
-  it.skip('can pass JSX through a round trip using temporary references', async () => {
+  it('can pass JSX through a round trip using temporary references', async () => {
     function Component() {
       return <div />;
     }
@@ -577,7 +577,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(response.children).toBe(children);
   });
 
-  it.skip('can pass JSX as root model through a round trip using temporary references', async () => {
+  it('can pass JSX as root model through a round trip using temporary references', async () => {
     const jsx = <div />;
 
     const temporaryReferences =
@@ -615,7 +615,7 @@ describe('ReactFlightDOMResultSuite', () => {
     await expect(response).toBe(jsx);
   });
 
-  it.skip('can pass a promise that resolves to JSX through a round trip using temporary references', async () => {
+  it('can pass a promise that resolves to JSX through a round trip using temporary references', async () => {
     const jsx = <div />;
     const promise = Promise.resolve(jsx);
 
@@ -657,7 +657,7 @@ describe('ReactFlightDOMResultSuite', () => {
     await expect(response.promise).resolves.toBe(jsx);
   });
 
-  it.skip('can return the same object using temporary references', async () => {
+  it('can return the same object using temporary references', async () => {
     const obj = {
       this: {is: 'a large object'},
       with: {many: 'properties in it'},

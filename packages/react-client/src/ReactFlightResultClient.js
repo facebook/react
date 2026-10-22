@@ -14,16 +14,28 @@ import type {
   ClientReference,
   ClientReferenceMetadata,
   ServerConsumerModuleMap,
+  ServerManifest,
   ModuleLoading,
 } from './ReactFlightClientConfig';
 import type {ClientReferenceMetadata as ServerClientReferenceMetadata} from 'react-server/src/ReactFlightServerConfig';
+import type {
+  CallServerCallback,
+  EncodeFormActionCallback,
+} from './ReactFlightReplyClient';
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 
 import {
   resolveClientReference,
+  resolveServerReference,
   preloadModule,
   requireModule,
   prepareDestinationForModule,
 } from './ReactFlightClientConfig';
+import {
+  createBoundServerReference,
+  registerBoundServerReference,
+} from './ReactFlightReplyClient';
+import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
 import {enableTaint} from 'shared/ReactFeatureFlags';
 
@@ -69,17 +81,29 @@ export type ReferenceBundler = {
   resolveClientReferenceMetadata: (
     reference: any,
   ) => ServerClientReferenceMetadata,
+  isServerReference: (reference: any) => boolean,
+  getServerReferenceId: (reference: any) => string,
+  getServerReferenceBoundArguments: (reference: any) => null | Array<any>,
+  // The id the server registered a temporary reference under, if any.
+  resolveTemporaryReference: (value: any) => void | string,
 };
 
 export type ResultResponse = {
   _result: Result<any>,
   _bundlerConfig: ServerConsumerModuleMap,
+  _serverReferenceConfig: null | ServerManifest,
   _moduleLoading: ModuleLoading,
   _nonce: ?string,
   _bundler: ReferenceBundler,
+  _callServer: CallServerCallback,
+  _encodeFormAction: void | EncodeFormActionCallback,
+  _temporaryReferences: void | TemporaryReferenceSet,
   // Client Reference id -> the chunk that loads its module. On the wire each
   // module is its own row, referenced from every place it's used.
   _modules: Map<string, SomeChunk<any>>,
+  // Server Reference -> the chunk with the function this consumer gets for
+  // it, which is also one row on the wire.
+  _serverReferences: Map<any, SomeChunk<any>>,
   _onError: (error: mixed) => ?string,
   // Server object -> what this consumer got for it, when that is a different
   // object: a container that was copied because something inside it
@@ -324,6 +348,14 @@ function createErrorChunk<T>(
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new ReactPromise(ERRORED, null, error, response, null as any);
+}
+
+function createInitializedChunk<T>(
+  response: ResultResponse,
+  value: T,
+): InitializedChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new ReactPromise(INITIALIZED, value, null, response, null as any);
 }
 
 // A chunk for a model that's already here, read right away.
@@ -1291,7 +1323,15 @@ function getModuleChunk(
 // module failed to load, the row fails with the module's own error, which
 // is this consumer's error and not reported to onError.
 function readClientReferenceValue(response: ResultResponse, reference: any) {
-  const chunk = getModuleChunk(response, reference);
+  return readReferenceChunk(response, getModuleChunk(response, reference));
+}
+
+// Reads a chunk referenced from a row, like a direct $ reference on the
+// wire: the row waits for it or fails with it.
+function readReferenceChunk(
+  response: ResultResponse,
+  chunk: SomeChunk<any>,
+): any {
   switch (chunk.status) {
     case RESOLVED_MODULE:
       initializeModuleChunk(chunk);
@@ -1309,6 +1349,90 @@ function readClientReferenceValue(response: ResultResponse, reference: any) {
       }
       return undefined;
   }
+}
+
+// A Server Reference reads as what the wire would give this consumer for
+// it. With a server module map that's the function itself, loaded from this
+// consumer's module graph with the bound arguments applied, the same way
+// loadServerReference does on the client. Without one it's a proxy that
+// calls the server. Either way it carries the form action metadata.
+function readServerReference(
+  response: ResultResponse,
+  reference: any,
+  context: KeyContext,
+): any {
+  const serverReferences = response._serverReferences;
+  const existing = serverReferences.get(reference);
+  if (existing !== undefined) {
+    return readReferenceChunk(response, existing);
+  }
+  const bundler = response._bundler;
+  const id = bundler.getServerReferenceId(reference);
+  const boundArgs = bundler.getServerReferenceBoundArguments(reference);
+  const args =
+    boundArgs === null ? null : readArray(response, boundArgs, context);
+  const bound = args === null ? null : Promise.resolve(args);
+  let chunk;
+  if (!response._serverReferenceConfig) {
+    // In the normal case, we can't load this Server Reference in the current environment and
+    // we just return a proxy to it.
+    const proxy = createBoundServerReference<Array<any>, any>(
+      {id, bound},
+      response._callServer,
+      response._encodeFormAction,
+    );
+    chunk = createInitializedChunk(response, proxy);
+  } else {
+    // If we have a module mapping we can load the real version of this Server Reference.
+    const serverReference: ClientReference<any> =
+      resolveServerReference<$FlowFixMe>(response._serverReferenceConfig, id);
+    const pendingChunk: SomeChunk<any> = createPendingModuleChunk(response);
+    const load = () => {
+      let fn;
+      try {
+        fn = requireModule(serverReference);
+        if (args !== null) {
+          fn = fn.bind.apply(fn, [null].concat(args));
+        }
+        registerBoundServerReference(fn, id, bound, response._encodeFormAction);
+      } catch (error) {
+        triggerErrorOnChunk(pendingChunk, error);
+        return;
+      }
+      fulfillChunk(pendingChunk, fn);
+    };
+    const promise = preloadModule(serverReference);
+    if (promise) {
+      promise.then(load, error => triggerErrorOnChunk(pendingChunk, error));
+    } else {
+      load();
+    }
+    chunk = pendingChunk;
+  }
+  serverReferences.set(reference, chunk);
+  return readReferenceChunk(response, chunk);
+}
+
+// A value the server registered as a temporary reference reads as the value
+// this consumer registered under the same id, like a $T row does.
+function readTemporaryReferenceValue(
+  response: ResultResponse,
+  value: any,
+): void | any {
+  const id = response._bundler.resolveTemporaryReference(value);
+  if (id === undefined) {
+    return undefined;
+  }
+  const temporaryReferences = response._temporaryReferences;
+  if (temporaryReferences === undefined) {
+    throw new Error(
+      'Missing a temporary reference set but the RSC response returned a temporary reference. ' +
+        'Pass a temporaryReference option with the set that was used with the reply.',
+    );
+  }
+  // The server's set holds the reference without the $ that the wire adds
+  // back and the client's set is keyed by.
+  return readTemporaryReference(temporaryReferences, '$' + id);
 }
 
 function throwTaintViolation(message: string) {
@@ -1408,6 +1532,16 @@ function readModel(
     if (response._bundler.isClientReference(value)) {
       return readClientReferenceValue(response, value);
     }
+    if (response._bundler.isServerReference(value)) {
+      // An object registered as a Server Reference. This must be checked
+      // before the thenable case below so that a reference that happens to
+      // be a Promise is read by reference instead of being awaited.
+      return readServerReference(response, value, context);
+    }
+    const temporaryReference = readTemporaryReferenceValue(response, value);
+    if (temporaryReference !== undefined) {
+      return temporaryReference;
+    }
     if (enableTaint) {
       checkTaintedObject(response, value);
     }
@@ -1501,6 +1635,13 @@ function readModel(
     if (response._bundler.isClientReference(value)) {
       return readClientReferenceValue(response, value);
     }
+    if (response._bundler.isServerReference(value)) {
+      return readServerReference(response, value, context);
+    }
+    const temporaryReference = readTemporaryReferenceValue(response, value);
+    if (temporaryReference !== undefined) {
+      return temporaryReference;
+    }
     if (enableTaint) {
       checkTaintedObject(response, value);
     }
@@ -1550,18 +1691,27 @@ function readModel(
 export function createResponse(
   result: Result<any>,
   bundlerConfig: ServerConsumerModuleMap,
+  serverReferenceConfig: null | ServerManifest,
   moduleLoading: ModuleLoading,
   bundler: ReferenceBundler,
+  callServer: CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
+  temporaryReferences: void | TemporaryReferenceSet,
   nonce: ?string,
   onError: void | ((error: mixed) => ?string),
 ): ResultResponse {
   const response: ResultResponse = {
     _result: result,
     _bundlerConfig: bundlerConfig,
+    _serverReferenceConfig: serverReferenceConfig,
     _moduleLoading: moduleLoading,
     _nonce: nonce,
     _bundler: bundler,
+    _callServer: callServer,
+    _encodeFormAction: encodeFormAction,
+    _temporaryReferences: temporaryReferences,
     _modules: new Map(),
+    _serverReferences: new Map(),
     _onError: onError === undefined ? result.onError : onError,
     _models: new Map(),
     _recorded: [],

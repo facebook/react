@@ -7,13 +7,15 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
 import type {Result} from 'shared/ReactFlightResult';
 import type {
   ServerConsumerModuleMap,
   ModuleLoading,
   ServerManifest,
 } from 'react-client/src/ReactFlightClientConfig';
+import type {TemporaryReferenceSet} from 'react-client/src/ReactFlightTemporaryReferences';
+import type {TemporaryReferenceSet as ServerTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 import type {ClientManifest} from '../server/ReactFlightServerConfigWebpackBundler';
 
 import {
@@ -21,8 +23,29 @@ import {
   getRoot,
 } from 'react-client/src/ReactFlightResultClient';
 
-import {isClientReference} from '../ReactFlightWebpackReferences';
-import {resolveClientReferenceMetadata} from '../server/ReactFlightServerConfigWebpackBundler';
+import {
+  isClientReference,
+  isServerReference,
+} from '../ReactFlightWebpackReferences';
+import {
+  resolveClientReferenceMetadata,
+  getServerReferenceId,
+  getServerReferenceBoundArguments,
+} from '../server/ReactFlightServerConfigWebpackBundler';
+import {resolveTemporaryReference} from 'react-server/src/ReactFlightServerTemporaryReferences';
+
+function noServerCall() {
+  throw new Error(
+    'Server Functions cannot be called during initial render. ' +
+      'This would create a fetch waterfall. Try to use a Server Component ' +
+      'to pass data to Client Components instead.',
+  );
+}
+
+type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
 
 export type Options = {
   // The manifest the Server Components were rendered with, to turn their
@@ -35,6 +58,8 @@ export type Options = {
     serverModuleMap: null | ServerManifest,
   },
   nonce?: string,
+  encodeFormAction?: EncodeFormActionCallback,
+  temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => ?string,
 };
 
@@ -43,15 +68,30 @@ export function createFromResult<T>(
   options: Options,
 ): Thenable<T> {
   const clientManifest = options.clientManifest;
+  const serverTemporaryReferences: void | ServerTemporaryReferenceSet =
+    result.temporaryReferences;
   const response = createResponse(
     result,
     options.serverConsumerManifest.moduleMap,
+    options.serverConsumerManifest.serverModuleMap,
     options.serverConsumerManifest.moduleLoading,
     {
       isClientReference,
       resolveClientReferenceMetadata: reference =>
         resolveClientReferenceMetadata(clientManifest, reference),
+      isServerReference,
+      getServerReferenceId: reference =>
+        getServerReferenceId(clientManifest, reference),
+      getServerReferenceBoundArguments: reference =>
+        getServerReferenceBoundArguments(clientManifest, reference),
+      resolveTemporaryReference: value =>
+        serverTemporaryReferences === undefined
+          ? undefined
+          : resolveTemporaryReference(serverTemporaryReferences, value),
     },
+    noServerCall,
+    options.encodeFormAction,
+    options.temporaryReferences,
     typeof options.nonce === 'string' ? options.nonce : undefined,
     options.onError,
   );
