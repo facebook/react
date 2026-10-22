@@ -17,6 +17,7 @@ import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {Thenable} from 'shared/ReactTypes';
+import type {Result} from 'shared/ReactFlightResult';
 
 import type {Duplex} from 'stream';
 
@@ -36,7 +37,10 @@ import {
   attachAbortSignal,
   resolveDebugMessage,
   closeDebugChannel,
+  createResult,
 } from 'react-server/src/ReactFlightServer';
+
+import {isResult} from 'shared/ReactFlightResult';
 
 import {
   createResponse,
@@ -163,11 +167,36 @@ type PipeableStream = {
   pipe<T: Writable>(destination: T): T,
 };
 
+type ResultOptions = {
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
+  onError?: (error: mixed) => void,
+  identifierPrefix?: string,
+  temporaryReferences?: TemporaryReferenceSet,
+};
+
+function renderToResult<T: ReactClientValue>(
+  model: T,
+  options?: ResultOptions,
+): Result<T> {
+  return createResult(
+    model,
+    options ? options.onError : undefined,
+    options ? options.identifierPrefix : undefined,
+    options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
+  );
+}
+
 function renderToPipeableStream(
-  model: ReactClientValue,
+  model: ReactClientValue | Result<ReactClientValue>,
   webpackMap: ClientManifest,
   options?: Options,
 ): PipeableStream {
+  const result: null | Result<ReactClientValue> = isResult(model)
+    ? (model as any)
+    : null;
   const debugChannel = __DEV__ && options ? options.debugChannel : undefined;
   const debugChannelReadable: void | Readable | WebSocket =
     __DEV__ &&
@@ -188,7 +217,7 @@ function renderToPipeableStream(
           : undefined
       : undefined;
   const request = createRequest(
-    model,
+    result !== null ? result.model : (model as any),
     webpackMap,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
@@ -197,6 +226,7 @@ function renderToPipeableStream(
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
+    result,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -331,13 +361,16 @@ function startReadingFromDebugChannelReadableStream(
 }
 
 function renderToReadableStream(
-  model: ReactClientValue,
+  model: ReactClientValue | Result<ReactClientValue>,
   webpackMap: ClientManifest,
   options?: Omit<Options, 'debugChannel'> & {
     debugChannel?: {readable?: ReadableStream, writable?: WritableStream, ...},
     signal?: AbortSignal,
   },
 ): ReadableStream {
+  const result: null | Result<ReactClientValue> = isResult(model)
+    ? (model as any)
+    : null;
   const debugChannelReadable =
     __DEV__ && options && options.debugChannel
       ? options.debugChannel.readable
@@ -347,7 +380,7 @@ function renderToReadableStream(
       ? options.debugChannel.writable
       : undefined;
   const request = createRequest(
-    model,
+    result !== null ? result.model : (model as any),
     webpackMap,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
@@ -356,6 +389,7 @@ function renderToReadableStream(
     __DEV__ && options ? options.environmentName : undefined,
     __DEV__ && options ? options.filterStackFrame : undefined,
     debugChannelReadable !== undefined,
+    result,
   );
   if (options && options.signal) {
     attachAbortSignal(request, options.signal);
@@ -750,6 +784,7 @@ function decodeReplyFromAsyncIterable<T>(
 export {
   renderToReadableStream,
   renderToPipeableStream,
+  renderToResult,
   prerender,
   prerenderToNodeStream,
   decodeReply,

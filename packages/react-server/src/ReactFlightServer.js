@@ -123,6 +123,13 @@ import {
   subscribeToHints,
 } from 'shared/ReactFlightRenderContext';
 export {emitHint} from 'shared/ReactFlightRenderContext';
+import type {Result, ResultTask} from 'shared/ReactFlightResult';
+import {
+  createResultObject,
+  getResultTask,
+  fulfillResultTask,
+  rejectResultTask,
+} from 'shared/ReactFlightResult';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
@@ -604,6 +611,9 @@ export type Request = {
   destination: null | Destination,
   bundlerConfig: ClientManifest,
   context: RenderContext,
+  // The Result this request serializes, if any. Server Components are read
+  // from its tasks instead of rendered, and it owns the render context.
+  result: null | Result<any>,
   nextChunkId: number,
   pendingChunks: number,
   abortableTasks: Set<Task>,
@@ -701,6 +711,7 @@ function RequestInstance(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
+  result: null | Result<any>,
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -724,7 +735,10 @@ function RequestInstance(
   if (enableTaint) {
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
-  const context = createRenderContext(createHints(), identifierPrefix);
+  const context =
+    result === null
+      ? createRenderContext(createHints(), identifierPrefix)
+      : result.context;
   this.type = type;
   this.status = OPENING;
   this.flushScheduled = false;
@@ -732,6 +746,7 @@ function RequestInstance(
   this.destination = null;
   this.bundlerConfig = bundlerConfig;
   this.context = context;
+  this.result = result;
   this.nextChunkId = 0;
   this.pendingChunks = 0;
   this.abortableTasks = abortSet;
@@ -748,9 +763,17 @@ function RequestInstance(
   this.writtenObjects = new WeakMap();
   this.writtenImportStrings = new Map();
   this.writtenImportStringsSize = 0;
-  this.temporaryReferences = temporaryReferences;
+  this.temporaryReferences =
+    temporaryReferences === undefined && result !== null
+      ? result.temporaryReferences
+      : temporaryReferences;
   this.taintCleanupQueue = cleanupQueue;
-  this.onError = onError === undefined ? defaultErrorHandler : onError;
+  this.onError =
+    onError === undefined
+      ? result === null
+        ? defaultErrorHandler
+        : result.onError
+      : onError;
   this.onAllReady = onAllReady;
   this.onFatalError = onFatalError;
 
@@ -839,6 +862,7 @@ export function createRequest(
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
   keepDebugAlive: boolean, // DEV-only
+  result: null | Result<any> = null,
 ): Request {
   if (__DEV__) {
     resetOwnerStackLimit();
@@ -858,6 +882,7 @@ export function createRequest(
     environmentName,
     filterStackFrame,
     keepDebugAlive,
+    result,
   );
 }
 
@@ -892,6 +917,7 @@ export function createPrerenderRequest(
     environmentName,
     filterStackFrame,
     keepDebugAlive,
+    null,
   );
 }
 
@@ -1861,8 +1887,17 @@ function renderFunctionComponent<Props>(
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-    // $FlowFixMe[constant-condition]
-    if (supportsComponentStorage) {
+    if (request.result !== null) {
+      // The Result renders this component once for all of its consumers.
+      // task.model is the element being rendered. The task is a thenable so
+      // we suspend on it if the component hasn't finished yet.
+      const resultTask: Thenable<any> = getResultTask(
+        request.result,
+        task.model as any,
+      ) as any;
+      result = readThenable(resultTask);
+      // $FlowFixMe[constant-condition]
+    } else if (supportsComponentStorage) {
       // Run the component in an Async Context that tracks the current owner.
       if (task.debugTask) {
         result = task.debugTask.run(
@@ -1885,21 +1920,27 @@ function renderFunctionComponent<Props>(
           componentDebugInfo,
         );
       }
+    } else if (task.debugTask) {
+      result = task.debugTask.run(
+        callComponentInDEV.bind(null, Component, props, componentDebugInfo),
+      );
     } else {
-      if (task.debugTask) {
-        result = task.debugTask.run(
-          callComponentInDEV.bind(null, Component, props, componentDebugInfo),
-        );
-      } else {
-        result = callComponentInDEV(Component, props, componentDebugInfo);
-      }
+      result = callComponentInDEV(Component, props, componentDebugInfo);
     }
   } else {
     componentDebugInfo = null as any;
     prepareToUseHooksForComponent(prevThenableState, null);
-    // The secondArg is always undefined in Server Components since refs error early.
-    const secondArg = undefined;
-    result = Component(props, secondArg);
+    if (request.result !== null) {
+      const resultTask: Thenable<any> = getResultTask(
+        request.result,
+        task.model as any,
+      ) as any;
+      result = readThenable(resultTask);
+    } else {
+      // The secondArg is always undefined in Server Components since refs error early.
+      const secondArg = undefined;
+      result = Component(props, secondArg);
+    }
   }
 
   if (request.status === ABORTING) {
@@ -1977,6 +2018,128 @@ function renderFunctionComponent<Props>(
   task.keyPath = prevKeyPath;
   task.implicitSlot = prevImplicitSlot;
   return json;
+}
+
+export function createResult<T>(
+  model: T,
+  onError: void | ((error: mixed) => ?string),
+  identifierPrefix: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  environmentName: void | string | (() => string), // DEV-only
+  filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
+): Result<T> {
+  if (
+    ReactSharedInternals.A !== null &&
+    ReactSharedInternals.A !== DefaultAsyncDispatcher
+  ) {
+    throw new Error(
+      'Currently React only supports one RSC renderer at a time.',
+    );
+  }
+  ReactSharedInternals.A = DefaultAsyncDispatcher;
+  const result: Result<T> = createResultObject(
+    model,
+    createRenderContext(createHints(), identifierPrefix),
+    retryResultTask,
+    onError === undefined ? defaultErrorHandler : onError,
+    temporaryReferences,
+  );
+  if (__DEV__) {
+    result.environmentName =
+      environmentName === undefined
+        ? () => 'Server'
+        : typeof environmentName !== 'function'
+          ? () => environmentName
+          : environmentName;
+    result.filterStackFrame =
+      filterStackFrame === undefined
+        ? defaultFilterStackFrame
+        : filterStackFrame;
+  }
+  return result;
+}
+
+// Finds the Server Component an element renders, through memo, forwardRef
+// and lazy wrappers, the same way renderElement does. Returns null if the
+// element isn't a Server Component.
+function resolveServerComponentType(type: any): null | Function {
+  if (
+    typeof type === 'function' &&
+    !isClientReference(type) &&
+    !isOpaqueTemporaryReference(type)
+  ) {
+    return type;
+  } else if (
+    type != null &&
+    typeof type === 'object' &&
+    !isClientReference(type)
+  ) {
+    switch (type.$$typeof) {
+      case REACT_LAZY_TYPE: {
+        let wrappedType;
+        if (__DEV__) {
+          wrappedType = callLazyInitInDEV(type);
+        } else {
+          const payload = type._payload;
+          const init = type._init;
+          wrappedType = init(payload);
+        }
+        return resolveServerComponentType(wrappedType);
+      }
+      case REACT_FORWARD_REF_TYPE:
+        return resolveServerComponentType(type.render);
+      case REACT_MEMO_TYPE:
+        return resolveServerComponentType(type.type);
+    }
+  }
+  return null;
+}
+
+// Runs the Server Component of a Result task. This happens outside any
+// request, under the Result's render context, since the consumer that
+// reached the element first may be anything that reads the Result.
+function retryResultTask(result: Result<any>, task: ResultTask): void {
+  // $FlowFixMe[constant-condition]
+  if (supportsRequestStorage) {
+    // The component's continuations after an await find the context here,
+    // the same way a request's tasks do through startWork.
+    contextStorage.run(result.context, performResultTask, result, task);
+  } else {
+    performResultTask(result, task);
+  }
+}
+
+function performResultTask(result: Result<any>, task: ResultTask): void {
+  const element = task.model;
+  const prevDispatcher = ReactSharedInternals.H;
+  const prevContext = currentContext;
+  ReactSharedInternals.H = HooksDispatcher;
+  currentContext = result.context;
+  prepareToUseHooksForRequest(result.context);
+  prepareToUseHooksForComponent(null, null);
+  try {
+    const Component = resolveServerComponentType(element.type);
+    if (Component === null) {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        'Expected the element to render a Server Component. This is a bug in React.',
+      );
+    }
+    // The secondArg is always undefined in Server Components since refs error early.
+    const secondArg = undefined;
+    const value = Component(element.props, secondArg);
+    fulfillResultTask(task, value);
+  } catch (thrownValue) {
+    rejectResultTask(task, thrownValue);
+  } finally {
+    ReactSharedInternals.H = prevDispatcher;
+    currentContext = prevContext;
+    if (prevContext === null) {
+      resetHooksForRequest();
+    } else {
+      prepareToUseHooksForRequest(prevContext);
+    }
+  }
 }
 
 function warnForMissingKey(
