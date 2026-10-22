@@ -10,6 +10,10 @@
 import type {ReactElement} from './ReactElementType';
 import type {RenderContext} from './ReactFlightRenderContext';
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+import type {
+  TaintEntry,
+  RequestCleanupQueue,
+} from 'react/src/ReactTaintRegistry';
 import noop from './noop';
 
 // A Result is a model whose Server Components run at most once, no matter
@@ -128,6 +132,16 @@ export function rejectResultTask(task: ResultTask, reason: mixed): void {
 
 const RESULT_TYPE = Symbol.for('react.flight.result');
 
+// The server's taint registries, for the in-process reader to reject a
+// tainted value with. They're keyed by the values themselves, so the
+// reader can use them from its own module graph.
+export type TaintRegistries = {
+  objects: WeakMap<{...} | Function, string>,
+  values: Map<string | bigint, TaintEntry>,
+  byteLengths: Set<number>,
+  pendingRequests: Set<RequestCleanupQueue>,
+};
+
 export type Result<T> = {
   $$typeof: symbol,
   model: T,
@@ -152,6 +166,8 @@ export type Result<T> = {
   replays: null | WeakMap<Object, Replay>,
   onError: (error: mixed) => ?string,
   temporaryReferences: void | TemporaryReferenceSet,
+  // Server-owned. Null unless enableTaint.
+  taintRegistries: TaintRegistries,
   // DEV-only
   environmentName: () => string,
   filterStackFrame: (
@@ -194,6 +210,7 @@ function ResultInstance(
   this.replays = null;
   this.onError = onError;
   this.temporaryReferences = temporaryReferences;
+  this.taintRegistries = null;
   this.environmentName = null;
   this.filterStackFrame = null;
 }

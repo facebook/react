@@ -2072,6 +2072,14 @@ export function createResult<T>(
     onError === undefined ? defaultErrorHandler : onError,
     temporaryReferences,
   );
+  if (enableTaint) {
+    result.taintRegistries = {
+      objects: TaintRegistryObjects,
+      values: TaintRegistryValues,
+      byteLengths: TaintRegistryByteLengths,
+      pendingRequests: TaintRegistryPendingRequests,
+    };
+  }
   if (__DEV__) {
     result.environmentName =
       environmentName === undefined

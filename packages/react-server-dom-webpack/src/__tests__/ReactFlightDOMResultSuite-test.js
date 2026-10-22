@@ -1455,7 +1455,7 @@ describe('ReactFlightDOMResultSuite', () => {
     });
   });
 
-  it.skip('should resolve the root', async () => {
+  it('should resolve the root', async () => {
     // Model
     function Text({children}) {
       return <span>{children}</span>;
@@ -1501,7 +1501,7 @@ describe('ReactFlightDOMResultSuite', () => {
     );
   });
 
-  it.skip('should not get confused by $', async () => {
+  it('should not get confused by $', async () => {
     // Model
     function RootModel() {
       return {text: '$1'};
@@ -1532,7 +1532,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
-  it.skip('should not get confused by @', async () => {
+  it('should not get confused by @', async () => {
     // Model
     function RootModel() {
       return {text: '@div'};
@@ -2273,7 +2273,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  it.skip('should handle streaming async server components', async () => {
+  it('should handle streaming async server components', async () => {
     const reportedErrors = [];
 
     const Row = async ({current, next}) => {
@@ -2452,7 +2452,7 @@ describe('ReactFlightDOMResultSuite', () => {
     expect(inputB.value).toBe('goodbye');
   });
 
-  it.skip('should be able to complete after aborting and throw the reason client-side', async () => {
+  it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
     const controller = new AbortController();
@@ -4553,7 +4553,7 @@ describe('ReactFlightDOMResultSuite', () => {
     return {searchParams, usedSearchParams};
   }
 
-  it.skip('emits the value of a weak-pending thenable that settles during the render', async () => {
+  it('emits the value of a weak-pending thenable that settles during the render', async () => {
     const {searchParams, usedSearchParams} = createSearchParams({q: 'react'});
 
     function Page() {
@@ -5555,7 +5555,7 @@ describe('ReactFlightDOMResultSuite', () => {
       expect(ReactNoop).toMatchRenderedOutput('prop: 2009-02-13T23:31:30.123Z');
     });
 
-    it.skip('can transport Date as a top-level value', async () => {
+    it('can transport Date as a top-level value', async () => {
       const date = new Date(0);
       const result = await serverAct(() =>
         ReactServerDOMServer.renderToResult(date),
