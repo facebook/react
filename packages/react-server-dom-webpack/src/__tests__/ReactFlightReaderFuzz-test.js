@@ -2560,9 +2560,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'a', other: 'b'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('function bound to its array', () =>
+    it('function bound to its array', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2572,9 +2570,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'container', other: 'container'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('function bound to its Map', () =>
+    it('function bound to its Map', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2589,9 +2585,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'container', other: 'container'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('cycle first exposed through a bound function', () =>
+    it('cycle first exposed through a bound function', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2601,9 +2595,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'fn', other: 'fn'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('cycle first exposed through a Promise of a bound function', () =>
+    it('cycle first exposed through a Promise of a bound function', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2614,9 +2606,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'exposure', other: 'exposure'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('cycle first exposed through a stream item with a bound function', () =>
+    it('cycle first exposed through a stream item with a bound function', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2748,9 +2738,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'holder', other: 'holder'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('Blob beside a cycle', () =>
+    it('Blob beside a cycle', () =>
       runGraph({
         nodes: {
           ready: {module: 'export-0'},
@@ -2772,9 +2760,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
   });
 
   describe('known cases with elements, components or Errors', () => {
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('props object referenced again while a prop is loading', () =>
+    it('props object referenced again while a prop is loading', () =>
       runGraph({
         nodes: {
           payload: {module: 'export-0'},
@@ -2798,9 +2784,7 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
         roots: {entry: 'element', other: 'selected'},
       }));
 
-    // Reader bug.
-    // eslint-disable-next-line jest/no-disabled-tests
-    it.skip('element reaching itself through its props', () =>
+    it('element reaching itself through its props', () =>
       runGraph({
         nodes: {
           payload: {module: 'export-0'},
@@ -2809,6 +2793,58 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
           element: {element: 'value'},
         },
         roots: {entry: 'element', other: 'data'},
+      }));
+
+    it('waits that loop before the check that merges them', () =>
+      runGraph({
+        nodes: {
+          value1: {value: 'other value'},
+          value2: {value: ''},
+          value3: {value: 42},
+          text0: {text: 'text-898'},
+          blob0: {blob: 'blob-116'},
+          host0: {host: 'atom'},
+          module1: {module: 'export-1', async: true},
+          array0: {array: ['array0']},
+          set0: {set: ['map1']},
+          map0: {
+            map: [
+              ['blob0', 'bytes0'],
+              ['value3', 'props0'],
+              ['module1', 'iterable0'],
+              ['set0', 'value2'],
+              ['array0', 'value1'],
+            ],
+          },
+          map1: {
+            map: [
+              ['host0', 'host0'],
+              ['element0', 'host0'],
+              ['array0', 'host0'],
+              ['blob0', 'text0'],
+            ],
+          },
+          bytes0: {bytes: 2},
+          element0: {element: 'host0'},
+          props0: {props: 'element0'},
+          iterable0: {iterable: []},
+        },
+        roots: {entry: 'map0', other: 'array0'},
+        afterEof: true,
+        rootPromise: true,
+        events: [
+          'bytes0 chunk 1',
+          'load module1',
+          'bytes0 chunk 0',
+          'start iterable0',
+          'load element0',
+          'evaluate module1',
+          'resolve the root Promise',
+          'resolve an unrelated Promise',
+        ],
+        packetSizes: [3, 89, 2624],
+        yieldBetweenPackets: false,
+        demand: 'early',
       }));
 
     it('all leaf kinds beside a cycle and a loading module', () =>
