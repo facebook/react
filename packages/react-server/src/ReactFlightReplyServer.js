@@ -224,6 +224,9 @@ export type Response = {
   _serverObjectReferenceCache: WeakMap<Object, SomeChunk<any>>,
   _rootArrayContexts: WeakMap<$ReadOnlyArray<mixed>, NestedArrayContext>,
   _arraySizeLimit: number,
+  // The handler of each chunk that has parsed but is still waiting for
+  // references, by chunk.
+  _handlers: WeakMap<SomeChunk<any>, InitializationHandler>,
   // A Set or Map that was referenced before its entries chunk had initialized,
   // by that chunk. Every reference to the chunk receives the same collection,
   // including a reference from inside its own entries. The entries are copied
@@ -509,9 +512,10 @@ function loadServerReference<A: Iterable<any>, T>(
       initializeModelChunk(chunk);
     }
     const handler = createInitializationHandler(1);
-    handler.chunk = blockedPromise;
+    blockedOn(response, handler, blockedPromise);
     const reference = createInitializationReference(
       handler,
+      chunk,
       {'': null},
       '',
       null,
@@ -835,10 +839,15 @@ type InitializationReference = {
   ) => any,
   path: Array<string>,
   arrayRoot: null | NestedArrayContext,
+  // The chunk the reference is queued on.
+  chunk: SomeChunk<any>,
   // The collection reserved for the chunk this reference waits for, when it
   // constructs a Set or Map. It already sits in the slot; it is the mapped
   // value once the chunk initializes.
   collection: null | Set<any> | Map<any, any>,
+  // Whether the reference is done and the handler no longer counts it as
+  // outstanding.
+  released: boolean,
 };
 type InitializationHandler = {
   chunk: null | BlockedChunk<any>,
@@ -846,7 +855,11 @@ type InitializationHandler = {
   // TODO: Split type to make it impossible to treat a thrown value as NestedArrayContext.
   // thrown value if errored, otherwise array context
   reason: mixed | NestedArrayContext,
+  // Work outstanding before the chunk can initialize: the references that are
+  // not done, and other waits like a module loading.
   deps: number,
+  references: null | Array<InitializationReference>,
+  outstanding: number,
   errored: boolean,
 };
 
@@ -856,6 +869,8 @@ function createInitializationHandler(deps: number): InitializationHandler {
     value: null,
     reason: null,
     deps,
+    references: null,
+    outstanding: 0,
     errored: false,
   };
 }
@@ -868,6 +883,8 @@ function createErroredInitializationHandler(
     value: null,
     reason,
     deps: 0,
+    references: null,
+    outstanding: 0,
     errored: true,
   };
 }
@@ -934,7 +951,7 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
         // We have to keep the BLOCKED state until they're resolved.
         initializingHandler.value = value;
         initializingHandler.reason = arrayRoot;
-        initializingHandler.chunk = cyclicChunk;
+        blockedOn(response, initializingHandler, cyclicChunk);
         return;
       }
     }
@@ -1091,6 +1108,8 @@ function installReference(
   value: any,
 ): void {
   const {handler, parentObject, key} = reference;
+  reference.released = true;
+  handler.outstanding--;
   if (key !== __PROTO__) {
     parentObject[key] = value;
   }
@@ -1113,6 +1132,7 @@ function resolveReference(
     if (chunk === null || chunk.status !== BLOCKED) {
       return;
     }
+    releaseHandler(response, handler);
     const resolveListeners = chunk.value;
     const initializedChunk: InitializedChunk<any> = chunk as any;
     initializedChunk.status = INITIALIZED;
@@ -1144,6 +1164,7 @@ function rejectReference(
   if (chunk === null || chunk.status !== BLOCKED) {
     return;
   }
+  releaseHandler(response, handler);
   // There's no debug info to forward in this direction.
   triggerErrorOnChunk(response, chunk, error);
 }
@@ -1159,6 +1180,7 @@ function waitForReference<T>(
 ): T {
   const reference = createInitializationReference(
     addDependency(),
+    referencedChunk,
     parentObject,
     key,
     arrayRoot,
@@ -1188,6 +1210,29 @@ function waitForReference<T>(
   return null as any;
 }
 
+// Records which chunk the handler initializes once its work is done, where
+// anything that walks what the chunks wait for can find it.
+function blockedOn(
+  response: Response,
+  handler: InitializationHandler,
+  chunk: BlockedChunk<any>,
+): void {
+  handler.chunk = chunk;
+  response._handlers.set(chunk, handler);
+}
+
+// The chunk no longer waits for references.
+function releaseHandler(
+  response: Response,
+  handler: InitializationHandler,
+): void {
+  const chunk = handler.chunk;
+  if (chunk !== null) {
+    response._handlers.delete(chunk);
+  }
+  handler.references = null;
+}
+
 // Counts one more outstanding dependency against the handler of the model
 // being initialized, creating the handler if the model has none yet.
 function addDependency(): InitializationHandler {
@@ -1205,21 +1250,31 @@ function addDependency(): InitializationHandler {
 // one of the handler's dependencies.
 function createInitializationReference<T>(
   handler: InitializationHandler,
+  chunk: SomeChunk<any>,
   parentObject: Object,
   key: string,
   arrayRoot: null | NestedArrayContext,
   map: (response: Response, model: any, parentObject: Object, key: string) => T,
   path: Array<string>,
 ): InitializationReference {
-  return {
+  const reference: InitializationReference = {
     handler,
     parentObject,
     key,
     map,
     path,
     arrayRoot,
+    chunk,
     collection: null,
+    released: false,
   };
+  if (handler.references === null) {
+    handler.references = [reference];
+  } else {
+    handler.references.push(reference);
+  }
+  handler.outstanding++;
+  return reference;
 }
 
 // Queues the reference on a chunk that has not initialized yet. It is fulfilled
@@ -1228,6 +1283,7 @@ function addReferenceListener(
   chunk: PendingChunk<any> | BlockedChunk<any>,
   reference: InitializationReference,
 ): void {
+  reference.chunk = chunk;
   if (chunk.value === null) {
     chunk.value = [reference];
   } else {
@@ -1539,41 +1595,11 @@ function parseTypedArray<T: $ArrayBufferView | ArrayBuffer>(
       return;
     }
 
-    handler.deps--;
-
-    if (handler.deps === 0) {
-      const chunk = handler.chunk;
-      if (chunk === null || chunk.status !== BLOCKED) {
-        return;
-      }
-      const resolveListeners = chunk.value;
-      const initializedChunk: InitializedChunk<T> = chunk as any;
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = handler.value;
-      // We don't keep an array count for this since it won't be referenced again.
-      // In fact, we don't really need to store this chunk at all.
-      initializedChunk.reason = null;
-      if (resolveListeners !== null) {
-        wakeChunk(response, resolveListeners, handler.value, initializedChunk);
-      }
-    }
+    resolveReference(response, handler);
   }
 
   function reject(error: mixed): void {
-    if (handler.errored) {
-      // We've already errored. We could instead build up an AggregateError
-      // but if there are multiple errors we just take the first one like
-      // Promise.all.
-      return;
-    }
-    handler.errored = true;
-    handler.value = null;
-    handler.reason = error;
-    const chunk = handler.chunk;
-    if (chunk === null || chunk.status !== BLOCKED) {
-      return;
-    }
-    triggerErrorOnChunk(response, chunk, error);
+    rejectReference(response, handler, error);
   }
 
   promise.then(fulfill, reject);
@@ -2206,6 +2232,7 @@ export function createResponse(
     _serverObjectReferenceCache: new WeakMap(),
     _rootArrayContexts: new WeakMap(),
     _arraySizeLimit: arraySizeLimit,
+    _handlers: new WeakMap(),
     _reservedCollections: new WeakMap(),
   };
   return response;
