@@ -58,7 +58,11 @@ import {
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
-import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
+import {
+  describeObjectForErrorMessage,
+  jsxPropsParents,
+  jsxChildrenParents,
+} from 'shared/ReactSerializationErrors';
 
 const ObjectPrototype = Object.prototype;
 
@@ -144,6 +148,7 @@ function createRootKeyContext(): KeyContext {
   (context as any).enclosing = context;
   return context;
 }
+const rootKeyContext: KeyContext = createRootKeyContext();
 
 // The context inside a Server Component with this key, like the keyPath and
 // implicitSlot renderFunctionComponent sets before rendering its output.
@@ -579,6 +584,9 @@ function resolveErrorProd(response: ResultResponse): Error {
   return error;
 }
 
+// Like emitErrorChunk and resolveErrorDev together: the error the client
+// would build from the error row, with the cause and an AggregateError's
+// errors read as values.
 function resolveErrorDev(response: ResultResponse, reason: mixed): Error {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -587,19 +595,67 @@ function resolveErrorDev(response: ResultResponse, reason: mixed): Error {
       'resolveErrorDev should never be called in production mode. Use resolveErrorProd instead. This is a bug in React.',
     );
   }
-  let error;
+  let name: string = 'Error';
+  let message: string;
+  let stack: void | string;
+  let env = (0, response._result.environmentName)();
+  let errorOptions: void | {cause: mixed};
+  let errors: null | Array<mixed> = null;
   if (reason instanceof Error) {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    error = new Error(reason.message);
-    error.name = reason.name;
-    error.stack = reason.stack;
+    name = reason.name;
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    message = String(reason.message);
+    stack = reason.stack;
+    const errorEnv = (reason as any).environmentName;
+    if (typeof errorEnv === 'string') {
+      // This probably came from another FlightClient as a pass through.
+      // Keep the environment name.
+      env = errorEnv;
+    }
+    if ('cause' in reason) {
+      // The serializer outlines the cause in a row of its own, so it's read
+      // outside any key context.
+      errorOptions = {
+        cause: readModel(
+          response,
+          reason.cause,
+          rootKeyContext,
+          reason,
+          'cause',
+        ),
+      };
+    }
+    if (
+      typeof AggregateError !== 'undefined' &&
+      reason instanceof AggregateError
+    ) {
+      errors = readModel(
+        response,
+        reason.errors,
+        rootKeyContext,
+        reason,
+        'errors',
+      );
+    }
   } else if (typeof reason === 'object' && reason !== null) {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    error = new Error(describeObjectForErrorMessage(reason));
+    message = describeObjectForErrorMessage(reason);
   } else {
-    // eslint-disable-next-line react-internal/prod-error-codes, react-internal/safe-string-coercion
-    error = new Error(String(reason));
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    message = String(reason);
   }
+  let error;
+  if (errors !== null) {
+    // $FlowFixMe[extra-arg] AggregateError takes options like Error does
+    error = new AggregateError(errors, message, errorOptions);
+  } else {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    error = new Error(message, errorOptions);
+  }
+  error.name = name;
+  if (stack !== undefined) {
+    error.stack = stack;
+  }
+  (error as any).environmentName = env;
   return error;
 }
 
@@ -616,6 +672,14 @@ function resolveError(
 }
 
 function logRecoverableError(response: ResultResponse, error: mixed): string {
+  const result = response._result;
+  if (typeof error === 'object' && error !== null) {
+    const knownDigest = result.errorDigests.get(error);
+    if (knownDigest !== undefined) {
+      // Another consumer of the Result already reported this error.
+      return knownDigest;
+    }
+  }
   const onError = response._onError;
   const errorDigest = onError(error);
   if (errorDigest != null && typeof errorDigest !== 'string') {
@@ -624,7 +688,11 @@ function logRecoverableError(response: ResultResponse, error: mixed): string {
       `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
     );
   }
-  return errorDigest || '';
+  const digest = errorDigest || '';
+  if (typeof error === 'object' && error !== null) {
+    result.errorDigests.set(error, digest);
+  }
+  return digest;
 }
 
 // Reports an error that happened while reading, like a value the serializer
@@ -1199,6 +1267,12 @@ function readClientElement(
       'Refs cannot be used in Server Components, nor passed to Client Components.',
     );
   }
+  if (__DEV__) {
+    jsxPropsParents.set(props, element.type);
+    if (typeof props.children === 'object' && props.children !== null) {
+      jsxChildrenParents.set(props.children, element.type);
+    }
+  }
   let type = element.type;
   if (type === REACT_FRAGMENT_TYPE && element.key === null) {
     // For key-less fragments, we add a small optimization to avoid serializing
@@ -1578,8 +1652,11 @@ function readModel(
       return value;
     }
     if (value instanceof Error) {
-      // An Error value carries no details in production, like on the wire.
-      return resolveError(response, value, '');
+      // An Error value carries no details in production, like a $Z row. It
+      // didn't throw into the render, so it isn't reported and has no digest.
+      return __DEV__
+        ? resolveErrorDev(response, value)
+        : resolveErrorProd(response);
     }
     if (value instanceof ArrayBuffer) {
       if (enableTaint) {
@@ -1650,6 +1727,22 @@ function readModel(
         'Event handlers cannot be passed to Client Component props.' +
           describeObjectForErrorMessage(parent, parentPropertyName) +
           '\nIf you need interactivity, consider converting part of this to a Client Component.',
+      );
+    } else if (
+      __DEV__ &&
+      (jsxChildrenParents.has(parent) ||
+        (jsxPropsParents.has(parent) && parentPropertyName === 'children'))
+    ) {
+      const componentName = value.displayName || value.name || 'Component';
+      throw new Error(
+        'Functions are not valid as a child of Client Components. This may happen if ' +
+          'you return ' +
+          componentName +
+          ' instead of <' +
+          componentName +
+          ' /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.' +
+          describeObjectForErrorMessage(parent, parentPropertyName),
       );
     } else {
       throw new Error(
@@ -1728,7 +1821,7 @@ export function getRoot<T>(response: ResultResponse): Thenable<T> {
   const chunk: SomeChunk<T> = createModelChunk(
     response,
     response._result.model,
-    createRootKeyContext(),
+    rootKeyContext,
   );
   return chunk as any;
 }

@@ -647,6 +647,96 @@ describe('ReactFlightDOMResult', () => {
     expect(root.last).toBe('b');
   });
 
+  it('reports an error once across the consumers of a Result', async () => {
+    const errors = [];
+    const rejected = Promise.reject(new Error('rejected'));
+    rejected.catch(() => {});
+    function Throws() {
+      throw new Error('thrown');
+    }
+    const model = {
+      thrown: ReactServer.createElement(Throws, null),
+      rejected,
+      invalid: ReactServer.createElement('div', {data: {handler() {}}}),
+    };
+    const result = ReactServerDOMServer.renderToResult(model, {
+      onError(error) {
+        errors.push(error.message);
+        return 'digest(' + error.message + ')';
+      },
+    });
+    let inProcess;
+    let fromStream;
+    await serverAct(() => {
+      inProcess = readFromResult(result);
+      fromStream = readFromStream(result);
+    });
+    const root = await inProcess;
+    const streamed = await fromStream;
+    const invalid =
+      'Functions cannot be passed directly to Client Components unless you ' +
+      'explicitly expose it by marking it with "use server". Or maybe you ' +
+      'meant to call this function rather than return it.\n' +
+      '  {handler: function handler}\n' +
+      '            ^^^^^^^^^^^^^^^^';
+    // A thrown error and a rejection are one error object that both
+    // consumers meet, so the first one to report it sets the digest. An
+    // invalid value is found by each consumer on its own, so each reports
+    // it.
+    expect(errors.sort()).toEqual([invalid, invalid, 'rejected', 'thrown']);
+    // Both consumers see the same digests.
+    function digestOf(lazy) {
+      try {
+        lazy._init(lazy._payload);
+      } catch (error) {
+        return error.digest;
+      }
+      throw new Error('Expected the lazy to throw.');
+    }
+    expect(digestOf(root.thrown)).toBe('digest(thrown)');
+    expect(digestOf(streamed.thrown)).toBe('digest(thrown)');
+    await expect(root.rejected).rejects.toMatchObject({
+      digest: 'digest(rejected)',
+    });
+    await expect(streamed.rejected).rejects.toMatchObject({
+      digest: 'digest(rejected)',
+    });
+  });
+
+  // @gate __DEV__
+  it('carries the cause and errors of an error in development', async () => {
+    const cause = {detail: 'why'};
+    function Throws() {
+      throw new AggregateError(
+        [new TypeError('first'), new Error('second')],
+        'aggregate',
+        {cause},
+      );
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(Throws, null),
+      {
+        onError() {
+          return 'digest';
+        },
+      },
+    );
+    let caught;
+    try {
+      await readFromResult(result);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(AggregateError);
+    expect(caught.message).toBe('aggregate');
+    expect(caught.environmentName).toBe('Server');
+    expect(caught.cause).toEqual({detail: 'why'});
+    expect(caught.errors.map(error => error.name)).toEqual([
+      'TypeError',
+      'Error',
+    ]);
+  });
+
   it('serializes a Result to a stream started after the last consumer finished', async () => {
     let cacheSignal;
     function App() {

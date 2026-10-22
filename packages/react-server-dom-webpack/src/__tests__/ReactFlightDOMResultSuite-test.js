@@ -4951,7 +4951,7 @@ describe('ReactFlightDOMResultSuite', () => {
       );
     }
 
-    it.skip('can transport Error objects as values', async () => {
+    it('can transport Error objects as values', async () => {
       class CustomError extends Error {
         constructor(message) {
           super(message);
@@ -5003,7 +5003,7 @@ describe('ReactFlightDOMResultSuite', () => {
       }
     });
 
-    it.skip('can transport Error.cause', async () => {
+    it('can transport Error.cause', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5071,7 +5071,7 @@ describe('ReactFlightDOMResultSuite', () => {
       }
     });
 
-    it.skip('can transport AggregateError', async () => {
+    it('can transport AggregateError', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5152,7 +5152,7 @@ describe('ReactFlightDOMResultSuite', () => {
       }
     });
 
-    it.skip('includes Error.cause in thrown errors', async () => {
+    it('includes Error.cause in thrown errors', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5221,7 +5221,7 @@ describe('ReactFlightDOMResultSuite', () => {
       }
     });
 
-    it.skip('includes AggregateError.errors in thrown errors', async () => {
+    it('includes AggregateError.errors in thrown errors', async () => {
       function renderError(error) {
         if (!(error instanceof Error)) {
           return `${JSON.stringify(error)}`;
@@ -5342,7 +5342,7 @@ describe('ReactFlightDOMResultSuite', () => {
       }
     });
 
-    it.skip('should error if a non-serializable value is passed to a host component', async () => {
+    it('should error if a non-serializable value is passed to a host component', async () => {
       function ClientImpl({children}) {
         return children;
       }

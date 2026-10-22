@@ -4757,6 +4757,14 @@ function logRecoverableError(
   error: mixed,
   task: Task | null, // DEV-only
 ): string {
+  const result = request.result;
+  if (result !== null && typeof error === 'object' && error !== null) {
+    const knownDigest = result.errorDigests.get(error);
+    if (knownDigest !== undefined) {
+      // Another consumer of the Result already reported this error.
+      return knownDigest;
+    }
+  }
   const prevRequest = currentRequest;
   // We clear the request context so that console.logs inside the callback doesn't
   // get forwarded to the client.
@@ -4801,7 +4809,11 @@ function logRecoverableError(
       `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
     );
   }
-  return errorDigest || '';
+  const digest = errorDigest || '';
+  if (result !== null && typeof error === 'object' && error !== null) {
+    result.errorDigests.set(error, digest);
+  }
+  return digest;
 }
 
 function fatalError(request: Request, error: mixed): void {

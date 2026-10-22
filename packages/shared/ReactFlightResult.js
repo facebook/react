@@ -165,6 +165,11 @@ export type Result<T> = {
   iteratorEntries: null | WeakMap<Object, Array<mixed>>,
   replays: null | WeakMap<Object, Replay>,
   onError: (error: mixed) => ?string,
+  // The digest each error was reported with, by the first consumer to see
+  // it. The others use the same digest without reporting it again, so an
+  // error in a Server Component is reported once per Result, like once per
+  // request on the wire.
+  errorDigests: WeakMap<Object, string>,
   temporaryReferences: void | TemporaryReferenceSet,
   // Server-owned. Null unless enableTaint.
   taintRegistries: TaintRegistries,
@@ -209,6 +214,7 @@ function ResultInstance(
   this.iteratorEntries = null;
   this.replays = null;
   this.onError = onError;
+  this.errorDigests = new WeakMap();
   this.temporaryReferences = temporaryReferences;
   this.taintRegistries = null;
   this.environmentName = null;
