@@ -2150,6 +2150,56 @@ describe('ReactFlightDOMEdge', () => {
     expect(Array.from(result.bytes)).toEqual([1, 2, 3, 4]);
   });
 
+  it('can pass a large typed array from two places', async () => {
+    // Larger than the Edge writer copies: it transfers the buffer into its
+    // output instead, so a second write of the same array has nothing left
+    // to transfer.
+    const bytes = Uint8Array.from({length: 5000}, (_, i) => i % 251);
+    // Stream items are written inline, so the first one leaves no path to
+    // the array for the second to refer to.
+    const s = new ReadableStream({
+      start(c) {
+        c.enqueue({bytes});
+        c.enqueue({again: bytes});
+        c.close();
+      },
+    });
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(s, {}),
+    );
+
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    const reader = result.getReader();
+    const first = (await reader.read()).value;
+    const second = (await reader.read()).value;
+    expect(second.again).toBe(first.bytes);
+    expect(first.bytes[4999]).toBe(4999 % 251);
+    expect((await reader.read()).done).toBe(true);
+    if (
+      __DEV__ &&
+      !Object.prototype.hasOwnProperty.call(ArrayBuffer.prototype, 'detached')
+    ) {
+      // A Node below 22 cannot tell a transferred buffer apart, so the writer
+      // copies the array and says so once.
+      assertConsoleErrorDev(
+        [
+          'React copied a partial view into a fresh buffer as a safety precaution ' +
+            'because the environment does not implement ArrayBuffer.prototype.detached. ' +
+            'This negatively impacts performance. ' +
+            'Please upgrade to a modern Edge runtime.',
+        ],
+        {withoutStack: true},
+      );
+    }
+  });
+
   it('ends a BYOB read that is waiting when the byte stream closes', async () => {
     const s = new ReadableStream({
       type: 'bytes',

@@ -2513,11 +2513,10 @@ describe.each(['node', 'edge'])('ReactFlightReaderFuzz (%s)', host => {
     }
   }
 
-  // These leaves wait for fixes further up the stack: a large typed array held
-  // in two places arrives empty the second time, an object key whose value is
-  // undefined is dropped, and a cycle through a property name with a colon
+  // These leaves wait for fixes further up the stack: an object key whose value
+  // is undefined is dropped, and a cycle through a property name with a colon
   // overflows the writer's stack.
-  const unsupportedMoves = ['large binary', 'undefined', 'colon'];
+  const unsupportedMoves = ['undefined', 'colon'];
 
   describe('generated graphs', () => {
     seeds.forEach(seed => {
