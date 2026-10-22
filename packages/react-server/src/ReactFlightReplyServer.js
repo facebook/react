@@ -837,15 +837,18 @@ function reviveModel(
             reference !== undefined && key.indexOf(':') === -1
               ? reference + ':' + key
               : undefined;
+          const raw = value[key];
           const newValue = reviveModel(
             response,
             value,
             key,
-            value[key],
+            raw,
             childRef,
             null, // The array context resets when we're entering a non-array
           );
-          if (newValue !== undefined) {
+          if (newValue !== undefined || raw === '$undefined') {
+            // A key whose value is undefined stays a key, as it was on the
+            // other side.
             // $FlowFixMe[cannot-write]
             value[key] = newValue;
           } else {

@@ -6678,8 +6678,11 @@ function reviveModel(
       if (k === __PROTO__) {
         delete (value as any)[k];
       } else {
-        const walked = reviveModel(response, (value as any)[k], value, k);
-        if (walked !== undefined) {
+        const raw = (value as any)[k];
+        const walked = reviveModel(response, raw, value, k);
+        if (walked !== undefined || raw === '$undefined') {
+          // A key whose value is undefined stays a key, as it was on the
+          // other side.
           (value as any)[k] = walked;
         } else {
           delete (value as any)[k];
