@@ -431,6 +431,100 @@ describe('ReactFlightDOMResult', () => {
     expect(errors).toEqual([]);
   });
 
+  // The shape of a tree with lazies resolved, for comparing the in-process
+  // read against the wire.
+  async function shapeOf(node) {
+    if (node === null || typeof node !== 'object') {
+      return node;
+    }
+    if (node.$$typeof === Symbol.for('react.lazy')) {
+      await node._payload;
+      return shapeOf(node._init(node._payload));
+    }
+    if (Array.isArray(node)) {
+      return Promise.all(node.map(shapeOf));
+    }
+    if (node.$$typeof === Symbol.for('react.transitional.element')) {
+      return {
+        type: typeof node.type === 'string' ? node.type : 'component',
+        key: node.key,
+        children: await shapeOf(node.props.children),
+      };
+    }
+    return node;
+  }
+
+  it('prefixes the keys of Server Components like the serializer', async () => {
+    function Item({children}) {
+      return ReactServer.createElement('li', null, children);
+    }
+    function Pair() {
+      return [
+        ReactServer.createElement('span', {key: 'a'}),
+        ReactServer.createElement('span', {key: 'b'}),
+      ];
+    }
+    async function Later() {
+      await 1;
+      return ReactServer.createElement('b', {key: 'inner'});
+    }
+    function App() {
+      return ReactServer.createElement(
+        'ul',
+        null,
+        // A keyed Server Component prefixes the key of what it renders.
+        ReactServer.createElement(Item, {key: 'x'}, 'one'),
+        // A keyed one rendering an array wraps it in a keyed fragment.
+        ReactServer.createElement(Pair, {key: 'p'}),
+        // A keyless one in a slot of its own gives its output an implicit
+        // slot, so a keyed element it renders is wrapped in an array.
+        ReactServer.createElement(
+          'div',
+          null,
+          ReactServer.createElement(Later, null),
+        ),
+        // A keyless fragment is dropped, and gives an implicit slot too.
+        ReactServer.createElement(
+          ReactServer.Fragment,
+          null,
+          ReactServer.createElement(Item, {key: 'f'}, 'three'),
+        ),
+      );
+    }
+    const result = ReactServerDOMServer.renderToResult(
+      ReactServer.createElement(App),
+    );
+    let inProcess;
+    let fromStream;
+    await serverAct(() => {
+      inProcess = readFromResult(result);
+      fromStream = readFromStream(result);
+    });
+    const expected = await shapeOf(await fromStream);
+    expect(await shapeOf(await inProcess)).toEqual(expected);
+    expect(expected).toEqual({
+      type: 'ul',
+      key: null,
+      children: [
+        {type: 'li', key: 'x', children: 'one'},
+        {
+          type: 'component',
+          key: 'p',
+          children: [
+            {type: 'span', key: 'a', children: undefined},
+            {type: 'span', key: 'b', children: undefined},
+          ],
+        },
+        {
+          type: 'div',
+          key: null,
+          children: [{type: 'b', key: 'inner', children: undefined}],
+        },
+        [{type: 'li', key: 'f', children: 'three'}],
+      ],
+    });
+  });
+
   it('serializes a Result to a stream started after the last consumer finished', async () => {
     let cacheSignal;
     function App() {

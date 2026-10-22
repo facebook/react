@@ -36,10 +36,12 @@ import {
 
 import {
   REACT_ELEMENT_TYPE,
+  REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_LEGACY_ELEMENT_TYPE,
   REACT_MEMO_TYPE,
   REACT_FORWARD_REF_TYPE,
+  REACT_OPTIMISTIC_KEY,
 } from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
@@ -85,6 +87,76 @@ export type ResultResponse = {
   _readError: null | Error,
 };
 
+// The key context a value is read in, which is the keyPath and implicitSlot
+// of the serializer's task at that point. The keys of the Server Components
+// a terminal element is rendered through prefix its key; a Server Component
+// without a key in a slot of its own means the terminal needs an implicit
+// one. The props and children of a terminal are read in the enclosing
+// context, since the serializer restores its task's context once it has
+// rendered the terminal and before it recurses into them.
+type KeyContext = {
+  +keyPath: ReactKey,
+  +implicitSlot: boolean,
+  +enclosing: KeyContext,
+};
+
+function createRootKeyContext(): KeyContext {
+  const context: KeyContext = {
+    keyPath: null,
+    implicitSlot: false,
+    enclosing: null as any,
+  };
+  (context as any).enclosing = context;
+  return context;
+}
+
+// The context inside a Server Component with this key, like the keyPath and
+// implicitSlot renderFunctionComponent sets before rendering its output.
+function enterServerComponent(context: KeyContext, key: ReactKey): KeyContext {
+  const prevKeyPath = context.keyPath;
+  if (key !== null) {
+    // Append the key to the path. Technically a null key should really add the child
+    // index. We don't do that to hold the payload small and implementation simple.
+    let keyPath;
+    if (key === REACT_OPTIMISTIC_KEY || prevKeyPath === REACT_OPTIMISTIC_KEY) {
+      // The optimistic key is viral. It turns the whole key into optimistic if any part is.
+      keyPath = REACT_OPTIMISTIC_KEY;
+    } else {
+      keyPath = prevKeyPath === null ? key : prevKeyPath + ',' + key;
+    }
+    return {
+      keyPath,
+      implicitSlot: context.implicitSlot,
+      enclosing: context.enclosing,
+    };
+  } else if (prevKeyPath === null && !context.implicitSlot) {
+    // This sequence of Server Components has no keys. This means that it was rendered
+    // in a slot that needs to assign an implicit key. Even if children below have
+    // explicit keys, they should not be used for the outer most key since it might
+    // collide with other slots in that set.
+    return {keyPath: null, implicitSlot: true, enclosing: context.enclosing};
+  }
+  return context;
+}
+
+// The key of a terminal element rendered in this context, like
+// renderClientElement computes it.
+function terminalKey(context: KeyContext, key: ReactKey): ReactKey {
+  // We prepend the terminal client element that actually gets serialized with
+  // the keys of any Server Components which are not serialized.
+  const keyPath = context.keyPath;
+  if (key === null) {
+    return keyPath;
+  } else if (keyPath !== null) {
+    if (keyPath === REACT_OPTIMISTIC_KEY || key === REACT_OPTIMISTIC_KEY) {
+      // Optimistic key is viral and turns the whole key optimistic.
+      return REACT_OPTIMISTIC_KEY;
+    }
+    return keyPath + ',' + key;
+  }
+  return key;
+}
+
 // Chunk status. These are the statuses use() understands, plus one for a
 // module that has loaded but hasn't been required yet.
 const PENDING = 'pending';
@@ -96,24 +168,32 @@ type PendingChunk<T> = {
   status: 'pending',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
+  _response: ResultResponse,
+  _context: KeyContext,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
   value: ClientReference<T>,
   reason: null,
+  _response: ResultResponse,
+  _context: KeyContext,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
   reason: null,
+  _response: ResultResponse,
+  _context: KeyContext,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
   status: 'rejected',
   value: null,
   reason: mixed,
+  _response: ResultResponse,
+  _context: KeyContext,
   then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
@@ -123,10 +203,19 @@ type SomeChunk<T> =
   | ErroredChunk<T>;
 
 // $FlowFixMe[missing-this-annot]
-function ReactPromise(status: any, value: any, reason: any) {
+function ReactPromise(
+  status: any,
+  value: any,
+  reason: any,
+  response: ResultResponse,
+  context: KeyContext,
+) {
   this.status = status;
   this.value = value;
   this.reason = reason;
+  this._response = response;
+  // The key context the chunk's model is read in.
+  this._context = context;
 }
 // We subclass Promise.prototype so that we get other methods like .catch
 ReactPromise.prototype = Object.create(Promise.prototype) as any;
@@ -203,9 +292,19 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
   }
 }
 
-function createPendingChunk<T>(response: ResultResponse): PendingChunk<T> {
+function createPendingChunk<T>(
+  response: ResultResponse,
+  context: KeyContext,
+): PendingChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(PENDING, null, null);
+  return new ReactPromise(PENDING, null, null, response, context);
+}
+
+function createPendingModuleChunk<T>(
+  response: ResultResponse,
+): PendingChunk<T> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new ReactPromise(PENDING, null, null, response, null as any);
 }
 
 function createErrorChunk<T>(
@@ -213,15 +312,16 @@ function createErrorChunk<T>(
   error: mixed,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(ERRORED, null, error);
+  return new ReactPromise(ERRORED, null, error, response, null as any);
 }
 
 // A chunk for a model that's already here, read right away.
 function createModelChunk<T>(
   response: ResultResponse,
   model: any,
+  context: KeyContext,
 ): SomeChunk<T> {
-  const chunk: SomeChunk<T> = createPendingChunk(response);
+  const chunk: SomeChunk<T> = createPendingChunk(response, context);
   resolveModelChunk(response, chunk, model);
   return chunk;
 }
@@ -231,7 +331,7 @@ function createResolvedModuleChunk<T>(
   value: ClientReference<T>,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new ReactPromise(RESOLVED_MODULE, value, null);
+  return new ReactPromise(RESOLVED_MODULE, value, null, response, null as any);
 }
 
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
@@ -320,7 +420,7 @@ function resolveModelChunk<T>(
   response._readError = null;
   let value;
   try {
-    value = readModel(response, model, emptyRoot, '');
+    value = readModel(response, model, chunk._context, emptyRoot, '');
   } catch (thrown) {
     response._readError = prevReadError;
     if (isThenable(thrown)) {
@@ -536,12 +636,13 @@ function nullRefGetter() {
 // row; here it becomes undefined, since the row fails anyway.
 function readValue(
   response: ResultResponse,
+  value: any,
+  context: KeyContext,
   parent: Object,
   parentPropertyName: string,
-  value: any,
 ): any {
   try {
-    return readModel(response, value, parent, parentPropertyName);
+    return readModel(response, value, context, parent, parentPropertyName);
   } catch (thrown) {
     if (isThenable(thrown)) {
       // A reference inside is still loading. Let the row wait for it.
@@ -555,11 +656,47 @@ function readValue(
   }
 }
 
-function readArray(response: ResultResponse, array: Array<any>): Array<any> {
+// An array is a fragment. Like renderFragment on the server, one rendered
+// through a keyed Server Component is wrapped in a keyed Fragment element
+// so that the whole set can move together.
+function readFragment(
+  response: ResultResponse,
+  children: Array<any>,
+  context: KeyContext,
+): any {
+  if (context.keyPath !== null) {
+    // We have a Server Component that specifies a key but we're now splitting
+    // the tree using a fragment.
+    const fragment = createElement(REACT_FRAGMENT_TYPE, context.keyPath, {
+      children: readArray(response, children, context.enclosing),
+    });
+    if (!context.implicitSlot) {
+      // If this was keyed inside a set. I.e. the outer Server Component was keyed
+      // then we need to handle reorders of the whole set. To do this we need to wrap
+      // this array in a keyed Fragment.
+      return fragment;
+    }
+    // If the outer Server Component was implicit but then an inner one had a key
+    // we don't actually need to be able to move the whole set around. It'll always be
+    // in an implicit slot. The key only exists to be able to reset the state of the
+    // children. We wrap it with an unkeyed fragment and inner keyed fragment, like
+    // the serializer does.
+    return [fragment];
+  }
+  // The children are read in the enclosing context, like the serializer
+  // recurses into them once its task's context is restored.
+  return readArray(response, children, context.enclosing);
+}
+
+function readArray(
+  response: ResultResponse,
+  array: Array<any>,
+  context: KeyContext,
+): Array<any> {
   let copy: null | Array<any> = null;
   for (let i = 0; i < array.length; i++) {
     const child = array[i];
-    const read = readValue(response, array, '' + i, child);
+    const read = readValue(response, child, context, array, '' + i);
     if (copy === null) {
       if (read === child) {
         continue;
@@ -574,6 +711,7 @@ function readArray(response: ResultResponse, array: Array<any>): Array<any> {
 function readObject(
   response: ResultResponse,
   object: {[key: string]: any},
+  context: KeyContext,
 ): {[key: string]: any} {
   let copy: null | {[key: string]: any} = null;
   const keys = Object.keys(object);
@@ -585,7 +723,7 @@ function readObject(
     const read =
       child === undefined || key === '__proto__'
         ? undefined
-        : readValue(response, object, key, child);
+        : readValue(response, child, context, object, key);
     if (copy === null) {
       if (read === child && child !== undefined) {
         continue;
@@ -602,15 +740,23 @@ function readObject(
   return copy === null ? object : copy;
 }
 
-function readMap(response: ResultResponse, map: Map<any, any>): Map<any, any> {
+function readMap(
+  response: ResultResponse,
+  map: Map<any, any>,
+  context: KeyContext,
+): Map<any, any> {
   const entries = Array.from(map);
-  const read = readArray(response, entries);
+  const read = readArray(response, entries, context);
   return read === entries ? map : new Map(read);
 }
 
-function readSet(response: ResultResponse, set: Set<any>): Set<any> {
+function readSet(
+  response: ResultResponse,
+  set: Set<any>,
+  context: KeyContext,
+): Set<any> {
   const values = Array.from(set);
-  const read = readArray(response, values);
+  const read = readArray(response, values, context);
   return read === values ? set : new Set(read);
 }
 
@@ -668,7 +814,11 @@ function processServerComponentReturnValue(
   return output;
 }
 
-function readServerComponentOutput(response: ResultResponse, output: any): any {
+function readServerComponentOutput(
+  response: ResultResponse,
+  output: any,
+  context: KeyContext,
+): any {
   output = processServerComponentReturnValue(response, output);
   if (isThenable(output) && !response._bundler.isClientReference(output)) {
     // When the return value is in children position we can resolve it immediately,
@@ -676,7 +826,7 @@ function readServerComponentOutput(response: ResultResponse, output: any): any {
     const thenable: Thenable<any> = output;
     switch (thenable.status) {
       case 'fulfilled':
-        return readServerComponentOutput(response, thenable.value);
+        return readServerComponentOutput(response, thenable.value, context);
       case 'rejected':
         return createLazyChunkWrapper(
           createErrorChunk(
@@ -685,11 +835,11 @@ function readServerComponentOutput(response: ResultResponse, output: any): any {
           ),
         );
     }
-    const chunk: SomeChunk<any> = createPendingChunk(response);
+    const chunk: SomeChunk<any> = createPendingChunk(response, context);
     resolveServerComponentOutput(response, chunk, thenable);
     return createLazyChunkWrapper(chunk);
   }
-  return readModel(response, output, emptyRoot, '');
+  return readModel(response, output, context, emptyRoot, '');
 }
 
 // Resolves a chunk with the value a Server Component returned once that is
@@ -711,13 +861,19 @@ function resolveServerComponentOutput(
   resolveModelChunk(response, chunk, output);
 }
 
-function readServerComponent(response: ResultResponse, element: any): any {
+function readServerComponent(
+  response: ResultResponse,
+  element: any,
+  context: KeyContext,
+): any {
   const task = getResultTask(response._result, element);
+  // Track this element's key on the Server Component on the keyPath context.
+  context = enterServerComponent(context, element.key);
   switch (task.status) {
     case TASK_FULFILLED:
-      return readServerComponentOutput(response, task.value);
+      return readServerComponentOutput(response, task.value, context);
     case TASK_PENDING: {
-      const chunk: SomeChunk<any> = createPendingChunk(response);
+      const chunk: SomeChunk<any> = createPendingChunk(response, context);
       task.then(
         value => resolveServerComponentOutput(response, chunk, value),
         reason => triggerErrorOnChunk(chunk, reportReadError(response, reason)),
@@ -736,17 +892,18 @@ function readServerComponent(response: ResultResponse, element: any): any {
 function readThenable(
   response: ResultResponse,
   thenable: Thenable<any>,
+  context: KeyContext,
 ): SomeChunk<any> {
   switch (thenable.status) {
     case 'fulfilled':
-      return createModelChunk(response, thenable.value);
+      return createModelChunk(response, thenable.value, context);
     case 'rejected':
       return createErrorChunk(
         response,
         reportReadError(response, thenable.reason),
       );
   }
-  const chunk: SomeChunk<any> = createPendingChunk(response);
+  const chunk: SomeChunk<any> = createPendingChunk(response, context);
   thenable.then(
     value => resolveModelChunk(response, chunk, value),
     reason => triggerErrorOnChunk(chunk, reportReadError(response, reason)),
@@ -768,18 +925,22 @@ function isThenable(value: any): boolean {
 // its parent's row takes the parent down with it, but which elements get
 // inlined depends on row sizes and timing, so every element is treated as
 // its own row here.
-function readElement(response: ResultResponse, element: any): any {
+function readElement(
+  response: ResultResponse,
+  element: any,
+  context: KeyContext,
+): any {
   try {
     if (resolveServerComponentType(response, element.type) !== null) {
-      return readServerComponent(response, element);
+      return readServerComponent(response, element, context);
     }
-    return readClientElement(response, element);
+    return readClientElement(response, element, context);
   } catch (thrown) {
     if (isThenable(thrown)) {
       // Something inside the element is still loading. It becomes a lazy
       // that reads the element again once that's done, like an element
       // whose row waits for a reference.
-      const chunk: SomeChunk<any> = createPendingChunk(response);
+      const chunk: SomeChunk<any> = createPendingChunk(response, context);
       const retry = () => resolveModelChunk(response, chunk, element);
       thrown.then(retry, retry);
       return createLazyChunkWrapper(chunk);
@@ -793,36 +954,92 @@ function readElement(response: ResultResponse, element: any): any {
 // A host or Client Component element. The serializer outlines each of these
 // as its own row when it can't be inlined, and its props are what that row
 // holds, so an invalid prop fails this element and nothing above it.
-function readClientElement(response: ResultResponse, element: any): any {
+function readClientElement(
+  response: ResultResponse,
+  element: any,
+  context: KeyContext,
+): any {
   const props = element.props;
   if (props.ref !== undefined && props.ref !== null) {
     throw new Error(
       'Refs cannot be used in Server Components, nor passed to Client Components.',
     );
   }
+  let type = element.type;
+  if (type === REACT_FRAGMENT_TYPE && element.key === null) {
+    // For key-less fragments, we add a small optimization to avoid serializing
+    // it as a wrapper.
+    const childContext =
+      context.keyPath === null && !context.implicitSlot
+        ? {keyPath: null, implicitSlot: true, enclosing: context.enclosing}
+        : context;
+    return readModel(response, props.children, childContext, props, 'children');
+  }
+  // The serializer resolves a lazy type and unwraps memo and forwardRef
+  // before it emits the element, so neither reaches a consumer.
+  while (
+    type !== null &&
+    typeof type === 'object' &&
+    !response._bundler.isClientReference(type)
+  ) {
+    switch (type.$$typeof) {
+      case REACT_LAZY_TYPE: {
+        const payload = type._payload;
+        const init = type._init;
+        type = init(payload);
+        continue;
+      }
+      case REACT_MEMO_TYPE:
+        type = type.type;
+        continue;
+      case REACT_FORWARD_REF_TYPE:
+        type = type.render;
+        continue;
+    }
+    break;
+  }
+  const key = terminalKey(context, element.key);
   const prevReadError = response._readError;
   response._readError = null;
-  const readProps = readValue(response, element, 'props', props);
+  const readProps = readValue(
+    response,
+    props,
+    context.enclosing,
+    element,
+    'props',
+  );
   const error = response._readError;
   response._readError = prevReadError;
+  let read;
   if (error !== null) {
-    return createLazyChunkWrapper(createErrorChunk(response, error));
-  }
-  const type = element.type;
-  if (response._bundler.isClientReference(type)) {
+    const chunk: SomeChunk<any> = createErrorChunk(response, error);
+    read = createLazyChunkWrapper(chunk);
+  } else if (response._bundler.isClientReference(type)) {
     // Like on the wire, the type is a lazy over the module, so that the
     // renderer suspends on this component rather than its parent until the
     // code has loaded.
-    return createElement(
+    read = createElement(
       createLazyChunkWrapper(getModuleChunk(response, type)),
-      element.key,
+      key,
       readProps,
     );
+  } else if (
+    key === element.key &&
+    type === element.type &&
+    readProps === props
+  ) {
+    read = element;
+  } else {
+    read = createElement(type, key, readProps);
   }
-  if (readProps === props) {
-    return element;
+  if (context.implicitSlot && key !== null) {
+    // The root Server Component had no key so it was in an implicit slot.
+    // If we had a key lower, it would end up in that slot with an explicit key.
+    // We wrap the element in a fragment to give it an implicit key slot with
+    // an inner explicit key.
+    return [read];
   }
-  return createElement(type, element.key, readProps);
+  return read;
 }
 
 // The chunk loading a Client Reference's module in this consumer's module
@@ -854,7 +1071,7 @@ function getModuleChunk(
   const promise = preloadModule(clientReference);
   let chunk;
   if (promise) {
-    const pendingChunk: SomeChunk<any> = createPendingChunk(response);
+    const pendingChunk: SomeChunk<any> = createPendingModuleChunk(response);
     promise.then(
       () => resolveModuleChunk(response, pendingChunk, clientReference),
       error => triggerErrorOnChunk(pendingChunk, error),
@@ -954,6 +1171,7 @@ function checkTaintedFormData(
 function readModel(
   response: ResultResponse,
   value: any,
+  context: KeyContext,
   parent: Object,
   parentPropertyName: string,
 ): any {
@@ -963,12 +1181,18 @@ function readModel(
   if (typeof value === 'object') {
     switch (value.$$typeof) {
       case REACT_ELEMENT_TYPE:
-        return readElement(response, value);
+        return readElement(response, value, context);
       case REACT_LAZY_TYPE: {
         const lazy: LazyComponent<any, any> = value;
         const payload = lazy._payload;
         const init = lazy._init;
-        return readModel(response, init(payload), parent, parentPropertyName);
+        return readModel(
+          response,
+          init(payload),
+          context,
+          parent,
+          parentPropertyName,
+        );
       }
       case REACT_LEGACY_ELEMENT_TYPE:
         throw new Error(
@@ -988,22 +1212,22 @@ function readModel(
     if (typeof value.then === 'function') {
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
-      return readThenable(response, value);
+      return readThenable(response, value, context);
     }
     const proto = getPrototypeOf(value);
     if (proto === ObjectPrototype) {
       // Nearly every value is a plain object, and none of the cases below
       // can apply to one, so the built-ins are checked for the rest.
-      return readObject(response, value);
+      return readObject(response, value, context);
     }
     if (isArray(value)) {
-      return readArray(response, value);
+      return readFragment(response, value, context);
     }
     if (value instanceof Map) {
-      return readMap(response, value);
+      return readMap(response, value, context);
     }
     if (value instanceof Set) {
-      return readSet(response, value);
+      return readSet(response, value, context);
     }
     // TODO: FormData is not available in old Node. Remove the typeof later.
     if (typeof FormData === 'function' && value instanceof FormData) {
@@ -1044,7 +1268,7 @@ function readModel(
           describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
-    return readObject(response, value);
+    return readObject(response, value, context);
   }
 
   if (typeof value === 'string') {
@@ -1144,6 +1368,7 @@ export function getRoot<T>(response: ResultResponse): Thenable<T> {
   const chunk: SomeChunk<T> = createModelChunk(
     response,
     response._result.model,
+    createRootKeyContext(),
   );
   return chunk as any;
 }
