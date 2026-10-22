@@ -1773,6 +1773,52 @@ describe('ReactFlightDOMEdge', () => {
     expect(result.after).toBe('done');
   });
 
+  it('keeps a typed array intact when a byte stream row ends the same transport chunk', async () => {
+    const bytes = new Uint8Array([1, 2, 3, 4]);
+    const s = new ReadableStream({
+      type: 'bytes',
+      start(c) {
+        c.enqueue(new Uint8Array([65, 66, 67]));
+        c.close();
+      },
+    });
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream({bytes, s}, {}),
+    );
+    const chunks = [];
+    const reader = stream.getReader();
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      }
+      chunks.push(value);
+    }
+    const all = Buffer.concat(chunks);
+    const text = all.toString('latin1');
+    // The byte stream's row is "id:b3,ABC". The transport chunk ends right
+    // after it, so the client can enqueue it without copying.
+    const cut = text.indexOf('ABC') + 3;
+    const first = new Uint8Array(all.subarray(0, cut));
+    const second = new Uint8Array(all.subarray(cut));
+    const split = new ReadableStream({
+      start(c) {
+        c.enqueue(first);
+        c.enqueue(second);
+        c.close();
+      },
+    });
+    const result = await ReactServerDOMClient.createFromReadableStream(split, {
+      serverConsumerManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    const read = await result.s.getReader().read();
+    expect(Array.from(read.value)).toEqual([65, 66, 67]);
+    expect(Array.from(result.bytes)).toEqual([1, 2, 3, 4]);
+  });
+
   it('ends a BYOB read that is waiting when the byte stream closes', async () => {
     const s = new ReadableStream({
       type: 'bytes',

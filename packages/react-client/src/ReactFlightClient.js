@@ -5408,6 +5408,10 @@ export function processBinaryChunk(
   // detached at all.
   const ownsBuffer =
     chunk.byteOffset === 0 && chunkLength === chunk.buffer.byteLength;
+  // A typed array row that fits in this chunk is handed out as a view of the
+  // chunk's buffer. Once that has happened the buffer cannot be detached by
+  // enqueueing another view of it into a byte stream.
+  let sharedViews = false;
   incrementChunkDebugInfo(streamState, chunkLength);
   while (i < chunkLength) {
     let lastIdx = -1;
@@ -5499,10 +5503,15 @@ export function processBinaryChunk(
           // If we're at the end of the RSC chunk, no more parsing will access
           // this buffer and we don't need to copy the chunk to allow detaching
           // the buffer, otherwise we need to copy.
-          lastIdx === chunkLength && ownsBuffer ? lastChunk : lastChunk.slice(),
+          lastIdx === chunkLength && ownsBuffer && !sharedViews
+            ? lastChunk
+            : lastChunk.slice(),
           streamState,
         );
       } else {
+        if (rowState === ROW_CHUNK_BY_LENGTH && rowTag !== 84 /* "T" */) {
+          sharedViews = true;
+        }
         // Process all other row types.
         processFullBinaryRow(
           response,
@@ -5541,7 +5550,7 @@ export function processBinaryChunk(
         resolveBuffer(
           response,
           rowID,
-          ownsBuffer ? remainingSlice : remainingSlice.slice(),
+          ownsBuffer && !sharedViews ? remainingSlice : remainingSlice.slice(),
           streamState,
         );
       } else {
