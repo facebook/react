@@ -934,6 +934,13 @@ function applyEffect(
       ) {
         effects.push(effect);
       } else if (
+        sourceType === 'context' &&
+        destinationType === 'mutable' &&
+        effect.kind === 'Capture' &&
+        effect.isObjectSpreadCapture === true
+      ) {
+        effects.push(effect);
+      } else if (
         (sourceType === 'context' && destinationType != null) ||
         (sourceType === 'mutable' && destinationType === 'context')
       ) {
@@ -1782,6 +1789,8 @@ function computeSignatureForInstruction(
             kind: 'Capture',
             from: property.place,
             into: lvalue,
+            // With additional properties, a load may read an overwritten value.
+            isObjectSpreadCapture: value.properties.length === 1,
           });
         }
       }
@@ -2654,7 +2663,7 @@ function computeEffectsForSignature(
         for (const fromId of from) {
           for (const toId of to) {
             effects.push({
-              kind: effect.kind,
+              ...effect,
               from: fromId,
               into: toId,
             });
