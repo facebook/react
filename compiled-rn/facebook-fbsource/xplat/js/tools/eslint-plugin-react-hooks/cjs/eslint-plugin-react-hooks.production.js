@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<d29a902d431c3f0fafbb398eecd8499b>>
+ * @generated SignedSource<<e039c855cf63ee28bba7405e516e4302>>
  */
 
 'use strict';
@@ -30355,6 +30355,26 @@ const TYPED_GLOBALS = [
         'IntersectionObserver',
         addFunction(DEFAULT_SHAPES, [], {
             positionalParams: [Effect.Freeze, Effect.Read],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'ResizeObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'MutationObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze],
             restParam: null,
             returnType: { kind: 'Poly' },
             calleeEffect: Effect.Read,

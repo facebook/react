@@ -12,7 +12,7 @@
  * @lightSyntaxTransform
  * @preventMunge
  * @oncall react_core
- * @generated SignedSource<<28bec7bd050d451c738b7c7362f6415b>>
+ * @generated SignedSource<<f06ca3c767dd290c1580128cfd506b91>>
  */
 
 'use strict';
@@ -30576,6 +30576,26 @@ const TYPED_GLOBALS = [
         'IntersectionObserver',
         addFunction(DEFAULT_SHAPES, [], {
             positionalParams: [Effect.Freeze, Effect.Read],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'ResizeObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'MutationObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze],
             restParam: null,
             returnType: { kind: 'Poly' },
             calleeEffect: Effect.Read,
