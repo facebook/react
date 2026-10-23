@@ -38615,7 +38615,12 @@ function hashEffect(effect) {
             ].join(':');
         }
         case 'Freeze': {
-            return [effect.kind, effect.value.identifier.id, effect.reason].join(':');
+            return [
+                effect.kind,
+                effect.value.identifier.id,
+                effect.reason,
+                effect.alreadyFrozen === true,
+            ].join(':');
         }
         case 'Impure':
         case 'Render': {
@@ -39047,6 +39052,9 @@ function applyEffect(context, state, _effect, initialized, effects) {
             const didFreeze = state.freeze(effect.value, effect.reason);
             if (didFreeze) {
                 effects.push(effect);
+            }
+            else {
+                effects.push(Object.assign(Object.assign({}, effect), { alreadyFrozen: true }));
             }
             break;
         }
@@ -42079,7 +42087,9 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                         break;
                     }
                     case 'Freeze': {
-                        operandEffects.set(effect.value.identifier.id, Effect.Freeze);
+                        if (effect.alreadyFrozen !== true) {
+                            operandEffects.set(effect.value.identifier.id, Effect.Freeze);
+                        }
                         break;
                     }
                     case 'ImmutableCapture': {
