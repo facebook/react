@@ -1990,6 +1990,7 @@ function renderFunctionComponent<Props>(
     emptyRoot,
     '',
     result,
+    false,
     null,
   );
   task.keyPath = prevKeyPath;
@@ -2404,6 +2405,7 @@ function renderElement(
       emptyRoot,
       '',
       props.children,
+      false,
       null,
     );
     task.implicitSlot = prevImplicitSlot;
@@ -2962,6 +2964,7 @@ function resolveModel(
     | $ReadOnlyArray<ReactClientValue>,
   parentPropertyName: string,
   value: ReactClientValue,
+  parentIsAddressable: boolean,
 ): ReactJSONValue {
   // Replicate JSON.stringify's toJSON semantics: if the value has a toJSON
   // method, call it first. In practice this only matters for Date objects whose
@@ -2984,6 +2987,7 @@ function resolveModel(
         request.writtenObjects,
         parent,
         parentPropertyName,
+        parentIsAddressable,
       );
     }
   }
@@ -3044,8 +3048,10 @@ function resolveModel(
     parent,
     parentPropertyName,
     jsonValue,
+    parentIsAddressable,
     substituted,
   );
+  const addressable = renderedIsAddressable;
 
   if (rendered === null || typeof rendered !== 'object') {
     return rendered;
@@ -3054,7 +3060,14 @@ function resolveModel(
   if (isArray(rendered)) {
     const resolved: Array<ReactJSONValue> = [];
     for (let i = 0; i < rendered.length; i++) {
-      resolved[i] = resolveModel(request, task, rendered, '' + i, rendered[i]);
+      resolved[i] = resolveModel(
+        request,
+        task,
+        rendered,
+        '' + i,
+        rendered[i],
+        addressable,
+      );
     }
     return resolved;
   }
@@ -3070,6 +3083,7 @@ function resolveModel(
         rendered,
         key,
         rendered[key],
+        addressable,
       );
       if (key === __PROTO__) {
         // Match JSON's ordinary data-property semantics for this legacy key.
@@ -3692,13 +3706,13 @@ function serializeImportString(request: Request, value: string): string {
   return ref;
 }
 
-// writtenObjects maps an object to the reference string of its row, or for an
-// object inside a row, to the container it was first serialized in. The path
-// reference is only built if the object is reached again, which is rare,
-// while a path string per object costs more than the rest of the walk. What a
-// Server Component element rendered is recorded as the element, which has the
-// same reference. An element is never a container a value is serialized in,
-// so the two kinds of entry can't be confused.
+// What writtenObjects records for an object: the reference string of a row
+// root, or for an object inside a row, the container it was first serialized
+// in. Its path reference is built only if it is reached again, which is rare,
+// while a path string per object would cost more than the rest of the walk.
+// What a Server Component element rendered is recorded as the element itself,
+// since it has the element's reference. An element is never a container a
+// value is serialized in, so the two kinds of entry can't be confused.
 type WrittenEntry = string | Reference;
 
 function resolveWrittenReference(
@@ -3763,28 +3777,37 @@ function resolveWrittenReference(
     return undefined;
   }
   const reference = parentReference + ':' + propertyName;
+  // The next reference to this object doesn't walk the parents again.
   writtenObjects.set(value, reference);
   return reference;
 }
 
 // The path of a value that stands in for what the parent holds, like a
-// lazy's resolved model or a toJSON result, since scanning the parent can't
-// find it later. Null if the parent has no reference.
+// lazy's resolved model or a toJSON result. It can't be found by scanning
+// the parent later, so it is recorded under this path instead of the parent.
+// Null if the parent can't be referred to.
 function substitutedReference(
   writtenObjects: WeakMap<Reference, WrittenEntry>,
   parent: Object,
   parentPropertyName: string,
+  parentIsAddressable: boolean,
 ): null | string {
-  if (parentPropertyName.indexOf(':') !== -1) {
+  if (!parentIsAddressable || parentPropertyName.indexOf(':') !== -1) {
     return null;
   }
   const parentReference = resolveWrittenReference(writtenObjects, parent);
-  return parentReference === undefined
-    ? null
-    : parentReference + ':' + parentPropertyName;
+  if (parentReference === undefined) {
+    return null;
+  }
+  return parentReference + ':' + parentPropertyName;
 }
 
 let modelRoot: null | ReactClientValue = false;
+
+// Whether the object renderModelDestructive last returned can be referred to,
+// so that resolveModel records the values inside it. Set on the way out of
+// every branch that returns a container.
+let renderedIsAddressable: boolean = false;
 
 function renderModel(
   request: Request,
@@ -3794,6 +3817,7 @@ function renderModel(
     | $ReadOnlyArray<ReactClientValue>,
   key: string,
   value: ReactClientValue,
+  parentIsAddressable: boolean,
   substituted: null | string,
 ): ReactJSONValue {
   // First time we're serializing the key, we should add it to the size.
@@ -3808,6 +3832,7 @@ function renderModel(
       parent,
       key,
       value,
+      parentIsAddressable,
       substituted,
     );
   } catch (thrownValue) {
@@ -3916,12 +3941,16 @@ function renderModelDestructive(
     | $ReadOnlyArray<ReactClientValue>,
   parentPropertyName: string,
   value: ReactClientValue,
-  // The reference to record for the value in place of its parent, when the
-  // parent doesn't hold the value itself.
+  // Whether the parent has a reference, so that the value can be recorded as
+  // reachable through it.
+  parentIsAddressable: boolean,
+  // The path to record the value under instead, when the parent doesn't hold
+  // the value itself.
   substituted: null | string,
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
+  renderedIsAddressable = false;
 
   if (__DEV__) {
     if (parentPropertyName === __PROTO__) {
@@ -3972,17 +4001,17 @@ function renderModelDestructive(
               // We currently don't have a data structure that lets us see that though.
               return existingReference;
             }
-          } else if (substituted !== null) {
-            writtenObjects.set(value, substituted);
-            recorded = true;
           } else if (
-            parentPropertyName.indexOf(':') === -1 &&
-            writtenObjects.has(parent)
+            parentIsAddressable &&
+            parentPropertyName.indexOf(':') === -1
           ) {
             // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
             // If the parent has a reference, we can refer to this object indirectly
             // through the property name inside that parent.
-            writtenObjects.set(value, parent);
+            writtenObjects.set(
+              value,
+              substituted !== null ? substituted : parent,
+            );
             recorded = true;
           }
         }
@@ -4064,6 +4093,9 @@ function renderModelDestructive(
           if (!writtenObjects.has(newChild)) {
             writtenObjects.set(newChild, value);
           }
+          renderedIsAddressable = true;
+        } else {
+          renderedIsAddressable = false;
         }
         return newChild;
       }
@@ -4119,6 +4151,7 @@ function renderModelDestructive(
             request.writtenObjects,
             parent,
             parentPropertyName,
+            parentIsAddressable,
           );
         }
         return renderModelDestructive(
@@ -4127,6 +4160,7 @@ function renderModelDestructive(
           parent,
           parentPropertyName,
           resolvedModel,
+          parentIsAddressable,
           resolvedSubstituted,
         );
       }
@@ -4212,6 +4246,7 @@ function renderModelDestructive(
       return promiseReference;
     }
 
+    let addressable = false;
     if (existingReference !== undefined) {
       if (modelRoot === value) {
         if (existingReference !== serializeByValueID(task.id)) {
@@ -4222,25 +4257,25 @@ function renderModelDestructive(
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
+        addressable = true;
       } else {
         // We've already emitted this as an outlined object, so we can
         // just refer to that by its existing ID.
         return existingReference;
       }
-    } else if (substituted !== null) {
-      writtenObjects.set(value, substituted);
-    } else if (
-      parentPropertyName.indexOf(':') === -1 &&
-      writtenObjects.has(parent)
-    ) {
+    } else if (parentIsAddressable && parentPropertyName.indexOf(':') === -1) {
       // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
-      // If the parent has a reference, we can refer to this object indirectly
-      // through the property name inside that parent.
-      writtenObjects.set(value, parent);
+      // The parent is a row root or was itself recorded inside one, so this
+      // object can be referred to through it if it is reached again.
+      writtenObjects.set(value, substituted !== null ? substituted : parent);
+      addressable = true;
     }
 
     if (isArray(value)) {
-      return renderFragment(request, task, value);
+      const fragment = renderFragment(request, task, value);
+      // A keyed fragment wraps the array in a new element that isn't recorded.
+      renderedIsAddressable = addressable && fragment === value;
+      return fragment;
     }
 
     if (value instanceof Map) {
@@ -4391,6 +4426,7 @@ function renderModelDestructive(
       }
     }
 
+    renderedIsAddressable = addressable;
     // $FlowFixMe[incompatible-type]
     return value;
   }
@@ -6391,7 +6427,16 @@ function emitChunk(
   // For anything else we need to try to serialize it using JSON.
   // We resolve the model tree first in pure JS to avoid the C++->JS boundary
   // overhead of JSON.stringify's replacer callback.
-  const resolvedModel = resolveModel(request, task, {'': value}, '', value);
+  // The root was given its id before this call, so everything in it is
+  // addressable through it.
+  const resolvedModel = resolveModel(
+    request,
+    task,
+    {'': value},
+    '',
+    value,
+    true,
+  );
   // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
   const json: string = stringify(resolvedModel);
   emitModelChunk(request, task.id, json);
@@ -6455,6 +6500,7 @@ function retryTask(request: Request, task: Task): void {
       emptyRoot,
       '',
       task.model,
+      false,
       null,
     );
 
