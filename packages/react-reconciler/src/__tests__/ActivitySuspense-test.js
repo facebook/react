@@ -457,6 +457,45 @@ describe('Activity Suspense', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
   });
 
+  test('deleting a hidden tree that suspended does not throw when the data resolves', async () => {
+    function App({showHidden}) {
+      return (
+        <>
+          <span>
+            <Text text="Visible" />
+          </span>
+          {showHidden ? (
+            <Activity mode="hidden">
+              <AsyncText text="Hidden" />
+            </Activity>
+          ) : null}
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App showHidden={true} />);
+    });
+    assertLog(['Visible', 'Suspend! [Hidden]']);
+    expect(root).toMatchRenderedOutput(<span>Visible</span>);
+
+    // Delete the hidden tree while it's still suspended.
+    await act(() => {
+      root.render(<App showHidden={false} />);
+    });
+    assertLog(['Visible']);
+    expect(root).toMatchRenderedOutput(<span>Visible</span>);
+
+    // The retry listener attached to the deleted Offscreen boundary still
+    // fires when the data resolves.
+    await act(async () => {
+      await resolveText('Hidden');
+    });
+    assertLog([]);
+    expect(root).toMatchRenderedOutput(<span>Visible</span>);
+  });
+
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
     // update is made to a hidden tree: when scheduling the update, we walk up
