@@ -617,6 +617,9 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
     const fallbackBeforeHydration = container.querySelector('span');
+    // Give the fallback DOM state that neither server HTML nor a re-render
+    // would set. If React remounts an identical fallback, this marker is lost.
+    fallbackBeforeHydration.setAttribute('data-kept', 'yes');
 
     // Hydration: browser() passes on the client, then the client-only promise
     // suspends. React must keep the fallback UI it already painted instead of
@@ -631,12 +634,14 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
 
     expect(recoverableErrors).toEqual([]);
+    // The preserved fallback still carries the marker we set on the node.
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        <span>Loading</span>
+        <span data-kept="yes">Loading</span>
       </div>,
     );
     expect(container.querySelector('span')).toBe(fallbackBeforeHydration);
+    expect(fallbackBeforeHydration.getAttribute('data-kept')).toBe('yes');
 
     await act(() => {
       resolveClientReady('Content');
@@ -650,6 +655,89 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span>Content</span>
+      </div>,
+    );
+  });
+
+  it('keeps the fallback DOM across sequential client suspensions', async () => {
+    let resolveFirstPart;
+    const firstPart = new Promise(resolve => {
+      resolveFirstPart = resolve;
+    });
+    let resolveSecondPart;
+    const secondPart = new Promise(resolve => {
+      resolveSecondPart = resolve;
+    });
+
+    function ClientSide() {
+      use(ReactDOM.browser());
+      const first = use(firstPart);
+      const second = use(secondPart);
+      return <span>{first + ' ' + second}</span>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<span>Loading</span>}>
+            <ClientSide />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const serverErrors = [];
+    const browserBailouts = [];
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onError(error) {
+          serverErrors.push(error);
+        },
+        onBrowserBailout(error) {
+          browserBailouts.push(error);
+        },
+      });
+      pipe(writable);
+    });
+    expect(serverErrors).toEqual([]);
+    expect(browserBailouts).toHaveLength(1);
+
+    const fallbackBeforeHydration = container.querySelector('span');
+
+    const recoverableErrors = [];
+    ReactDOMClient.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        recoverableErrors.push(error);
+      },
+    });
+    await waitForAll([]);
+    expect(recoverableErrors).toEqual([]);
+    expect(container.querySelector('span')).toBe(fallbackBeforeHydration);
+
+    // Resolving the first promise suspends the boundary again on the second.
+    // The painted fallback must remain the same node through the intermediate
+    // state, not get remounted between the two suspensions.
+    await act(() => {
+      resolveFirstPart('Hello');
+    });
+    await waitForAll([]);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading</span>
+      </div>,
+    );
+    expect(container.querySelector('span')).toBe(fallbackBeforeHydration);
+
+    await act(() => {
+      resolveSecondPart('Browser');
+    });
+    await waitForAll([]);
+    jest.advanceTimersByTime(300);
+    await waitForAll([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Hello Browser</span>
       </div>,
     );
   });
