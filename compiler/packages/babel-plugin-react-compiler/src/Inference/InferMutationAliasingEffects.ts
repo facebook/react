@@ -686,6 +686,9 @@ function applyEffect(
       const didFreeze = state.freeze(effect.value, effect.reason);
       if (didFreeze) {
         effects.push(effect);
+      } else {
+        // Ref validation needs the declared effect even if already frozen.
+        effects.push({...effect, alreadyFrozen: true});
       }
       break;
     }
