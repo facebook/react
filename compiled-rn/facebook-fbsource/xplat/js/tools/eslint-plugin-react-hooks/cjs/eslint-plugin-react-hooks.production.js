@@ -6,7 +6,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- * @generated SignedSource<<e039c855cf63ee28bba7405e516e4302>>
+ * @generated SignedSource<<8edd0de169891dce7fed1136a0f194b2>>
  */
 
 'use strict';
@@ -38441,7 +38441,12 @@ function hashEffect(effect) {
             ].join(':');
         }
         case 'Freeze': {
-            return [effect.kind, effect.value.identifier.id, effect.reason].join(':');
+            return [
+                effect.kind,
+                effect.value.identifier.id,
+                effect.reason,
+                effect.alreadyFrozen === true,
+            ].join(':');
         }
         case 'Impure':
         case 'Render': {
@@ -38873,6 +38878,9 @@ function applyEffect(context, state, _effect, initialized, effects) {
             const didFreeze = state.freeze(effect.value, effect.reason);
             if (didFreeze) {
                 effects.push(effect);
+            }
+            else {
+                effects.push(Object.assign(Object.assign({}, effect), { alreadyFrozen: true }));
             }
             break;
         }
@@ -41905,7 +41913,9 @@ function inferMutationAliasingRanges(fn, { isFunctionExpression }) {
                         break;
                     }
                     case 'Freeze': {
-                        operandEffects.set(effect.value.identifier.id, Effect.Freeze);
+                        if (effect.alreadyFrozen !== true) {
+                            operandEffects.set(effect.value.identifier.id, Effect.Freeze);
+                        }
                         break;
                     }
                     case 'ImmutableCapture': {
