@@ -258,6 +258,29 @@ const refsTests: CompilerTestCases = {
         }
       `,
     },
+    {
+      name: 'Allows deferred ref access in memoized React Native PanResponder config',
+      filename: 'test.tsx',
+      code: normalizeIndent`
+        import {useMemo, useRef} from 'react';
+        import {PanResponder, View} from 'react-native';
+
+        function SwipeableCard() {
+          const ref = useRef(0);
+          const config = useMemo(
+            () => ({
+              onPanResponderRelease: () => {
+                ref.current = 0;
+              },
+            }),
+            [],
+          );
+          const panResponder = PanResponder.create(config);
+
+          return <View {...panResponder.panHandlers} />;
+        }
+      `,
+    },
   ],
   invalid: [
     {
