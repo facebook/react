@@ -30535,6 +30535,26 @@ const TYPED_GLOBALS = [
             returnValueKind: ValueKind.Mutable,
         }, null, true),
     ],
+    [
+        'ResizeObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
+    [
+        'MutationObserver',
+        addFunction(DEFAULT_SHAPES, [], {
+            positionalParams: [Effect.Freeze],
+            restParam: null,
+            returnType: { kind: 'Poly' },
+            calleeEffect: Effect.Read,
+            returnValueKind: ValueKind.Mutable,
+        }, null, true),
+    ],
 ];
 const REACT_APIS = [
     [
