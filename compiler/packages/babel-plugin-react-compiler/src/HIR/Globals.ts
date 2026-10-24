@@ -655,6 +655,44 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       true,
     ),
   ],
+  [
+    'ResizeObserver',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        /*
+         * The callback is retained for later delivery, not invoked by construction.
+         * Unlike IntersectionObserver, the options object is not a constructor
+         * argument; it belongs to `observe(target, options)`.
+         */
+        positionalParams: [Effect.Freeze],
+        restParam: null,
+        returnType: {kind: 'Poly'},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
+  [
+    'MutationObserver',
+    addFunction(
+      DEFAULT_SHAPES,
+      [],
+      {
+        // The callback is retained for later delivery, not invoked by construction.
+        positionalParams: [Effect.Freeze],
+        restParam: null,
+        returnType: {kind: 'Poly'},
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      },
+      null,
+      true,
+    ),
+  ],
   // TODO: rest of Global objects
 ];
 
